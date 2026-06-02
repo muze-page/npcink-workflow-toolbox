@@ -491,6 +491,30 @@
 		});
 	}
 
+	function initConnectorSwitcher() {
+		document.querySelectorAll('[data-toolbox-connectors]').forEach((workspace) => {
+			workspace.addEventListener('click', (event) => {
+				if (!(event.target instanceof Element)) {
+					return;
+				}
+
+				const button = event.target.closest('[data-toolbox-connector-target]');
+				if (!button || !workspace.contains(button)) {
+					return;
+				}
+
+				activateTarget(
+					workspace,
+					'[data-toolbox-connector-target]',
+					'[data-toolbox-connector-panel]',
+					'data-toolbox-connector-target',
+					'data-toolbox-connector-panel',
+					button.getAttribute('data-toolbox-connector-target')
+				);
+			});
+		});
+	}
+
 	function setContextField(form, key, value) {
 		const option = config.contextOption || 'magick_ai_toolbox_content_context';
 		const fieldName = option + '[' + key + ']';
@@ -581,6 +605,7 @@
 
 	initTopTabs();
 	initToolSwitcher();
+	initConnectorSwitcher();
 	initContextDrafts();
 
 	document.addEventListener('submit', function (event) {

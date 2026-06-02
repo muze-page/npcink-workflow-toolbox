@@ -91,6 +91,18 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
+Connector settings now include a compact status catalog. It may show active MVP
+providers, missing local setup, and reserved future slots, but it must stay a
+read-only orientation surface:
+
+- current runtime provider owner: `Local MVP config`;
+- reserved slots owner: `Future connector owner`;
+- no billing, quota, key rotation, request-log, marketplace, or provider
+  routing ownership in Toolbox.
+
+Reserved provider labels such as `Pixabay / Pexels` and
+`Pinecone / Weaviate` are planning context only, not runtime adapters.
+
 ## Content Discoverability Context
 
 The admin page also includes an operator-filled Content Context form for SEO,
@@ -230,6 +242,23 @@ Do not manually re-fire `wp_abilities_api_categories_init` and
 `wp_abilities_api_init` after WordPress has already loaded all active plugins;
 that can produce duplicate notices from other active plugins unrelated to
 Toolbox.
+
+## REST Route Matrix
+
+The first-version route matrix is exact:
+
+- `GET /status`
+- `POST /web-research`
+- `POST /image-candidates`
+- `POST /vector-search`
+- `POST /knowledge-search`
+- `POST /flows/article-brief`
+- `POST /flows/media-brief`
+
+Do not add routes for publish, delivery, workflow-run consoles, queues,
+schedulers, approval stores, write confirmation, featured-image mutation, media
+upload/import, SEO mutation, indexing, or re-indexing without a new boundary
+decision.
 
 ## Verification Gates
 

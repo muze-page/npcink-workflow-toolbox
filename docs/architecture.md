@@ -140,6 +140,13 @@ Current routes require `manage_options`:
 `/knowledge-search` remains as a compatibility alias for the first local MVP.
 New clients should use `/vector-search`.
 
+The route surface is intentionally controlled by a static matrix in
+`tests/run.php`. The matrix must stay exact: adding a route requires updating
+the allowlist and boundary docs in the same change. The first version must not
+register routes whose purpose is publish, delivery, workflow-run display,
+queue/scheduler ownership, approval, write confirmation, featured-image
+mutation, media upload/import, SEO mutation, indexing, or re-indexing.
+
 ## Admin Surface
 
 When another Magick AI plugin has registered the shared `magick-ai` parent menu,
@@ -167,6 +174,12 @@ Content Assistant product-surface discipline:
 
 This is a display contract only. It does not add Content Assistant article,
 comment, media, preview, confirm, or apply responsibilities to Toolbox.
+
+Connector settings use a compact status catalog before editable fields. The
+catalog separates `Local MVP config` providers from `Future connector owner`
+slots, keeps reserved providers visible as planning context, and repeats the
+provider boundary where needed. It is not a billing, quota, request-log,
+marketplace, or key-rotation surface.
 
 ## Dependency Direction
 

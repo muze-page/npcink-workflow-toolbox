@@ -343,183 +343,275 @@ final class Admin_Page {
 	}
 
 	private function render_connector_settings_form( array $settings ): void {
-		$tavily_open     = ! $this->settings->has_tavily_api_key();
-		$unsplash_open   = ! $this->settings->has_unsplash_access_key();
-		$qdrant_open     = ! $this->settings->has_qdrant_connection();
-		$siliconflow_open = 'siliconflow' === (string) $settings['embedding_provider'] && ! $this->settings->has_siliconflow_api_key();
-		$jina_open       = 'jina' === (string) $settings['embedding_provider'] && ! $this->settings->has_jina_api_key();
+		$embedding_provider = (string) $settings['embedding_provider'];
+		$embedding_ready    = 'jina' === $embedding_provider ? $this->settings->has_jina_api_key() : $this->settings->has_siliconflow_api_key();
+		$vector_ready       = $this->settings->has_qdrant_connection() && $embedding_ready;
 		?>
 		<div class="magick-ai-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Configure provider credentials and bounded runtime options. Secrets are stored separately from content context and are never exposed through abilities.', 'magick-ai-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Configure provider credentials by capability. Secrets are stored separately from content context and are never exposed through abilities.', 'magick-ai-toolbox' ); ?></p>
 		</div>
 
 		<form class="magick-ai-toolbox__settings-form" method="post" action="options.php">
 			<?php settings_fields( 'magick_ai_toolbox' ); ?>
 
-			<details class="magick-ai-toolbox__disclosure" <?php echo $tavily_open ? 'open' : ''; ?>>
-				<summary>
-					<span><?php esc_html_e( 'Tavily web research', 'magick-ai-toolbox' ); ?></span>
-					<small><?php echo esc_html( $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<label>
-						<span><?php esc_html_e( 'Tavily API key', 'magick-ai-toolbox' ); ?></span>
-						<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_tavily_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'tvly-...', 'magick-ai-toolbox' ) ); ?>" />
-					</label>
-
-					<label>
-						<span><?php esc_html_e( 'Tavily search depth', 'magick-ai-toolbox' ); ?></span>
-						<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_search_depth]">
-							<option value="basic" <?php selected( (string) $settings['tavily_search_depth'], 'basic' ); ?>><?php esc_html_e( 'Basic', 'magick-ai-toolbox' ); ?></option>
-							<option value="advanced" <?php selected( (string) $settings['tavily_search_depth'], 'advanced' ); ?>><?php esc_html_e( 'Advanced', 'magick-ai-toolbox' ); ?></option>
-						</select>
-					</label>
-
-					<?php $this->render_checkbox( 'tavily_include_answer', __( 'Tavily answer summary', 'magick-ai-toolbox' ), $settings ); ?>
-					<?php $this->render_checkbox( 'tavily_include_raw', __( 'Tavily raw content', 'magick-ai-toolbox' ), $settings ); ?>
-					<?php $this->render_checkbox( 'tavily_include_images', __( 'Tavily image URLs', 'magick-ai-toolbox' ), $settings ); ?>
-					<label class="magick-ai-toolbox__check">
-						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_tavily_api_key]" value="1" />
-						<span><?php esc_html_e( 'Clear stored Tavily key', 'magick-ai-toolbox' ); ?></span>
-					</label>
+			<div class="magick-ai-toolbox__tool-workspace magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
+				<div class="magick-ai-toolbox__tool-list" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
+					<button type="button" class="magick-ai-toolbox__tool-button is-active" data-toolbox-connector-target="search" aria-selected="true">
+						<span><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></span>
+						<small><?php echo esc_html( $this->settings->has_tavily_api_key() ? __( 'Tavily configured', 'magick-ai-toolbox' ) : __( 'Tavily key needed', 'magick-ai-toolbox' ) ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__tool-button" data-toolbox-connector-target="image" aria-selected="false">
+						<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
+						<small><?php echo esc_html( $this->settings->has_unsplash_access_key() ? __( 'Unsplash configured', 'magick-ai-toolbox' ) : __( 'Unsplash key needed', 'magick-ai-toolbox' ) ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__tool-button" data-toolbox-connector-target="vector" aria-selected="false">
+						<span><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></span>
+						<small><?php echo esc_html( $vector_ready ? __( 'Qdrant and embedding ready', 'magick-ai-toolbox' ) : __( 'Needs Qdrant and embedding', 'magick-ai-toolbox' ) ); ?></small>
+					</button>
 				</div>
-			</details>
 
-			<details class="magick-ai-toolbox__disclosure" <?php echo $unsplash_open ? 'open' : ''; ?>>
-				<summary>
-					<span><?php esc_html_e( 'Unsplash image source', 'magick-ai-toolbox' ); ?></span>
-					<small><?php echo esc_html( $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<label>
-						<span><?php esc_html_e( 'Unsplash access key', 'magick-ai-toolbox' ); ?></span>
-						<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_access_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_unsplash_access_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Unsplash access key', 'magick-ai-toolbox' ) ); ?>" />
-					</label>
+				<div class="magick-ai-toolbox__connector-panels">
+					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="search">
+						<h2><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Tavily powers external web research suggestions. Results are source candidates for operator review, not verified truth.', 'magick-ai-toolbox' ); ?></p>
 
-					<label>
-						<span><?php esc_html_e( 'Unsplash app name', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_utm_source]" value="<?php echo esc_attr( (string) $settings['unsplash_utm_source'] ); ?>" />
-					</label>
+						<?php
+						$this->render_connector_status_catalog(
+							array(
+								array(
+									'label'  => __( 'Tavily', 'magick-ai-toolbox' ),
+									'state'  => $this->settings->has_tavily_api_key() ? 'ok' : 'warning',
+									'status' => $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+									'note'   => __( 'Server-side search connector; provider secrets are not exposed through REST or abilities.', 'magick-ai-toolbox' ),
+								),
+								array(
+									'label'  => __( 'Additional search providers', 'magick-ai-toolbox' ),
+									'state'  => 'inactive',
+									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
+									'note'   => __( 'New search providers need a later contract before runtime support.', 'magick-ai-toolbox' ),
+								),
+							)
+						);
+						?>
 
-					<label class="magick-ai-toolbox__check">
-						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_unsplash_access_key]" value="1" />
-						<span><?php esc_html_e( 'Clear stored Unsplash key', 'magick-ai-toolbox' ); ?></span>
-					</label>
-				</div>
-			</details>
+						<label>
+							<span><?php esc_html_e( 'Tavily API key', 'magick-ai-toolbox' ); ?></span>
+							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_tavily_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'tvly-...', 'magick-ai-toolbox' ) ); ?>" />
+						</label>
 
-			<details class="magick-ai-toolbox__disclosure" <?php echo $qdrant_open ? 'open' : ''; ?>>
-				<summary>
-					<span><?php esc_html_e( 'Qdrant vector search', 'magick-ai-toolbox' ); ?></span>
-					<small><?php echo esc_html( $this->settings->has_qdrant_connection() ? __( 'Collection selected', 'magick-ai-toolbox' ) : __( 'Needs endpoint and collection', 'magick-ai-toolbox' ) ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<label>
-						<span><?php esc_html_e( 'Qdrant endpoint', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_endpoint]" value="<?php echo esc_attr( (string) $settings['qdrant_endpoint'] ); ?>" placeholder="https://example.qdrant.io" />
-					</label>
+						<label>
+							<span><?php esc_html_e( 'Tavily search depth', 'magick-ai-toolbox' ); ?></span>
+							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_search_depth]">
+								<option value="basic" <?php selected( (string) $settings['tavily_search_depth'], 'basic' ); ?>><?php esc_html_e( 'Basic', 'magick-ai-toolbox' ); ?></option>
+								<option value="advanced" <?php selected( (string) $settings['tavily_search_depth'], 'advanced' ); ?>><?php esc_html_e( 'Advanced', 'magick-ai-toolbox' ); ?></option>
+							</select>
+						</label>
 
-					<label>
-						<span><?php esc_html_e( 'Qdrant collection', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_collection]" value="<?php echo esc_attr( (string) $settings['qdrant_collection'] ); ?>" />
-					</label>
+						<?php $this->render_checkbox( 'tavily_include_answer', __( 'Tavily answer summary', 'magick-ai-toolbox' ), $settings ); ?>
+						<?php $this->render_checkbox( 'tavily_include_raw', __( 'Tavily raw content', 'magick-ai-toolbox' ), $settings ); ?>
+						<?php $this->render_checkbox( 'tavily_include_images', __( 'Tavily image URLs', 'magick-ai-toolbox' ), $settings ); ?>
+					</section>
 
-					<label>
-						<span><?php esc_html_e( 'Qdrant vector name', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_vector_name]" value="<?php echo esc_attr( (string) $settings['qdrant_vector_name'] ); ?>" />
-					</label>
+					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="image" hidden>
+						<h2><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Unsplash returns image-source candidates with attribution and download tracking metadata. This is not AI image generation.', 'magick-ai-toolbox' ); ?></p>
 
-					<label>
-						<span><?php esc_html_e( 'Qdrant API key', 'magick-ai-toolbox' ); ?></span>
-						<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( '' !== $this->settings->get_qdrant_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Optional for local Qdrant', 'magick-ai-toolbox' ) ); ?>" />
-					</label>
+						<?php
+						$this->render_connector_status_catalog(
+							array(
+								array(
+									'label'  => __( 'Unsplash', 'magick-ai-toolbox' ),
+									'state'  => $this->settings->has_unsplash_access_key() ? 'ok' : 'warning',
+									'status' => $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+									'note'   => __( 'Image-source candidates preserve attribution and download tracking metadata.', 'magick-ai-toolbox' ),
+								),
+								array(
+									'label'  => __( 'Pixabay / Pexels', 'magick-ai-toolbox' ),
+									'state'  => 'inactive',
+									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
+									'note'   => __( 'Reserved as public image-source connectors, not AI image generation providers.', 'magick-ai-toolbox' ),
+								),
+							)
+						);
+						?>
 
-					<label class="magick-ai-toolbox__check">
-						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_qdrant_api_key]" value="1" />
-						<span><?php esc_html_e( 'Clear stored Qdrant key', 'magick-ai-toolbox' ); ?></span>
-					</label>
-				</div>
-			</details>
+						<label>
+							<span><?php esc_html_e( 'Unsplash access key', 'magick-ai-toolbox' ); ?></span>
+							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_access_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_unsplash_access_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Unsplash access key', 'magick-ai-toolbox' ) ); ?>" />
+						</label>
 
-			<details class="magick-ai-toolbox__disclosure" <?php echo $siliconflow_open || $jina_open ? 'open' : ''; ?>>
-				<summary>
-					<span><?php esc_html_e( 'Query embedding', 'magick-ai-toolbox' ); ?></span>
-					<small><?php echo esc_html( sprintf( /* translators: %s: selected embedding provider. */ __( 'Selected: %s', 'magick-ai-toolbox' ), 'jina' === (string) $settings['embedding_provider'] ? __( 'Jina AI', 'magick-ai-toolbox' ) : __( 'SiliconFlow', 'magick-ai-toolbox' ) ) ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<label>
-						<span><?php esc_html_e( 'Embedding provider', 'magick-ai-toolbox' ); ?></span>
-						<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_provider]">
-							<option value="siliconflow" <?php selected( (string) $settings['embedding_provider'], 'siliconflow' ); ?>><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></option>
-							<option value="jina" <?php selected( (string) $settings['embedding_provider'], 'jina' ); ?>><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></option>
-						</select>
-					</label>
+						<label>
+							<span><?php esc_html_e( 'Unsplash app name', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_utm_source]" value="<?php echo esc_attr( (string) $settings['unsplash_utm_source'] ); ?>" />
+						</label>
+					</section>
 
-					<label>
-						<span><?php esc_html_e( 'Embedding dimensions', 'magick-ai-toolbox' ); ?></span>
-						<input type="number" min="1" max="4096" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_dimensions]" value="<?php echo esc_attr( (string) $settings['embedding_dimensions'] ); ?>" />
-					</label>
+					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="vector" hidden>
+						<h2><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Qdrant stores and queries vectors. SiliconFlow or Jina AI creates a synchronous query embedding for vector search; Toolbox does not own indexing or collection lifecycle.', 'magick-ai-toolbox' ); ?></p>
 
-					<div class="magick-ai-toolbox__split">
-						<div>
-							<h3><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></h3>
-							<label>
-								<span><?php esc_html_e( 'SiliconFlow API key', 'magick-ai-toolbox' ); ?></span>
-								<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_siliconflow_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'SiliconFlow API key', 'magick-ai-toolbox' ) ); ?>" />
-							</label>
-							<label>
-								<span><?php esc_html_e( 'SiliconFlow base URL', 'magick-ai-toolbox' ); ?></span>
-								<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_base_url]" value="<?php echo esc_attr( (string) $settings['siliconflow_base_url'] ); ?>" placeholder="https://api.siliconflow.com/v1" />
-							</label>
-							<label>
-								<span><?php esc_html_e( 'SiliconFlow embedding model', 'magick-ai-toolbox' ); ?></span>
-								<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_model]" value="<?php echo esc_attr( (string) $settings['siliconflow_model'] ); ?>" placeholder="BAAI/bge-m3" />
-							</label>
-							<label class="magick-ai-toolbox__check">
-								<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_siliconflow_api_key]" value="1" />
-								<span><?php esc_html_e( 'Clear stored SiliconFlow key', 'magick-ai-toolbox' ); ?></span>
-							</label>
+						<?php
+						$this->render_connector_status_catalog(
+							array(
+								array(
+									'label'  => __( 'Qdrant', 'magick-ai-toolbox' ),
+									'state'  => $this->settings->has_qdrant_connection() ? 'ok' : 'warning',
+									'status' => $this->settings->has_qdrant_connection() ? __( 'Endpoint and collection selected', 'magick-ai-toolbox' ) : __( 'Needs endpoint and collection', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+									'note'   => __( 'Queries an existing collection only; indexing and collection lifecycle stay out of Toolbox.', 'magick-ai-toolbox' ),
+								),
+								array(
+									'label'  => __( 'SiliconFlow / Jina AI', 'magick-ai-toolbox' ),
+									'state'  => $embedding_ready ? 'ok' : 'warning',
+									'status' => $embedding_ready ? __( 'Selected embedding ready', 'magick-ai-toolbox' ) : __( 'Selected embedding key needed', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+									'note'   => __( 'Creates one synchronous query embedding for vector search; it does not index WordPress content.', 'magick-ai-toolbox' ),
+								),
+								array(
+									'label'  => __( 'Pinecone / Weaviate', 'magick-ai-toolbox' ),
+									'state'  => 'inactive',
+									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
+									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
+									'note'   => __( 'Reserved vector database slots; runtime support needs a later contract.', 'magick-ai-toolbox' ),
+								),
+							)
+						);
+						?>
+
+						<div class="magick-ai-toolbox__example">
+							<strong><?php esc_html_e( 'Jina test setup', 'magick-ai-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Choose Jina AI as the embedding provider, use https://api.jina.ai/v1 as the base URL, keep jina-embeddings-v3 for the model, then fill Qdrant endpoint and collection before trying Vector Search.', 'magick-ai-toolbox' ); ?></span>
 						</div>
 
-						<div>
-							<h3><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></h3>
-							<label>
-								<span><?php esc_html_e( 'Jina AI API key', 'magick-ai-toolbox' ); ?></span>
-								<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_jina_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Jina AI API key', 'magick-ai-toolbox' ) ); ?>" />
-							</label>
-							<label>
-								<span><?php esc_html_e( 'Jina AI base URL', 'magick-ai-toolbox' ); ?></span>
-								<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_base_url]" value="<?php echo esc_attr( (string) $settings['jina_base_url'] ); ?>" placeholder="https://api.jina.ai/v1" />
-							</label>
-							<label>
-								<span><?php esc_html_e( 'Jina AI embedding model', 'magick-ai-toolbox' ); ?></span>
-								<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_model]" value="<?php echo esc_attr( (string) $settings['jina_model'] ); ?>" placeholder="jina-embeddings-v3" />
-							</label>
-							<label class="magick-ai-toolbox__check">
-								<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_jina_api_key]" value="1" />
-								<span><?php esc_html_e( 'Clear stored Jina AI key', 'magick-ai-toolbox' ); ?></span>
-							</label>
+						<label>
+							<span><?php esc_html_e( 'Qdrant endpoint', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_endpoint]" value="<?php echo esc_attr( (string) $settings['qdrant_endpoint'] ); ?>" placeholder="https://example.qdrant.io" />
+						</label>
+
+						<label>
+							<span><?php esc_html_e( 'Qdrant collection', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_collection]" value="<?php echo esc_attr( (string) $settings['qdrant_collection'] ); ?>" />
+						</label>
+
+						<label>
+							<span><?php esc_html_e( 'Qdrant vector name', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_vector_name]" value="<?php echo esc_attr( (string) $settings['qdrant_vector_name'] ); ?>" />
+						</label>
+
+						<label>
+							<span><?php esc_html_e( 'Qdrant API key', 'magick-ai-toolbox' ); ?></span>
+							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( '' !== $this->settings->get_qdrant_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Optional for local Qdrant', 'magick-ai-toolbox' ) ); ?>" />
+						</label>
+
+						<label>
+							<span><?php esc_html_e( 'Embedding provider', 'magick-ai-toolbox' ); ?></span>
+							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_provider]">
+								<option value="siliconflow" <?php selected( (string) $settings['embedding_provider'], 'siliconflow' ); ?>><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></option>
+								<option value="jina" <?php selected( (string) $settings['embedding_provider'], 'jina' ); ?>><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></option>
+							</select>
+						</label>
+
+						<label>
+							<span><?php esc_html_e( 'Embedding dimensions', 'magick-ai-toolbox' ); ?></span>
+							<input type="number" min="1" max="4096" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_dimensions]" value="<?php echo esc_attr( (string) $settings['embedding_dimensions'] ); ?>" />
+						</label>
+
+						<div class="magick-ai-toolbox__split">
+							<div>
+								<h3><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></h3>
+								<label>
+									<span><?php esc_html_e( 'SiliconFlow API key', 'magick-ai-toolbox' ); ?></span>
+									<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_siliconflow_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'SiliconFlow API key', 'magick-ai-toolbox' ) ); ?>" />
+								</label>
+								<label>
+									<span><?php esc_html_e( 'SiliconFlow base URL', 'magick-ai-toolbox' ); ?></span>
+									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_base_url]" value="<?php echo esc_attr( (string) $settings['siliconflow_base_url'] ); ?>" placeholder="https://api.siliconflow.com/v1" />
+								</label>
+								<label>
+									<span><?php esc_html_e( 'SiliconFlow embedding model', 'magick-ai-toolbox' ); ?></span>
+									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_model]" value="<?php echo esc_attr( (string) $settings['siliconflow_model'] ); ?>" placeholder="BAAI/bge-m3" />
+								</label>
+							</div>
+
+							<div>
+								<h3><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></h3>
+								<label>
+									<span><?php esc_html_e( 'Jina AI API key', 'magick-ai-toolbox' ); ?></span>
+									<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_jina_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Jina AI API key', 'magick-ai-toolbox' ) ); ?>" />
+								</label>
+								<label>
+									<span><?php esc_html_e( 'Jina AI base URL', 'magick-ai-toolbox' ); ?></span>
+									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_base_url]" value="<?php echo esc_attr( (string) $settings['jina_base_url'] ); ?>" placeholder="https://api.jina.ai/v1" />
+								</label>
+								<label>
+									<span><?php esc_html_e( 'Jina AI embedding model', 'magick-ai-toolbox' ); ?></span>
+									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_model]" value="<?php echo esc_attr( (string) $settings['jina_model'] ); ?>" placeholder="jina-embeddings-v3" />
+								</label>
+							</div>
 						</div>
-					</div>
+					</section>
 				</div>
-			</details>
+			</div>
 
 			<details class="magick-ai-toolbox__disclosure">
 				<summary>
-					<span><?php esc_html_e( 'Runtime toggles and debug', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Feature visibility and raw response output', 'magick-ai-toolbox' ); ?></small>
+					<span><?php esc_html_e( 'Advanced / Debug', 'magick-ai-toolbox' ); ?></span>
+					<small><?php esc_html_e( 'Feature toggles, raw response output, and key clearing', 'magick-ai-toolbox' ); ?></small>
 				</summary>
 				<div class="magick-ai-toolbox__disclosure-body">
 					<?php $this->render_checkbox( 'enable_web_research', __( 'Web research', 'magick-ai-toolbox' ), $settings ); ?>
 					<?php $this->render_checkbox( 'enable_image_source', __( 'Image source search', 'magick-ai-toolbox' ), $settings ); ?>
 					<?php $this->render_checkbox( 'enable_vector_search', __( 'Vector search', 'magick-ai-toolbox' ), $settings ); ?>
 					<?php $this->render_checkbox( 'include_raw_responses', __( 'Include provider raw responses', 'magick-ai-toolbox' ), $settings ); ?>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_tavily_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Tavily key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_unsplash_access_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Unsplash key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_qdrant_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Qdrant key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_siliconflow_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored SiliconFlow key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_jina_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Jina AI key', 'magick-ai-toolbox' ); ?></span>
+					</label>
 				</div>
 			</details>
 
 			<?php submit_button( __( 'Save settings', 'magick-ai-toolbox' ) ); ?>
 		</form>
+		<?php
+	}
+
+	private function render_connector_status_catalog( array $rows ): void {
+		?>
+		<dl class="magick-ai-toolbox__connector-status" aria-label="<?php esc_attr_e( 'Connector status catalog', 'magick-ai-toolbox' ); ?>">
+			<?php foreach ( $rows as $row ) : ?>
+				<div class="magick-ai-toolbox__connector-status-row is-<?php echo esc_attr( (string) $row['state'] ); ?>">
+					<dt>
+						<span><?php echo esc_html( (string) $row['label'] ); ?></span>
+						<small><?php echo esc_html( (string) $row['owner'] ); ?></small>
+					</dt>
+					<dd>
+						<strong><?php echo esc_html( (string) $row['status'] ); ?></strong>
+						<span><?php echo esc_html( (string) $row['note'] ); ?></span>
+					</dd>
+				</div>
+			<?php endforeach; ?>
+		</dl>
 		<?php
 	}
 

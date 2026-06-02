@@ -241,6 +241,48 @@
 	color: #1d2327;
 }
 
+.magick-ai-toolbox__connector-status {
+	display: grid;
+	gap: 8px;
+	margin: 12px 0 4px;
+}
+
+.magick-ai-toolbox__connector-status-row {
+	display: grid;
+	grid-template-columns: minmax(160px, 0.5fr) minmax(0, 1fr);
+	gap: 12px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #8c8f94;
+}
+
+.magick-ai-toolbox__connector-status-row.is-ok {
+	border-left-color: #00a32a;
+}
+
+.magick-ai-toolbox__connector-status-row.is-warning {
+	border-left-color: #dba617;
+}
+
+.magick-ai-toolbox__connector-status-row dt,
+.magick-ai-toolbox__connector-status-row dd {
+	display: grid;
+	gap: 3px;
+	margin: 0;
+}
+
+.magick-ai-toolbox__connector-status-row dt span,
+.magick-ai-toolbox__connector-status-row dd strong {
+	font-weight: 600;
+}
+
+.magick-ai-toolbox__connector-status-row dt small,
+.magick-ai-toolbox__connector-status-row dd span {
+	color: #646970;
+	line-height: 1.35;
+}
+
 .magick-ai-toolbox label {
 	display: block;
 	margin: 12px 0 0;
@@ -505,6 +547,10 @@ pre.magick-ai-toolbox__result {
 	}
 
 	.magick-ai-toolbox__check-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.magick-ai-toolbox__connector-status-row {
 		grid-template-columns: 1fr;
 	}
 

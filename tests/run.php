@@ -29,6 +29,15 @@ toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tabs' ), 'Admin pag
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="context" aria-selected="true"' ), 'Content Context is the default admin tab.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="tools" aria-selected="false"' ) && false !== strpos( $admin_page, 'Try Tools' ), 'Tool execution is a secondary Try Tools tab.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-panel="connectors"' ), 'Connector settings are moved out of the default tools view.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connectors' ) && false !== strpos( $admin_page, 'data-toolbox-connector-panel' ), 'Connector settings use a single active connector workspace.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="search" aria-selected="true"' ), 'Search is the default connector section.' );
+toolbox_assert( strpos( $admin_page, 'data-toolbox-connector-target="search"' ) < strpos( $admin_page, 'data-toolbox-connector-target="image"' ) && strpos( $admin_page, 'data-toolbox-connector-target="image"' ) < strpos( $admin_page, 'data-toolbox-connector-target="vector"' ), 'Connector sections are ordered Search, Image, Vector.' );
+toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__connector-status' ) && false !== strpos( $admin_page, 'Connector status catalog' ), 'Connector panels expose a read-only status catalog.' );
+toolbox_assert( false !== strpos( $admin_page, 'Local MVP config' ) && false !== strpos( $admin_page, 'Future connector owner' ), 'Connector status catalog separates local MVP config from future connector ownership.' );
+toolbox_assert( false !== strpos( $admin_page, 'Pixabay / Pexels' ) && false !== strpos( $admin_page, 'Pinecone / Weaviate' ), 'Reserved providers stay visible as future connector slots.' );
+toolbox_assert( false !== strpos( $admin_page, 'does not index WordPress content' ) && false !== strpos( $admin_page, 'not AI image generation providers' ), 'Connector catalog copy preserves image-source and vector-indexing boundaries.' );
+toolbox_assert( false !== strpos( $admin_page, 'Jina test setup' ) && false !== strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector includes Jina AI test setup guidance.' );
+toolbox_assert( false !== strpos( $admin_page, 'Advanced / Debug' ) && false !== strpos( $admin_page, 'Clear stored Jina AI key' ), 'Connector key clearing and debug toggles are moved to an advanced area.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tools' ) && false !== strpos( $admin_page, 'data-toolbox-tool-panel' ), 'Tool actions use a single active tool workspace instead of a card matrix.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__disclosure' ) && false !== strpos( $admin_page, 'Ability preview' ), 'Content context and connector detail use disclosures for lower-frequency details.' );
 toolbox_assert( false !== strpos( $admin_page, '<div class="magick-ai-toolbox__result is-empty"' ), 'Tool result panels use structured result containers instead of raw preformatted output.' );
@@ -41,6 +50,7 @@ toolbox_assert( false !== strpos( $admin_page, 'JSON_UNESCAPED_UNICODE' ), 'Cont
 
 $admin_js = file_get_contents( $root . '/assets/admin.js' );
 toolbox_assert( false !== strpos( $admin_js, 'initTopTabs' ) && false !== strpos( $admin_js, 'initToolSwitcher' ), 'Admin JavaScript initializes section tabs and tool switching.' );
+toolbox_assert( false !== strpos( $admin_js, 'initConnectorSwitcher' ), 'Admin JavaScript initializes connector section switching.' );
 toolbox_assert( false !== strpos( $admin_js, "result.hidden = false" ), 'Tool results stay hidden until a tool returns output.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderStructuredResult' ) && false !== strpos( $admin_js, 'renderShell' ), 'Admin JavaScript renders tool results through a summary-first structured renderer.' );
 toolbox_assert( false !== strpos( $admin_js, 'createRawDetails' ) && false !== strpos( $admin_js, 'Complete payload' ), 'Complete payload output is moved behind a result disclosure.' );
@@ -61,8 +71,35 @@ toolbox_assert( false !== strpos( $plugin, 'register_with_magick_ai_abilities' )
 toolbox_assert( false === strpos( $plugin, '$this->abilities->register_with_magick_ai_abilities();' ), 'Helper ability registration is not executed during plugin hook setup.' );
 
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
-foreach ( array( '/web-research', '/image-candidates', '/vector-search', '/knowledge-search', '/flows/article-brief', '/flows/media-brief' ) as $route ) {
-	toolbox_assert( false !== strpos( $rest, $route ), "REST route {$route} is registered." );
+$allowed_rest_routes = array(
+	'/status',
+	'/web-research',
+	'/image-candidates',
+	'/vector-search',
+	'/knowledge-search',
+	'/flows/article-brief',
+	'/flows/media-brief',
+);
+preg_match_all( "/\\\$this->post\\(\\s*'([^']+)'/", $rest, $post_route_matches );
+preg_match_all( "/register_rest_route\\(\\s*Plugin::REST_NAMESPACE\\s*,\\s*'([^']+)'/s", $rest, $direct_route_matches );
+$registered_rest_routes = array_values(
+	array_unique(
+		array_merge(
+			$post_route_matches[1] ?? array(),
+			$direct_route_matches[1] ?? array()
+		)
+	)
+);
+sort( $allowed_rest_routes );
+sort( $registered_rest_routes );
+toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route matrix exactly matches the first-version allowed routes.' );
+toolbox_assert( false !== strpos( $rest, "'methods'             => 'GET'" ) && false !== strpos( $rest, "private function post( string \$route, string \$method ): void" ) && false !== strpos( $rest, "'methods'             => 'POST'" ), 'REST route matrix keeps status as GET and tool actions as POST.' );
+foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue', 'scheduler', 'approval', 'approve', 'confirm', 'write', 'featured-image', 'media-upload', 'media-import', 'seo' ) as $forbidden_fragment ) {
+	$has_forbidden_route = false;
+	foreach ( $registered_rest_routes as $route ) {
+		$has_forbidden_route = $has_forbidden_route || str_contains( $route, $forbidden_fragment );
+	}
+	toolbox_assert( ! $has_forbidden_route, "REST route matrix excludes forbidden route fragment {$forbidden_fragment}." );
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
@@ -123,6 +160,16 @@ toolbox_assert( false !== strpos( $readme, 'Pinecone and Weaviate' ), 'Pinecone 
 toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'README links the connector ability exposure contract.' );
 toolbox_assert( false !== strpos( $readme, 'Content Discoverability Context' ), 'README links the content context contract.' );
 toolbox_assert( false !== strpos( $readme, 'Content Assistant Surface Lessons' ), 'README links the Content Assistant surface lessons contract.' );
+
+$boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
+toolbox_assert( false !== $boundary_doc && false !== strpos( $boundary_doc, 'REST Route Boundary' ) && false !== strpos( $boundary_doc, 'Connector Status Catalog' ), 'Boundary documentation records route and connector status catalog limits.' );
+toolbox_assert( false !== strpos( $boundary_doc, 'publishing, delivery, workflow runs, queues' ) && false !== strpos( $boundary_doc, 'SEO mutation, content indexing, or re-indexing' ), 'Boundary documentation blocks write/runtime/indexing routes.' );
+
+$architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
+toolbox_assert( false !== $architecture_doc && false !== strpos( $architecture_doc, 'static matrix in' ) && false !== strpos( $architecture_doc, 'Future connector owner' ), 'Architecture documentation records the route matrix and connector owner split.' );
+
+$first_version_doc = file_get_contents( $root . '/docs/first-version-reference.md' );
+toolbox_assert( false !== $first_version_doc && false !== strpos( $first_version_doc, 'REST Route Matrix' ) && false !== strpos( $first_version_doc, 'Connector settings now include a compact status catalog' ), 'First-version reference captures route matrix and connector status catalog guidance.' );
 
 $connector_exposure_doc = file_get_contents( $root . '/docs/connector-ability-exposure.md' );
 toolbox_assert( false !== $connector_exposure_doc && false !== strpos( $connector_exposure_doc, 'provider_secret_exposure: none' ), 'Connector exposure documentation records secret non-exposure.' );

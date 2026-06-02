@@ -36,6 +36,26 @@ First-version write posture:
    exposing provider keys to AI callers.
 5. Use WordPress abilities and Core proposals for final WordPress writes.
 
+## REST Route Boundary
+
+The first-version REST surface is an allowlist, not an open namespace. Allowed
+routes are limited to status, bounded provider-backed tool actions, and fixed
+planning flows:
+
+- `/status`
+- `/web-research`
+- `/image-candidates`
+- `/vector-search`
+- `/knowledge-search`
+- `/flows/article-brief`
+- `/flows/media-brief`
+
+Do not add Toolbox REST routes for publishing, delivery, workflow runs, queues,
+schedulers, approvals, write confirmation, featured image setting, media
+upload/import, SEO mutation, content indexing, or re-indexing without a new
+boundary decision. Write-like outcomes must be prepared as suggestions or Core
+proposal handoffs, not executed by Toolbox.
+
 ## Content Context Boundary
 
 Toolbox may store the non-secret `magick_ai_toolbox_content_context` option and
@@ -88,3 +108,17 @@ or vector collection lifecycle management.
 Jina Reader and Jina Reranker are reserved for future workflow-level source
 extraction and candidate reranking. They are not part of the first runtime
 surface.
+
+## Connector Status Catalog
+
+The local connector settings page may show a compact read-only status catalog
+for current and reserved providers. Its job is to identify:
+
+- whether the current MVP connector is configured;
+- whether the owner is `Local MVP config` or a `Future connector owner`;
+- whether a provider is active, missing local setup, or reserved only;
+- what boundary applies to the provider output.
+
+The catalog must not become provider billing, quota, key-rotation, request-log,
+or marketplace ownership. Those are future connector-owner concerns, not the
+Toolbox MVP settings surface.
