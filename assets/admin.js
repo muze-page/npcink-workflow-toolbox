@@ -262,6 +262,30 @@
 		container.appendChild(section);
 	}
 
+	function renderArtifactSummary(container, title, artifact) {
+		if (!artifact || typeof artifact !== 'object') {
+			return;
+		}
+
+		const section = createSection(title);
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		Object.keys(artifact).slice(0, 4).forEach((key) => {
+			const value = artifact[key];
+			if (Array.isArray(value)) {
+				appendMeta(meta, formatLabel(key), value.length + ' item' + (value.length === 1 ? '' : 's'));
+			} else if (value && typeof value === 'object') {
+				appendMeta(meta, formatLabel(key), 'Included');
+			} else {
+				appendMeta(meta, formatLabel(key), truncate(value, 80));
+			}
+		});
+		if (meta.childNodes.length) {
+			section.appendChild(meta);
+		}
+		section.appendChild(createRawDetails(artifact, title + ' payload'));
+		container.appendChild(section);
+	}
+
 	function renderTavily(form, payload) {
 		const count = Array.isArray(payload.results) ? payload.results.length : 0;
 		const result = renderShell(
@@ -356,6 +380,49 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
+	function renderArticlePlan(form, payload) {
+		const risk = payload.article_risk_report || {};
+		const ready = risk.ready_for_proposal === true;
+		const action = Array.isArray(payload.write_actions) ? payload.write_actions[0] || {} : {};
+		const actionInput = action.input || {};
+		const result = renderShell(
+			form,
+			payload,
+			'Article write plan',
+			ready
+				? 'Core-ready planning artifact. Review it, then hand it to Core from-plan intake for approval.'
+				: 'Plan is not ready for Core proposal intake. Review risk and blocked claims before handoff.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Artifact', payload.artifact_type);
+		appendMeta(meta, 'Batch', payload.batch_id);
+		appendMeta(meta, 'Risk', risk.risk_level ? formatLabel(risk.risk_level) : '');
+		appendMeta(meta, 'Ready', ready ? 'Yes' : 'No');
+		appendMeta(meta, 'Final ability', action.target_ability_id);
+		appendMeta(meta, 'Post status', actionInput.status);
+		result.appendChild(meta);
+
+		if (Array.isArray(risk.blocked_claims) && risk.blocked_claims.length) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', 'Blocked claims must be resolved before Core handoff.'));
+		}
+		if (risk.risk_level === 'high') {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'High-risk plans are expected to fail Core proposal intake until revised.'));
+		}
+
+		renderArtifactSummary(result, 'Goal brief', payload.article_goal_brief);
+		renderArtifactSummary(result, 'Evidence pack', payload.research_evidence_pack);
+		renderArtifactSummary(result, 'Outline', payload.article_outline);
+		renderArtifactSummary(result, 'Draft candidate', payload.article_draft_candidate);
+		renderArtifactSummary(result, 'Discoverability', payload.discoverability_pack);
+		renderArtifactSummary(result, 'Risk report', risk);
+		renderHandoff(result, payload.handoff);
+		result.appendChild(createRawDetails(payload, 'Complete payload'));
+	}
+
 	function renderStructuredResult(form, payload) {
 		if (typeof payload === 'string') {
 			renderTextResult(form, payload, 'pending');
@@ -379,6 +446,11 @@
 
 		if (payload.provider === 'qdrant') {
 			renderQdrant(form, payload);
+			return;
+		}
+
+		if (payload.artifact_type === 'article_write_plan') {
+			renderArticlePlan(form, payload);
 			return;
 		}
 

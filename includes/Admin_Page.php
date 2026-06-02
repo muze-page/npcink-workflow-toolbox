@@ -763,6 +763,13 @@ final class Admin_Page {
 				'button'      => __( 'Build brief', 'magick-ai-toolbox' ),
 			),
 			array(
+				'id'          => 'article-plan',
+				'endpoint'    => 'flows/article-plan',
+				'title'       => __( 'Article Write Plan', 'magick-ai-toolbox' ),
+				'description' => __( 'Prepare a Core-ready article_write_plan for one reviewed draft. Toolbox does not submit or approve the proposal.', 'magick-ai-toolbox' ),
+				'custom'      => 'article_plan',
+			),
+			array(
 				'id'          => 'media-brief',
 				'endpoint'    => 'flows/media-brief',
 				'title'       => __( 'Media Brief', 'magick-ai-toolbox' ),
@@ -839,6 +846,17 @@ final class Admin_Page {
 			<div class="magick-ai-toolbox__tool-panels">
 				<?php
 				foreach ( $tools as $index => $tool ) {
+					if ( 'article_plan' === (string) ( $tool['custom'] ?? '' ) ) {
+						$this->render_article_plan_tool(
+							(string) $tool['endpoint'],
+							(string) $tool['title'],
+							(string) $tool['description'],
+							(string) $tool['id'],
+							0 === $index
+						);
+						continue;
+					}
+
 					$this->render_text_tool(
 						(string) $tool['endpoint'],
 						(string) $tool['title'],
@@ -854,6 +872,51 @@ final class Admin_Page {
 				?>
 			</div>
 		</div>
+		<?php
+	}
+
+	private function render_article_plan_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
+		?>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<h2><?php echo esc_html( $title ); ?></h2>
+			<p><?php echo esc_html( $description ); ?></p>
+			<div class="magick-ai-toolbox__example">
+				<strong><?php esc_html_e( 'Handoff', 'magick-ai-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Review the returned artifact, then send it to Core through Adapter or Core from-plan intake. Final execution remains magick-ai/create-draft after Core approval.', 'magick-ai-toolbox' ); ?></span>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Reviewed draft title', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Working article title', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Reviewed draft body', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="content_markdown" rows="8" placeholder="<?php esc_attr_e( 'Paste the reviewed draft body. This creates a plan only, not a post.', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Topic', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="topic" placeholder="<?php esc_attr_e( 'Optional topic label', 'magick-ai-toolbox' ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Risk level', 'magick-ai-toolbox' ); ?></span>
+					<select name="risk_level">
+						<option value="low"><?php esc_html_e( 'Low', 'magick-ai-toolbox' ); ?></option>
+						<option value="medium"><?php esc_html_e( 'Medium', 'magick-ai-toolbox' ); ?></option>
+						<option value="high"><?php esc_html_e( 'High', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'SEO title', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="seo_title" placeholder="<?php esc_attr_e( 'Optional proposal SEO title', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<label>
+				<span><?php esc_html_e( 'SEO description', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="seo_description" rows="2" placeholder="<?php esc_attr_e( 'Optional proposal SEO description', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build plan', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
 		<?php
 	}
 

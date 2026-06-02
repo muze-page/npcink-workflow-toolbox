@@ -39,6 +39,8 @@ toolbox_assert( false !== strpos( $admin_page, 'does not index WordPress content
 toolbox_assert( false !== strpos( $admin_page, 'Jina test setup' ) && false !== strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector includes Jina AI test setup guidance.' );
 toolbox_assert( false !== strpos( $admin_page, 'Advanced / Debug' ) && false !== strpos( $admin_page, 'Clear stored Jina AI key' ), 'Connector key clearing and debug toggles are moved to an advanced area.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tools' ) && false !== strpos( $admin_page, 'data-toolbox-tool-panel' ), 'Tool actions use a single active tool workspace instead of a card matrix.' );
+toolbox_assert( false !== strpos( $admin_page, 'Article Write Plan' ) && false !== strpos( $admin_page, 'render_article_plan_tool' ), 'Tool actions include a dedicated Article Write Plan panel.' );
+toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !== strpos( $admin_page, 'Final execution remains magick-ai/create-draft after Core approval.' ), 'Article Write Plan panel collects reviewed draft content and preserves Core handoff copy.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__disclosure' ) && false !== strpos( $admin_page, 'Ability preview' ), 'Content context and connector detail use disclosures for lower-frequency details.' );
 toolbox_assert( false !== strpos( $admin_page, '<div class="magick-ai-toolbox__result is-empty"' ), 'Tool result panels use structured result containers instead of raw preformatted output.' );
 toolbox_assert( false !== strpos( $admin_page, 'contextDrafts' ) && false !== strpos( $admin_page, 'get_ai_blog_context_template' ), 'Content context exposes an editable AI technology blog draft template.' );
@@ -57,6 +59,8 @@ toolbox_assert( false !== strpos( $admin_js, 'createRawDetails' ) && false !== s
 toolbox_assert( false !== strpos( $admin_js, 'Provider raw response' ), 'Provider raw responses are rendered only as disclosure details.' );
 toolbox_assert( false !== strpos( $admin_js, 'Download tracking' ) && false !== strpos( $admin_js, 'Attribution metadata' ), 'Image candidate rendering preserves Unsplash attribution and download tracking metadata.' );
 toolbox_assert( false !== strpos( $admin_js, 'Governed handoff' ) && false !== strpos( $admin_js, 'Core proposal required' ), 'Workflow result rendering keeps governed handoff guidance visible.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderArticlePlan' ) && false !== strpos( $admin_js, "payload.artifact_type === 'article_write_plan'" ), 'Admin JavaScript renders article write plans through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'Goal brief' ) && false !== strpos( $admin_js, 'Risk report' ) && false !== strpos( $admin_js, 'Final ability' ), 'Article write plan renderer shows artifacts, risk, and final ability summary.' );
 toolbox_assert( false === strpos( $admin_js, 'result.textContent = JSON.stringify(value, null, 2)' ), 'Tool results do not default to raw JSON in the main result surface.' );
 toolbox_assert( false !== strpos( $admin_js, 'initContextDrafts' ) && false !== strpos( $admin_js, 'applyContextDraft' ), 'Admin JavaScript can prefill editable content context drafts.' );
 toolbox_assert( false !== strpos( $admin_js, 'clearContextForm' ), 'Admin JavaScript can clear the content context form before a new draft.' );
@@ -175,6 +179,7 @@ toolbox_assert( false !== strpos( $boundary_doc, 'publishing, delivery, workflow
 
 $architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
 toolbox_assert( false !== $architecture_doc && false !== strpos( $architecture_doc, 'static matrix in' ) && false !== strpos( $architecture_doc, 'Future connector owner' ), 'Architecture documentation records the route matrix and connector owner split.' );
+toolbox_assert( false !== strpos( $architecture_doc, 'Article Write Plan' ) && false !== strpos( $architecture_doc, 'submit the plan to Core' ) && false !== strpos( $architecture_doc, 'approve execution' ), 'Architecture documentation records the article plan UI boundary.' );
 
 $first_version_doc = file_get_contents( $root . '/docs/first-version-reference.md' );
 toolbox_assert( false !== $first_version_doc && false !== strpos( $first_version_doc, 'REST Route Matrix' ) && false !== strpos( $first_version_doc, 'Connector settings now include a compact status catalog' ), 'First-version reference captures route matrix and connector status catalog guidance.' );

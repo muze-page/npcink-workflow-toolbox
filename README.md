@@ -104,6 +104,9 @@ require Core proposal approval.
 The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
+The admin **Try Tools** surface includes an **Article Write Plan** panel that
+renders the plan artifacts, risk report, final `magick-ai/create-draft` action,
+and Core handoff route for operator review.
 
 ## Connector Configuration
 
