@@ -55,6 +55,7 @@ Goal: connect useful suggestions to governed WordPress changes.
 Target features:
 
 - create draft proposal handoff;
+- article write plan artifact for one reviewed draft;
 - set featured image proposal handoff;
 - update media metadata proposal handoff;
 - set SEO meta proposal handoff;

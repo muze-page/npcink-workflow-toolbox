@@ -55,6 +55,7 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/magick-ai-toolbox/v1/vector-search`
 - `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-brief`
+- `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
 
 ## Abilities
@@ -69,6 +70,7 @@ When the WordPress Abilities API is available, Toolbox registers:
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/build-article-brief`
+- `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 
@@ -98,6 +100,10 @@ The context is exposed only as read-only, suggestion-only guidance through
 `magick-ai-toolbox/get-content-discoverability-context`. Third-party AI callers
 may use it to prepare SEO/AEO/GEO suggestions, but final WordPress writes still
 require Core proposal approval.
+
+The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
+assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
+call Core, approve proposals, publish content, or write WordPress data.
 
 ## Connector Configuration
 

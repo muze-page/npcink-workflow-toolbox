@@ -274,6 +274,107 @@ final class Provider_Client {
 		);
 	}
 
+	public function build_article_write_plan( array $input ) {
+		$title   = trim( sanitize_text_field( (string) ( $input['title'] ?? '' ) ) );
+		$content = trim( sanitize_textarea_field( (string) ( $input['content_markdown'] ?? ( $input['content'] ?? '' ) ) ) );
+		if ( '' === $title || '' === $content ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_article_plan_input',
+				__( 'A title and content_markdown are required to build an article write plan.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$topic   = trim( sanitize_text_field( (string) ( $input['topic'] ?? $title ) ) );
+		$context = $this->settings->get_content_context_for_ability();
+		$forbidden_claims = $this->sanitize_string_list( $context['claims']['forbidden'] ?? array() );
+		$blocked_claims = $this->sanitize_string_list( $input['blocked_claims'] ?? array() );
+		foreach ( $forbidden_claims as $claim ) {
+			if ( '' !== $claim && false !== stripos( $content, $claim ) ) {
+				$blocked_claims[] = $claim;
+			}
+		}
+		$blocked_claims = array_values( array_unique( array_filter( $blocked_claims ) ) );
+
+		$risk_level = sanitize_key( (string) ( $input['risk_level'] ?? ( empty( $blocked_claims ) ? 'low' : 'high' ) ) );
+		if ( ! in_array( $risk_level, array( 'low', 'medium', 'high' ), true ) ) {
+			$risk_level = 'medium';
+		}
+		$ready_for_proposal = empty( $blocked_claims ) && 'high' !== $risk_level;
+
+		$goal_brief = is_array( $input['article_goal_brief'] ?? null ) ? $this->sanitize_payload( $input['article_goal_brief'] ) : array(
+			'topic'           => $topic,
+			'target_audience' => $this->sanitize_payload( $context['target_audience'] ?? array() ),
+			'brand_voice'     => sanitize_textarea_field( (string) ( $context['brand_voice'] ?? '' ) ),
+		);
+		$evidence_pack = is_array( $input['research_evidence_pack'] ?? null ) ? $this->sanitize_payload( $input['research_evidence_pack'] ) : array(
+			'sources' => is_array( $input['sources'] ?? null ) ? $this->sanitize_payload( $input['sources'] ) : array(),
+		);
+		$outline = is_array( $input['article_outline'] ?? null ) ? $this->sanitize_payload( $input['article_outline'] ) : array(
+			'title'    => $title,
+			'sections' => array(),
+		);
+		$draft_candidate = is_array( $input['article_draft_candidate'] ?? null ) ? $this->sanitize_payload( $input['article_draft_candidate'] ) : array(
+			'content_markdown'  => $content,
+			'used_sources'      => $this->sanitize_string_list( $input['used_sources'] ?? array() ),
+			'unverified_claims' => $this->sanitize_string_list( $input['unverified_claims'] ?? array() ),
+			'needs_human_input' => $this->sanitize_string_list( $input['needs_human_input'] ?? array() ),
+		);
+		$discoverability_pack = is_array( $input['discoverability_pack'] ?? null ) ? $this->sanitize_payload( $input['discoverability_pack'] ) : array(
+			'seo_title'       => sanitize_text_field( (string) ( $input['seo_title'] ?? $title ) ),
+			'seo_description' => sanitize_textarea_field( (string) ( $input['seo_description'] ?? wp_trim_words( wp_strip_all_tags( $content ), 24, '' ) ) ),
+			'excerpt'         => sanitize_textarea_field( (string) ( $input['excerpt'] ?? wp_trim_words( wp_strip_all_tags( $content ), 35, '' ) ) ),
+		);
+
+		$risk_report = array(
+			'risk_level'         => $risk_level,
+			'blocked_claims'     => $blocked_claims,
+			'needs_review'       => $this->sanitize_string_list( $input['needs_review'] ?? array() ),
+			'ready_for_proposal' => $ready_for_proposal,
+		);
+
+		return array(
+			'artifact_type'          => 'article_write_plan',
+			'version'                => 1,
+			'batch_id'               => 'article_write_' . substr( md5( $title . '|' . $content ), 0, 12 ),
+			'requires_approval'      => true,
+			'dry_run'                => true,
+			'commit_execution'       => false,
+			'proposal_mode'          => 'single',
+			'article_goal_brief'     => $goal_brief,
+			'research_evidence_pack' => $evidence_pack,
+			'article_outline'        => $outline,
+			'article_draft_candidate' => $draft_candidate,
+			'discoverability_pack'   => $discoverability_pack,
+			'article_risk_report'    => $risk_report,
+			'write_actions'          => array(
+				array(
+					'action_id'         => 'create_article_draft',
+					'target_ability_id' => 'magick-ai/create-draft',
+					'input'             => array(
+						'title'   => $title,
+						'content' => $content,
+						'excerpt' => (string) ( $discoverability_pack['excerpt'] ?? '' ),
+						'status'  => 'draft',
+						'dry_run' => true,
+						'commit'  => false,
+					),
+					'risk'              => 'medium',
+					'requires_approval' => true,
+					'commit_execution'  => false,
+					'proposal_ready'    => $ready_for_proposal,
+					'reason'            => __( 'Create a reviewed AI-assisted article draft through Core governance.', 'magick-ai-toolbox' ),
+				),
+			),
+			'handoff'                => array(
+				'plan_ability_id'        => 'magick-ai-toolbox/build-article-write-plan',
+				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+			),
+		);
+	}
+
 	public function build_media_brief( string $post_context ) {
 		return $this->image_candidates( $this->post_context_to_image_query( $post_context ), array( 'per_page' => 8 ) );
 	}
@@ -514,6 +615,36 @@ final class Provider_Client {
 		}
 
 		return $payload;
+	}
+
+	private function sanitize_string_list( $value ): array {
+		$items = is_array( $value ) ? $value : array_filter( array_map( 'trim', explode( "\n", (string) $value ) ) );
+		return array_values(
+			array_filter(
+				array_map(
+					static fn( $item ): string => sanitize_textarea_field( (string) $item ),
+					$items
+				),
+				static fn( string $item ): bool => '' !== $item
+			)
+		);
+	}
+
+	private function sanitize_payload( $value ) {
+		if ( is_array( $value ) ) {
+			$sanitized = array();
+			foreach ( $value as $key => $child ) {
+				$sanitized[ is_string( $key ) ? sanitize_key( $key ) : $key ] = $this->sanitize_payload( $child );
+			}
+
+			return $sanitized;
+		}
+
+		if ( is_bool( $value ) || is_int( $value ) || is_float( $value ) || null === $value ) {
+			return $value;
+		}
+
+		return sanitize_textarea_field( (string) $value );
 	}
 
 	private function post_context_to_image_query( string $post_context ): string {

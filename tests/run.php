@@ -78,6 +78,7 @@ $allowed_rest_routes = array(
 	'/vector-search',
 	'/knowledge-search',
 	'/flows/article-brief',
+	'/flows/article-plan',
 	'/flows/media-brief',
 );
 preg_match_all( "/\\\$this->post\\(\\s*'([^']+)'/", $rest, $post_route_matches );
@@ -103,7 +104,7 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/get-content-discoverability-context' ) as $ability_id ) {
+foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/get-content-discoverability-context' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
 
@@ -120,6 +121,11 @@ toolbox_assert( false !== strpos( $client, 'with_optional_raw' ), 'Provider raw 
 toolbox_assert( false === strpos( $client, 'provider_body' ), 'Provider error responses do not expose raw provider bodies.' );
 toolbox_assert( false !== strpos( $client, "'write_posture' => 'suggestion_only'" ), 'Article brief handoff stays suggestion-only.' );
 toolbox_assert( false !== strpos( $client, 'Create WordPress draft or media proposals through Abilities/Core.' ), 'Article brief handoff points write-like actions to Abilities/Core.' );
+toolbox_assert( false !== strpos( $client, 'build_article_write_plan' ), 'Provider client can build Core-ready article write plans.' );
+toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_write_plan'" ), 'Article write plan declares the Core contract artifact type.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/create-draft'" ), 'Article write plan targets the governed create-draft ability.' );
+toolbox_assert( false !== strpos( $client, "'status'  => 'draft'" ), 'Article write plan is draft-only.' );
+toolbox_assert( false !== strpos( $client, "'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan'" ), 'Article write plan points to Core plan intake.' );
 
 $settings = file_get_contents( $root . '/includes/Settings.php' );
 toolbox_assert( false !== strpos( $settings, 'BAAI/bge-m3' ), 'SiliconFlow default embedding model is configured.' );
@@ -144,6 +150,8 @@ toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.vector_search' ), 'Ve
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.workflow_suggest' ), 'Workflow abilities expose the stable Toolbox workflow scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.context.read' ), 'Content context ability exposes a read scope.' );
 toolbox_assert( false !== strpos( $abilities, 'public_context' ), 'Content context ability declares public context classification.' );
+toolbox_assert( false !== strpos( $abilities, 'planning_artifact' ), 'Article write plan ability declares planning artifact classification.' );
+toolbox_assert( false !== strpos( $abilities, 'core_proposal_handoff' ), 'Article write plan ability declares Core proposal handoff posture.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_execution'       => 'server_side_toolbox'" ), 'Provider-backed abilities declare server-side execution.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_secret_exposure' => 'none'" ), 'Abilities declare that provider secrets are not exposed.' );
 toolbox_assert( false !== strpos( $abilities, "'final_write_path'         => 'core_proposal_required'" ), 'Abilities point write-like outcomes to Core proposals.' );

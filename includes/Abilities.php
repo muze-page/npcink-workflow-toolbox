@@ -94,6 +94,18 @@ final class Abilities {
 			'magick-ai-toolbox/search-image-source'                => $this->definition( __( 'Search Image Source', 'magick-ai-toolbox' ), __( 'Search configured image source candidates without importing media.', 'magick-ai-toolbox' ), array( 'query' ), array( $this, 'search_image_source' ), 'cap.toolbox.image_source' ),
 			'magick-ai-toolbox/vector-search'                      => $this->definition( __( 'Vector Search', 'magick-ai-toolbox' ), __( 'Query the configured vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ), array( 'query' ), array( $this, 'vector_search' ), 'cap.toolbox.vector_search' ),
 			'magick-ai-toolbox/build-article-brief'                => $this->definition( __( 'Build Article Brief', 'magick-ai-toolbox' ), __( 'Build a research-backed article planning brief without writing WordPress content.', 'magick-ai-toolbox' ), array( 'topic' ), array( $this, 'build_article_brief' ), 'cap.toolbox.workflow_suggest' ),
+			'magick-ai-toolbox/build-article-write-plan'           => $this->definition(
+				__( 'Build Article Write Plan', 'magick-ai-toolbox' ),
+				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'magick-ai-toolbox' ),
+				array( 'title', 'content_markdown' ),
+				array( $this, 'build_article_write_plan' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'core_proposal_handoff',
+				)
+			),
 			'magick-ai-toolbox/build-media-brief'                  => $this->definition( __( 'Build Media Brief', 'magick-ai-toolbox' ), __( 'Build image prompt and media SEO suggestions from supplied post context.', 'magick-ai-toolbox' ), array( 'post_context' ), array( $this, 'build_media_brief' ), 'cap.toolbox.workflow_suggest' ),
 			'magick-ai-toolbox/get-content-discoverability-context' => $this->definition(
 				__( 'Get Content Discoverability Context', 'magick-ai-toolbox' ),
@@ -179,6 +191,10 @@ final class Abilities {
 	public function build_article_brief( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
 		return $this->client->build_article_brief( sanitize_textarea_field( (string) ( $input['topic'] ?? '' ) ) );
+	}
+
+	public function build_article_write_plan( $input = array() ) {
+		return $this->client->build_article_write_plan( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_media_brief( $input = array() ) {

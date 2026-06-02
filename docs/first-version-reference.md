@@ -142,6 +142,7 @@ Toolbox ability ids stay under `magick-ai-toolbox/*`:
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/build-article-brief`
+- `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 
@@ -253,6 +254,7 @@ The first-version route matrix is exact:
 - `POST /vector-search`
 - `POST /knowledge-search`
 - `POST /flows/article-brief`
+- `POST /flows/article-plan`
 - `POST /flows/media-brief`
 
 Do not add routes for publish, delivery, workflow-run consoles, queues,

@@ -99,11 +99,15 @@ Current ability ids:
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/build-article-brief`
+- `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 
 These are read/suggestion tools. They must not imply final WordPress write
 approval, media import approval, or indexing lifecycle ownership.
+`magick-ai-toolbox/build-article-write-plan` assembles a Core-ready
+`article_write_plan` for a reviewed draft and leaves proposal creation,
+approval, preflight, audit, and final execution outside Toolbox.
 
 Ability ids remain under `magick-ai-toolbox/*` to keep them distinct from Core
 governance abilities and first-party reusable WordPress abilities. Ability
@@ -135,6 +139,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/magick-ai-toolbox/v1/vector-search`
 - `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-brief`
+- `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
 
 `/knowledge-search` remains as a compatibility alias for the first local MVP.

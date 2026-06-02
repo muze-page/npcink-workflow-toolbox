@@ -30,6 +30,7 @@ External AI callers should discover and call Toolbox abilities such as:
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/build-article-brief`
+- `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 

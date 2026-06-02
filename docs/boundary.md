@@ -48,6 +48,7 @@ planning flows:
 - `/vector-search`
 - `/knowledge-search`
 - `/flows/article-brief`
+- `/flows/article-plan`
 - `/flows/media-brief`
 
 Do not add Toolbox REST routes for publishing, delivery, workflow runs, queues,
@@ -55,6 +56,10 @@ schedulers, approvals, write confirmation, featured image setting, media
 upload/import, SEO mutation, content indexing, or re-indexing without a new
 boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
+
+`/flows/article-plan` prepares a Core-ready `article_write_plan` for
+`magick-ai-toolbox/build-article-write-plan`. It is a planning artifact route,
+not a WordPress write route and not a Core proposal execution route.
 
 ## Content Context Boundary
 
