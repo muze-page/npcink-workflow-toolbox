@@ -130,6 +130,21 @@ final class Abilities {
 					'composition_role' => 'article_planning_bundle',
 				)
 			),
+			'magick-ai-toolbox/build-article-assistant'            => $this->definition(
+				__( 'Build Article Assistant Workbench', 'magick-ai-toolbox' ),
+				__( 'Build one local article_draft_v1 workbench artifact from topic, evidence, site context, draft notes, and reviewed draft input without writing WordPress content.', 'magick-ai-toolbox' ),
+				array( 'topic' ),
+				array( $this, 'build_article_assistant' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'article_assistant_workbench',
+					'local_recipe_id'     => 'article_draft_v1',
+					'ability_recipe_ref'  => 'workflow/wordpress_article_draft',
+					'provider_execution'  => 'server_side_toolbox',
+					'write_posture'       => 'core_proposal_handoff',
+				)
+			),
 			'magick-ai-toolbox/build-article-write-plan'           => $this->definition(
 				__( 'Build Article Write Plan', 'magick-ai-toolbox' ),
 				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'magick-ai-toolbox' ),
@@ -280,6 +295,10 @@ final class Abilities {
 	public function build_article_brief( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
 		return $this->client->build_article_brief( sanitize_textarea_field( (string) ( $input['topic'] ?? '' ) ) );
+	}
+
+	public function build_article_assistant( $input = array() ) {
+		return $this->client->build_article_assistant( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_article_write_plan( $input = array() ) {

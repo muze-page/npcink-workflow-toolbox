@@ -763,6 +763,13 @@ final class Admin_Page {
 				'button'      => __( 'Build brief', 'magick-ai-toolbox' ),
 			),
 			array(
+				'id'          => 'article-assistant',
+				'endpoint'    => 'flows/article-assistant',
+				'title'       => __( 'Article Assistant', 'magick-ai-toolbox' ),
+				'description' => __( 'Compose one local article_draft_v1 workbench from abilities, evidence, context, notes, and an optional reviewed draft.', 'magick-ai-toolbox' ),
+				'custom'      => 'article_assistant',
+			),
+			array(
 				'id'          => 'article-plan',
 				'endpoint'    => 'flows/article-plan',
 				'title'       => __( 'Article Write Plan', 'magick-ai-toolbox' ),
@@ -853,6 +860,16 @@ final class Admin_Page {
 			<div class="magick-ai-toolbox__tool-panels">
 				<?php
 				foreach ( $tools as $index => $tool ) {
+					if ( 'article_assistant' === (string) ( $tool['custom'] ?? '' ) ) {
+						$this->render_article_assistant_tool(
+							(string) $tool['endpoint'],
+							(string) $tool['title'],
+							(string) $tool['description'],
+							(string) $tool['id'],
+							0 === $index
+						);
+						continue;
+					}
 					if ( 'article_plan' === (string) ( $tool['custom'] ?? '' ) ) {
 						$this->render_article_plan_tool(
 							(string) $tool['endpoint'],
@@ -889,6 +906,89 @@ final class Admin_Page {
 				?>
 			</div>
 		</div>
+		<?php
+	}
+
+	private function render_article_assistant_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
+		?>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<h2><?php echo esc_html( $title ); ?></h2>
+			<p><?php echo esc_html( $description ); ?></p>
+			<div class="magick-ai-toolbox__example">
+				<strong><?php esc_html_e( 'Local workbench', 'magick-ai-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'This composes a planning artifact only. It does not run a cloud writer, submit a proposal, approve a proposal, or write WordPress content.', 'magick-ai-toolbox' ); ?></span>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Topic', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="topic" placeholder="<?php esc_attr_e( 'Article topic', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Working title', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Audience', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="target_audience" placeholder="<?php esc_attr_e( 'Target reader', 'magick-ai-toolbox' ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Angle', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="angle" placeholder="<?php esc_attr_e( 'Point of view or structure', 'magick-ai-toolbox' ); ?>" />
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Language', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="language" value="zh-CN" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Target words', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="500" max="5000" step="50" name="target_word_count" value="1200" />
+				</label>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Article goal', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="article_goal" rows="2" placeholder="<?php esc_attr_e( 'What should the article help the reader do?', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Must include', 'magick-ai-toolbox' ); ?></span>
+					<textarea name="must_include" rows="3" placeholder="<?php esc_attr_e( 'One required point per line', 'magick-ai-toolbox' ); ?>"></textarea>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Must avoid', 'magick-ai-toolbox' ); ?></span>
+					<textarea name="must_avoid" rows="3" placeholder="<?php esc_attr_e( 'One forbidden or sensitive point per line', 'magick-ai-toolbox' ); ?>"></textarea>
+				</label>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Reference URLs', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="reference_urls" rows="3" placeholder="<?php esc_attr_e( 'One source URL per line', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Draft notes', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="draft_notes" rows="4" placeholder="<?php esc_attr_e( 'Operator notes, facts, outline fragments, or constraints.', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Reviewed draft body', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="reviewed_draft_markdown" rows="7" placeholder="<?php esc_attr_e( 'Optional. When present and risk checks pass, Toolbox also returns an article_write_plan for Core intake.', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Source policy', 'magick-ai-toolbox' ); ?></span>
+					<select name="source_policy">
+						<option value="strict_sources"><?php esc_html_e( 'Strict sources', 'magick-ai-toolbox' ); ?></option>
+						<option value="review_required"><?php esc_html_e( 'Review required', 'magick-ai-toolbox' ); ?></option>
+						<option value="operator_notes_only"><?php esc_html_e( 'Operator notes only', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Tone', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="tone" placeholder="<?php esc_attr_e( 'Optional tone hint', 'magick-ai-toolbox' ); ?>" />
+				</label>
+			</div>
+			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build assistant artifact', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
 		<?php
 	}
 

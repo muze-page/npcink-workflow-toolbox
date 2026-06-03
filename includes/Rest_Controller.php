@@ -28,6 +28,7 @@ final class Rest_Controller {
 		$this->post( '/vector-search', 'knowledge_search' );
 		$this->post( '/knowledge-search', 'knowledge_search' );
 		$this->post( '/flows/article-brief', 'article_brief' );
+		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
@@ -142,6 +143,11 @@ final class Rest_Controller {
 		}
 
 		return rest_ensure_response( $this->client->build_article_brief( $topic, ! empty( $request->get_param( 'include_knowledge' ) ) ) );
+	}
+
+	public function article_assistant( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->build_article_assistant( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function article_plan( WP_REST_Request $request ) {

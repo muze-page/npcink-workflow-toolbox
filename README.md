@@ -43,6 +43,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Content Discoverability Context](docs/content-discoverability-context.md)
 - [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
+- [Article Assistant Workbench](docs/article-assistant-workbench.md)
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)
@@ -57,6 +58,7 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/magick-ai-toolbox/v1/vector-search`
 - `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-brief`
+- `POST /wp-json/magick-ai-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
 - `POST /wp-json/magick-ai-toolbox/v1/media-derivative-handoff`

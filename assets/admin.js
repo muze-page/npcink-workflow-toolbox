@@ -497,6 +497,54 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
+	function renderArticleAssistant(form, payload) {
+		const risk = payload.article_risk_report || {};
+		const ready = risk.ready_for_proposal === true;
+		const hasWritePlan = payload.article_write_plan && payload.article_write_plan.artifact_type === 'article_write_plan';
+		const result = renderShell(
+			form,
+			payload,
+			'Article assistant',
+			ready
+				? 'Local workbench is ready to hand its article_write_plan to Core proposal intake.'
+				: 'Local workbench artifact returned. Revise evidence, context, or reviewed draft before Core handoff.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Recipe', payload.source_recipe_id);
+		appendMeta(meta, 'Risk', risk.risk_level ? formatLabel(risk.risk_level) : '');
+		appendMeta(meta, 'Ready', ready ? 'Yes' : 'No');
+		appendMeta(meta, 'Write plan', hasWritePlan ? 'Included' : 'Not ready');
+		appendMeta(meta, 'Final path', payload.final_write_path || (payload.handoff && payload.handoff.final_write_path));
+		result.appendChild(meta);
+
+		if (Array.isArray(risk.needs_review) && risk.needs_review.length) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Review required: ' + risk.needs_review.join(', ')));
+		}
+		if (Array.isArray(risk.blocked_claims) && risk.blocked_claims.length) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', 'Blocked claims must be removed before Core handoff.'));
+		}
+
+		renderArtifactSummary(result, 'Goal brief', payload.article_goal_brief);
+		renderArtifactSummary(result, 'Evidence pack', payload.research_evidence_pack);
+		if (payload.image_candidates && payload.image_candidates.error) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.image_candidates.error));
+		} else if (payload.image_candidates) {
+			renderImageList(result, payload.image_candidates.images);
+		}
+		renderArtifactSummary(result, 'Outline', payload.article_outline);
+		renderArtifactSummary(result, 'Draft candidate', payload.article_draft_candidate);
+		renderArtifactSummary(result, 'Discoverability', payload.discoverability_pack);
+		if (hasWritePlan) {
+			renderArtifactSummary(result, 'Article write plan', payload.article_write_plan);
+		}
+		renderHandoff(result, payload.handoff);
+		result.appendChild(createRawDetails(payload, 'Complete payload'));
+	}
+
 	function renderMediaDerivativeHandoff(form, payload) {
 		const abilityInput = payload.ability_input || {};
 		const result = renderShell(
@@ -561,6 +609,11 @@
 
 		if (payload.artifact_type === 'article_write_plan') {
 			renderArticlePlan(form, payload);
+			return;
+		}
+
+		if (payload.artifact_type === 'article_assistant_workbench') {
+			renderArticleAssistant(form, payload);
 			return;
 		}
 

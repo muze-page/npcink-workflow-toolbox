@@ -290,6 +290,146 @@ final class Provider_Client {
 		);
 	}
 
+	public function build_article_assistant( array $input ) {
+		$topic = trim( sanitize_text_field( (string) ( $input['topic'] ?? '' ) ) );
+		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $topic ) ) );
+		if ( '' === $topic ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_article_assistant_topic',
+				__( 'A topic is required to build an article assistant workbench.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+		if ( '' === $title ) {
+			$title = $topic;
+		}
+
+		$reviewed_draft = trim( sanitize_textarea_field( (string) ( $input['reviewed_draft_markdown'] ?? ( $input['content_markdown'] ?? '' ) ) ) );
+		$draft_notes    = trim( sanitize_textarea_field( (string) ( $input['draft_notes'] ?? '' ) ) );
+		$goal           = trim( sanitize_textarea_field( (string) ( $input['article_goal'] ?? '' ) ) );
+		$audience       = trim( sanitize_text_field( (string) ( $input['target_audience'] ?? '' ) ) );
+		$angle          = trim( sanitize_text_field( (string) ( $input['angle'] ?? '' ) ) );
+		$language       = trim( sanitize_text_field( (string) ( $input['language'] ?? 'zh-CN' ) ) );
+		$tone           = trim( sanitize_text_field( (string) ( $input['tone'] ?? '' ) ) );
+		$target_words   = absint( $input['target_word_count'] ?? ( $input['desired_length'] ?? 1200 ) );
+		$target_words   = max( 500, min( 5000, $target_words ) );
+		$source_policy  = sanitize_key( (string) ( $input['source_policy'] ?? 'strict_sources' ) );
+		if ( ! in_array( $source_policy, array( 'strict_sources', 'review_required', 'operator_notes_only' ), true ) ) {
+			$source_policy = 'strict_sources';
+		}
+
+		$reference_urls = $this->sanitize_string_list( $input['reference_urls'] ?? array() );
+		$must_include   = $this->sanitize_string_list( $input['must_include'] ?? array() );
+		$must_avoid     = $this->sanitize_string_list( $input['must_avoid'] ?? array() );
+		$context        = $this->settings->get_content_context_for_ability();
+		$validation     = $this->settings->validate_content_context_for_ability();
+		$context_status = sanitize_key( (string) ( $validation['status'] ?? 'needs_attention' ) );
+
+		$research = $this->web_research( $topic, array( 'max_results' => 5 ) );
+		$images   = $this->image_candidates( $topic, array( 'per_page' => 6 ) );
+		$knowledge = null;
+		if ( (bool) $this->settings->get( 'enable_vector_search' ) && $this->settings->has_qdrant_connection() ) {
+			$knowledge = $this->vector_search( $topic, 4, 'text' );
+		}
+
+		$discoverability = $this->build_content_discoverability_brief(
+			array(
+				'topic'            => $topic,
+				'title'            => $title,
+				'content_markdown' => '' !== $reviewed_draft ? $reviewed_draft : $draft_notes,
+			)
+		);
+
+		$goal_brief = array(
+			'topic'             => $topic,
+			'title'             => $title,
+			'article_goal'      => $goal,
+			'target_audience'   => '' !== $audience ? $audience : $this->sanitize_payload( $context['target_audience'] ?? array() ),
+			'angle'             => $angle,
+			'language'          => $language,
+			'tone'              => $tone,
+			'target_word_count' => $target_words,
+			'source_policy'     => $source_policy,
+			'must_include'      => $must_include,
+			'must_avoid'        => $must_avoid,
+			'context_status'    => $context_status,
+		);
+		$evidence_pack = $this->article_assistant_evidence_pack( $research, $knowledge, $reference_urls );
+		$outline       = $this->article_assistant_outline( $title, $topic, $must_include );
+		$draft_candidate = $this->article_assistant_draft_candidate( $reviewed_draft, $draft_notes, $outline, $evidence_pack );
+		$discoverability_pack = is_wp_error( $discoverability ) ? array(
+			'error' => $discoverability->get_error_message(),
+		) : $this->sanitize_payload( $discoverability );
+		$risk_report = $this->article_assistant_risk_report(
+			$reviewed_draft,
+			$draft_notes,
+			$context,
+			$validation,
+			$evidence_pack,
+			$must_avoid,
+			$source_policy
+		);
+
+		$write_plan = null;
+		if ( true === ( $risk_report['ready_for_proposal'] ?? false ) ) {
+			$write_plan = $this->build_article_write_plan(
+				array(
+					'title'                  => $title,
+					'topic'                  => $topic,
+					'content_markdown'       => $reviewed_draft,
+					'article_goal_brief'     => $goal_brief,
+					'research_evidence_pack' => $evidence_pack,
+					'article_outline'        => $outline,
+					'article_draft_candidate' => $draft_candidate,
+					'discoverability_pack'   => $discoverability_pack,
+					'article_risk_report'    => $risk_report,
+					'needs_review'           => $risk_report['needs_review'] ?? array(),
+					'risk_level'             => $risk_report['risk_level'] ?? 'medium',
+				)
+			);
+		}
+
+		return array(
+			'artifact_type'          => 'article_assistant_workbench',
+			'composition_role'       => 'article_assistant_workbench',
+			'version'                => 1,
+			'source_recipe_id'       => 'article_draft_v1',
+			'source_recipe_ref'      => 'workflow/wordpress_article_draft',
+			'source_recipe_provider' => 'magick-ai-abilities',
+			'recipe_execution'       => 'local_operator_orchestration',
+			'write_posture'          => 'core_proposal_handoff',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'provider_execution'     => 'server_side_toolbox',
+			'workflow_runtime'       => false,
+			'batch_execution'        => false,
+			'proposal_mode'          => 'single',
+			'provider'               => 'toolbox',
+			'article_goal_brief'     => $goal_brief,
+			'research_evidence_pack' => $evidence_pack,
+			'image_candidates'       => is_wp_error( $images ) ? array( 'error' => $images->get_error_message() ) : $images,
+			'article_outline'        => $outline,
+			'article_draft_candidate' => $draft_candidate,
+			'discoverability_pack'   => $discoverability_pack,
+			'article_risk_report'    => $risk_report,
+			'article_write_plan'     => is_wp_error( $write_plan ) ? array( 'error' => $write_plan->get_error_message() ) : $write_plan,
+			'handoff'                => array(
+				'assistant_ability_id'   => 'magick-ai-toolbox/build-article-assistant',
+				'write_plan_ability_id'  => 'magick-ai-toolbox/build-article-write-plan',
+				'recipe_id'              => 'article_draft_v1',
+				'recipe_ref'             => 'workflow/wordpress_article_draft',
+				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'next_steps'             => array(
+					'Review the goal brief, evidence, image candidates, outline, and risk report.',
+					'Revise the reviewed draft until ready_for_proposal is true.',
+					'Submit only the article_write_plan to Core proposal intake; Toolbox does not approve or execute it.',
+				),
+			),
+		);
+	}
+
 	public function build_article_write_plan( array $input ) {
 		$title   = trim( sanitize_text_field( (string) ( $input['title'] ?? '' ) ) );
 		$content = trim( sanitize_textarea_field( (string) ( $input['content_markdown'] ?? ( $input['content'] ?? '' ) ) ) );
@@ -791,6 +931,162 @@ final class Provider_Client {
 				'direct_wordpress_write' => false,
 			),
 			$payload
+		);
+	}
+
+	private function article_assistant_evidence_pack( $research, $knowledge, array $reference_urls ): array {
+		$sources = array();
+		foreach ( $reference_urls as $url ) {
+			$sources[] = array(
+				'source_type'         => 'operator_reference',
+				'title'               => $url,
+				'url'                 => esc_url_raw( $url ),
+				'summary'             => '',
+				'verification_status' => 'operator_supplied_candidate',
+			);
+		}
+
+		if ( is_array( $research ) ) {
+			foreach ( array_slice( is_array( $research['results'] ?? null ) ? $research['results'] : array(), 0, 8 ) as $item ) {
+				$item = is_array( $item ) ? $item : array();
+				$sources[] = array(
+					'source_type'         => 'web_research',
+					'title'               => sanitize_text_field( (string) ( $item['title'] ?? $item['url'] ?? '' ) ),
+					'url'                 => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+					'summary'             => sanitize_textarea_field( (string) ( $item['content'] ?? ( $item['snippet'] ?? '' ) ) ),
+					'verification_status' => 'source_candidate',
+				);
+			}
+		}
+
+		$knowledge_points = array();
+		if ( is_array( $knowledge ) && is_array( $knowledge['points'] ?? null ) ) {
+			$knowledge_points = $this->sanitize_payload( array_slice( $knowledge['points'], 0, 4 ) );
+		}
+
+		return array(
+			'sources'              => array_values( array_filter( $sources, static fn( array $source ): bool => '' !== (string) ( $source['title'] ?? '' ) || '' !== (string) ( $source['url'] ?? '' ) ) ),
+			'research_status'      => is_wp_error( $research ) ? array(
+				'error' => $research->get_error_message(),
+			) : array(
+				'provider'        => is_array( $research ) ? sanitize_key( (string) ( $research['provider'] ?? 'web_research' ) ) : 'web_research',
+				'provider_mode'   => is_array( $research ) ? sanitize_key( (string) ( $research['provider_mode'] ?? '' ) ) : '',
+				'active_sources'  => is_array( $research ) ? $this->sanitize_payload( $research['active_sources'] ?? array() ) : array(),
+			),
+			'site_knowledge'       => is_wp_error( $knowledge ) ? array(
+				'error' => $knowledge->get_error_message(),
+			) : array(
+				'points' => $knowledge_points,
+			),
+			'evidence_policy'      => 'Source candidates are planning evidence only. Operators must verify citations and factual claims before Core proposal handoff.',
+			'direct_wordpress_write' => false,
+		);
+	}
+
+	private function article_assistant_outline( string $title, string $topic, array $must_include ): array {
+		$sections = array(
+			array(
+				'section'         => 'direct_answer',
+				'heading_hint'    => __( 'Direct answer', 'magick-ai-toolbox' ),
+				'purpose'         => __( 'State the useful answer or thesis with only supported facts.', 'magick-ai-toolbox' ),
+				'evidence_needed' => true,
+			),
+			array(
+				'section'         => 'context',
+				'heading_hint'    => __( 'Context', 'magick-ai-toolbox' ),
+				'purpose'         => __( 'Explain why the topic matters to the target reader.', 'magick-ai-toolbox' ),
+				'evidence_needed' => true,
+			),
+			array(
+				'section'         => 'main_body',
+				'heading_hint'    => __( 'Practical breakdown', 'magick-ai-toolbox' ),
+				'purpose'         => __( 'Organize steps, examples, comparisons, or tradeoffs that the evidence supports.', 'magick-ai-toolbox' ),
+				'evidence_needed' => true,
+			),
+			array(
+				'section'         => 'geo_summary',
+				'heading_hint'    => __( 'AI-readable summary', 'magick-ai-toolbox' ),
+				'purpose'         => __( 'Summarize the grounded conclusion without ranking or outcome guarantees.', 'magick-ai-toolbox' ),
+				'evidence_needed' => true,
+			),
+			array(
+				'section'         => 'conclusion',
+				'heading_hint'    => __( 'Next step', 'magick-ai-toolbox' ),
+				'purpose'         => __( 'Close with a practical next step for the reader.', 'magick-ai-toolbox' ),
+				'evidence_needed' => false,
+			),
+		);
+
+		return array(
+			'title'        => $title,
+			'topic'        => $topic,
+			'sections'     => $sections,
+			'must_include' => $must_include,
+		);
+	}
+
+	private function article_assistant_draft_candidate( string $reviewed_draft, string $draft_notes, array $outline, array $evidence_pack ): array {
+		$has_reviewed_draft = '' !== trim( $reviewed_draft );
+		return array(
+			'content_markdown'      => $has_reviewed_draft ? $reviewed_draft : '',
+			'draft_notes'           => $draft_notes,
+			'draft_source'          => $has_reviewed_draft ? 'operator_supplied_reviewed_draft' : 'operator_notes_or_outline_only',
+			'ready_for_write_plan'  => $has_reviewed_draft,
+			'outline_ref'           => $this->sanitize_payload( $outline ),
+			'used_sources'          => array_values(
+				array_filter(
+					array_map(
+						static fn( $source ): string => is_array( $source ) ? (string) ( $source['url'] ?? $source['title'] ?? '' ) : '',
+						is_array( $evidence_pack['sources'] ?? null ) ? $evidence_pack['sources'] : array()
+					)
+				)
+			),
+			'needs_human_input'     => $has_reviewed_draft ? array() : array(
+				'Paste the operator-reviewed article body before creating a Core-ready article_write_plan.',
+			),
+		);
+	}
+
+	private function article_assistant_risk_report( string $reviewed_draft, string $draft_notes, array $context, array $validation, array $evidence_pack, array $must_avoid, string $source_policy ): array {
+		$text = $reviewed_draft . "\n" . $draft_notes;
+		$blocked_claims = array();
+		foreach ( array_merge( $this->sanitize_string_list( $context['claims']['forbidden'] ?? array() ), $must_avoid ) as $claim ) {
+			if ( '' !== $claim && false !== stripos( $text, $claim ) ) {
+				$blocked_claims[] = $claim;
+			}
+		}
+		$blocked_claims = array_values( array_unique( $blocked_claims ) );
+
+		$needs_review = array();
+		if ( '' === trim( $reviewed_draft ) ) {
+			$needs_review[] = 'reviewed_draft_required';
+		}
+		if ( empty( $evidence_pack['sources'] ) && 'operator_notes_only' !== $source_policy ) {
+			$needs_review[] = 'source_evidence_required';
+		}
+		$context_status = sanitize_key( (string) ( $validation['status'] ?? 'needs_attention' ) );
+		if ( ! in_array( $context_status, array( 'ready', 'ready_with_warnings' ), true ) ) {
+			$needs_review[] = 'content_context_needs_attention';
+		}
+		if ( array() !== $blocked_claims ) {
+			$needs_review[] = 'blocked_claims_present';
+		}
+
+		$risk_level = 'low';
+		if ( array() !== $blocked_claims ) {
+			$risk_level = 'high';
+		} elseif ( array() !== $needs_review ) {
+			$risk_level = 'medium';
+		}
+
+		return array(
+			'risk_level'         => $risk_level,
+			'blocked_claims'     => $blocked_claims,
+			'needs_review'       => array_values( array_unique( $needs_review ) ),
+			'source_policy'      => $source_policy,
+			'context_status'     => $context_status,
+			'ready_for_proposal' => 'low' === $risk_level && '' !== trim( $reviewed_draft ),
+			'legal_posture'      => 'local_operator_review_required',
 		);
 	}
 

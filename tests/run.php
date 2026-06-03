@@ -39,6 +39,8 @@ toolbox_assert( false !== strpos( $admin_page, 'does not index WordPress content
 toolbox_assert( false !== strpos( $admin_page, 'Jina test setup' ) && false !== strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector includes Jina AI test setup guidance.' );
 toolbox_assert( false !== strpos( $admin_page, 'Advanced / Debug' ) && false !== strpos( $admin_page, 'Clear stored Jina AI key' ), 'Connector key clearing and debug toggles are moved to an advanced area.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tools' ) && false !== strpos( $admin_page, 'data-toolbox-tool-panel' ), 'Tool actions use a single active tool workspace instead of a card matrix.' );
+toolbox_assert( false !== strpos( $admin_page, 'Article Assistant' ) && false !== strpos( $admin_page, 'render_article_assistant_tool' ), 'Tool actions include a dedicated Article Assistant workbench panel.' );
+toolbox_assert( false !== strpos( $admin_page, 'reviewed_draft_markdown' ) && false !== strpos( $admin_page, 'Build assistant artifact' ), 'Article Assistant panel collects optional reviewed draft input for Core-ready handoff.' );
 toolbox_assert( false !== strpos( $admin_page, 'Article Write Plan' ) && false !== strpos( $admin_page, 'render_article_plan_tool' ), 'Tool actions include a dedicated Article Write Plan panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !== strpos( $admin_page, 'Final execution remains magick-ai/create-draft after Core approval.' ), 'Article Write Plan panel collects reviewed draft content and preserves Core handoff copy.' );
 toolbox_assert( false !== strpos( $admin_page, 'Media Derivative Handoff' ) && false !== strpos( $admin_page, 'render_media_derivative_tool' ), 'Tool actions include a dedicated Media Derivative Handoff panel.' );
@@ -63,6 +65,8 @@ toolbox_assert( false !== strpos( $admin_js, 'Provider raw response' ), 'Provide
 toolbox_assert( false !== strpos( $admin_js, 'Download tracking' ) && false !== strpos( $admin_js, 'Attribution metadata' ), 'Image candidate rendering preserves Unsplash attribution and download tracking metadata.' );
 toolbox_assert( false !== strpos( $admin_js, 'Governed handoff' ) && false !== strpos( $admin_js, 'Core proposal required' ), 'Workflow result rendering keeps governed handoff guidance visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderArticlePlan' ) && false !== strpos( $admin_js, "payload.artifact_type === 'article_write_plan'" ), 'Admin JavaScript renders article write plans through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderArticleAssistant' ) && false !== strpos( $admin_js, "payload.artifact_type === 'article_assistant_workbench'" ), 'Admin JavaScript renders article assistant workbench artifacts through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'Write plan' ) && false !== strpos( $admin_js, 'Local workbench' ), 'Article Assistant renderer shows local workbench and write-plan readiness.' );
 toolbox_assert( false !== strpos( $admin_js, 'Goal brief' ) && false !== strpos( $admin_js, 'Risk report' ) && false !== strpos( $admin_js, 'Final ability' ), 'Article write plan renderer shows artifacts, risk, and final ability summary.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderMediaDerivativeHandoff' ) && false !== strpos( $admin_js, "payload.artifact_type === 'media_derivative_handoff'" ), 'Admin JavaScript renders media derivative handoffs through a dedicated view.' );
 toolbox_assert( false !== strpos( $admin_js, 'One-run planning artifact' ) && false !== strpos( $admin_js, 'Core policy' ), 'Media derivative renderer keeps one-run Core policy handoff visible.' );
@@ -90,6 +94,7 @@ $allowed_rest_routes = array(
 	'/vector-search',
 	'/knowledge-search',
 	'/flows/article-brief',
+	'/flows/article-assistant',
 	'/flows/article-plan',
 	'/flows/media-brief',
 	'/media-derivative-handoff',
@@ -117,7 +122,7 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/build-media-derivative-handoff', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief' ) as $ability_id ) {
+foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-assistant', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/build-media-derivative-handoff', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
 
@@ -141,6 +146,10 @@ toolbox_assert( false !== strpos( $client, "'local_style_context'" ), 'Vector ou
 toolbox_assert( false === strpos( $client, 'provider_body' ), 'Provider error responses do not expose raw provider bodies.' );
 toolbox_assert( false !== strpos( $client, "'write_posture' => 'suggestion_only'" ), 'Article brief handoff stays suggestion-only.' );
 toolbox_assert( false !== strpos( $client, 'Create WordPress draft or media proposals through Abilities/Core.' ), 'Article brief handoff points write-like actions to Abilities/Core.' );
+toolbox_assert( false !== strpos( $client, 'build_article_assistant' ), 'Provider client can build local article assistant workbench artifacts.' );
+toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_assistant_workbench'" ), 'Article Assistant declares the workbench artifact type.' );
+toolbox_assert( false !== strpos( $client, "'workflow_runtime'       => false" ) && false !== strpos( $client, "'batch_execution'        => false" ), 'Article Assistant explicitly avoids workflow runtime and batch execution ownership.' );
+toolbox_assert( false !== strpos( $client, "'assistant_ability_id'   => 'magick-ai-toolbox/build-article-assistant'" ), 'Article Assistant handoff carries its ability id.' );
 toolbox_assert( false !== strpos( $client, 'build_article_write_plan' ), 'Provider client can build Core-ready article write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_write_plan'" ), 'Article write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'core_article_write_plan'" ), 'Article write plan declares its composition role.' );
@@ -194,6 +203,7 @@ toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'research_e
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'image_source_candidates'" ), 'Image-source ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'local_style_context'" ), 'Vector ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'core_article_write_plan'" ), 'Article write plan ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'article_assistant_workbench'" ), 'Article Assistant ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'local_recipe_id'     => 'article_draft_v1'" ) && false !== strpos( $abilities, "'ability_recipe_ref'  => 'workflow/wordpress_article_draft'" ), 'Article write plan ability declares the local Ability recipe reference.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'media_derivative_operator_handoff'" ), 'Media derivative handoff ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_context'" ), 'Content context ability declares its content composition role.' );
@@ -220,6 +230,7 @@ toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'READ
 toolbox_assert( false !== strpos( $readme, 'Content Discoverability Context' ), 'README links the content context contract.' );
 toolbox_assert( false !== strpos( $readme, 'OpenClaw Content Discoverability Handoff' ), 'README links the OpenClaw content discoverability handoff.' );
 toolbox_assert( false !== strpos( $readme, 'Content Assistant Surface Lessons' ), 'README links the Content Assistant surface lessons contract.' );
+toolbox_assert( false !== strpos( $readme, 'Article Assistant Workbench' ), 'README links the Article Assistant workbench contract.' );
 
 $boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
 toolbox_assert( false !== $boundary_doc && false !== strpos( $boundary_doc, 'REST Route Boundary' ) && false !== strpos( $boundary_doc, 'Connector Status Catalog' ), 'Boundary documentation records route and connector status catalog limits.' );
