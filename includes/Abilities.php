@@ -90,10 +90,46 @@ final class Abilities {
 
 	private function definitions(): array {
 		return array(
-			'magick-ai-toolbox/web-research'                       => $this->definition( __( 'Web Research', 'magick-ai-toolbox' ), __( 'Research a topic using the configured external search provider.', 'magick-ai-toolbox' ), array( 'query' ), array( $this, 'web_research' ), 'cap.toolbox.search' ),
-			'magick-ai-toolbox/search-image-source'                => $this->definition( __( 'Search Image Source', 'magick-ai-toolbox' ), __( 'Search configured image source candidates without importing media.', 'magick-ai-toolbox' ), array( 'query' ), array( $this, 'search_image_source' ), 'cap.toolbox.image_source' ),
-			'magick-ai-toolbox/vector-search'                      => $this->definition( __( 'Vector Search', 'magick-ai-toolbox' ), __( 'Query the configured vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ), array( 'query' ), array( $this, 'vector_search' ), 'cap.toolbox.vector_search' ),
-			'magick-ai-toolbox/build-article-brief'                => $this->definition( __( 'Build Article Brief', 'magick-ai-toolbox' ), __( 'Build a research-backed article planning brief without writing WordPress content.', 'magick-ai-toolbox' ), array( 'topic' ), array( $this, 'build_article_brief' ), 'cap.toolbox.workflow_suggest' ),
+			'magick-ai-toolbox/web-research'                       => $this->definition(
+				__( 'Web Research', 'magick-ai-toolbox' ),
+				__( 'Research a topic using the configured external search provider.', 'magick-ai-toolbox' ),
+				array( 'query' ),
+				array( $this, 'web_research' ),
+				'cap.toolbox.search',
+				array(
+					'composition_role' => 'research_evidence',
+				)
+			),
+			'magick-ai-toolbox/search-image-source'                => $this->definition(
+				__( 'Search Image Source', 'magick-ai-toolbox' ),
+				__( 'Search configured image source candidates without importing media.', 'magick-ai-toolbox' ),
+				array( 'query' ),
+				array( $this, 'search_image_source' ),
+				'cap.toolbox.image_source',
+				array(
+					'composition_role' => 'image_source_candidates',
+				)
+			),
+			'magick-ai-toolbox/vector-search'                      => $this->definition(
+				__( 'Vector Search', 'magick-ai-toolbox' ),
+				__( 'Query the configured vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ),
+				array( 'query' ),
+				array( $this, 'vector_search' ),
+				'cap.toolbox.vector_search',
+				array(
+					'composition_role' => 'local_style_context',
+				)
+			),
+			'magick-ai-toolbox/build-article-brief'                => $this->definition(
+				__( 'Build Article Brief', 'magick-ai-toolbox' ),
+				__( 'Build a research-backed article planning brief without writing WordPress content.', 'magick-ai-toolbox' ),
+				array( 'topic' ),
+				array( $this, 'build_article_brief' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'composition_role' => 'article_planning_bundle',
+				)
+			),
 			'magick-ai-toolbox/build-article-write-plan'           => $this->definition(
 				__( 'Build Article Write Plan', 'magick-ai-toolbox' ),
 				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'magick-ai-toolbox' ),
@@ -102,11 +138,21 @@ final class Abilities {
 				'cap.toolbox.workflow_suggest',
 				array(
 					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'core_article_write_plan',
 					'provider_execution'  => 'none',
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/build-media-brief'                  => $this->definition( __( 'Build Media Brief', 'magick-ai-toolbox' ), __( 'Build image prompt and media SEO suggestions from supplied post context.', 'magick-ai-toolbox' ), array( 'post_context' ), array( $this, 'build_media_brief' ), 'cap.toolbox.workflow_suggest' ),
+			'magick-ai-toolbox/build-media-brief'                  => $this->definition(
+				__( 'Build Media Brief', 'magick-ai-toolbox' ),
+				__( 'Build image prompt and media SEO suggestions from supplied post context.', 'magick-ai-toolbox' ),
+				array( 'post_context' ),
+				array( $this, 'build_media_brief' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'composition_role' => 'media_planning_bundle',
+				)
+			),
 			'magick-ai-toolbox/get-content-discoverability-context' => $this->definition(
 				__( 'Get Content Discoverability Context', 'magick-ai-toolbox' ),
 				__( 'Return the operator-maintained SEO, AEO, and GEO context for third-party AI callers without exposing provider secrets or writing WordPress content.', 'magick-ai-toolbox' ),
@@ -115,6 +161,33 @@ final class Abilities {
 				'cap.toolbox.context.read',
 				array(
 					'data_classification' => 'public_context',
+					'composition_role'    => 'site_context',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'suggestion_only',
+				)
+			),
+			'magick-ai-toolbox/validate-content-discoverability-context' => $this->definition(
+				__( 'Validate Content Discoverability Context', 'magick-ai-toolbox' ),
+				__( 'Check whether the operator-maintained SEO, AEO, and GEO context has enough fields for third-party AI suggestion workflows.', 'magick-ai-toolbox' ),
+				array(),
+				array( $this, 'validate_content_discoverability_context' ),
+				'cap.toolbox.context.read',
+				array(
+					'data_classification' => 'public_context',
+					'composition_role'    => 'context_preflight',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'suggestion_only',
+				)
+			),
+			'magick-ai-toolbox/build-content-discoverability-brief' => $this->definition(
+				__( 'Build Content Discoverability Brief', 'magick-ai-toolbox' ),
+				__( 'Build a suggestion-only SEO, AEO, and GEO brief from operator context and supplied post or topic input without writing WordPress content.', 'magick-ai-toolbox' ),
+				array(),
+				array( $this, 'build_content_discoverability_brief' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'seo_aeo_geo_brief',
 					'provider_execution'  => 'none',
 					'write_posture'       => 'suggestion_only',
 				)
@@ -127,6 +200,7 @@ final class Abilities {
 			'show_in_rest'             => true,
 			'readonly'                 => true,
 			'data_classification'      => 'provider_suggestion',
+			'composition_role'         => 'toolbox_suggestion',
 			'write_posture'            => 'suggestion_only',
 			'final_write_path'         => 'core_proposal_required',
 			'direct_wordpress_write'   => false,
@@ -204,6 +278,14 @@ final class Abilities {
 
 	public function get_content_discoverability_context( $input = array() ) {
 		return $this->settings->get_content_context_for_ability();
+	}
+
+	public function validate_content_discoverability_context( $input = array() ) {
+		return $this->settings->validate_content_context_for_ability();
+	}
+
+	public function build_content_discoverability_brief( $input = array() ) {
+		return $this->client->build_content_discoverability_brief( is_array( $input ) ? $input : array() );
 	}
 
 	private function can_execute_ability( string $ability_id ): bool {

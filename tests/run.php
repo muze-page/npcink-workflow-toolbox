@@ -111,7 +111,7 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/get-content-discoverability-context' ) as $ability_id ) {
+foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
 
@@ -125,14 +125,27 @@ toolbox_assert( false !== strpos( $client, 'jina' ), 'Jina AI is available as an
 toolbox_assert( false !== strpos( $client, 'embedding_dimension_mismatch' ), 'Vector search guards against embedding dimension mismatch.' );
 toolbox_assert( false !== strpos( $client, 'download_location' ), 'Unsplash responses preserve download tracking location.' );
 toolbox_assert( false !== strpos( $client, 'with_optional_raw' ), 'Provider raw responses are optional.' );
+toolbox_assert( false !== strpos( $client, 'with_output_contract' ), 'Provider-backed outputs use a shared AI composition contract.' );
+toolbox_assert( false !== strpos( $client, "'artifact_type'          => \$artifact_type" ), 'Shared output contract includes artifact type.' );
+toolbox_assert( false !== strpos( $client, "'composition_role'       => \$composition_role" ), 'Shared output contract includes composition role.' );
+toolbox_assert( false !== strpos( $client, "'direct_wordpress_write' => false" ), 'Shared output contract forbids direct WordPress writes.' );
+toolbox_assert( false !== strpos( $client, "'research_evidence'" ), 'Web research output is classified as research evidence.' );
+toolbox_assert( false !== strpos( $client, "'image_source_candidates'" ), 'Image source output is classified as image-source candidates.' );
+toolbox_assert( false !== strpos( $client, "'local_style_context'" ), 'Vector output is classified as local style context.' );
 toolbox_assert( false === strpos( $client, 'provider_body' ), 'Provider error responses do not expose raw provider bodies.' );
 toolbox_assert( false !== strpos( $client, "'write_posture' => 'suggestion_only'" ), 'Article brief handoff stays suggestion-only.' );
 toolbox_assert( false !== strpos( $client, 'Create WordPress draft or media proposals through Abilities/Core.' ), 'Article brief handoff points write-like actions to Abilities/Core.' );
 toolbox_assert( false !== strpos( $client, 'build_article_write_plan' ), 'Provider client can build Core-ready article write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_write_plan'" ), 'Article write plan declares the Core contract artifact type.' );
+toolbox_assert( false !== strpos( $client, "'composition_role'       => 'core_article_write_plan'" ), 'Article write plan declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/create-draft'" ), 'Article write plan targets the governed create-draft ability.' );
 toolbox_assert( false !== strpos( $client, "'status'  => 'draft'" ), 'Article write plan is draft-only.' );
 toolbox_assert( false !== strpos( $client, "'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan'" ), 'Article write plan points to Core plan intake.' );
+toolbox_assert( false !== strpos( $client, 'build_content_discoverability_brief' ), 'Provider client can build content discoverability briefs.' );
+toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'content_discoverability_brief'" ), 'Content discoverability brief declares its artifact type.' );
+toolbox_assert( false !== strpos( $client, "'composition_role'       => 'seo_aeo_geo_brief'" ), 'Content discoverability brief declares its composition role.' );
+toolbox_assert( false !== strpos( $client, 'proposal_template' ) && false !== strpos( $client, 'candidate_suggestions' ), 'Content discoverability brief returns proposal templates and conservative candidates.' );
+toolbox_assert( false !== strpos( $client, "'brief_ability_id'       => 'magick-ai-toolbox/build-content-discoverability-brief'" ), 'Content discoverability brief returns ability handoff metadata.' );
 
 $settings = file_get_contents( $root . '/includes/Settings.php' );
 toolbox_assert( false !== strpos( $settings, 'BAAI/bge-m3' ), 'SiliconFlow default embedding model is configured.' );
@@ -142,6 +155,10 @@ toolbox_assert( false !== strpos( $settings, 'SILICONFLOW_API_KEY' ), 'SiliconFl
 toolbox_assert( false !== strpos( $settings, 'JINA_API_KEY' ), 'Jina key can be provided by environment.' );
 toolbox_assert( false !== strpos( $settings, 'content_context_defaults' ), 'Content context has separate defaults.' );
 toolbox_assert( false !== strpos( $settings, 'get_content_context_for_ability' ), 'Content context can be exported for Abilities callers.' );
+toolbox_assert( false !== strpos( $settings, 'validate_content_context_for_ability' ), 'Content context can be validated for AI callers.' );
+toolbox_assert( false !== strpos( $settings, "'composition_role'                => 'site_context'" ), 'Content context export declares the site-context composition role.' );
+toolbox_assert( false !== strpos( $settings, "'composition_role'       => 'context_preflight'" ), 'Content context validation declares the preflight composition role.' );
+toolbox_assert( false !== strpos( $settings, 'missing_required' ) && false !== strpos( $settings, 'missing_recommended' ), 'Content context validation reports missing required and recommended fields.' );
 toolbox_assert( false !== strpos( $settings, "'write_posture'                   => 'suggestion_only'" ), 'Content context is suggestion-only.' );
 toolbox_assert( false !== strpos( $settings, "'final_write_path'                => 'core_proposal_required'" ), 'Content context points writes to Core proposals.' );
 toolbox_assert( false !== strpos( $settings, "'direct_wordpress_write'          => false" ), 'Content context forbids direct WordPress writes.' );
@@ -158,7 +175,16 @@ toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.workflow_suggest' ), 
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.context.read' ), 'Content context ability exposes a read scope.' );
 toolbox_assert( false !== strpos( $abilities, 'public_context' ), 'Content context ability declares public context classification.' );
 toolbox_assert( false !== strpos( $abilities, 'planning_artifact' ), 'Article write plan ability declares planning artifact classification.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'research_evidence'" ), 'Web research ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'image_source_candidates'" ), 'Image-source ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'local_style_context'" ), 'Vector ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'core_article_write_plan'" ), 'Article write plan ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_context'" ), 'Content context ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'context_preflight'" ), 'Context validation ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'seo_aeo_geo_brief'" ), 'Content discoverability brief ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, 'core_proposal_handoff' ), 'Article write plan ability declares Core proposal handoff posture.' );
+toolbox_assert( false !== strpos( $abilities, 'validate_content_discoverability_context' ), 'Content context validation ability has an execution callback.' );
+toolbox_assert( false !== strpos( $abilities, 'build_content_discoverability_brief' ), 'Content discoverability brief ability has an execution callback.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_execution'       => 'server_side_toolbox'" ), 'Provider-backed abilities declare server-side execution.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_secret_exposure' => 'none'" ), 'Abilities declare that provider secrets are not exposed.' );
 toolbox_assert( false !== strpos( $abilities, "'final_write_path'         => 'core_proposal_required'" ), 'Abilities point write-like outcomes to Core proposals.' );
@@ -172,29 +198,61 @@ toolbox_assert( false !== strpos( $abilities, 'wp_has_ability_category' ), 'Nati
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Pixabay and Pexels' ), 'Pixabay and Pexels remain documentation-only reserved image providers.' );
 toolbox_assert( false !== strpos( $readme, 'Pinecone and Weaviate' ), 'Pinecone and Weaviate remain documentation-only reserved vector providers.' );
+toolbox_assert( false !== strpos( $readme, 'AI Content Composition Abilities' ), 'README links the AI content composition abilities contract.' );
 toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'README links the connector ability exposure contract.' );
 toolbox_assert( false !== strpos( $readme, 'Content Discoverability Context' ), 'README links the content context contract.' );
+toolbox_assert( false !== strpos( $readme, 'OpenClaw Content Discoverability Handoff' ), 'README links the OpenClaw content discoverability handoff.' );
 toolbox_assert( false !== strpos( $readme, 'Content Assistant Surface Lessons' ), 'README links the Content Assistant surface lessons contract.' );
 
 $boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
 toolbox_assert( false !== $boundary_doc && false !== strpos( $boundary_doc, 'REST Route Boundary' ) && false !== strpos( $boundary_doc, 'Connector Status Catalog' ), 'Boundary documentation records route and connector status catalog limits.' );
-toolbox_assert( false !== strpos( $boundary_doc, 'publishing, delivery, workflow runs, queues' ) && false !== strpos( $boundary_doc, 'SEO mutation, content indexing, or re-indexing' ), 'Boundary documentation blocks write/runtime/indexing routes.' );
+toolbox_assert( false !== strpos( $boundary_doc, 'publishing' ) && false !== strpos( $boundary_doc, 'content indexing' ), 'Boundary documentation blocks write/runtime/indexing routes.' );
+toolbox_assert( false !== strpos( $boundary_doc, 'AI Content Composition Boundary' ) && false !== strpos( $boundary_doc, 'local vector context for style' ), 'Boundary documentation records AI content composition limits.' );
 
 $architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
 toolbox_assert( false !== $architecture_doc && false !== strpos( $architecture_doc, 'static matrix in' ) && false !== strpos( $architecture_doc, 'Future connector owner' ), 'Architecture documentation records the route matrix and connector owner split.' );
 toolbox_assert( false !== strpos( $architecture_doc, 'Article Write Plan' ) && false !== strpos( $architecture_doc, 'submit the plan to Core' ) && false !== strpos( $architecture_doc, 'approve execution' ), 'Architecture documentation records the article plan UI boundary.' );
+toolbox_assert( false !== strpos( $architecture_doc, 'artifact_type' ) && false !== strpos( $architecture_doc, 'composition_role' ), 'Architecture documentation records the compact provider payload contract.' );
 
 $first_version_doc = file_get_contents( $root . '/docs/first-version-reference.md' );
 toolbox_assert( false !== $first_version_doc && false !== strpos( $first_version_doc, 'REST Route Matrix' ) && false !== strpos( $first_version_doc, 'Connector settings now include a compact status catalog' ), 'First-version reference captures route matrix and connector status catalog guidance.' );
+toolbox_assert( false !== strpos( $first_version_doc, 'canonical composition sequence' ) && false !== strpos( $first_version_doc, 'The sequence is a recommendation for composing tool inputs' ) && false !== strpos( $first_version_doc, 'runtime contract' ), 'First-version reference captures the AI content composition sequence.' );
+
+$content_composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
+toolbox_assert( false !== $content_composition_doc && false !== strpos( $content_composition_doc, 'Recommended Call Sequence' ), 'AI content composition documentation records the recommended call sequence.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'local_style_context' ), 'AI content composition documentation maps vector search to local style context.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-image-source' ) && false !== strpos( $content_composition_doc, 'download_location' ), 'AI content composition documentation maps image source search to attribution-preserving image candidates.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'content indexing' ), 'AI content composition documentation blocks indexing ownership.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'Final WordPress writes still require Core proposal approval' ), 'AI content composition documentation preserves Core write governance.' );
 
 $connector_exposure_doc = file_get_contents( $root . '/docs/connector-ability-exposure.md' );
 toolbox_assert( false !== $connector_exposure_doc && false !== strpos( $connector_exposure_doc, 'provider_secret_exposure: none' ), 'Connector exposure documentation records secret non-exposure.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'server_side_toolbox' ), 'Connector exposure documentation records server-side provider execution.' );
+toolbox_assert( false !== strpos( $connector_exposure_doc, 'composition_role:' ), 'Connector exposure documentation records machine-readable composition role metadata.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'Do not add `confirm_token`, `write_confirmed`' ), 'Connector exposure documentation blocks direct write confirmation contracts.' );
+toolbox_assert( false !== strpos( $connector_exposure_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'Connector exposure documentation lists the content discoverability brief ability.' );
 
 $content_context_doc = file_get_contents( $root . '/docs/content-discoverability-context.md' );
 toolbox_assert( false !== $content_context_doc && false !== strpos( $content_context_doc, 'magick-ai-toolbox/get-content-discoverability-context' ), 'Content context documentation records the ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'magick-ai-toolbox/validate-content-discoverability-context' ), 'Content context documentation records the validation ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'Content context documentation records the brief ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'does not call a model and does not write WordPress data' ), 'Content context documentation keeps brief generation bounded.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smoke-content-discoverability.php' ), 'Content context documentation records the local readiness smoke command.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Gateway exposure is a host-side admission task' ), 'Content context documentation keeps Agent Gateway admission outside Toolbox.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );
+
+$content_context_smoke = file_get_contents( $root . '/tests/smoke-content-discoverability.php' );
+toolbox_assert( false !== $content_context_smoke && false !== strpos( $content_context_smoke, 'magick_ai_abilities_get_registered' ), 'Content context smoke checks the Magick AI Abilities registry.' );
+toolbox_assert( false !== strpos( $content_context_smoke, 'magick_ai_open_platform_ability_catalog' ) && false !== strpos( $content_context_smoke, 'magick_ai_open_platform_get_ability_catalog' ), 'Content context smoke checks Magick catalog projection.' );
+toolbox_assert( false !== strpos( $content_context_smoke, 'magick_ai_open_platform_get_projection_matrix' ) && false !== strpos( $content_context_smoke, 'Core-side allowed_channels/tool-name admission is required' ), 'Content context smoke reports Agent Gateway admission status without owning it.' );
+toolbox_assert( false !== strpos( $content_context_smoke, "direct_wordpress_write'] ?? true" ) && false !== strpos( $content_context_smoke, "'suggestion_only'" ), 'Content context smoke verifies suggestion-only no-write outputs.' );
+toolbox_assert( false === strpos( $content_context_smoke, 'update_post_meta' ) && false === strpos( $content_context_smoke, 'wp_update_post' ), 'Content context smoke does not write WordPress content.' );
+
+$openclaw_handoff_doc = file_get_contents( $root . '/docs/openclaw-content-discoverability-handoff.md' );
+toolbox_assert( false !== $openclaw_handoff_doc && false !== strpos( $openclaw_handoff_doc, 'OpenClaw Content Discoverability Handoff' ), 'OpenClaw handoff documentation exists.' );
+toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/validate-content-discoverability-context' ) && false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'OpenClaw handoff documentation records the required ability sequence.' );
+toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'GET /content-discoverability-brief?post_id=POST_ID' ), 'OpenClaw handoff documentation records Adapter shortcut usage.' );
+toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'Do not write WordPress data' ) && false !== strpos( $openclaw_handoff_doc, 'Final writes must go through Core proposal' ), 'OpenClaw handoff documentation preserves no-write guidance.' );
 
 $content_assistant_surface_doc = file_get_contents( $root . '/docs/content-assistant-surface-lessons.md' );
 toolbox_assert( false !== $content_assistant_surface_doc && false !== strpos( $content_assistant_surface_doc, 'summary -> detail' ), 'Content Assistant surface lessons document records summary-first display discipline.' );

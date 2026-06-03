@@ -12,6 +12,7 @@ Done:
 - Admin toolbox screen.
 - Tavily, Unsplash, SiliconFlow, Jina, and Qdrant connector settings.
 - Content discoverability context setting and read-only Abilities exposure.
+- Content discoverability context validation and one-item brief abilities.
 - REST routes.
 - Abilities registrations.
 - Static contract tests.
@@ -61,6 +62,7 @@ Target features:
 - set SEO meta proposal handoff;
 - use content discoverability context when preparing SEO/AEO/GEO proposal
   payloads;
+- validate content discoverability context before third-party AI usage;
 - handoff status display that points operators to Core review.
 
 Rules:

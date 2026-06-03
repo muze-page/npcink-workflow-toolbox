@@ -5,6 +5,9 @@ Status: active first-version contract.
 This document summarizes how Toolbox exposes external search, image-source,
 embedding, and vector APIs to other AI callers.
 
+For article drafting and content-planning composition, also read
+`docs/ai-content-composition-abilities.md`.
+
 ## Product Rule
 
 Toolbox is:
@@ -33,10 +36,24 @@ External AI callers should discover and call Toolbox abilities such as:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
+- `magick-ai-toolbox/validate-content-discoverability-context`
+- `magick-ai-toolbox/build-content-discoverability-brief`
 
 The caller provides task input. Toolbox reads local configuration, performs the
 provider request on the server, normalizes the response, and returns a
 suggestion-oriented payload.
+
+For SEO, AEO, and GEO context readiness, operators can run:
+
+```bash
+wp eval-file tests/smoke-content-discoverability.php -- [post_id]
+```
+
+This smoke verifies the content discoverability ability registrations, local
+Magick catalog projection, context validation, and one suggestion-only brief.
+It may also report Agent Gateway direct tool-map status when the host projection
+matrix is present. Missing `wp_*` Agent Gateway exposure is a host-side
+admission task, not a Toolbox route or registry task.
 
 The caller must not receive provider API keys. Provider secrets remain in:
 
@@ -68,6 +85,7 @@ Toolbox ability metadata should make the boundary machine-readable:
 ```text
 readonly: true
 show_in_rest: true
+composition_role: research_evidence|image_source_candidates|local_style_context|...
 write_posture: suggestion_only
 final_write_path: core_proposal_required
 direct_wordpress_write: false

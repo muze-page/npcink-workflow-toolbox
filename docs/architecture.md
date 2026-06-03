@@ -89,6 +89,10 @@ Toolbox exposes its actions through the WordPress Abilities API when available.
 Abilities are server-side Toolbox tool wrappers: AI callers provide task input,
 Toolbox uses local connector configuration to execute the provider call, and the
 caller receives a normalized suggestion payload instead of provider secrets.
+For content composition, AI callers should treat these abilities as ordered
+tool inputs: content context, context validation, web research, vector context,
+image-source candidates, discoverability brief, article brief, and article
+write plan.
 
 If `magick-ai-abilities` is active, Toolbox uses its public helper functions.
 Otherwise, Toolbox falls back to native WordPress Abilities API registration.
@@ -102,12 +106,18 @@ Current ability ids:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
+- `magick-ai-toolbox/validate-content-discoverability-context`
+- `magick-ai-toolbox/build-content-discoverability-brief`
 
 These are read/suggestion tools. They must not imply final WordPress write
 approval, media import approval, or indexing lifecycle ownership.
 `magick-ai-toolbox/build-article-write-plan` assembles a Core-ready
 `article_write_plan` for a reviewed draft and leaves proposal creation,
 approval, preflight, audit, and final execution outside Toolbox.
+`magick-ai-toolbox/build-content-discoverability-brief` assembles a
+suggestion-only SEO, AEO, and GEO instruction pack and proposal template for a
+post or topic. It does not mutate SEO meta, slugs, excerpts, schema, or post
+content.
 
 Ability ids remain under `magick-ai-toolbox/*` to keep them distinct from Core
 governance abilities and first-party reusable WordPress abilities. Ability
@@ -122,6 +132,9 @@ metadata declares Toolbox scopes:
 Ability metadata also declares that provider execution is server-side, provider
 secret exposure is `none`, write posture is `suggestion_only`, final writes use
 Core proposals, and direct WordPress writes are disabled.
+Provider-backed ability payloads keep the runtime contract smaller:
+`artifact_type`, `composition_role`, `write_posture`, and
+`direct_wordpress_write`.
 
 The first admin REST surface remains `manage_options` gated by default.
 External AI access should be mediated by Core/app-key scope checks in the host

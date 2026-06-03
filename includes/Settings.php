@@ -107,6 +107,7 @@ final class Settings {
 
 		return array(
 			'context_type'                    => 'content_discoverability',
+			'composition_role'                => 'site_context',
 			'version'                         => 1,
 			'write_posture'                   => 'suggestion_only',
 			'final_write_path'                => 'core_proposal_required',
@@ -138,6 +139,51 @@ final class Settings {
 				'final_writes'           => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
+		);
+	}
+
+	public function validate_content_context_for_ability(): array {
+		$context = $this->get_content_context_for_ability();
+		$checks  = array();
+
+		$this->append_context_check( $checks, 'site_positioning', __( 'Site positioning is filled.', 'magick-ai-toolbox' ), $context['site_positioning'], 'required' );
+		$this->append_context_check( $checks, 'target_audience', __( 'Target audience is filled.', 'magick-ai-toolbox' ), $context['target_audience'], 'required' );
+		$this->append_context_check( $checks, 'brand_voice', __( 'Brand voice is filled.', 'magick-ai-toolbox' ), $context['brand_voice'], 'required' );
+		$this->append_context_check( $checks, 'keywords.primary', __( 'Primary keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['primary'], 'required' );
+		$this->append_context_check( $checks, 'rules.seo', __( 'SEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['seo'], 'required' );
+		$this->append_context_check( $checks, 'rules.aeo', __( 'AEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['aeo'], 'required' );
+		$this->append_context_check( $checks, 'rules.geo', __( 'GEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['geo'], 'required' );
+		$this->append_context_check( $checks, 'proposal_allowed_fields', __( 'Proposal suggestion fields are selected.', 'magick-ai-toolbox' ), $context['proposal_allowed_fields'], 'required' );
+
+		$this->append_context_check( $checks, 'keywords.long_tail', __( 'Long-tail keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['long_tail'], 'recommended' );
+		$this->append_context_check( $checks, 'keywords.entities', __( 'Entity keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['entities'], 'recommended' );
+		$this->append_context_check( $checks, 'claims.allowed', __( 'Allowed claims are filled.', 'magick-ai-toolbox' ), $context['claims']['allowed'], 'recommended' );
+		$this->append_context_check( $checks, 'claims.forbidden', __( 'Forbidden claims are filled.', 'magick-ai-toolbox' ), $context['claims']['forbidden'], 'recommended' );
+
+		$missing_required    = array_values( array_filter( $checks, static fn( array $check ): bool => 'required' === $check['severity'] && ! $check['passed'] ) );
+		$missing_recommended = array_values( array_filter( $checks, static fn( array $check ): bool => 'recommended' === $check['severity'] && ! $check['passed'] ) );
+		$passed_count        = count( array_filter( $checks, static fn( array $check ): bool => (bool) $check['passed'] ) );
+		$total_count         = max( 1, count( $checks ) );
+		$status              = empty( $missing_required ) ? ( empty( $missing_recommended ) ? 'ready' : 'ready_with_warnings' ) : 'needs_attention';
+
+		return array(
+			'artifact_type'          => 'content_discoverability_context_validation',
+			'composition_role'       => 'context_preflight',
+			'version'                => 1,
+			'status'                 => $status,
+			'score'                  => round( $passed_count / $total_count, 2 ),
+			'checks'                 => $checks,
+			'missing_required'       => $missing_required,
+			'missing_recommended'    => $missing_recommended,
+			'context_summary'        => array(
+				'has_site_positioning' => '' !== trim( (string) $context['site_positioning'] ),
+				'target_audience_count' => count( (array) $context['target_audience'] ),
+				'primary_keyword_count' => count( (array) $context['keywords']['primary'] ),
+				'proposal_field_count'  => count( (array) $context['proposal_allowed_fields'] ),
+			),
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
 		);
 	}
 
@@ -308,5 +354,22 @@ final class Settings {
 		);
 
 		return array_values( array_filter( array_unique( $items ) ) );
+	}
+
+	private function append_context_check( array &$checks, string $field, string $message, $value, string $severity ): void {
+		$checks[] = array(
+			'field'    => $field,
+			'severity' => $severity,
+			'passed'   => $this->context_value_present( $value ),
+			'message'  => $message,
+		);
+	}
+
+	private function context_value_present( $value ): bool {
+		if ( is_array( $value ) ) {
+			return count( array_filter( $value, static fn( $item ): bool => '' !== trim( (string) $item ) ) ) > 0;
+		}
+
+		return '' !== trim( (string) $value );
 	}
 }

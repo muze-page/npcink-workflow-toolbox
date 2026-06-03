@@ -145,6 +145,23 @@ Toolbox ability ids stay under `magick-ai-toolbox/*`:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
+- `magick-ai-toolbox/validate-content-discoverability-context`
+- `magick-ai-toolbox/build-content-discoverability-brief`
+
+For article-writing AI callers, the canonical composition sequence is:
+
+1. `magick-ai-toolbox/get-content-discoverability-context`
+2. `magick-ai-toolbox/validate-content-discoverability-context`
+3. `magick-ai-toolbox/web-research`
+4. `magick-ai-toolbox/vector-search`
+5. `magick-ai-toolbox/search-image-source`
+6. `magick-ai-toolbox/build-content-discoverability-brief`
+7. `magick-ai-toolbox/build-article-brief`
+8. `magick-ai-toolbox/build-article-write-plan`
+
+The sequence is a recommendation for composing tool inputs, not a workflow
+runtime contract. Toolbox does not schedule, retry, index, import media, publish
+posts, or mutate SEO fields.
 
 Stable first-version scopes:
 
@@ -153,6 +170,13 @@ Stable first-version scopes:
 - `cap.toolbox.vector_search`
 - `cap.toolbox.workflow_suggest`
 - `cap.toolbox.context.read`
+
+Content context consumers should call
+`magick-ai-toolbox/validate-content-discoverability-context` before using the
+context for third-party AI workflows. For one post or topic, call
+`magick-ai-toolbox/build-content-discoverability-brief` to get the
+suggestion-only SEO/AEO/GEO instruction pack, proposal template, conservative
+candidate values, and Core handoff reminders.
 
 Do not rename these scopes unless Magick AI Core explicitly changes the app-key
 scope contract.

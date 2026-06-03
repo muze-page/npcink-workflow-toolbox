@@ -46,16 +46,19 @@ credentials.
 
 ## Abilities Surface
 
-Current read-only ability:
+Current read-only/context abilities:
 
 ```text
 magick-ai-toolbox/get-content-discoverability-context
+magick-ai-toolbox/validate-content-discoverability-context
+magick-ai-toolbox/build-content-discoverability-brief
 ```
 
-Scope:
+Scopes:
 
 ```text
 cap.toolbox.context.read
+cap.toolbox.workflow_suggest
 ```
 
 Native ability metadata should include:
@@ -71,6 +74,15 @@ write_posture: suggestion_only
 The ability returns guidance only. Third-party AI must treat it as context for
 suggestions, briefs, and proposal-ready payloads, not as permission to commit
 WordPress writes.
+
+`validate-content-discoverability-context` returns `ready`,
+`ready_with_warnings`, or `needs_attention` plus required/recommended field
+checks. It is intended as a preflight before third-party AI uses the context.
+
+`build-content-discoverability-brief` accepts supplied topic/title/content or a
+local `post_id` and returns a suggestion-only SEO, AEO, and GEO instruction
+pack, proposal template, and conservative candidate values grounded in the
+source. It does not call a model and does not write WordPress data.
 
 ## Payload Shape
 
@@ -150,10 +162,14 @@ AI sessions can see exactly what third-party callers will receive.
 Third-party AI should:
 
 1. read `magick-ai-toolbox/get-content-discoverability-context`;
-2. combine it with read-only site/post abilities when needed;
-3. produce suggestions for the fields listed in `proposal_allowed_fields`;
-4. preserve `forbidden_claims` and the site `brand_voice`;
-5. hand write-like outcomes to Core proposal flows.
+2. call `magick-ai-toolbox/validate-content-discoverability-context` and stop
+   for operator input if required fields are missing;
+3. call `magick-ai-toolbox/build-content-discoverability-brief` for one post or
+   topic;
+4. combine the brief with read-only site/post abilities when needed;
+5. produce suggestions for the fields listed in `proposal_allowed_fields`;
+6. preserve `forbidden_claims` and the site `brand_voice`;
+7. hand write-like outcomes to Core proposal flows.
 
 Third-party AI must not:
 
@@ -164,12 +180,44 @@ Third-party AI must not:
 - leak connector keys or private credentials into prompts, outputs, proposals,
   logs, REST responses, or docs.
 
+## Local Readiness Smoke
+
+After the operator fills the content context, run the local smoke through
+WP-CLI:
+
+```bash
+wp eval-file tests/smoke-content-discoverability.php -- [post_id]
+```
+
+The optional `post_id` lets the operator test a specific draft or post. Without
+it, the smoke uses the most recently modified local post it can read. The script
+does not print the context body, post title, or generated suggestions; it only
+prints pass/fail status and the sampled post id.
+
+The smoke verifies:
+
+- the three content discoverability abilities are registered through
+  `magick_ai_abilities_get_registered()`;
+- each ability is read-only, REST-discoverable, projected into the Magick
+  compatibility catalog, exposes no provider secrets, and declares no direct
+  WordPress write path;
+- the saved content context validates as `ready` or `ready_with_warnings`;
+- `build-content-discoverability-brief` can build one suggestion-only brief for
+  a real local post;
+- the optional Agent Gateway projection matrix is inspected when available.
+
+Agent Gateway/OpenClaw direct tool exposure is intentionally reported as a
+status, not forced by Toolbox. Core/Agent Gateway still owns the `wp_*` tool
+name, `allowed_channels`, scope, quota, audit, and execution policy. If the
+smoke reports that the Agent Gateway direct tool map is missing these abilities,
+the next task belongs in the host projection/admission contract, not in Toolbox.
+Missing `wp_*` Agent Gateway exposure is a host-side admission task.
+
 ## Future Work
 
 Possible later abilities:
 
-- `magick-ai-toolbox/validate-content-discoverability-context`
-- `magick-ai-toolbox/build-content-discoverability-brief`
+- `magick-ai-toolbox/build-content-discoverability-batch-brief`
 
 Do not add an update-context ability for third-party AI in the first version.
 If an external update path becomes necessary, it must be governed by Core and

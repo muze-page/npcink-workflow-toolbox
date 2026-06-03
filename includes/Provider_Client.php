@@ -76,12 +76,16 @@ final class Provider_Client {
 		}
 
 		return $this->with_optional_raw(
-			array(
-				'provider' => 'tavily',
-				'query'    => $query,
-				'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
-				'results'  => $results,
-				'images'   => is_array( $response['images'] ?? null ) ? $response['images'] : array(),
+			$this->with_output_contract(
+				array(
+					'provider' => 'tavily',
+					'query'    => $query,
+					'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
+					'results'  => $results,
+					'images'   => is_array( $response['images'] ?? null ) ? $response['images'] : array(),
+				),
+				'research_evidence',
+				'research_evidence'
 			),
 			$response
 		);
@@ -151,10 +155,14 @@ final class Provider_Client {
 		}
 
 		return $this->with_optional_raw(
-			array(
-				'provider' => 'unsplash',
-				'query'    => $query,
-				'images'   => $images,
+			$this->with_output_contract(
+				array(
+					'provider' => 'unsplash',
+					'query'    => $query,
+					'images'   => $images,
+				),
+				'image_source_candidates',
+				'image_source_candidates'
 			),
 			$response
 		);
@@ -233,11 +241,15 @@ final class Provider_Client {
 			return $response;
 		}
 
-		$payload = array(
-			'provider'        => 'qdrant',
-			'input_type'      => $resolved_input_type,
-			'collection'      => $collection,
-			'points'          => is_array( $response['result']['points'] ?? null ) ? $response['result']['points'] : array(),
+		$payload = $this->with_output_contract(
+			array(
+				'provider'   => 'qdrant',
+				'input_type' => $resolved_input_type,
+				'collection' => $collection,
+				'points'     => is_array( $response['result']['points'] ?? null ) ? $response['result']['points'] : array(),
+			),
+			'local_style_context',
+			'local_style_context'
 		);
 
 		if ( is_array( $embedding ) ) {
@@ -258,12 +270,16 @@ final class Provider_Client {
 		}
 
 		return array(
-			'provider'  => 'toolbox',
-			'topic'     => $topic,
-			'research'  => is_wp_error( $research ) ? array( 'error' => $research->get_error_message() ) : $research,
-			'images'    => is_wp_error( $images ) ? array( 'error' => $images->get_error_message() ) : $images,
-			'knowledge' => is_wp_error( $knowledge ) ? array( 'error' => $knowledge->get_error_message() ) : $knowledge,
-			'handoff'   => array(
+			'artifact_type'             => 'article_planning_bundle',
+			'composition_role'          => 'article_planning_bundle',
+			'write_posture'             => 'suggestion_only',
+			'direct_wordpress_write'    => false,
+			'provider'                  => 'toolbox',
+			'topic'                     => $topic,
+			'research'                  => is_wp_error( $research ) ? array( 'error' => $research->get_error_message() ) : $research,
+			'images'                    => is_wp_error( $images ) ? array( 'error' => $images->get_error_message() ) : $images,
+			'knowledge'                 => is_wp_error( $knowledge ) ? array( 'error' => $knowledge->get_error_message() ) : $knowledge,
+			'handoff'                   => array(
 				'write_posture' => 'suggestion_only',
 				'next_steps'    => array(
 					'Review sources.',
@@ -335,7 +351,10 @@ final class Provider_Client {
 
 		return array(
 			'artifact_type'          => 'article_write_plan',
+			'composition_role'       => 'core_article_write_plan',
 			'version'                => 1,
+			'write_posture'          => 'core_proposal_handoff',
+			'direct_wordpress_write' => false,
 			'batch_id'               => 'article_write_' . substr( md5( $title . '|' . $content ), 0, 12 ),
 			'requires_approval'      => true,
 			'dry_run'                => true,
@@ -370,6 +389,60 @@ final class Provider_Client {
 				'plan_ability_id'        => 'magick-ai-toolbox/build-article-write-plan',
 				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+			),
+		);
+	}
+
+	public function build_content_discoverability_brief( array $input ) {
+		$source = $this->resolve_discoverability_source( $input );
+		if ( is_wp_error( $source ) ) {
+			return $source;
+		}
+
+		$context           = $this->settings->get_content_context_for_ability();
+		$validation        = $this->settings->validate_content_context_for_ability();
+		$allowed_fields    = $this->sanitize_string_list( $context['proposal_allowed_fields'] ?? array() );
+		$proposal_template = array();
+		$candidates        = array();
+
+		foreach ( $allowed_fields as $field ) {
+			$proposal_template[ $field ] = array(
+				'instruction' => $this->content_discoverability_field_instruction( $field ),
+				'value'       => null,
+			);
+
+			$candidate = $this->content_discoverability_candidate( $field, $source, $context );
+			if ( null !== $candidate ) {
+				$candidates[ $field ] = $candidate;
+			}
+		}
+
+		return array(
+			'artifact_type'          => 'content_discoverability_brief',
+			'composition_role'       => 'seo_aeo_geo_brief',
+			'version'                => 1,
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'context_validation'     => $validation,
+			'content_context'        => $context,
+			'source'                 => $source,
+			'ai_instructions'        => array(
+				'Use the content_context as the site-level rule source.',
+				'Use only facts present in the supplied source, public site context, or cited evidence.',
+				'Do not invent customer cases, ranking guarantees, source citations, or unavailable product features.',
+				'Return suggestions only for proposal_allowed_fields.',
+				'Respect forbidden claims and preserve the requested brand voice.',
+				'Final WordPress writes must go through Core proposal approval.',
+			),
+			'proposal_allowed_fields' => $allowed_fields,
+			'proposal_template'      => $proposal_template,
+			'candidate_suggestions'  => $candidates,
+			'handoff'                => array(
+				'brief_ability_id'       => 'magick-ai-toolbox/build-content-discoverability-brief',
+				'context_ability_id'     => 'magick-ai-toolbox/get-content-discoverability-context',
+				'validation_ability_id'  => 'magick-ai-toolbox/validate-content-discoverability-context',
+				'final_writes'           => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
 		);
@@ -617,6 +690,18 @@ final class Provider_Client {
 		return $payload;
 	}
 
+	private function with_output_contract( array $payload, string $artifact_type, string $composition_role ): array {
+		return array_merge(
+			array(
+				'artifact_type'          => $artifact_type,
+				'composition_role'       => $composition_role,
+				'write_posture'          => 'suggestion_only',
+				'direct_wordpress_write' => false,
+			),
+			$payload
+		);
+	}
+
 	private function sanitize_string_list( $value ): array {
 		$items = is_array( $value ) ? $value : array_filter( array_map( 'trim', explode( "\n", (string) $value ) ) );
 		return array_values(
@@ -645,6 +730,141 @@ final class Provider_Client {
 		}
 
 		return sanitize_textarea_field( (string) $value );
+	}
+
+	private function resolve_discoverability_source( array $input ) {
+		$post_id = absint( $input['post_id'] ?? 0 );
+		$title   = trim( sanitize_text_field( (string) ( $input['title'] ?? '' ) ) );
+		$topic   = trim( sanitize_text_field( (string) ( $input['topic'] ?? '' ) ) );
+		$content = trim( sanitize_textarea_field( (string) ( $input['content'] ?? ( $input['content_markdown'] ?? '' ) ) ) );
+		$excerpt = trim( sanitize_textarea_field( (string) ( $input['excerpt'] ?? '' ) ) );
+
+		if ( 0 < $post_id ) {
+			$post = get_post( $post_id );
+			if ( ! $post ) {
+				return new WP_Error(
+					'magick_ai_toolbox_post_not_found',
+					__( 'The requested post was not found.', 'magick-ai-toolbox' ),
+					array( 'status' => 404 )
+				);
+			}
+
+			$title   = '' !== $title ? $title : get_the_title( $post );
+			$content = '' !== $content ? $content : wp_strip_all_tags( (string) $post->post_content );
+			$excerpt = '' !== $excerpt ? $excerpt : wp_strip_all_tags( get_the_excerpt( $post ) );
+			$topic   = '' !== $topic ? $topic : $title;
+
+			return array(
+				'input_type'      => 'post',
+				'post_id'         => $post_id,
+				'post_type'       => get_post_type( $post ),
+				'post_status'     => get_post_status( $post ),
+				'title'           => sanitize_text_field( (string) $title ),
+				'topic'           => sanitize_text_field( (string) $topic ),
+				'excerpt'         => sanitize_textarea_field( (string) $excerpt ),
+				'content_excerpt' => wp_trim_words( wp_strip_all_tags( $content ), 180, '' ),
+			);
+		}
+
+		if ( '' === $title && '' === $topic ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_discoverability_source',
+				__( 'A post_id, topic, or title is required to build a content discoverability brief.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( '' === $title ) {
+			$title = $topic;
+		}
+		if ( '' === $topic ) {
+			$topic = $title;
+		}
+
+		return array(
+			'input_type'      => 'supplied_context',
+			'post_id'         => 0,
+			'post_type'       => sanitize_key( (string) ( $input['post_type'] ?? 'post' ) ),
+			'post_status'     => sanitize_key( (string) ( $input['post_status'] ?? 'draft' ) ),
+			'title'           => $title,
+			'topic'           => $topic,
+			'excerpt'         => $excerpt,
+			'content_excerpt' => wp_trim_words( wp_strip_all_tags( $content ), 180, '' ),
+		);
+	}
+
+	private function content_discoverability_field_instruction( string $field ): string {
+		$instructions = array(
+			'seo_title'             => __( 'Suggest a concise search title based on the source topic and primary keywords. Avoid clickbait and unsupported claims.', 'magick-ai-toolbox' ),
+			'seo_description'       => __( 'Suggest a meta description that summarizes the reader problem, topic, and value using verified source facts only.', 'magick-ai-toolbox' ),
+			'slug'                  => __( 'Suggest a short, readable URL slug from the title or topic.', 'magick-ai-toolbox' ),
+			'excerpt'               => __( 'Suggest an editorial excerpt grounded in the supplied content.', 'magick-ai-toolbox' ),
+			'faq'                   => __( 'Suggest FAQ question and answer pairs only when the context allows FAQ generation and the source supports the answers.', 'magick-ai-toolbox' ),
+			'answer_summary'        => __( 'Suggest a direct one-sentence AEO answer summary grounded in the supplied source.', 'magick-ai-toolbox' ),
+			'geo_summary'           => __( 'Suggest a standalone GEO summary that is easy for AI systems to quote without adding unsupported facts.', 'magick-ai-toolbox' ),
+			'structured_data_hints' => __( 'Suggest schema hints only when the source supports them; do not claim schema has been applied.', 'magick-ai-toolbox' ),
+		);
+
+		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'magick-ai-toolbox' );
+	}
+
+	private function content_discoverability_candidate( string $field, array $source, array $context ) {
+		$title   = sanitize_text_field( (string) ( $source['title'] ?? $source['topic'] ?? '' ) );
+		$topic   = sanitize_text_field( (string) ( $source['topic'] ?? $title ) );
+		$content = sanitize_textarea_field( (string) ( $source['content_excerpt'] ?? '' ) );
+		$excerpt = sanitize_textarea_field( (string) ( $source['excerpt'] ?? '' ) );
+		$text    = '' !== $excerpt ? $excerpt : $content;
+
+		if ( '' === $text ) {
+			$text = $topic;
+		}
+
+		if ( 'seo_title' === $field ) {
+			return wp_trim_words( $title, 12, '' );
+		}
+		if ( 'seo_description' === $field ) {
+			return wp_trim_words( wp_strip_all_tags( $text ), 26, '' );
+		}
+		if ( 'slug' === $field ) {
+			return sanitize_title( $title );
+		}
+		if ( 'excerpt' === $field ) {
+			return wp_trim_words( wp_strip_all_tags( $text ), 36, '' );
+		}
+		if ( 'answer_summary' === $field && ! empty( $context['rules']['allow_aeo_summary'] ) ) {
+			return wp_trim_words( wp_strip_all_tags( $text ), 28, '' );
+		}
+		if ( 'geo_summary' === $field && ! empty( $context['rules']['allow_geo_summary'] ) ) {
+			return wp_trim_words( wp_strip_all_tags( $text ), 42, '' );
+		}
+		if ( 'faq' === $field && ! empty( $context['rules']['allow_faq_generation'] ) ) {
+			return array(
+				array(
+					'question' => sprintf(
+						/* translators: %s: topic. */
+						__( 'What should readers know about %s?', 'magick-ai-toolbox' ),
+						$topic
+					),
+					'answer_guidance' => __( 'Answer only with facts supported by the supplied source and site context.', 'magick-ai-toolbox' ),
+				),
+				array(
+					'question' => sprintf(
+						/* translators: %s: topic. */
+						__( 'How does %s affect the target audience?', 'magick-ai-toolbox' ),
+						$topic
+					),
+					'answer_guidance' => __( 'Connect the answer to target audience needs without inventing outcomes or guarantees.', 'magick-ai-toolbox' ),
+				),
+			);
+		}
+		if ( 'structured_data_hints' === $field && ! empty( $context['rules']['allow_structured_data_suggestions'] ) ) {
+			return array(
+				'Article',
+				! empty( $context['rules']['allow_faq_generation'] ) ? 'FAQPage candidate if final FAQ answers are verified' : 'FAQPage disabled by context',
+			);
+		}
+
+		return null;
 	}
 
 	private function post_context_to_image_query( string $post_context ): string {

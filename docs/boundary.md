@@ -34,7 +34,28 @@ First-version write posture:
 3. Expose operator-filled content context as read-only Abilities guidance.
 4. Expose provider-backed actions through server-side Toolbox abilities without
    exposing provider keys to AI callers.
-5. Use WordPress abilities and Core proposals for final WordPress writes.
+5. Let article-writing AI compose context, search, image-source, and vector
+   abilities as inputs, not as write authority.
+6. Use WordPress abilities and Core proposals for final WordPress writes.
+
+## AI Content Composition Boundary
+
+Toolbox may expose the tool abilities needed by an article-writing AI:
+
+- site content context;
+- context validation;
+- external research evidence;
+- local vector context for style, related articles, internal links, or image
+  recommendation context;
+- image-source candidates;
+- suggestion-only SEO/AEO/GEO briefs;
+- reviewed article write plans for Core handoff.
+
+Toolbox must not own the drafting model, workflow runtime, content indexing,
+media import, featured-image setting, SEO mutation, publishing, approval, or
+audit trail. The final output of a composition run is a draft candidate,
+evidence pack, image recommendation, discoverability suggestion, or Core-ready
+plan.
 
 ## REST Route Boundary
 

@@ -38,8 +38,10 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Boundary](docs/boundary.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)
+- [AI Content Composition Abilities](docs/ai-content-composition-abilities.md)
 - [Connector Ability Exposure](docs/connector-ability-exposure.md)
 - [Content Discoverability Context](docs/content-discoverability-context.md)
+- [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
@@ -69,6 +71,9 @@ Toolbox abilities are server-side tool wrappers. External AI callers provide
 task input and receive normalized suggestion payloads; they do not receive
 provider API keys or direct provider credentials.
 
+Article-drafting composition guidance is kept in
+[AI Content Composition Abilities](docs/ai-content-composition-abilities.md).
+
 When the WordPress Abilities API is available, Toolbox registers:
 
 - `magick-ai-toolbox/web-research`
@@ -78,6 +83,8 @@ When the WordPress Abilities API is available, Toolbox registers:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
+- `magick-ai-toolbox/validate-content-discoverability-context`
+- `magick-ai-toolbox/build-content-discoverability-brief`
 
 When `magick-ai-abilities` is active, Toolbox uses its public registration
 helpers so the tools can be discovered by existing Magick AI consumers.
@@ -103,8 +110,11 @@ that may contain provider keys.
 
 The context is exposed only as read-only, suggestion-only guidance through
 `magick-ai-toolbox/get-content-discoverability-context`. Third-party AI callers
-may use it to prepare SEO/AEO/GEO suggestions, but final WordPress writes still
-require Core proposal approval.
+may also call `magick-ai-toolbox/validate-content-discoverability-context` to
+check filling quality and `magick-ai-toolbox/build-content-discoverability-brief`
+to get a suggestion-only SEO/AEO/GEO instruction pack, proposal template, and
+conservative candidates from supplied post or topic input. Final WordPress
+writes still require Core proposal approval.
 
 The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
