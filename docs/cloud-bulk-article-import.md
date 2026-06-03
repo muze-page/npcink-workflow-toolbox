@@ -1,75 +1,57 @@
 # Cloud Bulk Article Import
 
-Status: active planning guidance.
+Status: prohibited and deprecated planning guidance.
 
-This document defines how Toolbox may use selected Cloud bulk article artifacts
-without becoming a bulk publishing console, queue owner, approval surface, or
-WordPress write executor.
+This document records that Toolbox must not import Cloud-generated article
+drafts, Cloud bulk article items, or Cloud-produced `article_write_plan`
+candidates.
 
-## Position
+## Decision
 
-Toolbox may help an operator review and import selected items from a Cloud
-`bulk_article_run_v1` result. The imported item must become the same local
-`article_write_plan` shape already used by the Article Write Plan panel.
-
-Cloud bulk production is a scale benefit for research and draft preparation.
-It is not a publish shortcut.
-
-## Allowed Toolbox Role
-
-Toolbox may:
-
-- show selected Cloud article artifacts for operator review;
-- preserve `article_goal_brief`, `research_evidence_pack`, `article_outline`,
-  `article_draft_candidate`, `discoverability_pack`, and
-  `article_risk_report`;
-- convert one selected ready item into
-  `magick-ai-toolbox/build-article-write-plan` input;
-- surface Core handoff guidance and governed `operator_feedback`;
-- keep the final action draft-only.
+Toolbox article drafting remains local Ability recipe UX. Cloud article import
+is not part of the product.
 
 Toolbox must not:
 
-- own Cloud run state, queues, retries, or worker recovery;
+- show Cloud-generated article artifacts for writing review;
+- import Cloud `bulk_article_run_v1` items;
+- convert Cloud article items into `magick-ai-toolbox/build-article-write-plan`
+  input;
+- add a bulk article import panel;
 - submit bulk proposals automatically;
-- approve Core proposals;
-- publish, schedule, or update WordPress posts directly;
-- add a local bulk publish console;
-- treat Cloud item readiness as approval or preflight.
+- treat Cloud item readiness as proposal readiness;
+- publish, schedule, or update WordPress posts directly.
 
-## Import Rules
+## Replacement
 
-P0 import accepts one selected item at a time.
-
-The imported item must produce:
-
-- `artifact_type=article_write_plan`;
-- `version>=1`;
-- `proposal_mode=single`;
-- `requires_approval=true`;
-- `dry_run=true`;
-- `commit_execution=false`;
-- exactly one draft-only `magick-ai/create-draft` write action.
-
-Toolbox should block or request revision when:
-
-- `article_risk_report.ready_for_proposal` is not true;
-- `article_risk_report.risk_level` is `high`;
-- `article_risk_report.blocked_claims` is not empty;
-- the draft asks for `status=publish` or `post_status=publish`;
-- the plan asks for `commit=true` or `dry_run=false`;
-- the item is expired or missing required artifacts.
-
-## Handoff
-
-After import and review, the local path remains:
+The Article Write Plan panel may remain, but it should be understood as local
+`article_draft_v1` recipe UX:
 
 ```text
-Toolbox article_write_plan
+local Ability recipe
+  -> operator-reviewed local artifacts
+  -> magick-ai-toolbox/build-article-write-plan
   -> Adapter or Core /proposals/from-plan
   -> Core proposal review
   -> Core approval and commit preflight
   -> Adapter executes magick-ai/create-draft through WordPress Abilities API
 ```
 
-The operator should see Cloud provenance as context, not as write authority.
+## Allowed Toolbox Role
+
+Toolbox may:
+
+- expose fixed local recipe buttons;
+- render local research, image-source, vector, context, draft, and risk
+  artifacts;
+- build a Core-ready `article_write_plan`;
+- surface Core handoff guidance and governed `operator_feedback`;
+- keep the final action draft-only.
+
+Toolbox must not become a Cloud writing console, queue owner, approval surface,
+proposal truth, or WordPress write executor.
+
+## Guardrail Phrase
+
+Toolbox helps operators compose local Ability outputs into governed write
+plans. It does not import or publish Cloud-generated article content.
