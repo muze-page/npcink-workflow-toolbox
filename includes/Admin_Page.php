@@ -75,18 +75,22 @@ final class Admin_Page {
 			true
 		);
 
+		wp_enqueue_media();
+
 		wp_add_inline_script(
 			'magick-ai-toolbox-admin',
 			'window.MagickAIToolbox = ' . wp_json_encode(
 				array(
-					'restUrl'       => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
-					'nonce'         => wp_create_nonce( 'wp_rest' ),
-					'contextOption' => Plugin::CONTEXT_OPTION_NAME,
-					'contextDrafts' => array(
+					'restUrl'        => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
+					'adapterRestUrl' => esc_url_raw( rest_url( 'magick-ai-adapter/v1' ) ),
+					'coreAdminUrl'   => esc_url_raw( admin_url( 'admin.php?page=magick-ai-core' ) ),
+					'nonce'          => wp_create_nonce( 'wp_rest' ),
+					'contextOption'  => Plugin::CONTEXT_OPTION_NAME,
+					'contextDrafts'  => array(
 						'aiBlog' => $this->get_ai_blog_context_template(),
 						'site'   => $this->get_site_content_context_suggestion(),
 					),
-					'labels'        => array(
+					'labels'         => array(
 						'running' => __( 'Running...', 'magick-ai-toolbox' ),
 						'error'   => __( 'Request failed.', 'magick-ai-toolbox' ),
 					),
@@ -1004,7 +1008,7 @@ final class Admin_Page {
 				'use_cloud_when_available' => true,
 			);
 		?>
-		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" data-toolbox-media-derivative <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
 			<div class="magick-ai-toolbox__example">
@@ -1022,10 +1026,21 @@ final class Admin_Page {
 					?>
 				</span>
 			</div>
-			<label>
-				<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
-				<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" />
-			</label>
+			<div class="magick-ai-toolbox__media-picker">
+				<div class="magick-ai-toolbox__media-preview" data-toolbox-media-preview>
+					<span><?php esc_html_e( 'No image selected', 'magick-ai-toolbox' ); ?></span>
+				</div>
+				<div>
+					<label>
+						<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" data-toolbox-media-attachment />
+					</label>
+					<div class="magick-ai-toolbox__inline-actions">
+						<button type="button" class="button" data-toolbox-select-media><?php esc_html_e( 'Select from media library', 'magick-ai-toolbox' ); ?></button>
+						<span data-toolbox-media-name><?php esc_html_e( 'Choose one local image attachment.', 'magick-ai-toolbox' ); ?></span>
+					</div>
+				</div>
+			</div>
 			<div class="magick-ai-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Format override', 'magick-ai-toolbox' ); ?></span>
@@ -1045,8 +1060,68 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Quality override', 'magick-ai-toolbox' ); ?></span>
 				<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
 			</label>
-			<p class="description"><?php esc_html_e( 'The returned handoff contains ability input for magick-ai/build-media-derivative-cloud-request. Core remains the policy and final write owner.', 'magick-ai-toolbox' ); ?></p>
-			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build handoff', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Exclude formats from setting repair', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="settings_excluded_formats" value="svg,gif,ico,pdf" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Minimum setting image size', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="settings_min_dimensions" value="64x64" />
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__batch-panel">
+				<h3><?php esc_html_e( 'Batch conversion plan', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'Build a bounded local candidate plan first, then generate previews and Core proposals only for reviewed selections.', 'magick-ai-toolbox' ); ?></p>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Date from', 'magick-ai-toolbox' ); ?></span>
+						<input type="date" name="batch_date_from" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Date to', 'magick-ai-toolbox' ); ?></span>
+						<input type="date" name="batch_date_to" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Batch target format', 'magick-ai-toolbox' ); ?></span>
+						<select name="batch_target_format">
+							<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
+								<option value="<?php echo esc_attr( $format ); ?>" <?php selected( 'webp', $format ); ?>><?php echo esc_html( strtoupper( $format ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Exclude formats', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="batch_exclude_formats" value="webp" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Min dimensions', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="batch_min_dimensions" value="0x0" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Max candidates', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="1" max="50" step="1" name="batch_max_items" value="20" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__inline-actions">
+					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build batch plan', 'magick-ai-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'magick-ai-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected proposals', 'magick-ai-toolbox' ); ?></button>
+				</div>
+				<div class="magick-ai-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
+			</div>
+			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Core remains the policy owner and final WordPress write owner.', 'magick-ai-toolbox' ); ?></p>
+			<div class="magick-ai-toolbox__inline-actions">
+				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit replacement proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-reference-repair disabled><?php esc_html_e( 'Submit URL repair proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-settings-repair disabled><?php esc_html_e( 'Submit settings URL proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="submit" class="button"><?php esc_html_e( 'Build handoff only', 'magick-ai-toolbox' ); ?></button>
+			</div>
 			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

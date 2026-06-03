@@ -65,8 +65,9 @@ All routes require a logged-in user with `manage_options`.
 
 Toolbox admin result panels can render governed `operator_feedback` payloads
 from Adapter/Core handoff failures. The feedback is for operator revision only;
-Toolbox still does not submit proposals, approve proposals, or execute
-WordPress writes.
+the media derivative operator flow can ask Adapter/Core to create review
+proposals, but Toolbox still does not approve proposals, execute proposals, or
+write WordPress data.
 
 ## Abilities
 
@@ -128,9 +129,18 @@ and Core handoff route for operator review.
 
 The media derivative handoff flow reads Core media optimization defaults when
 available, accepts one-run operator overrides, and returns ability input for
-`magick-ai/build-media-derivative-cloud-request`. Toolbox does not store the
-site media policy, call Cloud, import media, replace files, submit proposals, or
-write attachment metadata.
+`magick-ai/build-media-derivative-cloud-request`. In the admin **Try Tools**
+surface, an operator can select a media-library image, generate a short-lived
+Cloud derivative preview through Adapter, then submit a governed Core proposal
+for `magick-ai/adopt-cloud-media-derivative`. The same panel can build bounded
+candidate plans with `magick-ai/build-media-derivative-batch-plan`, generate
+selected previews, and submit selected Core proposals. Hard-coded post content
+URLs and option-held image URLs are handled through the read-only
+`magick-ai/build-media-reference-repair-plan` and
+`magick-ai/build-media-settings-reference-repair-plan` routes followed by Core
+plan-to-proposal intake. Toolbox does not store the site media policy, import
+media, replace files, approve proposals, execute proposals, or write attachment
+metadata.
 
 ## Connector Configuration
 

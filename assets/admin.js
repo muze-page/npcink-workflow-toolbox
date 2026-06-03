@@ -62,6 +62,63 @@
 		return link;
 	}
 
+	function joinRestUrl(base, path) {
+		return String(base || '').replace(/\/$/, '') + '/' + String(path || '').replace(/^\//, '');
+	}
+
+	function withRestNonce(url) {
+		if (!url) {
+			return '';
+		}
+
+		try {
+			const parsed = new URL(String(url), window.location.href);
+			if (parsed.origin !== window.location.origin) {
+				return '';
+			}
+			if (config.nonce && !parsed.searchParams.has('_wpnonce')) {
+				parsed.searchParams.set('_wpnonce', config.nonce);
+			}
+			return parsed.toString();
+		} catch (error) {
+			return '';
+		}
+	}
+
+	async function postJson(base, path, payload) {
+		const response = await fetch(joinRestUrl(base, path), {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': config.nonce || '',
+			},
+			body: JSON.stringify(payload || {}),
+		});
+		const body = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			throw body;
+		}
+		return body;
+	}
+
+	async function getJson(base, path) {
+		const response = await fetch(joinRestUrl(base, path), {
+			method: 'GET',
+			headers: {
+				'X-WP-Nonce': config.nonce || '',
+			},
+		});
+		const body = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			throw body;
+		}
+		return body;
+	}
+
+	function sleep(ms) {
+		return new Promise((resolve) => window.setTimeout(resolve, ms));
+	}
+
 	function createSection(title) {
 		const section = el('section', 'magick-ai-toolbox__result-section');
 		section.appendChild(el('h3', '', title));
@@ -577,6 +634,352 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
+	function derivativeFromResult(payload) {
+		const cloudResult = payload && payload.cloud_result ? payload.cloud_result : payload;
+		if (!cloudResult || typeof cloudResult !== 'object') {
+			return {};
+		}
+		if (cloudResult.derivative && typeof cloudResult.derivative === 'object') {
+			return cloudResult.derivative;
+		}
+		if (cloudResult.data && cloudResult.data.derivative && typeof cloudResult.data.derivative === 'object') {
+			return cloudResult.data.derivative;
+		}
+		if (cloudResult.data && cloudResult.data.result && cloudResult.data.result.artifact) {
+			return cloudResult.data.result.artifact;
+		}
+		return {};
+	}
+
+	function cloudStatus(payload) {
+		const cloudRun = payload && payload.cloud_run ? payload.cloud_run : payload && payload.cloud_result ? payload.cloud_result : payload;
+		if (!cloudRun || typeof cloudRun !== 'object') {
+			return '';
+		}
+		return String(cloudRun.status || (cloudRun.data && cloudRun.data.status) || '');
+	}
+
+	function mediaDerivativeInput(form) {
+		const raw = serialize(form);
+		const input = {};
+		['attachment_id', 'target_format', 'max_width', 'quality'].forEach((key) => {
+			if (raw[key] !== undefined && raw[key] !== null && String(raw[key]).trim() !== '') {
+				input[key] = raw[key];
+			}
+		});
+		return input;
+	}
+
+	function commaList(value) {
+		return String(value || '')
+			.split(',')
+			.map((item) => item.trim())
+			.filter(Boolean);
+	}
+
+	function dimensionsFromText(value, fallbackWidth, fallbackHeight) {
+		const parts = String(value || '').toLowerCase().split('x');
+		const width = parseInt(parts[0] || String(fallbackWidth || 0), 10) || fallbackWidth || 0;
+		const height = parseInt(parts[1] || parts[0] || String(fallbackHeight || 0), 10) || fallbackHeight || 0;
+		return { width, height };
+	}
+
+	function mediaDerivativeBatchPlanInput(form) {
+		const raw = serialize(form);
+		const dimensions = dimensionsFromText(raw.batch_min_dimensions || '0x0', 0, 0);
+		const targetFormat = String(raw.batch_target_format || 'webp');
+		const input = {
+			mime_type: 'image',
+			target_format: targetFormat,
+			exclude_formats: commaList(raw.batch_exclude_formats || targetFormat),
+			min_width: dimensions.width,
+			min_height: dimensions.height,
+			max_items: parseInt(raw.batch_max_items || '20', 10) || 20,
+		};
+		if (raw.batch_date_from) {
+			input.date_from = String(raw.batch_date_from);
+		}
+		if (raw.batch_date_to) {
+			input.date_to = String(raw.batch_date_to) + ' 23:59:59';
+		}
+		if (raw.max_width) {
+			input.target_max_width = raw.max_width;
+		}
+		if (raw.quality) {
+			input.quality = raw.quality;
+		}
+		return input;
+	}
+
+	function mediaAttachmentId(form) {
+		const field = form.querySelector('[data-toolbox-media-attachment]');
+		if (!(field instanceof HTMLInputElement)) {
+			return 0;
+		}
+		return parseInt(field.value || '0', 10) || 0;
+	}
+
+	function referenceRepairInput(form) {
+		return {
+			attachment_id: mediaAttachmentId(form),
+			max_posts: 20,
+			max_replacements_per_post: 20,
+		};
+	}
+
+	function settingsReferenceRepairInput(form) {
+		const raw = serialize(form);
+		const dimensions = dimensionsFromText(raw.settings_min_dimensions || '64x64', 64, 64);
+		return {
+			attachment_id: mediaAttachmentId(form),
+			max_settings: 50,
+			max_replacements_per_setting: 20,
+			excluded_formats: commaList(raw.settings_excluded_formats || 'svg,gif,ico,pdf'),
+			min_width: dimensions.width,
+			min_height: dimensions.height,
+			excluded_filename_patterns: ['logo', 'favicon', 'icon', 'brand', 'payment', 'placeholder'],
+		};
+	}
+
+	function proposalInputFromState(state) {
+		const artifact = state.derivative || {};
+		const abilityInput = state.abilityInput || {};
+		return {
+			attachment_id: abilityInput.attachment_id,
+			derivative_artifact: {
+				artifact_id: artifact.artifact_id || artifact.id || '',
+				expires_at: artifact.expires_at || '',
+				expires_ts: artifact.expires_ts || '',
+				mime_type: artifact.mime_type || '',
+				format: artifact.format || '',
+				width: artifact.width || 0,
+				height: artifact.height || 0,
+				filesize_bytes: artifact.filesize_bytes || 0,
+				checksum: artifact.checksum || artifact.sha256 || '',
+				sha256: artifact.sha256 || artifact.checksum || '',
+				processing_warnings: Array.isArray(artifact.processing_warnings) ? artifact.processing_warnings : [],
+				cloud_run_id: state.runId || '',
+			},
+			expected_derivative_mime_type: artifact.mime_type || '',
+			backup_suffix: 'magick-ai-cloud-backup',
+			dry_run: true,
+			commit: false,
+			idempotency_key: 'media-derivative-' + String(artifact.artifact_id || artifact.id || state.runId || Date.now()),
+		};
+	}
+
+	function planDataFromEnvelope(payload) {
+		if (payload && payload.result && payload.result.success && payload.result.data) {
+			return payload.result.data;
+		}
+		if (payload && payload.success && payload.data) {
+			return payload.data;
+		}
+		if (payload && payload.result) {
+			return payload.result;
+		}
+		return payload && payload.data ? payload.data : payload;
+	}
+
+	function proposalFromPlanResponse(payload) {
+		if (payload && Array.isArray(payload.proposals) && payload.proposals.length) {
+			return payload.proposals[0];
+		}
+		if (payload && payload.proposal) {
+			return payload.proposal;
+		}
+		return payload;
+	}
+
+	function renderMediaDerivativeRun(form, state, message) {
+		const payload = state.result || state.create || {};
+		const derivative = state.derivative || derivativeFromResult(payload);
+		const result = renderShell(
+			form,
+			{ provider: 'cloud runtime' },
+			'Media derivative preview',
+			message || 'Cloud generated a short-lived derivative artifact. Submit a Core replacement proposal before any local adoption.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Run', state.runId);
+		appendMeta(meta, 'Artifact', derivative.artifact_id || derivative.id);
+		appendMeta(meta, 'Format', derivative.format ? String(derivative.format).toUpperCase() : '');
+		appendMeta(meta, 'MIME', derivative.mime_type);
+		appendMeta(meta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
+		appendMeta(meta, 'Bytes', derivative.filesize_bytes);
+		appendMeta(meta, 'Expires', derivative.expires_at);
+		result.appendChild(meta);
+
+		if (Array.isArray(derivative.processing_warnings) && derivative.processing_warnings.length) {
+			derivative.processing_warnings.forEach((warning) => {
+				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', warning));
+			});
+		}
+
+		const previewUrl = withRestNonce(derivative.preview_url || '');
+		if (previewUrl) {
+			const preview = el('figure', 'magick-ai-toolbox__derivative-preview');
+			const image = el('img');
+			image.src = previewUrl;
+			image.alt = 'Generated derivative preview';
+			image.loading = 'lazy';
+			preview.appendChild(image);
+			preview.appendChild(el('figcaption', '', 'Same-origin signed preview proxy. This is not a public Cloud URL or a WordPress media write.'));
+			result.appendChild(preview);
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Preview is served through Adapter and Cloud Addon with local authorization.'));
+		} else {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
+		}
+		renderArtifactSummary(result, 'Derivative artifact', derivative);
+		if (state.proposalPayload) {
+			renderArtifactSummary(result, 'Core proposal payload', state.proposalPayload);
+		}
+		result.appendChild(createRawDetails(payload, 'Cloud result payload'));
+	}
+
+	function renderMediaDerivativeBatchPlan(form, planEnvelope, plan) {
+		const panel = form.querySelector('[data-toolbox-media-batch-plan]');
+		if (!panel) {
+			return;
+		}
+		const candidates = Array.isArray(plan.candidates) ? plan.candidates : [];
+		const skipped = Array.isArray(plan.skipped) ? plan.skipped : [];
+		const summary = plan.summary || {};
+		panel.hidden = false;
+		clearNode(panel);
+
+		const heading = el('div', 'magick-ai-toolbox__batch-heading');
+		heading.appendChild(el('h4', '', 'Batch plan'));
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Candidates', summary.candidate_count || candidates.length);
+		appendMeta(meta, 'Skipped', summary.skipped_count || skipped.length);
+		appendMeta(meta, 'Matched', summary.total_matched);
+		appendMeta(meta, 'Mode', plan.plan_mode || 'dry_run');
+		heading.appendChild(meta);
+		panel.appendChild(heading);
+
+		if (!candidates.length) {
+			panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'No candidates are ready for derivative previews. Review skipped reasons or adjust filters.'));
+		}
+
+		const list = el('div', 'magick-ai-toolbox__batch-list');
+		candidates.forEach((candidate, index) => {
+			const row = el('label', 'magick-ai-toolbox__batch-row');
+			const checkbox = document.createElement('input');
+			checkbox.type = 'checkbox';
+			checkbox.checked = true;
+			checkbox.setAttribute('data-toolbox-media-batch-candidate', String(candidate.attachment_id || ''));
+			row.appendChild(checkbox);
+			const body = el('span', 'magick-ai-toolbox__batch-row-body');
+			body.appendChild(el('strong', '', '#' + String(candidate.attachment_id || '') + ' ' + String(candidate.title || 'Untitled media')));
+			const detail = [
+				candidate.source_format ? String(candidate.source_format).toUpperCase() : '',
+				candidate.target_format ? 'to ' + String(candidate.target_format).toUpperCase() : '',
+				candidate.width && candidate.height ? String(candidate.width) + ' x ' + String(candidate.height) : '',
+				candidate.filesize_bytes ? String(candidate.filesize_bytes) + ' bytes' : '',
+			].filter(Boolean).join(' · ');
+			body.appendChild(el('small', '', detail));
+			row.appendChild(body);
+			row.__magickMediaBatchCandidate = Object.assign({}, candidate, { batch_index: index });
+			list.appendChild(row);
+		});
+		panel.appendChild(list);
+
+		if (skipped.length) {
+			const details = el('details', 'magick-ai-toolbox__result-details');
+			details.appendChild(el('summary', '', 'Skipped media'));
+			const skippedList = el('div', 'magick-ai-toolbox__batch-list');
+			skipped.slice(0, 20).forEach((item) => {
+				const row = el('div', 'magick-ai-toolbox__batch-row is-skipped');
+				const body = el('span', 'magick-ai-toolbox__batch-row-body');
+				body.appendChild(el('strong', '', '#' + String(item.attachment_id || '') + ' ' + String(item.title || 'Skipped media')));
+				body.appendChild(el('small', '', String(item.reason || 'skipped')));
+				row.appendChild(body);
+				skippedList.appendChild(row);
+			});
+			details.appendChild(skippedList);
+			panel.appendChild(details);
+		}
+
+		panel.appendChild(createRawDetails(planEnvelope, 'Batch plan payload'));
+	}
+
+	function selectedMediaBatchCandidates(form) {
+		const rows = Array.from(form.querySelectorAll('[data-toolbox-media-batch-candidate]'));
+		return rows
+			.filter((checkbox) => checkbox instanceof HTMLInputElement && checkbox.checked)
+			.map((checkbox) => {
+				const row = checkbox.closest('.magick-ai-toolbox__batch-row');
+				return row && row.__magickMediaBatchCandidate ? row.__magickMediaBatchCandidate : null;
+			})
+			.filter(Boolean);
+	}
+
+	function renderMediaDerivativeBatchResults(form, states, title, summary) {
+		const result = renderShell(
+			form,
+			{ provider: 'core governance' },
+			title || 'Batch media derivative previews',
+			summary || 'Selected media now have short-lived derivative artifact evidence. Submit Core proposals before artifact expiry.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Previewed', states.length);
+		appendMeta(meta, 'Proposal path', 'Core review');
+		result.appendChild(meta);
+
+		const list = el('div', 'magick-ai-toolbox__result-list');
+		states.forEach((state) => {
+			const derivative = state.derivative || {};
+			const row = el('article', 'magick-ai-toolbox__result-item');
+			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(derivative.format || '').toUpperCase()));
+			const itemMeta = el('div', 'magick-ai-toolbox__result-meta');
+			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
+			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
+			appendMeta(itemMeta, 'Expires', derivative.expires_at);
+			row.appendChild(itemMeta);
+			const previewUrl = withRestNonce(derivative.preview_url || '');
+			if (previewUrl) {
+				row.appendChild(createLink(previewUrl, 'Open preview'));
+			}
+			list.appendChild(row);
+		});
+		result.appendChild(list);
+	}
+
+	function renderProposalCreated(form, proposal, options) {
+		options = options || {};
+		const proposalId = proposal && proposal.proposal_id ? proposal.proposal_id : '';
+		const result = renderShell(
+			form,
+			{ provider: 'core governance' },
+			options.title || 'Core proposal submitted',
+			options.summary || 'The derivative artifact is now in Core review as a local media replacement proposal. WordPress writes still require Core approval and preflight.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Proposal', proposalId);
+		appendMeta(meta, 'Status', proposal && proposal.status ? formatLabel(proposal.status) : '');
+		appendMeta(meta, 'Ability', proposal && proposal.ability_id);
+		result.appendChild(meta);
+		if (proposalId && config.coreAdminUrl) {
+			const actions = el('div', 'magick-ai-toolbox__result-actions');
+			actions.appendChild(createLink(config.coreAdminUrl + '&proposal_id=' + encodeURIComponent(proposalId), 'Open in Core review'));
+			result.appendChild(actions);
+		}
+		result.appendChild(createRawDetails(proposal, options.rawTitle || 'Core proposal'));
+	}
+
 	function renderStructuredResult(form, payload) {
 		if (typeof payload === 'string') {
 			renderTextResult(form, payload, 'pending');
@@ -665,6 +1068,267 @@
 		}
 
 		renderStructuredResult(form, payload);
+	}
+
+	async function waitForMediaDerivativeResult(runId) {
+		let lastStatus = '';
+		for (let attempt = 0; attempt < 30; attempt += 1) {
+			const statusPayload = await getJson(config.adapterRestUrl, 'media-derivative-runs/' + encodeURIComponent(runId));
+			lastStatus = cloudStatus(statusPayload);
+			if (lastStatus === 'failed' || lastStatus === 'error') {
+				throw statusPayload;
+			}
+			if (lastStatus === 'succeeded' || lastStatus === 'complete' || lastStatus === 'completed') {
+				return getJson(config.adapterRestUrl, 'media-derivative-runs/' + encodeURIComponent(runId) + '/result');
+			}
+			await sleep(1500);
+		}
+		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Adapter.' };
+	}
+
+	async function createMediaDerivativePreview(input) {
+		if (!input.attachment_id) {
+			throw { message: 'Select an image attachment before generating a preview.' };
+		}
+
+		const createPayload = await postJson(config.adapterRestUrl, 'media-derivative-runs', { input });
+		const runId = createPayload.run_id || (createPayload.cloud_run && createPayload.cloud_run.run_id) || '';
+		if (!runId) {
+			throw { message: 'Adapter did not return a Cloud run id.' };
+		}
+
+		const resultPayload = await waitForMediaDerivativeResult(runId);
+		const derivative = derivativeFromResult(resultPayload);
+		if (!derivative || !derivative.artifact_id) {
+			throw { message: 'Cloud result did not include a derivative artifact id.' };
+		}
+
+		const proposalEnvelope = await postJson(config.adapterRestUrl, 'media-derivative-proposal-payload', {
+			ability_response: createPayload.ability_response || {},
+			cloud_result: resultPayload.cloud_result || resultPayload,
+			derivative_artifact: derivative,
+		});
+
+		return {
+			abilityInput: input,
+			create: createPayload,
+			result: resultPayload,
+			runId,
+			derivative,
+			proposalPayload: proposalEnvelope.proposal_payload || {},
+		};
+	}
+
+	async function runMediaDerivative(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const input = mediaDerivativeInput(form);
+		renderTextResult(form, 'Submitting media derivative run...', 'pending');
+		const state = await createMediaDerivativePreview(input);
+		form.__magickMediaDerivativeState = state;
+		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = false;
+		}
+		renderMediaDerivativeRun(form, state);
+	}
+
+	async function buildMediaDerivativeBatchPlan(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const input = mediaDerivativeBatchPlanInput(form);
+		renderTextResult(form, 'Building media derivative batch plan...', 'pending');
+		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+			ability_id: 'magick-ai/build-media-derivative-batch-plan',
+			input,
+		});
+		const plan = planDataFromEnvelope(planEnvelope) || {};
+		form.__magickMediaDerivativeBatchPlan = plan;
+		form.__magickMediaDerivativeBatchStates = [];
+		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
+		renderTextResult(form, 'Batch plan ready. Review candidates and generate selected previews.', 'ok');
+		const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
+		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
+		if (runButton instanceof HTMLButtonElement) {
+			runButton.disabled = !(Array.isArray(plan.candidates) && plan.candidates.length > 0);
+		}
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = true;
+		}
+	}
+
+	async function runMediaDerivativeBatchPreviews(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const candidates = selectedMediaBatchCandidates(form);
+		if (!candidates.length) {
+			throw { message: 'Select at least one batch candidate before generating previews.' };
+		}
+		const states = [];
+		for (let index = 0; index < candidates.length; index += 1) {
+			const candidate = candidates[index] || {};
+			const input = Object.assign({}, candidate.cloud_request_input || {});
+			if (!input.attachment_id && candidate.attachment_id) {
+				input.attachment_id = candidate.attachment_id;
+			}
+			renderTextResult(form, 'Generating preview ' + String(index + 1) + ' of ' + String(candidates.length) + '...', 'pending');
+			states.push(await createMediaDerivativePreview(input));
+		}
+
+		form.__magickMediaDerivativeBatchStates = states;
+		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = states.length <= 0;
+		}
+		renderMediaDerivativeBatchResults(form, states);
+	}
+
+	async function submitMediaDerivativeBatchProposals(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const states = Array.isArray(form.__magickMediaDerivativeBatchStates) ? form.__magickMediaDerivativeBatchStates : [];
+		if (!states.length) {
+			throw { message: 'Generate selected batch previews before submitting Core proposals.' };
+		}
+
+		const proposals = [];
+		for (let index = 0; index < states.length; index += 1) {
+			const state = states[index];
+			renderTextResult(form, 'Submitting Core proposal ' + String(index + 1) + ' of ' + String(states.length) + '...', 'pending');
+			proposals.push(await postJson(config.adapterRestUrl, 'proposals', {
+				ability_id: 'magick-ai/adopt-cloud-media-derivative',
+				title: 'Replace media file with Cloud derivative',
+				summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
+				input: proposalInputFromState(state),
+				preview: state.proposalPayload,
+			}));
+		}
+		renderMediaDerivativeBatchResults(form, states, 'Batch proposals submitted', 'Selected derivative artifacts are now in Core review. WordPress writes still require Core approval and preflight.');
+		const result = form.querySelector('.magick-ai-toolbox__result');
+		if (result) {
+			result.appendChild(createRawDetails({ proposals }, 'Core proposals'));
+		}
+	}
+
+	async function submitMediaDerivativeProposal(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const state = form.__magickMediaDerivativeState;
+		if (!state || !state.proposalPayload || !state.derivative) {
+			throw { message: 'Generate a derivative preview before submitting a Core proposal.' };
+		}
+
+		renderTextResult(form, 'Submitting Core proposal...', 'pending');
+		const proposal = await postJson(config.adapterRestUrl, 'proposals', {
+			ability_id: 'magick-ai/adopt-cloud-media-derivative',
+			title: 'Replace media file with Cloud derivative',
+			summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
+			input: proposalInputFromState(state),
+			preview: state.proposalPayload,
+		});
+		renderProposalCreated(form, proposal);
+	}
+
+	async function submitMediaReferenceRepairProposal(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const input = referenceRepairInput(form);
+		if (!input.attachment_id) {
+			throw { message: 'Select or enter an image attachment before building a URL repair proposal.' };
+		}
+
+		renderTextResult(form, 'Building media URL repair plan...', 'pending');
+		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+			ability_id: 'magick-ai/build-media-reference-repair-plan',
+			input,
+		});
+		const plan = planDataFromEnvelope(planEnvelope) || {};
+		const actionCount = Number(plan.action_count || (Array.isArray(plan.write_actions) ? plan.write_actions.length : 0));
+		if (actionCount <= 0) {
+			const result = renderShell(
+				form,
+				{ provider: 'core governance' },
+				'No exact URL repairs found',
+				'No proposal was submitted. Sized image variants and ambiguous references remain review-only.'
+			);
+			if (result) {
+				if (Array.isArray(plan.manual_review) && plan.manual_review.length) {
+					result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Manual review found references that are not safe for exact automatic replacement.'));
+				}
+				result.appendChild(createRawDetails(planEnvelope, 'Reference repair plan'));
+			}
+			return;
+		}
+
+		renderTextResult(form, 'Submitting URL repair proposal...', 'pending');
+		const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
+			plan_ability_id: 'magick-ai/build-media-reference-repair-plan',
+			plan,
+			plan_input: input,
+		});
+		renderProposalCreated(form, proposalFromPlanResponse(bridge), {
+			title: 'URL repair proposal submitted',
+			summary: 'Exact hard-coded media URLs are now in Core review as patch-post-content actions. WordPress writes still require Core approval and preflight.',
+			rawTitle: 'Core plan-to-proposal response',
+		});
+	}
+
+	async function submitMediaSettingsReferenceRepairProposal(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
+		const input = settingsReferenceRepairInput(form);
+		if (!input.attachment_id) {
+			throw { message: 'Select or enter an image attachment before building a settings URL repair proposal.' };
+		}
+
+		renderTextResult(form, 'Building settings URL repair plan...', 'pending');
+		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+			ability_id: 'magick-ai/build-media-settings-reference-repair-plan',
+			input,
+		});
+		const plan = planDataFromEnvelope(planEnvelope) || {};
+		const actionCount = Number(plan.action_count || (Array.isArray(plan.write_actions) ? plan.write_actions.length : 0));
+		if (actionCount <= 0) {
+			const result = renderShell(
+				form,
+				{ provider: 'core governance' },
+				'No exact settings URL repairs found',
+				'No proposal was submitted. Excluded formats, small images, serialized values, sized variants, and ambiguous references remain review-only.'
+			);
+			if (result) {
+				if (Array.isArray(plan.manual_review) && plan.manual_review.length) {
+					result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Manual review found setting references that are not safe for exact automatic replacement.'));
+				}
+				result.appendChild(createRawDetails(planEnvelope, 'Settings reference repair plan'));
+			}
+			return;
+		}
+
+		renderTextResult(form, 'Submitting settings URL repair proposal...', 'pending');
+		const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
+			plan_ability_id: 'magick-ai/build-media-settings-reference-repair-plan',
+			plan,
+			plan_input: input,
+		});
+		renderProposalCreated(form, proposalFromPlanResponse(bridge), {
+			title: 'Settings URL repair proposal submitted',
+			summary: 'Exact hard-coded media URLs in settings are now in Core review as patch-setting-value actions. WordPress writes still require Core approval and preflight.',
+			rawTitle: 'Core plan-to-proposal response',
+		});
 	}
 
 	function activateTarget(container, buttonSelector, panelSelector, targetAttribute, panelAttribute, target) {
@@ -843,10 +1507,151 @@
 		});
 	}
 
+	function renderSelectedMedia(form, attachment) {
+		const preview = form.querySelector('[data-toolbox-media-preview]');
+		const name = form.querySelector('[data-toolbox-media-name]');
+		const idField = form.querySelector('[data-toolbox-media-attachment]');
+		const repairButton = form.querySelector('[data-toolbox-submit-reference-repair]');
+		const settingsRepairButton = form.querySelector('[data-toolbox-submit-settings-repair]');
+		if (idField instanceof HTMLInputElement && attachment && attachment.id) {
+			idField.value = String(attachment.id);
+		}
+		if (repairButton instanceof HTMLButtonElement) {
+			repairButton.disabled = mediaAttachmentId(form) <= 0;
+		}
+		if (settingsRepairButton instanceof HTMLButtonElement) {
+			settingsRepairButton.disabled = mediaAttachmentId(form) <= 0;
+		}
+		if (name) {
+			name.textContent = attachment && attachment.filename ? attachment.filename : 'Selected attachment #' + (attachment && attachment.id ? attachment.id : '');
+		}
+		if (!preview) {
+			return;
+		}
+		clearNode(preview);
+		const url = attachment && attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment && attachment.url;
+		if (url) {
+			const image = el('img', 'magick-ai-toolbox__media-thumb');
+			image.src = url;
+			image.alt = attachment && attachment.alt ? attachment.alt : '';
+			preview.appendChild(image);
+			return;
+		}
+		preview.appendChild(el('span', '', 'Attachment selected'));
+	}
+
+	function initMediaDerivativeControls() {
+		document.querySelectorAll('[data-toolbox-media-derivative]').forEach((form) => {
+			const idField = form.querySelector('[data-toolbox-media-attachment]');
+			const repairButton = form.querySelector('[data-toolbox-submit-reference-repair]');
+			const settingsRepairButton = form.querySelector('[data-toolbox-submit-settings-repair]');
+			if (idField instanceof HTMLInputElement) {
+				idField.addEventListener('input', () => {
+					if (repairButton instanceof HTMLButtonElement) {
+						repairButton.disabled = mediaAttachmentId(form) <= 0;
+					}
+					if (settingsRepairButton instanceof HTMLButtonElement) {
+						settingsRepairButton.disabled = mediaAttachmentId(form) <= 0;
+					}
+				});
+			}
+
+			form.addEventListener('click', (event) => {
+				if (!(event.target instanceof Element)) {
+					return;
+				}
+
+				const selectButton = event.target.closest('[data-toolbox-select-media]');
+				if (selectButton && form.contains(selectButton)) {
+					event.preventDefault();
+					if (!window.wp || !window.wp.media) {
+						renderTextResult(form, 'WordPress media picker is unavailable on this page.', 'error');
+						return;
+					}
+					const frame = window.wp.media({
+						title: 'Select image',
+						button: { text: 'Use image' },
+						library: { type: 'image' },
+						multiple: false,
+					});
+					frame.on('select', () => {
+						const attachment = frame.state().get('selection').first();
+						renderSelectedMedia(form, attachment ? attachment.toJSON() : null);
+					});
+					frame.open();
+					return;
+				}
+
+				const runButton = event.target.closest('[data-toolbox-run-media-derivative]');
+				if (runButton && form.contains(runButton)) {
+					event.preventDefault();
+					runMediaDerivative(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const batchPlanButton = event.target.closest('[data-toolbox-build-media-batch-plan]');
+				if (batchPlanButton && form.contains(batchPlanButton)) {
+					event.preventDefault();
+					buildMediaDerivativeBatchPlan(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const batchPreviewButton = event.target.closest('[data-toolbox-run-media-batch-previews]');
+				if (batchPreviewButton && form.contains(batchPreviewButton)) {
+					event.preventDefault();
+					runMediaDerivativeBatchPreviews(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const batchProposalButton = event.target.closest('[data-toolbox-submit-media-batch-proposals]');
+				if (batchProposalButton && form.contains(batchProposalButton)) {
+					event.preventDefault();
+					submitMediaDerivativeBatchProposals(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const proposalButton = event.target.closest('[data-toolbox-submit-media-proposal]');
+				if (proposalButton && form.contains(proposalButton)) {
+					event.preventDefault();
+					submitMediaDerivativeProposal(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const repairButton = event.target.closest('[data-toolbox-submit-reference-repair]');
+				if (repairButton && form.contains(repairButton)) {
+					event.preventDefault();
+					submitMediaReferenceRepairProposal(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const settingsRepairButton = event.target.closest('[data-toolbox-submit-settings-repair]');
+				if (settingsRepairButton && form.contains(settingsRepairButton)) {
+					event.preventDefault();
+					submitMediaSettingsReferenceRepairProposal(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+				}
+			});
+		});
+	}
+
 	initTopTabs();
 	initToolSwitcher();
 	initConnectorSwitcher();
 	initContextDrafts();
+	initMediaDerivativeControls();
 
 	document.addEventListener('submit', function (event) {
 		const form = event.target;

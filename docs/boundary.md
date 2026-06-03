@@ -86,8 +86,13 @@ not a WordPress write route and not a Core proposal execution route.
 `/media-derivative-handoff` prepares one-run ability input for
 `magick-ai/build-media-derivative-cloud-request` from Core media policy defaults
 and operator overrides. It is a planning artifact route. Toolbox must not store
-site media policy truth, upload/import media, call Cloud, submit Core proposals,
-replace attachment files, or update attachment metadata.
+site media policy truth, upload/import media, replace attachment files, approve
+proposals, execute proposals, or update attachment metadata. The admin operator
+surface may call Adapter to generate a short-lived Cloud preview, build a
+bounded `magick-ai/build-media-derivative-batch-plan`, and create Core review
+proposals for selected derivative or exact-reference repair actions. Those
+proposals remain Core-owned local governance records, not Toolbox approval or
+write truth.
 
 ## Content Context Boundary
 
