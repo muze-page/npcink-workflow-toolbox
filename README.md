@@ -263,6 +263,10 @@ The admin **Site Knowledge** tab lets operators refresh, rebuild, or delete the
 Cloud-managed index and inspect coverage without configuring vector provider
 keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
 Toolbox only starts sync from local public content and displays returned status.
+The **Connectors -> Vector** panel is a read-only verification surface for the
+same Cloud-managed site knowledge status and search check; it does not expose
+provider keys, embedding settings, collection names, or vector database
+configuration.
 
 Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include raw provider payloads for debugging.

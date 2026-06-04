@@ -2077,16 +2077,7 @@ final class Provider_Client {
 	}
 
 	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
-		$result = array();
-		foreach ( array( 'result', 'output', 'data' ) as $key ) {
-			if ( is_array( $response[ $key ] ?? null ) ) {
-				$result = $response[ $key ];
-				break;
-			}
-		}
-		if ( array() === $result ) {
-			$result = $response;
-		}
+		$result = $this->extract_cloud_runtime_result( $response );
 
 		$images = array();
 		foreach ( array( 'images', 'candidates', 'image_candidates' ) as $key ) {
