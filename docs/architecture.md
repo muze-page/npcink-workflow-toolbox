@@ -224,8 +224,8 @@ Content Assistant product-surface discipline:
 4. keep provider raw responses and complete payloads inside collapsed result
    disclosures.
 
-The **Article Write Plan** tool has a dedicated panel for reviewed draft title,
-draft body, SEO hints, and risk level. Its result renderer shows
+The **Reviewed Draft Handoff** fallback tool has a dedicated panel for reviewed
+draft title, draft body, SEO hints, and risk level. Its result renderer shows
 `article_write_plan` workflow artifacts, the risk report, the final
 `magick-ai/create-draft` action, and the Core from-plan handoff route. It does
 not submit the plan to Core or approve execution.

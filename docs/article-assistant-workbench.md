@@ -5,6 +5,12 @@ Toolbox and Abilities outputs into one reviewable `article_draft_v1` artifact.
 It is not a cloud writing product, batch publishing surface, workflow runtime,
 or second approval plane.
 
+It is also not the default Toolbox product surface. Default Toolbox workflows
+should support the work around a human-written article: taxonomy/tag choices,
+internal links, image candidates, SEO/AEO/GEO suggestions, media metadata, and
+publish/readiness checks. Article Assistant is a fallback for broad article
+requests or for reviewed local draft handoff.
+
 ## Surface Budget
 
 This workbench is intentionally small. Its job is to arrange existing Toolbox
@@ -22,6 +28,7 @@ The current budget is:
 - one optional `article_write_plan` for `magick-ai/create-draft`;
 - no prompt library, authoring runtime, scheduler, background writing job, or
   batch article console;
+- no default button that promises to write the article body;
 - no Cloud article generation, Cloud article import, or Cloud-produced writing
   plan.
 
@@ -59,8 +66,8 @@ The workbench returns:
   optional local knowledge matches.
 - `image_candidates`: image-source candidates with attribution metadata when a
   configured image provider is available.
-- `article_outline`: deterministic section guidance for a human or external AI
-  caller.
+- `article_outline`: deterministic section guidance for a human editor or an
+  external AI caller, not a finished article body.
 - `article_draft_candidate`: reviewed draft content when supplied, otherwise
   notes plus a not-ready marker.
 - `discoverability_pack`: SEO/AEO/GEO suggestion contract from the existing
@@ -92,3 +99,9 @@ become the article writing owner.
 5. Submit only the returned `article_write_plan` to Core from-plan intake.
 6. Let Core handle proposal review, preflight, approval, audit, and final
    authorized ability execution.
+
+For normal editorial operations, prefer the smaller support buttons first:
+taxonomy/tag recommendations, internal-link candidates, image candidates,
+content discoverability suggestions, media metadata, and publish/readiness
+preflight. Use Article Assistant only when those support artifacts need to be
+assembled around one reviewed draft.

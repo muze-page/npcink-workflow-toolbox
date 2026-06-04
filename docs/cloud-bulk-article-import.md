@@ -24,8 +24,8 @@ Toolbox must not:
 
 ## Replacement
 
-The Article Write Plan panel may remain, but it should be understood as local
-`article_draft_v1` recipe UX:
+The Reviewed Draft Handoff fallback panel may remain, but it should be
+understood as local `article_draft_v1` recipe UX:
 
 ```text
 local Ability recipe

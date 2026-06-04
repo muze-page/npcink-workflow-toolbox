@@ -34,7 +34,8 @@ Target features:
 - Cloud-managed web search action with source-aware response display.
 - configured image-source action with browser preview instead of raw JSON only.
 - Cloud-managed site knowledge search, status, and sync.
-- Article brief button.
+- Content support brief button for SEO/AEO/GEO, source coverage, image
+  candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
 - Clear empty/error/loading states.
@@ -54,8 +55,11 @@ Goal: connect useful suggestions to governed WordPress changes.
 
 Target features:
 
-- create draft proposal handoff;
-- article write plan artifact for one reviewed draft;
+- taxonomy/tag proposal handoff;
+- internal-link candidate handoff for operator review;
+- image candidate adoption proposal handoff;
+- article write plan artifact for one reviewed human draft as a fallback
+  off-ramp;
 - set featured image proposal handoff;
 - update media metadata proposal handoff;
 - set SEO meta proposal handoff;
@@ -98,14 +102,18 @@ Goal: add repeatable operator flows without creating a workflow runtime.
 
 Candidate buttons:
 
-- generate article outline with references;
+- recommend taxonomy and tags;
+- find internal-link opportunities;
 - find configured image-source candidates for featured or inline images;
+- build content discoverability suggestions from the operator-filled context;
+- run publish/readiness preflight for source coverage, duplicate risk, and
+  missing media metadata;
 - optimize old article;
 - complete media alt and caption suggestions;
-- find internal-link opportunities;
 - build FAQ suggestions;
-- build content discoverability suggestions from the operator-filled context;
 - check source coverage.
+- generate article outline with references only as an Article Assistant
+  fallback after the operator chooses a writing-support route.
 - rerank source, image, and vector candidates with Jina Reranker.
 
 Rule:

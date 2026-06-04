@@ -292,14 +292,14 @@ final class Admin_Page {
 		?>
 		<div class="wrap magick-ai-toolbox">
 			<h1><?php esc_html_e( 'Magick AI Toolbox', 'magick-ai-toolbox' ); ?></h1>
-			<p class="magick-ai-toolbox__scope"><?php esc_html_e( 'Generate research, image-source candidates, vector matches, and planning handoffs. Final WordPress writes still require Core proposal approval.', 'magick-ai-toolbox' ); ?></p>
+			<p class="magick-ai-toolbox__scope"><?php esc_html_e( 'Review content context, site knowledge, image candidates, and governed handoffs. Human editors own article text; final WordPress writes still require Core proposal approval.', 'magick-ai-toolbox' ); ?></p>
 
 			<?php $this->render_status_strip( $settings, $content_context ); ?>
 
 			<nav class="magick-ai-toolbox__tabs" data-toolbox-tabs aria-label="<?php esc_attr_e( 'Toolbox sections', 'magick-ai-toolbox' ); ?>">
 				<button type="button" class="magick-ai-toolbox__tab is-active" data-toolbox-tab-target="context" aria-selected="true"><?php esc_html_e( 'Content Context', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="site-knowledge" aria-selected="false"><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></button>
-				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Try Tools', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Content Support', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="connectors" aria-selected="false"><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></button>
 			</nav>
 
@@ -358,30 +358,19 @@ final class Admin_Page {
 
 			<section class="magick-ai-toolbox__card">
 				<h3><?php esc_html_e( 'Index actions', 'magick-ai-toolbox' ); ?></h3>
-				<p><?php esc_html_e( 'Refresh is the default action. Rebuild clears the selected Cloud index before re-indexing. Delete removes Cloud index entries for this site or selected post IDs.', 'magick-ai-toolbox' ); ?></p>
+				<p><?php esc_html_e( 'Create or refresh the Cloud index for current public site content. Advanced cleanup stays in Cloud operations.', 'magick-ai-toolbox' ); ?></p>
 				<form data-toolbox-site-knowledge-sync>
-					<div class="magick-ai-toolbox__split">
-						<label>
-							<span><?php esc_html_e( 'Sync mode', 'magick-ai-toolbox' ); ?></span>
-							<select name="sync_mode">
-								<option value="refresh"><?php esc_html_e( 'Refresh', 'magick-ai-toolbox' ); ?></option>
-								<option value="rebuild"><?php esc_html_e( 'Rebuild', 'magick-ai-toolbox' ); ?></option>
-								<option value="delete"><?php esc_html_e( 'Delete index', 'magick-ai-toolbox' ); ?></option>
-							</select>
-						</label>
-						<label>
-							<span><?php esc_html_e( 'Max posts', 'magick-ai-toolbox' ); ?></span>
-							<input type="number" name="max_posts" min="1" max="50" value="20" />
-						</label>
-					</div>
-					<label>
-						<span><?php esc_html_e( 'Post IDs', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="post_ids" placeholder="<?php esc_attr_e( 'Optional: 123,456', 'magick-ai-toolbox' ); ?>" />
-					</label>
-					<p class="description"><?php esc_html_e( 'Leave Post IDs empty to process the latest public posts/pages. Comments are included only when Cloud comments indexing is enabled.', 'magick-ai-toolbox' ); ?></p>
+					<input type="hidden" name="sync_mode" value="refresh" />
+					<input type="hidden" name="max_posts" value="20" />
+					<p class="description"><?php esc_html_e( 'Toolbox sends the latest public posts and pages. Approved comments are included only when Cloud comments indexing is enabled.', 'magick-ai-toolbox' ); ?></p>
 					<div class="magick-ai-toolbox__inline-actions">
-						<button type="submit" class="button button-primary"><?php esc_html_e( 'Start sync', 'magick-ai-toolbox' ); ?></button>
-						<button type="button" class="button" data-toolbox-site-knowledge-action-status><?php esc_html_e( 'Refresh status', 'magick-ai-toolbox' ); ?></button>
+						<button
+							type="submit"
+							class="button button-primary"
+							data-toolbox-site-knowledge-sync-submit
+							data-start-label="<?php esc_attr_e( 'Start indexing', 'magick-ai-toolbox' ); ?>"
+							data-refresh-label="<?php esc_attr_e( 'Refresh index', 'magick-ai-toolbox' ); ?>"
+						><?php esc_html_e( 'Start indexing', 'magick-ai-toolbox' ); ?></button>
 					</div>
 					<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 				</form>
@@ -571,7 +560,7 @@ final class Admin_Page {
 		?>
 		<div class="magick-ai-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Content Context', 'magick-ai-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Fill a compact site brief, then tune SEO, AEO, and GEO guidance. Draft buttons only prefill this form; nothing is saved until you click Save content context. After saving, use Try Tools to test generated briefs and search outputs.', 'magick-ai-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Fill a compact site brief, then tune SEO, AEO, and GEO guidance. Draft buttons only prefill this form; nothing is saved until you click Save content context. After saving, use Content Support to test briefs, site knowledge, and image candidates.', 'magick-ai-toolbox' ); ?></p>
 		</div>
 
 		<form class="magick-ai-toolbox__settings-form" method="post" action="options.php" data-toolbox-context-form>
@@ -860,8 +849,8 @@ final class Admin_Page {
 			array(
 				'id'          => 'article-brief',
 				'endpoint'    => 'flows/article-brief',
-				'title'       => __( 'Article Brief', 'magick-ai-toolbox' ),
-				'description' => __( 'Build a research-backed outline, source notes, image prompt, and governance handoff.', 'magick-ai-toolbox' ),
+				'title'       => __( 'Content Support Brief', 'magick-ai-toolbox' ),
+				'description' => __( 'Build source notes, outline guidance, image candidates, and governance handoff notes around a human-written article.', 'magick-ai-toolbox' ),
 				'field'       => 'topic',
 				'placeholder' => __( 'Article topic', 'magick-ai-toolbox' ),
 				'button'      => __( 'Build brief', 'magick-ai-toolbox' ),
@@ -869,15 +858,15 @@ final class Admin_Page {
 			array(
 				'id'          => 'article-assistant',
 				'endpoint'    => 'flows/article-assistant',
-				'title'       => __( 'Article Assistant', 'magick-ai-toolbox' ),
-				'description' => __( 'Compose one local article_draft_v1 workbench from abilities, evidence, context, notes, and an optional reviewed draft.', 'magick-ai-toolbox' ),
+				'title'       => __( 'Article Assistant Fallback', 'magick-ai-toolbox' ),
+				'description' => __( 'Assemble one local workbench artifact from support abilities and an optional reviewed draft; it does not write the article body.', 'magick-ai-toolbox' ),
 				'custom'      => 'article_assistant',
 			),
 			array(
 				'id'          => 'article-plan',
 				'endpoint'    => 'flows/article-plan',
-				'title'       => __( 'Article Write Plan', 'magick-ai-toolbox' ),
-				'description' => __( 'Prepare a Core-ready article_write_plan for one reviewed draft. Toolbox does not submit or approve the proposal.', 'magick-ai-toolbox' ),
+				'title'       => __( 'Reviewed Draft Handoff', 'magick-ai-toolbox' ),
+				'description' => __( 'Prepare a Core-ready article_write_plan only after a human-reviewed draft exists. Toolbox does not submit or approve the proposal.', 'magick-ai-toolbox' ),
 				'custom'      => 'article_plan',
 			),
 			array(

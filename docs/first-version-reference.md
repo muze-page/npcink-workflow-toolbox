@@ -151,20 +151,22 @@ Site knowledge status and sync:
   or rebuild work from public WordPress content. It does not write WordPress
   content and does not create a local indexing queue.
 
-For article-writing AI callers, the canonical composition sequence is:
+For content-support AI callers, the canonical composition sequence is:
 
-1. `magick-ai-toolbox/get-content-discoverability-context`
-2. `magick-ai-toolbox/validate-content-discoverability-context`
-3. Cloud-managed web search
-4. `magick-ai-toolbox/vector-search`
-5. `magick-ai-toolbox/search-image-source`
-6. `magick-ai-toolbox/build-content-discoverability-brief`
-7. `magick-ai-toolbox/build-article-brief`
-8. `magick-ai-toolbox/build-article-write-plan`
+1. `magick-ai-toolbox/build-content-discoverability-brief`
+2. `magick-ai-toolbox/search-site-knowledge`
+3. `magick-ai-toolbox/search-image-source`
+4. `magick-ai-toolbox/build-image-candidate-adoption-plan` after operator
+   review
+5. `magick-ai-toolbox/build-media-brief`
+6. `magick-ai-toolbox/build-ai-article-writing-pack` only as a broad
+   writing-support fallback
+7. `magick-ai-toolbox/build-article-write-plan` only after a reviewed human
+   draft exists
 
 The sequence is a recommendation for composing tool inputs, not a workflow
 runtime contract. Toolbox does not schedule, retry, index, import media, publish
-posts, or mutate SEO fields.
+posts, write article bodies, or mutate SEO fields.
 
 Stable first-version scopes:
 

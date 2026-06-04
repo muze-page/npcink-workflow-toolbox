@@ -12,6 +12,11 @@ Toolbox provides a bounded tool layer for AI composition. It exposes
 image-source, vector, content-context, and planning abilities that other AI
 systems can call. Cloud-managed web search, image-source, and vector surfaces
 are general tool inputs; article drafting is only one consumer.
+Default composition should support the editorial work around the article body:
+taxonomy/tag choices, internal-link candidates, image candidates, SEO/AEO/GEO
+guidance, media metadata, and publish/readiness checks. Article writing packs
+are fallback packaging for broad writing-support prompts, not the main product
+contract.
 
 Toolbox does not become the article-writing brain, workflow runtime, knowledge
 indexer, media importer, SEO writer, publisher, approval store, or audit truth.
@@ -37,7 +42,7 @@ one kind of evidence:
 Do not call article-specific planning abilities unless the workflow is actually
 building or handing off an article.
 
-## Article Call Sequence
+## Content Support First
 
 For SEO, AEO, and GEO guidance, the primary contract is the lightweight brief:
 
@@ -47,6 +52,25 @@ magick-ai-toolbox/build-content-discoverability-brief
 
 It returns per-section `seo`, `aeo`, and `geo` blocks plus
 `exceptions`/`special_cases`, proposal fields, and conservative candidates.
+
+For normal WordPress editorial support, compose abilities in this order:
+
+1. `magick-ai-toolbox/build-content-discoverability-brief`
+   - Build suggestion-only SEO/AEO/GEO guidance, taxonomy/tag candidates,
+     internal-link hints, and proposal fields for one topic or post.
+2. `magick-ai-toolbox/search-site-knowledge`
+   - Retrieve related content, internal-link candidates, duplicate-risk
+     signals, refresh suggestions, or image context from Cloud-managed site
+     knowledge.
+3. `magick-ai-toolbox/search-image-source`
+   - Retrieve featured, inline, layout, reference, or media-planning image
+     candidates and preserve attribution.
+4. `magick-ai-toolbox/build-image-candidate-adoption-plan`
+   - After operator review, build a Core-ready media adoption plan when the
+     operator wants to import a selected image candidate.
+5. `magick-ai-toolbox/build-media-brief`
+   - Build image prompts, alt/caption suggestions, and governed media handoff
+     notes for an existing post.
 
 For OpenClaw or another external caller that only receives a broad
 natural-language request such as "write an article about AI", use the high-level
@@ -61,8 +85,8 @@ and content discoverability brief into one writing pack. The caller can then
 draft from the returned instructions without manually chaining each lower-level
 ability. It is not the primary SEO/AEO/GEO contract.
 
-For one article draft or article-planning run, an AI caller should use this
-sequence:
+For one reviewed article draft or article-planning fallback run, an AI caller
+should use this sequence:
 
 1. `magick-ai-toolbox/get-content-discoverability-context`
    - Read site positioning, target audience, brand voice, keywords, forbidden
@@ -104,12 +128,16 @@ same ability contracts. The channel changes, but the write boundary does not.
 
 | Operator intent | OpenClaw route | Toolbox button flow | Final write path |
 | --- | --- | --- | --- |
-| Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan | Core proposal for `magick-ai/create-draft` |
-| Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch plan | Core proposal for draft, media upload, metadata, and featured-image abilities |
+| Suggest taxonomy/tags | Adapter taxonomy terms recipe | Taxonomy/tag recommendations | Core proposal for `magick-ai/set-post-terms` after review |
+| Find internal-link opportunities | Adapter/site-knowledge support recipe | Internal-link candidates | No direct write; future reviewed content patch must go through Core |
+| Find image candidates | Adapter image-source support recipe | Image candidates | No direct write until a candidate adoption plan is reviewed |
+| Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
+| Run publish/readiness preflight | Adapter site-knowledge/support recipe | Publish preflight | No direct write; returns warnings and operator tasks |
 | Adopt one reviewed image candidate | Adapter `image_candidate_adoption_plan` recipe | Adopt New Image | Core proposal for media upload, metadata, and optional featured image |
 | Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | Core proposal for `magick-ai/adopt-cloud-media-derivative` |
 | Repair hard-coded media URLs | Adapter read ability plus Core from-plan | URL repair proposal button | Core proposal for exact-match patch actions |
-| Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
+| Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan fallback | Core proposal for `magick-ai/create-draft` |
+| Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch fallback | Core proposal for draft, media upload, metadata, and featured-image abilities |
 
 Toolbox may make these flows easier to click through, but it must not create a
 separate workflow runtime, direct write path, or approval store for them.

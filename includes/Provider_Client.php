@@ -203,6 +203,18 @@ final class Provider_Client {
 		$license_review_status = $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? '' ), $source_type );
 		$provider_origin = sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) );
 		$warnings = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
+		$file_name = sanitize_file_name( (string) ( $candidate['file_name'] ?? '' ) );
+		$suggested_filename = sanitize_file_name( (string) ( $candidate['suggested_filename'] ?? $file_name ) );
+		if ( '' === $file_name && '' !== $suggested_filename ) {
+			$file_name = $suggested_filename;
+		}
+		$filename_basis = is_array( $candidate['filename_basis'] ?? null )
+			? $this->sanitize_payload( $candidate['filename_basis'] )
+			: array(
+				'owner'                          => 'wordpress_write_ability_final',
+				'strategy'                       => 'candidate_suggested_filename',
+				'final_sanitize_unique_required' => true,
+			);
 
 		$candidate['contract_version']              = 'image_candidate.v1';
 		$candidate['source_type']                   = $source_type;
@@ -216,6 +228,9 @@ final class Provider_Client {
 		$candidate['license_review_status']         = $license_review_status;
 		$candidate['requires_human_license_review'] = 'not_required' !== $license_review_status;
 		$candidate['warnings']                      = $warnings;
+		$candidate['file_name']                     = $file_name;
+		$candidate['suggested_filename']            = '' !== $suggested_filename ? $suggested_filename : $file_name;
+		$candidate['filename_basis']                = $filename_basis;
 		$candidate['provenance']                    = array(
 			'provider'          => $provider,
 			'provider_origin'   => $candidate['provider_origin'],
@@ -1227,7 +1242,14 @@ final class Provider_Client {
 
 		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
 		$photographer = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['photographer_name'] ?? '' ) );
-		$file_name = sanitize_file_name( (string) ( $input['file_name'] ?? $candidate['file_name'] ?? '' ) );
+		$file_name = sanitize_file_name( (string) ( $input['file_name'] ?? $candidate['file_name'] ?? $candidate['suggested_filename'] ?? '' ) );
+		$filename_policy = array(
+			'owner'                          => 'wordpress_write_ability_final',
+			'proposed_filename'              => $file_name,
+			'final_sanitize_unique_required' => true,
+			'preserve_attachment_metadata'   => true,
+			'source'                         => '' !== $file_name ? 'reviewed_or_candidate_suggestion' : 'wordpress_default',
+		);
 		$upload_id = 'upload_image_candidate';
 		$metadata_id = 'update_image_candidate_details';
 		$featured_id = 'set_image_candidate_featured_image';
@@ -1324,6 +1346,8 @@ final class Provider_Client {
 			'recipe_execution'            => 'local_operator_orchestration',
 			'write_posture'               => 'core_proposal_handoff',
 			'direct_wordpress_write'      => false,
+			'proposed_filename'           => $file_name,
+			'filename_policy'             => $filename_policy,
 			'batch_id'                    => 'image_candidate_adoption_' . substr( md5( $image_url . '|' . $post_id . '|' . wp_json_encode( $write_actions ) ), 0, 12 ),
 			'requires_approval'           => true,
 			'dry_run'                     => true,
@@ -1340,7 +1364,9 @@ final class Provider_Client {
 					'source_type'      => $source_type,
 					'provider'         => sanitize_key( (string) ( $candidate['provider'] ?? 'external' ) ),
 					'provider_origin'  => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
-					'post_id'          => $post_id,
+					'proposed_filename' => $file_name,
+					'filename_policy'   => $filename_policy,
+					'post_id'           => $post_id,
 					'set_featured_image' => $set_featured_image,
 					'attribution'      => $attribution,
 				),
@@ -1718,6 +1744,9 @@ final class Provider_Client {
 		$idempotency_key = $this->trace_id( str_replace( '.', '_', $contract_version ) );
 		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
+			if ( $this->is_cloud_concurrency_error( $response ) ) {
+				return $this->site_knowledge_active_run_response( $artifact_type, $composition_role, $runtime_payload );
+			}
 			return $response;
 		}
 
@@ -1851,17 +1880,10 @@ final class Provider_Client {
 	}
 
 	private function normalize_site_knowledge_cloud_response( array $response, string $artifact_type, string $composition_role, array $runtime_payload ): array {
-		$result = array();
-		foreach ( array( 'result', 'output', 'data' ) as $key ) {
-			if ( is_array( $response[ $key ] ?? null ) ) {
-				$result = $response[ $key ];
-				break;
-			}
-		}
+		$result = $this->extract_cloud_runtime_result( $response );
 
-		if ( array() === $result ) {
-			$result = $response;
-		}
+		$results = is_array( $result['results'] ?? null ) ? $this->sanitize_payload( $result['results'] ) : array();
+		$results = $this->filter_current_public_site_knowledge_results( $results );
 
 		$payload = $this->with_output_contract(
 			array(
@@ -1870,10 +1892,12 @@ final class Provider_Client {
 				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
 				'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
 				'status'            => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
-				'run_id'            => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
-				'results'           => is_array( $result['results'] ?? null ) ? $this->sanitize_payload( $result['results'] ) : array(),
+				'run_id'            => sanitize_text_field( (string) ( $response['run_id'] ?? ( ( $response['data']['run_id'] ?? null ) ?: ( $result['run_id'] ?? '' ) ) ) ),
+				'results'           => $results,
 				'coverage'          => is_array( $result['coverage'] ?? null ) ? $this->sanitize_payload( $result['coverage'] ) : array(),
 				'sync'              => is_array( $result['sync'] ?? null ) ? $this->sanitize_payload( $result['sync'] ) : array(),
+				'intent'            => sanitize_key( (string) ( $result['intent'] ?? '' ) ),
+				'evidence_gate'     => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
 				'handoff'           => array(
 					'cloud_runtime'          => 'magick_ai_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
@@ -1889,6 +1913,102 @@ final class Provider_Client {
 		}
 
 		return $payload;
+	}
+
+	private function filter_current_public_site_knowledge_results( array $results ): array {
+		if ( ! function_exists( 'get_post_status' ) || ! function_exists( 'get_post_type' ) ) {
+			return $results;
+		}
+
+		return array_values(
+			array_filter(
+				$results,
+				function ( $result ): bool {
+					if ( ! is_array( $result ) ) {
+						return false;
+					}
+
+					$source_type = sanitize_key( (string) ( $result['source_type'] ?? '' ) );
+					$post_id     = absint( $result['post_id'] ?? 0 );
+					if ( 0 >= $post_id ) {
+						return false;
+					}
+
+					if ( 'comment' === $source_type ) {
+						if ( ! function_exists( 'get_comment' ) ) {
+							return false;
+						}
+						$comment = get_comment( absint( $result['source_id'] ?? 0 ) );
+						if ( ! $comment || 'approve' !== (string) $comment->comment_approved ) {
+							return false;
+						}
+					}
+
+					return 'publish' === get_post_status( $post_id )
+						&& in_array( get_post_type( $post_id ), array( 'post', 'page' ), true );
+				}
+			)
+		);
+	}
+
+	private function extract_cloud_runtime_result( array $response ): array {
+		foreach ( array( 'result', 'output' ) as $key ) {
+			if ( is_array( $response[ $key ] ?? null ) ) {
+				return $response[ $key ];
+			}
+		}
+
+		$data = is_array( $response['data'] ?? null ) ? $response['data'] : array();
+		foreach ( array( 'result', 'output', 'result_json' ) as $key ) {
+			if ( is_array( $data[ $key ] ?? null ) ) {
+				return $data[ $key ];
+			}
+		}
+
+		if ( is_array( $data['run']['result'] ?? null ) ) {
+			return $data['run']['result'];
+		}
+
+		if ( array() !== $data && ( isset( $data['artifact_type'] ) || isset( $data['results'] ) || isset( $data['coverage'] ) || isset( $data['sync'] ) ) ) {
+			return $data;
+		}
+
+		return $response;
+	}
+
+	private function is_cloud_concurrency_error( WP_Error $error ): bool {
+		$code    = (string) $error->get_error_code();
+		$message = (string) $error->get_error_message();
+		return false !== strpos( $code, 'concurrency' ) || false !== strpos( $message, 'max active cloud runs' );
+	}
+
+	private function site_knowledge_active_run_response( string $artifact_type, string $composition_role, array $runtime_payload ): array {
+		return $this->with_output_contract(
+			array(
+				'provider'          => 'magick_ai_cloud',
+				'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
+				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
+				'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
+				'status'            => 'syncing',
+				'results'           => array(),
+				'coverage'          => array(),
+				'sync'              => array(
+					'sync_mode'          => sanitize_key( (string) ( $runtime_payload['input']['sync_mode'] ?? 'refresh' ) ),
+					'accepted_documents' => 0,
+					'indexed_documents'  => 0,
+					'indexed_chunks'     => 0,
+					'failed_documents'   => 0,
+				),
+				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'magick-ai-toolbox' ),
+				'handoff'           => array(
+					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'final_writes'           => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+			),
+			$artifact_type,
+			$composition_role
+		);
 	}
 
 	private function sanitize_absint_list( $value ): array {

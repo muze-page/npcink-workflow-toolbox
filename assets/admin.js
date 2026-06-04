@@ -531,6 +531,9 @@
 		appendMeta(meta, 'Indexed chunks', sync.indexed_chunks);
 		appendMeta(meta, 'Failed documents', sync.failed_documents);
 		result.appendChild(meta);
+		if (payload.message) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', payload.message));
+		}
 		renderHandoff(result, payload.handoff);
 		result.appendChild(createRawDetails(payload, 'Sync payload'));
 	}
@@ -552,6 +555,9 @@
 		const meta = el('div', 'magick-ai-toolbox__result-meta');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
+		if (payload.evidence_gate && typeof payload.evidence_gate === 'object') {
+			appendMeta(meta, 'Evidence', payload.evidence_gate.status ? formatLabel(payload.evidence_gate.status) : '');
+		}
 		result.appendChild(meta);
 
 		if (results.length) {
@@ -1589,6 +1595,7 @@
 			renderSiteKnowledgeStatusNode(summary, payload);
 			summary.appendChild(createRawDetails(payload, 'Status payload'));
 		}
+		updateSiteKnowledgeActionState(root, payload);
 		return payload;
 	}
 
@@ -1600,14 +1607,14 @@
 	}
 
 	function setSiteKnowledgeButtonsBusy(root, busy) {
-		root.querySelectorAll('[data-toolbox-site-knowledge-status], [data-toolbox-site-knowledge-action-status]').forEach((button) => {
+		root.querySelectorAll('[data-toolbox-site-knowledge-status]').forEach((button) => {
 			button.disabled = busy;
 			button.setAttribute('aria-busy', busy ? 'true' : 'false');
 		});
 	}
 
 	function setSiteKnowledgeSyncBusy(form, busy) {
-		const submitButton = form.querySelector('button[type="submit"]');
+		const submitButton = form.querySelector('[data-toolbox-site-knowledge-sync-submit]') || form.querySelector('button[type="submit"]');
 		if (!submitButton) {
 			return;
 		}
@@ -1617,6 +1624,22 @@
 		submitButton.disabled = busy;
 		submitButton.setAttribute('aria-busy', busy ? 'true' : 'false');
 		submitButton.textContent = busy ? 'Sync queued...' : submitButton.__magickOriginalText;
+	}
+
+	function updateSiteKnowledgeActionState(root, payload) {
+		const button = root.querySelector('[data-toolbox-site-knowledge-sync-submit]');
+		if (!button) {
+			return;
+		}
+		const coverage = payload && payload.coverage && typeof payload.coverage === 'object' ? payload.coverage : {};
+		const indexedChunks = Number(coverage.indexed_chunks || 0);
+		const startLabel = button.getAttribute('data-start-label') || 'Start indexing';
+		const refreshLabel = button.getAttribute('data-refresh-label') || 'Refresh index';
+		button.dataset.indexState = indexedChunks > 0 ? 'ready' : 'empty';
+		button.__magickOriginalText = indexedChunks > 0 ? refreshLabel : startLabel;
+		if (!button.disabled) {
+			button.textContent = button.__magickOriginalText;
+		}
 	}
 
 	function siteKnowledgeStatusStillActive(payload) {
@@ -1648,7 +1671,7 @@
 					summary.appendChild(createRawDetails(error, 'Status error'));
 				}
 			};
-			root.querySelectorAll('[data-toolbox-site-knowledge-status], [data-toolbox-site-knowledge-action-status]').forEach((statusButton) => {
+			root.querySelectorAll('[data-toolbox-site-knowledge-status]').forEach((statusButton) => {
 				statusButton.addEventListener('click', async () => {
 					setSiteKnowledgeButtonsBusy(root, true);
 					try {

@@ -5,12 +5,12 @@ Status: active for the first Toolbox build.
 Magick AI Toolbox is the WordPress operator-facing AI tool surface: it gives
 site owners and editors buttons for Cloud-managed web search, Cloud-managed
 image-source candidates, Cloud-managed site knowledge abilities, and repeatable
-AI-assisted planning workflows.
+AI-assisted content-support workflows.
 
 ## One-Sentence Positioning
 
-Magick AI Toolbox turns research, image-source, site-knowledge, and planning
-abilities into safe, click-driven WordPress operator tools.
+Magick AI Toolbox turns WordPress content-support abilities into safe,
+click-driven operator tools around human-written articles.
 
 ## Relationship To OpenClaw
 
@@ -34,8 +34,8 @@ WordPress write executor.
 
 - WordPress administrators who want controlled AI tools without touching raw
   provider APIs.
-- Editors who need research, image-source, vector-search, and article planning
-  support.
+- Editors who need taxonomy/tag, internal-link, image-source, SEO/AEO/GEO, and
+  publish-readiness support around human-written articles.
 - Magick AI operators who need fixed workflow buttons that produce reviewable
   handoffs.
 
@@ -49,7 +49,12 @@ WordPress write executor.
 4. Return planning artifacts, candidates, and handoff notes.
 5. Let operators fill non-secret SEO, AEO, and GEO content context for
    suggestion workflows and third-party AI callers.
-6. Preserve Core and Abilities boundaries for final WordPress writes.
+6. Prioritize work around the article body: taxonomy/tag candidates,
+   internal-link candidates, image candidates, SEO/AEO/GEO briefs, media
+   metadata plans, and publish/readiness checks.
+7. Keep article text creation with human editors; expose Article Assistant only
+   as a fallback workbench for reviewed local draft artifacts.
+8. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals
 
@@ -82,6 +87,10 @@ can consume as suggestion-only context, it may belong in Toolbox.
 
 If a feature authorizes, commits, audits, schedules, or owns final WordPress
 writes, it belongs outside Toolbox.
+
+Default buttons should solve around-the-body work before offering article draft
+handoffs. Draft handoffs are acceptable only after a reviewed human draft exists
+and the final write goes through Core proposal governance.
 
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source

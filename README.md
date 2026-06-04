@@ -21,8 +21,9 @@ The first version provides:
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
   guidance that can be exposed to third-party AI callers;
-- REST endpoints for image-source candidates, vector search,
-  article briefs, media briefs, and media derivative handoffs;
+- REST endpoints for image-source candidates, site knowledge/search, content
+  discoverability, article-support fallback flows, media briefs, and media
+  derivative handoffs;
 - WordPress Abilities API registrations for the same tool actions;
 - static tests and PHP syntax linting.
 
@@ -31,6 +32,12 @@ The first version provides:
 Toolbox returns suggestions and planning artifacts. It does not directly update
 posts, upload media, publish content, or bypass governance. WordPress writes
 should continue through WordPress abilities and Core proposal approval.
+
+The default product posture is content support outside the article body:
+taxonomy/tag candidates, internal-link candidates, image candidates,
+SEO/AEO/GEO suggestions, media metadata plans, and publish-readiness checks.
+Human editors own the article text. Article Assistant exists only as a fallback
+workbench for reviewed local draft artifacts.
 
 Project goals, ownership, and future-session instructions are documented in:
 
@@ -120,16 +127,17 @@ The context is exposed only as read-only, suggestion-only guidance through
 `magick-ai-toolbox/get-content-discoverability-context`. Third-party AI callers
 may also call `magick-ai-toolbox/validate-content-discoverability-context` to
 check filling quality and `magick-ai-toolbox/build-content-discoverability-brief`
-to get the primary lightweight SEO/AEO/GEO contract: per-section rules,
-exception/special-case rules, proposal template, and conservative candidates
-from supplied post or topic input. Final WordPress writes still require Core
-proposal approval.
+to get the primary lightweight content-support contract: SEO/AEO/GEO guidance,
+taxonomy/tag candidates, internal-link hints, proposal fields, and conservative
+candidates from supplied post or topic input. Final WordPress writes still
+require Core proposal approval.
 
 For natural-language article requests from OpenClaw or another external AI,
 `magick-ai-toolbox/build-ai-article-writing-pack` composes the context,
 validation result, discoverability brief, writing instructions, and guardrails
 into one suggestion-only pack. It is a convenience fallback for broad prompts,
-not the primary SEO/AEO/GEO context contract.
+not the default SEO/AEO/GEO, taxonomy, link, image, or publish-readiness
+surface.
 
 The Article Assistant flow and `magick-ai-toolbox/build-article-assistant`
 ability compose one local `article_draft_v1` workbench artifact from topic,
@@ -151,9 +159,9 @@ executor.
 The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
-The admin **Try Tools** surface includes an **Article Write Plan** panel that
-renders the plan artifacts, risk report, final `magick-ai/create-draft` action,
-and Core handoff route for operator review.
+The admin **Content Support** surface includes a **Reviewed Draft Handoff**
+fallback panel that renders the plan artifacts, risk report, final
+`magick-ai/create-draft` action, and Core handoff route for operator review.
 
 The media derivative preview flow reads Core media optimization defaults when
 available, accepts one-run operator overrides, and lets an operator select one
