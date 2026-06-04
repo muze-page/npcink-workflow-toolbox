@@ -670,8 +670,11 @@ final class Provider_Client {
 				'workflow_search'       => $search,
 				'result_count'          => absint( $search['result_count'] ?? 0 ),
 				'source_count'          => absint( $search['source_count'] ?? 0 ),
+				'provider_call_count'   => absint( $search['provider_call_count'] ?? 0 ),
 				'provider_mode'         => sanitize_key( (string) ( $search['provider_mode'] ?? '' ) ),
 				'cloud_provider'        => sanitize_key( (string) ( $search['provider'] ?? '' ) ),
+				'usage_summary'         => is_array( $search['usage_summary'] ?? null ) ? $this->sanitize_payload( $search['usage_summary'] ) : array(),
+				'error_code'            => sanitize_key( (string) ( $search['error_code'] ?? '' ) ),
 				'handoff'               => array(
 					'cloud_runtime'          => 'magick_ai_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
@@ -1590,6 +1593,7 @@ final class Provider_Client {
 		$external_research = $include_external_search
 			? $this->cloud_web_search_for_content( sanitize_text_field( (string) ( $source['topic'] ?? $source['title'] ?? '' ) ), $external_search_intent, 3 )
 			: $this->cloud_web_search_notice();
+		$cloud_evidence   = $this->cloud_web_search_evidence( $external_research );
 		$sections          = array(
 			'seo' => array(
 				'rules'              => sanitize_textarea_field( (string) ( $context['rules']['seo'] ?? '' ) ),
@@ -1645,6 +1649,7 @@ final class Provider_Client {
 			'special_cases'          => $exceptions,
 			'source'                 => $source,
 			'external_research'      => $external_research,
+			'cloud_evidence'         => $cloud_evidence,
 			'seo'                    => $sections['seo'],
 			'aeo'                    => $sections['aeo'],
 			'geo'                    => $sections['geo'],
@@ -1697,6 +1702,8 @@ final class Provider_Client {
 		$long_tail_keywords = $this->sanitize_string_list( $keywords['long_tail'] ?? array() );
 		$entity_keywords    = $this->sanitize_string_list( $keywords['entities'] ?? array() );
 		$forbidden_claims   = $this->sanitize_string_list( $claims['forbidden'] ?? array() );
+		$external_research  = is_array( $brief['external_research'] ?? null ) ? $brief['external_research'] : array();
+		$cloud_evidence     = is_array( $brief['cloud_evidence'] ?? null ) ? $brief['cloud_evidence'] : $this->cloud_web_search_evidence( $external_research );
 
 		return array(
 			'artifact_type'          => 'ai_article_writing_pack',
@@ -1719,6 +1726,8 @@ final class Provider_Client {
 			'content_context'        => $context,
 			'context_validation'     => $validation,
 			'discoverability_brief'  => $brief,
+			'external_research'      => $external_research,
+			'cloud_evidence'         => $cloud_evidence,
 			'exceptions'             => is_array( $brief['exceptions'] ?? null ) ? $brief['exceptions'] : array(),
 			'special_cases'          => is_array( $brief['special_cases'] ?? null ) ? $brief['special_cases'] : array(),
 			'article_prompt_pack'    => array(
@@ -2083,6 +2092,39 @@ final class Provider_Client {
 		}
 
 		return $payload;
+	}
+
+	private function cloud_web_search_evidence( array $research ): array {
+		$status = sanitize_key( (string) ( $research['status'] ?? '' ) );
+		if ( 'ready' !== $status ) {
+			return array();
+		}
+
+		$results = is_array( $research['results'] ?? null ) ? $research['results'] : array();
+		$report  = array(
+			'status'                 => $status,
+			'provider'               => sanitize_key( (string) ( $research['provider'] ?? 'cloud_web_search' ) ),
+			'provider_mode'          => sanitize_key( (string) ( $research['provider_mode'] ?? '' ) ),
+			'intent'                 => sanitize_key( (string) ( $research['intent'] ?? '' ) ),
+			'result_count'           => absint( $research['result_count'] ?? count( $results ) ),
+			'source_count'           => absint( $research['source_count'] ?? count( $results ) ),
+			'provider_call_count'    => absint( $research['provider_call_count'] ?? 0 ),
+			'usage_summary'          => is_array( $research['usage_summary'] ?? null ) ? $this->sanitize_payload( $research['usage_summary'] ) : array(),
+			'evidence_gate'          => is_array( $research['evidence_gate'] ?? null ) ? $this->sanitize_payload( $research['evidence_gate'] ) : array(),
+			'error_code'             => sanitize_key( (string) ( $research['error_code'] ?? '' ) ),
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+		);
+
+		return array(
+			'web_search' => array(
+				'source'                 => 'cloud_managed_toolbox_content_search',
+				'report'                 => $report,
+				'result'                 => $this->sanitize_payload( $research ),
+				'write_posture'          => 'suggestion_only',
+				'direct_wordpress_write' => false,
+			),
+		);
 	}
 
 	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
