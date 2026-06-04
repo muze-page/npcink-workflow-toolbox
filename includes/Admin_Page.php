@@ -461,49 +461,108 @@ final class Admin_Page {
 			<p><?php esc_html_e( 'Review Cloud-managed web search and image-source ownership. Toolbox does not store provider keys locally.', 'magick-ai-toolbox' ); ?></p>
 		</div>
 
+		<div class="magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
+			<nav class="magick-ai-toolbox__connector-tabs" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
+				<button type="button" class="magick-ai-toolbox__connector-tab is-active" data-toolbox-connector-target="search" aria-selected="true">
+					<span><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></span>
+					<small><?php esc_html_e( 'Cloud managed', 'magick-ai-toolbox' ); ?></small>
+				</button>
+				<button type="button" class="magick-ai-toolbox__connector-tab" data-toolbox-connector-target="image" aria-selected="false">
+					<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
+					<small><?php echo esc_html( $image_ready ? __( 'Cloud managed', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ) ); ?></small>
+				</button>
+			</nav>
+
+			<div class="magick-ai-toolbox__connector-panels">
+				<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="search">
+					<h2><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></h2>
+					<p><?php esc_html_e( 'Cloud owns provider keys, quotas, health, and provider selection. Use this test to verify that Cloud-managed web search is reachable from Toolbox.', 'magick-ai-toolbox' ); ?></p>
+					<?php
+					$this->render_connector_status_catalog(
+						array(
+							array(
+								'label'  => __( 'Web Search', 'magick-ai-toolbox' ),
+								'state'  => 'inactive',
+								'status' => __( 'Cloud managed', 'magick-ai-toolbox' ),
+								'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
+								'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
+								'intro'  => __( 'Tavily, Bocha, Jina Reader, and Apify settings stay in Cloud.', 'magick-ai-toolbox' ),
+								'note'   => __( 'Toolbox sends a suggestion-only runtime request and never stores local search provider keys.', 'magick-ai-toolbox' ),
+							),
+						)
+					);
+					?>
+					<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
+						<h3><?php esc_html_e( 'Cloud search test', 'magick-ai-toolbox' ); ?></h3>
+						<label>
+							<span><?php esc_html_e( 'Query', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="query" value="latest WordPress AI search trends" />
+						</label>
+						<div class="magick-ai-toolbox__split">
+							<label>
+								<span><?php esc_html_e( 'Intent', 'magick-ai-toolbox' ); ?></span>
+								<select name="intent">
+									<option value="news"><?php esc_html_e( 'News', 'magick-ai-toolbox' ); ?></option>
+									<option value="fact_check"><?php esc_html_e( 'Fact check', 'magick-ai-toolbox' ); ?></option>
+									<option value="writing_context"><?php esc_html_e( 'Writing context', 'magick-ai-toolbox' ); ?></option>
+									<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'magick-ai-toolbox' ); ?></option>
+									<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'magick-ai-toolbox' ); ?></option>
+									<option value="external_links"><?php esc_html_e( 'External links', 'magick-ai-toolbox' ); ?></option>
+								</select>
+							</label>
+							<label>
+								<span><?php esc_html_e( 'Provider', 'magick-ai-toolbox' ); ?></span>
+								<select name="provider">
+									<option value="auto"><?php esc_html_e( 'Auto', 'magick-ai-toolbox' ); ?></option>
+									<option value="tavily"><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></option>
+									<option value="bocha"><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></option>
+									<option value="apify"><?php esc_html_e( 'Apify', 'magick-ai-toolbox' ); ?></option>
+								</select>
+							</label>
+						</div>
+						<div class="magick-ai-toolbox__split">
+							<label>
+								<span><?php esc_html_e( 'Max results', 'magick-ai-toolbox' ); ?></span>
+								<input type="number" name="max_results" min="1" max="5" value="3" />
+							</label>
+							<label>
+								<span><?php esc_html_e( 'Recency days', 'magick-ai-toolbox' ); ?></span>
+								<input type="number" name="recency_days" min="0" max="30" value="7" />
+							</label>
+						</div>
+						<label class="magick-ai-toolbox__check">
+							<input type="checkbox" name="enhance_with_reader" value="1" />
+							<span><?php esc_html_e( 'Enhance returned pages with Jina Reader when Cloud enables it', 'magick-ai-toolbox' ); ?></span>
+						</label>
+						<button type="submit" class="button button-primary"><?php esc_html_e( 'Run search test', 'magick-ai-toolbox' ); ?></button>
+						<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+					</form>
+				</section>
+
+				<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="image" hidden>
+					<h2><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></h2>
+					<p><?php esc_html_e( 'Public image-source providers are configured in Cloud. Toolbox only requests reviewed image candidates and keeps final WordPress media writes behind Core approval.', 'magick-ai-toolbox' ); ?></p>
+					<?php
+					$this->render_connector_status_catalog(
+						array(
+							array(
+								'label'  => __( 'Cloud image sources', 'magick-ai-toolbox' ),
+								'state'  => $image_ready ? 'ok' : 'warning',
+								'status' => $image_ready ? __( 'Available', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ),
+								'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
+								'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
+								'intro'  => __( 'Cloud owns provider keys, quotas, health, and provider selection for public image references.', 'magick-ai-toolbox' ),
+								'note'   => __( 'Returned candidates still use image_candidate.v1 and must be adopted through Core proposal governance.', 'magick-ai-toolbox' ),
+							),
+						)
+					);
+					?>
+				</section>
+			</div>
+		</div>
+
 		<form class="magick-ai-toolbox__settings-form" method="post" action="options.php">
 			<?php settings_fields( 'magick_ai_toolbox' ); ?>
-
-			<div class="magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
-				<nav class="magick-ai-toolbox__connector-tabs" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
-					<button type="button" class="magick-ai-toolbox__connector-tab is-active" data-toolbox-connector-target="image" aria-selected="true">
-						<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
-						<small><?php echo esc_html( $image_ready ? __( 'Cloud managed', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ) ); ?></small>
-					</button>
-				</nav>
-
-				<div class="magick-ai-toolbox__connector-panels">
-					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="image">
-						<h2><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></h2>
-						<p><?php esc_html_e( 'Public image-source providers are configured in Cloud. Toolbox only requests reviewed image candidates and keeps final WordPress media writes behind Core approval.', 'magick-ai-toolbox' ); ?></p>
-						<?php
-						$this->render_connector_status_catalog(
-							array(
-								array(
-									'label'  => __( 'Web Search', 'magick-ai-toolbox' ),
-									'state'  => 'inactive',
-									'status' => __( 'Cloud managed', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
-									'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
-									'intro'  => __( 'Cloud owns provider keys, quotas, health, and provider selection for web search.', 'magick-ai-toolbox' ),
-									'note'   => __( 'Toolbox exposes suggestion artifacts and does not store local search provider keys.', 'magick-ai-toolbox' ),
-								),
-								array(
-									'label'  => __( 'Cloud image sources', 'magick-ai-toolbox' ),
-									'state'  => $image_ready ? 'ok' : 'warning',
-									'status' => $image_ready ? __( 'Available', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
-									'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
-									'intro'  => __( 'Cloud owns provider keys, quotas, health, and provider selection for public image references.', 'magick-ai-toolbox' ),
-									'note'   => __( 'Returned candidates still use image_candidate.v1 and must be adopted through Core proposal governance.', 'magick-ai-toolbox' ),
-								),
-							)
-						);
-						?>
-					</section>
-				</div>
-			</div>
-
 			<details class="magick-ai-toolbox__disclosure">
 				<summary>
 					<span><?php esc_html_e( 'Advanced / Debug', 'magick-ai-toolbox' ); ?></span>
@@ -896,22 +955,8 @@ final class Admin_Page {
 				'id'           => 'image-candidates',
 				'endpoint'     => 'image-candidates',
 				'title'        => __( 'Image Source Candidates', 'magick-ai-toolbox' ),
-				'description'  => __( 'Search image-source candidates and preserve attribution metadata.', 'magick-ai-toolbox' ),
-				'field'        => 'query',
-				'placeholder'  => __( 'Image search query', 'magick-ai-toolbox' ),
-				'button'       => __( 'Search images', 'magick-ai-toolbox' ),
-				'extra_fields' => array(
-					array(
-						'name'        => 'provider',
-						'label'       => __( 'Provider', 'magick-ai-toolbox' ),
-						'placeholder' => 'auto',
-					),
-					array(
-						'name'        => 'orientation',
-						'label'       => __( 'Orientation', 'magick-ai-toolbox' ),
-						'placeholder' => 'landscape',
-					),
-				),
+				'description'  => __( 'Test Cloud-managed Unsplash/Pixabay/Pexels image-source candidates and preserve attribution metadata.', 'magick-ai-toolbox' ),
+				'custom'       => 'image_source_candidates',
 			),
 		);
 		?>
@@ -968,6 +1013,16 @@ final class Admin_Page {
 						);
 						continue;
 					}
+					if ( 'image_source_candidates' === (string) ( $tool['custom'] ?? '' ) ) {
+						$this->render_image_source_candidates_tool(
+							(string) $tool['endpoint'],
+							(string) $tool['title'],
+							(string) $tool['description'],
+							(string) $tool['id'],
+							0 === $index
+						);
+						continue;
+					}
 
 					$this->render_text_tool(
 						(string) $tool['endpoint'],
@@ -984,6 +1039,55 @@ final class Admin_Page {
 				?>
 			</div>
 		</div>
+		<?php
+	}
+
+	private function render_image_source_candidates_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
+		?>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<h2><?php echo esc_html( $title ); ?></h2>
+			<p><?php echo esc_html( $description ); ?></p>
+			<div class="magick-ai-toolbox__example">
+				<strong><?php esc_html_e( 'Cloud smoke test', 'magick-ai-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, and license review status. This does not import media or write WordPress.', 'magick-ai-toolbox' ); ?></span>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Image search query', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="query" value="<?php esc_attr_e( 'wordpress article hero image', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Provider', 'magick-ai-toolbox' ); ?></span>
+					<select name="provider">
+						<option value="unsplash"><?php esc_html_e( 'Unsplash', 'magick-ai-toolbox' ); ?></option>
+						<option value="auto"><?php esc_html_e( 'Cloud auto', 'magick-ai-toolbox' ); ?></option>
+						<option value="pixabay"><?php esc_html_e( 'Pixabay', 'magick-ai-toolbox' ); ?></option>
+						<option value="pexels"><?php esc_html_e( 'Pexels', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Orientation', 'magick-ai-toolbox' ); ?></span>
+					<select name="orientation">
+						<option value="landscape"><?php esc_html_e( 'Landscape', 'magick-ai-toolbox' ); ?></option>
+						<option value="portrait"><?php esc_html_e( 'Portrait', 'magick-ai-toolbox' ); ?></option>
+						<option value="squarish"><?php esc_html_e( 'Squarish', 'magick-ai-toolbox' ); ?></option>
+						<option value=""><?php esc_html_e( 'Any', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Candidate count', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="1" max="8" step="1" name="per_page" value="3" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Color filter', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="color" placeholder="<?php esc_attr_e( 'Optional Unsplash color filter', 'magick-ai-toolbox' ); ?>" />
+				</label>
+			</div>
+			<button type="submit" class="button button-primary"><?php esc_html_e( 'Test Cloud image source', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
 		<?php
 	}
 

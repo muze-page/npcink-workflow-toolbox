@@ -26,6 +26,7 @@ final class Rest_Controller {
 		$this->post( '/image-candidates', 'image_candidates' );
 		$this->post( '/vector-search', 'knowledge_search' );
 		$this->post( '/knowledge-search', 'knowledge_search' );
+		$this->post( '/web-search/test', 'web_search_test' );
 		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/flows/article-brief', 'article_brief' );
@@ -129,6 +130,25 @@ final class Rest_Controller {
 			$this->client->get_site_knowledge_status(
 				array(
 					'include_coverage' => true,
+				)
+			)
+		);
+	}
+
+	public function web_search_test( WP_REST_Request $request ) {
+		$query = $this->required_text( $request, 'query' );
+		if ( is_wp_error( $query ) ) {
+			return $query;
+		}
+
+		return rest_ensure_response(
+			$this->client->test_cloud_web_search(
+				array(
+					'query'               => $query,
+					'intent'              => sanitize_key( (string) ( $request->get_param( 'intent' ) ?: 'news' ) ),
+					'provider'            => sanitize_key( (string) ( $request->get_param( 'provider' ) ?: 'auto' ) ),
+					'max_results'         => max( 1, min( 5, (int) ( $request->get_param( 'max_results' ) ?: 3 ) ) ),
+					'recency_days'        => max( 0, min( 30, (int) ( $request->get_param( 'recency_days' ) ?: 7 ) ) ),
 				)
 			)
 		);

@@ -499,6 +499,98 @@ final class Provider_Client {
 		);
 	}
 
+	public function test_cloud_web_search( array $input ) {
+		$query = trim( sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ) );
+		if ( '' === $query ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_web_search_query',
+				__( 'A query is required for Cloud web search testing.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$intent = sanitize_key( (string) ( $input['intent'] ?? 'news' ) );
+		if ( ! in_array( $intent, array( 'general_research', 'fact_check', 'news', 'writing_context', 'competitor_research', 'source_discovery', 'external_links' ), true ) ) {
+			$intent = 'news';
+		}
+
+		$provider = sanitize_key( (string) ( $input['provider'] ?? 'auto' ) );
+		if ( ! in_array( $provider, array( 'auto', 'tavily', 'bocha', 'apify' ), true ) ) {
+			$provider = 'auto';
+		}
+
+		$max_results  = max( 1, min( 5, absint( $input['max_results'] ?? 3 ) ) );
+		$recency_days = max( 0, min( 30, absint( $input['recency_days'] ?? 7 ) ) );
+		$runtime_input = array(
+			'contract_version'    => 'web_search.v1',
+			'query'               => $query,
+			'intent'              => $intent,
+			'provider'            => $provider,
+			'max_results'         => $max_results,
+			'recency_days'        => $recency_days,
+			'enhance_with_reader' => ! empty( $input['enhance_with_reader'] ),
+			'evidence_policy'     => array(
+				'required_sources' => 1,
+				'no_hit_policy'    => 'abstain',
+			),
+			'write_posture'       => 'suggestion_only',
+		);
+
+		$runtime_payload = array(
+			'ability_name'        => 'magick-ai-cloud/web-search',
+			'ability_family'      => 'knowledge',
+			'contract_version'    => 'web_search.v1',
+			'channel'             => 'toolbox_admin',
+			'execution_kind'      => 'web_search',
+			'profile_id'          => 'web-search.managed',
+			'execution_pattern'   => 'inline',
+			'data_classification' => 'public',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 3600,
+			'timeout_seconds'     => 30,
+			'retry_max'           => 0,
+			'input'               => $this->sanitize_payload( $runtime_input ),
+			'policy'              => array(
+				'allow_fallback' => true,
+			),
+		);
+
+		$runtime_payload = apply_filters( 'magick_ai_toolbox_web_search_runtime_payload', $runtime_payload, $runtime_input );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_invalid_web_search_runtime_payload',
+				__( 'The web search runtime payload was not valid.', 'magick-ai-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'magick_ai_toolbox_web_search_cloud_request', null, $runtime_payload, $runtime_input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_cloud_web_search_response( $handled, $runtime_payload );
+		}
+
+		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_web_search_cloud_unavailable',
+				__( 'Connect Magick AI Cloud before testing managed web search.', 'magick-ai-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'web_search' );
+		$idempotency_key = $this->trace_id( 'web_search_cloud_test' );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_cloud_web_search_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
 	public function build_article_brief( string $topic, bool $include_vector = true ) {
 		$research  = $this->cloud_web_search_notice();
 		$images    = $this->image_candidates( $topic, array( 'per_page' => 6 ) );
@@ -1819,6 +1911,61 @@ final class Provider_Client {
 		return $this->normalize_image_source_candidates_response( is_array( $response ) ? $response : array(), $query, $provider, $runtime_payload );
 	}
 
+	private function normalize_cloud_web_search_response( array $response, array $runtime_payload ): array {
+		$result = $this->extract_cloud_runtime_result( $response );
+		$input  = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+
+		$results = array();
+		foreach ( array_slice( is_array( $result['results'] ?? null ) ? $result['results'] : array(), 0, max( 1, min( 10, (int) ( $input['max_results'] ?? 3 ) ) ) ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$results[] = array(
+				'title'                  => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+				'url'                    => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'snippet'                => sanitize_textarea_field( (string) ( $item['snippet'] ?? $item['content'] ?? '' ) ),
+				'score'                  => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
+				'source'                 => sanitize_key( (string) ( $item['source'] ?? $result['provider'] ?? '' ) ),
+				'write_posture'          => sanitize_key( (string) ( $item['write_posture'] ?? 'suggestion_only' ) ),
+				'direct_wordpress_write' => false,
+			);
+		}
+
+		$payload = $this->with_output_contract(
+			array(
+				'provider'             => sanitize_key( (string) ( $result['provider'] ?? $input['provider'] ?? 'cloud_web_search' ) ),
+				'provider_mode'        => sanitize_key( (string) ( $input['provider'] ?? 'auto' ) ),
+				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
+				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/web-search' ) ),
+				'cloud_runtime'        => 'magick_ai_cloud_addon',
+				'status'               => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
+				'run_id'               => sanitize_text_field( (string) ( $response['run_id'] ?? ( ( $response['data']['run_id'] ?? null ) ?: ( $result['run_id'] ?? '' ) ) ) ),
+				'query'                => sanitize_text_field( (string) ( $input['query'] ?? '' ) ),
+				'intent'               => sanitize_key( (string) ( $result['intent'] ?? $input['intent'] ?? '' ) ),
+				'max_results'          => max( 1, min( 10, (int) ( $input['max_results'] ?? 3 ) ) ),
+				'result_count'         => count( $results ),
+				'evidence_gate'        => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
+				'reader_enhancement'   => is_array( $result['reader_enhancement'] ?? null ) ? $this->sanitize_payload( $result['reader_enhancement'] ) : array(),
+				'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
+				'results'              => $results,
+				'handoff'              => array(
+					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'final_writes'           => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+			),
+			'web_search_results',
+			'external_web_evidence'
+		);
+
+		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+			$payload['cloud_response'] = $this->sanitize_payload( $response );
+		}
+
+		return $payload;
+	}
+
 	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
 		$result = array();
 		foreach ( array( 'result', 'output', 'data' ) as $key ) {
@@ -1896,6 +2043,8 @@ final class Provider_Client {
 				'results'           => $results,
 				'coverage'          => is_array( $result['coverage'] ?? null ) ? $this->sanitize_payload( $result['coverage'] ) : array(),
 				'sync'              => is_array( $result['sync'] ?? null ) ? $this->sanitize_payload( $result['sync'] ) : array(),
+				'progress'          => is_array( $result['progress'] ?? null ) ? $this->sanitize_payload( $result['progress'] ) : array(),
+				'active_run'        => is_array( $result['active_run'] ?? null ) ? $this->sanitize_payload( $result['active_run'] ) : array(),
 				'intent'            => sanitize_key( (string) ( $result['intent'] ?? '' ) ),
 				'evidence_gate'     => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
 				'handoff'           => array(
@@ -1998,6 +2147,16 @@ final class Provider_Client {
 					'indexed_documents'  => 0,
 					'indexed_chunks'     => 0,
 					'failed_documents'   => 0,
+				),
+				'progress'          => array(
+					'status'              => 'running',
+					'stage'               => 'queued',
+					'message'             => __( 'Cloud indexing is already running for this site.', 'magick-ai-toolbox' ),
+					'processed_documents' => 0,
+					'total_documents'     => 0,
+					'indexed_chunks'      => 0,
+					'failed_documents'    => 0,
+					'percent'             => 0,
 				),
 				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'magick-ai-toolbox' ),
 				'handoff'           => array(

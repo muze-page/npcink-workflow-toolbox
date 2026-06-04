@@ -299,10 +299,12 @@
 		const list = el('div', 'magick-ai-toolbox__image-list');
 		images.forEach((image) => {
 			const row = el('article', 'magick-ai-toolbox__image-item');
-			if (image.thumb_url || image.small_url) {
+			const previewUrl = image.thumbnail_url || image.thumb_url || image.small_url || image.download_url || image.regular_url;
+			if (previewUrl) {
 				const preview = el('img', 'magick-ai-toolbox__image-thumb');
-				preview.src = image.thumb_url || image.small_url;
+				preview.src = previewUrl;
 				preview.alt = image.alt_description || image.description || '';
+				preview.loading = 'lazy';
 				row.appendChild(preview);
 			}
 
@@ -324,12 +326,18 @@
 			const meta = el('div', 'magick-ai-toolbox__result-meta');
 			appendMeta(meta, 'Provider', image.provider ? formatLabel(image.provider) : '');
 			appendMeta(meta, 'ID', image.id);
+			appendMeta(meta, 'Suggested filename', image.suggested_filename);
+			appendMeta(meta, 'License review', image.license_review_status ? formatLabel(image.license_review_status) : '');
+			appendMeta(meta, 'Source type', image.source_type ? formatLabel(image.source_type) : '');
 			appendMeta(meta, 'Download tracking', image.download_location ? 'Preserved' : '');
 			appendMeta(meta, 'Photographer', image.photographer);
 			if (meta.childNodes.length) {
 				body.appendChild(meta);
 			}
-			if (image.download_location) {
+			if (image.requires_human_license_review) {
+				body.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'License or source review is required before Core approval.'));
+			}
+			if (image.download_location || image.suggested_filename || image.filename_basis) {
 				const details = el('details', 'magick-ai-toolbox__result-details');
 				details.appendChild(el('summary', '', 'Attribution metadata'));
 				const pre = el('pre', 'magick-ai-toolbox__result-raw');
@@ -337,6 +345,8 @@
 					attribution: image.attribution || '',
 					download_location: image.download_location || '',
 					regular_url: image.regular_url || '',
+					suggested_filename: image.suggested_filename || '',
+					filename_basis: image.filename_basis || {},
 				}, null, 2);
 				details.appendChild(pre);
 				body.appendChild(details);
@@ -418,25 +428,49 @@
 		container.appendChild(section);
 	}
 
-	function renderUnsplash(form, payload, title) {
+	function renderImageSourceCandidates(form, payload, title) {
 		const count = Array.isArray(payload.images) ? payload.images.length : 0;
 		const result = renderShell(
 			form,
 			payload,
 			title || 'Image-source candidates',
 			count
-				? count + ' candidates returned. Attribution and download tracking metadata are preserved.'
+				? count + ' candidates returned from Cloud-managed image-source runtime. Review license evidence before adoption.'
 				: 'No image-source candidates were returned.'
 		);
 		if (!result) {
 			return;
 		}
 
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Cloud runtime', payload.cloud_runtime || 'magick_ai_cloud_addon');
+		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
+		appendMeta(meta, 'Candidate contract', payload.candidate_contract_version);
+		if (Array.isArray(payload.active_sources) && payload.active_sources.length) {
+			appendMeta(
+				meta,
+				'Active sources',
+				payload.active_sources.map((source) => {
+					const provider = source && source.provider ? formatLabel(source.provider) : 'Cloud';
+					const countValue = source && source.count !== undefined ? ' (' + source.count + ')' : '';
+					return provider + countValue;
+				}).join(', ')
+			);
+		}
+		if (meta.childNodes.length) {
+			result.appendChild(meta);
+		}
+
+		result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Cloud returned image candidates only. Media import still requires an Adopt New Image plan and Core approval.'));
 		renderImageList(result, payload.images);
 		if (payload.raw) {
 			result.appendChild(createRawDetails(payload.raw, 'Provider raw response'));
 		}
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
+	}
+
+	function renderUnsplash(form, payload, title) {
+		renderImageSourceCandidates(form, payload, title);
 	}
 
 	function renderQdrant(form, payload) {
@@ -462,16 +496,32 @@
 
 	function renderSiteKnowledgeStatusNode(container, payload) {
 		const coverage = payload && payload.coverage && typeof payload.coverage === 'object' ? payload.coverage : {};
+		const progress = payload && payload.progress && typeof payload.progress === 'object' ? payload.progress : {};
+		const activeRun = payload && payload.active_run && typeof payload.active_run === 'object' ? payload.active_run : {};
 		clearNode(container);
 
 		const status = String(payload && payload.status ? payload.status : 'unknown');
 		const noticeKind = status === 'ready' ? 'ok' : (status === 'failed' ? 'error' : 'pending');
 		container.appendChild(el('div', 'magick-ai-toolbox__result-notice is-' + noticeKind, 'Status: ' + formatLabel(status)));
+		if (progress.message) {
+			container.appendChild(el('div', 'magick-ai-toolbox__result-notice is-' + noticeKind, progress.message));
+		}
 
 		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Stage', progress.stage ? formatLabel(progress.stage) : '');
+		appendMeta(meta, 'Progress', typeof progress.percent === 'number' ? progress.percent + '%' : '');
+		appendMeta(
+			meta,
+			'Processed',
+			typeof progress.total_documents === 'number' && progress.total_documents > 0
+				? String(progress.processed_documents || 0) + ' / ' + String(progress.total_documents)
+				: ''
+		);
 		appendMeta(meta, 'Indexed posts', coverage.indexed_posts);
 		appendMeta(meta, 'Indexed chunks', coverage.indexed_chunks);
+		appendMeta(meta, 'Failures', progress.failed_documents);
 		appendMeta(meta, 'Last sync', coverage.last_sync_at);
+		appendMeta(meta, 'Active run', activeRun.run_id);
 		appendMeta(meta, 'Comments', coverage.comments_enabled === true ? 'Enabled in Cloud' : 'Disabled in Cloud');
 		if (meta.childNodes.length) {
 			container.appendChild(meta);
@@ -581,6 +631,69 @@
 			section.appendChild(list);
 			result.appendChild(section);
 		}
+		result.appendChild(createRawDetails(payload, 'Search payload'));
+	}
+
+	function renderWebSearchResults(form, payload) {
+		const results = Array.isArray(payload.results) ? payload.results : [];
+		const result = renderShell(
+			form,
+			payload,
+			'Cloud web search',
+			results.length
+				? results.length + ' external search results returned from Cloud.'
+				: 'Cloud search completed without usable external results.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
+		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
+		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
+		appendMeta(meta, 'Provider calls', payload.provider_call_count);
+		appendMeta(meta, 'Run', payload.run_id);
+		if (payload.evidence_gate && typeof payload.evidence_gate === 'object') {
+			appendMeta(meta, 'Evidence', payload.evidence_gate.status ? formatLabel(payload.evidence_gate.status) : '');
+			appendMeta(meta, 'Sources', payload.evidence_gate.source_count);
+		}
+		if (meta.childNodes.length) {
+			result.appendChild(meta);
+		}
+
+		if (results.length) {
+			const section = createSection('Results');
+			const list = el('div', 'magick-ai-toolbox__result-list');
+			results.forEach((item) => {
+				const row = el('article', 'magick-ai-toolbox__result-item');
+				row.appendChild(el('h4', '', item.title || item.url || 'Search result'));
+				if (item.url) {
+					row.appendChild(createLink(item.url, item.url));
+				}
+				row.appendChild(el('p', '', truncate(item.snippet || '', 360)));
+				const rowMeta = el('div', 'magick-ai-toolbox__result-meta');
+				appendMeta(rowMeta, 'Score', item.score);
+				appendMeta(rowMeta, 'Source', item.source ? formatLabel(item.source) : '');
+				appendMeta(rowMeta, 'Write posture', item.write_posture ? formatLabel(item.write_posture) : '');
+				row.appendChild(rowMeta);
+				list.appendChild(row);
+			});
+			section.appendChild(list);
+			result.appendChild(section);
+		}
+
+		if (payload.reader_enhancement && typeof payload.reader_enhancement === 'object' && payload.reader_enhancement.status) {
+			const reader = createSection('Reader enhancement');
+			const readerMeta = el('div', 'magick-ai-toolbox__result-meta');
+			appendMeta(readerMeta, 'Status', formatLabel(payload.reader_enhancement.status));
+			appendMeta(readerMeta, 'Provider', payload.reader_enhancement.provider ? formatLabel(payload.reader_enhancement.provider) : '');
+			appendMeta(readerMeta, 'Pages', payload.reader_enhancement.page_count);
+			reader.appendChild(readerMeta);
+			result.appendChild(reader);
+		}
+
+		renderHandoff(result, payload.handoff);
 		result.appendChild(createRawDetails(payload, 'Search payload'));
 	}
 
@@ -1298,6 +1411,11 @@
 			return;
 		}
 
+		if (payload.artifact_type === 'image_source_candidates') {
+			renderImageSourceCandidates(form, payload);
+			return;
+		}
+
 		if (payload.provider === 'unsplash') {
 			renderUnsplash(form, payload);
 			return;
@@ -1320,6 +1438,11 @@
 
 		if (payload.artifact_type === 'site_knowledge_results') {
 			renderSiteKnowledgeResults(form, payload);
+			return;
+		}
+
+		if (payload.artifact_type === 'web_search_results') {
+			renderWebSearchResults(form, payload);
 			return;
 		}
 
@@ -1635,6 +1758,7 @@
 		const coverage = payload && payload.coverage && typeof payload.coverage === 'object' ? payload.coverage : {};
 		const indexedChunks = Number(coverage.indexed_chunks || 0);
 		const hasIndex = indexedChunks > 0;
+		const active = siteKnowledgeStatusStillActive(payload);
 		const startLabel = button.getAttribute('data-start-label') || 'Start indexing';
 		const refreshLabel = button.getAttribute('data-refresh-label') || 'Refresh index';
 		button.dataset.indexState = hasIndex ? 'ready' : 'empty';
@@ -1642,9 +1766,9 @@
 		if (modeInput) {
 			modeInput.value = hasIndex ? 'rebuild' : 'refresh';
 		}
-		if (!button.disabled) {
-			button.textContent = button.__magickOriginalText;
-		}
+		button.disabled = active;
+		button.setAttribute('aria-busy', active ? 'true' : 'false');
+		button.textContent = active ? 'Indexing...' : button.__magickOriginalText;
 	}
 
 	function siteKnowledgeStatusStillActive(payload) {
@@ -1693,20 +1817,24 @@
 			if (syncForm) {
 				syncForm.addEventListener('submit', async (event) => {
 					event.preventDefault();
+					let latestPayload = null;
 					setSiteKnowledgeSyncBusy(syncForm, true);
 					setSiteKnowledgeButtonsBusy(root, true);
 					try {
 						const payload = await runSiteKnowledgeForm(syncForm, 'site-knowledge/sync');
 						if (siteKnowledgeStatusStillActive(payload)) {
-							await pollSiteKnowledgeStatus(root, 8);
+							latestPayload = await pollSiteKnowledgeStatus(root, 60);
 						} else {
-							await refreshSiteKnowledgeStatus(root);
+							latestPayload = await refreshSiteKnowledgeStatus(root);
 						}
 					} catch (error) {
 						renderTextResult(syncForm, error.message || 'Site knowledge sync failed.', 'error');
 					} finally {
 						setSiteKnowledgeButtonsBusy(root, false);
 						setSiteKnowledgeSyncBusy(syncForm, false);
+						if (latestPayload) {
+							updateSiteKnowledgeActionState(root, latestPayload);
+						}
 					}
 				});
 			}

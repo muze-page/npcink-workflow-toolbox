@@ -76,8 +76,9 @@ toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-panel="connecto
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connectors' ) && false !== strpos( $admin_page, 'data-toolbox-connector-panel' ), 'Connector settings use a single active connector workspace.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__connector-tabs' ) && false !== strpos( $admin_page, 'magick-ai-toolbox__connector-tab' ), 'Connector groups use horizontal sub tabs near the connector heading.' );
 toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-providers' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-target' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-panel' ), 'Connector settings no longer expose provider rail configuration locally.' );
-toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="image" aria-selected="true"' ), 'Image is the default connector section after local provider settings were removed.' );
-toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-target="search"' ), 'Connector settings no longer expose a local Search provider section.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="search" aria-selected="true"' ), 'Search is the default connector section for Cloud web search testing.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-endpoint="web-search/test"' ) && false !== strpos( $admin_page, 'Run search test' ), 'Connector settings expose a Cloud-managed Web Search test action.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="image" aria-selected="false"' ), 'Image connector stays available after the Cloud Search test section.' );
 toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-target="vector"' ) && false === strpos( $admin_page, 'data-toolbox-connector-panel="vector"' ), 'Connector settings no longer expose a Vector section.' );
 toolbox_assert( false !== strpos( $admin_page, 'Cloud image sources' ) && false !== strpos( $admin_page, 'Cloud service' ) && false !== strpos( $admin_page, 'provider keys, quotas, health, and provider selection' ), 'Image connector surface is Cloud-managed and read-only locally.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__connector-status' ) && false !== strpos( $admin_page, 'Connector status catalog' ), 'Connector panels expose a read-only status catalog.' );
@@ -100,6 +101,7 @@ toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !==
 toolbox_assert( false !== strpos( $admin_page, 'Adopt New Image' ) && false !== strpos( $admin_page, 'render_image_candidate_adoption_tool' ), 'Tool actions include an Adopt New Image panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'Selected image URL' ) && false !== strpos( $admin_page, 'Source type' ) && false !== strpos( $admin_page, 'Advanced candidate details' ) && false !== strpos( $admin_page, 'Build import proposal plan' ), 'Adopt New Image panel hides image_candidate internals behind a simpler button flow.' );
 toolbox_assert( false !== strpos( $admin_page, 'Candidate JSON' ) && false !== strpos( $admin_page, 'Toolbox does not import media directly' ), 'Adopt New Image panel keeps advanced candidate JSON optional and preserves no-write copy.' );
+toolbox_assert( false !== strpos( $admin_page, 'Cloud smoke test' ) && false !== strpos( $admin_page, 'Test Cloud image source' ) && false !== strpos( $admin_page, 'Candidate count' ), 'Image Source Candidates panel exposes a Cloud provider smoke-test flow.' );
 toolbox_assert( false !== strpos( $admin_page, 'Optimize Existing Image' ) && false !== strpos( $admin_page, 'render_media_derivative_tool' ), 'Tool actions include a dedicated Optimize Existing Image panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'Core defaults' ) && false !== strpos( $admin_page, 'magick_ai_core_get_media_derivative_settings' ), 'Media Derivative Handoff reads Core media policy defaults when available.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-select-media' ) && false !== strpos( $admin_page, 'Generate preview' ) && false !== strpos( $admin_page, 'Submit replacement review' ) && false !== strpos( $admin_page, 'Repair and handoff actions' ) && false !== strpos( $admin_page, 'data-toolbox-submit-reference-repair' ) && false !== strpos( $admin_page, 'data-toolbox-submit-settings-repair' ), 'Optimize Existing Image supports media selection, Cloud preview generation, Core replacement review, and advanced repair actions.' );
@@ -128,6 +130,7 @@ toolbox_assert( false !== strpos( $admin_js, 'initUrlState' ) && false !== strpo
 toolbox_assert( false !== strpos( $admin_js, 'toolbox_tab' ) && false !== strpos( $admin_js, 'toolbox_tool' ) && false !== strpos( $admin_js, 'toolbox_connector' ), 'Admin tab URL state uses Toolbox-specific query parameters.' );
 toolbox_assert( false !== strpos( $admin_js, "result.hidden = false" ), 'Tool results stay hidden until a tool returns output.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderStructuredResult' ) && false !== strpos( $admin_js, 'renderShell' ), 'Admin JavaScript renders tool results through a summary-first structured renderer.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderWebSearchResults' ) && false !== strpos( $admin_js, "payload.artifact_type === 'web_search_results'" ), 'Admin JavaScript renders Cloud web search test results through a dedicated view.' );
 toolbox_assert( false !== strpos( $admin_js, 'createRawDetails' ) && false !== strpos( $admin_js, 'Complete payload' ), 'Complete payload output is moved behind a result disclosure.' );
 toolbox_assert( false !== strpos( $admin_js, 'Provider raw response' ), 'Provider raw responses are rendered only as disclosure details.' );
 toolbox_assert( false !== strpos( $admin_js, 'Download tracking' ) && false !== strpos( $admin_js, 'Attribution metadata' ), 'Image candidate rendering preserves Unsplash attribution and download tracking metadata.' );
@@ -139,6 +142,8 @@ toolbox_assert( false !== strpos( $admin_js, 'Goal brief' ) && false !== strpos(
 toolbox_assert( false !== strpos( $admin_js, 'renderMediaDerivativeHandoff' ) && false !== strpos( $admin_js, "payload.artifact_type === 'media_derivative_handoff'" ), 'Admin JavaScript renders media derivative handoffs through a dedicated view.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderImageCandidateAdoptionPlan' ) && false !== strpos( $admin_js, "payload.artifact_type === 'image_candidate_adoption_plan'" ), 'Admin JavaScript renders image candidate adoption plans through a dedicated view.' );
 toolbox_assert( false !== strpos( $admin_js, 'Image import proposal plan' ) && false !== strpos( $admin_js, 'License or source review is required before approval.' ), 'Image candidate adoption renderer keeps next steps and review status visible.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderImageSourceCandidates' ) && false !== strpos( $admin_js, "payload.artifact_type === 'image_source_candidates'" ), 'Admin JavaScript renders Cloud image-source candidates through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'Suggested filename' ) && false !== strpos( $admin_js, 'Cloud returned image candidates only' ), 'Image-source renderer shows filename evidence and no-write guidance.' );
 toolbox_assert( false !== strpos( $admin_js, 'One-run planning artifact' ) && false !== strpos( $admin_js, 'Core policy' ), 'Media derivative renderer keeps one-run Core policy handoff visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'initMediaDerivativeControls' ) && false !== strpos( $admin_js, 'runMediaDerivative' ) && false !== strpos( $admin_js, 'submitMediaDerivativeProposal' ) && false !== strpos( $admin_js, 'submitMediaReferenceRepairProposal' ) && false !== strpos( $admin_js, 'submitMediaSettingsReferenceRepairProposal' ), 'Admin JavaScript runs the media derivative preview, replacement proposal, post reference repair, and settings reference repair proposal flows through Adapter routes.' );
 toolbox_assert( false !== strpos( $admin_js, 'media-derivative-runs' ) && false !== strpos( $admin_js, 'media-derivative-proposal-payload' ) && false !== strpos( $admin_js, "ability_id: 'magick-ai/adopt-cloud-media-derivative'" ), 'Media derivative preview uses Adapter recipe routes and submits a governed local replacement proposal.' );
@@ -159,6 +164,7 @@ toolbox_assert( false !== strpos( $admin_js, 'initSiteKnowledge' ) && false !== 
 toolbox_assert( false !== strpos( $admin_js, 'setSiteKnowledgeSyncBusy' ) && false !== strpos( $admin_js, 'pollSiteKnowledgeStatus' ) && false !== strpos( $admin_js, 'Sync queued...' ), 'Admin JavaScript disables duplicate Site Knowledge sync submissions and polls status.' );
 toolbox_assert( false !== strpos( $admin_js, 'updateSiteKnowledgeActionState' ) && false !== strpos( $admin_js, 'indexState' ), 'Admin JavaScript updates the Site Knowledge indexing action from start to refresh after coverage exists.' );
 toolbox_assert( false !== strpos( $admin_js, "modeInput.value = hasIndex ? 'rebuild' : 'refresh'" ), 'Admin JavaScript maps the simple Refresh index action to a Cloud rebuild when an index already exists.' );
+toolbox_assert( false !== strpos( $admin_js, 'progress.message' ) && false !== strpos( $admin_js, 'Active run' ) && false !== strpos( $admin_js, 'Indexing...' ), 'Admin JavaScript renders Site Knowledge progress and disables indexing while Cloud is active.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false !== strpos( $admin_js, 'payload.message' ), 'Admin JavaScript renders Site Knowledge evidence state and active-run guidance.' );
 
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
@@ -199,6 +205,7 @@ $allowed_rest_routes = array(
 	'/image-candidates',
 	'/vector-search',
 	'/knowledge-search',
+	'/web-search/test',
 	'/site-knowledge/search',
 	'/site-knowledge/sync',
 	'/site-knowledge/status',
@@ -244,6 +251,8 @@ toolbox_assert( false === strpos( $abilities, 'magick-ai-toolbox/web-research' )
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
 toolbox_assert( false === strpos( $client, 'https://api.tavily.com/search' ) && false === strpos( $client, 'search_bocha_web' ) && false === strpos( $client, 'enhance_results_with_jina_reader' ), 'Provider client no longer calls local web search providers.' );
+toolbox_assert( false !== strpos( $client, 'test_cloud_web_search' ) && false !== strpos( $client, "'ability_name'        => 'magick-ai-cloud/web-search'" ), 'Provider client can test Cloud-managed web search through the Cloud runtime seam.' );
+toolbox_assert( false !== strpos( $client, 'normalize_cloud_web_search_response' ) && false !== strpos( $client, "'web_search_results'" ), 'Provider client normalizes Cloud web search test output for operator review.' );
 toolbox_assert( false !== strpos( $client, 'execute_image_source_cloud_request' ) && false !== strpos( $client, 'magick_ai_toolbox_image_source_cloud_request' ), 'Image candidates use a Cloud-managed image-source runtime seam.' );
 toolbox_assert( false === strpos( $client, 'https://api.unsplash.com/search/photos' ) && false === strpos( $client, 'https://pixabay.com/api/' ) && false === strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates do not directly call public image provider APIs locally.' );
 toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
@@ -281,6 +290,7 @@ toolbox_assert( false !== strpos( $client, 'collect_site_knowledge_comments' ) &
 toolbox_assert( false !== strpos( $client, 'extract_cloud_runtime_result' ) && false !== strpos( $client, "'result_json'" ), 'Provider client unwraps nested Cloud runtime result payloads.' );
 toolbox_assert( false !== strpos( $client, 'is_cloud_concurrency_error' ) && false !== strpos( $client, 'site_knowledge_active_run_response' ), 'Provider client turns active Cloud run concurrency into Site Knowledge status guidance.' );
 toolbox_assert( false !== strpos( $client, 'filter_current_public_site_knowledge_results' ) && false !== strpos( $client, "'publish' === get_post_status" ), 'Provider client filters stale Site Knowledge search results against current public WordPress status.' );
+toolbox_assert( false !== strpos( $client, "'progress'" ) && false !== strpos( $client, "'active_run'" ), 'Provider client preserves Cloud Site Knowledge progress and active run status.' );
 toolbox_assert( false === strpos( $client, 'provider_body' ), 'Provider error responses do not expose raw provider bodies.' );
 toolbox_assert( false !== strpos( $client, "'write_posture' => 'suggestion_only'" ), 'Article brief handoff stays suggestion-only.' );
 toolbox_assert( false !== strpos( $client, 'Create WordPress draft or media proposals through Abilities/Core.' ), 'Article brief handoff points write-like actions to Abilities/Core.' );
@@ -365,7 +375,7 @@ toolbox_assert( false === strpos( $rest, 'embedding_dimensions' ), 'Status no lo
 toolbox_assert( false !== strpos( $rest, "'vector_provider'          => 'cloud_site_knowledge'" ) && false !== strpos( $rest, "'vector_owner'             => 'cloud_runtime'" ), 'Status reports Cloud ownership for vector infrastructure.' );
 toolbox_assert( false !== strpos( $rest, 'query or vector field' ), 'Vector REST route accepts query or vector input.' );
 toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== strpos( $rest, 'site_knowledge_status' ) && false !== strpos( $rest, 'site_knowledge_search' ), 'REST routes expose Cloud-managed site knowledge operations.' );
-toolbox_assert( false === strpos( $rest, 'enhance_with_reader' ) && false === strpos( $rest, '/web-research' ), 'REST no longer exposes local web research or Jina Reader enhancement inputs.' );
+toolbox_assert( false === strpos( $rest, 'enhance_with_reader' ) && false === strpos( $rest, 'web_research' ) && false === strpos( $rest, 'jina_reader' ), 'REST exposes Cloud web search testing without local web research or reader enhancement inputs.' );
 toolbox_assert( false !== strpos( $rest, "'provider'    => sanitize_key" ), 'Image candidate REST route accepts provider selection.' );
 toolbox_assert( false !== strpos( $rest, 'magick_ai_toolbox_rest_permission' ), 'REST permission can be mediated by a host scope filter.' );
 
