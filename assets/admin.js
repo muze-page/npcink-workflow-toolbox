@@ -525,7 +525,7 @@
 		const meta = el('div', 'magick-ai-toolbox__result-meta');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Run', payload.run_id);
-		appendMeta(meta, 'Mode', sync.sync_mode ? formatLabel(sync.sync_mode) : '');
+		appendMeta(meta, 'Action', sync.sync_mode ? 'Index refresh' : '');
 		appendMeta(meta, 'Accepted documents', sync.accepted_documents);
 		appendMeta(meta, 'Indexed documents', sync.indexed_documents);
 		appendMeta(meta, 'Indexed chunks', sync.indexed_chunks);
@@ -1631,12 +1631,17 @@
 		if (!button) {
 			return;
 		}
+		const modeInput = root.querySelector('[data-toolbox-site-knowledge-sync] input[name="sync_mode"]');
 		const coverage = payload && payload.coverage && typeof payload.coverage === 'object' ? payload.coverage : {};
 		const indexedChunks = Number(coverage.indexed_chunks || 0);
+		const hasIndex = indexedChunks > 0;
 		const startLabel = button.getAttribute('data-start-label') || 'Start indexing';
 		const refreshLabel = button.getAttribute('data-refresh-label') || 'Refresh index';
-		button.dataset.indexState = indexedChunks > 0 ? 'ready' : 'empty';
-		button.__magickOriginalText = indexedChunks > 0 ? refreshLabel : startLabel;
+		button.dataset.indexState = hasIndex ? 'ready' : 'empty';
+		button.__magickOriginalText = hasIndex ? refreshLabel : startLabel;
+		if (modeInput) {
+			modeInput.value = hasIndex ? 'rebuild' : 'refresh';
+		}
 		if (!button.disabled) {
 			button.textContent = button.__magickOriginalText;
 		}

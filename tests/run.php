@@ -158,6 +158,7 @@ toolbox_assert( false !== strpos( $admin_js, 'clearContextForm' ), 'Admin JavaSc
 toolbox_assert( false !== strpos( $admin_js, 'initSiteKnowledge' ) && false !== strpos( $admin_js, 'site-knowledge/sync' ) && false !== strpos( $admin_js, 'site-knowledge/status' ), 'Admin JavaScript runs Site Knowledge status and sync actions.' );
 toolbox_assert( false !== strpos( $admin_js, 'setSiteKnowledgeSyncBusy' ) && false !== strpos( $admin_js, 'pollSiteKnowledgeStatus' ) && false !== strpos( $admin_js, 'Sync queued...' ), 'Admin JavaScript disables duplicate Site Knowledge sync submissions and polls status.' );
 toolbox_assert( false !== strpos( $admin_js, 'updateSiteKnowledgeActionState' ) && false !== strpos( $admin_js, 'indexState' ), 'Admin JavaScript updates the Site Knowledge indexing action from start to refresh after coverage exists.' );
+toolbox_assert( false !== strpos( $admin_js, "modeInput.value = hasIndex ? 'rebuild' : 'refresh'" ), 'Admin JavaScript maps the simple Refresh index action to a Cloud rebuild when an index already exists.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false !== strpos( $admin_js, 'payload.message' ), 'Admin JavaScript renders Site Knowledge evidence state and active-run guidance.' );
 
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
