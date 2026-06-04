@@ -90,16 +90,6 @@ final class Abilities {
 
 	private function definitions(): array {
 		return array(
-			'magick-ai-toolbox/web-research'                       => $this->definition(
-				__( 'Web Research', 'magick-ai-toolbox' ),
-				__( 'Research a topic using the configured external search provider.', 'magick-ai-toolbox' ),
-				array( 'query' ),
-				array( $this, 'web_research' ),
-				'cap.toolbox.search',
-				array(
-					'composition_role' => 'research_evidence',
-				)
-			),
 			'magick-ai-toolbox/search-image-source'                => $this->definition(
 				__( 'Search Image Source', 'magick-ai-toolbox' ),
 				__( 'Search configured image source candidates without importing media.', 'magick-ai-toolbox' ),
@@ -112,15 +102,15 @@ final class Abilities {
 			),
 			'magick-ai-toolbox/vector-search'                      => $this->definition(
 				__( 'Vector Search', 'magick-ai-toolbox' ),
-				__( 'Query the configured low-level vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ),
+				__( 'Compatibility pointer for Cloud-managed site knowledge. Vector provider configuration is managed in Magick AI Cloud.', 'magick-ai-toolbox' ),
 				array( 'query' ),
 				array( $this, 'vector_search' ),
 				'cap.toolbox.vector_search',
 				array(
-					'data_classification' => 'provider_suggestion',
-					'composition_role' => 'local_style_context',
-					'provider_execution' => 'server_side_toolbox',
-					'knowledge_layer' => 'low_level_vector_query',
+					'data_classification' => 'public_site_content',
+					'composition_role' => 'site_knowledge_context',
+					'provider_execution' => 'cloud_runtime_via_addon',
+					'knowledge_layer' => 'cloud_managed_site_knowledge',
 				)
 			),
 			'magick-ai-toolbox/search-site-knowledge'              => $this->definition(
@@ -230,6 +220,22 @@ final class Abilities {
 					'ability_recipe_ref'  => 'workflow/wordpress_article_media_batch_draft',
 					'provider_execution'  => 'optional_image_source_lookup',
 					'write_posture'       => 'core_proposal_handoff',
+				)
+			),
+			'magick-ai-toolbox/build-image-candidate-adoption-plan' => $this->definition(
+				__( 'Build Image Candidate Adoption Plan', 'magick-ai-toolbox' ),
+				__( 'Build a Core-ready image_candidate_adoption_plan for one reviewed image candidate without importing media or writing WordPress content.', 'magick-ai-toolbox' ),
+				array( 'image_candidate' ),
+				array( $this, 'build_image_candidate_adoption_plan' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'core_image_candidate_adoption_plan',
+					'local_recipe_id'     => 'image_candidate_adoption_v1',
+					'ability_recipe_ref'  => 'workflow/image_candidate_adoption',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'core_proposal_handoff',
+					'candidate_contract'  => 'image_candidate.v1',
 				)
 			),
 			'magick-ai-toolbox/build-media-brief'                  => $this->definition(
@@ -351,18 +357,6 @@ final class Abilities {
 		);
 	}
 
-	public function web_research( $input = array() ) {
-		$input = is_array( $input ) ? $input : array();
-		return $this->client->web_research(
-			sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ),
-			array(
-				'provider'            => sanitize_key( (string) ( $input['provider'] ?? '' ) ),
-				'enhance_with_reader' => ! empty( $input['enhance_with_reader'] ),
-				'max_results'         => (int) ( $input['max_results'] ?? 5 ),
-			)
-		);
-	}
-
 	public function search_image_source( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
 		return $this->client->image_candidates(
@@ -422,6 +416,10 @@ final class Abilities {
 		return $this->client->build_article_media_batch_write_plan( is_array( $input ) ? $input : array() );
 	}
 
+	public function build_image_candidate_adoption_plan( $input = array() ) {
+		return $this->client->build_image_candidate_adoption_plan( is_array( $input ) ? $input : array() );
+	}
+
 	public function build_media_brief( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
 		return $this->client->build_media_brief( sanitize_textarea_field( (string) ( $input['post_context'] ?? '' ) ) );
@@ -449,5 +447,20 @@ final class Abilities {
 
 	private function can_execute_ability( string $ability_id ): bool {
 		return (bool) apply_filters( 'magick_ai_toolbox_ability_permission', current_user_can( 'manage_options' ), $ability_id );
+	}
+
+	private function sanitize_string_list( $value ): array {
+		if ( is_array( $value ) ) {
+			$items = $value;
+		} else {
+			$items = preg_split( '/[\r\n,]+/', (string) $value );
+		}
+
+		$items = array_map(
+			static fn( $item ): string => sanitize_text_field( trim( (string) $item ) ),
+			is_array( $items ) ? $items : array()
+		);
+
+		return array_values( array_filter( array_unique( $items ) ) );
 	}
 }

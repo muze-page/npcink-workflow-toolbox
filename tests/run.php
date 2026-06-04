@@ -35,7 +35,7 @@ foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same 
 }
 
 $composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
-foreach ( array( 'Fixed Button Mapping', 'OpenClaw natural-language recipes and Toolbox fixed buttons should compose the', 'same ability contracts', 'Article/media batch plan', 'Media Derivative Preview', 'Core proposal for `magick-ai/adopt-cloud-media-derivative`', 'separate workflow runtime, direct write path, or approval store' ) as $required_composition_doc ) {
+foreach ( array( 'Fixed Button Mapping', 'OpenClaw natural-language recipes and Toolbox fixed buttons should compose the', 'same ability contracts', 'Article/media batch plan', 'Adopt New Image', 'Optimize Existing Image', 'Core proposal for `magick-ai/adopt-cloud-media-derivative`', 'separate workflow runtime, direct write path, or approval store' ) as $required_composition_doc ) {
 	toolbox_assert( false !== strpos( $composition_doc, $required_composition_doc ), 'Composition doc preserves fixed-button mapping: ' . $required_composition_doc );
 }
 
@@ -65,30 +65,34 @@ toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="tools" 
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-panel="connectors"' ), 'Connector settings are moved out of the default tools view.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connectors' ) && false !== strpos( $admin_page, 'data-toolbox-connector-panel' ), 'Connector settings use a single active connector workspace.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__connector-tabs' ) && false !== strpos( $admin_page, 'magick-ai-toolbox__connector-tab' ), 'Connector groups use horizontal sub tabs near the connector heading.' );
-toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-providers' ) && false !== strpos( $admin_page, 'data-toolbox-connector-provider-target' ) && false !== strpos( $admin_page, 'data-toolbox-connector-provider-panel' ), 'Connector groups show a left provider list and right provider detail panel.' );
-toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="search" aria-selected="true"' ), 'Search is the default connector section.' );
-toolbox_assert( strpos( $admin_page, 'data-toolbox-connector-target="search"' ) < strpos( $admin_page, 'data-toolbox-connector-target="image"' ) && strpos( $admin_page, 'data-toolbox-connector-target="image"' ) < strpos( $admin_page, 'data-toolbox-connector-target="vector"' ), 'Connector sections are ordered Search, Image, Vector.' );
-toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-provider-target="image-unsplash"' ) && false !== strpos( $admin_page, 'data-toolbox-connector-provider-target="image-pixabay"' ) && false !== strpos( $admin_page, 'data-toolbox-connector-provider-target="vector-qdrant"' ), 'Provider lists expose per-category vendor choices.' );
+toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-providers' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-target' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-panel' ), 'Connector settings no longer expose provider rail configuration locally.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-connector-target="image" aria-selected="true"' ), 'Image is the default connector section after local search provider settings were removed.' );
+toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-target="search"' ), 'Connector settings no longer expose a local Search provider section.' );
+toolbox_assert( strpos( $admin_page, 'data-toolbox-connector-target="image"' ) < strpos( $admin_page, 'data-toolbox-connector-target="vector"' ), 'Connector sections are ordered Image, Vector.' );
+toolbox_assert( false !== strpos( $admin_page, 'Cloud image sources' ) && false !== strpos( $admin_page, 'Cloud service' ) && false !== strpos( $admin_page, 'provider keys, quotas, health, and provider selection' ), 'Image connector surface is Cloud-managed and read-only locally.' );
 toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__connector-status' ) && false !== strpos( $admin_page, 'Connector status catalog' ), 'Connector panels expose a read-only status catalog.' );
-toolbox_assert( false !== strpos( $admin_page, 'Local MVP config' ) && false !== strpos( $admin_page, 'Future connector owner' ), 'Connector status catalog separates local MVP config from future connector ownership.' );
-toolbox_assert( false !== strpos( $admin_page, 'Pixabay' ) && false !== strpos( $admin_page, 'Pexels' ) && false !== strpos( $admin_page, 'Pinecone' ) && false !== strpos( $admin_page, 'Weaviate' ), 'Provider lists expose active image providers and reserved vector slots.' );
-toolbox_assert( false !== strpos( $admin_page, 'Bocha' ) && false !== strpos( $admin_page, 'Jina Reader' ) && false !== strpos( $admin_page, 'search-bocha' ) && false !== strpos( $admin_page, 'search-jina-reader' ), 'Search provider list exposes Bocha and Jina Reader enhancement.' );
-toolbox_assert( false !== strpos( $admin_page, 'pixabay_api_key' ) && false !== strpos( $admin_page, 'pexels_api_key' ), 'Pixabay and Pexels image-source keys are configurable.' );
-toolbox_assert( false !== strpos( $admin_page, 'bocha_api_key' ) && false !== strpos( $admin_page, 'enable_jina_reader' ), 'Bocha and Jina Reader search settings are configurable.' );
-toolbox_assert( false !== strpos( $admin_page, 'https://www.tavily.com/' ) && false !== strpos( $admin_page, 'https://unsplash.com/developers' ) && false !== strpos( $admin_page, 'https://qdrant.tech/' ), 'Connector provider rows expose vendor addresses.' );
-toolbox_assert( false !== strpos( $admin_page, 'External web research API' ) && false !== strpos( $admin_page, 'Photo search API' ) && false !== strpos( $admin_page, 'Vector database used here only' ), 'Connector provider rows expose short vendor descriptions.' );
-toolbox_assert( false !== strpos( $admin_page, 'external source candidates that any AI workflow can use' ), 'Web Research tool copy keeps search general-purpose.' );
-toolbox_assert( false !== strpos( $admin_page, 'does not index WordPress content' ) && false !== strpos( $admin_page, 'This is not AI image generation or media import' ), 'Connector catalog copy preserves image-source and vector-indexing boundaries.' );
-toolbox_assert( false !== strpos( $admin_page, 'Jina test setup' ) && false !== strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector includes Jina AI test setup guidance.' );
-toolbox_assert( false !== strpos( $admin_page, 'Advanced / Debug' ) && false !== strpos( $admin_page, 'Clear stored Jina AI key' ), 'Connector key clearing and debug toggles are moved to an advanced area.' );
+toolbox_assert( false === strpos( $admin_page, 'Local MVP config' ) && false === strpos( $admin_page, 'Future connector owner' ), 'Connector status catalog no longer presents local or reserved vector provider ownership.' );
+toolbox_assert( false === strpos( $admin_page, 'Pinecone' ) && false === strpos( $admin_page, 'Weaviate' ), 'Provider lists do not expose reserved vector slots locally.' );
+toolbox_assert( false === strpos( $admin_page, 'search-bocha' ) && false === strpos( $admin_page, 'search-jina-reader' ) && false === strpos( $admin_page, 'tavily_api_key' ), 'Search provider keys and panels are removed from the connector UI.' );
+toolbox_assert( false === strpos( $admin_page, 'unsplash_access_key' ) && false === strpos( $admin_page, 'pixabay_api_key' ) && false === strpos( $admin_page, 'pexels_api_key' ), 'Public image-source provider keys are not configurable in local Toolbox.' );
+toolbox_assert( false === strpos( $admin_page, 'bocha_api_key' ) && false === strpos( $admin_page, 'enable_jina_reader' ), 'Bocha and Jina Reader search settings are not configurable locally.' );
+toolbox_assert( false !== strpos( $admin_page, 'admin.php?page=magick-ai-cloud-addon' ) && false !== strpos( $admin_page, 'toolbox_tab=site-knowledge' ) && false === strpos( $admin_page, 'https://qdrant.tech/' ), 'Connector provider rows expose Cloud and Site Knowledge entries without local vector vendor links.' );
+toolbox_assert( false !== strpos( $admin_page, 'Cloud owns provider keys' ) && false !== strpos( $admin_page, 'Toolbox does not store vector provider keys' ), 'Connector provider rows expose short Cloud ownership descriptions.' );
+toolbox_assert( false !== strpos( $admin_page, 'Web Search' ) && false !== strpos( $admin_page, 'Cloud managed' ), 'Web Search status is Cloud-managed only.' );
+toolbox_assert( false !== strpos( $admin_page, 'Cloud owns the vector database' ) && false !== strpos( $admin_page, 'Returned candidates still use image_candidate.v1' ), 'Connector catalog copy preserves image-source and Cloud vector ownership boundaries.' );
+toolbox_assert( false === strpos( $admin_page, 'Jina test setup' ) && false === strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector does not include local embedding setup guidance.' );
+toolbox_assert( false !== strpos( $admin_page, 'Advanced / Debug' ) && false === strpos( $admin_page, 'Clear stored Jina AI key' ) && false === strpos( $admin_page, 'Clear stored Tavily key' ), 'Connector debug toggles exclude removed provider key clearing.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tools' ) && false !== strpos( $admin_page, 'data-toolbox-tool-panel' ), 'Tool actions use a single active tool workspace instead of a card matrix.' );
 toolbox_assert( false !== strpos( $admin_page, 'Article Assistant' ) && false !== strpos( $admin_page, 'render_article_assistant_tool' ), 'Tool actions include a dedicated Article Assistant workbench panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'reviewed_draft_markdown' ) && false !== strpos( $admin_page, 'Build assistant artifact' ), 'Article Assistant panel collects optional reviewed draft input for Core-ready handoff.' );
 toolbox_assert( false !== strpos( $admin_page, 'Article Write Plan' ) && false !== strpos( $admin_page, 'render_article_plan_tool' ), 'Tool actions include a dedicated Article Write Plan panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !== strpos( $admin_page, 'Final execution remains magick-ai/create-draft after Core approval.' ), 'Article Write Plan panel collects reviewed draft content and preserves Core handoff copy.' );
-toolbox_assert( false !== strpos( $admin_page, 'Media Derivative Preview' ) && false !== strpos( $admin_page, 'render_media_derivative_tool' ), 'Tool actions include a dedicated Media Derivative Preview panel.' );
+toolbox_assert( false !== strpos( $admin_page, 'Adopt New Image' ) && false !== strpos( $admin_page, 'render_image_candidate_adoption_tool' ), 'Tool actions include an Adopt New Image panel.' );
+toolbox_assert( false !== strpos( $admin_page, 'Selected image URL' ) && false !== strpos( $admin_page, 'Source type' ) && false !== strpos( $admin_page, 'Advanced candidate details' ) && false !== strpos( $admin_page, 'Build import proposal plan' ), 'Adopt New Image panel hides image_candidate internals behind a simpler button flow.' );
+toolbox_assert( false !== strpos( $admin_page, 'Candidate JSON' ) && false !== strpos( $admin_page, 'Toolbox does not import media directly' ), 'Adopt New Image panel keeps advanced candidate JSON optional and preserves no-write copy.' );
+toolbox_assert( false !== strpos( $admin_page, 'Optimize Existing Image' ) && false !== strpos( $admin_page, 'render_media_derivative_tool' ), 'Tool actions include a dedicated Optimize Existing Image panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'Core defaults' ) && false !== strpos( $admin_page, 'magick_ai_core_get_media_derivative_settings' ), 'Media Derivative Handoff reads Core media policy defaults when available.' );
-toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-select-media' ) && false !== strpos( $admin_page, 'Generate preview' ) && false !== strpos( $admin_page, 'Submit replacement proposal' ) && false !== strpos( $admin_page, 'data-toolbox-submit-reference-repair' ) && false !== strpos( $admin_page, 'data-toolbox-submit-settings-repair' ), 'Media Derivative Preview supports media selection, Cloud preview generation, Core replacement proposal submission, post reference repair, and settings reference repair submission.' );
+toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-select-media' ) && false !== strpos( $admin_page, 'Generate preview' ) && false !== strpos( $admin_page, 'Submit replacement review' ) && false !== strpos( $admin_page, 'Repair and handoff actions' ) && false !== strpos( $admin_page, 'data-toolbox-submit-reference-repair' ) && false !== strpos( $admin_page, 'data-toolbox-submit-settings-repair' ), 'Optimize Existing Image supports media selection, Cloud preview generation, Core replacement review, and advanced repair actions.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-media-url' ) && false !== strpos( $admin_page, 'data-toolbox-resolve-media-url' ) && false !== strpos( $admin_page, 'data-toolbox-media-url-resolution' ), 'Media Derivative Preview supports resolving a local uploads URL to an attachment before preview generation.' );
 toolbox_assert( false !== strpos( $admin_page, 'Batch conversion plan' ) && false !== strpos( $admin_page, 'data-toolbox-build-media-batch-plan' ) && false !== strpos( $admin_page, 'data-toolbox-run-media-batch-previews' ) && false !== strpos( $admin_page, 'data-toolbox-submit-media-batch-proposals' ), 'Media Derivative Preview supports bounded batch planning, selected previews, and selected proposal submission.' );
 toolbox_assert( false !== strpos( $admin_page, 'settings_excluded_formats' ) && false !== strpos( $admin_page, 'settings_min_dimensions' ), 'Media Derivative Preview exposes bounded settings reference repair exclusions.' );
@@ -123,6 +127,8 @@ toolbox_assert( false !== strpos( $admin_js, 'renderArticleAssistant' ) && false
 toolbox_assert( false !== strpos( $admin_js, 'Write plan' ) && false !== strpos( $admin_js, 'Local workbench' ), 'Article Assistant renderer shows local workbench and write-plan readiness.' );
 toolbox_assert( false !== strpos( $admin_js, 'Goal brief' ) && false !== strpos( $admin_js, 'Risk report' ) && false !== strpos( $admin_js, 'Final ability' ), 'Article write plan renderer shows artifacts, risk, and final ability summary.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderMediaDerivativeHandoff' ) && false !== strpos( $admin_js, "payload.artifact_type === 'media_derivative_handoff'" ), 'Admin JavaScript renders media derivative handoffs through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderImageCandidateAdoptionPlan' ) && false !== strpos( $admin_js, "payload.artifact_type === 'image_candidate_adoption_plan'" ), 'Admin JavaScript renders image candidate adoption plans through a dedicated view.' );
+toolbox_assert( false !== strpos( $admin_js, 'Image import proposal plan' ) && false !== strpos( $admin_js, 'License or source review is required before approval.' ), 'Image candidate adoption renderer keeps next steps and review status visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'One-run planning artifact' ) && false !== strpos( $admin_js, 'Core policy' ), 'Media derivative renderer keeps one-run Core policy handoff visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'initMediaDerivativeControls' ) && false !== strpos( $admin_js, 'runMediaDerivative' ) && false !== strpos( $admin_js, 'submitMediaDerivativeProposal' ) && false !== strpos( $admin_js, 'submitMediaReferenceRepairProposal' ) && false !== strpos( $admin_js, 'submitMediaSettingsReferenceRepairProposal' ), 'Admin JavaScript runs the media derivative preview, replacement proposal, post reference repair, and settings reference repair proposal flows through Adapter routes.' );
 toolbox_assert( false !== strpos( $admin_js, 'media-derivative-runs' ) && false !== strpos( $admin_js, 'media-derivative-proposal-payload' ) && false !== strpos( $admin_js, "ability_id: 'magick-ai/adopt-cloud-media-derivative'" ), 'Media derivative preview uses Adapter recipe routes and submits a governed local replacement proposal.' );
@@ -144,6 +150,7 @@ toolbox_assert( false !== strpos( $admin_js, 'initSiteKnowledge' ) && false !== 
 $admin_css = file_get_contents( $root . '/assets/admin.css' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-summary' ), 'Admin CSS styles summary-first result panels.' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-details' ), 'Admin CSS styles collapsed result detail disclosures.' );
+toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__image-preview' ), 'Admin CSS styles adoption result image previews.' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__image-thumb' ), 'Admin CSS supports browser image-source previews.' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__connector-tabs' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__connector-tab.is-active' ), 'Admin CSS styles connector sub tabs.' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__connector-provider-workspace' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__connector-provider-button.is-active' ), 'Admin CSS styles connector provider rail and selected vendor state.' );
@@ -159,7 +166,6 @@ toolbox_assert( false === strpos( $plugin, '$this->abilities->register_with_magi
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
 $allowed_rest_routes = array(
 	'/status',
-	'/web-research',
 	'/image-candidates',
 	'/vector-search',
 	'/knowledge-search',
@@ -169,6 +175,7 @@ $allowed_rest_routes = array(
 	'/flows/article-brief',
 	'/flows/article-assistant',
 	'/flows/article-plan',
+	'/flows/image-candidate-adoption-plan',
 	'/flows/media-brief',
 	'/media-derivative-handoff',
 );
@@ -195,36 +202,37 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'magick-ai-toolbox/web-research', 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/search-site-knowledge', 'magick-ai-toolbox/get-site-knowledge-status', 'magick-ai-toolbox/request-site-knowledge-sync', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-assistant', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/build-media-derivative-handoff', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief', 'magick-ai-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
+foreach ( array( 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/search-site-knowledge', 'magick-ai-toolbox/get-site-knowledge-status', 'magick-ai-toolbox/request-site-knowledge-sync', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-assistant', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-image-candidate-adoption-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/build-media-derivative-handoff', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief', 'magick-ai-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
+toolbox_assert( false === strpos( $abilities, 'magick-ai-toolbox/web-research' ), 'Toolbox no longer registers a local web-research ability.' );
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
-toolbox_assert( false !== strpos( $client, 'https://api.tavily.com/search' ), 'Web research uses Tavily search.' );
-toolbox_assert( false !== strpos( $client, '/web-search' ) && false !== strpos( $client, 'search_bocha_web' ), 'Web research uses Bocha web search.' );
-toolbox_assert( false !== strpos( $client, 'enhance_results_with_jina_reader' ) && false !== strpos( $client, 'jina_reader_base_url' ), 'Web research can enhance selected results through Jina Reader.' );
-toolbox_assert( false !== strpos( $client, 'https://api.unsplash.com/search/photos' ), 'Image candidates use Unsplash photo search.' );
-toolbox_assert( false !== strpos( $client, 'https://pixabay.com/api/' ), 'Image candidates use Pixabay photo search.' );
-toolbox_assert( false !== strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates use Pexels photo search.' );
+toolbox_assert( false === strpos( $client, 'https://api.tavily.com/search' ) && false === strpos( $client, 'search_bocha_web' ) && false === strpos( $client, 'enhance_results_with_jina_reader' ), 'Provider client no longer calls local web search providers.' );
+toolbox_assert( false !== strpos( $client, 'execute_image_source_cloud_request' ) && false !== strpos( $client, 'magick_ai_toolbox_image_source_cloud_request' ), 'Image candidates use a Cloud-managed image-source runtime seam.' );
+toolbox_assert( false === strpos( $client, 'https://api.unsplash.com/search/photos' ) && false === strpos( $client, 'https://pixabay.com/api/' ) && false === strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates do not directly call public image provider APIs locally.' );
 toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
 toolbox_assert( false !== strpos( $client, "'source_type'                   => 'ai_generated'" ) && false !== strpos( $client, "'requires_human_license_review' => true" ), 'AI-generated image candidates preserve source type and license review status.' );
+toolbox_assert( false !== strpos( $client, 'normalize_image_candidate_contract' ) && false !== strpos( $client, "'candidate_contract_version' => 'image_candidate.v1'" ), 'Image candidates normalize to image_candidate.v1.' );
+toolbox_assert( false !== strpos( $client, "'source_type']                   = \$source_type" ) && false !== strpos( $client, "'download_url']" ) && false !== strpos( $client, "'thumbnail_url']" ) && false !== strpos( $client, "'provider_origin']" ), 'Image candidate v1 output includes source type, download URL, thumbnail URL, and provider origin.' );
+toolbox_assert( false !== strpos( $client, 'build_image_candidate_adoption_plan' ) && false !== strpos( $client, "'artifact_type'               => 'image_candidate_adoption_plan'" ), 'Provider client can build image candidate adoption plans.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'magick-ai/set-post-featured-image'" ), 'Image candidate adoption plan routes media import and featured image writes through Core-governed abilities.' );
 toolbox_assert( false !== strpos( $client, 'sanitize_provider_error_data' ) && false !== strpos( $client, "'provider_status' => \$status" ), 'Image-source provider failures preserve safe diagnostic status data.' );
-toolbox_assert( false !== strpos( $client, '/points/query' ), 'Vector search uses Qdrant query points.' );
-toolbox_assert( false !== strpos( $client, '/embeddings' ), 'Text vector search uses the configured embedding endpoint.' );
-toolbox_assert( false !== strpos( $client, 'siliconflow' ), 'Embedding provider is normalized as SiliconFlow.' );
-toolbox_assert( false !== strpos( $client, 'jina' ), 'Jina AI is available as an optional embedding provider.' );
-toolbox_assert( false !== strpos( $client, 'embedding_dimension_mismatch' ), 'Vector search guards against embedding dimension mismatch.' );
-toolbox_assert( false !== strpos( $client, 'download_location' ), 'Unsplash responses preserve download tracking location.' );
+toolbox_assert( false === strpos( $client, '/points/query' ), 'Vector search no longer calls Qdrant query points locally.' );
+toolbox_assert( false === strpos( $client, '/embeddings' ), 'Vector search no longer calls embedding endpoints locally.' );
+toolbox_assert( false === strpos( $client, 'create_siliconflow_embedding' ) && false === strpos( $client, 'create_jina_embedding' ), 'Provider client no longer contains local embedding provider implementations.' );
+toolbox_assert( false !== strpos( $client, 'Low-level vector provider configuration has moved to Magick AI Cloud' ), 'Vector search returns a Cloud-managed compatibility pointer.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai-toolbox/search-site-knowledge'" ), 'Vector compatibility output points callers to Cloud-managed Site Knowledge.' );
+toolbox_assert( false !== strpos( $client, 'provider_origin' ) && false !== strpos( $client, "'cloud_runtime'              => 'magick_ai_cloud_addon'" ), 'Cloud image-source responses preserve candidate provenance.' );
 toolbox_assert( false !== strpos( $client, "'provider_mode'" ) && false !== strpos( $client, "'active_sources'" ), 'Image-source output records provider mode and active sources.' );
 toolbox_assert( false !== strpos( $client, 'with_optional_raw' ), 'Provider raw responses are optional.' );
 toolbox_assert( false !== strpos( $client, 'with_output_contract' ), 'Provider-backed outputs use a shared AI composition contract.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => \$artifact_type" ), 'Shared output contract includes artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => \$composition_role" ), 'Shared output contract includes composition role.' );
 toolbox_assert( false !== strpos( $client, "'direct_wordpress_write' => false" ), 'Shared output contract forbids direct WordPress writes.' );
-toolbox_assert( false !== strpos( $client, "'research_evidence'" ), 'Web research output is classified as research evidence.' );
-toolbox_assert( false !== strpos( $client, "'provider_mode'" ) && false !== strpos( $client, "'reader_enhancement'" ), 'Web research output records provider mode and reader enhancement status.' );
+toolbox_assert( false !== strpos( $client, 'cloud_web_search_notice' ) && false !== strpos( $client, "'provider_mode'  => 'cloud_managed'" ), 'Article helpers record Cloud-managed web search status without local provider execution.' );
 toolbox_assert( false !== strpos( $client, "'image_source_candidates'" ), 'Image source output is classified as image-source candidates.' );
-toolbox_assert( false !== strpos( $client, "'local_style_context'" ), 'Vector output is classified as local style context.' );
+toolbox_assert( false !== strpos( $client, "'site_knowledge_context'" ), 'Vector compatibility output is classified as site knowledge context.' );
 toolbox_assert( false !== strpos( $client, 'search_site_knowledge' ) && false !== strpos( $client, "'site_knowledge_search.v1'" ), 'Provider client exposes Cloud-managed site knowledge search.' );
 toolbox_assert( false !== strpos( $client, "'faq_candidates'" ) && false !== strpos( $client, "'content_gap_analysis'" ) && false !== strpos( $client, "'duplicate_check'" ), 'Provider client allows high-value site knowledge search intents.' );
 toolbox_assert( false !== strpos( $client, 'get_site_knowledge_status' ) && false !== strpos( $client, "'site_knowledge_status.v1'" ), 'Provider client exposes Cloud-managed site knowledge status.' );
@@ -261,6 +269,8 @@ toolbox_assert( false !== strpos( $client, "'composition_role'          => 'core
 toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'magick-ai/set-post-featured-image'" ), 'Article plus media batch write plan routes media upload and featured image writes through Core-governed abilities.' );
 toolbox_assert( false !== strpos( $client, "'file_name'         => \$file_name" ), 'Article plus media batch write plan preserves approved media file names.' );
 toolbox_assert( false !== strpos( $client, "'attach_to_post_id' => '\$outputs.' . \$create_id . '.post_id'" ) && false !== strpos( $client, "'attachment_id'  => '\$outputs.' . \$upload_id . '.attachment_id'" ), 'Article plus media batch write plan uses output references for dependent media writes.' );
+toolbox_assert( false !== strpos( $client, 'build_image_candidate_adoption_plan' ), 'Provider client can build image candidate adoption plans.' );
+toolbox_assert( false !== strpos( $client, "\$input['download_url']" ) && false !== strpos( $client, 'A selected image URL or image_candidate object is required' ), 'Image candidate adoption plan accepts simplified selected image URL input.' );
 toolbox_assert( false !== strpos( $client, 'build_media_derivative_handoff' ), 'Provider client can build media derivative handoffs.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'media_derivative_handoff'" ), 'Media derivative handoff declares its artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'media_derivative_operator_handoff'" ), 'Media derivative handoff declares its composition role.' );
@@ -272,6 +282,7 @@ toolbox_assert( false !== strpos( $client, 'build_content_discoverability_brief'
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'content_discoverability_brief'" ), 'Content discoverability brief declares its artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'seo_aeo_geo_brief'" ), 'Content discoverability brief declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'primary_contract'       => true" ), 'Content discoverability brief is the primary SEO/AEO/GEO contract.' );
+toolbox_assert( false !== strpos( $client, "'final_write_path'       => 'core_proposal_required'" ), 'Content discoverability brief points final writes to Core proposals.' );
 toolbox_assert( false !== strpos( $client, "'seo'                    =>" ) && false !== strpos( $client, "'aeo'                    =>" ) && false !== strpos( $client, "'geo'                    =>" ) && false !== strpos( $client, 'content_discoverability_field_group' ), 'Content discoverability brief exposes SEO/AEO/GEO section blocks.' );
 toolbox_assert( false !== strpos( $client, "'exceptions'             =>" ) && false !== strpos( $client, "'special_cases'          =>" ), 'Content discoverability brief exposes exception and special-case rules.' );
 toolbox_assert( false !== strpos( $client, 'proposal_template' ) && false !== strpos( $client, 'candidate_suggestions' ), 'Content discoverability brief returns proposal templates and conservative candidates.' );
@@ -284,16 +295,16 @@ toolbox_assert( false !== strpos( $client, 'article_prompt_pack' ) && false !== 
 toolbox_assert( false !== strpos( $client, "'pack_ability_id'       => 'magick-ai-toolbox/build-ai-article-writing-pack'" ), 'AI article writing pack returns ability handoff metadata.' );
 
 $settings = file_get_contents( $root . '/includes/Settings.php' );
-toolbox_assert( false !== strpos( $settings, 'BAAI/bge-m3' ), 'SiliconFlow default embedding model is configured.' );
-toolbox_assert( false !== strpos( $settings, 'jina-embeddings-v3' ), 'Jina default embedding model is configured.' );
-toolbox_assert( false !== strpos( $settings, "'embedding_dimensions'  => 1024" ), 'Default embedding dimensions match BAAI/bge-m3 and Qdrant guidance.' );
-toolbox_assert( false !== strpos( $settings, 'SILICONFLOW_API_KEY' ), 'SiliconFlow key can be provided by environment.' );
-toolbox_assert( false !== strpos( $settings, 'JINA_API_KEY' ), 'Jina key can be provided by environment.' );
-toolbox_assert( false !== strpos( $settings, 'BOCHA_API_KEY' ), 'Bocha key can be provided by environment.' );
-toolbox_assert( false !== strpos( $settings, 'configured_search_providers' ), 'Settings can enumerate configured search providers.' );
-toolbox_assert( false !== strpos( $settings, 'PIXABAY_API_KEY' ), 'Pixabay key can be provided by environment.' );
-toolbox_assert( false !== strpos( $settings, 'PEXELS_API_KEY' ), 'Pexels key can be provided by environment.' );
-toolbox_assert( false !== strpos( $settings, 'configured_image_source_providers' ), 'Settings can enumerate configured image-source providers.' );
+toolbox_assert( false === strpos( $settings, 'BAAI/bge-m3' ), 'Local Settings no longer store a default embedding model.' );
+toolbox_assert( false === strpos( $settings, 'jina-embeddings-v3' ), 'Local Settings no longer store a Jina embedding model.' );
+toolbox_assert( false === strpos( $settings, "'embedding_dimensions'  => 1024" ), 'Local Settings no longer store embedding dimensions.' );
+toolbox_assert( false === strpos( $settings, 'SILICONFLOW_API_KEY' ), 'SiliconFlow key cannot be provided by local Toolbox settings.' );
+toolbox_assert( false === strpos( $settings, 'JINA_API_KEY' ), 'Jina key cannot be provided by local Toolbox settings.' );
+toolbox_assert( false === strpos( $settings, 'QDRANT_API_KEY' ) && false === strpos( $settings, 'qdrant_api_key' ), 'Qdrant key cannot be provided by local Toolbox settings.' );
+toolbox_assert( false === strpos( $settings, 'BOCHA_API_KEY' ) && false === strpos( $settings, 'TAVILY_API_KEY' ), 'Search provider keys cannot be provided locally.' );
+toolbox_assert( false === strpos( $settings, 'configured_search_providers' ), 'Settings no longer enumerate local search providers.' );
+toolbox_assert( false === strpos( $settings, 'PIXABAY_API_KEY' ) && false === strpos( $settings, 'PEXELS_API_KEY' ) && false === strpos( $settings, 'UNSPLASH_ACCESS_KEY' ), 'Public image-source keys are not accepted from local environment settings.' );
+toolbox_assert( false !== strpos( $settings, 'configured_image_source_providers' ) && false !== strpos( $settings, 'cloud_image_sources' ), 'Settings expose Cloud-managed image-source availability.' );
 toolbox_assert( false !== strpos( $settings, 'content_context_defaults' ), 'Content context has separate defaults.' );
 toolbox_assert( false !== strpos( $settings, 'get_content_context_for_ability' ), 'Content context can be exported for Abilities callers.' );
 toolbox_assert( false !== strpos( $settings, 'validate_content_context_for_ability' ), 'Content context can be validated for AI callers.' );
@@ -305,29 +316,31 @@ toolbox_assert( false !== strpos( $settings, "'write_posture'                   
 toolbox_assert( false !== strpos( $settings, "'final_write_path'                => 'core_proposal_required'" ), 'Content context points writes to Core proposals.' );
 toolbox_assert( false !== strpos( $settings, "'direct_wordpress_write'          => false" ), 'Content context forbids direct WordPress writes.' );
 
-toolbox_assert( false !== strpos( $rest, 'siliconflow_configured' ), 'Status reports SiliconFlow configuration.' );
-toolbox_assert( false !== strpos( $rest, 'jina_configured' ), 'Status reports Jina configuration.' );
-toolbox_assert( false !== strpos( $rest, 'search_providers' ) && false !== strpos( $rest, 'bocha_configured' ) && false !== strpos( $rest, 'jina_reader_enabled' ), 'Status reports configured search providers and reader enhancement.' );
-toolbox_assert( false !== strpos( $rest, 'image_source_providers' ) && false !== strpos( $rest, 'pixabay_configured' ) && false !== strpos( $rest, 'pexels_configured' ), 'Status reports configured image-source providers.' );
+toolbox_assert( false === strpos( $rest, 'siliconflow_configured' ), 'Status no longer reports SiliconFlow configuration.' );
+toolbox_assert( false === strpos( $rest, 'jina_configured' ), 'Status no longer reports Jina configuration.' );
+toolbox_assert( false !== strpos( $rest, "'web_search_owner'         => 'cloud_runtime'" ) && false === strpos( $rest, 'bocha_configured' ) && false === strpos( $rest, 'jina_reader_enabled' ), 'Status reports Cloud ownership for web search and omits local search provider state.' );
+toolbox_assert( false !== strpos( $rest, 'image_source_providers' ) && false !== strpos( $rest, 'cloud_image_sources_configured' ), 'Status reports Cloud-managed image-source availability.' );
 toolbox_assert( false !== strpos( $rest, 'include_ai_generated' ) && false !== strpos( $rest, 'generated_image_url' ), 'Image candidate REST route accepts explicit AI-generated candidate inputs.' );
-toolbox_assert( false !== strpos( $rest, 'embedding_dimensions' ), 'Status reports embedding dimensions.' );
+toolbox_assert( false === strpos( $rest, 'embedding_dimensions' ), 'Status no longer reports embedding dimensions.' );
+toolbox_assert( false !== strpos( $rest, "'vector_provider'          => 'cloud_site_knowledge'" ) && false !== strpos( $rest, "'vector_owner'             => 'cloud_runtime'" ), 'Status reports Cloud ownership for vector infrastructure.' );
 toolbox_assert( false !== strpos( $rest, 'query or vector field' ), 'Vector REST route accepts query or vector input.' );
 toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== strpos( $rest, 'site_knowledge_status' ) && false !== strpos( $rest, 'site_knowledge_search' ), 'REST routes expose Cloud-managed site knowledge operations.' );
-toolbox_assert( false !== strpos( $rest, 'enhance_with_reader' ), 'Web research REST route accepts Jina Reader enhancement.' );
+toolbox_assert( false === strpos( $rest, 'enhance_with_reader' ) && false === strpos( $rest, '/web-research' ), 'REST no longer exposes local web research or Jina Reader enhancement inputs.' );
 toolbox_assert( false !== strpos( $rest, "'provider'    => sanitize_key" ), 'Image candidate REST route accepts provider selection.' );
 toolbox_assert( false !== strpos( $rest, 'magick_ai_toolbox_rest_permission' ), 'REST permission can be mediated by a host scope filter.' );
 
-toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.search' ), 'Web ability exposes the stable Toolbox search scope.' );
+toolbox_assert( false === strpos( $abilities, 'cap.toolbox.search' ), 'Removed local web ability no longer exposes a Toolbox search scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.vector_search' ), 'Vector ability exposes a Toolbox vector scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.knowledge.search' ) && false !== strpos( $abilities, 'cap.toolbox.knowledge.read' ) && false !== strpos( $abilities, 'cap.toolbox.knowledge.sync' ), 'Site knowledge abilities expose stable knowledge scopes.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.workflow_suggest' ), 'Workflow abilities expose the stable Toolbox workflow scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.context.read' ), 'Content context ability exposes a read scope.' );
 toolbox_assert( false !== strpos( $abilities, 'public_context' ), 'Content context ability declares public context classification.' );
 toolbox_assert( false !== strpos( $abilities, 'planning_artifact' ), 'Article write plan ability declares planning artifact classification.' );
-toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'research_evidence'" ), 'Web research ability declares its content composition role.' );
+toolbox_assert( false === strpos( $abilities, "'composition_role' => 'research_evidence'" ), 'Removed local web ability no longer declares a research composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'image_source_candidates'" ), 'Image-source ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, 'include_ai_generated' ) && false !== strpos( $abilities, 'generated_image_url' ), 'Image-source ability accepts explicit AI-generated candidate inputs.' );
-toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'local_style_context'" ), 'Vector ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'core_image_candidate_adoption_plan'" ) && false !== strpos( $abilities, "'candidate_contract'  => 'image_candidate.v1'" ), 'Image candidate adoption ability declares its Core handoff role and candidate contract.' );
+toolbox_assert( false !== strpos( $abilities, "'knowledge_layer' => 'cloud_managed_site_knowledge'" ), 'Vector compatibility ability declares Cloud-managed site knowledge ownership.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_context'" ), 'Site knowledge search ability declares its composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_status'" ), 'Site knowledge status ability declares its composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_sync_request'" ), 'Site knowledge sync ability declares its composition role.' );
@@ -357,10 +370,10 @@ toolbox_assert( false !== strpos( $abilities, '$this->registered_with_helpers ||
 toolbox_assert( false !== strpos( $abilities, 'wp_has_ability_category' ), 'Native category registration checks for an existing WordPress ability category.' );
 
 $readme = file_get_contents( $root . '/README.md' );
-toolbox_assert( false !== strpos( $readme, 'Unsplash, Pixabay, and Pexels' ), 'README documents active image-source providers.' );
-toolbox_assert( false !== strpos( $readme, 'Tavily and Bocha' ) && false !== strpos( $readme, 'Jina Reader result enhancement' ), 'README documents active search providers and Reader enhancement.' );
+toolbox_assert( false !== strpos( $readme, 'Cloud-managed image-source candidates' ), 'README documents Cloud-managed image-source providers.' );
+toolbox_assert( false !== strpos( $readme, 'Cloud-managed web search' ) && false === strpos( $readme, 'magick-ai-toolbox/web-research' ), 'README documents Cloud-managed web search without local web-research ability.' );
 toolbox_assert( false !== strpos( $readme, 'Cloud-managed site knowledge' ) && false !== strpos( $readme, 'magick-ai-toolbox/search-site-knowledge' ), 'README documents Cloud-managed site knowledge abilities.' );
-toolbox_assert( false !== strpos( $readme, 'Pinecone and Weaviate' ), 'Pinecone and Weaviate remain documentation-only reserved vector providers.' );
+toolbox_assert( false === strpos( $readme, 'Pinecone and Weaviate' ), 'README does not advertise reserved local vector providers.' );
 toolbox_assert( false !== strpos( $readme, 'AI Content Composition Abilities' ), 'README links the AI content composition abilities contract.' );
 toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'README links the connector ability exposure contract.' );
 toolbox_assert( false !== strpos( $readme, 'Content Discoverability Context' ), 'README links the content context contract.' );
@@ -379,8 +392,8 @@ $architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
 toolbox_assert( false !== $architecture_doc && false !== strpos( $architecture_doc, 'static matrix in' ) && false !== strpos( $architecture_doc, 'Future connector owner' ), 'Architecture documentation records the route matrix and connector owner split.' );
 toolbox_assert( false !== strpos( $architecture_doc, 'Article Write Plan' ) && false !== strpos( $architecture_doc, 'submit the plan to Core' ) && false !== strpos( $architecture_doc, 'approve execution' ), 'Architecture documentation records the article plan UI boundary.' );
 toolbox_assert( false !== strpos( $architecture_doc, 'artifact_type' ) && false !== strpos( $architecture_doc, 'composition_role' ), 'Architecture documentation records the compact provider payload contract.' );
-toolbox_assert( false !== strpos( $architecture_doc, '`web-research` is the general external source-candidate ability' ), 'Architecture documentation records web research as a reusable tool input.' );
-toolbox_assert( false !== strpos( $architecture_doc, '| Bocha | External web search | `/web-research` |' ) && false !== strpos( $architecture_doc, '| Jina Reader | Search result URL extraction | `/web-research` enhancement only |' ), 'Architecture documentation records Bocha and Jina Reader search roles.' );
+toolbox_assert( false !== strpos( $architecture_doc, 'Cloud-managed web search' ) && false === strpos( $architecture_doc, '`magick-ai-toolbox/web-research`' ), 'Architecture documentation records Cloud ownership for web search.' );
+toolbox_assert( false === strpos( $architecture_doc, '| Bocha | External web search | `/web-research` |' ) && false === strpos( $architecture_doc, '| Jina Reader | Search result URL extraction | `/web-research` enhancement only |' ), 'Architecture documentation no longer records local Bocha or Jina Reader search roles.' );
 toolbox_assert( false !== strpos( $architecture_doc, '`search-site-knowledge` is the high-level ability' ) && false !== strpos( $architecture_doc, 'magick_ai_toolbox_site_knowledge_runtime_payload' ), 'Architecture documentation records the Cloud site knowledge ability seam.' );
 
 $first_version_doc = file_get_contents( $root . '/docs/first-version-reference.md' );
@@ -390,12 +403,12 @@ toolbox_assert( false !== strpos( $first_version_doc, 'canonical composition seq
 $content_composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
 toolbox_assert( false !== $content_composition_doc && false !== strpos( $content_composition_doc, 'Article Call Sequence' ), 'AI content composition documentation records the article call sequence.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'General Tool Usage' ) && false !== strpos( $content_composition_doc, 'article drafting is only one consumer' ), 'AI content composition documentation keeps provider abilities general-purpose.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'local_style_context' ), 'AI content composition documentation maps vector search to local style context.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'Cloud-managed site knowledge compatibility pointer' ), 'AI content composition documentation maps vector search to a Cloud-managed compatibility pointer.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-site-knowledge' ) && false !== strpos( $content_composition_doc, 'related content' ), 'AI content composition documentation maps site knowledge to general search and recommendations.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-image-source' ) && false !== strpos( $content_composition_doc, 'download_location' ), 'AI content composition documentation maps image source search to attribution-preserving image candidates.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'source_type=ai_generated' ) && false !== strpos( $content_composition_doc, 'magick_ai_toolbox_ai_image_generation_request' ), 'AI content composition documentation separates generated-image candidates from public source search.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/web-research' ) && false !== strpos( $content_composition_doc, 'support answers' ), 'AI content composition documentation maps web research to general external source candidates.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'Tavily, Bocha, and Jina Reader output' ), 'AI content composition documentation preserves search and reader evidence boundaries.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'Cloud-managed web search' ) && false === strpos( $content_composition_doc, 'magick-ai-toolbox/web-research' ), 'AI content composition documentation maps web research to Cloud.' );
+toolbox_assert( false === strpos( $content_composition_doc, 'Tavily, Bocha, and Jina Reader output' ), 'AI content composition documentation no longer presents local search provider output.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'content indexing' ), 'AI content composition documentation blocks indexing ownership.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'Final WordPress writes still require Core proposal approval' ), 'AI content composition documentation preserves Core write governance.' );
 
@@ -403,8 +416,8 @@ $connector_exposure_doc = file_get_contents( $root . '/docs/connector-ability-ex
 toolbox_assert( false !== $connector_exposure_doc && false !== strpos( $connector_exposure_doc, 'provider_secret_exposure: none' ), 'Connector exposure documentation records secret non-exposure.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'server_side_toolbox' ), 'Connector exposure documentation records server-side provider execution.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'composition_role:' ), 'Connector exposure documentation records machine-readable composition role metadata.' );
-toolbox_assert( false !== strpos( $connector_exposure_doc, 'single `web-research` ability' ) && false !== strpos( $connector_exposure_doc, 'not only article drafting' ), 'Connector exposure documentation keeps web research general-purpose.' );
-toolbox_assert( false !== strpos( $connector_exposure_doc, 'Tavily and Bocha' ) && false !== strpos( $connector_exposure_doc, 'bounded post-search enhancement' ), 'Connector exposure documentation records Bocha and Jina Reader boundaries.' );
+toolbox_assert( false !== strpos( $connector_exposure_doc, 'Cloud-managed web search' ) && false === strpos( $connector_exposure_doc, 'single `web-research` ability' ), 'Connector exposure documentation keeps web search Cloud-owned.' );
+toolbox_assert( false === strpos( $connector_exposure_doc, 'Tavily and Bocha' ) && false === strpos( $connector_exposure_doc, 'bounded post-search enhancement' ), 'Connector exposure documentation removes local Bocha and Jina Reader boundaries.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, '`search-site-knowledge` for semantic site search' ) && false !== strpos( $connector_exposure_doc, 'cap.toolbox.knowledge.search' ), 'Connector exposure documentation records site knowledge abilities and scopes.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'Do not add `confirm_token`, `write_confirmed`' ), 'Connector exposure documentation blocks direct write confirmation contracts.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'Connector exposure documentation lists the content discoverability brief ability.' );

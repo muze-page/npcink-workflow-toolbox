@@ -27,11 +27,11 @@ semantic runtime.
 Create `magick-ai-toolbox` as a standalone WordPress plugin.
 
 Toolbox owns the operator-facing product surface for external tools and fixed
-workflow buttons. It may call Tavily, Bocha, Jina Reader as a bounded
-post-search enhancement, configured image-source providers such as Unsplash,
-Pixabay, and Pexels, SiliconFlow, Jina, Qdrant, and future connector APIs for
-bounded suggestion tasks and may register its actions through the WordPress
-Abilities API.
+workflow buttons. Magick AI Cloud owns web search provider configuration and
+execution. Toolbox may call Cloud-managed image-source providers,
+Cloud-managed site knowledge, and future non-search connector APIs for bounded
+suggestion tasks and may register its actions through the WordPress Abilities
+API.
 
 For workflows that also exist as OpenClaw recipes, Toolbox buttons are the
 click-driven operator surface for the same local ability, plan artifact, Adapter
@@ -97,17 +97,16 @@ Rejected as the only surface. Host/runtime integration remains a future option.
   request logs, and key rotation may later move to connector plugins.
 - Write-like actions must hand off to WordPress abilities and Core governance.
 - Long-running workflows require a future runtime decision before implementation.
-- Tavily and Bocha must be treated as source-candidate search connectors, not
-  verified truth providers. Jina Reader may enhance selected result URLs but
-  must not become a crawler or search provider.
+- Cloud-managed web search results must be treated as source candidates, not
+  verified truth. Toolbox must not store local web search provider keys,
+  register a local web search REST route, or expose a local web search
+  ability.
 - Unsplash, Pixabay, and Pexels must be treated as image-source connectors with
   attribution/source metadata, not as AI image-generation providers. Unsplash
   candidates must preserve download tracking. AI-generated image candidates are
   a separate explicit mode that may normalize a reviewed generated-image URL or
   use a host runtime seam; Toolbox must not own model routing, prompt
   management, provider billing, media import, or featured-image writes.
-- Vector search may create a synchronous query embedding through SiliconFlow or
-  Jina. WordPress content indexing, re-index jobs, and vector collection
-  lifecycle remain separate decisions.
-- Jina Reranker is a reserved workflow-level enhancement, not a first-version
-  runtime feature.
+- Vector provider configuration, embedding, indexing, re-index jobs, rerank,
+  and vector collection lifecycle belong to Cloud-managed Site Knowledge, not
+  local Toolbox settings.

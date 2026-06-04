@@ -8,8 +8,8 @@ Status: MVP architecture.
 | --- | --- |
 | `magick-ai-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
-| `Settings` | Option defaults, sanitization, connector secret lookup, and content context export. |
-| `Provider_Client` | Minimal Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, explicit AI-generated image candidate normalization, SiliconFlow, Jina, and Qdrant calls for MVP tool actions. |
+| `Settings` | Option defaults, sanitization, non-search connector secret lookup, and content context export. |
+| `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Magick AI submenu fallback. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
@@ -23,9 +23,10 @@ The MVP stores two WordPress options:
 - `magick_ai_toolbox_settings`
 - `magick_ai_toolbox_content_context`
 
-The settings option may contain connector endpoints, feature flags, collection
-names, and connector keys when the operator chooses not to use environment
-variables.
+The settings option may contain feature flags and non-vector connector keys when
+the operator chooses not to use environment variables. It must not contain web
+search provider keys, vector provider keys, embedding models, dimensions,
+endpoints, or collection names.
 
 The content context option stores non-secret SEO, AEO, and GEO guidance for
 third-party AI callers. It must not contain provider keys, private credentials,
@@ -39,12 +40,14 @@ Current MVP provider flow:
 
 1. Admin user submits a tool form or REST request.
 2. `Rest_Controller` checks `manage_options`.
-3. `Provider_Client` calls Tavily, Bocha, optional Jina Reader, Unsplash,
-   Pixabay, Pexels, a host AI image generation seam when explicitly requested,
-   SiliconFlow, Jina, or Qdrant.
-4. Toolbox returns normalized source results, image-source candidates, vector
-   matches, or planning output. Raw provider payloads are included only when
-   the debug setting is enabled.
+3. `Provider_Client` calls Cloud image-source runtime, a host AI image
+   generation seam when explicitly requested, or Cloud-managed Site Knowledge.
+   Cloud-managed web search is executed by Magick AI Cloud rather than a local
+   Toolbox provider route.
+4. Toolbox returns `image_candidate.v1` image-source or generated-image
+   candidates, Cloud site-knowledge context, Cloud-managed web search status,
+   or planning output. Raw provider payloads are included only when the debug
+   setting is enabled.
 5. Any WordPress write remains a separate Abilities/Core handoff.
 
 The current provider client is deliberately small. Future durable connector
@@ -55,54 +58,37 @@ Current connector routes:
 
 | Connector | API role | Current Toolbox action |
 | --- | --- | --- |
-| Tavily | External web search | `/web-research` |
-| Bocha | External web search | `/web-research` |
-| Jina Reader | Search result URL extraction | `/web-research` enhancement only |
+| Cloud-managed web search | External web search | Magick AI Cloud runtime, no local Toolbox route |
 | Unsplash | Image-source candidates | `/image-candidates` |
 | Pixabay | Image-source candidates | `/image-candidates` |
 | Pexels | Image-source candidates | `/image-candidates` |
 | Host AI image generation seam | AI-generated image candidates | `/image-candidates` with `provider=ai_generated` |
-| SiliconFlow | Default query text embedding | `/vector-search` when input is text |
-| Jina AI | Optional query text embedding | `/vector-search` when input is text and Jina is selected |
-| Qdrant | Vector collection query | `/vector-search` |
+| Cloud Site Knowledge | Semantic site context | `/site-knowledge/*` and vector compatibility pointer |
 
-The Qdrant action accepts a natural-language `query`, a vector JSON payload, or
-a full Qdrant query object. Natural-language input is embedded through the
-configured embedding provider before Qdrant is queried.
-
-Default vector contract:
-
-- default embedding provider: SiliconFlow;
-- default model: `BAAI/bge-m3`;
-- default dimensions: `1024`;
-- recommended Qdrant distance: `Cosine`.
-
-Jina AI is available as an optional embedding provider for the first version.
-Jina Reader is available as a bounded post-search enhancement for selected
-result URLs. Jina Reranker remains a reserved workflow-level enhancement and is
-not part of the first runtime path.
+The legacy `/vector-search` route remains only as a compatibility pointer. It
+does not query a local vector database or call local embedding providers.
+Vector provider details live in Magick AI Cloud.
 
 Reserved provider slots:
 
 | Capability | Current provider | Reserved future providers |
 | --- | --- | --- |
-| External search | Tavily, Bocha | Additional search providers by later contract. |
-| Search result extraction | Jina Reader | Additional extraction providers by later contract. |
+| External search | Magick AI Cloud | Additional search providers are Cloud-owned by later contract. |
 | Image source | Unsplash, Pixabay, Pexels | Additional image-source providers by later contract. |
 | AI-generated image candidates | Caller-supplied generated URL or host filter | Durable AI image connector by later contract. |
-| Query embedding | SiliconFlow | Jina AI. |
-| Vector database | Qdrant | Pinecone, Weaviate. |
+| Site knowledge vector infrastructure | Magick AI Cloud | Cloud operator console by later contract. |
 
 ## Abilities Path
 
 Toolbox exposes its actions through the WordPress Abilities API when available.
 Abilities are server-side Toolbox tool wrappers: AI callers provide task input,
-Toolbox uses local connector configuration to execute the provider call, and the
-caller receives a normalized suggestion payload instead of provider secrets.
-For AI composition, callers should treat provider-backed abilities as reusable
-tool inputs. `web-research` is the general external source-candidate ability,
-`search-image-source` is the general image-candidate ability, and
-`vector-search` is the general configured vector-query ability. Article
+Toolbox uses local configuration or Cloud runtime ownership to execute the
+provider call, and the caller receives a normalized suggestion payload instead
+of provider secrets. For AI composition, callers should treat provider-backed
+abilities as reusable tool inputs. Cloud-managed web search is owned by Magick
+AI Cloud, `search-image-source` is the general image-candidate ability, and
+`search-site-knowledge` is the general Cloud-managed semantic site-context
+ability. `vector-search` remains a compatibility pointer only. Article
 briefs, article writing packs, and article write plans are only one workflow
 family built from those lower-level tools.
 
@@ -111,7 +97,6 @@ Otherwise, Toolbox falls back to native WordPress Abilities API registration.
 
 Current ability ids:
 
-- `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/search-site-knowledge`
@@ -121,6 +106,7 @@ Current ability ids:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-article-batch-write-plan`
 - `magick-ai-toolbox/build-article-media-batch-write-plan`
+- `magick-ai-toolbox/build-image-candidate-adoption-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 - `magick-ai-toolbox/validate-content-discoverability-context`
@@ -135,6 +121,10 @@ approval, preflight, audit, and final execution outside Toolbox.
 Core-ready `article_media_batch_write_plan` from reviewed drafts and reviewed
 image-source candidates. It does not upload media, set featured images, approve
 proposals, or execute writes.
+`magick-ai-toolbox/build-image-candidate-adoption-plan` assembles a Core-ready
+`image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
+not import media, update metadata, set featured images, approve proposals, or
+execute writes.
 `magick-ai-toolbox/build-content-discoverability-brief` assembles a
 suggestion-only SEO, AEO, and GEO instruction pack and proposal template for a
 post or topic. It does not mutate SEO meta, slugs, excerpts, schema, or post
@@ -144,7 +134,6 @@ Ability ids remain under `magick-ai-toolbox/*` to keep them distinct from Core
 governance abilities and first-party reusable WordPress abilities. Ability
 metadata declares Toolbox scopes:
 
-- `cap.toolbox.search`
 - `cap.toolbox.image_source`
 - `cap.toolbox.vector_search`
 - `cap.toolbox.knowledge.search`
@@ -160,13 +149,14 @@ Provider-backed ability payloads keep the runtime contract smaller:
 `artifact_type`, `composition_role`, `write_posture`, and
 `direct_wordpress_write`.
 
-Cloud-managed site knowledge abilities use the Cloud Addon runtime seam, not
-local connector credentials. `search-site-knowledge` is the high-level ability
+Cloud-managed web search and Cloud-managed site knowledge abilities use the
+Cloud Addon runtime seam, not local connector credentials.
+`search-site-knowledge` is the high-level ability
 for semantic site search, related content, writing context, internal-link
 candidates, refresh suggestions, image-context lookup, FAQ candidates, content
-gap analysis, and publish preflight duplicate checks. `vector-search` remains
-the low-level Qdrant query ability for clients that explicitly need a configured
-vector query.
+gap analysis, and publish preflight duplicate checks. `vector-search` returns a
+Cloud-managed compatibility pointer and should not be used for new low-level
+vector integrations.
 
 The host can intercept site knowledge execution with
 `magick_ai_toolbox_site_knowledge_cloud_request` or adjust the runtime payload
@@ -191,12 +181,12 @@ that consumes these ability definitions. The host can use
 Current routes require `manage_options`:
 
 - `GET /wp-json/magick-ai-toolbox/v1/status`
-- `POST /wp-json/magick-ai-toolbox/v1/web-research`
 - `POST /wp-json/magick-ai-toolbox/v1/image-candidates`
 - `POST /wp-json/magick-ai-toolbox/v1/vector-search`
 - `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-brief`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
+- `POST /wp-json/magick-ai-toolbox/v1/flows/image-candidate-adoption-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
 
 `/knowledge-search` remains as a compatibility alias for the first local MVP.

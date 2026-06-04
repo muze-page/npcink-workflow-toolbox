@@ -3,15 +3,14 @@
 Status: active for the first Toolbox build.
 
 Magick AI Toolbox is the WordPress operator-facing AI tool surface: it gives
-site owners and editors buttons for Tavily and Bocha research, Jina Reader
-result enhancement, Unsplash, Pixabay, and Pexels image-source candidates,
-Cloud-managed site knowledge abilities, SiliconFlow or Jina query embeddings,
-Qdrant vector search, and repeatable AI-assisted planning workflows.
+site owners and editors buttons for Cloud-managed web search, Cloud-managed
+image-source candidates, Cloud-managed site knowledge abilities, and repeatable
+AI-assisted planning workflows.
 
 ## One-Sentence Positioning
 
-Magick AI Toolbox turns third-party research, image-source, and vector-search
-connectors into safe, click-driven WordPress operator tools.
+Magick AI Toolbox turns research, image-source, site-knowledge, and planning
+abilities into safe, click-driven WordPress operator tools.
 
 ## Relationship To OpenClaw
 
@@ -43,9 +42,9 @@ WordPress write executor.
 ## Core Jobs
 
 1. Provide a visible admin product surface for external AI tools.
-2. Run configured external search, optional result reading, configured
-   image-source search, configured query embeddings, and Qdrant vector queries
-   from a controlled WordPress UI.
+2. Run configured external search, optional result reading, Cloud-managed
+   image-source requests, and Cloud-managed site knowledge operations from a
+   controlled WordPress UI.
 3. Convert repeated operator workflows into fixed buttons.
 4. Return planning artifacts, candidates, and handoff notes.
 5. Let operators fill non-secret SEO, AEO, and GEO content context for
@@ -70,7 +69,7 @@ Magick AI Toolbox does not own:
 | --- | --- |
 | `magick-ai-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
 | `magick-ai-abilities` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
-| `magick-ai-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, configured image-source candidates, configured query embeddings, and Qdrant vector search actions. |
+| `magick-ai-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
 
 ## Design Rule
@@ -92,11 +91,11 @@ explicit candidate mode: callers may provide reviewed generated image URLs, or
 a host may provide a bounded generation runtime seam. Toolbox must not own
 model routing, prompt management, provider billing, or media import.
 
-Qdrant is a vector database connector, not a complete knowledge system by
-itself. Toolbox may create a single query embedding through SiliconFlow or Jina
-so other AI clients can call vector search with text. WordPress content
-indexing, re-index jobs, stale index detection, and vector collection lifecycle
-still require a separate stage decision.
+Cloud-managed Site Knowledge is the vector surface. Toolbox may collect bounded
+public WordPress manifests, trigger Cloud sync, show returned status, and call
+semantic site search. Embedding providers, vector database endpoints,
+collection names, dimensions, rerank, stale detection, and index lifecycle are
+Cloud operator responsibilities.
 
 Cloud-managed site knowledge is the preferred high-level surface for semantic
 site search, related content, writing context, internal links, refresh

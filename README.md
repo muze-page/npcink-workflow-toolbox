@@ -1,9 +1,8 @@
 # Magick AI Toolbox
 
-Magick AI Toolbox is an operator-facing WordPress plugin for Tavily and Bocha
-research, Jina Reader result enhancement, Unsplash, Pixabay, and Pexels
-image-source candidates, SiliconFlow or Jina query embeddings, Qdrant vector
-search, and fixed-flow AI actions.
+Magick AI Toolbox is an operator-facing WordPress plugin for Cloud-managed web
+search, Cloud-managed image-source candidates, Cloud-managed site knowledge,
+and fixed-flow AI actions.
 
 It is intentionally separate from:
 
@@ -18,11 +17,11 @@ The first version provides:
 
 - a Magick AI admin page at **Magick AI -> Toolbox** when a Magick AI host menu
   exists, with a **Tools -> Magick AI Toolbox** fallback for standalone installs;
-- Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, SiliconFlow, Jina, and
-  Qdrant connector settings with environment-variable support;
+- Cloud-managed web search status, plus read-only Cloud-managed image-source
+  and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
   guidance that can be exposed to third-party AI callers;
-- REST endpoints for web research, image-source candidates, vector search,
+- REST endpoints for image-source candidates, vector search,
   article briefs, media briefs, and media derivative handoffs;
 - WordPress Abilities API registrations for the same tool actions;
 - static tests and PHP syntax linting.
@@ -54,7 +53,6 @@ Project goals, ownership, and future-session instructions are documented in:
 All routes require a logged-in user with `manage_options`.
 
 - `GET /wp-json/magick-ai-toolbox/v1/status`
-- `POST /wp-json/magick-ai-toolbox/v1/web-research`
 - `POST /wp-json/magick-ai-toolbox/v1/image-candidates`
 - `POST /wp-json/magick-ai-toolbox/v1/vector-search`
 - `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
@@ -81,7 +79,6 @@ General AI composition guidance is kept in
 
 When the WordPress Abilities API is available, Toolbox registers:
 
-- `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/search-site-knowledge`
@@ -103,9 +100,8 @@ helpers so the tools can be discovered by existing Magick AI consumers.
 Toolbox ability ids stay under `magick-ai-toolbox/*` so they do not collide with
 Core governance abilities or first-party WordPress abilities.
 
-Ability metadata includes Toolbox scopes such as `cap.toolbox.search`,
-`cap.toolbox.image_source`, `cap.toolbox.vector_search`, and
-`cap.toolbox.workflow_suggest`. Content context uses
+Ability metadata includes Toolbox scopes such as `cap.toolbox.image_source`,
+`cap.toolbox.vector_search`, and `cap.toolbox.workflow_suggest`. Content context uses
 `cap.toolbox.context.read`. The first admin REST surface remains
 `manage_options` gated; external AI/app-key authorization should be enforced by
 Core or the host that consumes the ability scope metadata. First-version host
@@ -197,46 +193,50 @@ Supported environment variables:
 - `UNSPLASH_ACCESS_KEY`
 - `PIXABAY_API_KEY`
 - `PEXELS_API_KEY`
-- `QDRANT_API_KEY`
-- `SILICONFLOW_API_KEY`
-- `JINA_API_KEY`
 
 Supported PHP constants:
 
 - `MAGICK_AI_TOOLBOX_TAVILY_API_KEY`
 - `MAGICK_AI_TOOLBOX_BOCHA_API_KEY`
-- `MAGICK_AI_TOOLBOX_UNSPLASH_ACCESS_KEY`
-- `MAGICK_AI_TOOLBOX_PIXABAY_API_KEY`
-- `MAGICK_AI_TOOLBOX_PEXELS_API_KEY`
-- `MAGICK_AI_TOOLBOX_QDRANT_API_KEY`
-- `MAGICK_AI_TOOLBOX_SILICONFLOW_API_KEY`
-- `MAGICK_AI_TOOLBOX_JINA_API_KEY`
 
-Image-source search supports `auto`, `unsplash`, `pixabay`, `pexels`, and an
-explicit `ai_generated` candidate mode. `auto` uses configured public
-image-source provider keys on the server and returns one normalized
-`image_source_candidates` payload for any AI caller that needs images, whether
-the use case is article drafting, media planning, layout suggestions,
-reference selection, or another image-dependent workflow. `ai_generated` is
-separate from Unsplash/Pixabay/Pexels: callers may provide a reviewed generated
-image URL, or a host may handle `magick_ai_toolbox_ai_image_generation_request`
-and return generated-image candidates. Toolbox still does not own model
-routing, provider billing, media import, or final WordPress writes.
+Image-source search supports `auto`, `cloud`, and provider hints such as
+`unsplash`, `pixabay`, or `pexels`, but the public provider keys and provider
+selection live in Cloud. Toolbox sends one Cloud runtime request and returns a
+normalized `image_source_candidates` payload for any AI caller that needs
+images, whether the use case is article drafting, media planning, layout
+suggestions, reference selection, or another image-dependent workflow.
+`ai_generated` remains explicit: callers may provide a reviewed generated image
+URL, or a host may handle `magick_ai_toolbox_ai_image_generation_request` and
+return generated-image candidates. Toolbox still does not own model routing,
+provider billing, media import, or final WordPress writes.
 
-Web research is also a general-purpose ability. `magick-ai-toolbox/web-research`
-supports `tavily`, `bocha`, and `auto` provider modes and returns normalized
-external source candidates for any AI workflow that needs fresh web evidence,
-comparison material, Chinese source lookup, source coverage, product research,
-support context, or article preparation. Optional Jina Reader enhancement reads
-selected result URLs into cleaner text snippets for evidence packs. It does not
-verify truth, write WordPress content, or expose provider keys.
+Every returned image candidate is normalized to `image_candidate.v1` while
+preserving legacy URL fields for existing callers. The normalized fields include
+`source_type`, `provider`, `provider_origin`, `download_url`,
+`thumbnail_url`, `prompt`, `model`, `license_review_status`, attribution,
+provenance, and warnings. Stock providers return `source_type=stock`;
+generated candidates return `source_type=ai_generated`.
 
-The current vector MVP accepts a natural-language `query` and uses the
-configured embedding provider to create an embedding before querying Qdrant.
-SiliconFlow remains the default provider with `BAAI/bge-m3`. Jina AI is an
-optional embedding provider with `jina-embeddings-v3`. It also accepts a
-supplied vector JSON payload or full Qdrant query object for clients that
-already own embedding.
+After an operator reviews one candidate, `magick-ai-toolbox/build-image-candidate-adoption-plan`
+or `POST /wp-json/magick-ai-toolbox/v1/flows/image-candidate-adoption-plan`
+can build an `image_candidate_adoption_plan`. That plan targets only
+`magick-ai/upload-media-from-url`, `magick-ai/update-media-details`, and
+optional `magick-ai/set-post-featured-image` through Core proposal intake. It
+does not import media, update metadata, set a featured image, or write
+WordPress directly.
+
+Cloud-managed web search is provided by Magick AI Cloud. Toolbox no longer
+stores local web search provider keys, registers a local web search ability,
+or exposes a local web search REST route. AI workflows that need current
+external evidence, comparison material, Chinese source lookup, source coverage,
+product research, support context, or article preparation should call the Cloud
+runtime and preserve returned source URLs in their evidence packs. Toolbox does
+not verify truth, write WordPress content, or expose provider keys.
+
+The legacy `vector-search` route and ability are compatibility pointers only.
+Toolbox no longer stores vector provider keys, embedding models, dimensions,
+provider endpoints, collection names, or local vector database settings. New
+callers should use Cloud-managed Site Knowledge for semantic site context.
 
 Cloud-managed site knowledge is the preferred high-level ability surface for
 semantic site search, related content, writing context, internal-link
@@ -246,7 +246,7 @@ gap analysis, and publish preflight duplicate checks. Toolbox registers
 `request-site-knowledge-sync` as WordPress Abilities. These abilities call
 Magick AI Cloud through the Cloud Addon runtime seam or the
 `magick_ai_toolbox_site_knowledge_cloud_request` host filter; Toolbox does not
-store Cloud credentials, own Qdrant collection lifecycle, or write WordPress
+store Cloud credentials, own vector collection lifecycle, or write WordPress
 content.
 
 Sync requests send bounded public WordPress manifests: published posts and
@@ -260,19 +260,8 @@ Cloud-managed index and inspect coverage without configuring vector provider
 keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
 Toolbox only starts sync from local public content and displays returned status.
 
-The default embedding dimension is `1024`, matching `BAAI/bge-m3` guidance.
-Create the Qdrant collection with vector size `1024` and `Cosine` distance for
-the default configuration. If the embedding provider returns a vector whose
-length does not match the configured dimension, Toolbox returns an explicit
-dimension mismatch error before querying Qdrant.
-
 Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include raw provider payloads for debugging.
-
-Reserved future provider slots:
-
-- vector database: Pinecone and Weaviate;
-- workflow-level enhancement: Jina Reranker for candidate reranking.
 
 ## Development
 

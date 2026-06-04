@@ -4,10 +4,10 @@ Magick AI Toolbox owns product-facing tools and fixed-flow buttons.
 
 Owned here:
 
-- external research actions;
+- Cloud-managed web search status and handoff guidance;
 - image-source candidate actions;
 - vector search actions;
-- query embedding actions for vector search;
+- Cloud-managed site knowledge actions for vector search;
 - fixed-flow buttons that return planning artifacts;
 - non-secret content discoverability context for SEO, AEO, and GEO suggestion
   workflows;
@@ -34,8 +34,8 @@ First-version write posture:
 3. Expose operator-filled content context as read-only Abilities guidance.
 4. Expose provider-backed actions through server-side Toolbox abilities without
    exposing provider keys to AI callers.
-5. Let external AI workflows compose context, search, image-source, and vector
-   abilities as inputs, not as write authority.
+5. Let external AI workflows compose context, Cloud-managed web search,
+   image-source, and vector abilities as inputs, not as write authority.
 6. Use WordPress abilities and Core proposals for final WordPress writes.
 
 ## OpenClaw Button Surface Boundary
@@ -72,7 +72,8 @@ bounded suggestion workflows.
 
 - site content context;
 - context validation;
-- external research evidence for any workflow that needs source candidates;
+- Cloud-managed web search evidence for any workflow that needs source
+  candidates;
 - Cloud-managed site knowledge for semantic search, related content, writing
   context, internal-link candidates, refresh suggestions, or image context;
 - local vector context for style, related articles, internal links, or image
@@ -100,12 +101,12 @@ routes are limited to status, bounded provider-backed tool actions, and fixed
 planning flows:
 
 - `/status`
-- `/web-research`
 - `/image-candidates`
 - `/vector-search`
 - `/knowledge-search`
 - `/flows/article-brief`
 - `/flows/article-plan`
+- `/flows/image-candidate-adoption-plan`
 - `/flows/media-brief`
 - `/media-derivative-handoff`
 
@@ -118,6 +119,12 @@ proposal handoffs, not executed by Toolbox.
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
 `magick-ai-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
+
+`/flows/image-candidate-adoption-plan` prepares a Core-ready
+`image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may
+describe media upload, metadata, and optional featured-image write actions for
+Core proposal intake, but it must not import media, update attachment metadata,
+set featured images, approve proposals, or execute writes.
 
 `/media-derivative-handoff` prepares one-run ability input for
 `magick-ai/build-media-derivative-cloud-request` from Core media policy defaults
@@ -169,25 +176,14 @@ as permission to bypass Core governance.
 
 ## Connector Boundaries
 
-### Tavily And Bocha
+### Cloud-Managed Web Search
 
-Tavily and Bocha own external web search results and source snippets.
-
-Toolbox may store Tavily and Bocha API keys and submit bounded search requests.
-Toolbox must not treat search results as verified truth; results are source
-candidates for operator review. `magick-ai-toolbox/web-research` is a
-general-purpose external source ability for any AI workflow that needs web
-evidence, not only article drafting. Bocha is a synchronous search provider,
-not a crawler or workflow runtime.
-
-### Jina Reader
-
-Jina Reader owns URL-to-clean-text extraction.
-
-Toolbox may use Jina Reader to enhance a small number of selected search result
-URLs after Tavily or Bocha has returned source candidates. Jina Reader must not
-be represented as the default search provider, a crawler, a bulk extraction
-job, a citation verifier, or a write authority.
+Magick AI Cloud owns external web search provider configuration, execution, and
+provider routing. Toolbox must not store local web search provider keys,
+register a local web search REST route, or expose a local web search ability.
+Toolbox must not treat search results as verified truth; Cloud search results
+are source candidates for operator review. Cloud-managed web search is a
+general-purpose evidence input, not only an article drafting helper.
 
 ### Image Source Providers
 
@@ -209,25 +205,15 @@ evidence, and human license review status. Toolbox must not own AI image model
 routing, prompt management, provider credentials, billing, media import,
 featured-image setting, or approval truth.
 
-### Qdrant
+### Cloud Site Knowledge
 
-Qdrant owns vector collection query storage.
+Magick AI Cloud owns vector storage, embedding provider configuration,
+embedding dimensions, indexing, rerank, quotas, and detailed run health.
 
-Toolbox may query a configured collection with a text query, supplied vector
-JSON payload, or full Qdrant query object.
-
-### SiliconFlow And Jina
-
-SiliconFlow and Jina own text-to-vector embedding generation for the first
-Toolbox vector-search path.
-
-Toolbox may send a bounded query string to the configured embedding provider
-and use the returned embedding only to query the configured vector database.
-Toolbox does not own WordPress indexing, re-index jobs, stale index detection,
-or vector collection lifecycle management.
-
-Jina Reranker is reserved for future workflow-level candidate reranking. It is
-not part of the first runtime surface.
+Toolbox may collect bounded public WordPress manifests, request Cloud sync,
+show Cloud-returned status, and search Cloud-managed site knowledge. Toolbox
+must not store vector provider keys, provider endpoints, collection names,
+embedding model settings, or vector database lifecycle controls.
 
 ## Connector Status Catalog
 

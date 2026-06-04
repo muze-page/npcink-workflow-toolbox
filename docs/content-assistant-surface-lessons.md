@@ -42,8 +42,9 @@ For Toolbox, the equivalent rule is:
 
 `Toolbox surfaces. Core governs. WordPress writes through abilities.`
 
-Toolbox may run configured external research, optional result reading, configured image-source search, query embedding,
-Qdrant vector search, and bounded fixed-flow planning actions. The result must
+Toolbox may run configured external research, optional result reading,
+Cloud-managed image-source search, Cloud-managed site knowledge, and bounded
+fixed-flow planning actions. The result must
 remain a suggestion, candidate set, or handoff note until Magick AI Core and the
 appropriate WordPress ability approve and execute any final write.
 

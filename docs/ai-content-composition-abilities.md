@@ -9,9 +9,9 @@ guidance, or article planning.
 ## Product Rule
 
 Toolbox provides a bounded tool layer for AI composition. It exposes
-search, image-source, vector, content-context, and planning abilities that other
-AI systems can call. Search, image-source, and vector abilities are general
-tool inputs; article drafting is only one consumer.
+image-source, vector, content-context, and planning abilities that other AI
+systems can call. Cloud-managed web search, image-source, and vector surfaces
+are general tool inputs; article drafting is only one consumer.
 
 Toolbox does not become the article-writing brain, workflow runtime, knowledge
 indexer, media importer, SEO writer, publisher, approval store, or audit truth.
@@ -21,19 +21,18 @@ indexer, media importer, SEO writer, publisher, approval store, or audit truth.
 Use the low-level provider abilities directly whenever the workflow only needs
 one kind of evidence:
 
-- `magick-ai-toolbox/web-research` for external source candidates, comparison
-  material, current public references, support context, source coverage, or
-  article preparation. It can use Tavily, Bocha, or auto provider mode, and may
-  attach Jina Reader excerpts for selected result URLs when enhancement is
-  enabled;
+- Cloud-managed web search for external source candidates, comparison material,
+  current public references, support context, source coverage, or article
+  preparation. Magick AI Cloud owns web search provider configuration and
+  execution;
 - `magick-ai-toolbox/search-image-source` for featured, inline, layout,
   presentation, reference, or media-planning image candidates;
 - `magick-ai-toolbox/search-site-knowledge` for semantic site search, related
   content, writing context, internal-link candidates, refresh suggestions,
   image-context lookup, FAQ candidates, content gap analysis, or publish
   preflight duplicate checks from Cloud-managed site knowledge;
-- `magick-ai-toolbox/vector-search` only for low-level configured vector
-  queries against an existing collection.
+- `magick-ai-toolbox/vector-search` only as a Cloud-managed site knowledge
+  compatibility pointer for older clients.
 
 Do not call article-specific planning abilities unless the workflow is actually
 building or handing off an article.
@@ -70,8 +69,8 @@ sequence:
      claims, and proposal fields.
 2. `magick-ai-toolbox/validate-content-discoverability-context`
    - Stop for operator input if required context is missing.
-3. `magick-ai-toolbox/web-research`
-   - Gather external source candidates for the topic.
+3. Cloud-managed web search
+   - Gather external source candidates for the topic through Magick AI Cloud.
 4. `magick-ai-toolbox/vector-search`
    - Retrieve local style, historical content, internal-link, or image-context
      references from an already configured collection.
@@ -107,7 +106,8 @@ same ability contracts. The channel changes, but the write boundary does not.
 | --- | --- | --- | --- |
 | Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan | Core proposal for `magick-ai/create-draft` |
 | Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch plan | Core proposal for draft, media upload, metadata, and featured-image abilities |
-| Optimize existing media | Adapter media derivative recipe | Media Derivative Preview | Core proposal for `magick-ai/adopt-cloud-media-derivative` |
+| Adopt one reviewed image candidate | Adapter `image_candidate_adoption_plan` recipe | Adopt New Image | Core proposal for media upload, metadata, and optional featured image |
+| Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | Core proposal for `magick-ai/adopt-cloud-media-derivative` |
 | Repair hard-coded media URLs | Adapter read ability plus Core from-plan | URL repair proposal button | Core proposal for exact-match patch actions |
 | Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
 
@@ -120,8 +120,7 @@ separate workflow runtime, direct write path, or approval store for them.
 | --- | --- | --- |
 | `magick-ai-toolbox/get-content-discoverability-context` | `site_context` | Site-level content rules. |
 | `magick-ai-toolbox/validate-content-discoverability-context` | `context_preflight` | Readiness checks before drafting. |
-| `magick-ai-toolbox/web-research` | `research_evidence` | External source candidates and research notes. |
-| `magick-ai-toolbox/vector-search` | `local_style_context` | Local style, previous article, internal-link, or image-context references from an existing collection. |
+| `magick-ai-toolbox/vector-search` | `site_knowledge_context` | Cloud-managed site knowledge compatibility pointer. New callers should use `search-site-knowledge`. |
 | `magick-ai-toolbox/search-site-knowledge` | `site_knowledge_context` | Cloud-managed site search, related content, writing context, internal links, refresh suggestions, or image context. |
 | `magick-ai-toolbox/get-site-knowledge-status` | `site_knowledge_status` | Cloud-managed site knowledge coverage and freshness status. |
 | `magick-ai-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content sync or rebuild request for Cloud-managed site knowledge. |
@@ -132,6 +131,7 @@ separate workflow runtime, direct write path, or approval store for them.
 | `magick-ai-toolbox/build-article-write-plan` | `core_article_write_plan` | Reviewed draft plan for Core proposal intake. |
 | `magick-ai-toolbox/build-article-batch-write-plan` | `core_article_batch_write_plan` | Reviewed draft batch plan for one Core batch proposal. |
 | `magick-ai-toolbox/build-article-media-batch-write-plan` | `core_article_media_batch_write_plan` | Reviewed article plus image-source plan for Core-governed draft, media upload, metadata, and featured-image actions. |
+| `magick-ai-toolbox/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
 | `magick-ai-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
 
 ## Output Contract
@@ -141,8 +141,8 @@ callers to reason about them without reading private settings:
 
 ```json
 {
-  "artifact_type": "research_evidence|image_source_candidates|local_style_context",
-  "composition_role": "research_evidence|image_source_candidates|local_style_context",
+  "artifact_type": "research_evidence|image_source_candidates|site_knowledge_context",
+  "composition_role": "research_evidence|image_source_candidates|site_knowledge_context",
   "write_posture": "suggestion_only",
   "direct_wordpress_write": false
 }
@@ -159,19 +159,18 @@ secret non-exposure and Core proposal write path.
 
 ## Search Usage
 
-`web-research` provides external source candidates. This ability is
-general-purpose: support answers, competitive comparisons, source coverage,
+Cloud-managed web search provides external source candidates. This Cloud runtime
+is general-purpose: support answers, competitive comparisons, source coverage,
 briefing, product research, content planning, and article writing should call
-the same ability instead of integrating search provider APIs directly.
+the same Cloud search capability instead of integrating search provider APIs
+directly or configuring provider keys in Toolbox.
 
 Every AI caller should:
 
-- keep provider names when returned, especially for mixed Tavily/Bocha results;
+- preserve Cloud-returned provider/source names when present;
 - cite or preserve source URLs in its evidence pack;
-- treat Tavily, Bocha, and Jina Reader output as research material, not
-  verified truth;
-- treat Jina Reader excerpts as cleaner page text for review, not as proof that
-  the source is correct;
+- treat Cloud-managed web search output as research material, not verified
+  truth;
 - avoid inventing facts beyond the source candidates and supplied context;
 - send write-like outcomes to Core proposal flows.
 
@@ -185,6 +184,12 @@ runtime seam and return generated-image candidates. This ability is
 general-purpose: article writing, media planning, page layout, product
 presentation, reference selection, and any other image-dependent AI workflow
 should call the same ability instead of integrating provider APIs directly.
+
+Every image candidate should be treated as `image_candidate.v1`. The contract
+keeps `source_type`, `provider`, `provider_origin`, `download_url`,
+`thumbnail_url`, `prompt`, `model`, `license_review_status`, attribution,
+provenance, and warnings. Public image providers use `source_type=stock`;
+generated-image candidates use `source_type=ai_generated`.
 
 A writing AI may recommend a featured or inline image candidate, but every AI
 caller must:
@@ -201,7 +206,9 @@ caller must:
 
 AI-generated candidates are not public image-source search results. They remain
 suggestion-only candidates until Core approval and a local WordPress media
-write ability handles import.
+write ability handles import. To adopt one reviewed candidate, callers should
+build `magick-ai-toolbox/build-image-candidate-adoption-plan` and send the
+returned `image_candidate_adoption_plan` to Core from-plan intake.
 
 ## Vector Usage
 
@@ -214,19 +221,11 @@ Prefer `search-site-knowledge` when the workflow needs current site context:
 - old article refresh context;
 - image recommendation context.
 
-`vector-search` remains a lower-level connector ability. It can help with:
-
-- article writing style references;
-- old article refresh context;
-- internal-link candidates;
-- image recommendation context;
-- reusable wording or topic patterns from an already indexed collection.
-
-In the current stage, Toolbox may query Qdrant and create a synchronous query
-embedding through SiliconFlow or Jina. High-level site knowledge execution goes
-through Magick AI Cloud via Cloud Addon or a host filter. Toolbox must not own
-content indexing, re-indexing, stale-index detection, collection lifecycle, or
-full RAG behavior.
+`vector-search` remains only as a Cloud-managed site knowledge compatibility
+pointer for older clients. New workflows should call `search-site-knowledge`
+directly. Toolbox must not own embedding provider configuration, vector
+database settings, content indexing, re-indexing, stale-index detection,
+collection lifecycle, or full RAG behavior.
 
 ## Handoff Rule
 

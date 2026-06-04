@@ -10,8 +10,7 @@ Done:
 
 - WordPress plugin scaffold.
 - Admin toolbox screen.
-- Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, SiliconFlow, Jina, and
-  Qdrant connector settings.
+- Cloud-managed web search, image-source, and site knowledge status surfaces.
 - Content discoverability context setting and read-only Abilities exposure.
 - Content discoverability context validation and one-item brief abilities.
 - REST routes.
@@ -32,10 +31,9 @@ Goal: prove the Toolbox is useful as a manual admin tool.
 
 Target features:
 
-- configured research action with source-aware response display.
+- Cloud-managed web search action with source-aware response display.
 - configured image-source action with browser preview instead of raw JSON only.
-- SiliconFlow or Jina text-to-vector query plus Qdrant vector query against a
-  configured collection.
+- Cloud-managed site knowledge search, status, and sync.
 - Article brief button.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
@@ -80,7 +78,7 @@ Target features:
 
 - Cloud-managed site knowledge Abilities for search, status, and sync;
 - site-content indexing plan;
-- embedding provider expansion beyond SiliconFlow and Jina;
+- Cloud operator vector provider configuration and migration paths;
 - manual re-index button;
 - index status display;
 - document/source coverage report;

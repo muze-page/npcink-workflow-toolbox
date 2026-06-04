@@ -31,45 +31,23 @@ Current runtime providers:
 
 | Capability | Provider | Runtime status |
 | --- | --- | --- |
-| Web research | Tavily | Active default for general external source candidates. |
-| Web research | Bocha | Active provider when configured, useful for Chinese source lookup. |
-| Search result extraction | Jina Reader | Optional post-search enhancement for selected result URLs. |
+| Cloud-managed web search | Magick AI Cloud | General external source candidates. Cloud owns provider configuration and routing. |
 | Image source candidates | Unsplash | Active provider; preserve attribution and `download_location`. |
 | Image source candidates | Pixabay | Active provider when configured; preserve attribution and source URL. |
 | Image source candidates | Pexels | Active provider when configured; preserve attribution and source URL. |
 | AI-generated image candidates | Caller URL or host filter | Explicit `ai_generated` mode; preserve prompt/model evidence and human license review status. |
-| Text query embedding | SiliconFlow | Active default. |
-| Text query embedding | Jina AI | Optional provider. |
-| Vector database | Qdrant | Active default. |
+| Site knowledge vector infrastructure | Magick AI Cloud | Cloud-managed embedding, vector storage, indexing, rerank, status, and search. |
 
-Reserved only:
+## Cloud-Managed Vector
 
-- vector database: Pinecone, Weaviate;
-- workflow enhancement: Jina Reranker.
+Toolbox no longer configures vector providers locally. The legacy
+`vector-search` route and ability return a Cloud-managed site knowledge
+compatibility pointer. New callers should use `search-site-knowledge`,
+`get-site-knowledge-status`, and `request-site-knowledge-sync`.
 
-Reserved vector/workflow providers are documented only. Do not add runtime
-adapters for them without a new contract.
-
-## Embedding And Qdrant
-
-Default embedding provider: SiliconFlow.
-
-Default model: `BAAI/bge-m3`.
-
-Default dimensions: `1024`.
-
-Recommended Qdrant collection distance: `Cosine`.
-
-The vector search action accepts:
-
-- natural-language `query`;
-- supplied vector JSON;
-- full Qdrant query object.
-
-When the input is text, Toolbox creates a query embedding through the configured
-embedding provider and then queries Qdrant. It checks vector dimensions before
-querying Qdrant and returns a dimension mismatch error if the returned or
-supplied vector length does not match `embedding_dimensions`.
+Toolbox must not store vector provider keys, embedding models, dimensions,
+provider endpoints, collection names, rerank settings, or vector lifecycle
+controls.
 
 ## Settings And Secrets
 
@@ -85,12 +63,6 @@ Secrets:
 
 - `TAVILY_API_KEY` / `MAGICK_AI_TOOLBOX_TAVILY_API_KEY`
 - `BOCHA_API_KEY` / `MAGICK_AI_TOOLBOX_BOCHA_API_KEY`
-- `UNSPLASH_ACCESS_KEY` / `MAGICK_AI_TOOLBOX_UNSPLASH_ACCESS_KEY`
-- `PIXABAY_API_KEY` / `MAGICK_AI_TOOLBOX_PIXABAY_API_KEY`
-- `PEXELS_API_KEY` / `MAGICK_AI_TOOLBOX_PEXELS_API_KEY`
-- `QDRANT_API_KEY` / `MAGICK_AI_TOOLBOX_QDRANT_API_KEY`
-- `SILICONFLOW_API_KEY` / `MAGICK_AI_TOOLBOX_SILICONFLOW_API_KEY`
-- `JINA_API_KEY` / `MAGICK_AI_TOOLBOX_JINA_API_KEY`
 
 Provider raw payloads are excluded by default. Enable
 `include_raw_responses` only for debugging.
@@ -98,17 +70,11 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
-Connector settings now include a compact status catalog. It may show active MVP
-providers, missing local setup, and reserved future slots, but it must stay a
-read-only orientation surface:
-
-- current runtime provider owner: `Local MVP config`;
-- reserved slots owner: `Future connector owner`;
-- no billing, quota, key rotation, request-log, marketplace, or provider
-  routing ownership in Toolbox.
-
-Reserved provider labels such as `Pinecone / Weaviate` are planning context
-only, not runtime adapters.
+Connector settings now include a compact status catalog. It may show Cloud
+entry points and missing Cloud connection state, but it must stay a read-only
+orientation surface. Billing, quota, key rotation, request-log, marketplace,
+provider routing, vector provider settings, and vector lifecycle controls do
+not belong in Toolbox.
 
 ## Content Discoverability Context
 
@@ -145,7 +111,6 @@ direct_wordpress_write: false
 
 Toolbox ability ids stay under `magick-ai-toolbox/*`:
 
-- `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/search-site-knowledge`
@@ -153,6 +118,7 @@ Toolbox ability ids stay under `magick-ai-toolbox/*`:
 - `magick-ai-toolbox/request-site-knowledge-sync`
 - `magick-ai-toolbox/build-article-brief`
 - `magick-ai-toolbox/build-article-write-plan`
+- `magick-ai-toolbox/build-image-candidate-adoption-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 - `magick-ai-toolbox/validate-content-discoverability-context`
@@ -160,18 +126,22 @@ Toolbox ability ids stay under `magick-ai-toolbox/*`:
 
 General-purpose provider abilities:
 
-- `magick-ai-toolbox/web-research` is the external source-candidate ability for
-  any workflow that needs web evidence, comparison material, Chinese source
-  lookup, public references, support context, source coverage, or article
-  preparation. It supports Tavily, Bocha, and optional Jina Reader excerpts for
-  selected result URLs.
+- Cloud-managed web search is the external source-candidate capability for any
+  workflow that needs web evidence, comparison material, Chinese source lookup,
+  public references, support context, source coverage, or article preparation.
+  Magick AI Cloud owns provider configuration and execution; Toolbox does not
+  register a local search ability.
 - `magick-ai-toolbox/search-image-source` is the image-candidate ability for
-  any workflow that needs sourced images.
+  any workflow that needs sourced images. It returns `image_candidate.v1`
+  candidates for stock, AI-generated, owned, or external image sources.
+- `magick-ai-toolbox/build-image-candidate-adoption-plan` turns one reviewed
+  `image_candidate.v1` into a Core-ready `image_candidate_adoption_plan` for
+  media upload, metadata, and optional featured-image proposal intake.
 - `magick-ai-toolbox/search-site-knowledge` is the Cloud-managed site knowledge
   ability for semantic site search, related content, writing context, internal
   links, refresh suggestions, or image context.
-- `magick-ai-toolbox/vector-search` is the low-level configured vector-query
-  ability for clients that explicitly need existing collection access.
+- `magick-ai-toolbox/vector-search` is a Cloud-managed site knowledge
+  compatibility pointer for older clients.
 
 Site knowledge status and sync:
 
@@ -185,7 +155,7 @@ For article-writing AI callers, the canonical composition sequence is:
 
 1. `magick-ai-toolbox/get-content-discoverability-context`
 2. `magick-ai-toolbox/validate-content-discoverability-context`
-3. `magick-ai-toolbox/web-research`
+3. Cloud-managed web search
 4. `magick-ai-toolbox/vector-search`
 5. `magick-ai-toolbox/search-image-source`
 6. `magick-ai-toolbox/build-content-discoverability-brief`
@@ -198,7 +168,6 @@ posts, or mutate SEO fields.
 
 Stable first-version scopes:
 
-- `cap.toolbox.search`
 - `cap.toolbox.image_source`
 - `cap.toolbox.vector_search`
 - `cap.toolbox.knowledge.search`
@@ -309,12 +278,12 @@ Toolbox.
 The first-version route matrix is exact:
 
 - `GET /status`
-- `POST /web-research`
 - `POST /image-candidates`
 - `POST /vector-search`
 - `POST /knowledge-search`
 - `POST /flows/article-brief`
 - `POST /flows/article-plan`
+- `POST /flows/image-candidate-adoption-plan`
 - `POST /flows/media-brief`
 
 Do not add routes for publish, delivery, workflow-run consoles, queues,

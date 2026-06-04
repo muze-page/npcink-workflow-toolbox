@@ -23,7 +23,6 @@ final class Rest_Controller {
 	}
 
 	public function register_routes(): void {
-		$this->post( '/web-research', 'web_research' );
 		$this->post( '/image-candidates', 'image_candidates' );
 		$this->post( '/vector-search', 'knowledge_search' );
 		$this->post( '/knowledge-search', 'knowledge_search' );
@@ -32,6 +31,7 @@ final class Rest_Controller {
 		$this->post( '/flows/article-brief', 'article_brief' );
 		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
+		$this->post( '/flows/image-candidate-adoption-plan', 'image_candidate_adoption_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
 
@@ -63,52 +63,18 @@ final class Rest_Controller {
 	public function status(): WP_REST_Response {
 		return rest_ensure_response(
 			array(
-				'search_provider'          => sanitize_key( (string) $this->settings->get( 'search_provider' ) ),
-				'search_providers'         => $this->settings->configured_search_providers(),
-				'image_provider'           => sanitize_key( (string) $this->settings->get( 'image_provider' ) ),
+				'image_provider'           => 'cloud_image_sources',
 				'image_source_providers'   => $this->settings->configured_image_source_providers(),
-				'vector_provider'          => 'qdrant',
-				'embedding_provider'       => sanitize_key( (string) $this->settings->get( 'embedding_provider' ) ),
-				'embedding_dimensions'     => (int) $this->settings->get( 'embedding_dimensions' ),
-				'tavily_configured'        => $this->settings->has_tavily_api_key(),
-				'bocha_configured'         => $this->settings->has_bocha_api_key(),
-				'unsplash_configured'      => $this->settings->has_unsplash_access_key(),
-				'pixabay_configured'       => $this->settings->has_pixabay_api_key(),
-				'pexels_configured'        => $this->settings->has_pexels_api_key(),
-				'qdrant_configured'        => $this->settings->has_qdrant_connection(),
-				'siliconflow_configured'   => $this->settings->has_siliconflow_api_key(),
-				'jina_configured'          => $this->settings->has_jina_api_key(),
-				'jina_reader_enabled'      => (bool) $this->settings->get( 'enable_jina_reader' ),
+				'vector_provider'          => 'cloud_site_knowledge',
+				'web_search_owner'         => 'cloud_runtime',
+				'cloud_image_sources_configured' => $this->settings->has_image_source_provider(),
 				'raw_responses_enabled'    => (bool) $this->settings->get( 'include_raw_responses' ),
-				'web_research_enabled'     => (bool) $this->settings->get( 'enable_web_research' ),
 				'image_source_enabled'     => (bool) $this->settings->get( 'enable_image_source' ),
-				'vector_search_enabled'    => (bool) $this->settings->get( 'enable_vector_search' ),
-				'boundary'                 => 'Toolbox returns research, image-source, and vector-search suggestions only. WordPress writes should be handed to Abilities/Core governance.',
-			)
-		);
-	}
-
-	public function web_research( WP_REST_Request $request ) {
-		if ( ! $this->settings->get( 'enable_web_research' ) ) {
-			return $this->disabled_error( 'web research' );
-		}
-
-		$query = $this->required_text( $request, 'query' );
-		if ( is_wp_error( $query ) ) {
-			return $query;
-		}
-
-		return rest_ensure_response(
-			$this->client->web_research(
-				$query,
-				array(
-					'include_domains' => $this->csv_list( (string) $request->get_param( 'include_domains' ) ),
-					'exclude_domains' => $this->csv_list( (string) $request->get_param( 'exclude_domains' ) ),
-					'time_range'      => sanitize_key( (string) $request->get_param( 'time_range' ) ),
-					'provider'        => sanitize_key( (string) $request->get_param( 'provider' ) ),
-					'enhance_with_reader' => ! empty( $request->get_param( 'enhance_with_reader' ) ),
-					'max_results'     => (int) ( $request->get_param( 'max_results' ) ?: 5 ),
-				)
+				'vector_search_enabled'    => false,
+				'web_search_enabled'       => true,
+				'image_source_owner'       => 'cloud_runtime',
+				'vector_owner'             => 'cloud_runtime',
+				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',
 			)
 		);
 	}
@@ -141,10 +107,6 @@ final class Rest_Controller {
 	}
 
 	public function knowledge_search( WP_REST_Request $request ) {
-		if ( ! $this->settings->get( 'enable_vector_search' ) ) {
-			return $this->disabled_error( 'vector search' );
-		}
-
 		$query = trim( sanitize_textarea_field( (string) $request->get_param( 'query' ) ) );
 		$vector = trim( sanitize_textarea_field( (string) $request->get_param( 'vector' ) ) );
 		if ( '' === $query && '' === $vector ) {
@@ -226,6 +188,11 @@ final class Rest_Controller {
 	public function article_plan( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_article_write_plan( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function image_candidate_adoption_plan( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->build_image_candidate_adoption_plan( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function media_brief( WP_REST_Request $request ) {

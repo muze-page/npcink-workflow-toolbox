@@ -18,319 +18,31 @@ final class Provider_Client {
 		$this->settings = $settings;
 	}
 
-	public function web_research( string $query, array $options = array() ) {
-		$provider = sanitize_key( (string) ( $options['provider'] ?? $this->settings->get( 'search_provider' ) ?? 'tavily' ) );
-		if ( ! in_array( $provider, array( 'tavily', 'bocha', 'auto' ), true ) ) {
-			$provider = 'tavily';
-		}
-
-		$providers = 'auto' === $provider ? $this->settings->configured_search_providers() : array( $provider );
-		if ( array() === $providers ) {
-			return $this->missing_secret_error( 'search_provider', __( 'Configure at least one search provider key before running web research.', 'magick-ai-toolbox' ) );
-		}
-
-		$max_results  = max( 1, min( 10, (int) ( $options['max_results'] ?? 5 ) ) );
-		$per_provider = max( 1, (int) ceil( $max_results / max( 1, count( $providers ) ) ) );
-		$results      = array();
-		$images       = array();
-		$raw          = array();
-		$sources      = array();
-		$errors       = array();
-		$answer       = '';
-
-		foreach ( $providers as $source_provider ) {
-			$source_options = array_merge( $options, array( 'max_results' => $per_provider ) );
-			$result         = $this->search_web_provider( $source_provider, $query, $source_options );
-			if ( is_wp_error( $result ) ) {
-				if ( 'auto' !== $provider ) {
-					return $result;
-				}
-
-				$errors[] = array(
-					'provider' => $source_provider,
-					'code'     => $result->get_error_code(),
-					'message'  => $result->get_error_message(),
-				);
-				continue;
-			}
-
-			$provider_results = is_array( $result['results'] ?? null ) ? $result['results'] : array();
-			$results          = array_merge( $results, $provider_results );
-			$images           = array_merge( $images, is_array( $result['images'] ?? null ) ? $result['images'] : array() );
-			if ( '' === $answer && ! empty( $result['answer'] ) ) {
-				$answer = (string) $result['answer'];
-			}
-			$sources[] = array(
-				'provider' => $source_provider,
-				'count'    => count( $provider_results ),
-			);
-			$raw[ $source_provider ] = is_array( $result['raw'] ?? null ) ? $result['raw'] : array();
-		}
-
-		if ( array() === $results && array() !== $errors ) {
-			return new WP_Error(
-				'magick_ai_toolbox_search_provider_errors',
-				__( 'Configured search providers did not return source candidates.', 'magick-ai-toolbox' ),
-				array(
-					'status'          => 502,
-					'provider_errors' => $errors,
-				)
-			);
-		}
-
-		$results = array_slice( $this->dedupe_results_by_url( $results ), 0, $max_results );
-		$reader_enabled = ! empty( $options['enhance_with_reader'] ) || (bool) $this->settings->get( 'enable_jina_reader' );
-		$reader_report  = array();
-		if ( $reader_enabled ) {
-			$reader = $this->enhance_results_with_jina_reader( $results, (int) ( $options['reader_max_pages'] ?? $this->settings->get( 'jina_reader_max_pages' ) ) );
-			$results = $reader['results'];
-			$reader_report = $reader['report'];
-		}
-
-		return $this->with_optional_raw(
-			$this->with_output_contract(
-				array(
-					'provider'        => 'web_research',
-					'provider_mode'   => $provider,
-					'active_sources'  => $sources,
-					'provider_errors' => $errors,
-					'query'           => $query,
-					'answer'          => sanitize_textarea_field( $answer ),
-					'results'         => $results,
-					'images'          => $images,
-					'reader_enhancement' => $reader_report,
-				),
-				'research_evidence',
-				'research_evidence'
-			),
-			$raw
-		);
-	}
-
-	private function search_web_provider( string $provider, string $query, array $options ) {
-		if ( 'bocha' === $provider ) {
-			return $this->search_bocha_web( $query, $options );
-		}
-
-		return $this->search_tavily_web( $query, $options );
-	}
-
-	private function search_tavily_web( string $query, array $options ) {
-		$api_key = $this->settings->get_tavily_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'tavily_api_key', __( 'Configure a Tavily API key before running web research.', 'magick-ai-toolbox' ) );
-		}
-
-		$body = array(
-			'query'               => $query,
-			'search_depth'        => (string) $this->settings->get( 'tavily_search_depth' ),
-			'include_answer'      => (bool) $this->settings->get( 'tavily_include_answer' ),
-			'include_raw_content' => (bool) $this->settings->get( 'tavily_include_raw' ),
-			'include_images'      => (bool) $this->settings->get( 'tavily_include_images' ),
-			'include_favicon'     => true,
-			'max_results'         => max( 1, min( 10, (int) ( $options['max_results'] ?? 5 ) ) ),
-		);
-
-		if ( ! empty( $options['include_domains'] ) && is_array( $options['include_domains'] ) ) {
-			$body['include_domains'] = array_values( $options['include_domains'] );
-		}
-
-		if ( ! empty( $options['exclude_domains'] ) && is_array( $options['exclude_domains'] ) ) {
-			$body['exclude_domains'] = array_values( $options['exclude_domains'] );
-		}
-
-		if ( ! empty( $options['time_range'] ) && in_array( $options['time_range'], array( 'day', 'week', 'month', 'year' ), true ) ) {
-			$body['time_range'] = $options['time_range'];
-		}
-
-		$response = $this->json_request(
-			'https://api.tavily.com/search',
-			'POST',
-			array(
-				'Authorization' => 'Bearer ' . $api_key,
-			),
-			$body
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$results = array();
-		foreach ( (array) ( $response['results'] ?? array() ) as $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
-			$results[] = array(
-				'provider'    => 'tavily',
-				'title'       => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
-				'url'         => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
-				'content'     => sanitize_textarea_field( (string) ( $item['content'] ?? '' ) ),
-				'raw_content' => isset( $item['raw_content'] ) ? sanitize_textarea_field( (string) $item['raw_content'] ) : '',
-				'score'       => isset( $item['score'] ) ? (float) $item['score'] : 0.0,
-				'favicon'     => esc_url_raw( (string) ( $item['favicon'] ?? '' ) ),
-			);
-		}
-
-		return array(
-			'provider' => 'tavily',
-			'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
-			'results'  => $results,
-			'images'   => is_array( $response['images'] ?? null ) ? $response['images'] : array(),
-			'raw'      => $response,
-		);
-	}
-
-	private function search_bocha_web( string $query, array $options ) {
-		$api_key = $this->settings->get_bocha_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'bocha_api_key', __( 'Configure a Bocha API key before running Bocha web research.', 'magick-ai-toolbox' ) );
-		}
-
-		$base_url = untrailingslashit( (string) ( $this->settings->get( 'bocha_base_url' ) ?: 'https://api.bochaai.com/v1' ) );
-		$count    = max( 1, min( 20, (int) ( $options['max_results'] ?? $this->settings->get( 'bocha_count' ) ?? 8 ) ) );
-		$body     = array(
-			'query'   => $query,
-			'count'   => $count,
-			'summary' => true,
-		);
-
-		if ( ! empty( $options['freshness'] ) ) {
-			$body['freshness'] = sanitize_key( (string) $options['freshness'] );
-		}
-
-		$response = $this->json_request(
-			$base_url . '/web-search',
-			'POST',
-			array(
-				'Authorization' => 'Bearer ' . $api_key,
-			),
-			$body
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$items   = is_array( $response['webPages']['value'] ?? null ) ? $response['webPages']['value'] : array();
-		$results = array();
-		foreach ( $items as $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
-			$results[] = array(
-				'provider'       => 'bocha',
-				'title'          => sanitize_text_field( (string) ( $item['name'] ?? $item['title'] ?? '' ) ),
-				'url'            => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
-				'content'        => sanitize_textarea_field( (string) ( $item['snippet'] ?? $item['summary'] ?? '' ) ),
-				'raw_content'    => sanitize_textarea_field( (string) ( $item['summary'] ?? '' ) ),
-				'score'          => isset( $item['score'] ) ? (float) $item['score'] : 0.0,
-				'favicon'        => esc_url_raw( (string) ( $item['siteIcon'] ?? '' ) ),
-				'site_name'      => sanitize_text_field( (string) ( $item['siteName'] ?? '' ) ),
-				'published_date' => sanitize_text_field( (string) ( $item['datePublished'] ?? '' ) ),
-			);
-		}
-
-		return array(
-			'provider' => 'bocha',
-			'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
-			'results'  => $results,
-			'images'   => array(),
-			'raw'      => $response,
-		);
-	}
-
 	public function image_candidates( string $query, array $options = array() ) {
-		$provider = sanitize_key( (string) ( $options['provider'] ?? $this->settings->get( 'image_provider' ) ?? 'auto' ) );
-		if ( ! in_array( $provider, array( 'auto', 'unsplash', 'pixabay', 'pexels', 'ai_generated' ), true ) ) {
+		$provider = sanitize_key( (string) ( $options['provider'] ?? 'auto' ) );
+		if ( ! in_array( $provider, array( 'auto', 'cloud', 'unsplash', 'pixabay', 'pexels', 'ai_generated' ), true ) ) {
 			$provider = 'auto';
 		}
 
-		$providers = 'auto' === $provider ? $this->settings->configured_image_source_providers() : array( $provider );
-		if ( 'auto' === $provider && $this->should_include_ai_generated_images( $options ) ) {
-			$providers[] = 'ai_generated';
-			$providers   = array_values( array_unique( $providers ) );
-		}
-		if ( array() === $providers ) {
-			return $this->missing_secret_error( 'image_source_provider', __( 'Configure at least one image-source provider key before searching image candidates.', 'magick-ai-toolbox' ) );
-		}
-
-		$per_page     = max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) );
-		$per_provider = isset( $options['per_provider'] ) ? max( 1, min( 30, (int) $options['per_provider'] ) ) : max( 1, (int) ceil( $per_page / max( 1, count( $providers ) ) ) );
-		$images       = array();
-		$raw          = array();
-		$sources      = array();
-		$errors       = array();
-
-		foreach ( $providers as $source_provider ) {
-			$source_options = array_merge( $options, array( 'per_page' => $per_provider ) );
-			$result         = $this->search_image_provider( $source_provider, $query, $source_options );
+		if ( 'ai_generated' === $provider || $this->should_include_ai_generated_images( $options ) ) {
+			$result = $this->search_ai_generated_images( $query, $options );
 			if ( is_wp_error( $result ) ) {
-				if ( 'auto' !== $provider ) {
-					return $result;
-				}
-
-				$errors[] = array(
-					'provider' => $source_provider,
-					'code'     => $result->get_error_code(),
-					'message'  => $result->get_error_message(),
-					'data'     => $this->sanitize_provider_error_data( $result->get_error_data() ),
-				);
-				continue;
+				return $result;
 			}
-
-			$provider_images = is_array( $result['images'] ?? null ) ? $result['images'] : array();
-			$images          = array_merge( $images, $provider_images );
-			$sources[]       = array(
-				'provider' => $source_provider,
-				'count'    => count( $provider_images ),
-			);
-			$raw[ $source_provider ] = is_array( $result['raw'] ?? null ) ? $result['raw'] : array();
-		}
-
-		if ( array() === $images && array() !== $errors ) {
-			return new WP_Error(
-				'magick_ai_toolbox_image_source_provider_errors',
-				__( 'Configured image-source providers did not return candidates.', 'magick-ai-toolbox' ),
+			return $this->normalize_image_source_candidates_response(
 				array(
-					'status'          => 502,
-					'provider_errors' => $errors,
-				)
+					'provider'       => 'ai_generated',
+					'provider_mode'  => 'ai_generated',
+					'active_sources' => array( array( 'provider' => 'ai_generated', 'count' => count( (array) ( $result['images'] ?? array() ) ) ) ),
+					'images'         => is_array( $result['images'] ?? null ) ? $result['images'] : array(),
+					'raw'            => is_array( $result['raw'] ?? null ) ? $result['raw'] : array(),
+				),
+				$query,
+				'ai_generated'
 			);
 		}
 
-		$payload = $this->with_output_contract(
-			array(
-				'provider'        => 'image_source',
-				'provider_mode'   => $provider,
-				'active_sources'  => $sources,
-				'provider_errors' => $errors,
-				'query'           => $query,
-				'images'          => array_slice( $this->dedupe_image_candidates( $images ), 0, $per_page ),
-			),
-			'image_source_candidates',
-			'image_source_candidates'
-		);
-
-		return $this->with_optional_raw( $payload, $raw );
-	}
-
-	private function search_image_provider( string $provider, string $query, array $options ) {
-		if ( 'ai_generated' === $provider ) {
-			return $this->search_ai_generated_images( $query, $options );
-		}
-
-		if ( 'pixabay' === $provider ) {
-			return $this->search_pixabay_images( $query, $options );
-		}
-
-		if ( 'pexels' === $provider ) {
-			return $this->search_pexels_images( $query, $options );
-		}
-
-		return $this->search_unsplash_images( $query, $options );
+		return $this->execute_image_source_cloud_request( $query, $options, $provider );
 	}
 
 	private function should_include_ai_generated_images( array $options ): bool {
@@ -432,216 +144,6 @@ final class Provider_Client {
 		);
 	}
 
-	private function search_unsplash_images( string $query, array $options ) {
-		$access_key = $this->settings->get_unsplash_access_key();
-		if ( '' === $access_key ) {
-			return $this->missing_secret_error( 'unsplash_access_key', __( 'Configure an Unsplash access key before searching image candidates.', 'magick-ai-toolbox' ) );
-		}
-
-		$params = array(
-			'query'    => $query,
-			'per_page' => max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) ),
-		);
-
-		foreach ( array( 'orientation', 'color' ) as $key ) {
-			if ( ! empty( $options[ $key ] ) ) {
-				$params[ $key ] = sanitize_key( (string) $options[ $key ] );
-			}
-		}
-
-		$response = $this->json_request(
-			add_query_arg( $params, 'https://api.unsplash.com/search/photos' ),
-			'GET',
-			array(
-				'Authorization' => 'Client-ID ' . $access_key,
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$utm_source = sanitize_key( (string) $this->settings->get( 'unsplash_utm_source' ) );
-		$images     = array();
-		foreach ( (array) ( $response['results'] ?? array() ) as $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
-			$user = is_array( $item['user'] ?? null ) ? $item['user'] : array();
-			$urls = is_array( $item['urls'] ?? null ) ? $item['urls'] : array();
-			$links = is_array( $item['links'] ?? null ) ? $item['links'] : array();
-			$profile_url = (string) ( $user['links']['html'] ?? '' );
-			if ( '' !== $profile_url && '' !== $utm_source ) {
-				$profile_url = add_query_arg( array( 'utm_source' => $utm_source, 'utm_medium' => 'referral' ), $profile_url );
-			}
-
-			$images[] = array(
-				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
-				'provider'          => 'unsplash',
-				'description'       => sanitize_textarea_field( (string) ( $item['description'] ?? $item['alt_description'] ?? '' ) ),
-				'alt_description'   => sanitize_textarea_field( (string) ( $item['alt_description'] ?? '' ) ),
-				'thumb_url'         => esc_url_raw( (string) ( $urls['thumb'] ?? '' ) ),
-				'small_url'         => esc_url_raw( (string) ( $urls['small'] ?? '' ) ),
-				'regular_url'       => esc_url_raw( (string) ( $urls['regular'] ?? '' ) ),
-				'html_url'          => esc_url_raw( (string) ( $links['html'] ?? '' ) ),
-				'download_location' => esc_url_raw( (string) ( $links['download_location'] ?? '' ) ),
-				'source_url'        => esc_url_raw( (string) ( $links['html'] ?? '' ) ),
-				'photographer'      => sanitize_text_field( (string) ( $user['name'] ?? '' ) ),
-				'photographer_url'  => esc_url_raw( $profile_url ),
-				'attribution'       => sprintf(
-					/* translators: %s: photographer name. */
-					__( 'Photo by %s on Unsplash.', 'magick-ai-toolbox' ),
-					sanitize_text_field( (string) ( $user['name'] ?? 'Unsplash' ) )
-				),
-			);
-		}
-
-		return array(
-			'provider' => 'unsplash',
-			'images'   => $images,
-			'raw'      => $response,
-		);
-	}
-
-	private function search_pixabay_images( string $query, array $options ) {
-		$api_key = $this->settings->get_pixabay_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'pixabay_api_key', __( 'Configure a Pixabay API key before searching Pixabay image candidates.', 'magick-ai-toolbox' ) );
-		}
-
-		$params = array(
-			'key'        => $api_key,
-			'q'          => $query,
-			'image_type' => 'photo',
-			'per_page'   => max( 3, min( 30, (int) ( $options['per_page'] ?? 8 ) ) ),
-			'safesearch' => 'true',
-		);
-
-		$orientation = sanitize_key( (string) ( $options['orientation'] ?? '' ) );
-		if ( in_array( $orientation, array( 'horizontal', 'vertical' ), true ) ) {
-			$params['orientation'] = $orientation;
-		} elseif ( 'landscape' === $orientation ) {
-			$params['orientation'] = 'horizontal';
-		} elseif ( 'portrait' === $orientation ) {
-			$params['orientation'] = 'vertical';
-		}
-
-		if ( ! empty( $options['color'] ) ) {
-			$params['colors'] = sanitize_key( (string) $options['color'] );
-		}
-
-		$response = $this->json_request( add_query_arg( $params, 'https://pixabay.com/api/' ), 'GET' );
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$images = array();
-		foreach ( (array) ( $response['hits'] ?? array() ) as $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
-			$user = sanitize_text_field( (string) ( $item['user'] ?? 'Pixabay' ) );
-			$user_id = sanitize_key( (string) ( $item['user_id'] ?? '' ) );
-			$user_url = '' !== $user_id && '' !== $user ? 'https://pixabay.com/users/' . rawurlencode( sanitize_title( $user ) ) . '-' . rawurlencode( $user_id ) . '/' : '';
-			$tags = sanitize_textarea_field( (string) ( $item['tags'] ?? '' ) );
-
-			$images[] = array(
-				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
-				'provider'          => 'pixabay',
-				'description'       => $tags,
-				'alt_description'   => $tags,
-				'thumb_url'         => esc_url_raw( (string) ( $item['previewURL'] ?? '' ) ),
-				'small_url'         => esc_url_raw( (string) ( $item['webformatURL'] ?? '' ) ),
-				'regular_url'       => esc_url_raw( (string) ( $item['largeImageURL'] ?? $item['webformatURL'] ?? '' ) ),
-				'html_url'          => esc_url_raw( (string) ( $item['pageURL'] ?? '' ) ),
-				'download_location' => '',
-				'source_url'        => esc_url_raw( (string) ( $item['pageURL'] ?? '' ) ),
-				'photographer'      => $user,
-				'photographer_url'  => esc_url_raw( $user_url ),
-				'attribution'       => sprintf(
-					/* translators: %s: image creator name. */
-					__( 'Image by %s on Pixabay.', 'magick-ai-toolbox' ),
-					$user
-				),
-			);
-		}
-
-		return array(
-			'provider' => 'pixabay',
-			'images'   => $images,
-			'raw'      => $response,
-		);
-	}
-
-	private function search_pexels_images( string $query, array $options ) {
-		$api_key = $this->settings->get_pexels_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'pexels_api_key', __( 'Configure a Pexels API key before searching Pexels image candidates.', 'magick-ai-toolbox' ) );
-		}
-
-		$params = array(
-			'query'    => $query,
-			'per_page' => max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) ),
-		);
-
-		foreach ( array( 'orientation', 'color' ) as $key ) {
-			if ( ! empty( $options[ $key ] ) ) {
-				$params[ $key ] = sanitize_key( (string) $options[ $key ] );
-			}
-		}
-
-		$response = $this->json_request(
-			add_query_arg( $params, 'https://api.pexels.com/v1/search' ),
-			'GET',
-			array(
-				'Authorization' => $api_key,
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$images = array();
-		foreach ( (array) ( $response['photos'] ?? array() ) as $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
-			$src = is_array( $item['src'] ?? null ) ? $item['src'] : array();
-			$photographer = sanitize_text_field( (string) ( $item['photographer'] ?? 'Pexels' ) );
-			$alt = sanitize_textarea_field( (string) ( $item['alt'] ?? '' ) );
-
-			$images[] = array(
-				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
-				'provider'          => 'pexels',
-				'description'       => $alt,
-				'alt_description'   => $alt,
-				'thumb_url'         => esc_url_raw( (string) ( $src['tiny'] ?? $src['small'] ?? '' ) ),
-				'small_url'         => esc_url_raw( (string) ( $src['small'] ?? $src['medium'] ?? '' ) ),
-				'regular_url'       => esc_url_raw( (string) ( $src['large'] ?? $src['large2x'] ?? $src['original'] ?? '' ) ),
-				'html_url'          => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
-				'download_location' => '',
-				'source_url'        => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
-				'photographer'      => $photographer,
-				'photographer_url'  => esc_url_raw( (string) ( $item['photographer_url'] ?? '' ) ),
-				'attribution'       => sprintf(
-					/* translators: %s: photographer name. */
-					__( 'Photo by %s on Pexels.', 'magick-ai-toolbox' ),
-					$photographer
-				),
-			);
-		}
-
-		return array(
-			'provider' => 'pexels',
-			'images'   => $images,
-			'raw'      => $response,
-		);
-	}
-
 	private function dedupe_image_candidates( array $images ): array {
 		$seen = array();
 		$out  = array();
@@ -661,6 +163,85 @@ final class Provider_Client {
 		}
 
 		return $out;
+	}
+
+	private function normalize_image_candidate_contract( array $candidate ): array {
+		$provider = sanitize_key( (string) ( $candidate['provider'] ?? 'external' ) );
+		$source_type = sanitize_key( (string) ( $candidate['source_type'] ?? '' ) );
+		if ( '' === $source_type ) {
+			if ( 'ai_generated' === $provider ) {
+				$source_type = 'ai_generated';
+			} elseif ( in_array( $provider, array( 'unsplash', 'pixabay', 'pexels' ), true ) ) {
+				$source_type = 'stock';
+			} else {
+				$source_type = 'external';
+			}
+		}
+
+		$download_url = $this->first_non_empty_url(
+			array(
+				$candidate['download_url'] ?? '',
+				$candidate['regular_url'] ?? '',
+				$candidate['url'] ?? '',
+				$candidate['image_url'] ?? '',
+				$candidate['generated_image_url'] ?? '',
+				$candidate['output_url'] ?? '',
+				$candidate['small_url'] ?? '',
+			)
+		);
+		$thumbnail_url = $this->first_non_empty_url(
+			array(
+				$candidate['thumbnail_url'] ?? '',
+				$candidate['thumb_url'] ?? '',
+				$candidate['small_url'] ?? '',
+				$download_url,
+			)
+		);
+		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
+		$prompt = trim( sanitize_textarea_field( (string) ( $candidate['prompt'] ?? $candidate['generation_prompt'] ?? '' ) ) );
+		$model = sanitize_text_field( (string) ( $candidate['model'] ?? $candidate['generation_model'] ?? '' ) );
+		$license_review_status = $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? '' ), $source_type );
+		$provider_origin = sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) );
+		$warnings = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
+
+		$candidate['contract_version']              = 'image_candidate.v1';
+		$candidate['source_type']                   = $source_type;
+		$candidate['provider']                      = $provider;
+		$candidate['provider_origin']               = '' !== $provider_origin ? $provider_origin : 'toolbox';
+		$candidate['download_url']                  = $download_url;
+		$candidate['thumbnail_url']                 = $thumbnail_url;
+		$candidate['source_url']                    = $source_url;
+		$candidate['prompt']                        = $prompt;
+		$candidate['model']                         = $model;
+		$candidate['license_review_status']         = $license_review_status;
+		$candidate['requires_human_license_review'] = 'not_required' !== $license_review_status;
+		$candidate['warnings']                      = $warnings;
+		$candidate['provenance']                    = array(
+			'provider'          => $provider,
+			'provider_origin'   => $candidate['provider_origin'],
+			'source_type'       => $source_type,
+			'source_url'        => $source_url,
+			'download_location' => esc_url_raw( (string) ( $candidate['download_location'] ?? '' ) ),
+			'photographer'      => sanitize_text_field( (string) ( $candidate['photographer'] ?? '' ) ),
+			'generation_provider' => sanitize_key( (string) ( $candidate['generation_provider'] ?? $candidate['provider_name'] ?? '' ) ),
+			'generation_model'  => $model,
+		);
+
+		return $candidate;
+	}
+
+	private function normalize_license_review_status( string $status, string $source_type ): string {
+		$status = sanitize_key( $status );
+		if ( in_array( $status, array( 'required', 'reviewed', 'not_required' ), true ) ) {
+			return $status;
+		}
+		if ( in_array( $status, array( 'needs_human_review', 'needs_review', 'human_review_required' ), true ) ) {
+			return 'required';
+		}
+		if ( 'owned' === $source_type ) {
+			return 'not_required';
+		}
+		return 'required';
 	}
 
 	private function first_non_empty_url( array $urls ): string {
@@ -729,6 +310,7 @@ final class Provider_Client {
 			'id'                            => sanitize_text_field( (string) ( $candidate['id'] ?? ( '' !== $url ? md5( $url ) : '' ) ) ),
 			'provider'                      => 'ai_generated',
 			'provider_name'                 => $provider,
+			'provider_origin'               => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
 			'source_type'                   => 'ai_generated',
 			'description'                   => $alt,
 			'alt_description'               => $alt,
@@ -741,10 +323,12 @@ final class Provider_Client {
 			'photographer'                  => '',
 			'photographer_url'              => '',
 			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'magick-ai-toolbox' ) ) ),
+			'prompt'                        => $prompt,
+			'model'                         => $model,
 			'generation_prompt'             => $prompt,
 			'generation_model'              => $model,
 			'generation_provider'           => $provider,
-			'license_review_status'         => sanitize_key( (string) ( $candidate['license_review_status'] ?? 'needs_human_review' ) ),
+			'license_review_status'         => $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? 'required' ), 'ai_generated' ),
 			'requires_human_license_review' => true,
 		);
 	}
@@ -764,107 +348,6 @@ final class Provider_Client {
 		return $allowed;
 	}
 
-	private function dedupe_results_by_url( array $results ): array {
-		$seen = array();
-		$out  = array();
-
-		foreach ( $results as $result ) {
-			if ( ! is_array( $result ) ) {
-				continue;
-			}
-
-			$url = esc_url_raw( (string) ( $result['url'] ?? '' ) );
-			if ( '' === $url || isset( $seen[ $url ] ) ) {
-				continue;
-			}
-
-			$seen[ $url ] = true;
-			$result['url'] = $url;
-			$out[] = $result;
-		}
-
-		return $out;
-	}
-
-	private function enhance_results_with_jina_reader( array $results, int $max_pages ): array {
-		$max_pages = max( 1, min( 5, $max_pages ) );
-		$enhanced  = array();
-		$report    = array(
-			'provider'       => 'jina_reader',
-			'enabled'        => true,
-			'requested_pages' => $max_pages,
-			'succeeded'      => 0,
-			'failed'         => 0,
-			'errors'         => array(),
-		);
-
-		foreach ( $results as $index => $result ) {
-			if ( $index >= $max_pages || empty( $result['url'] ) ) {
-				$enhanced[] = $result;
-				continue;
-			}
-
-			$reader = $this->read_url_with_jina_reader( (string) $result['url'] );
-			if ( is_wp_error( $reader ) ) {
-				$result['reader_status'] = 'failed';
-				$report['failed']++;
-				$report['errors'][] = array(
-					'url'     => esc_url_raw( (string) $result['url'] ),
-					'code'    => $reader->get_error_code(),
-					'message' => $reader->get_error_message(),
-				);
-				$enhanced[] = $result;
-				continue;
-			}
-
-			$result['reader_status']  = 'ready';
-			$result['reader_excerpt'] = $reader;
-			$report['succeeded']++;
-			$enhanced[] = $result;
-		}
-
-		return array(
-			'results' => $enhanced,
-			'report'  => $report,
-		);
-	}
-
-	private function read_url_with_jina_reader( string $url ) {
-		$url = esc_url_raw( $url );
-		if ( '' === $url ) {
-			return new WP_Error(
-				'magick_ai_toolbox_invalid_reader_url',
-				__( 'Jina Reader requires a valid source URL.', 'magick-ai-toolbox' ),
-				array( 'status' => 400 )
-			);
-		}
-
-		$base_url = untrailingslashit( (string) ( $this->settings->get( 'jina_reader_base_url' ) ?: 'https://r.jina.ai' ) );
-		$headers  = array(
-			'Accept' => 'text/plain',
-		);
-		$api_key = $this->settings->get_jina_api_key();
-		if ( '' !== $api_key ) {
-			$headers['Authorization'] = 'Bearer ' . $api_key;
-		}
-
-		$response = $this->text_request( $base_url . '/' . $url, 'GET', $headers );
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$text = sanitize_textarea_field( $response );
-		if ( '' === trim( $text ) ) {
-			return new WP_Error(
-				'magick_ai_toolbox_empty_reader_response',
-				__( 'Jina Reader returned an empty response for this source URL.', 'magick-ai-toolbox' ),
-				array( 'status' => 502 )
-			);
-		}
-
-		return substr( $text, 0, 4000 );
-	}
-
 	public function vector_search( string $input, int $max_results = 4, string $input_type = 'auto' ) {
 		if ( '' === trim( $input ) ) {
 			return new WP_Error(
@@ -874,88 +357,22 @@ final class Provider_Client {
 			);
 		}
 
-		$endpoint = untrailingslashit( (string) $this->settings->get( 'qdrant_endpoint' ) );
-		$collection = trim( (string) $this->settings->get( 'qdrant_collection' ) );
-		if ( '' === $endpoint || '' === $collection ) {
-			return new WP_Error(
-				'magick_ai_toolbox_missing_qdrant_connection',
-				__( 'Configure a Qdrant endpoint and collection before running vector search.', 'magick-ai-toolbox' ),
-				array( 'status' => 400 )
-			);
-		}
-
-		$input_type = sanitize_key( $input_type );
-		if ( ! in_array( $input_type, array( 'auto', 'text', 'vector', 'qdrant_query' ), true ) ) {
-			$input_type = 'auto';
-		}
-
-		$embedding = null;
-		$decoded = null;
-		if ( 'text' !== $input_type ) {
-			$decoded = json_decode( $input, true );
-		}
-
-		if ( is_array( $decoded ) ) {
-			$resolved_input_type = $this->is_list( $decoded ) ? 'vector' : 'qdrant_query';
-			if ( 'vector' === $resolved_input_type ) {
-				$dimension_error = $this->validate_vector_dimensions( $decoded, __( 'The supplied vector', 'magick-ai-toolbox' ) );
-				if ( is_wp_error( $dimension_error ) ) {
-					return $dimension_error;
-				}
-			}
-
-			$body = $this->build_qdrant_query_body( $decoded, $max_results );
-		} elseif ( 'vector' === $input_type || 'qdrant_query' === $input_type ) {
-			return new WP_Error(
-				'magick_ai_toolbox_invalid_vector_json',
-				__( 'Vector search requires a JSON array vector or a Qdrant query object when input_type is vector or qdrant_query.', 'magick-ai-toolbox' ),
-				array( 'status' => 400 )
-			);
-		} else {
-			$resolved_input_type = 'text';
-			$embedding = $this->create_embedding( $input );
-			if ( is_wp_error( $embedding ) ) {
-				return $embedding;
-			}
-
-			$body = $this->build_qdrant_query_body( $embedding['vector'], $max_results );
-		}
-
-		$api_key = $this->settings->get_qdrant_api_key();
-		$headers = array();
-		if ( '' !== $api_key ) {
-			$headers['api-key'] = $api_key;
-		}
-
-		$response = $this->json_request(
-			$endpoint . '/collections/' . rawurlencode( $collection ) . '/points/query',
-			'POST',
-			$headers,
-			$body
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$payload = $this->with_output_contract(
+		return $this->with_output_contract(
 			array(
-				'provider'   => 'qdrant',
-				'input_type' => $resolved_input_type,
-				'collection' => $collection,
-				'points'     => is_array( $response['result']['points'] ?? null ) ? $response['result']['points'] : array(),
+				'provider'          => 'cloud_site_knowledge',
+				'provider_mode'     => 'cloud_managed',
+				'status'            => 'cloud_managed',
+				'message'           => __( 'Low-level vector provider configuration has moved to Magick AI Cloud. Use search-site-knowledge for Cloud-managed semantic site context.', 'magick-ai-toolbox' ),
+				'target_ability_id' => 'magick-ai-toolbox/search-site-knowledge',
+				'results'           => array(),
+				'requested_input'   => array(
+					'input_type'  => sanitize_key( $input_type ),
+					'max_results' => max( 1, min( 20, $max_results ) ),
+				),
 			),
-			'local_style_context',
-			'local_style_context'
+			'site_knowledge_context',
+			'site_knowledge_context'
 		);
-
-		if ( is_array( $embedding ) ) {
-			$payload['embedding_provider']   = $embedding['provider'];
-			$payload['embedding_model']      = $embedding['model'];
-			$payload['embedding_dimensions'] = $embedding['dimensions'];
-		}
-
-		return $this->with_optional_raw( $payload, $response );
 	}
 
 	public function search_site_knowledge( array $input ) {
@@ -1056,13 +473,21 @@ final class Provider_Client {
 		);
 	}
 
+	private function cloud_web_search_notice(): array {
+		return array(
+			'provider'       => 'cloud_web_search',
+			'provider_mode'  => 'cloud_managed',
+			'active_sources' => array(),
+			'results'        => array(),
+			'status'         => 'cloud_managed',
+			'message'        => __( 'External web search is provided by Magick AI Cloud. Toolbox no longer stores local web search provider configuration.', 'magick-ai-toolbox' ),
+		);
+	}
+
 	public function build_article_brief( string $topic, bool $include_vector = true ) {
-		$research  = $this->web_research( $topic, array( 'max_results' => 5 ) );
+		$research  = $this->cloud_web_search_notice();
 		$images    = $this->image_candidates( $topic, array( 'per_page' => 6 ) );
-		$knowledge = null;
-		if ( $include_vector && (bool) $this->settings->get( 'enable_vector_search' ) && $this->settings->has_qdrant_connection() ) {
-			$knowledge = $this->vector_search( $topic, 4, 'text' );
-		}
+		$knowledge = $include_vector ? $this->vector_search( $topic, 4, 'text' ) : null;
 
 		return array(
 			'artifact_type'             => 'article_planning_bundle',
@@ -1077,7 +502,7 @@ final class Provider_Client {
 			'handoff'                   => array(
 				'write_posture' => 'suggestion_only',
 				'next_steps'    => array(
-					'Review sources.',
+					'Use Cloud web search or operator-provided references for current external sources.',
 					'Select image candidate and preserve attribution.',
 					'Create WordPress draft or media proposals through Abilities/Core.',
 				),
@@ -1120,12 +545,9 @@ final class Provider_Client {
 		$validation     = $this->settings->validate_content_context_for_ability();
 		$context_status = sanitize_key( (string) ( $validation['status'] ?? 'needs_attention' ) );
 
-		$research = $this->web_research( $topic, array( 'max_results' => 5 ) );
-		$images   = $this->image_candidates( $topic, array( 'per_page' => 6 ) );
-		$knowledge = null;
-		if ( (bool) $this->settings->get( 'enable_vector_search' ) && $this->settings->has_qdrant_connection() ) {
+			$research = $this->cloud_web_search_notice();
+			$images   = $this->image_candidates( $topic, array( 'per_page' => 6 ) );
 			$knowledge = $this->vector_search( $topic, 4, 'text' );
-		}
 
 		$discoverability = $this->build_content_discoverability_brief(
 			array(
@@ -1729,6 +1151,212 @@ final class Provider_Client {
 		);
 	}
 
+	public function build_image_candidate_adoption_plan( array $input ) {
+		$raw_candidate = $input['image_candidate'] ?? ( $input['candidate'] ?? array() );
+		if ( is_string( $raw_candidate ) ) {
+			$decoded = json_decode( $raw_candidate, true );
+			$raw_candidate = is_array( $decoded ) ? $decoded : array();
+		}
+		$candidate = is_array( $raw_candidate ) ? $raw_candidate : array();
+		if ( empty( $candidate ) ) {
+			$direct_url = $this->first_non_empty_url(
+				array(
+					$input['download_url'] ?? '',
+					$input['image_url'] ?? '',
+					$input['url'] ?? '',
+				)
+			);
+			if ( '' !== $direct_url ) {
+				$candidate = array(
+					'download_url'           => $direct_url,
+					'thumbnail_url'          => $input['thumbnail_url'] ?? '',
+					'source_url'             => $input['source_url'] ?? '',
+					'source_type'            => $input['source_type'] ?? 'external',
+					'provider'               => $input['provider'] ?? 'manual',
+					'provider_origin'        => $input['provider_origin'] ?? 'toolbox',
+					'title'                  => $input['title'] ?? '',
+					'description'            => $input['description'] ?? ( $input['alt'] ?? '' ),
+					'alt_description'        => $input['alt'] ?? '',
+					'attribution'            => $input['attribution_text'] ?? '',
+					'photographer'           => $input['photographer_name'] ?? '',
+					'prompt'                 => $input['prompt'] ?? '',
+					'model'                  => $input['model'] ?? '',
+					'license_review_status'  => $input['license_review_status'] ?? '',
+					'warnings'               => $this->sanitize_string_list( $input['warnings'] ?? array() ),
+				);
+			}
+		}
+		if ( empty( $candidate ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_image_candidate_required',
+				__( 'A selected image URL or image_candidate object is required before building an adoption plan.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$candidate = $this->normalize_image_candidate_contract( $candidate );
+		$image_url = $this->first_non_empty_url(
+			array(
+				$candidate['download_url'] ?? '',
+				$candidate['regular_url'] ?? '',
+				$candidate['small_url'] ?? '',
+				$candidate['url'] ?? '',
+			)
+		);
+		if ( '' === $image_url ) {
+			return new WP_Error(
+				'magick_ai_toolbox_image_candidate_url_missing',
+				__( 'The selected image candidate must include a download_url, regular_url, small_url, or url.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$post_id = absint( $input['post_id'] ?? 0 );
+		$set_featured_image = $post_id > 0 && ! empty( $input['set_featured_image'] );
+		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $candidate['title'] ?? $candidate['description'] ?? __( 'Selected image candidate', 'magick-ai-toolbox' ) ) ) );
+		$alt = trim( sanitize_textarea_field( (string) ( $input['alt'] ?? $candidate['alt_description'] ?? $candidate['description'] ?? $title ) ) );
+		$description = trim( sanitize_textarea_field( (string) ( $input['description'] ?? $candidate['description'] ?? $alt ) ) );
+		$attribution = trim( sanitize_textarea_field( (string) ( $input['attribution_text'] ?? $candidate['attribution'] ?? '' ) ) );
+		$source_type = sanitize_key( (string) ( $candidate['source_type'] ?? 'external' ) );
+		if ( ! in_array( $source_type, array( 'owned', 'ai_generated', 'stock', 'external', 'manual_upload', 'test' ), true ) ) {
+			$source_type = 'external';
+		}
+		if ( 'manual_upload' === $source_type ) {
+			$source_type = 'owned';
+		}
+
+		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
+		$photographer = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['photographer_name'] ?? '' ) );
+		$file_name = sanitize_file_name( (string) ( $input['file_name'] ?? $candidate['file_name'] ?? '' ) );
+		$upload_id = 'upload_image_candidate';
+		$metadata_id = 'update_image_candidate_details';
+		$featured_id = 'set_image_candidate_featured_image';
+
+		$upload_input = array(
+			'url'               => $image_url,
+			'title'             => $title,
+			'file_name'         => $file_name,
+			'alt'               => $alt,
+			'caption'           => $attribution,
+			'description'       => $description,
+			'source_type'       => $source_type,
+			'source_page_url'   => $source_url,
+			'photographer_name' => $photographer,
+			'attribution_text'  => $attribution,
+			'copyright_notice'  => sanitize_text_field( (string) ( $input['copyright_notice'] ?? $candidate['copyright_notice'] ?? '' ) ),
+			'dry_run'           => true,
+			'commit'            => false,
+			'idempotency_key'   => 'image-candidate-upload-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
+		);
+		if ( $post_id > 0 ) {
+			$upload_input['attach_to_post_id'] = $post_id;
+		}
+
+		$write_actions = array(
+			array(
+				'action_id'         => $upload_id,
+				'target_ability_id' => 'magick-ai/upload-media-from-url',
+				'recipe_step'       => 'host_governed_upload_image_candidate',
+				'input'             => $upload_input,
+				'risk'              => 'medium',
+				'requires_approval' => true,
+				'commit_execution'  => false,
+				'proposal_ready'    => true,
+				'reason'            => __( 'Import the reviewed image candidate into the media library after Core approval.', 'magick-ai-toolbox' ),
+			),
+			array(
+				'action_id'         => $metadata_id,
+				'target_ability_id' => 'magick-ai/update-media-details',
+				'recipe_step'       => 'host_governed_update_image_candidate_metadata',
+				'depends_on'        => array( $upload_id ),
+				'input'             => array(
+					'attachment_id'     => '$outputs.' . $upload_id . '.attachment_id',
+					'title'             => $title,
+					'alt'               => $alt,
+					'caption'           => $attribution,
+					'description'       => $description,
+					'source_type'       => $source_type,
+					'source_page_url'   => $source_url,
+					'photographer_name' => $photographer,
+					'attribution_text'  => $attribution,
+					'copyright_notice'  => sanitize_text_field( (string) ( $input['copyright_notice'] ?? $candidate['copyright_notice'] ?? '' ) ),
+					'dry_run'           => true,
+					'commit'            => false,
+					'idempotency_key'   => 'image-candidate-details-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
+				),
+				'risk'              => 'medium',
+				'requires_approval' => true,
+				'commit_execution'  => false,
+				'proposal_ready'    => true,
+				'reason'            => __( 'Apply reviewed image candidate metadata after media import.', 'magick-ai-toolbox' ),
+			),
+		);
+
+		if ( $set_featured_image ) {
+			$write_actions[] = array(
+				'action_id'         => $featured_id,
+				'target_ability_id' => 'magick-ai/set-post-featured-image',
+				'recipe_step'       => 'host_governed_set_image_candidate_featured_image',
+				'depends_on'        => array( $upload_id ),
+				'input'             => array(
+					'post_id'        => $post_id,
+					'attachment_id'  => '$outputs.' . $upload_id . '.attachment_id',
+					'dry_run'        => true,
+					'commit'         => false,
+					'idempotency_key' => 'image-candidate-featured-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
+				),
+				'risk'              => 'medium',
+				'requires_approval' => true,
+				'commit_execution'  => false,
+				'proposal_ready'    => true,
+				'reason'            => __( 'Set the imported image candidate as the post featured image after Core approval.', 'magick-ai-toolbox' ),
+			);
+		}
+
+		return array(
+			'artifact_type'               => 'image_candidate_adoption_plan',
+			'composition_role'            => 'core_image_candidate_adoption_plan',
+			'version'                     => 1,
+			'candidate_contract_version'  => 'image_candidate.v1',
+			'source_recipe_id'            => 'image_candidate_adoption_v1',
+			'source_recipe_ref'           => 'workflow/image_candidate_adoption',
+			'source_recipe_provider'      => 'magick-ai-toolbox',
+			'recipe_execution'            => 'local_operator_orchestration',
+			'write_posture'               => 'core_proposal_handoff',
+			'direct_wordpress_write'      => false,
+			'batch_id'                    => 'image_candidate_adoption_' . substr( md5( $image_url . '|' . $post_id . '|' . wp_json_encode( $write_actions ) ), 0, 12 ),
+			'requires_approval'           => true,
+			'dry_run'                     => true,
+			'commit_execution'            => false,
+			'proposal_mode'               => 'batch',
+			'batch_approval'              => true,
+			'action_count'                => count( $write_actions ),
+			'selected_image_candidate'    => $this->sanitize_payload( $candidate ),
+			'preview'                     => array(
+				array(
+					'action_id'        => $upload_id,
+					'image_url'        => $image_url,
+					'thumbnail_url'    => esc_url_raw( (string) ( $candidate['thumbnail_url'] ?? $image_url ) ),
+					'source_type'      => $source_type,
+					'provider'         => sanitize_key( (string) ( $candidate['provider'] ?? 'external' ) ),
+					'provider_origin'  => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
+					'post_id'          => $post_id,
+					'set_featured_image' => $set_featured_image,
+					'attribution'      => $attribution,
+				),
+			),
+			'write_actions'               => $write_actions,
+			'handoff'                     => array(
+				'plan_ability_id'        => 'magick-ai-toolbox/build-image-candidate-adoption-plan',
+				'recipe_id'              => 'image_candidate_adoption_v1',
+				'recipe_ref'             => 'workflow/image_candidate_adoption',
+				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+			),
+		);
+	}
+
 	public function build_content_discoverability_brief( array $input ) {
 		$source = $this->resolve_discoverability_source( $input );
 		if ( is_wp_error( $source ) ) {
@@ -1788,6 +1416,7 @@ final class Provider_Client {
 			'version'                => 1,
 			'primary_contract'       => true,
 			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 			'context_validation'     => $validation,
 			'content_context'        => $context,
@@ -2095,6 +1724,132 @@ final class Provider_Client {
 		return $this->normalize_site_knowledge_cloud_response( is_array( $response ) ? $response : array(), $artifact_type, $composition_role, $runtime_payload );
 	}
 
+	private function execute_image_source_cloud_request( string $query, array $options, string $provider ) {
+		$per_page = max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) );
+		$input    = array(
+			'query'              => $query,
+			'provider'           => $provider,
+			'provider_origin'    => 'cloud',
+			'per_page'           => $per_page,
+			'orientation'        => sanitize_key( (string) ( $options['orientation'] ?? '' ) ),
+			'color'              => sanitize_key( (string) ( $options['color'] ?? '' ) ),
+			'purpose'            => sanitize_key( (string) ( $options['purpose'] ?? 'image_reference_candidate' ) ),
+			'candidate_contract' => 'image_candidate.v1',
+		);
+		$runtime_payload = array(
+			'ability_name'        => 'magick-ai-toolbox/search-image-source',
+			'contract_version'    => 'image_source_cloud_request.v1',
+			'execution_pattern'   => 'step_offload',
+			'input'               => $this->sanitize_payload( $input ),
+			'data_classification' => 'public_reference_media',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 3600,
+			'timeout_seconds'     => 20,
+			'retry_max'           => 0,
+			'policy'              => array(
+				'allow_fallback'         => true,
+				'wordpress_write_owner'  => 'local_core',
+				'candidate_contract'     => 'image_candidate.v1',
+				'direct_wordpress_write' => false,
+			),
+		);
+
+		$runtime_payload = apply_filters( 'magick_ai_toolbox_image_source_runtime_payload', $runtime_payload, $query, $options );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_invalid_image_source_runtime_payload',
+				__( 'The image-source runtime payload was not valid.', 'magick-ai-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'magick_ai_toolbox_image_source_cloud_request', null, $runtime_payload, $query, $options );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_image_source_candidates_response( $handled, $query, $provider, $runtime_payload );
+		}
+
+		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_image_source_cloud_unavailable',
+				__( 'Connect Magick AI Cloud before searching managed image-source candidates. You can still use Adopt New Image with a reviewed image URL.', 'magick-ai-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'image_source' );
+		$idempotency_key = $this->trace_id( 'image_source_cloud_request' );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_image_source_candidates_response( is_array( $response ) ? $response : array(), $query, $provider, $runtime_payload );
+	}
+
+	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
+		$result = array();
+		foreach ( array( 'result', 'output', 'data' ) as $key ) {
+			if ( is_array( $response[ $key ] ?? null ) ) {
+				$result = $response[ $key ];
+				break;
+			}
+		}
+		if ( array() === $result ) {
+			$result = $response;
+		}
+
+		$images = array();
+		foreach ( array( 'images', 'candidates', 'image_candidates' ) as $key ) {
+			if ( is_array( $result[ $key ] ?? null ) ) {
+				$images = $result[ $key ];
+				break;
+			}
+		}
+
+		$contract_images = array();
+		foreach ( array_slice( $this->dedupe_image_candidates( $images ), 0, max( 1, min( 30, (int) ( $runtime_payload['input']['per_page'] ?? 8 ) ) ) ) as $image ) {
+			if ( is_array( $image ) ) {
+				$image['provider_origin'] = $image['provider_origin'] ?? 'cloud';
+				$contract_images[]        = $this->normalize_image_candidate_contract( $image );
+			}
+		}
+
+		$active_sources = is_array( $result['active_sources'] ?? null ) ? $this->sanitize_payload( $result['active_sources'] ) : array();
+		if ( array() === $active_sources && $provider_mode ) {
+			$active_sources[] = array(
+				'provider' => 'cloud' === $provider_mode || 'auto' === $provider_mode ? 'cloud_image_sources' : $provider_mode,
+				'count'    => count( $contract_images ),
+			);
+		}
+
+		$payload = $this->with_output_contract(
+			array(
+				'provider'                   => 'magick_ai_cloud',
+				'provider_mode'              => $provider_mode,
+				'candidate_contract_version' => 'image_candidate.v1',
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/search-image-source' ) ),
+				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'active_sources'             => $active_sources,
+				'provider_errors'            => is_array( $result['provider_errors'] ?? null ) ? $this->sanitize_payload( $result['provider_errors'] ) : array(),
+				'query'                      => $query,
+				'images'                     => $contract_images,
+				'handoff'                    => array(
+					'candidate_contract'    => 'image_candidate.v1',
+					'final_writes'          => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+			),
+			'image_source_candidates',
+			'image_source_candidates'
+		);
+
+		return $this->with_optional_raw( $payload, is_array( $response['raw'] ?? null ) ? $response['raw'] : $response );
+	}
+
 	private function normalize_site_knowledge_cloud_response( array $response, string $artifact_type, string $composition_role, array $runtime_payload ): array {
 		$result = array();
 		foreach ( array( 'result', 'output', 'data' ) as $key ) {
@@ -2267,180 +2022,6 @@ final class Provider_Client {
 		return $prefix . '_' . $uuid;
 	}
 
-	private function build_qdrant_query_body( array $decoded, int $max_results ): array {
-		$is_vector = $this->is_list( $decoded );
-		$limit = max( 1, min( 10, $max_results ) );
-		$vector_name = trim( (string) $this->settings->get( 'qdrant_vector_name' ) );
-
-		if ( $is_vector ) {
-			$body = array(
-				'query'        => array_map( 'floatval', $decoded ),
-				'limit'        => $limit,
-				'with_payload' => true,
-			);
-
-			if ( '' !== $vector_name ) {
-				$body['using'] = $vector_name;
-			}
-
-			return $body;
-		}
-
-		$decoded['limit'] = isset( $decoded['limit'] ) ? max( 1, min( 10, (int) $decoded['limit'] ) ) : $limit;
-		if ( ! array_key_exists( 'with_payload', $decoded ) ) {
-			$decoded['with_payload'] = true;
-		}
-		if ( '' !== $vector_name && ! array_key_exists( 'using', $decoded ) ) {
-			$decoded['using'] = $vector_name;
-		}
-
-		return $decoded;
-	}
-
-	private function create_embedding( string $query ) {
-		$provider = sanitize_key( (string) $this->settings->get( 'embedding_provider' ) );
-		if ( 'jina' === $provider ) {
-			return $this->create_jina_embedding( $query );
-		}
-
-		return $this->create_siliconflow_embedding( $query );
-	}
-
-	private function create_siliconflow_embedding( string $query ) {
-		$api_key = $this->settings->get_siliconflow_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'siliconflow_api_key', __( 'Configure a SiliconFlow API key before running text-to-vector search.', 'magick-ai-toolbox' ) );
-		}
-
-		$base_url = untrailingslashit( (string) ( $this->settings->get( 'siliconflow_base_url' ) ?: 'https://api.siliconflow.com/v1' ) );
-		$model = trim( (string) $this->settings->get( 'siliconflow_model' ) );
-		if ( '' === $model ) {
-			$model = 'BAAI/bge-m3';
-		}
-
-		$response = $this->json_request(
-			$base_url . '/embeddings',
-			'POST',
-			array(
-				'Authorization' => 'Bearer ' . $api_key,
-			),
-			array(
-				'model' => $model,
-				'input' => $query,
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$vector = $response['data'][0]['embedding'] ?? null;
-		if ( ! is_array( $vector ) || array() === $vector ) {
-			return new WP_Error(
-				'magick_ai_toolbox_invalid_embedding_response',
-				__( 'The embedding provider did not return an embedding vector.', 'magick-ai-toolbox' ),
-				array( 'status' => 502 )
-			);
-		}
-
-		$dimension_error = $this->validate_vector_dimensions( $vector, __( 'The SiliconFlow embedding', 'magick-ai-toolbox' ) );
-		if ( is_wp_error( $dimension_error ) ) {
-			return $dimension_error;
-		}
-
-		return array(
-			'provider'   => 'siliconflow',
-			'model'      => sanitize_text_field( (string) ( $response['model'] ?? $model ) ),
-			'vector'     => array_map( 'floatval', $vector ),
-			'dimensions' => count( $vector ),
-		);
-	}
-
-	private function create_jina_embedding( string $query ) {
-		$api_key = $this->settings->get_jina_api_key();
-		if ( '' === $api_key ) {
-			return $this->missing_secret_error( 'jina_api_key', __( 'Configure a Jina AI API key before running Jina text-to-vector search.', 'magick-ai-toolbox' ) );
-		}
-
-		$base_url = untrailingslashit( (string) ( $this->settings->get( 'jina_base_url' ) ?: 'https://api.jina.ai/v1' ) );
-		$model = trim( (string) $this->settings->get( 'jina_model' ) );
-		if ( '' === $model ) {
-			$model = 'jina-embeddings-v3';
-		}
-
-		$body = array(
-			'model' => $model,
-			'input' => $query,
-		);
-
-		$dimensions = $this->expected_embedding_dimensions();
-		if ( 0 < $dimensions ) {
-			$body['dimensions'] = $dimensions;
-		}
-
-		$response = $this->json_request(
-			$base_url . '/embeddings',
-			'POST',
-			array(
-				'Authorization' => 'Bearer ' . $api_key,
-			),
-			$body
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$vector = $response['data'][0]['embedding'] ?? null;
-		if ( ! is_array( $vector ) || array() === $vector ) {
-			return new WP_Error(
-				'magick_ai_toolbox_invalid_embedding_response',
-				__( 'The embedding provider did not return an embedding vector.', 'magick-ai-toolbox' ),
-				array( 'status' => 502 )
-			);
-		}
-
-		$dimension_error = $this->validate_vector_dimensions( $vector, __( 'The Jina embedding', 'magick-ai-toolbox' ) );
-		if ( is_wp_error( $dimension_error ) ) {
-			return $dimension_error;
-		}
-
-		return array(
-			'provider'   => 'jina',
-			'model'      => sanitize_text_field( (string) ( $response['model'] ?? $model ) ),
-			'vector'     => array_map( 'floatval', $vector ),
-			'dimensions' => count( $vector ),
-		);
-	}
-
-	private function expected_embedding_dimensions(): int {
-		return max( 0, (int) $this->settings->get( 'embedding_dimensions' ) );
-	}
-
-	private function validate_vector_dimensions( array $vector, string $label ) {
-		$expected = $this->expected_embedding_dimensions();
-		if ( 0 === $expected ) {
-			return null;
-		}
-
-		$actual = count( $vector );
-		if ( $actual === $expected ) {
-			return null;
-		}
-
-		return new WP_Error(
-			'magick_ai_toolbox_embedding_dimension_mismatch',
-			sprintf(
-				/* translators: 1: vector label, 2: actual dimensions, 3: expected dimensions. */
-				__( '%1$s has %2$d dimensions, but the configured Qdrant collection expects %3$d.', 'magick-ai-toolbox' ),
-				$label,
-				$actual,
-				$expected
-			),
-			array( 'status' => 400 )
-		);
-	}
-
 	private function json_request( string $url, string $method, array $headers = array(), ?array $body = null ) {
 		$args = array(
 			'method'  => $method,
@@ -2525,14 +2106,6 @@ final class Provider_Client {
 		return $raw;
 	}
 
-	private function missing_secret_error( string $secret, string $message ): WP_Error {
-		return new WP_Error(
-			'magick_ai_toolbox_missing_' . sanitize_key( $secret ),
-			$message,
-			array( 'status' => 400 )
-		);
-	}
-
 	private function with_optional_raw( array $payload, array $raw ): array {
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
 			$payload['raw'] = $raw;
@@ -2569,7 +2142,7 @@ final class Provider_Client {
 			foreach ( array_slice( is_array( $research['results'] ?? null ) ? $research['results'] : array(), 0, 8 ) as $item ) {
 				$item = is_array( $item ) ? $item : array();
 				$sources[] = array(
-					'source_type'         => 'web_research',
+					'source_type'         => 'cloud_web_search',
 					'title'               => sanitize_text_field( (string) ( $item['title'] ?? $item['url'] ?? '' ) ),
 					'url'                 => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
 					'summary'             => sanitize_textarea_field( (string) ( $item['content'] ?? ( $item['snippet'] ?? '' ) ) ),
@@ -2588,7 +2161,7 @@ final class Provider_Client {
 			'research_status'      => is_wp_error( $research ) ? array(
 				'error' => $research->get_error_message(),
 			) : array(
-				'provider'        => is_array( $research ) ? sanitize_key( (string) ( $research['provider'] ?? 'web_research' ) ) : 'web_research',
+				'provider'        => is_array( $research ) ? sanitize_key( (string) ( $research['provider'] ?? 'cloud_web_search' ) ) : 'cloud_web_search',
 				'provider_mode'   => is_array( $research ) ? sanitize_key( (string) ( $research['provider_mode'] ?? '' ) ) : '',
 				'active_sources'  => is_array( $research ) ? $this->sanitize_payload( $research['active_sources'] ?? array() ) : array(),
 			),

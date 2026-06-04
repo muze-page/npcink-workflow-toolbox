@@ -2,8 +2,8 @@
 
 Status: active first-version contract.
 
-This document summarizes how Toolbox exposes external search, image-source,
-embedding, and vector APIs to other AI callers.
+This document summarizes how Toolbox exposes Cloud-managed web search status,
+image-source, embedding, and vector APIs to other AI callers.
 
 For AI composition examples, including article drafting and content planning, read
 `docs/ai-content-composition-abilities.md`.
@@ -12,8 +12,8 @@ For AI composition examples, including article drafting and content planning, re
 
 Toolbox is:
 
-- a WordPress admin configuration surface for bounded external tools;
-- a server-side executor for configured provider calls;
+- a WordPress admin configuration surface for bounded non-search external tools;
+- a server-side executor for configured non-search provider calls;
 - a WordPress Abilities API exposure layer for AI callers.
 
 Toolbox is not:
@@ -29,7 +29,6 @@ Toolbox is not:
 
 External AI callers should discover and call Toolbox abilities such as:
 
-- `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
 - `magick-ai-toolbox/search-site-knowledge`
@@ -39,15 +38,17 @@ External AI callers should discover and call Toolbox abilities such as:
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-article-batch-write-plan`
 - `magick-ai-toolbox/build-article-media-batch-write-plan`
+- `magick-ai-toolbox/build-image-candidate-adoption-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 - `magick-ai-toolbox/validate-content-discoverability-context`
 - `magick-ai-toolbox/build-content-discoverability-brief`
 - `magick-ai-toolbox/build-ai-article-writing-pack`
 
-The caller provides task input. Toolbox reads local configuration, performs the
-provider request on the server, normalizes the response, and returns a
-suggestion-oriented payload.
+The caller provides task input. Toolbox reads local configuration or delegates
+to Cloud runtime ownership, normalizes the response, and returns a
+suggestion-oriented payload. Cloud-managed web search is executed by Magick AI
+Cloud, not by a local Toolbox provider route.
 
 For SEO, AEO, and GEO context readiness, operators can run:
 
@@ -71,20 +72,18 @@ The caller must not receive provider API keys. Provider secrets remain in:
 
 - PHP constants;
 - environment variables;
-- stored WordPress connector settings, when the operator chooses that path.
+- stored WordPress connector settings for non-search providers, when the
+  operator chooses that path.
 
 ## Provider Boundaries
 
-Tavily and Bocha are exposed through the single `web-research` ability as
-external web research. This ability is general-purpose for any AI workflow that
-needs external source candidates, not only article drafting. Results are source
-candidates, not verified truth. Payloads must preserve provider names, source
-URLs, and enough summary/snippet material for the caller to build an evidence
-pack without receiving provider API keys.
-
-Jina Reader is exposed only as a bounded post-search enhancement for selected
-result URLs. It may add reader excerpts to search results, but it must not be
-treated as a search provider, crawler, citation verifier, or write path.
+Cloud-managed web search is owned by Magick AI Cloud. Toolbox does not store web
+search provider keys, expose a local web search ability, or register a local
+web search REST route. This capability is general-purpose for any AI workflow
+that needs external source candidates, not only article drafting. Results are
+source candidates, not verified truth. Payloads must preserve provider/source
+names when Cloud returns them, source URLs, and enough summary/snippet material
+for the caller to build an evidence pack without receiving provider API keys.
 
 Unsplash, Pixabay, and Pexels are exposed through the single
 `search-image-source` ability as public image-source candidate search. This
@@ -101,13 +100,23 @@ image candidates. Toolbox normalizes those candidates with
 status. Toolbox does not own model routing, prompt management, provider
 credentials, billing, media import, or featured-image writes.
 
-SiliconFlow and Jina are exposed only as synchronous query embedding providers
-for vector search in the first version. They do not imply content indexing
-ownership.
+All image-source and generated-image candidates are normalized to
+`image_candidate.v1`. Public source providers return `source_type=stock`;
+generated providers return `source_type=ai_generated`; external or owned
+callers may pass the explicit source type. The contract includes
+`provider_origin`, `download_url`, `thumbnail_url`, attribution, provenance,
+and warnings so OpenClaw, Toolbox buttons, and Core proposal intake can consume
+one candidate shape.
 
-Qdrant is exposed as configured vector query execution. It does not imply full
-RAG, indexing jobs, re-index buttons, stale-index detection, or collection
-lifecycle ownership.
+`magick-ai-toolbox/build-image-candidate-adoption-plan` converts one reviewed
+`image_candidate.v1` into an `image_candidate_adoption_plan` with governed
+write actions for media upload, metadata update, and optional featured-image
+setting. It is read-only and suggestion-only; final adoption still goes through
+Core proposals and WordPress abilities.
+
+Vector provider configuration is not exposed locally. Embedding providers,
+embedding dimensions, vector database endpoints, collection names, rerank, and
+detailed index health are managed in Magick AI Cloud.
 
 Cloud-managed site knowledge is exposed through three high-level abilities:
 
@@ -121,9 +130,10 @@ Cloud-managed site knowledge is exposed through three high-level abilities:
 
 These abilities are general-purpose. Article drafting, admin search,
 recommendations, internal-link tooling, and refresh workflows should call the
-same site knowledge abilities instead of integrating Qdrant or embedding
-providers directly. Toolbox calls Cloud through the Cloud Addon runtime client
-or the `magick_ai_toolbox_site_knowledge_cloud_request` host filter. It does
+same site knowledge abilities instead of integrating vector databases or
+embedding providers directly. Toolbox calls Cloud through the Cloud Addon
+runtime client or the `magick_ai_toolbox_site_knowledge_cloud_request` host
+filter. It does
 not store Cloud credentials, create a second ability registry, write WordPress
 content, or own Cloud vector collection lifecycle.
 
@@ -134,7 +144,7 @@ Toolbox ability metadata should make the boundary machine-readable:
 ```text
 readonly: true
 show_in_rest: true
-composition_role: research_evidence|image_source_candidates|local_style_context|...
+composition_role: research_evidence|image_source_candidates|site_knowledge_context|...
 write_posture: suggestion_only
 final_write_path: core_proposal_required
 direct_wordpress_write: false
@@ -143,8 +153,8 @@ provider_secret_exposure: none
 ```
 
 Each ability also declares a stable Toolbox scope such as
-`cap.toolbox.search`, `cap.toolbox.image_source`,
-`cap.toolbox.vector_search`, `cap.toolbox.knowledge.search`,
+`cap.toolbox.image_source`, `cap.toolbox.vector_search`,
+`cap.toolbox.knowledge.search`,
 `cap.toolbox.knowledge.read`, `cap.toolbox.knowledge.sync`,
 `cap.toolbox.workflow_suggest`, or `cap.toolbox.context.read`.
 

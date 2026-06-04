@@ -72,14 +72,14 @@ Then verify:
 - Keep content context separate from connector settings so Abilities exposure
   never returns provider keys or private credentials.
 - Keep provider output as suggestions unless a governed handoff is implemented.
-- Keep web research provider output as source candidates, not verified truth.
-  Jina Reader may enhance selected search result URLs but must not become a
-  search provider, crawler, or write path.
+- Keep Cloud-managed web search output as source candidates, not verified truth.
+  Toolbox does not own web search provider configuration, local key storage, or
+  local search execution.
 - Preserve image-source provider attribution and source metadata. Unsplash
   responses must also preserve `download_location` metadata.
-- Keep SiliconFlow/Jina query embedding separate from WordPress content
-  indexing and Qdrant collection lifecycle until those stages have their own
-  contract.
+- Keep vector provider configuration, WordPress content indexing, and vector
+  collection lifecycle in Cloud-managed Site Knowledge contracts, not local
+  Toolbox settings.
 - Keep `cap.toolbox.*` scope names stable unless Core explicitly changes the
   contract.
 - Update `tests/run.php` when adding public REST routes or ability ids.
