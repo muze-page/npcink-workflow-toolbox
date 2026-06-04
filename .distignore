@@ -1,0 +1,13 @@
+.git
+.github
+.distignore
+AGENTS.md
+README.md
+composer.json
+composer.lock
+docs
+tests
+vendor
+node_modules
+build
+sj

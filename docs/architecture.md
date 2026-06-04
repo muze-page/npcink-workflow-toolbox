@@ -9,7 +9,7 @@ Status: MVP architecture.
 | `magick-ai-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
 | `Settings` | Option defaults, sanitization, connector secret lookup, and content context export. |
-| `Provider_Client` | Minimal Tavily, Unsplash, SiliconFlow, Jina, and Qdrant HTTP calls for MVP tool actions. |
+| `Provider_Client` | Minimal Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, SiliconFlow, Jina, and Qdrant HTTP calls for MVP tool actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Magick AI submenu fallback. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
@@ -39,7 +39,8 @@ Current MVP provider flow:
 
 1. Admin user submits a tool form or REST request.
 2. `Rest_Controller` checks `manage_options`.
-3. `Provider_Client` calls Tavily, Unsplash, SiliconFlow, Jina, or Qdrant.
+3. `Provider_Client` calls Tavily, Bocha, optional Jina Reader, Unsplash,
+   Pixabay, Pexels, SiliconFlow, Jina, or Qdrant.
 4. Toolbox returns normalized source results, image-source candidates, vector
    matches, or planning output. Raw provider payloads are included only when
    the debug setting is enabled.
@@ -54,7 +55,11 @@ Current connector routes:
 | Connector | API role | Current Toolbox action |
 | --- | --- | --- |
 | Tavily | External web search | `/web-research` |
+| Bocha | External web search | `/web-research` |
+| Jina Reader | Search result URL extraction | `/web-research` enhancement only |
 | Unsplash | Image-source candidates | `/image-candidates` |
+| Pixabay | Image-source candidates | `/image-candidates` |
+| Pexels | Image-source candidates | `/image-candidates` |
 | SiliconFlow | Default query text embedding | `/vector-search` when input is text |
 | Jina AI | Optional query text embedding | `/vector-search` when input is text and Jina is selected |
 | Qdrant | Vector collection query | `/vector-search` |
@@ -71,15 +76,17 @@ Default vector contract:
 - recommended Qdrant distance: `Cosine`.
 
 Jina AI is available as an optional embedding provider for the first version.
-Jina Reader and Jina Reranker remain reserved workflow-level enhancements and
-are not part of the first runtime path.
+Jina Reader is available as a bounded post-search enhancement for selected
+result URLs. Jina Reranker remains a reserved workflow-level enhancement and is
+not part of the first runtime path.
 
 Reserved provider slots:
 
 | Capability | Current provider | Reserved future providers |
 | --- | --- | --- |
-| External search | Tavily | Additional search providers by later contract. |
-| Image source | Unsplash | Pixabay, Pexels. |
+| External search | Tavily, Bocha | Additional search providers by later contract. |
+| Search result extraction | Jina Reader | Additional extraction providers by later contract. |
+| Image source | Unsplash, Pixabay, Pexels | Additional image-source providers by later contract. |
 | Query embedding | SiliconFlow | Jina AI. |
 | Vector database | Qdrant | Pinecone, Weaviate. |
 
@@ -89,10 +96,12 @@ Toolbox exposes its actions through the WordPress Abilities API when available.
 Abilities are server-side Toolbox tool wrappers: AI callers provide task input,
 Toolbox uses local connector configuration to execute the provider call, and the
 caller receives a normalized suggestion payload instead of provider secrets.
-For content composition, AI callers should treat these abilities as ordered
-tool inputs: content context, context validation, web research, vector context,
-image-source candidates, discoverability brief, article brief, and article
-write plan.
+For AI composition, callers should treat provider-backed abilities as reusable
+tool inputs. `web-research` is the general external source-candidate ability,
+`search-image-source` is the general image-candidate ability, and
+`vector-search` is the general configured vector-query ability. Article
+briefs, article writing packs, and article write plans are only one workflow
+family built from those lower-level tools.
 
 If `magick-ai-abilities` is active, Toolbox uses its public helper functions.
 Otherwise, Toolbox falls back to native WordPress Abilities API registration.
@@ -102,6 +111,9 @@ Current ability ids:
 - `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
+- `magick-ai-toolbox/search-site-knowledge`
+- `magick-ai-toolbox/get-site-knowledge-status`
+- `magick-ai-toolbox/request-site-knowledge-sync`
 - `magick-ai-toolbox/build-article-brief`
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
@@ -126,6 +138,9 @@ metadata declares Toolbox scopes:
 - `cap.toolbox.search`
 - `cap.toolbox.image_source`
 - `cap.toolbox.vector_search`
+- `cap.toolbox.knowledge.search`
+- `cap.toolbox.knowledge.read`
+- `cap.toolbox.knowledge.sync`
 - `cap.toolbox.workflow_suggest`
 - `cap.toolbox.context.read`
 
@@ -135,6 +150,26 @@ Core proposals, and direct WordPress writes are disabled.
 Provider-backed ability payloads keep the runtime contract smaller:
 `artifact_type`, `composition_role`, `write_posture`, and
 `direct_wordpress_write`.
+
+Cloud-managed site knowledge abilities use the Cloud Addon runtime seam, not
+local connector credentials. `search-site-knowledge` is the high-level ability
+for semantic site search, related content, writing context, internal-link
+candidates, refresh suggestions, image-context lookup, FAQ candidates, content
+gap analysis, and publish preflight duplicate checks. `vector-search` remains
+the low-level Qdrant query ability for clients that explicitly need a configured
+vector query.
+
+The host can intercept site knowledge execution with
+`magick_ai_toolbox_site_knowledge_cloud_request` or adjust the runtime payload
+with `magick_ai_toolbox_site_knowledge_runtime_payload`. Without a host or
+Cloud Addon runtime client, these abilities fail closed. Toolbox does not store
+Cloud credentials and does not own the Cloud index lifecycle.
+
+`request-site-knowledge-sync` collects only public WordPress manifests before
+calling Cloud: published posts and pages, plus bounded approved comments for
+the selected public entries. The comment manifest carries public text and
+source identifiers only. WordPress still owns moderation, edits, deletion, and
+final write decisions.
 
 The first admin REST surface remains `manage_options` gated by default.
 External AI access should be mediated by Core/app-key scope checks in the host
@@ -229,7 +264,7 @@ Disallowed:
 - Toolbox owning final write approval or audit truth.
 - Core depending on Toolbox.
 - Toolbox owning OpenClaw, Agent Gateway, Open API, or MCP projection truth.
-- Toolbox claiming Unsplash image search as AI image generation.
+- Toolbox claiming image-source search as AI image generation.
 - Toolbox treating vector search as complete RAG/indexing ownership.
 - Toolbox importing image candidates into the media library or setting featured
   images without a Core proposal.

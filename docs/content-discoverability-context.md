@@ -52,6 +52,7 @@ Current read-only/context abilities:
 magick-ai-toolbox/get-content-discoverability-context
 magick-ai-toolbox/validate-content-discoverability-context
 magick-ai-toolbox/build-content-discoverability-brief
+magick-ai-toolbox/build-ai-article-writing-pack
 ```
 
 Scopes:
@@ -81,8 +82,19 @@ checks. It is intended as a preflight before third-party AI uses the context.
 
 `build-content-discoverability-brief` accepts supplied topic/title/content or a
 local `post_id` and returns a suggestion-only SEO, AEO, and GEO instruction
-pack, proposal template, and conservative candidate values grounded in the
-source. It does not call a model and does not write WordPress data.
+pack, exception/special-case rules, proposal template, and conservative
+candidate values grounded in the source. This is the primary lightweight
+SEO/AEO/GEO contract for third-party AI. It does not call a model and does not
+write WordPress data.
+In short, this is the primary lightweight SEO/AEO/GEO contract.
+It does not call a model and does not write WordPress data.
+
+`build-ai-article-writing-pack` is the high-level OpenClaw-friendly entrypoint
+for natural-language article requests. It composes validation, context, the
+discoverability brief, writing instructions, and guardrails into one
+suggestion-only pack so the caller does not need to manually chain the
+lower-level context abilities. It is a convenience fallback, not the primary
+SEO/AEO/GEO context contract.
 
 ## Payload Shape
 
@@ -106,6 +118,12 @@ The ability returns a JSON object shaped like:
   "claims": {
     "allowed": [],
     "forbidden": []
+  },
+  "exceptions": {
+    "disallowed_topics": [],
+    "cautious_topics": [],
+    "no_structured_output_topics": [],
+    "human_confirmation_required": []
   },
   "rules": {
     "seo": "",
@@ -145,6 +163,10 @@ The first version exposes these admin fields:
 - entity keywords;
 - allowed claims;
 - forbidden claims;
+- disallowed topics;
+- cautious topics;
+- topics where FAQ/HowTo/schema suggestions must not be generated;
+- claims that require human confirmation;
 - SEO rules;
 - AEO rules;
 - GEO rules;
@@ -166,10 +188,15 @@ Third-party AI should:
    for operator input if required fields are missing;
 3. call `magick-ai-toolbox/build-content-discoverability-brief` for one post or
    topic;
-4. combine the brief with read-only site/post abilities when needed;
-5. produce suggestions for the fields listed in `proposal_allowed_fields`;
-6. preserve `forbidden_claims` and the site `brand_voice`;
-7. hand write-like outcomes to Core proposal flows.
+4. consume the brief's `seo`, `aeo`, `geo`, `exceptions`, and `special_cases`
+   blocks as the primary SEO/AEO/GEO contract;
+5. use `magick-ai-toolbox/build-ai-article-writing-pack` only as a convenience
+   fallback for broad natural-language article requests;
+6. combine the brief or writing pack with read-only site/post abilities when needed;
+7. produce suggestions for the fields listed in `proposal_allowed_fields`;
+8. preserve `forbidden_claims`, `exceptions`, `special_cases`, and the site
+   `brand_voice`;
+9. hand write-like outcomes to Core proposal flows.
 
 Third-party AI must not:
 
@@ -196,14 +223,17 @@ prints pass/fail status and the sampled post id.
 
 The smoke verifies:
 
-- the three content discoverability abilities are registered through
+- the four content discoverability and writing-pack abilities are registered through
   `magick_ai_abilities_get_registered()`;
 - each ability is read-only, REST-discoverable, projected into the Magick
   compatibility catalog, exposes no provider secrets, and declares no direct
   WordPress write path;
 - the saved content context validates as `ready` or `ready_with_warnings`;
 - `build-content-discoverability-brief` can build one suggestion-only brief for
-  a real local post;
+  a real local post and exposes `seo`, `aeo`, `geo`, `exceptions`, and
+  `special_cases`;
+- `build-ai-article-writing-pack` can build one suggestion-only writing pack for
+  the same local post;
 - the optional Agent Gateway projection matrix is inspected when available.
 
 Agent Gateway/OpenClaw direct tool exposure is intentionally reported as a

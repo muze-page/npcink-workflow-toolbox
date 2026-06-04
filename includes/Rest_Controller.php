@@ -27,6 +27,8 @@ final class Rest_Controller {
 		$this->post( '/image-candidates', 'image_candidates' );
 		$this->post( '/vector-search', 'knowledge_search' );
 		$this->post( '/knowledge-search', 'knowledge_search' );
+		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
+		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/flows/article-brief', 'article_brief' );
 		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
@@ -42,6 +44,16 @@ final class Rest_Controller {
 				'permission_callback' => array( $this, 'permission' ),
 			)
 		);
+
+		register_rest_route(
+			Plugin::REST_NAMESPACE,
+			'/site-knowledge/status',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'site_knowledge_status' ),
+				'permission_callback' => array( $this, 'permission' ),
+			)
+		);
 	}
 
 	public function permission( $request = null ): bool {
@@ -51,16 +63,22 @@ final class Rest_Controller {
 	public function status(): WP_REST_Response {
 		return rest_ensure_response(
 			array(
-				'search_provider'          => 'tavily',
-				'image_provider'           => 'unsplash',
+				'search_provider'          => sanitize_key( (string) $this->settings->get( 'search_provider' ) ),
+				'search_providers'         => $this->settings->configured_search_providers(),
+				'image_provider'           => sanitize_key( (string) $this->settings->get( 'image_provider' ) ),
+				'image_source_providers'   => $this->settings->configured_image_source_providers(),
 				'vector_provider'          => 'qdrant',
 				'embedding_provider'       => sanitize_key( (string) $this->settings->get( 'embedding_provider' ) ),
 				'embedding_dimensions'     => (int) $this->settings->get( 'embedding_dimensions' ),
 				'tavily_configured'        => $this->settings->has_tavily_api_key(),
+				'bocha_configured'         => $this->settings->has_bocha_api_key(),
 				'unsplash_configured'      => $this->settings->has_unsplash_access_key(),
+				'pixabay_configured'       => $this->settings->has_pixabay_api_key(),
+				'pexels_configured'        => $this->settings->has_pexels_api_key(),
 				'qdrant_configured'        => $this->settings->has_qdrant_connection(),
 				'siliconflow_configured'   => $this->settings->has_siliconflow_api_key(),
 				'jina_configured'          => $this->settings->has_jina_api_key(),
+				'jina_reader_enabled'      => (bool) $this->settings->get( 'enable_jina_reader' ),
 				'raw_responses_enabled'    => (bool) $this->settings->get( 'include_raw_responses' ),
 				'web_research_enabled'     => (bool) $this->settings->get( 'enable_web_research' ),
 				'image_source_enabled'     => (bool) $this->settings->get( 'enable_image_source' ),
@@ -87,6 +105,8 @@ final class Rest_Controller {
 					'include_domains' => $this->csv_list( (string) $request->get_param( 'include_domains' ) ),
 					'exclude_domains' => $this->csv_list( (string) $request->get_param( 'exclude_domains' ) ),
 					'time_range'      => sanitize_key( (string) $request->get_param( 'time_range' ) ),
+					'provider'        => sanitize_key( (string) $request->get_param( 'provider' ) ),
+					'enhance_with_reader' => ! empty( $request->get_param( 'enhance_with_reader' ) ),
 					'max_results'     => (int) ( $request->get_param( 'max_results' ) ?: 5 ),
 				)
 			)
@@ -109,6 +129,7 @@ final class Rest_Controller {
 				array(
 					'orientation' => sanitize_key( (string) $request->get_param( 'orientation' ) ),
 					'color'       => sanitize_key( (string) $request->get_param( 'color' ) ),
+					'provider'    => sanitize_key( (string) $request->get_param( 'provider' ) ),
 					'per_page'    => (int) ( $request->get_param( 'per_page' ) ?: 8 ),
 				)
 			)
@@ -134,6 +155,54 @@ final class Rest_Controller {
 		$input = '' !== $query ? $query : $vector;
 		$max_results = max( 1, min( 10, (int) ( $request->get_param( 'max_results' ) ?: 4 ) ) );
 		return rest_ensure_response( $this->client->vector_search( $input, $max_results, $input_type ) );
+	}
+
+	public function site_knowledge_status( WP_REST_Request $request ) {
+		return rest_ensure_response(
+			$this->client->get_site_knowledge_status(
+				array(
+					'include_coverage' => true,
+				)
+			)
+		);
+	}
+
+	public function site_knowledge_sync( WP_REST_Request $request ) {
+		$sync_mode = sanitize_key( (string) ( $request->get_param( 'sync_mode' ) ?: 'refresh' ) );
+		if ( ! in_array( $sync_mode, array( 'refresh', 'rebuild', 'delete' ), true ) ) {
+			$sync_mode = 'refresh';
+		}
+
+		return rest_ensure_response(
+			$this->client->request_site_knowledge_sync(
+				array(
+					'sync_mode' => $sync_mode,
+					'post_ids'  => $this->csv_absint_list( (string) $request->get_param( 'post_ids' ) ),
+					'max_posts' => max( 1, min( 50, (int) ( $request->get_param( 'max_posts' ) ?: 20 ) ) ),
+				)
+			)
+		);
+	}
+
+	public function site_knowledge_search( WP_REST_Request $request ) {
+		$query = $this->required_text( $request, 'query' );
+		if ( is_wp_error( $query ) ) {
+			return $query;
+		}
+
+		return rest_ensure_response(
+			$this->client->search_site_knowledge(
+				array(
+					'query'           => $query,
+					'intent'          => sanitize_key( (string) ( $request->get_param( 'intent' ) ?: 'site_search' ) ),
+					'current_post_id' => absint( $request->get_param( 'current_post_id' ) ),
+					'max_results'     => max( 1, min( 20, (int) ( $request->get_param( 'max_results' ) ?: 8 ) ) ),
+					'filters'         => array(
+						'source_types' => $this->csv_list( (string) $request->get_param( 'source_types' ) ),
+					),
+				)
+			)
+		);
 	}
 
 	public function article_brief( WP_REST_Request $request ) {
@@ -229,6 +298,16 @@ final class Rest_Controller {
 			array_filter(
 				array_map( 'sanitize_text_field', $items ),
 				static fn( string $item ): bool => '' !== $item
+			)
+		);
+	}
+
+	private function csv_absint_list( string $value ): array {
+		$items = array_filter( array_map( 'trim', explode( ',', $value ) ) );
+		return array_values(
+			array_filter(
+				array_map( 'absint', $items ),
+				static fn( int $item ): bool => 0 < $item
 			)
 		);
 	}

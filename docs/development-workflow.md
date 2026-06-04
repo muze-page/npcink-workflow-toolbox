@@ -72,8 +72,11 @@ Then verify:
 - Keep content context separate from connector settings so Abilities exposure
   never returns provider keys or private credentials.
 - Keep provider output as suggestions unless a governed handoff is implemented.
-- Preserve Unsplash attribution and `download_location` metadata in image-source
-  responses.
+- Keep web research provider output as source candidates, not verified truth.
+  Jina Reader may enhance selected search result URLs but must not become a
+  search provider, crawler, or write path.
+- Preserve image-source provider attribution and source metadata. Unsplash
+  responses must also preserve `download_location` metadata.
 - Keep SiliconFlow/Jina query embedding separate from WordPress content
   indexing and Qdrant collection lifecycle until those stages have their own
   contract.

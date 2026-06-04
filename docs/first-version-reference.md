@@ -31,20 +31,23 @@ Current runtime providers:
 
 | Capability | Provider | Runtime status |
 | --- | --- | --- |
-| Web research | Tavily | Active default. |
-| Image source candidates | Unsplash | Active default; preserve attribution and `download_location`. |
+| Web research | Tavily | Active default for general external source candidates. |
+| Web research | Bocha | Active provider when configured, useful for Chinese source lookup. |
+| Search result extraction | Jina Reader | Optional post-search enhancement for selected result URLs. |
+| Image source candidates | Unsplash | Active provider; preserve attribution and `download_location`. |
+| Image source candidates | Pixabay | Active provider when configured; preserve attribution and source URL. |
+| Image source candidates | Pexels | Active provider when configured; preserve attribution and source URL. |
 | Text query embedding | SiliconFlow | Active default. |
 | Text query embedding | Jina AI | Optional provider. |
 | Vector database | Qdrant | Active default. |
 
 Reserved only:
 
-- image source: Pixabay, Pexels;
 - vector database: Pinecone, Weaviate;
-- workflow enhancement: Jina Reader and Jina Reranker.
+- workflow enhancement: Jina Reranker.
 
-Reserved providers are documented only. Do not add runtime adapters without a
-new contract.
+Reserved vector/workflow providers are documented only. Do not add runtime
+adapters for them without a new contract.
 
 ## Embedding And Qdrant
 
@@ -80,7 +83,10 @@ magick_ai_toolbox_settings
 Secrets:
 
 - `TAVILY_API_KEY` / `MAGICK_AI_TOOLBOX_TAVILY_API_KEY`
+- `BOCHA_API_KEY` / `MAGICK_AI_TOOLBOX_BOCHA_API_KEY`
 - `UNSPLASH_ACCESS_KEY` / `MAGICK_AI_TOOLBOX_UNSPLASH_ACCESS_KEY`
+- `PIXABAY_API_KEY` / `MAGICK_AI_TOOLBOX_PIXABAY_API_KEY`
+- `PEXELS_API_KEY` / `MAGICK_AI_TOOLBOX_PEXELS_API_KEY`
 - `QDRANT_API_KEY` / `MAGICK_AI_TOOLBOX_QDRANT_API_KEY`
 - `SILICONFLOW_API_KEY` / `MAGICK_AI_TOOLBOX_SILICONFLOW_API_KEY`
 - `JINA_API_KEY` / `MAGICK_AI_TOOLBOX_JINA_API_KEY`
@@ -100,8 +106,8 @@ read-only orientation surface:
 - no billing, quota, key rotation, request-log, marketplace, or provider
   routing ownership in Toolbox.
 
-Reserved provider labels such as `Pixabay / Pexels` and
-`Pinecone / Weaviate` are planning context only, not runtime adapters.
+Reserved provider labels such as `Pinecone / Weaviate` are planning context
+only, not runtime adapters.
 
 ## Content Discoverability Context
 
@@ -141,12 +147,38 @@ Toolbox ability ids stay under `magick-ai-toolbox/*`:
 - `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
+- `magick-ai-toolbox/search-site-knowledge`
+- `magick-ai-toolbox/get-site-knowledge-status`
+- `magick-ai-toolbox/request-site-knowledge-sync`
 - `magick-ai-toolbox/build-article-brief`
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 - `magick-ai-toolbox/validate-content-discoverability-context`
 - `magick-ai-toolbox/build-content-discoverability-brief`
+
+General-purpose provider abilities:
+
+- `magick-ai-toolbox/web-research` is the external source-candidate ability for
+  any workflow that needs web evidence, comparison material, Chinese source
+  lookup, public references, support context, source coverage, or article
+  preparation. It supports Tavily, Bocha, and optional Jina Reader excerpts for
+  selected result URLs.
+- `magick-ai-toolbox/search-image-source` is the image-candidate ability for
+  any workflow that needs sourced images.
+- `magick-ai-toolbox/search-site-knowledge` is the Cloud-managed site knowledge
+  ability for semantic site search, related content, writing context, internal
+  links, refresh suggestions, or image context.
+- `magick-ai-toolbox/vector-search` is the low-level configured vector-query
+  ability for clients that explicitly need existing collection access.
+
+Site knowledge status and sync:
+
+- `magick-ai-toolbox/get-site-knowledge-status` reads Cloud-managed coverage
+  and freshness state.
+- `magick-ai-toolbox/request-site-knowledge-sync` requests bounded Cloud sync
+  or rebuild work from public WordPress content. It does not write WordPress
+  content and does not create a local indexing queue.
 
 For article-writing AI callers, the canonical composition sequence is:
 
@@ -168,6 +200,9 @@ Stable first-version scopes:
 - `cap.toolbox.search`
 - `cap.toolbox.image_source`
 - `cap.toolbox.vector_search`
+- `cap.toolbox.knowledge.search`
+- `cap.toolbox.knowledge.read`
+- `cap.toolbox.knowledge.sync`
 - `cap.toolbox.workflow_suggest`
 - `cap.toolbox.context.read`
 

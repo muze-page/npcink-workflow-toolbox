@@ -74,25 +74,26 @@ final class Admin_Page {
 			MAGICK_AI_TOOLBOX_VERSION,
 			true
 		);
+		wp_enqueue_media();
 
-		wp_add_inline_script(
+		wp_localize_script(
 			'magick-ai-toolbox-admin',
-			'window.MagickAIToolbox = ' . wp_json_encode(
-				array(
-					'restUrl'       => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
-					'nonce'         => wp_create_nonce( 'wp_rest' ),
-					'contextOption' => Plugin::CONTEXT_OPTION_NAME,
-					'contextDrafts' => array(
-						'aiBlog' => $this->get_ai_blog_context_template(),
-						'site'   => $this->get_site_content_context_suggestion(),
-					),
-					'labels'        => array(
-						'running' => __( 'Running...', 'magick-ai-toolbox' ),
-						'error'   => __( 'Request failed.', 'magick-ai-toolbox' ),
-					),
+			'MagickAIToolbox',
+			array(
+				'restUrl'       => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
+				'adapterRestUrl' => esc_url_raw( rest_url( 'magick-ai-adapter/v1' ) ),
+				'coreAdminUrl'  => esc_url_raw( admin_url( 'admin.php?page=magick-ai-core' ) ),
+				'nonce'         => wp_create_nonce( 'wp_rest' ),
+				'contextOption' => Plugin::CONTEXT_OPTION_NAME,
+				'contextDrafts' => array(
+					'aiBlog' => $this->get_ai_blog_context_template(),
+					'site'   => $this->get_site_content_context_suggestion(),
+				),
+				'labels'        => array(
+					'running' => __( 'Running...', 'magick-ai-toolbox' ),
+					'error'   => __( 'Request failed.', 'magick-ai-toolbox' ),
 				)
-			) . ';',
-			'before'
+			)
 		);
 	}
 
@@ -139,8 +140,20 @@ final class Admin_Page {
 				__( 'Do not claim automatic SEO ranking improvements.', 'magick-ai-toolbox' ),
 				__( 'Do not claim AI replaces human review, legal review, or expert judgment.', 'magick-ai-toolbox' ),
 				__( 'Do not imply WordPress permissions, approval, or governance can be bypassed.', 'magick-ai-toolbox' ),
-				__( 'Do not describe Unsplash image search as AI image generation.', 'magick-ai-toolbox' ),
+				__( 'Do not describe image-source search as AI image generation.', 'magick-ai-toolbox' ),
 				__( 'Do not describe vector search as a complete knowledge base or automatic indexing system.', 'magick-ai-toolbox' ),
+			),
+			'disallowed_topics'                 => array(
+				__( 'Unsupported customer stories, rankings, benchmark results, or legal/medical/financial advice.', 'magick-ai-toolbox' ),
+			),
+			'cautious_topics'                   => array(
+				__( 'Model comparisons, provider pricing, product roadmap, security posture, and production-readiness claims require current verification.', 'magick-ai-toolbox' ),
+			),
+			'no_structured_output_topics'       => array(
+				__( 'Do not generate FAQ, HowTo, or schema suggestions when the source does not clearly support every answer or step.', 'magick-ai-toolbox' ),
+			),
+			'human_confirmation_required'       => array(
+				__( 'Claims about implemented features, integrations, customer usage, benchmark quality, ranking impact, or availability must be confirmed by the operator.', 'magick-ai-toolbox' ),
 			),
 			'seo_rules'                         => __( "Titles should include the main topic keyword and avoid clickbait.\nDescriptions should state the problem, audience, and core conclusion.\nUse clear headings, steps, caveats, and engineering boundary notes.\nPrefer internal links to related tutorials, architecture notes, and tool reviews.", 'magick-ai-toolbox' ),
 			'aeo_rules'                         => __( "Start with a direct answer, then add conditions, steps, and limits.\nPrefer FAQ, short definitions, comparison tables, and actionable checklists.\nAvoid abstract-only answers; include practical guidance.", 'magick-ai-toolbox' ),
@@ -233,6 +246,18 @@ final class Admin_Page {
 				__( 'Do not claim the generated suggestions have been verified unless an operator verifies them.', 'magick-ai-toolbox' ),
 				__( 'Do not bypass WordPress permissions, approval, or governance.', 'magick-ai-toolbox' ),
 			),
+			'disallowed_topics'                 => array(
+				__( 'Unsupported private facts, unverified business claims, and claims outside current public site content.', 'magick-ai-toolbox' ),
+			),
+			'cautious_topics'                   => array(
+				__( 'Product status, pricing, customer examples, legal/medical/financial claims, and time-sensitive facts require operator confirmation.', 'magick-ai-toolbox' ),
+			),
+			'no_structured_output_topics'       => array(
+				__( 'Do not generate FAQ, HowTo, or schema suggestions unless the sampled source clearly supports them.', 'magick-ai-toolbox' ),
+			),
+			'human_confirmation_required'       => array(
+				__( 'Any claim not visible in public post titles, categories, tags, or supplied source content must be confirmed by the operator.', 'magick-ai-toolbox' ),
+			),
 			'seo_rules'                         => __( "Use public categories, tags, and recent article themes as keyword candidates.\nTitles should stay specific to the article topic and avoid clickbait.\nDescriptions should summarize the reader problem and expected value.\nSuggest internal links only when the target content is clearly related.", 'magick-ai-toolbox' ),
 			'aeo_rules'                         => __( "Answer likely reader questions directly before giving details.\nPrefer concise definitions, steps, checklists, and FAQ suggestions.\nMark assumptions clearly when the site content does not provide enough evidence.", 'magick-ai-toolbox' ),
 			'geo_rules'                         => __( "Use public entity names from categories, tags, and recent titles as entity hints.\nKeep conclusions standalone and easy to quote.\nDistinguish observed site content from generated recommendations.", 'magick-ai-toolbox' ),
@@ -273,12 +298,17 @@ final class Admin_Page {
 
 			<nav class="magick-ai-toolbox__tabs" data-toolbox-tabs aria-label="<?php esc_attr_e( 'Toolbox sections', 'magick-ai-toolbox' ); ?>">
 				<button type="button" class="magick-ai-toolbox__tab is-active" data-toolbox-tab-target="context" aria-selected="true"><?php esc_html_e( 'Content Context', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="site-knowledge" aria-selected="false"><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Try Tools', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="connectors" aria-selected="false"><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></button>
 			</nav>
 
 			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="context" aria-label="<?php esc_attr_e( 'Content context', 'magick-ai-toolbox' ); ?>">
 				<?php $this->render_content_context_form( $content_context ); ?>
+			</section>
+
+			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="site-knowledge" aria-label="<?php esc_attr_e( 'Site knowledge', 'magick-ai-toolbox' ); ?>" hidden>
+				<?php $this->render_site_knowledge_panel(); ?>
 			</section>
 
 			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="tools" aria-label="<?php esc_attr_e( 'Try Toolbox actions', 'magick-ai-toolbox' ); ?>" hidden>
@@ -296,13 +326,111 @@ final class Admin_Page {
 		$embedding_provider = (string) $settings['embedding_provider'];
 		$embedding_ready    = 'jina' === $embedding_provider ? $this->settings->has_jina_api_key() : $this->settings->has_siliconflow_api_key();
 		$vector_ready       = ! empty( $settings['enable_vector_search'] ) && $this->settings->has_qdrant_connection() && $embedding_ready;
+		$search_provider_count = count( $this->settings->configured_search_providers() );
+		$search_ready          = ! empty( $settings['enable_web_research'] ) && $search_provider_count > 0;
+		$image_provider_count = count( $this->settings->configured_image_source_providers() );
+		$image_ready          = ! empty( $settings['enable_image_source'] ) && $image_provider_count > 0;
 		$context_count      = $this->count_content_context_fields( $context );
 		?>
 		<div class="magick-ai-toolbox__status-strip" aria-label="<?php esc_attr_e( 'Toolbox status', 'magick-ai-toolbox' ); ?>">
-			<?php $this->render_status_pill( __( 'Tavily', 'magick-ai-toolbox' ), $this->settings->has_tavily_api_key() && ! empty( $settings['enable_web_research'] ) ? 'ok' : 'warning', $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?>
-			<?php $this->render_status_pill( __( 'Unsplash', 'magick-ai-toolbox' ), $this->settings->has_unsplash_access_key() && ! empty( $settings['enable_image_source'] ) ? 'ok' : 'warning', $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?>
+			<?php $this->render_status_pill( __( 'Search', 'magick-ai-toolbox' ), $search_ready ? 'ok' : 'warning', $search_ready ? sprintf( /* translators: %d: number of configured search providers. */ _n( '%d provider ready', '%d providers ready', $search_provider_count, 'magick-ai-toolbox' ), $search_provider_count ) : __( 'Search key needed', 'magick-ai-toolbox' ) ); ?>
+			<?php $this->render_status_pill( __( 'Images', 'magick-ai-toolbox' ), $image_ready ? 'ok' : 'warning', $image_ready ? sprintf( /* translators: %d: number of configured image providers. */ _n( '%d provider ready', '%d providers ready', $image_provider_count, 'magick-ai-toolbox' ), $image_provider_count ) : __( 'Image key needed', 'magick-ai-toolbox' ) ); ?>
 			<?php $this->render_status_pill( __( 'Vector', 'magick-ai-toolbox' ), $vector_ready ? 'ok' : 'warning', $vector_ready ? __( 'Ready', 'magick-ai-toolbox' ) : __( 'Needs Qdrant and embedding', 'magick-ai-toolbox' ) ); ?>
+			<?php $this->render_status_pill( __( 'Site Knowledge', 'magick-ai-toolbox' ), 'inactive', __( 'Cloud managed', 'magick-ai-toolbox' ) ); ?>
 			<?php $this->render_status_pill( __( 'Context', 'magick-ai-toolbox' ), $context_count > 0 ? 'ok' : 'inactive', sprintf( /* translators: %d: number of filled content context fields. */ _n( '%d field filled', '%d fields filled', $context_count, 'magick-ai-toolbox' ), $context_count ) ); ?>
+		</div>
+		<?php
+	}
+
+	private function render_site_knowledge_panel(): void {
+		?>
+		<div class="magick-ai-toolbox__panel-header">
+			<h2><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></h2>
+			<p><?php esc_html_e( 'Start Cloud-managed indexing for public posts, pages, and approved comments. Toolbox collects a bounded manifest; Cloud owns embeddings, vector storage, and run detail.', 'magick-ai-toolbox' ); ?></p>
+		</div>
+
+		<div class="magick-ai-toolbox__site-knowledge" data-toolbox-site-knowledge>
+			<section class="magick-ai-toolbox__card">
+				<div class="magick-ai-toolbox__section-heading">
+					<div>
+						<h3><?php esc_html_e( 'Index status', 'magick-ai-toolbox' ); ?></h3>
+						<p><?php esc_html_e( 'Read-only Cloud coverage summary for this WordPress site.', 'magick-ai-toolbox' ); ?></p>
+					</div>
+					<button type="button" class="button" data-toolbox-site-knowledge-status><?php esc_html_e( 'Refresh status', 'magick-ai-toolbox' ); ?></button>
+				</div>
+				<div class="magick-ai-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
+					<div class="magick-ai-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'magick-ai-toolbox' ); ?></div>
+				</div>
+			</section>
+
+			<section class="magick-ai-toolbox__card">
+				<h3><?php esc_html_e( 'Index actions', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'Refresh is the default action. Rebuild clears the selected Cloud index before re-indexing. Delete removes Cloud index entries for this site or selected post IDs.', 'magick-ai-toolbox' ); ?></p>
+				<form data-toolbox-site-knowledge-sync>
+					<div class="magick-ai-toolbox__split">
+						<label>
+							<span><?php esc_html_e( 'Sync mode', 'magick-ai-toolbox' ); ?></span>
+							<select name="sync_mode">
+								<option value="refresh"><?php esc_html_e( 'Refresh', 'magick-ai-toolbox' ); ?></option>
+								<option value="rebuild"><?php esc_html_e( 'Rebuild', 'magick-ai-toolbox' ); ?></option>
+								<option value="delete"><?php esc_html_e( 'Delete index', 'magick-ai-toolbox' ); ?></option>
+							</select>
+						</label>
+						<label>
+							<span><?php esc_html_e( 'Max posts', 'magick-ai-toolbox' ); ?></span>
+							<input type="number" name="max_posts" min="1" max="50" value="20" />
+						</label>
+					</div>
+					<label>
+						<span><?php esc_html_e( 'Post IDs', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="post_ids" placeholder="<?php esc_attr_e( 'Optional: 123,456', 'magick-ai-toolbox' ); ?>" />
+					</label>
+					<p class="description"><?php esc_html_e( 'Leave Post IDs empty to process the latest public posts/pages. Comments are included only when Cloud comments indexing is enabled.', 'magick-ai-toolbox' ); ?></p>
+					<div class="magick-ai-toolbox__inline-actions">
+						<button type="submit" class="button button-primary"><?php esc_html_e( 'Start sync', 'magick-ai-toolbox' ); ?></button>
+					</div>
+					<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+				</form>
+			</section>
+
+			<section class="magick-ai-toolbox__card">
+				<h3><?php esc_html_e( 'Search check', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'Run a Cloud site-knowledge search to verify that indexed content is available to AI callers.', 'magick-ai-toolbox' ); ?></p>
+				<form data-toolbox-site-knowledge-search>
+					<label>
+						<span><?php esc_html_e( 'Query', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="query" placeholder="<?php esc_attr_e( 'Search public site knowledge', 'magick-ai-toolbox' ); ?>" />
+					</label>
+					<div class="magick-ai-toolbox__split">
+						<label>
+							<span><?php esc_html_e( 'Intent', 'magick-ai-toolbox' ); ?></span>
+							<select name="intent">
+								<option value="site_search"><?php esc_html_e( 'Site search', 'magick-ai-toolbox' ); ?></option>
+								<option value="faq_candidates"><?php esc_html_e( 'FAQ candidates', 'magick-ai-toolbox' ); ?></option>
+								<option value="content_gap_analysis"><?php esc_html_e( 'Content gaps', 'magick-ai-toolbox' ); ?></option>
+								<option value="duplicate_check"><?php esc_html_e( 'Duplicate check', 'magick-ai-toolbox' ); ?></option>
+								<option value="internal_links"><?php esc_html_e( 'Internal links', 'magick-ai-toolbox' ); ?></option>
+							</select>
+						</label>
+						<label>
+							<span><?php esc_html_e( 'Source types', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="source_types" value="post,page" />
+						</label>
+					</div>
+					<div class="magick-ai-toolbox__split">
+						<label>
+							<span><?php esc_html_e( 'Current post ID', 'magick-ai-toolbox' ); ?></span>
+							<input type="number" name="current_post_id" min="0" value="0" />
+						</label>
+						<label>
+							<span><?php esc_html_e( 'Max results', 'magick-ai-toolbox' ); ?></span>
+							<input type="number" name="max_results" min="1" max="20" value="8" />
+						</label>
+					</div>
+					<button type="submit" class="button"><?php esc_html_e( 'Search index', 'magick-ai-toolbox' ); ?></button>
+					<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+				</form>
+			</section>
 		</div>
 		<?php
 	}
@@ -346,6 +474,8 @@ final class Admin_Page {
 		$embedding_provider = (string) $settings['embedding_provider'];
 		$embedding_ready    = 'jina' === $embedding_provider ? $this->settings->has_jina_api_key() : $this->settings->has_siliconflow_api_key();
 		$vector_ready       = $this->settings->has_qdrant_connection() && $embedding_ready;
+		$search_provider_count = count( $this->settings->configured_search_providers() );
+		$image_provider_count = count( $this->settings->configured_image_source_providers() );
 		?>
 		<div class="magick-ai-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></h2>
@@ -355,203 +485,440 @@ final class Admin_Page {
 		<form class="magick-ai-toolbox__settings-form" method="post" action="options.php">
 			<?php settings_fields( 'magick_ai_toolbox' ); ?>
 
-			<div class="magick-ai-toolbox__tool-workspace magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
-				<div class="magick-ai-toolbox__tool-list" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
-					<button type="button" class="magick-ai-toolbox__tool-button is-active" data-toolbox-connector-target="search" aria-selected="true">
+			<div class="magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
+				<nav class="magick-ai-toolbox__connector-tabs" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
+					<button type="button" class="magick-ai-toolbox__connector-tab is-active" data-toolbox-connector-target="search" aria-selected="true">
 						<span><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></span>
-						<small><?php echo esc_html( $this->settings->has_tavily_api_key() ? __( 'Tavily configured', 'magick-ai-toolbox' ) : __( 'Tavily key needed', 'magick-ai-toolbox' ) ); ?></small>
+						<small><?php echo esc_html( $search_provider_count > 0 ? sprintf( /* translators: %d: number of configured search providers. */ _n( '%d provider configured', '%d providers configured', $search_provider_count, 'magick-ai-toolbox' ), $search_provider_count ) : __( 'Search key needed', 'magick-ai-toolbox' ) ); ?></small>
 					</button>
-					<button type="button" class="magick-ai-toolbox__tool-button" data-toolbox-connector-target="image" aria-selected="false">
+					<button type="button" class="magick-ai-toolbox__connector-tab" data-toolbox-connector-target="image" aria-selected="false">
 						<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
-						<small><?php echo esc_html( $this->settings->has_unsplash_access_key() ? __( 'Unsplash configured', 'magick-ai-toolbox' ) : __( 'Unsplash key needed', 'magick-ai-toolbox' ) ); ?></small>
+						<small><?php echo esc_html( $image_provider_count > 0 ? sprintf( /* translators: %d: number of configured image providers. */ _n( '%d provider configured', '%d providers configured', $image_provider_count, 'magick-ai-toolbox' ), $image_provider_count ) : __( 'Image key needed', 'magick-ai-toolbox' ) ); ?></small>
 					</button>
-					<button type="button" class="magick-ai-toolbox__tool-button" data-toolbox-connector-target="vector" aria-selected="false">
+					<button type="button" class="magick-ai-toolbox__connector-tab" data-toolbox-connector-target="vector" aria-selected="false">
 						<span><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></span>
 						<small><?php echo esc_html( $vector_ready ? __( 'Qdrant and embedding ready', 'magick-ai-toolbox' ) : __( 'Needs Qdrant and embedding', 'magick-ai-toolbox' ) ); ?></small>
 					</button>
-				</div>
+				</nav>
 
 				<div class="magick-ai-toolbox__connector-panels">
 					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="search">
 						<h2><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></h2>
-						<p><?php esc_html_e( 'Tavily powers external web research suggestions. Results are source candidates for operator review, not verified truth.', 'magick-ai-toolbox' ); ?></p>
-
-						<?php
-						$this->render_connector_status_catalog(
-							array(
-								array(
-									'label'  => __( 'Tavily', 'magick-ai-toolbox' ),
-									'state'  => $this->settings->has_tavily_api_key() ? 'ok' : 'warning',
-									'status' => $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
-									'note'   => __( 'Server-side search connector; provider secrets are not exposed through REST or abilities.', 'magick-ai-toolbox' ),
-								),
-								array(
-									'label'  => __( 'Additional search providers', 'magick-ai-toolbox' ),
-									'state'  => 'inactive',
-									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
-									'note'   => __( 'New search providers need a later contract before runtime support.', 'magick-ai-toolbox' ),
-								),
-							)
-						);
-						?>
+						<p><?php esc_html_e( 'Search providers return external source candidates for any AI workflow. Jina Reader can enhance selected result URLs, but it is not a search provider.', 'magick-ai-toolbox' ); ?></p>
 
 						<label>
-							<span><?php esc_html_e( 'Tavily API key', 'magick-ai-toolbox' ); ?></span>
-							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_tavily_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'tvly-...', 'magick-ai-toolbox' ) ); ?>" />
-						</label>
-
-						<label>
-							<span><?php esc_html_e( 'Tavily search depth', 'magick-ai-toolbox' ); ?></span>
-							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_search_depth]">
-								<option value="basic" <?php selected( (string) $settings['tavily_search_depth'], 'basic' ); ?>><?php esc_html_e( 'Basic', 'magick-ai-toolbox' ); ?></option>
-								<option value="advanced" <?php selected( (string) $settings['tavily_search_depth'], 'advanced' ); ?>><?php esc_html_e( 'Advanced', 'magick-ai-toolbox' ); ?></option>
+							<span><?php esc_html_e( 'Default search provider', 'magick-ai-toolbox' ); ?></span>
+							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[search_provider]">
+								<option value="tavily" <?php selected( (string) $settings['search_provider'], 'tavily' ); ?>><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></option>
+								<option value="bocha" <?php selected( (string) $settings['search_provider'], 'bocha' ); ?>><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></option>
+								<option value="auto" <?php selected( (string) $settings['search_provider'], 'auto' ); ?>><?php esc_html_e( 'Auto - configured providers', 'magick-ai-toolbox' ); ?></option>
 							</select>
 						</label>
 
-						<?php $this->render_checkbox( 'tavily_include_answer', __( 'Tavily answer summary', 'magick-ai-toolbox' ), $settings ); ?>
-						<?php $this->render_checkbox( 'tavily_include_raw', __( 'Tavily raw content', 'magick-ai-toolbox' ), $settings ); ?>
-						<?php $this->render_checkbox( 'tavily_include_images', __( 'Tavily image URLs', 'magick-ai-toolbox' ), $settings ); ?>
+						<div class="magick-ai-toolbox__connector-provider-workspace" data-toolbox-connector-providers>
+							<nav class="magick-ai-toolbox__connector-provider-list" aria-label="<?php esc_attr_e( 'Search providers', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__connector-provider-button is-active" data-toolbox-connector-provider-target="search-tavily" aria-selected="true">
+									<span><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="search-bocha" aria-selected="false">
+									<span><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_bocha_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="search-jina-reader" aria-selected="false">
+									<span><?php esc_html_e( 'Jina Reader', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( ! empty( $settings['enable_jina_reader'] ) ? __( 'Enabled', 'magick-ai-toolbox' ) : __( 'Enhancement', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+							</nav>
+
+							<div class="magick-ai-toolbox__connector-provider-panels">
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="search-tavily">
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Tavily', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_tavily_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_tavily_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://www.tavily.com/',
+												'intro'  => __( 'External web research API for source-aware search results and answer snippets.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Server-side search connector; provider secrets are not exposed through REST or abilities.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<label>
+										<span><?php esc_html_e( 'Tavily API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_tavily_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'tvly-...', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+
+									<label>
+										<span><?php esc_html_e( 'Tavily search depth', 'magick-ai-toolbox' ); ?></span>
+										<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[tavily_search_depth]">
+											<option value="basic" <?php selected( (string) $settings['tavily_search_depth'], 'basic' ); ?>><?php esc_html_e( 'Basic', 'magick-ai-toolbox' ); ?></option>
+											<option value="advanced" <?php selected( (string) $settings['tavily_search_depth'], 'advanced' ); ?>><?php esc_html_e( 'Advanced', 'magick-ai-toolbox' ); ?></option>
+										</select>
+									</label>
+
+									<?php $this->render_checkbox( 'tavily_include_answer', __( 'Tavily answer summary', 'magick-ai-toolbox' ), $settings ); ?>
+									<?php $this->render_checkbox( 'tavily_include_raw', __( 'Tavily raw content', 'magick-ai-toolbox' ), $settings ); ?>
+									<?php $this->render_checkbox( 'tavily_include_images', __( 'Tavily image URLs', 'magick-ai-toolbox' ), $settings ); ?>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="search-bocha" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Bocha', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_bocha_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_bocha_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://open.bochaai.com/',
+												'intro'  => __( 'Chinese-friendly web search API for source candidates.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Server-side search connector; provider secrets are not exposed through REST or abilities.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<label>
+										<span><?php esc_html_e( 'Bocha API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[bocha_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_bocha_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Bocha API key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Bocha base URL', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[bocha_base_url]" value="<?php echo esc_attr( (string) $settings['bocha_base_url'] ); ?>" placeholder="https://api.bochaai.com/v1" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Bocha result count', 'magick-ai-toolbox' ); ?></span>
+										<input type="number" min="1" max="20" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[bocha_count]" value="<?php echo esc_attr( (string) $settings['bocha_count'] ); ?>" />
+									</label>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="search-jina-reader" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Jina Reader', 'magick-ai-toolbox' ),
+												'state'  => ! empty( $settings['enable_jina_reader'] ) ? 'ok' : 'inactive',
+												'status' => ! empty( $settings['enable_jina_reader'] ) ? __( 'Enabled', 'magick-ai-toolbox' ) : __( 'Optional enhancement', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://jina.ai/reader/',
+												'intro'  => __( 'Reads selected search result URLs into cleaner text for AI evidence packs.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Enhances search results after Tavily or Bocha; it is not the default search provider.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<?php $this->render_checkbox( 'enable_jina_reader', __( 'Enhance search results with Jina Reader', 'magick-ai-toolbox' ), $settings ); ?>
+									<label>
+										<span><?php esc_html_e( 'Jina Reader base URL', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_reader_base_url]" value="<?php echo esc_attr( (string) $settings['jina_reader_base_url'] ); ?>" placeholder="https://r.jina.ai" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Reader max pages per search', 'magick-ai-toolbox' ); ?></span>
+										<input type="number" min="1" max="5" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_reader_max_pages]" value="<?php echo esc_attr( (string) $settings['jina_reader_max_pages'] ); ?>" />
+									</label>
+								</section>
+							</div>
+						</div>
 					</section>
 
 					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="image" hidden>
 						<h2><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></h2>
-						<p><?php esc_html_e( 'Unsplash returns image-source candidates with attribution and download tracking metadata. This is not AI image generation.', 'magick-ai-toolbox' ); ?></p>
-
-						<?php
-						$this->render_connector_status_catalog(
-							array(
-								array(
-									'label'  => __( 'Unsplash', 'magick-ai-toolbox' ),
-									'state'  => $this->settings->has_unsplash_access_key() ? 'ok' : 'warning',
-									'status' => $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
-									'note'   => __( 'Image-source candidates preserve attribution and download tracking metadata.', 'magick-ai-toolbox' ),
-								),
-								array(
-									'label'  => __( 'Pixabay / Pexels', 'magick-ai-toolbox' ),
-									'state'  => 'inactive',
-									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
-									'note'   => __( 'Reserved as public image-source connectors, not AI image generation providers.', 'magick-ai-toolbox' ),
-								),
-							)
-						);
-						?>
+						<p><?php esc_html_e( 'Image-source providers return featured, inline, and reference image candidates with attribution metadata. This is not AI image generation or media import.', 'magick-ai-toolbox' ); ?></p>
 
 						<label>
-							<span><?php esc_html_e( 'Unsplash access key', 'magick-ai-toolbox' ); ?></span>
-							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_access_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_unsplash_access_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Unsplash access key', 'magick-ai-toolbox' ) ); ?>" />
+							<span><?php esc_html_e( 'Default image source provider', 'magick-ai-toolbox' ); ?></span>
+							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[image_provider]">
+								<option value="auto" <?php selected( (string) $settings['image_provider'], 'auto' ); ?>><?php esc_html_e( 'Auto - configured providers', 'magick-ai-toolbox' ); ?></option>
+								<option value="unsplash" <?php selected( (string) $settings['image_provider'], 'unsplash' ); ?>><?php esc_html_e( 'Unsplash', 'magick-ai-toolbox' ); ?></option>
+								<option value="pixabay" <?php selected( (string) $settings['image_provider'], 'pixabay' ); ?>><?php esc_html_e( 'Pixabay', 'magick-ai-toolbox' ); ?></option>
+								<option value="pexels" <?php selected( (string) $settings['image_provider'], 'pexels' ); ?>><?php esc_html_e( 'Pexels', 'magick-ai-toolbox' ); ?></option>
+							</select>
 						</label>
 
-						<label>
-							<span><?php esc_html_e( 'Unsplash app name', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_utm_source]" value="<?php echo esc_attr( (string) $settings['unsplash_utm_source'] ); ?>" />
-						</label>
+						<div class="magick-ai-toolbox__connector-provider-workspace" data-toolbox-connector-providers>
+							<nav class="magick-ai-toolbox__connector-provider-list" aria-label="<?php esc_attr_e( 'Image providers', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__connector-provider-button is-active" data-toolbox-connector-provider-target="image-unsplash" aria-selected="true">
+									<span><?php esc_html_e( 'Unsplash', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="image-pixabay" aria-selected="false">
+									<span><?php esc_html_e( 'Pixabay', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_pixabay_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="image-pexels" aria-selected="false">
+									<span><?php esc_html_e( 'Pexels', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_pexels_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+							</nav>
+
+							<div class="magick-ai-toolbox__connector-provider-panels">
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="image-unsplash">
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Unsplash', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_unsplash_access_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_unsplash_access_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://unsplash.com/developers',
+												'intro'  => __( 'Photo search API for public image-source candidates with attribution requirements.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Image-source candidates preserve attribution and download tracking metadata.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<label>
+										<span><?php esc_html_e( 'Unsplash access key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_access_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_unsplash_access_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Unsplash access key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+
+									<label>
+										<span><?php esc_html_e( 'Unsplash app name', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[unsplash_utm_source]" value="<?php echo esc_attr( (string) $settings['unsplash_utm_source'] ); ?>" />
+									</label>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="image-pixabay" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Pixabay', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_pixabay_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_pixabay_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://pixabay.com/api/docs/',
+												'intro'  => __( 'Public image-source search provider for photo candidates.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Returns image-source candidates only; it does not import media or generate images.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<label>
+										<span><?php esc_html_e( 'Pixabay API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[pixabay_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_pixabay_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Pixabay API key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="image-pexels" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Pexels', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_pexels_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_pexels_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://www.pexels.com/api/',
+												'intro'  => __( 'Public photo source provider for image candidates.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Returns image-source candidates only; it does not import media or generate images.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<label>
+										<span><?php esc_html_e( 'Pexels API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[pexels_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_pexels_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Pexels API key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+								</section>
+							</div>
+						</div>
 					</section>
 
 					<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="vector" hidden>
 						<h2><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></h2>
 						<p><?php esc_html_e( 'Qdrant stores and queries vectors. SiliconFlow or Jina AI creates a synchronous query embedding for vector search; Toolbox does not own indexing or collection lifecycle.', 'magick-ai-toolbox' ); ?></p>
 
-						<?php
-						$this->render_connector_status_catalog(
-							array(
-								array(
-									'label'  => __( 'Qdrant', 'magick-ai-toolbox' ),
-									'state'  => $this->settings->has_qdrant_connection() ? 'ok' : 'warning',
-									'status' => $this->settings->has_qdrant_connection() ? __( 'Endpoint and collection selected', 'magick-ai-toolbox' ) : __( 'Needs endpoint and collection', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
-									'note'   => __( 'Queries an existing collection only; indexing and collection lifecycle stay out of Toolbox.', 'magick-ai-toolbox' ),
-								),
-								array(
-									'label'  => __( 'SiliconFlow / Jina AI', 'magick-ai-toolbox' ),
-									'state'  => $embedding_ready ? 'ok' : 'warning',
-									'status' => $embedding_ready ? __( 'Selected embedding ready', 'magick-ai-toolbox' ) : __( 'Selected embedding key needed', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
-									'note'   => __( 'Creates one synchronous query embedding for vector search; it does not index WordPress content.', 'magick-ai-toolbox' ),
-								),
-								array(
-									'label'  => __( 'Pinecone / Weaviate', 'magick-ai-toolbox' ),
-									'state'  => 'inactive',
-									'status' => __( 'Reserved', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
-									'note'   => __( 'Reserved vector database slots; runtime support needs a later contract.', 'magick-ai-toolbox' ),
-								),
-							)
-						);
-						?>
+						<div class="magick-ai-toolbox__connector-provider-workspace" data-toolbox-connector-providers>
+							<nav class="magick-ai-toolbox__connector-provider-list" aria-label="<?php esc_attr_e( 'Vector providers', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__connector-provider-button is-active" data-toolbox-connector-provider-target="vector-qdrant" aria-selected="true">
+									<span><?php esc_html_e( 'Qdrant', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_qdrant_connection() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Needs endpoint', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="vector-siliconflow" aria-selected="false">
+									<span><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_siliconflow_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="vector-jina" aria-selected="false">
+									<span><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></span>
+									<small><?php echo esc_html( $this->settings->has_jina_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ) ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="vector-pinecone" aria-selected="false">
+									<span><?php esc_html_e( 'Pinecone', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Reserved', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__connector-provider-button" data-toolbox-connector-provider-target="vector-weaviate" aria-selected="false">
+									<span><?php esc_html_e( 'Weaviate', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Reserved', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
 
-						<div class="magick-ai-toolbox__example">
-							<strong><?php esc_html_e( 'Jina test setup', 'magick-ai-toolbox' ); ?></strong>
-							<span><?php esc_html_e( 'Choose Jina AI as the embedding provider, use https://api.jina.ai/v1 as the base URL, keep jina-embeddings-v3 for the model, then fill Qdrant endpoint and collection before trying Vector Search.', 'magick-ai-toolbox' ); ?></span>
-						</div>
+							<div class="magick-ai-toolbox__connector-provider-panels">
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="vector-qdrant">
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Qdrant', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_qdrant_connection() ? 'ok' : 'warning',
+												'status' => $this->settings->has_qdrant_connection() ? __( 'Endpoint and collection selected', 'magick-ai-toolbox' ) : __( 'Needs endpoint and collection', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://qdrant.tech/',
+												'intro'  => __( 'Vector database used here only for querying an existing collection.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Queries an existing collection only; indexing and collection lifecycle stay out of Toolbox.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
 
-						<label>
-							<span><?php esc_html_e( 'Qdrant endpoint', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_endpoint]" value="<?php echo esc_attr( (string) $settings['qdrant_endpoint'] ); ?>" placeholder="https://example.qdrant.io" />
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Qdrant endpoint', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_endpoint]" value="<?php echo esc_attr( (string) $settings['qdrant_endpoint'] ); ?>" placeholder="https://example.qdrant.io" />
+									</label>
 
-						<label>
-							<span><?php esc_html_e( 'Qdrant collection', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_collection]" value="<?php echo esc_attr( (string) $settings['qdrant_collection'] ); ?>" />
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Qdrant collection', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_collection]" value="<?php echo esc_attr( (string) $settings['qdrant_collection'] ); ?>" />
+									</label>
 
-						<label>
-							<span><?php esc_html_e( 'Qdrant vector name', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_vector_name]" value="<?php echo esc_attr( (string) $settings['qdrant_vector_name'] ); ?>" />
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Qdrant vector name', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_vector_name]" value="<?php echo esc_attr( (string) $settings['qdrant_vector_name'] ); ?>" />
+									</label>
 
-						<label>
-							<span><?php esc_html_e( 'Qdrant API key', 'magick-ai-toolbox' ); ?></span>
-							<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( '' !== $this->settings->get_qdrant_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Optional for local Qdrant', 'magick-ai-toolbox' ) ); ?>" />
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Qdrant API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[qdrant_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( '' !== $this->settings->get_qdrant_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Optional for local Qdrant', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
 
-						<label>
-							<span><?php esc_html_e( 'Embedding provider', 'magick-ai-toolbox' ); ?></span>
-							<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_provider]">
-								<option value="siliconflow" <?php selected( (string) $settings['embedding_provider'], 'siliconflow' ); ?>><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></option>
-								<option value="jina" <?php selected( (string) $settings['embedding_provider'], 'jina' ); ?>><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></option>
-							</select>
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Embedding provider', 'magick-ai-toolbox' ); ?></span>
+										<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_provider]">
+											<option value="siliconflow" <?php selected( (string) $settings['embedding_provider'], 'siliconflow' ); ?>><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></option>
+											<option value="jina" <?php selected( (string) $settings['embedding_provider'], 'jina' ); ?>><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></option>
+										</select>
+									</label>
 
-						<label>
-							<span><?php esc_html_e( 'Embedding dimensions', 'magick-ai-toolbox' ); ?></span>
-							<input type="number" min="1" max="4096" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_dimensions]" value="<?php echo esc_attr( (string) $settings['embedding_dimensions'] ); ?>" />
-						</label>
+									<label>
+										<span><?php esc_html_e( 'Embedding dimensions', 'magick-ai-toolbox' ); ?></span>
+										<input type="number" min="1" max="4096" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[embedding_dimensions]" value="<?php echo esc_attr( (string) $settings['embedding_dimensions'] ); ?>" />
+									</label>
+								</section>
 
-						<div class="magick-ai-toolbox__split">
-							<div>
-								<h3><?php esc_html_e( 'SiliconFlow', 'magick-ai-toolbox' ); ?></h3>
-								<label>
-									<span><?php esc_html_e( 'SiliconFlow API key', 'magick-ai-toolbox' ); ?></span>
-									<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_siliconflow_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'SiliconFlow API key', 'magick-ai-toolbox' ) ); ?>" />
-								</label>
-								<label>
-									<span><?php esc_html_e( 'SiliconFlow base URL', 'magick-ai-toolbox' ); ?></span>
-									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_base_url]" value="<?php echo esc_attr( (string) $settings['siliconflow_base_url'] ); ?>" placeholder="https://api.siliconflow.com/v1" />
-								</label>
-								<label>
-									<span><?php esc_html_e( 'SiliconFlow embedding model', 'magick-ai-toolbox' ); ?></span>
-									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_model]" value="<?php echo esc_attr( (string) $settings['siliconflow_model'] ); ?>" placeholder="BAAI/bge-m3" />
-								</label>
-							</div>
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="vector-siliconflow" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'SiliconFlow', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_siliconflow_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_siliconflow_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://siliconflow.cn/',
+												'intro'  => __( 'Default query embedding provider for BAAI/bge-m3 before Qdrant search.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Creates one synchronous query embedding for vector search; it does not index WordPress content.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
 
-							<div>
-								<h3><?php esc_html_e( 'Jina AI', 'magick-ai-toolbox' ); ?></h3>
-								<label>
-									<span><?php esc_html_e( 'Jina AI API key', 'magick-ai-toolbox' ); ?></span>
-									<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_jina_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Jina AI API key', 'magick-ai-toolbox' ) ); ?>" />
-								</label>
-								<label>
-									<span><?php esc_html_e( 'Jina AI base URL', 'magick-ai-toolbox' ); ?></span>
-									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_base_url]" value="<?php echo esc_attr( (string) $settings['jina_base_url'] ); ?>" placeholder="https://api.jina.ai/v1" />
-								</label>
-								<label>
-									<span><?php esc_html_e( 'Jina AI embedding model', 'magick-ai-toolbox' ); ?></span>
-									<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_model]" value="<?php echo esc_attr( (string) $settings['jina_model'] ); ?>" placeholder="jina-embeddings-v3" />
-								</label>
+									<label>
+										<span><?php esc_html_e( 'SiliconFlow API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_siliconflow_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'SiliconFlow API key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'SiliconFlow base URL', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_base_url]" value="<?php echo esc_attr( (string) $settings['siliconflow_base_url'] ); ?>" placeholder="https://api.siliconflow.com/v1" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'SiliconFlow embedding model', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[siliconflow_model]" value="<?php echo esc_attr( (string) $settings['siliconflow_model'] ); ?>" placeholder="BAAI/bge-m3" />
+									</label>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="vector-jina" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Jina AI', 'magick-ai-toolbox' ),
+												'state'  => $this->settings->has_jina_api_key() ? 'ok' : 'warning',
+												'status' => $this->settings->has_jina_api_key() ? __( 'Configured', 'magick-ai-toolbox' ) : __( 'Missing key', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Local MVP config', 'magick-ai-toolbox' ),
+												'url'    => 'https://jina.ai/',
+												'intro'  => __( 'Optional query embedding provider using jina-embeddings-v3 in this MVP.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Reader and Reranker remain reserved workflow-level enhancements, not active runtime features.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Jina test setup', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Choose Jina AI as the embedding provider, use https://api.jina.ai/v1 as the base URL, keep jina-embeddings-v3 for the model, then fill Qdrant endpoint and collection before trying Vector Search.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+
+									<label>
+										<span><?php esc_html_e( 'Jina AI API key', 'magick-ai-toolbox' ); ?></span>
+										<input type="password" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $this->settings->has_jina_api_key() ? __( 'Stored or provided by environment', 'magick-ai-toolbox' ) : __( 'Jina AI API key', 'magick-ai-toolbox' ) ); ?>" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Jina AI base URL', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_base_url]" value="<?php echo esc_attr( (string) $settings['jina_base_url'] ); ?>" placeholder="https://api.jina.ai/v1" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Jina AI embedding model', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[jina_model]" value="<?php echo esc_attr( (string) $settings['jina_model'] ); ?>" placeholder="jina-embeddings-v3" />
+									</label>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="vector-pinecone" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Pinecone', 'magick-ai-toolbox' ),
+												'state'  => 'inactive',
+												'status' => __( 'Reserved', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
+												'url'    => 'https://www.pinecone.io/',
+												'intro'  => __( 'Reserved vector database provider slot for later implementation.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Runtime support needs a later vector provider contract.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+								</section>
+
+								<section class="magick-ai-toolbox__connector-provider-panel" data-toolbox-connector-provider-panel="vector-weaviate" hidden>
+									<?php
+									$this->render_connector_status_catalog(
+										array(
+											array(
+												'label'  => __( 'Weaviate', 'magick-ai-toolbox' ),
+												'state'  => 'inactive',
+												'status' => __( 'Reserved', 'magick-ai-toolbox' ),
+												'owner'  => __( 'Future connector owner', 'magick-ai-toolbox' ),
+												'url'    => 'https://weaviate.io/',
+												'intro'  => __( 'Reserved vector database provider slot for later implementation.', 'magick-ai-toolbox' ),
+												'note'   => __( 'Runtime support needs a later vector provider contract.', 'magick-ai-toolbox' ),
+											),
+										)
+									);
+									?>
+								</section>
 							</div>
 						</div>
 					</section>
@@ -573,8 +940,20 @@ final class Admin_Page {
 						<span><?php esc_html_e( 'Clear stored Tavily key', 'magick-ai-toolbox' ); ?></span>
 					</label>
 					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_bocha_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Bocha key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
 						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_unsplash_access_key]" value="1" />
 						<span><?php esc_html_e( 'Clear stored Unsplash key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_pixabay_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Pixabay key', 'magick-ai-toolbox' ); ?></span>
+					</label>
+					<label class="magick-ai-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_pexels_api_key]" value="1" />
+						<span><?php esc_html_e( 'Clear stored Pexels key', 'magick-ai-toolbox' ); ?></span>
 					</label>
 					<label class="magick-ai-toolbox__check">
 						<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[clear_qdrant_api_key]" value="1" />
@@ -607,6 +986,12 @@ final class Admin_Page {
 					</dt>
 					<dd>
 						<strong><?php echo esc_html( (string) $row['status'] ); ?></strong>
+						<?php if ( ! empty( $row['url'] ) ) : ?>
+							<a href="<?php echo esc_url( (string) $row['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( (string) $row['url'] ); ?></a>
+						<?php endif; ?>
+						<?php if ( ! empty( $row['intro'] ) ) : ?>
+							<span><?php echo esc_html( (string) $row['intro'] ); ?></span>
+						<?php endif; ?>
 						<span><?php echo esc_html( (string) $row['note'] ); ?></span>
 					</dd>
 				</div>
@@ -643,111 +1028,274 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Drafts are editable suggestions and do not change posts, media, SEO meta, or provider settings.', 'magick-ai-toolbox' ); ?></span>
 			</div>
 
-			<details class="magick-ai-toolbox__disclosure" open>
-				<summary>
-					<span><?php esc_html_e( 'Basic brief', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Site type, audience, and voice', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<div class="magick-ai-toolbox__example">
-						<strong><?php esc_html_e( 'Example', 'magick-ai-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'A practical AI technology blog for developers and product teams, written in a clear and restrained engineering voice.', 'magick-ai-toolbox' ); ?></span>
-					</div>
-					<?php $this->render_context_textarea( 'site_positioning', __( 'Site positioning', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_list_field( 'target_audience', __( 'Target audience', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_textarea( 'brand_voice', __( 'Brand voice', 'magick-ai-toolbox' ), $context ); ?>
-				</div>
-			</details>
+			<div class="magick-ai-toolbox__context-workspace" data-toolbox-context-sections>
+				<nav class="magick-ai-toolbox__context-tabs" aria-label="<?php esc_attr_e( 'Content context sections', 'magick-ai-toolbox' ); ?>">
+					<button type="button" class="magick-ai-toolbox__context-tab is-active" data-toolbox-context-target="brief" aria-selected="true">
+						<span><?php esc_html_e( 'Brief', 'magick-ai-toolbox' ); ?></span>
+						<small><?php esc_html_e( 'Start here', 'magick-ai-toolbox' ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__context-tab" data-toolbox-context-target="seo" aria-selected="false">
+						<span><?php esc_html_e( 'SEO', 'magick-ai-toolbox' ); ?></span>
+						<small><?php esc_html_e( 'Search snippets', 'magick-ai-toolbox' ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__context-tab" data-toolbox-context-target="aeo" aria-selected="false">
+						<span><?php esc_html_e( 'AEO', 'magick-ai-toolbox' ); ?></span>
+						<small><?php esc_html_e( 'Answer shape', 'magick-ai-toolbox' ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__context-tab" data-toolbox-context-target="geo" aria-selected="false">
+						<span><?php esc_html_e( 'GEO', 'magick-ai-toolbox' ); ?></span>
+						<small><?php esc_html_e( 'AI citation signals', 'magick-ai-toolbox' ); ?></small>
+					</button>
+					<button type="button" class="magick-ai-toolbox__context-tab" data-toolbox-context-target="boundaries" aria-selected="false">
+						<span><?php esc_html_e( 'Boundaries', 'magick-ai-toolbox' ); ?></span>
+						<small><?php esc_html_e( 'Claims and preview', 'magick-ai-toolbox' ); ?></small>
+					</button>
+				</nav>
 
-			<details class="magick-ai-toolbox__disclosure" open>
-				<summary>
-					<span><?php esc_html_e( 'SEO', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Keywords, titles, descriptions, and internal links', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<div class="magick-ai-toolbox__example">
-						<strong><?php esc_html_e( 'Example', 'magick-ai-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'Use clear topic keywords, avoid clickbait, and explain the problem, audience, and conclusion in the excerpt.', 'magick-ai-toolbox' ); ?></span>
-					</div>
-					<?php $this->render_context_list_field( 'primary_keywords', __( 'Primary keywords', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_list_field( 'long_tail_keywords', __( 'Long-tail keywords', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_textarea( 'seo_rules', __( 'SEO rules', 'magick-ai-toolbox' ), $context ); ?>
-					<fieldset class="magick-ai-toolbox__check-grid">
-						<legend><?php esc_html_e( 'SEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
-						<?php foreach ( array( 'seo_title', 'seo_description', 'slug', 'excerpt' ) as $field ) : ?>
-							<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
-						<?php endforeach; ?>
-					</fieldset>
-				</div>
-			</details>
+				<div class="magick-ai-toolbox__context-panels">
+					<section class="magick-ai-toolbox__card" data-toolbox-context-panel="brief">
+						<h2><?php esc_html_e( 'Brief', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Define who the site is for and how suggestions should sound. This is the minimum useful setup.', 'magick-ai-toolbox' ); ?></p>
+						<div class="magick-ai-toolbox__context-group-workspace" data-toolbox-context-groups>
+							<nav class="magick-ai-toolbox__context-group-list" aria-label="<?php esc_attr_e( 'Brief fields', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__context-group-button is-active" data-toolbox-context-group-target="brief-profile" aria-selected="true">
+									<span><?php esc_html_e( 'Site profile', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Positioning', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="brief-audience" aria-selected="false">
+									<span><?php esc_html_e( 'Audience', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Readers', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="brief-voice" aria-selected="false">
+									<span><?php esc_html_e( 'Voice', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Tone', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="brief-keywords" aria-selected="false">
+									<span><?php esc_html_e( 'Keywords', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Primary terms', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div class="magick-ai-toolbox__context-group-panels">
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="brief-profile">
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Site profile', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Tell AI what this site is, who it helps, and what kind of suggestion it should produce first.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_textarea( 'site_positioning', __( 'Site positioning', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="brief-audience" hidden>
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Audience', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'List the reader groups AI should optimize explanations, examples, and terminology for.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_list_field( 'target_audience', __( 'Target audience', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="brief-voice" hidden>
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Voice', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Set the writing posture, level of detail, and phrases AI should favor or avoid.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_textarea( 'brand_voice', __( 'Brand voice', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="brief-keywords" hidden>
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Keywords', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Use this short list as the main topic vocabulary before adding SEO-specific long-tail terms.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_list_field( 'primary_keywords', __( 'Primary keywords', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+							</div>
+						</div>
+					</section>
 
-			<details class="magick-ai-toolbox__disclosure">
-				<summary>
-					<span><?php esc_html_e( 'AEO', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Direct answers, FAQs, definitions, and steps', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<div class="magick-ai-toolbox__example">
-						<strong><?php esc_html_e( 'Example', 'magick-ai-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'Start with a direct answer, then add conditions, steps, limits, and short FAQ-style followups.', 'magick-ai-toolbox' ); ?></span>
-					</div>
-					<?php $this->render_context_textarea( 'aeo_rules', __( 'AEO rules', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_checkbox( 'allow_faq_generation', __( 'Allow FAQ suggestions', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_checkbox( 'allow_aeo_summary', __( 'Allow AEO answer summary suggestions', 'magick-ai-toolbox' ), $context ); ?>
-					<fieldset class="magick-ai-toolbox__check-grid">
-						<legend><?php esc_html_e( 'AEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
-						<?php foreach ( array( 'faq', 'answer_summary' ) as $field ) : ?>
-							<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
-						<?php endforeach; ?>
-					</fieldset>
-				</div>
-			</details>
+					<section class="magick-ai-toolbox__card" data-toolbox-context-panel="seo" hidden>
+						<h2><?php esc_html_e( 'SEO', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Control search-oriented metadata, keyword coverage, and which SEO fields AI may suggest.', 'magick-ai-toolbox' ); ?></p>
+						<div class="magick-ai-toolbox__context-group-workspace" data-toolbox-context-groups>
+							<nav class="magick-ai-toolbox__context-group-list" aria-label="<?php esc_attr_e( 'SEO fields', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__context-group-button is-active" data-toolbox-context-group-target="seo-keywords" aria-selected="true">
+									<span><?php esc_html_e( 'Keywords', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Long-tail terms', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="seo-rules" aria-selected="false">
+									<span><?php esc_html_e( 'Rules', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Search guidance', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="seo-fields" aria-selected="false">
+									<span><?php esc_html_e( 'Suggestion fields', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Allowed output', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div class="magick-ai-toolbox__context-group-panels">
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="seo-keywords">
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'SEO keywords', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Add supporting long-tail phrases here. Primary keywords stay in the Brief section so the first setup path remains obvious.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_list_field( 'long_tail_keywords', __( 'Long-tail keywords', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="seo-rules" hidden>
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'SEO rules', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Describe title, description, slug, excerpt, and internal-link preferences for proposal-ready suggestions.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_textarea( 'seo_rules', __( 'SEO rules', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="seo-fields" hidden>
+									<fieldset class="magick-ai-toolbox__check-grid">
+										<legend><?php esc_html_e( 'SEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
+										<?php foreach ( array( 'seo_title', 'seo_description', 'slug', 'excerpt' ) as $field ) : ?>
+											<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
+										<?php endforeach; ?>
+									</fieldset>
+								</section>
+							</div>
+						</div>
+					</section>
 
-			<details class="magick-ai-toolbox__disclosure">
-				<summary>
-					<span><?php esc_html_e( 'GEO', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Entity signals, AI summaries, and citation-friendly boundaries', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<div class="magick-ai-toolbox__example">
-						<strong><?php esc_html_e( 'Example', 'magick-ai-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'Keep key conclusions standalone, define important entities, and distinguish implemented features from plans.', 'magick-ai-toolbox' ); ?></span>
-					</div>
-					<?php $this->render_context_list_field( 'entity_keywords', __( 'Entity keywords', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_textarea( 'geo_rules', __( 'GEO rules', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_checkbox( 'allow_geo_summary', __( 'Allow GEO summary suggestions', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_checkbox( 'allow_structured_data_suggestions', __( 'Allow structured data suggestions', 'magick-ai-toolbox' ), $context ); ?>
-					<fieldset class="magick-ai-toolbox__check-grid">
-						<legend><?php esc_html_e( 'GEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
-						<?php foreach ( array( 'geo_summary', 'structured_data_hints' ) as $field ) : ?>
-							<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
-						<?php endforeach; ?>
-					</fieldset>
-				</div>
-			</details>
+					<section class="magick-ai-toolbox__card" data-toolbox-context-panel="aeo" hidden>
+						<h2><?php esc_html_e( 'AEO', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Shape answer-engine output: direct answers, FAQs, definitions, and step-style responses.', 'magick-ai-toolbox' ); ?></p>
+						<div class="magick-ai-toolbox__context-group-workspace" data-toolbox-context-groups>
+							<nav class="magick-ai-toolbox__context-group-list" aria-label="<?php esc_attr_e( 'AEO fields', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__context-group-button is-active" data-toolbox-context-group-target="aeo-rules" aria-selected="true">
+									<span><?php esc_html_e( 'Rules', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Answer guidance', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="aeo-toggles" aria-selected="false">
+									<span><?php esc_html_e( 'Output toggles', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'FAQ and summary', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="aeo-fields" aria-selected="false">
+									<span><?php esc_html_e( 'Suggestion fields', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Allowed output', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div class="magick-ai-toolbox__context-group-panels">
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="aeo-rules">
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'AEO rules', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Start with a direct answer, then add conditions, steps, limits, and short followups.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_textarea( 'aeo_rules', __( 'AEO rules', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="aeo-toggles" hidden>
+									<?php $this->render_context_checkbox( 'allow_faq_generation', __( 'Allow FAQ suggestions', 'magick-ai-toolbox' ), $context ); ?>
+									<?php $this->render_context_checkbox( 'allow_aeo_summary', __( 'Allow AEO answer summary suggestions', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="aeo-fields" hidden>
+									<fieldset class="magick-ai-toolbox__check-grid">
+										<legend><?php esc_html_e( 'AEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
+										<?php foreach ( array( 'faq', 'answer_summary' ) as $field ) : ?>
+											<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
+										<?php endforeach; ?>
+									</fieldset>
+								</section>
+							</div>
+						</div>
+					</section>
 
-			<details class="magick-ai-toolbox__disclosure">
-				<summary>
-					<span><?php esc_html_e( 'Advanced boundaries', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Allowed claims and forbidden claims', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<?php $this->render_context_list_field( 'allowed_claims', __( 'Allowed claims', 'magick-ai-toolbox' ), $context ); ?>
-					<?php $this->render_context_list_field( 'forbidden_claims', __( 'Forbidden claims', 'magick-ai-toolbox' ), $context ); ?>
+					<section class="magick-ai-toolbox__card" data-toolbox-context-panel="geo" hidden>
+						<h2><?php esc_html_e( 'GEO', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Guide AI-readable entity signals, standalone conclusions, and citation-friendly summaries.', 'magick-ai-toolbox' ); ?></p>
+						<div class="magick-ai-toolbox__context-group-workspace" data-toolbox-context-groups>
+							<nav class="magick-ai-toolbox__context-group-list" aria-label="<?php esc_attr_e( 'GEO fields', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__context-group-button is-active" data-toolbox-context-group-target="geo-entities" aria-selected="true">
+									<span><?php esc_html_e( 'Entities', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Signals', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="geo-rules" aria-selected="false">
+									<span><?php esc_html_e( 'Rules', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Summary guidance', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="geo-toggles" aria-selected="false">
+									<span><?php esc_html_e( 'Output toggles', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'GEO and schema', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="geo-fields" aria-selected="false">
+									<span><?php esc_html_e( 'Suggestion fields', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Allowed output', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div class="magick-ai-toolbox__context-group-panels">
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="geo-entities">
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'Entities', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'List people, products, standards, projects, and concepts AI should recognize as important context.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_list_field( 'entity_keywords', __( 'Entity keywords', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="geo-rules" hidden>
+									<div class="magick-ai-toolbox__example">
+										<strong><?php esc_html_e( 'GEO rules', 'magick-ai-toolbox' ); ?></strong>
+										<span><?php esc_html_e( 'Keep key conclusions standalone, define important entities, and separate implemented facts from plans.', 'magick-ai-toolbox' ); ?></span>
+									</div>
+									<?php $this->render_context_textarea( 'geo_rules', __( 'GEO rules', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="geo-toggles" hidden>
+									<?php $this->render_context_checkbox( 'allow_geo_summary', __( 'Allow GEO summary suggestions', 'magick-ai-toolbox' ), $context ); ?>
+									<?php $this->render_context_checkbox( 'allow_structured_data_suggestions', __( 'Allow structured data suggestions', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="geo-fields" hidden>
+									<fieldset class="magick-ai-toolbox__check-grid">
+										<legend><?php esc_html_e( 'GEO fields AI may suggest', 'magick-ai-toolbox' ); ?></legend>
+										<?php foreach ( array( 'geo_summary', 'structured_data_hints' ) as $field ) : ?>
+											<?php $this->render_proposal_field_checkbox( $field, $proposal_fields[ $field ], $context ); ?>
+										<?php endforeach; ?>
+									</fieldset>
+								</section>
+							</div>
+						</div>
+					</section>
+
+					<section class="magick-ai-toolbox__card" data-toolbox-context-panel="boundaries" hidden>
+						<h2><?php esc_html_e( 'Boundaries', 'magick-ai-toolbox' ); ?></h2>
+						<p><?php esc_html_e( 'Limit what AI can claim and inspect the read-only payload exposed to callers.', 'magick-ai-toolbox' ); ?></p>
+						<div class="magick-ai-toolbox__context-group-workspace" data-toolbox-context-groups>
+							<nav class="magick-ai-toolbox__context-group-list" aria-label="<?php esc_attr_e( 'Boundary fields', 'magick-ai-toolbox' ); ?>">
+								<button type="button" class="magick-ai-toolbox__context-group-button is-active" data-toolbox-context-group-target="boundaries-allowed" aria-selected="true">
+									<span><?php esc_html_e( 'Allowed claims', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Can say', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="boundaries-forbidden" aria-selected="false">
+									<span><?php esc_html_e( 'Forbidden claims', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Must not say', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="boundaries-exceptions" aria-selected="false">
+									<span><?php esc_html_e( 'Exceptions', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Special cases', 'magick-ai-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="magick-ai-toolbox__context-group-button" data-toolbox-context-group-target="boundaries-preview" aria-selected="false">
+									<span><?php esc_html_e( 'Ability preview', 'magick-ai-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Read-only payload', 'magick-ai-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div class="magick-ai-toolbox__context-group-panels">
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="boundaries-allowed">
+									<?php $this->render_context_list_field( 'allowed_claims', __( 'Allowed claims', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="boundaries-forbidden" hidden>
+									<?php $this->render_context_list_field( 'forbidden_claims', __( 'Forbidden claims', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="boundaries-exceptions" hidden>
+									<?php $this->render_context_list_field( 'disallowed_topics', __( 'Disallowed topics', 'magick-ai-toolbox' ), $context ); ?>
+									<?php $this->render_context_list_field( 'cautious_topics', __( 'Cautious topics', 'magick-ai-toolbox' ), $context ); ?>
+									<?php $this->render_context_list_field( 'no_structured_output_topics', __( 'No structured output topics', 'magick-ai-toolbox' ), $context ); ?>
+									<?php $this->render_context_list_field( 'human_confirmation_required', __( 'Human confirmation required', 'magick-ai-toolbox' ), $context ); ?>
+								</section>
+								<section class="magick-ai-toolbox__context-group-panel" data-toolbox-context-group-panel="boundaries-preview" hidden>
+									<pre class="magick-ai-toolbox__result"><?php echo esc_html( (string) $preview ); ?></pre>
+								</section>
+							</div>
+						</div>
+					</section>
 				</div>
-			</details>
+			</div>
 
 			<p class="description"><?php esc_html_e( 'Final WordPress writes still require Core proposal approval; third-party AI receives this context as suggestion-only guidance.', 'magick-ai-toolbox' ); ?></p>
 			<?php submit_button( __( 'Save content context', 'magick-ai-toolbox' ) ); ?>
 		</form>
 
-		<details class="magick-ai-toolbox__disclosure magick-ai-toolbox__preview">
-			<summary>
-				<span><?php esc_html_e( 'Ability preview', 'magick-ai-toolbox' ); ?></span>
-				<small><?php esc_html_e( 'Read-only payload exposed to callers', 'magick-ai-toolbox' ); ?></small>
-			</summary>
-			<pre class="magick-ai-toolbox__result"><?php echo esc_html( (string) $preview ); ?></pre>
-		</details>
 		<?php
 	}
 
@@ -788,15 +1336,15 @@ final class Admin_Page {
 			array(
 				'id'          => 'media-derivative',
 				'endpoint'    => 'media-derivative-handoff',
-				'title'       => __( 'Media Derivative Handoff', 'magick-ai-toolbox' ),
-				'description' => __( 'Prepare a one-run optimized derivative handoff from Core media policy. This does not call Cloud, create a proposal, or write media.', 'magick-ai-toolbox' ),
+				'title'       => __( 'Media Derivative Preview', 'magick-ai-toolbox' ),
+				'description' => __( 'Select one image, generate a Cloud derivative preview through Adapter, then submit a Core replacement proposal for local approval.', 'magick-ai-toolbox' ),
 				'custom'      => 'media_derivative',
 			),
 			array(
 				'id'           => 'web-research',
 				'endpoint'     => 'web-research',
 				'title'        => __( 'Web Research', 'magick-ai-toolbox' ),
-				'description'  => __( 'Search Tavily and return source-aware research notes.', 'magick-ai-toolbox' ),
+				'description'  => __( 'Search Tavily for external source candidates that any AI workflow can use.', 'magick-ai-toolbox' ),
 				'field'        => 'query',
 				'placeholder'  => __( 'What should be researched?', 'magick-ai-toolbox' ),
 				'button'       => __( 'Research', 'magick-ai-toolbox' ),
@@ -822,6 +1370,11 @@ final class Admin_Page {
 				'placeholder'  => __( 'Image search query', 'magick-ai-toolbox' ),
 				'button'       => __( 'Search images', 'magick-ai-toolbox' ),
 				'extra_fields' => array(
+					array(
+						'name'        => 'provider',
+						'label'       => __( 'Provider', 'magick-ai-toolbox' ),
+						'placeholder' => 'auto',
+					),
 					array(
 						'name'        => 'orientation',
 						'label'       => __( 'Orientation', 'magick-ai-toolbox' ),
@@ -1004,7 +1557,7 @@ final class Admin_Page {
 				'use_cloud_when_available' => true,
 			);
 		?>
-		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" data-toolbox-media-derivative <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
 			<div class="magick-ai-toolbox__example">
@@ -1022,10 +1575,21 @@ final class Admin_Page {
 					?>
 				</span>
 			</div>
-			<label>
-				<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
-				<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" />
-			</label>
+			<div class="magick-ai-toolbox__media-picker">
+				<div class="magick-ai-toolbox__media-preview" data-toolbox-media-preview>
+					<span><?php esc_html_e( 'No image selected', 'magick-ai-toolbox' ); ?></span>
+				</div>
+				<div>
+					<label>
+						<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" data-toolbox-media-attachment />
+					</label>
+					<div class="magick-ai-toolbox__inline-actions">
+						<button type="button" class="button" data-toolbox-select-media><?php esc_html_e( 'Select from media library', 'magick-ai-toolbox' ); ?></button>
+						<span data-toolbox-media-name><?php esc_html_e( 'Choose one local image attachment.', 'magick-ai-toolbox' ); ?></span>
+					</div>
+				</div>
+			</div>
 			<div class="magick-ai-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Format override', 'magick-ai-toolbox' ); ?></span>
@@ -1045,8 +1609,68 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Quality override', 'magick-ai-toolbox' ); ?></span>
 				<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
 			</label>
-			<p class="description"><?php esc_html_e( 'The returned handoff contains ability input for magick-ai/build-media-derivative-cloud-request. Core remains the policy and final write owner.', 'magick-ai-toolbox' ); ?></p>
-			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build handoff', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Exclude formats from setting repair', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="settings_excluded_formats" value="svg,gif,ico,pdf" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Minimum setting image size', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="settings_min_dimensions" value="64x64" />
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__batch-panel">
+				<h3><?php esc_html_e( 'Batch conversion plan', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'Build a bounded local candidate plan first, then generate previews and Core proposals only for reviewed selections.', 'magick-ai-toolbox' ); ?></p>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Date from', 'magick-ai-toolbox' ); ?></span>
+						<input type="date" name="batch_date_from" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Date to', 'magick-ai-toolbox' ); ?></span>
+						<input type="date" name="batch_date_to" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Batch target format', 'magick-ai-toolbox' ); ?></span>
+						<select name="batch_target_format">
+							<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
+								<option value="<?php echo esc_attr( $format ); ?>" <?php selected( 'webp', $format ); ?>><?php echo esc_html( strtoupper( $format ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Exclude formats', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="batch_exclude_formats" value="webp" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Min dimensions', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="batch_min_dimensions" value="0x0" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Max candidates', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="1" max="50" step="1" name="batch_max_items" value="20" />
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__inline-actions">
+					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build batch plan', 'magick-ai-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'magick-ai-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected proposals', 'magick-ai-toolbox' ); ?></button>
+				</div>
+				<div class="magick-ai-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
+			</div>
+			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Core remains the policy owner and final WordPress write owner.', 'magick-ai-toolbox' ); ?></p>
+			<div class="magick-ai-toolbox__inline-actions">
+				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit replacement proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-reference-repair disabled><?php esc_html_e( 'Submit URL repair proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-settings-repair disabled><?php esc_html_e( 'Submit settings URL proposal', 'magick-ai-toolbox' ); ?></button>
+				<button type="submit" class="button"><?php esc_html_e( 'Build handoff only', 'magick-ai-toolbox' ); ?></button>
+			</div>
 			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

@@ -11,7 +11,7 @@
 
 .magick-ai-toolbox__status-strip {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(5, minmax(0, 1fr));
 	gap: 10px;
 	margin: 0 0 18px;
 }
@@ -102,6 +102,38 @@
 	color: #50575e;
 }
 
+.magick-ai-toolbox__site-knowledge {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 14px;
+	max-width: 980px;
+}
+
+.magick-ai-toolbox__section-heading {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	align-items: flex-start;
+	margin: 0 0 14px;
+}
+
+.magick-ai-toolbox__section-heading h3,
+.magick-ai-toolbox__card h3 {
+	margin: 0 0 4px;
+	font-size: 16px;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__section-heading p {
+	margin: 0;
+	color: #50575e;
+}
+
+.magick-ai-toolbox__knowledge-summary {
+	display: grid;
+	gap: 10px;
+}
+
 .magick-ai-toolbox__tool-workspace {
 	display: grid;
 	grid-template-columns: 300px minmax(0, 1fr);
@@ -177,6 +209,208 @@
 
 .magick-ai-toolbox__settings-form {
 	max-width: 920px;
+}
+
+.magick-ai-toolbox__connector-workspace {
+	display: grid;
+	gap: 12px;
+}
+
+.magick-ai-toolbox__connector-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: stretch;
+	margin: 0 0 2px;
+}
+
+.magick-ai-toolbox__connector-tab {
+	appearance: none;
+	display: grid;
+	gap: 2px;
+	min-width: 150px;
+	padding: 10px 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	color: #1d2327;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+}
+
+.magick-ai-toolbox__connector-tab:hover,
+.magick-ai-toolbox__connector-tab:focus {
+	border-color: #2271b1;
+}
+
+.magick-ai-toolbox__connector-tab.is-active {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	box-shadow: inset 0 -3px 0 #2271b1;
+}
+
+.magick-ai-toolbox__connector-tab span {
+	font-weight: 600;
+}
+
+.magick-ai-toolbox__connector-tab small {
+	color: #646970;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__connector-provider-workspace {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+	margin: 18px 0 0;
+}
+
+.magick-ai-toolbox__connector-provider-list {
+	display: grid;
+	gap: 8px;
+}
+
+.magick-ai-toolbox__connector-provider-button {
+	appearance: none;
+	display: grid;
+	gap: 3px;
+	width: 100%;
+	min-height: 54px;
+	padding: 11px 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	color: #1d2327;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+}
+
+.magick-ai-toolbox__connector-provider-button:hover,
+.magick-ai-toolbox__connector-provider-button:focus {
+	border-color: #2271b1;
+}
+
+.magick-ai-toolbox__connector-provider-button.is-active {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.magick-ai-toolbox__connector-provider-button span {
+	font-weight: 600;
+}
+
+.magick-ai-toolbox__connector-provider-button small {
+	color: #646970;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__connector-provider-panel {
+	min-height: 240px;
+}
+
+.magick-ai-toolbox__context-workspace {
+	display: grid;
+	gap: 12px;
+}
+
+.magick-ai-toolbox__context-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: stretch;
+	margin: 0 0 2px;
+}
+
+.magick-ai-toolbox__context-tab {
+	appearance: none;
+	display: grid;
+	gap: 2px;
+	min-width: 132px;
+	padding: 10px 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	color: #1d2327;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+}
+
+.magick-ai-toolbox__context-tab:hover,
+.magick-ai-toolbox__context-tab:focus {
+	border-color: #2271b1;
+}
+
+.magick-ai-toolbox__context-tab.is-active {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	box-shadow: inset 0 -3px 0 #2271b1;
+}
+
+.magick-ai-toolbox__context-tab span {
+	font-weight: 600;
+}
+
+.magick-ai-toolbox__context-tab small {
+	color: #646970;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__context-group-workspace {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+	margin: 18px 0 0;
+}
+
+.magick-ai-toolbox__context-group-list {
+	display: grid;
+	gap: 8px;
+}
+
+.magick-ai-toolbox__context-group-button {
+	appearance: none;
+	display: grid;
+	gap: 3px;
+	width: 100%;
+	min-height: 54px;
+	padding: 11px 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	color: #1d2327;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+}
+
+.magick-ai-toolbox__context-group-button:hover,
+.magick-ai-toolbox__context-group-button:focus {
+	border-color: #2271b1;
+}
+
+.magick-ai-toolbox__context-group-button.is-active {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.magick-ai-toolbox__context-group-button span {
+	font-weight: 600;
+}
+
+.magick-ai-toolbox__context-group-button small {
+	color: #646970;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__context-group-panel {
+	min-height: 220px;
 }
 
 .magick-ai-toolbox__draft-actions {
@@ -283,6 +517,10 @@
 	line-height: 1.35;
 }
 
+.magick-ai-toolbox__connector-status-row dd a {
+	overflow-wrap: anywhere;
+}
+
 .magick-ai-toolbox label {
 	display: block;
 	margin: 12px 0 0;
@@ -298,6 +536,7 @@
 .magick-ai-toolbox input[type='text'],
 .magick-ai-toolbox input[type='password'],
 .magick-ai-toolbox input[type='number'],
+.magick-ai-toolbox input[type='date'],
 .magick-ai-toolbox select {
 	width: 100%;
 	max-width: 100%;
@@ -338,6 +577,132 @@
 .magick-ai-toolbox__split h3 {
 	margin: 10px 0 0;
 	font-size: 14px;
+}
+
+.magick-ai-toolbox__media-picker {
+	display: grid;
+	grid-template-columns: 132px minmax(0, 1fr);
+	gap: 14px;
+	align-items: start;
+	margin: 14px 0 0;
+}
+
+.magick-ai-toolbox__media-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 96px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	color: #646970;
+	text-align: center;
+}
+
+.magick-ai-toolbox__media-thumb {
+	display: block;
+	width: 100%;
+	height: 96px;
+	object-fit: cover;
+}
+
+.magick-ai-toolbox__inline-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 10px 0 0;
+}
+
+.magick-ai-toolbox__inline-actions span {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__derivative-preview {
+	margin: 14px 0;
+	padding: 0;
+}
+
+.magick-ai-toolbox__derivative-preview img {
+	display: block;
+	width: 100%;
+	max-width: 720px;
+	max-height: 420px;
+	object-fit: contain;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__derivative-preview figcaption {
+	max-width: 720px;
+	margin-top: 6px;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__batch-panel {
+	margin: 16px 0 0;
+	padding: 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-panel h3,
+.magick-ai-toolbox__batch-heading h4 {
+	margin: 0 0 4px;
+	font-size: 15px;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__batch-panel p {
+	margin: 0 0 10px;
+	color: #50575e;
+}
+
+.magick-ai-toolbox__batch-plan {
+	margin: 12px 0 0;
+	padding: 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-list {
+	display: grid;
+	gap: 6px;
+	margin: 10px 0 0;
+}
+
+.magick-ai-toolbox .magick-ai-toolbox__batch-row {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin: 0;
+	padding: 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-row.is-skipped {
+	background: #f6f7f7;
+}
+
+.magick-ai-toolbox__batch-row-body {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+}
+
+.magick-ai-toolbox__batch-row-body strong,
+.magick-ai-toolbox__batch-row-body small {
+	display: block;
+	overflow-wrap: anywhere;
+}
+
+.magick-ai-toolbox__batch-row-body small {
+	color: #646970;
+	line-height: 1.35;
 }
 
 .magick-ai-toolbox__result {
@@ -554,6 +919,23 @@ pre.magick-ai-toolbox__result {
 		grid-template-columns: 1fr;
 	}
 
+	.magick-ai-toolbox__connector-provider-workspace {
+		grid-template-columns: 1fr;
+	}
+
+	.magick-ai-toolbox__connector-provider-list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.magick-ai-toolbox__context-group-workspace {
+		grid-template-columns: 1fr;
+	}
+
+	.magick-ai-toolbox__context-group-list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.magick-ai-toolbox__media-picker,
 	.magick-ai-toolbox__image-item {
 		grid-template-columns: 1fr;
 	}

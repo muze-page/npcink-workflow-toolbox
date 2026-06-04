@@ -10,7 +10,8 @@ Done:
 
 - WordPress plugin scaffold.
 - Admin toolbox screen.
-- Tavily, Unsplash, SiliconFlow, Jina, and Qdrant connector settings.
+- Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, SiliconFlow, Jina, and
+  Qdrant connector settings.
 - Content discoverability context setting and read-only Abilities exposure.
 - Content discoverability context validation and one-item brief abilities.
 - REST routes.
@@ -31,8 +32,8 @@ Goal: prove the Toolbox is useful as a manual admin tool.
 
 Target features:
 
-- Tavily research action with source-aware response display.
-- Unsplash image-source action with browser preview instead of raw JSON only.
+- configured research action with source-aware response display.
+- configured image-source action with browser preview instead of raw JSON only.
 - SiliconFlow or Jina text-to-vector query plus Qdrant vector query against a
   configured collection.
 - Article brief button.
@@ -77,6 +78,7 @@ Goal: make vector search practical for site content.
 
 Target features:
 
+- Cloud-managed site knowledge Abilities for search, status, and sync;
 - site-content indexing plan;
 - embedding provider expansion beyond SiliconFlow and Jina;
 - manual re-index button;
@@ -87,8 +89,9 @@ Target features:
 
 Open decision:
 
-- whether vector indexing lives in Toolbox, a provider connector, or a future
-  `magick-ai-knowledge` plugin.
+- whether Cloud-owned vector indexing is implemented directly in Cloud service
+  APIs or through a future `magick-ai-knowledge` connector, while Toolbox stays
+  the local Ability exposure surface.
 - which embedding provider owns text-to-vector conversion.
 
 ## Stage 4 - Productized Workflow Buttons
@@ -98,7 +101,7 @@ Goal: add repeatable operator flows without creating a workflow runtime.
 Candidate buttons:
 
 - generate article outline with references;
-- find Unsplash featured image candidates;
+- find configured image-source candidates for featured or inline images;
 - optimize old article;
 - complete media alt and caption suggestions;
 - find internal-link opportunities;
@@ -106,7 +109,6 @@ Candidate buttons:
 - build content discoverability suggestions from the operator-filled context;
 - check source coverage.
 - rerank source, image, and vector candidates with Jina Reranker.
-- extract cleaner source content with Jina Reader.
 
 Rule:
 

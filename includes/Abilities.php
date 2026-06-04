@@ -112,12 +112,54 @@ final class Abilities {
 			),
 			'magick-ai-toolbox/vector-search'                      => $this->definition(
 				__( 'Vector Search', 'magick-ai-toolbox' ),
-				__( 'Query the configured vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ),
+				__( 'Query the configured low-level vector database with text query embedding or vector JSON.', 'magick-ai-toolbox' ),
 				array( 'query' ),
 				array( $this, 'vector_search' ),
 				'cap.toolbox.vector_search',
 				array(
+					'data_classification' => 'provider_suggestion',
 					'composition_role' => 'local_style_context',
+					'provider_execution' => 'server_side_toolbox',
+					'knowledge_layer' => 'low_level_vector_query',
+				)
+			),
+			'magick-ai-toolbox/search-site-knowledge'              => $this->definition(
+				__( 'Search Site Knowledge', 'magick-ai-toolbox' ),
+				__( 'Search Cloud-managed site knowledge for semantic search, related content, writing context, internal links, or refresh suggestions without writing WordPress content.', 'magick-ai-toolbox' ),
+				array( 'query' ),
+				array( $this, 'search_site_knowledge' ),
+				'cap.toolbox.knowledge.search',
+				array(
+					'data_classification' => 'public_site_content',
+					'composition_role'    => 'site_knowledge_context',
+					'provider_execution'  => 'cloud_runtime_via_addon',
+					'cloud_contract'      => 'site_knowledge_search.v1',
+				)
+			),
+			'magick-ai-toolbox/get-site-knowledge-status'          => $this->definition(
+				__( 'Get Site Knowledge Status', 'magick-ai-toolbox' ),
+				__( 'Read Cloud-managed site knowledge coverage and sync status without writing WordPress content.', 'magick-ai-toolbox' ),
+				array(),
+				array( $this, 'get_site_knowledge_status' ),
+				'cap.toolbox.knowledge.read',
+				array(
+					'data_classification' => 'public_site_content',
+					'composition_role'    => 'site_knowledge_status',
+					'provider_execution'  => 'cloud_runtime_via_addon',
+					'cloud_contract'      => 'site_knowledge_status.v1',
+				)
+			),
+			'magick-ai-toolbox/request-site-knowledge-sync'        => $this->definition(
+				__( 'Request Site Knowledge Sync', 'magick-ai-toolbox' ),
+				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'magick-ai-toolbox' ),
+				array(),
+				array( $this, 'request_site_knowledge_sync' ),
+				'cap.toolbox.knowledge.sync',
+				array(
+					'data_classification' => 'public_site_content',
+					'composition_role'    => 'site_knowledge_sync_request',
+					'provider_execution'  => 'cloud_runtime_via_addon',
+					'cloud_contract'      => 'site_knowledge_sync.v1',
 				)
 			),
 			'magick-ai-toolbox/build-article-brief'                => $this->definition(
@@ -222,6 +264,19 @@ final class Abilities {
 					'write_posture'       => 'suggestion_only',
 				)
 			),
+			'magick-ai-toolbox/build-ai-article-writing-pack' => $this->definition(
+				__( 'Build AI Article Writing Pack', 'magick-ai-toolbox' ),
+				__( 'Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content.', 'magick-ai-toolbox' ),
+				array(),
+				array( $this, 'build_ai_article_writing_pack' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'ai_article_writing_pack',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'suggestion_only',
+				)
+			),
 		);
 	}
 
@@ -268,7 +323,14 @@ final class Abilities {
 
 	public function web_research( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
-		return $this->client->web_research( sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ) );
+		return $this->client->web_research(
+			sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ),
+			array(
+				'provider'            => sanitize_key( (string) ( $input['provider'] ?? '' ) ),
+				'enhance_with_reader' => ! empty( $input['enhance_with_reader'] ),
+				'max_results'         => (int) ( $input['max_results'] ?? 5 ),
+			)
+		);
 	}
 
 	public function search_image_source( $input = array() ) {
@@ -278,6 +340,7 @@ final class Abilities {
 			array(
 				'orientation' => sanitize_key( (string) ( $input['orientation'] ?? '' ) ),
 				'color'       => sanitize_key( (string) ( $input['color'] ?? '' ) ),
+				'provider'    => sanitize_key( (string) ( $input['provider'] ?? '' ) ),
 				'per_page'    => (int) ( $input['per_page'] ?? 8 ),
 			)
 		);
@@ -290,6 +353,18 @@ final class Abilities {
 		$payload = '' !== trim( $query ) ? $query : $vector;
 		$input_type = sanitize_key( (string) ( $input['input_type'] ?? 'auto' ) );
 		return $this->client->vector_search( $payload, (int) ( $input['max_results'] ?? 4 ), $input_type );
+	}
+
+	public function search_site_knowledge( $input = array() ) {
+		return $this->client->search_site_knowledge( is_array( $input ) ? $input : array() );
+	}
+
+	public function get_site_knowledge_status( $input = array() ) {
+		return $this->client->get_site_knowledge_status( is_array( $input ) ? $input : array() );
+	}
+
+	public function request_site_knowledge_sync( $input = array() ) {
+		return $this->client->request_site_knowledge_sync( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_article_brief( $input = array() ) {
@@ -324,6 +399,10 @@ final class Abilities {
 
 	public function build_content_discoverability_brief( $input = array() ) {
 		return $this->client->build_content_discoverability_brief( is_array( $input ) ? $input : array() );
+	}
+
+	public function build_ai_article_writing_pack( $input = array() ) {
+		return $this->client->build_ai_article_writing_pack( is_array( $input ) ? $input : array() );
 	}
 
 	private function can_execute_ability( string $ability_id ): bool {

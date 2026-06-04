@@ -17,6 +17,7 @@ $toolbox_smoke_target_abilities = array(
 	'magick-ai-toolbox/get-content-discoverability-context'      => 'cap.toolbox.context.read',
 	'magick-ai-toolbox/validate-content-discoverability-context' => 'cap.toolbox.context.read',
 	'magick-ai-toolbox/build-content-discoverability-brief'      => 'cap.toolbox.workflow_suggest',
+	'magick-ai-toolbox/build-ai-article-writing-pack'            => 'cap.toolbox.workflow_suggest',
 );
 
 function toolbox_content_smoke_pass( string $message ): void {
@@ -214,10 +215,31 @@ if ( is_wp_error( $brief ) ) {
 $brief = is_array( $brief ) ? $brief : array();
 
 toolbox_content_smoke_assert( 'content_discoverability_brief' === (string) ( $brief['artifact_type'] ?? '' ), 'Sample brief declares content_discoverability_brief.' );
+toolbox_content_smoke_assert( true === (bool) ( $brief['primary_contract'] ?? false ), 'Sample brief is the primary SEO/AEO/GEO contract.' );
 toolbox_content_smoke_assert( 'suggestion_only' === (string) ( $brief['write_posture'] ?? '' ), 'Sample brief is suggestion-only.' );
 toolbox_content_smoke_assert( false === (bool) ( $brief['direct_wordpress_write'] ?? true ), 'Sample brief disables direct WordPress writes.' );
+toolbox_content_smoke_assert( is_array( $brief['seo'] ?? null ) && is_array( $brief['aeo'] ?? null ) && is_array( $brief['geo'] ?? null ), 'Sample brief exposes SEO/AEO/GEO sections.' );
+toolbox_content_smoke_assert( is_array( $brief['exceptions'] ?? null ) && is_array( $brief['special_cases'] ?? null ), 'Sample brief exposes exceptions and special cases.' );
 toolbox_content_smoke_assert( ! empty( $brief['proposal_template'] ) && is_array( $brief['proposal_template'] ), 'Sample brief returns a proposal template.' );
 toolbox_content_smoke_assert( ! empty( $brief['handoff'] ) && is_array( $brief['handoff'] ), 'Sample brief returns governed handoff metadata.' );
+
+$pack = toolbox_content_smoke_call(
+	$definitions,
+	'magick-ai-toolbox/build-ai-article-writing-pack',
+	array(
+		'post_id' => $sample_post_id,
+	)
+);
+if ( is_wp_error( $pack ) ) {
+	toolbox_content_smoke_fail( 'Article writing pack build returned WP_Error: ' . $pack->get_error_code() );
+}
+$pack = is_array( $pack ) ? $pack : array();
+
+toolbox_content_smoke_assert( 'ai_article_writing_pack' === (string) ( $pack['artifact_type'] ?? '' ), 'Sample writing pack declares ai_article_writing_pack.' );
+toolbox_content_smoke_assert( false === (bool) ( $pack['primary_contract'] ?? true ), 'Sample writing pack is a fallback contract.' );
+toolbox_content_smoke_assert( 'suggestion_only' === (string) ( $pack['write_posture'] ?? '' ), 'Sample writing pack is suggestion-only.' );
+toolbox_content_smoke_assert( false === (bool) ( $pack['direct_wordpress_write'] ?? true ), 'Sample writing pack disables direct WordPress writes.' );
+toolbox_content_smoke_assert( ! empty( $pack['article_prompt_pack'] ) && is_array( $pack['article_prompt_pack'] ), 'Sample writing pack returns article prompt guidance.' );
 
 $agent_gateway = toolbox_content_smoke_find_agent_gateway_tools( array_keys( $toolbox_smoke_target_abilities ) );
 if ( empty( $agent_gateway['available'] ) ) {

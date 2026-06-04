@@ -3,9 +3,10 @@
 Status: active for the first Toolbox build.
 
 Magick AI Toolbox is the WordPress operator-facing AI tool surface: it gives
-site owners and editors buttons for Tavily research, Unsplash image-source
-candidates, SiliconFlow or Jina query embeddings, Qdrant vector search, and
-repeatable AI-assisted planning workflows.
+site owners and editors buttons for Tavily and Bocha research, Jina Reader
+result enhancement, Unsplash, Pixabay, and Pexels image-source candidates,
+Cloud-managed site knowledge abilities, SiliconFlow or Jina query embeddings,
+Qdrant vector search, and repeatable AI-assisted planning workflows.
 
 ## One-Sentence Positioning
 
@@ -24,8 +25,9 @@ connectors into safe, click-driven WordPress operator tools.
 ## Core Jobs
 
 1. Provide a visible admin product surface for external AI tools.
-2. Run Tavily search, Unsplash image-source search, configured query
-   embeddings, and Qdrant vector queries from a controlled WordPress UI.
+2. Run configured external search, optional result reading, configured
+   image-source search, configured query embeddings, and Qdrant vector queries
+   from a controlled WordPress UI.
 3. Convert repeated operator workflows into fixed buttons.
 4. Return planning artifacts, candidates, and handoff notes.
 5. Let operators fill non-secret SEO, AEO, and GEO content context for
@@ -50,7 +52,7 @@ Magick AI Toolbox does not own:
 | --- | --- |
 | `magick-ai-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
 | `magick-ai-abilities` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
-| `magick-ai-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, Tavily research, Unsplash image-source candidates, configured query embeddings, and Qdrant vector search actions. |
+| `magick-ai-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, configured image-source candidates, configured query embeddings, and Qdrant vector search actions. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
 
 ## Design Rule
@@ -64,12 +66,20 @@ can consume as suggestion-only context, it may belong in Toolbox.
 If a feature authorizes, commits, audits, schedules, or owns final WordPress
 writes, it belongs outside Toolbox.
 
-Unsplash is an image-source connector, not an AI image-generation connector.
-Toolbox must preserve attribution and download tracking metadata in its
-candidate payloads.
+Unsplash, Pixabay, and Pexels are image-source connectors, not AI
+image-generation connectors. Toolbox must preserve attribution and source
+metadata in its candidate payloads; Unsplash candidates must also preserve
+download tracking metadata.
 
 Qdrant is a vector database connector, not a complete knowledge system by
 itself. Toolbox may create a single query embedding through SiliconFlow or Jina
 so other AI clients can call vector search with text. WordPress content
 indexing, re-index jobs, stale index detection, and vector collection lifecycle
 still require a separate stage decision.
+
+Cloud-managed site knowledge is the preferred high-level surface for semantic
+site search, related content, writing context, internal links, refresh
+suggestions, and image context. Toolbox may expose these as local WordPress
+Abilities while Cloud owns embeddings, vector storage, indexing, reranking, and
+status detail. Toolbox must not store Cloud credentials or become the content
+index lifecycle owner.

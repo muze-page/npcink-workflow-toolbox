@@ -5,7 +5,7 @@ Status: active first-version contract.
 This document summarizes how Toolbox exposes external search, image-source,
 embedding, and vector APIs to other AI callers.
 
-For article drafting and content-planning composition, also read
+For AI composition examples, including article drafting and content planning, read
 `docs/ai-content-composition-abilities.md`.
 
 ## Product Rule
@@ -32,12 +32,16 @@ External AI callers should discover and call Toolbox abilities such as:
 - `magick-ai-toolbox/web-research`
 - `magick-ai-toolbox/search-image-source`
 - `magick-ai-toolbox/vector-search`
+- `magick-ai-toolbox/search-site-knowledge`
+- `magick-ai-toolbox/get-site-knowledge-status`
+- `magick-ai-toolbox/request-site-knowledge-sync`
 - `magick-ai-toolbox/build-article-brief`
 - `magick-ai-toolbox/build-article-write-plan`
 - `magick-ai-toolbox/build-media-brief`
 - `magick-ai-toolbox/get-content-discoverability-context`
 - `magick-ai-toolbox/validate-content-discoverability-context`
 - `magick-ai-toolbox/build-content-discoverability-brief`
+- `magick-ai-toolbox/build-ai-article-writing-pack`
 
 The caller provides task input. Toolbox reads local configuration, performs the
 provider request on the server, normalizes the response, and returns a
@@ -55,6 +59,12 @@ It may also report Agent Gateway direct tool-map status when the host projection
 matrix is present. Missing `wp_*` Agent Gateway exposure is a host-side
 admission task, not a Toolbox route or registry task.
 
+For SEO, AEO, and GEO usage, external AI callers should treat
+`magick-ai-toolbox/build-content-discoverability-brief` as the primary
+lightweight contract. It exposes `seo`, `aeo`, `geo`, `exceptions`,
+`special_cases`, and proposal fields. `build-ai-article-writing-pack` is only a
+convenience fallback for broad natural-language article requests.
+
 The caller must not receive provider API keys. Provider secrets remain in:
 
 - PHP constants;
@@ -63,12 +73,23 @@ The caller must not receive provider API keys. Provider secrets remain in:
 
 ## Provider Boundaries
 
-Tavily is exposed as external web research. Results are source candidates, not
-verified truth.
+Tavily and Bocha are exposed through the single `web-research` ability as
+external web research. This ability is general-purpose for any AI workflow that
+needs external source candidates, not only article drafting. Results are source
+candidates, not verified truth. Payloads must preserve provider names, source
+URLs, and enough summary/snippet material for the caller to build an evidence
+pack without receiving provider API keys.
 
-Unsplash is exposed as image-source candidate search. It is not AI image
-generation. Payloads must preserve photographer attribution and
-`download_location`.
+Jina Reader is exposed only as a bounded post-search enhancement for selected
+result URLs. It may add reader excerpts to search results, but it must not be
+treated as a search provider, crawler, citation verifier, or write path.
+
+Unsplash, Pixabay, and Pexels are exposed through the single
+`search-image-source` ability as image-source candidate search. This ability is
+general-purpose for any AI workflow that needs image candidates, not only
+article drafting. It is not AI image generation. Payloads must preserve
+provider name, source URL, photographer attribution, and Unsplash
+`download_location` when present.
 
 SiliconFlow and Jina are exposed only as synchronous query embedding providers
 for vector search in the first version. They do not imply content indexing
@@ -77,6 +98,24 @@ ownership.
 Qdrant is exposed as configured vector query execution. It does not imply full
 RAG, indexing jobs, re-index buttons, stale-index detection, or collection
 lifecycle ownership.
+
+Cloud-managed site knowledge is exposed through three high-level abilities:
+
+- `search-site-knowledge` for semantic site search, related content, writing
+  context, internal links, refresh suggestions, image context, FAQ candidates,
+  content gap analysis, and publish preflight duplicate checks;
+- `get-site-knowledge-status` for Cloud index coverage and freshness status;
+- `request-site-knowledge-sync` for bounded Cloud sync or rebuild requests from
+  public WordPress content, including published posts/pages and bounded
+  approved comments attached to those public entries.
+
+These abilities are general-purpose. Article drafting, admin search,
+recommendations, internal-link tooling, and refresh workflows should call the
+same site knowledge abilities instead of integrating Qdrant or embedding
+providers directly. Toolbox calls Cloud through the Cloud Addon runtime client
+or the `magick_ai_toolbox_site_knowledge_cloud_request` host filter. It does
+not store Cloud credentials, create a second ability registry, write WordPress
+content, or own Cloud vector collection lifecycle.
 
 ## Ability Metadata
 
@@ -95,8 +134,9 @@ provider_secret_exposure: none
 
 Each ability also declares a stable Toolbox scope such as
 `cap.toolbox.search`, `cap.toolbox.image_source`,
-`cap.toolbox.vector_search`, `cap.toolbox.workflow_suggest`, or
-`cap.toolbox.context.read`.
+`cap.toolbox.vector_search`, `cap.toolbox.knowledge.search`,
+`cap.toolbox.knowledge.read`, `cap.toolbox.knowledge.sync`,
+`cap.toolbox.workflow_suggest`, or `cap.toolbox.context.read`.
 
 Core or the host that consumes these scopes is responsible for external
 AI/app-key authorization.

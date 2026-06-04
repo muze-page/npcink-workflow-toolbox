@@ -27,9 +27,11 @@ semantic runtime.
 Create `magick-ai-toolbox` as a standalone WordPress plugin.
 
 Toolbox owns the operator-facing product surface for external tools and fixed
-workflow buttons. It may call Tavily, Unsplash, SiliconFlow, Jina, Qdrant, and
-future connector APIs for bounded suggestion tasks and may register its actions
-through the WordPress Abilities API.
+workflow buttons. It may call Tavily, Bocha, Jina Reader as a bounded
+post-search enhancement, configured image-source providers such as Unsplash,
+Pixabay, and Pexels, SiliconFlow, Jina, Qdrant, and future connector APIs for
+bounded suggestion tasks and may register its actions through the WordPress
+Abilities API.
 
 Toolbox does not own final WordPress write approval, Core audit truth, reusable
 first-party WordPress ability packs, queues, MCP, Agent Gateway, or OpenClaw
@@ -89,10 +91,14 @@ Rejected as the only surface. Host/runtime integration remains a future option.
   request logs, and key rotation may later move to connector plugins.
 - Write-like actions must hand off to WordPress abilities and Core governance.
 - Long-running workflows require a future runtime decision before implementation.
-- Unsplash must be treated as an image-source connector with attribution and
-  download tracking, not as an AI image-generation provider.
+- Tavily and Bocha must be treated as source-candidate search connectors, not
+  verified truth providers. Jina Reader may enhance selected result URLs but
+  must not become a crawler or search provider.
+- Unsplash, Pixabay, and Pexels must be treated as image-source connectors with
+  attribution/source metadata, not as AI image-generation providers. Unsplash
+  candidates must preserve download tracking.
 - Vector search may create a synchronous query embedding through SiliconFlow or
   Jina. WordPress content indexing, re-index jobs, and vector collection
   lifecycle remain separate decisions.
-- Jina Reader and Jina Reranker are reserved workflow-level enhancements, not
-  first-version runtime features.
+- Jina Reranker is a reserved workflow-level enhancement, not a first-version
+  runtime feature.

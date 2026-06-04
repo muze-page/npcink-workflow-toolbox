@@ -40,9 +40,17 @@ final class Settings {
 			'tavily_include_answer' => true,
 			'tavily_include_raw'    => false,
 			'tavily_include_images' => false,
-			'image_provider'        => 'unsplash',
+			'bocha_api_key'         => '',
+			'bocha_base_url'        => 'https://api.bochaai.com/v1',
+			'bocha_count'           => 8,
+			'enable_jina_reader'    => false,
+			'jina_reader_base_url'  => 'https://r.jina.ai',
+			'jina_reader_max_pages' => 2,
+			'image_provider'        => 'auto',
 			'unsplash_access_key'   => '',
 			'unsplash_utm_source'   => 'magick_ai_toolbox',
+			'pixabay_api_key'       => '',
+			'pexels_api_key'        => '',
 			'vector_provider'       => 'qdrant',
 			'qdrant_endpoint'       => '',
 			'qdrant_api_key'        => '',
@@ -78,6 +86,10 @@ final class Settings {
 			'entity_keywords'                  => array(),
 			'allowed_claims'                   => array(),
 			'forbidden_claims'                 => array(),
+			'disallowed_topics'                => array(),
+			'cautious_topics'                  => array(),
+			'no_structured_output_topics'      => array(),
+			'human_confirmation_required'      => array(),
 			'seo_rules'                        => '',
 			'aeo_rules'                        => '',
 			'geo_rules'                        => '',
@@ -124,6 +136,12 @@ final class Settings {
 				'allowed'   => $context['allowed_claims'],
 				'forbidden' => $context['forbidden_claims'],
 			),
+			'exceptions'                      => array(
+				'disallowed_topics'           => $context['disallowed_topics'],
+				'cautious_topics'             => $context['cautious_topics'],
+				'no_structured_output_topics' => $context['no_structured_output_topics'],
+				'human_confirmation_required' => $context['human_confirmation_required'],
+			),
 			'rules'                           => array(
 				'seo'                               => $context['seo_rules'],
 				'aeo'                               => $context['aeo_rules'],
@@ -159,6 +177,7 @@ final class Settings {
 		$this->append_context_check( $checks, 'keywords.entities', __( 'Entity keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['entities'], 'recommended' );
 		$this->append_context_check( $checks, 'claims.allowed', __( 'Allowed claims are filled.', 'magick-ai-toolbox' ), $context['claims']['allowed'], 'recommended' );
 		$this->append_context_check( $checks, 'claims.forbidden', __( 'Forbidden claims are filled.', 'magick-ai-toolbox' ), $context['claims']['forbidden'], 'recommended' );
+		$this->append_context_check( $checks, 'exceptions', __( 'Exception and special-case rules are filled when needed.', 'magick-ai-toolbox' ), $context['exceptions'], 'recommended' );
 
 		$missing_required    = array_values( array_filter( $checks, static fn( array $check ): bool => 'required' === $check['severity'] && ! $check['passed'] ) );
 		$missing_recommended = array_values( array_filter( $checks, static fn( array $check ): bool => 'recommended' === $check['severity'] && ! $check['passed'] ) );
@@ -200,12 +219,67 @@ final class Settings {
 		return '' !== $this->get_tavily_api_key();
 	}
 
+	public function get_bocha_api_key(): string {
+		return $this->get_secret( 'bocha_api_key', 'MAGICK_AI_TOOLBOX_BOCHA_API_KEY', 'BOCHA_API_KEY' );
+	}
+
+	public function has_bocha_api_key(): bool {
+		return '' !== $this->get_bocha_api_key();
+	}
+
+	public function configured_search_providers(): array {
+		$providers = array();
+		if ( $this->has_tavily_api_key() ) {
+			$providers[] = 'tavily';
+		}
+		if ( $this->has_bocha_api_key() ) {
+			$providers[] = 'bocha';
+		}
+
+		return $providers;
+	}
+
 	public function get_unsplash_access_key(): string {
 		return $this->get_secret( 'unsplash_access_key', 'MAGICK_AI_TOOLBOX_UNSPLASH_ACCESS_KEY', 'UNSPLASH_ACCESS_KEY' );
 	}
 
 	public function has_unsplash_access_key(): bool {
 		return '' !== $this->get_unsplash_access_key();
+	}
+
+	public function get_pixabay_api_key(): string {
+		return $this->get_secret( 'pixabay_api_key', 'MAGICK_AI_TOOLBOX_PIXABAY_API_KEY', 'PIXABAY_API_KEY' );
+	}
+
+	public function has_pixabay_api_key(): bool {
+		return '' !== $this->get_pixabay_api_key();
+	}
+
+	public function get_pexels_api_key(): string {
+		return $this->get_secret( 'pexels_api_key', 'MAGICK_AI_TOOLBOX_PEXELS_API_KEY', 'PEXELS_API_KEY' );
+	}
+
+	public function has_pexels_api_key(): bool {
+		return '' !== $this->get_pexels_api_key();
+	}
+
+	public function configured_image_source_providers(): array {
+		$providers = array();
+		if ( $this->has_unsplash_access_key() ) {
+			$providers[] = 'unsplash';
+		}
+		if ( $this->has_pixabay_api_key() ) {
+			$providers[] = 'pixabay';
+		}
+		if ( $this->has_pexels_api_key() ) {
+			$providers[] = 'pexels';
+		}
+
+		return $providers;
+	}
+
+	public function has_image_source_provider(): bool {
+		return array() !== $this->configured_image_source_providers();
 	}
 
 	public function get_qdrant_api_key(): string {
@@ -239,23 +313,38 @@ final class Settings {
 		$defaults = $this->defaults();
 
 		$clear_tavily_key      = ! empty( $input['clear_tavily_api_key'] );
+		$clear_bocha_key       = ! empty( $input['clear_bocha_api_key'] );
 		$clear_unsplash_key    = ! empty( $input['clear_unsplash_access_key'] );
+		$clear_pixabay_key     = ! empty( $input['clear_pixabay_api_key'] );
+		$clear_pexels_key      = ! empty( $input['clear_pexels_api_key'] );
 		$clear_qdrant_key      = ! empty( $input['clear_qdrant_api_key'] );
 		$clear_siliconflow_key = ! empty( $input['clear_siliconflow_api_key'] );
 		$clear_jina_key        = ! empty( $input['clear_jina_api_key'] );
+		$search_provider       = in_array( (string) ( $input['search_provider'] ?? '' ), array( 'tavily', 'bocha', 'auto' ), true ) ? (string) $input['search_provider'] : 'tavily';
+		$image_provider        = in_array( (string) ( $input['image_provider'] ?? '' ), array( 'auto', 'unsplash', 'pixabay', 'pexels' ), true ) ? (string) $input['image_provider'] : 'auto';
 		$embedding_provider    = in_array( (string) ( $input['embedding_provider'] ?? '' ), array( 'siliconflow', 'jina' ), true ) ? (string) $input['embedding_provider'] : 'siliconflow';
 		$embedding_dimensions  = isset( $input['embedding_dimensions'] ) ? absint( $input['embedding_dimensions'] ) : (int) $defaults['embedding_dimensions'];
+		$bocha_count           = isset( $input['bocha_count'] ) ? absint( $input['bocha_count'] ) : (int) $defaults['bocha_count'];
+		$jina_reader_max_pages = isset( $input['jina_reader_max_pages'] ) ? absint( $input['jina_reader_max_pages'] ) : (int) $defaults['jina_reader_max_pages'];
 
 		$sanitized = array(
-			'search_provider'       => 'tavily',
+			'search_provider'       => $search_provider,
 			'tavily_api_key'        => $this->sanitize_secret_input( $input, $current, 'tavily_api_key', $clear_tavily_key ),
 			'tavily_search_depth'   => in_array( (string) ( $input['tavily_search_depth'] ?? '' ), array( 'basic', 'advanced' ), true ) ? (string) $input['tavily_search_depth'] : 'basic',
 			'tavily_include_answer' => ! empty( $input['tavily_include_answer'] ),
 			'tavily_include_raw'    => ! empty( $input['tavily_include_raw'] ),
 			'tavily_include_images' => ! empty( $input['tavily_include_images'] ),
-			'image_provider'        => 'unsplash',
+			'bocha_api_key'         => $this->sanitize_secret_input( $input, $current, 'bocha_api_key', $clear_bocha_key ),
+			'bocha_base_url'        => untrailingslashit( esc_url_raw( (string) ( $input['bocha_base_url'] ?? $defaults['bocha_base_url'] ) ) ),
+			'bocha_count'           => max( 1, min( 20, $bocha_count ) ),
+			'enable_jina_reader'    => ! empty( $input['enable_jina_reader'] ),
+			'jina_reader_base_url'  => untrailingslashit( esc_url_raw( (string) ( $input['jina_reader_base_url'] ?? $defaults['jina_reader_base_url'] ) ) ),
+			'jina_reader_max_pages' => max( 1, min( 5, $jina_reader_max_pages ) ),
+			'image_provider'        => $image_provider,
 			'unsplash_access_key'   => $this->sanitize_secret_input( $input, $current, 'unsplash_access_key', $clear_unsplash_key ),
 			'unsplash_utm_source'   => sanitize_key( (string) ( $input['unsplash_utm_source'] ?? $defaults['unsplash_utm_source'] ) ),
+			'pixabay_api_key'       => $this->sanitize_secret_input( $input, $current, 'pixabay_api_key', $clear_pixabay_key ),
+			'pexels_api_key'        => $this->sanitize_secret_input( $input, $current, 'pexels_api_key', $clear_pexels_key ),
 			'vector_provider'       => 'qdrant',
 			'qdrant_endpoint'       => untrailingslashit( esc_url_raw( (string) ( $input['qdrant_endpoint'] ?? '' ) ) ),
 			'qdrant_api_key'        => $this->sanitize_secret_input( $input, $current, 'qdrant_api_key', $clear_qdrant_key ),
@@ -304,6 +393,10 @@ final class Settings {
 			'entity_keywords'                  => $this->sanitize_context_list( $input['entity_keywords'] ?? array() ),
 			'allowed_claims'                   => $this->sanitize_context_list( $input['allowed_claims'] ?? array() ),
 			'forbidden_claims'                 => $this->sanitize_context_list( $input['forbidden_claims'] ?? array() ),
+			'disallowed_topics'                => $this->sanitize_context_list( $input['disallowed_topics'] ?? array() ),
+			'cautious_topics'                  => $this->sanitize_context_list( $input['cautious_topics'] ?? array() ),
+			'no_structured_output_topics'      => $this->sanitize_context_list( $input['no_structured_output_topics'] ?? array() ),
+			'human_confirmation_required'      => $this->sanitize_context_list( $input['human_confirmation_required'] ?? array() ),
 			'seo_rules'                        => sanitize_textarea_field( (string) ( $input['seo_rules'] ?? '' ) ),
 			'aeo_rules'                        => sanitize_textarea_field( (string) ( $input['aeo_rules'] ?? '' ) ),
 			'geo_rules'                        => sanitize_textarea_field( (string) ( $input['geo_rules'] ?? '' ) ),
@@ -367,7 +460,13 @@ final class Settings {
 
 	private function context_value_present( $value ): bool {
 		if ( is_array( $value ) ) {
-			return count( array_filter( $value, static fn( $item ): bool => '' !== trim( (string) $item ) ) ) > 0;
+			foreach ( $value as $item ) {
+				if ( $this->context_value_present( $item ) ) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		return '' !== trim( (string) $value );

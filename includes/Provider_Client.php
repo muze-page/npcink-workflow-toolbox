@@ -19,6 +19,103 @@ final class Provider_Client {
 	}
 
 	public function web_research( string $query, array $options = array() ) {
+		$provider = sanitize_key( (string) ( $options['provider'] ?? $this->settings->get( 'search_provider' ) ?? 'tavily' ) );
+		if ( ! in_array( $provider, array( 'tavily', 'bocha', 'auto' ), true ) ) {
+			$provider = 'tavily';
+		}
+
+		$providers = 'auto' === $provider ? $this->settings->configured_search_providers() : array( $provider );
+		if ( array() === $providers ) {
+			return $this->missing_secret_error( 'search_provider', __( 'Configure at least one search provider key before running web research.', 'magick-ai-toolbox' ) );
+		}
+
+		$max_results  = max( 1, min( 10, (int) ( $options['max_results'] ?? 5 ) ) );
+		$per_provider = max( 1, (int) ceil( $max_results / max( 1, count( $providers ) ) ) );
+		$results      = array();
+		$images       = array();
+		$raw          = array();
+		$sources      = array();
+		$errors       = array();
+		$answer       = '';
+
+		foreach ( $providers as $source_provider ) {
+			$source_options = array_merge( $options, array( 'max_results' => $per_provider ) );
+			$result         = $this->search_web_provider( $source_provider, $query, $source_options );
+			if ( is_wp_error( $result ) ) {
+				if ( 'auto' !== $provider ) {
+					return $result;
+				}
+
+				$errors[] = array(
+					'provider' => $source_provider,
+					'code'     => $result->get_error_code(),
+					'message'  => $result->get_error_message(),
+				);
+				continue;
+			}
+
+			$provider_results = is_array( $result['results'] ?? null ) ? $result['results'] : array();
+			$results          = array_merge( $results, $provider_results );
+			$images           = array_merge( $images, is_array( $result['images'] ?? null ) ? $result['images'] : array() );
+			if ( '' === $answer && ! empty( $result['answer'] ) ) {
+				$answer = (string) $result['answer'];
+			}
+			$sources[] = array(
+				'provider' => $source_provider,
+				'count'    => count( $provider_results ),
+			);
+			$raw[ $source_provider ] = is_array( $result['raw'] ?? null ) ? $result['raw'] : array();
+		}
+
+		if ( array() === $results && array() !== $errors ) {
+			return new WP_Error(
+				'magick_ai_toolbox_search_provider_errors',
+				__( 'Configured search providers did not return source candidates.', 'magick-ai-toolbox' ),
+				array(
+					'status'          => 502,
+					'provider_errors' => $errors,
+				)
+			);
+		}
+
+		$results = array_slice( $this->dedupe_results_by_url( $results ), 0, $max_results );
+		$reader_enabled = ! empty( $options['enhance_with_reader'] ) || (bool) $this->settings->get( 'enable_jina_reader' );
+		$reader_report  = array();
+		if ( $reader_enabled ) {
+			$reader = $this->enhance_results_with_jina_reader( $results, (int) ( $options['reader_max_pages'] ?? $this->settings->get( 'jina_reader_max_pages' ) ) );
+			$results = $reader['results'];
+			$reader_report = $reader['report'];
+		}
+
+		return $this->with_optional_raw(
+			$this->with_output_contract(
+				array(
+					'provider'        => 'web_research',
+					'provider_mode'   => $provider,
+					'active_sources'  => $sources,
+					'provider_errors' => $errors,
+					'query'           => $query,
+					'answer'          => sanitize_textarea_field( $answer ),
+					'results'         => $results,
+					'images'          => $images,
+					'reader_enhancement' => $reader_report,
+				),
+				'research_evidence',
+				'research_evidence'
+			),
+			$raw
+		);
+	}
+
+	private function search_web_provider( string $provider, string $query, array $options ) {
+		if ( 'bocha' === $provider ) {
+			return $this->search_bocha_web( $query, $options );
+		}
+
+		return $this->search_tavily_web( $query, $options );
+	}
+
+	private function search_tavily_web( string $query, array $options ) {
 		$api_key = $this->settings->get_tavily_api_key();
 		if ( '' === $api_key ) {
 			return $this->missing_secret_error( 'tavily_api_key', __( 'Configure a Tavily API key before running web research.', 'magick-ai-toolbox' ) );
@@ -66,6 +163,7 @@ final class Provider_Client {
 			}
 
 			$results[] = array(
+				'provider'    => 'tavily',
 				'title'       => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
 				'url'         => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
 				'content'     => sanitize_textarea_field( (string) ( $item['content'] ?? '' ) ),
@@ -75,23 +173,158 @@ final class Provider_Client {
 			);
 		}
 
-		return $this->with_optional_raw(
-			$this->with_output_contract(
-				array(
-					'provider' => 'tavily',
-					'query'    => $query,
-					'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
-					'results'  => $results,
-					'images'   => is_array( $response['images'] ?? null ) ? $response['images'] : array(),
-				),
-				'research_evidence',
-				'research_evidence'
+		return array(
+			'provider' => 'tavily',
+			'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
+			'results'  => $results,
+			'images'   => is_array( $response['images'] ?? null ) ? $response['images'] : array(),
+			'raw'      => $response,
+		);
+	}
+
+	private function search_bocha_web( string $query, array $options ) {
+		$api_key = $this->settings->get_bocha_api_key();
+		if ( '' === $api_key ) {
+			return $this->missing_secret_error( 'bocha_api_key', __( 'Configure a Bocha API key before running Bocha web research.', 'magick-ai-toolbox' ) );
+		}
+
+		$base_url = untrailingslashit( (string) ( $this->settings->get( 'bocha_base_url' ) ?: 'https://api.bochaai.com/v1' ) );
+		$count    = max( 1, min( 20, (int) ( $options['max_results'] ?? $this->settings->get( 'bocha_count' ) ?? 8 ) ) );
+		$body     = array(
+			'query'   => $query,
+			'count'   => $count,
+			'summary' => true,
+		);
+
+		if ( ! empty( $options['freshness'] ) ) {
+			$body['freshness'] = sanitize_key( (string) $options['freshness'] );
+		}
+
+		$response = $this->json_request(
+			$base_url . '/web-search',
+			'POST',
+			array(
+				'Authorization' => 'Bearer ' . $api_key,
 			),
-			$response
+			$body
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$items   = is_array( $response['webPages']['value'] ?? null ) ? $response['webPages']['value'] : array();
+		$results = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$results[] = array(
+				'provider'       => 'bocha',
+				'title'          => sanitize_text_field( (string) ( $item['name'] ?? $item['title'] ?? '' ) ),
+				'url'            => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'content'        => sanitize_textarea_field( (string) ( $item['snippet'] ?? $item['summary'] ?? '' ) ),
+				'raw_content'    => sanitize_textarea_field( (string) ( $item['summary'] ?? '' ) ),
+				'score'          => isset( $item['score'] ) ? (float) $item['score'] : 0.0,
+				'favicon'        => esc_url_raw( (string) ( $item['siteIcon'] ?? '' ) ),
+				'site_name'      => sanitize_text_field( (string) ( $item['siteName'] ?? '' ) ),
+				'published_date' => sanitize_text_field( (string) ( $item['datePublished'] ?? '' ) ),
+			);
+		}
+
+		return array(
+			'provider' => 'bocha',
+			'answer'   => sanitize_textarea_field( (string) ( $response['answer'] ?? '' ) ),
+			'results'  => $results,
+			'images'   => array(),
+			'raw'      => $response,
 		);
 	}
 
 	public function image_candidates( string $query, array $options = array() ) {
+		$provider = sanitize_key( (string) ( $options['provider'] ?? $this->settings->get( 'image_provider' ) ?? 'auto' ) );
+		if ( ! in_array( $provider, array( 'auto', 'unsplash', 'pixabay', 'pexels' ), true ) ) {
+			$provider = 'auto';
+		}
+
+		$providers = 'auto' === $provider ? $this->settings->configured_image_source_providers() : array( $provider );
+		if ( array() === $providers ) {
+			return $this->missing_secret_error( 'image_source_provider', __( 'Configure at least one image-source provider key before searching image candidates.', 'magick-ai-toolbox' ) );
+		}
+
+		$per_page     = max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) );
+		$per_provider = isset( $options['per_provider'] ) ? max( 1, min( 30, (int) $options['per_provider'] ) ) : max( 1, (int) ceil( $per_page / max( 1, count( $providers ) ) ) );
+		$images       = array();
+		$raw          = array();
+		$sources      = array();
+		$errors       = array();
+
+		foreach ( $providers as $source_provider ) {
+			$source_options = array_merge( $options, array( 'per_page' => $per_provider ) );
+			$result         = $this->search_image_provider( $source_provider, $query, $source_options );
+			if ( is_wp_error( $result ) ) {
+				if ( 'auto' !== $provider ) {
+					return $result;
+				}
+
+				$errors[] = array(
+					'provider' => $source_provider,
+					'code'     => $result->get_error_code(),
+					'message'  => $result->get_error_message(),
+				);
+				continue;
+			}
+
+			$provider_images = is_array( $result['images'] ?? null ) ? $result['images'] : array();
+			$images          = array_merge( $images, $provider_images );
+			$sources[]       = array(
+				'provider' => $source_provider,
+				'count'    => count( $provider_images ),
+			);
+			$raw[ $source_provider ] = is_array( $result['raw'] ?? null ) ? $result['raw'] : array();
+		}
+
+		if ( array() === $images && array() !== $errors ) {
+			return new WP_Error(
+				'magick_ai_toolbox_image_source_provider_errors',
+				__( 'Configured image-source providers did not return candidates.', 'magick-ai-toolbox' ),
+				array(
+					'status'          => 502,
+					'provider_errors' => $errors,
+				)
+			);
+		}
+
+		$payload = $this->with_output_contract(
+			array(
+				'provider'        => 'image_source',
+				'provider_mode'   => $provider,
+				'active_sources'  => $sources,
+				'provider_errors' => $errors,
+				'query'           => $query,
+				'images'          => array_slice( $this->dedupe_image_candidates( $images ), 0, $per_page ),
+			),
+			'image_source_candidates',
+			'image_source_candidates'
+		);
+
+		return $this->with_optional_raw( $payload, $raw );
+	}
+
+	private function search_image_provider( string $provider, string $query, array $options ) {
+		if ( 'pixabay' === $provider ) {
+			return $this->search_pixabay_images( $query, $options );
+		}
+
+		if ( 'pexels' === $provider ) {
+			return $this->search_pexels_images( $query, $options );
+		}
+
+		return $this->search_unsplash_images( $query, $options );
+	}
+
+	private function search_unsplash_images( string $query, array $options ) {
 		$access_key = $this->settings->get_unsplash_access_key();
 		if ( '' === $access_key ) {
 			return $this->missing_secret_error( 'unsplash_access_key', __( 'Configure an Unsplash access key before searching image candidates.', 'magick-ai-toolbox' ) );
@@ -137,6 +370,7 @@ final class Provider_Client {
 
 			$images[] = array(
 				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
+				'provider'          => 'unsplash',
 				'description'       => sanitize_textarea_field( (string) ( $item['description'] ?? $item['alt_description'] ?? '' ) ),
 				'alt_description'   => sanitize_textarea_field( (string) ( $item['alt_description'] ?? '' ) ),
 				'thumb_url'         => esc_url_raw( (string) ( $urls['thumb'] ?? '' ) ),
@@ -144,6 +378,7 @@ final class Provider_Client {
 				'regular_url'       => esc_url_raw( (string) ( $urls['regular'] ?? '' ) ),
 				'html_url'          => esc_url_raw( (string) ( $links['html'] ?? '' ) ),
 				'download_location' => esc_url_raw( (string) ( $links['download_location'] ?? '' ) ),
+				'source_url'        => esc_url_raw( (string) ( $links['html'] ?? '' ) ),
 				'photographer'      => sanitize_text_field( (string) ( $user['name'] ?? '' ) ),
 				'photographer_url'  => esc_url_raw( $profile_url ),
 				'attribution'       => sprintf(
@@ -154,18 +389,271 @@ final class Provider_Client {
 			);
 		}
 
-		return $this->with_optional_raw(
-			$this->with_output_contract(
-				array(
-					'provider' => 'unsplash',
-					'query'    => $query,
-					'images'   => $images,
-				),
-				'image_source_candidates',
-				'image_source_candidates'
-			),
-			$response
+		return array(
+			'provider' => 'unsplash',
+			'images'   => $images,
+			'raw'      => $response,
 		);
+	}
+
+	private function search_pixabay_images( string $query, array $options ) {
+		$api_key = $this->settings->get_pixabay_api_key();
+		if ( '' === $api_key ) {
+			return $this->missing_secret_error( 'pixabay_api_key', __( 'Configure a Pixabay API key before searching Pixabay image candidates.', 'magick-ai-toolbox' ) );
+		}
+
+		$params = array(
+			'key'        => $api_key,
+			'q'          => $query,
+			'image_type' => 'photo',
+			'per_page'   => max( 3, min( 30, (int) ( $options['per_page'] ?? 8 ) ) ),
+			'safesearch' => 'true',
+		);
+
+		$orientation = sanitize_key( (string) ( $options['orientation'] ?? '' ) );
+		if ( in_array( $orientation, array( 'horizontal', 'vertical' ), true ) ) {
+			$params['orientation'] = $orientation;
+		} elseif ( 'landscape' === $orientation ) {
+			$params['orientation'] = 'horizontal';
+		} elseif ( 'portrait' === $orientation ) {
+			$params['orientation'] = 'vertical';
+		}
+
+		if ( ! empty( $options['color'] ) ) {
+			$params['colors'] = sanitize_key( (string) $options['color'] );
+		}
+
+		$response = $this->json_request( add_query_arg( $params, 'https://pixabay.com/api/' ), 'GET' );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$images = array();
+		foreach ( (array) ( $response['hits'] ?? array() ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$user = sanitize_text_field( (string) ( $item['user'] ?? 'Pixabay' ) );
+			$user_id = sanitize_key( (string) ( $item['user_id'] ?? '' ) );
+			$user_url = '' !== $user_id && '' !== $user ? 'https://pixabay.com/users/' . rawurlencode( sanitize_title( $user ) ) . '-' . rawurlencode( $user_id ) . '/' : '';
+			$tags = sanitize_textarea_field( (string) ( $item['tags'] ?? '' ) );
+
+			$images[] = array(
+				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
+				'provider'          => 'pixabay',
+				'description'       => $tags,
+				'alt_description'   => $tags,
+				'thumb_url'         => esc_url_raw( (string) ( $item['previewURL'] ?? '' ) ),
+				'small_url'         => esc_url_raw( (string) ( $item['webformatURL'] ?? '' ) ),
+				'regular_url'       => esc_url_raw( (string) ( $item['largeImageURL'] ?? $item['webformatURL'] ?? '' ) ),
+				'html_url'          => esc_url_raw( (string) ( $item['pageURL'] ?? '' ) ),
+				'download_location' => '',
+				'source_url'        => esc_url_raw( (string) ( $item['pageURL'] ?? '' ) ),
+				'photographer'      => $user,
+				'photographer_url'  => esc_url_raw( $user_url ),
+				'attribution'       => sprintf(
+					/* translators: %s: image creator name. */
+					__( 'Image by %s on Pixabay.', 'magick-ai-toolbox' ),
+					$user
+				),
+			);
+		}
+
+		return array(
+			'provider' => 'pixabay',
+			'images'   => $images,
+			'raw'      => $response,
+		);
+	}
+
+	private function search_pexels_images( string $query, array $options ) {
+		$api_key = $this->settings->get_pexels_api_key();
+		if ( '' === $api_key ) {
+			return $this->missing_secret_error( 'pexels_api_key', __( 'Configure a Pexels API key before searching Pexels image candidates.', 'magick-ai-toolbox' ) );
+		}
+
+		$params = array(
+			'query'    => $query,
+			'per_page' => max( 1, min( 30, (int) ( $options['per_page'] ?? 8 ) ) ),
+		);
+
+		foreach ( array( 'orientation', 'color' ) as $key ) {
+			if ( ! empty( $options[ $key ] ) ) {
+				$params[ $key ] = sanitize_key( (string) $options[ $key ] );
+			}
+		}
+
+		$response = $this->json_request(
+			add_query_arg( $params, 'https://api.pexels.com/v1/search' ),
+			'GET',
+			array(
+				'Authorization' => $api_key,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$images = array();
+		foreach ( (array) ( $response['photos'] ?? array() ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$src = is_array( $item['src'] ?? null ) ? $item['src'] : array();
+			$photographer = sanitize_text_field( (string) ( $item['photographer'] ?? 'Pexels' ) );
+			$alt = sanitize_textarea_field( (string) ( $item['alt'] ?? '' ) );
+
+			$images[] = array(
+				'id'                => sanitize_text_field( (string) ( $item['id'] ?? '' ) ),
+				'provider'          => 'pexels',
+				'description'       => $alt,
+				'alt_description'   => $alt,
+				'thumb_url'         => esc_url_raw( (string) ( $src['tiny'] ?? $src['small'] ?? '' ) ),
+				'small_url'         => esc_url_raw( (string) ( $src['small'] ?? $src['medium'] ?? '' ) ),
+				'regular_url'       => esc_url_raw( (string) ( $src['large'] ?? $src['large2x'] ?? $src['original'] ?? '' ) ),
+				'html_url'          => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'download_location' => '',
+				'source_url'        => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'photographer'      => $photographer,
+				'photographer_url'  => esc_url_raw( (string) ( $item['photographer_url'] ?? '' ) ),
+				'attribution'       => sprintf(
+					/* translators: %s: photographer name. */
+					__( 'Photo by %s on Pexels.', 'magick-ai-toolbox' ),
+					$photographer
+				),
+			);
+		}
+
+		return array(
+			'provider' => 'pexels',
+			'images'   => $images,
+			'raw'      => $response,
+		);
+	}
+
+	private function dedupe_image_candidates( array $images ): array {
+		$seen = array();
+		$out  = array();
+
+		foreach ( $images as $image ) {
+			if ( ! is_array( $image ) ) {
+				continue;
+			}
+
+			$key = (string) ( $image['source_url'] ?? $image['html_url'] ?? $image['regular_url'] ?? $image['id'] ?? '' );
+			if ( '' === $key || isset( $seen[ $key ] ) ) {
+				continue;
+			}
+
+			$seen[ $key ] = true;
+			$out[]        = $image;
+		}
+
+		return $out;
+	}
+
+	private function dedupe_results_by_url( array $results ): array {
+		$seen = array();
+		$out  = array();
+
+		foreach ( $results as $result ) {
+			if ( ! is_array( $result ) ) {
+				continue;
+			}
+
+			$url = esc_url_raw( (string) ( $result['url'] ?? '' ) );
+			if ( '' === $url || isset( $seen[ $url ] ) ) {
+				continue;
+			}
+
+			$seen[ $url ] = true;
+			$result['url'] = $url;
+			$out[] = $result;
+		}
+
+		return $out;
+	}
+
+	private function enhance_results_with_jina_reader( array $results, int $max_pages ): array {
+		$max_pages = max( 1, min( 5, $max_pages ) );
+		$enhanced  = array();
+		$report    = array(
+			'provider'       => 'jina_reader',
+			'enabled'        => true,
+			'requested_pages' => $max_pages,
+			'succeeded'      => 0,
+			'failed'         => 0,
+			'errors'         => array(),
+		);
+
+		foreach ( $results as $index => $result ) {
+			if ( $index >= $max_pages || empty( $result['url'] ) ) {
+				$enhanced[] = $result;
+				continue;
+			}
+
+			$reader = $this->read_url_with_jina_reader( (string) $result['url'] );
+			if ( is_wp_error( $reader ) ) {
+				$result['reader_status'] = 'failed';
+				$report['failed']++;
+				$report['errors'][] = array(
+					'url'     => esc_url_raw( (string) $result['url'] ),
+					'code'    => $reader->get_error_code(),
+					'message' => $reader->get_error_message(),
+				);
+				$enhanced[] = $result;
+				continue;
+			}
+
+			$result['reader_status']  = 'ready';
+			$result['reader_excerpt'] = $reader;
+			$report['succeeded']++;
+			$enhanced[] = $result;
+		}
+
+		return array(
+			'results' => $enhanced,
+			'report'  => $report,
+		);
+	}
+
+	private function read_url_with_jina_reader( string $url ) {
+		$url = esc_url_raw( $url );
+		if ( '' === $url ) {
+			return new WP_Error(
+				'magick_ai_toolbox_invalid_reader_url',
+				__( 'Jina Reader requires a valid source URL.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$base_url = untrailingslashit( (string) ( $this->settings->get( 'jina_reader_base_url' ) ?: 'https://r.jina.ai' ) );
+		$headers  = array(
+			'Accept' => 'text/plain',
+		);
+		$api_key = $this->settings->get_jina_api_key();
+		if ( '' !== $api_key ) {
+			$headers['Authorization'] = 'Bearer ' . $api_key;
+		}
+
+		$response = $this->text_request( $base_url . '/' . $url, 'GET', $headers );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$text = sanitize_textarea_field( $response );
+		if ( '' === trim( $text ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_empty_reader_response',
+				__( 'Jina Reader returned an empty response for this source URL.', 'magick-ai-toolbox' ),
+				array( 'status' => 502 )
+			);
+		}
+
+		return substr( $text, 0, 4000 );
 	}
 
 	public function vector_search( string $input, int $max_results = 4, string $input_type = 'auto' ) {
@@ -259,6 +747,104 @@ final class Provider_Client {
 		}
 
 		return $this->with_optional_raw( $payload, $response );
+	}
+
+	public function search_site_knowledge( array $input ) {
+		$query = trim( sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ) );
+		if ( '' === $query ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_site_knowledge_query',
+				__( 'A query is required for site knowledge search.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$intent = sanitize_key( (string) ( $input['intent'] ?? 'site_search' ) );
+		if (
+			! in_array(
+				$intent,
+				array(
+					'site_search',
+					'related_content',
+					'writing_context',
+					'internal_links',
+					'refresh_suggestions',
+					'image_context',
+					'faq_candidates',
+					'content_gap_analysis',
+					'duplicate_check',
+				),
+				true
+			)
+		) {
+			$intent = 'site_search';
+		}
+
+		$filters = is_array( $input['filters'] ?? null ) ? $this->sanitize_payload( $input['filters'] ) : array();
+		$payload = array(
+			'contract_version' => 'site_knowledge_search.v1',
+			'query'            => $query,
+			'intent'           => $intent,
+			'current_post_id'  => absint( $input['current_post_id'] ?? 0 ),
+			'max_results'      => max( 1, min( 20, absint( $input['max_results'] ?? 8 ) ) ),
+			'filters'          => is_array( $filters ) ? $filters : array(),
+			'write_posture'    => 'suggestion_only',
+		);
+
+		return $this->execute_site_knowledge_cloud_request(
+			'magick-ai-cloud/site-knowledge-search',
+			'site_knowledge_search.v1',
+			'inline',
+			$payload,
+			'site_knowledge_results',
+			'site_knowledge_context'
+		);
+	}
+
+	public function get_site_knowledge_status( array $input ) {
+		$payload = array(
+			'contract_version' => 'site_knowledge_status.v1',
+			'include_coverage' => ! empty( $input['include_coverage'] ),
+			'write_posture'    => 'suggestion_only',
+		);
+
+		return $this->execute_site_knowledge_cloud_request(
+			'magick-ai-cloud/site-knowledge-status',
+			'site_knowledge_status.v1',
+			'inline',
+			$payload,
+			'site_knowledge_status',
+			'site_knowledge_status'
+		);
+	}
+
+	public function request_site_knowledge_sync( array $input ) {
+		$sync_mode = sanitize_key( (string) ( $input['sync_mode'] ?? 'refresh' ) );
+		if ( ! in_array( $sync_mode, array( 'refresh', 'rebuild', 'delete' ), true ) ) {
+			$sync_mode = 'refresh';
+		}
+
+		$payload = array(
+			'contract_version' => 'site_knowledge_sync.v1',
+			'sync_mode'        => $sync_mode,
+			'post_ids'         => $this->sanitize_absint_list( $input['post_ids'] ?? array() ),
+			'max_posts'        => max( 1, min( 50, absint( $input['max_posts'] ?? 20 ) ) ),
+			'documents'        => array(),
+			'write_posture'    => 'suggestion_only',
+		);
+
+		if ( 'delete' !== $sync_mode ) {
+			$payload['documents'] = $this->collect_site_knowledge_documents( $payload['post_ids'], $payload['max_posts'] );
+		}
+
+		return $this->execute_site_knowledge_cloud_request(
+			'magick-ai-cloud/site-knowledge-sync',
+			'site_knowledge_sync.v1',
+			'whole_run_offload',
+			$payload,
+			'site_knowledge_sync_request',
+			'site_knowledge_sync_request'
+		);
 	}
 
 	public function build_article_brief( string $topic, bool $include_vector = true ) {
@@ -550,18 +1136,47 @@ final class Provider_Client {
 		$context           = $this->settings->get_content_context_for_ability();
 		$validation        = $this->settings->validate_content_context_for_ability();
 		$allowed_fields    = $this->sanitize_string_list( $context['proposal_allowed_fields'] ?? array() );
+		$exceptions        = is_array( $context['exceptions'] ?? null ) ? $this->sanitize_payload( $context['exceptions'] ) : array();
 		$proposal_template = array();
 		$candidates        = array();
+		$sections          = array(
+			'seo' => array(
+				'rules'              => sanitize_textarea_field( (string) ( $context['rules']['seo'] ?? '' ) ),
+				'allowed_fields'     => array(),
+				'proposal_template'  => array(),
+				'candidate_suggestions' => array(),
+			),
+			'aeo' => array(
+				'rules'              => sanitize_textarea_field( (string) ( $context['rules']['aeo'] ?? '' ) ),
+				'allow_faq_generation' => ! empty( $context['rules']['allow_faq_generation'] ),
+				'allow_answer_summary' => ! empty( $context['rules']['allow_aeo_summary'] ),
+				'allowed_fields'     => array(),
+				'proposal_template'  => array(),
+				'candidate_suggestions' => array(),
+			),
+			'geo' => array(
+				'rules'              => sanitize_textarea_field( (string) ( $context['rules']['geo'] ?? '' ) ),
+				'allow_geo_summary'  => ! empty( $context['rules']['allow_geo_summary'] ),
+				'allow_structured_data_suggestions' => ! empty( $context['rules']['allow_structured_data_suggestions'] ),
+				'allowed_fields'     => array(),
+				'proposal_template'  => array(),
+				'candidate_suggestions' => array(),
+			),
+		);
 
 		foreach ( $allowed_fields as $field ) {
 			$proposal_template[ $field ] = array(
 				'instruction' => $this->content_discoverability_field_instruction( $field ),
 				'value'       => null,
 			);
+			$group = $this->content_discoverability_field_group( $field );
+			$sections[ $group ]['allowed_fields'][] = $field;
+			$sections[ $group ]['proposal_template'][ $field ] = $proposal_template[ $field ];
 
 			$candidate = $this->content_discoverability_candidate( $field, $source, $context );
 			if ( null !== $candidate ) {
 				$candidates[ $field ] = $candidate;
+				$sections[ $group ]['candidate_suggestions'][ $field ] = $candidate;
 			}
 		}
 
@@ -569,17 +1184,24 @@ final class Provider_Client {
 			'artifact_type'          => 'content_discoverability_brief',
 			'composition_role'       => 'seo_aeo_geo_brief',
 			'version'                => 1,
+			'primary_contract'       => true,
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
 			'context_validation'     => $validation,
 			'content_context'        => $context,
+			'exceptions'             => $exceptions,
+			'special_cases'          => $exceptions,
 			'source'                 => $source,
+			'seo'                    => $sections['seo'],
+			'aeo'                    => $sections['aeo'],
+			'geo'                    => $sections['geo'],
 			'ai_instructions'        => array(
 				'Use the content_context as the site-level rule source.',
 				'Use only facts present in the supplied source, public site context, or cited evidence.',
 				'Do not invent customer cases, ranking guarantees, source citations, or unavailable product features.',
 				'Return suggestions only for proposal_allowed_fields.',
 				'Respect forbidden claims and preserve the requested brand voice.',
+				'Apply exceptions and special_cases before generating FAQ, HowTo, schema, or confident product claims.',
 				'Final WordPress writes must go through Core proposal approval.',
 			),
 			'proposal_allowed_fields' => $allowed_fields,
@@ -591,6 +1213,104 @@ final class Provider_Client {
 				'validation_ability_id'  => 'magick-ai-toolbox/validate-content-discoverability-context',
 				'final_writes'           => 'core_proposal_required',
 				'direct_wordpress_write' => false,
+			),
+		);
+	}
+
+	public function build_ai_article_writing_pack( array $input ) {
+		$brief = $this->build_content_discoverability_brief( $input );
+		if ( is_wp_error( $brief ) ) {
+			return $brief;
+		}
+
+		$brief              = is_array( $brief ) ? $brief : array();
+		$source             = is_array( $brief['source'] ?? null ) ? $brief['source'] : array();
+		$context            = is_array( $brief['content_context'] ?? null ) ? $brief['content_context'] : array();
+		$validation         = is_array( $brief['context_validation'] ?? null ) ? $brief['context_validation'] : array();
+		$rules              = is_array( $context['rules'] ?? null ) ? $context['rules'] : array();
+		$keywords           = is_array( $context['keywords'] ?? null ) ? $context['keywords'] : array();
+		$claims             = is_array( $context['claims'] ?? null ) ? $context['claims'] : array();
+		$topic              = sanitize_text_field( (string) ( $source['topic'] ?? ( $input['topic'] ?? '' ) ) );
+		$title              = sanitize_text_field( (string) ( $source['title'] ?? ( $input['title'] ?? $topic ) ) );
+		$language           = sanitize_text_field( (string) ( $input['language'] ?? 'zh-CN' ) );
+		$article_type       = sanitize_key( (string) ( $input['article_type'] ?? 'practical_guide' ) );
+		$target_word_count  = absint( $input['target_word_count'] ?? 1200 );
+		$target_word_count  = max( 500, min( 5000, $target_word_count ) );
+		$context_status     = sanitize_key( (string) ( $validation['status'] ?? 'needs_attention' ) );
+		$ready_for_writing  = in_array( $context_status, array( 'ready', 'ready_with_warnings' ), true );
+		$proposal_fields    = $this->sanitize_string_list( $brief['proposal_allowed_fields'] ?? array() );
+		$primary_keywords   = $this->sanitize_string_list( $keywords['primary'] ?? array() );
+		$long_tail_keywords = $this->sanitize_string_list( $keywords['long_tail'] ?? array() );
+		$entity_keywords    = $this->sanitize_string_list( $keywords['entities'] ?? array() );
+		$forbidden_claims   = $this->sanitize_string_list( $claims['forbidden'] ?? array() );
+
+		return array(
+			'artifact_type'          => 'ai_article_writing_pack',
+			'composition_role'       => 'ai_article_writing_pack',
+			'version'                => 1,
+			'primary_contract'       => false,
+			'contract_role'          => 'openclaw_natural_language_fallback',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'provider_execution'     => 'none',
+			'ready_for_writing'      => $ready_for_writing,
+			'context_status'         => $context_status,
+			'source'                 => $source,
+			'topic'                  => $topic,
+			'title'                  => $title,
+			'language'               => $language,
+			'article_type'           => $article_type,
+			'target_word_count'      => $target_word_count,
+			'content_context'        => $context,
+			'context_validation'     => $validation,
+			'discoverability_brief'  => $brief,
+			'exceptions'             => is_array( $brief['exceptions'] ?? null ) ? $brief['exceptions'] : array(),
+			'special_cases'          => is_array( $brief['special_cases'] ?? null ) ? $brief['special_cases'] : array(),
+			'article_prompt_pack'    => array(
+				'user_intent'      => sanitize_textarea_field( (string) ( $input['user_intent'] ?? 'Write one article from the supplied topic and site rules.' ) ),
+				'writing_goal'     => sprintf(
+					'Write one %1$s article in %2$s about: %3$s.',
+					$article_type,
+					$language,
+					'' !== $topic ? $topic : $title
+				),
+				'style_rules'      => array_filter(
+					array(
+						(string) ( $context['brand_voice'] ?? '' ),
+						(string) ( $rules['seo'] ?? '' ),
+						(string) ( $rules['aeo'] ?? '' ),
+						(string) ( $rules['geo'] ?? '' ),
+					)
+				),
+				'keyword_targets'  => array(
+					'primary'   => $primary_keywords,
+					'long_tail' => $long_tail_keywords,
+					'entities'  => $entity_keywords,
+				),
+				'proposal_fields'  => $proposal_fields,
+				'forbidden_claims' => $forbidden_claims,
+			),
+			'suggested_article_structure' => $this->article_writing_pack_structure( $rules ),
+			'ai_instructions'      => array(
+				'Use this pack as the local site-context source before writing.',
+				'If ready_for_writing is false, stop and ask the operator to complete Toolbox Content Context.',
+				'Write from the supplied source and topic; do not invent product facts, customer cases, rankings, citations, or unavailable features.',
+				'Respect forbidden claims, brand voice, SEO rules, AEO rules, and GEO rules.',
+				'Return article draft text and proposal-ready SEO/AEO/GEO suggestions only.',
+				'Do not write WordPress data. Final WordPress writes must go through Core proposal approval and commit preflight.',
+			),
+			'handoff'              => array(
+				'pack_ability_id'       => 'magick-ai-toolbox/build-ai-article-writing-pack',
+				'brief_ability_id'      => 'magick-ai-toolbox/build-content-discoverability-brief',
+				'write_plan_ability_id' => 'magick-ai-toolbox/build-article-write-plan',
+				'final_writes'          => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'next_steps'            => array(
+					'Use the pack to draft one article and SEO/AEO/GEO suggestions.',
+					'After human review, convert the reviewed draft with build-article-write-plan.',
+					'Send write-like outcomes through Core proposal, approval, and commit preflight.',
+				),
 			),
 		);
 	}
@@ -682,6 +1402,230 @@ final class Provider_Client {
 			'target_max_width' => max( 320, min( 7680, absint( $overrides['max_width'] ?? $policy['max_width'] ?? 1600 ) ) ),
 			'quality'          => max( 1, min( 100, absint( $overrides['quality'] ?? $policy['quality'] ?? 82 ) ) ),
 		);
+	}
+
+	private function execute_site_knowledge_cloud_request( string $ability_name, string $contract_version, string $execution_pattern, array $input, string $artifact_type, string $composition_role ) {
+		$runtime_payload = array(
+			'ability_name'        => $ability_name,
+			'contract_version'    => $contract_version,
+			'execution_pattern'   => $execution_pattern,
+			'input'               => $this->sanitize_payload( $input ),
+			'data_classification' => 'public_site_content',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 86400,
+			'timeout_seconds'     => 'whole_run_offload' === $execution_pattern ? 60 : 20,
+			'retry_max'           => 'whole_run_offload' === $execution_pattern ? 1 : 0,
+			'policy'              => array(
+				'allow_fallback' => true,
+			),
+		);
+
+		$runtime_payload = apply_filters( 'magick_ai_toolbox_site_knowledge_runtime_payload', $runtime_payload, $ability_name, $contract_version );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_invalid_site_knowledge_runtime_payload',
+				__( 'The site knowledge runtime payload was not valid.', 'magick-ai-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'magick_ai_toolbox_site_knowledge_cloud_request', null, $runtime_payload, $ability_name, $contract_version );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_site_knowledge_cloud_response( $handled, $artifact_type, $composition_role, $runtime_payload );
+		}
+
+		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_site_knowledge_cloud_unavailable',
+				__( 'Connect Magick AI Cloud before using site knowledge abilities.', 'magick-ai-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'site_knowledge' );
+		$idempotency_key = $this->trace_id( str_replace( '.', '_', $contract_version ) );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_site_knowledge_cloud_response( is_array( $response ) ? $response : array(), $artifact_type, $composition_role, $runtime_payload );
+	}
+
+	private function normalize_site_knowledge_cloud_response( array $response, string $artifact_type, string $composition_role, array $runtime_payload ): array {
+		$result = array();
+		foreach ( array( 'result', 'output', 'data' ) as $key ) {
+			if ( is_array( $response[ $key ] ?? null ) ) {
+				$result = $response[ $key ];
+				break;
+			}
+		}
+
+		if ( array() === $result ) {
+			$result = $response;
+		}
+
+		$payload = $this->with_output_contract(
+			array(
+				'provider'          => 'magick_ai_cloud',
+				'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
+				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
+				'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
+				'status'            => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
+				'run_id'            => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
+				'results'           => is_array( $result['results'] ?? null ) ? $this->sanitize_payload( $result['results'] ) : array(),
+				'coverage'          => is_array( $result['coverage'] ?? null ) ? $this->sanitize_payload( $result['coverage'] ) : array(),
+				'sync'              => is_array( $result['sync'] ?? null ) ? $this->sanitize_payload( $result['sync'] ) : array(),
+				'handoff'           => array(
+					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'final_writes'           => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+			),
+			$artifact_type,
+			$composition_role
+		);
+
+		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+			$payload['cloud_response'] = $this->sanitize_payload( $response );
+		}
+
+		return $payload;
+	}
+
+	private function sanitize_absint_list( $value ): array {
+		$items = is_array( $value ) ? $value : array_filter( array_map( 'trim', explode( ',', (string) $value ) ) );
+		return array_values(
+			array_filter(
+				array_map( 'absint', $items ),
+				static fn( int $item ): bool => 0 < $item
+			)
+		);
+	}
+
+	private function collect_site_knowledge_documents( array $post_ids, int $max_posts ): array {
+		if ( ! function_exists( 'get_posts' ) ) {
+			return array();
+		}
+
+		$args = array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => max( 1, min( 50, $max_posts ) ),
+			'orderby'        => 'modified',
+			'order'          => 'DESC',
+		);
+
+		if ( array() !== $post_ids ) {
+			$args['post__in'] = $post_ids;
+			$args['orderby']  = 'post__in';
+		}
+
+		$posts = get_posts( $args );
+		if ( ! is_array( $posts ) ) {
+			return array();
+		}
+
+		$documents = array();
+		$indexed_post_ids = array();
+		foreach ( $posts as $post ) {
+			if ( ! is_object( $post ) ) {
+				continue;
+			}
+
+			$post_id = absint( $post->ID ?? 0 );
+			if ( 0 >= $post_id ) {
+				continue;
+			}
+
+			$indexed_post_ids[] = $post_id;
+			$content = wp_strip_all_tags( (string) ( $post->post_content ?? '' ) );
+			$excerpt = function_exists( 'get_the_excerpt' ) ? wp_strip_all_tags( get_the_excerpt( $post ) ) : '';
+			$documents[] = array(
+				'post_id'         => $post_id,
+				'post_type'       => function_exists( 'get_post_type' ) ? sanitize_key( (string) get_post_type( $post ) ) : '',
+				'post_status'     => function_exists( 'get_post_status' ) ? sanitize_key( (string) get_post_status( $post ) ) : 'publish',
+				'title'           => function_exists( 'get_the_title' ) ? sanitize_text_field( (string) get_the_title( $post ) ) : '',
+				'url'             => function_exists( 'get_permalink' ) ? esc_url_raw( (string) get_permalink( $post ) ) : '',
+				'modified_gmt'    => sanitize_text_field( (string) ( $post->post_modified_gmt ?? '' ) ),
+				'excerpt'         => sanitize_textarea_field( (string) $excerpt ),
+				'content_excerpt' => wp_trim_words( $content, 600, '' ),
+				'content_hash'    => md5( $content ),
+			);
+		}
+
+		if ( array() !== $indexed_post_ids ) {
+			$documents = array_merge(
+				$documents,
+				$this->collect_site_knowledge_comments(
+					array_values( array_unique( $indexed_post_ids ) ),
+					max( 1, min( 100, max( 1, $max_posts ) * 3 ) )
+				)
+			);
+		}
+
+		return $documents;
+	}
+
+	private function collect_site_knowledge_comments( array $post_ids, int $max_comments ): array {
+		if ( array() === $post_ids || ! function_exists( 'get_comments' ) ) {
+			return array();
+		}
+
+		$comments = get_comments(
+			array(
+				'post__in' => array_values( array_unique( array_map( 'absint', $post_ids ) ) ),
+				'status'   => 'approve',
+				'type'     => 'comment',
+				'number'   => max( 1, min( 100, $max_comments ) ),
+				'orderby'  => 'comment_date_gmt',
+				'order'    => 'DESC',
+			)
+		);
+		if ( ! is_array( $comments ) ) {
+			return array();
+		}
+
+		$documents = array();
+		foreach ( $comments as $comment ) {
+			if ( ! is_object( $comment ) ) {
+				continue;
+			}
+
+			$comment_id = absint( $comment->comment_ID ?? 0 );
+			$post_id    = absint( $comment->comment_post_ID ?? 0 );
+			if ( 0 >= $comment_id || 0 >= $post_id || ! in_array( $post_id, $post_ids, true ) ) {
+				continue;
+			}
+
+			$content = wp_strip_all_tags( (string) ( $comment->comment_content ?? '' ) );
+			if ( '' === trim( $content ) ) {
+				continue;
+			}
+
+			$documents[] = array(
+				'comment_id'      => $comment_id,
+				'post_id'         => $post_id,
+				'comment_status'  => 'approve',
+				'created_gmt'     => sanitize_text_field( (string) ( $comment->comment_date_gmt ?? '' ) ),
+				'url'             => function_exists( 'get_comment_link' ) ? esc_url_raw( (string) get_comment_link( $comment ) ) : '',
+				'content_excerpt' => wp_trim_words( $content, 280, '' ),
+				'content_hash'    => md5( $content ),
+			);
+		}
+
+		return $documents;
+	}
+
+	private function trace_id( string $prefix ): string {
+		$prefix = sanitize_key( $prefix );
+		$uuid   = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : uniqid( '', true );
+
+		return $prefix . '_' . $uuid;
 	}
 
 	private function build_qdrant_query_body( array $decoded, int $max_results ): array {
@@ -906,6 +1850,39 @@ final class Provider_Client {
 		return $data;
 	}
 
+	private function text_request( string $url, string $method, array $headers = array() ) {
+		$args = array(
+			'method'  => $method,
+			'timeout' => 45,
+			'headers' => array_merge(
+				array(
+					'Accept' => 'text/plain',
+				),
+				$headers
+			),
+		);
+
+		$response = wp_remote_request( $url, $args );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+		$raw    = (string) wp_remote_retrieve_body( $response );
+		if ( 200 > $status || 299 < $status ) {
+			return new WP_Error(
+				'magick_ai_toolbox_provider_error',
+				__( 'The provider text request failed.', 'magick-ai-toolbox' ),
+				array(
+					'status'          => $status,
+					'provider_status' => $status,
+				)
+			);
+		}
+
+		return $raw;
+	}
+
 	private function missing_secret_error( string $secret, string $message ): WP_Error {
 		return new WP_Error(
 			'magick_ai_toolbox_missing_' . sanitize_key( $secret ),
@@ -1090,6 +2067,44 @@ final class Provider_Client {
 		);
 	}
 
+	private function article_writing_pack_structure( array $rules ): array {
+		$structure = array(
+			array(
+				'section' => 'title',
+				'purpose' => 'Use a clear article title aligned with the primary keyword and source topic.',
+			),
+			array(
+				'section' => 'direct_answer',
+				'purpose' => 'Open with a concise answer or definition that an answer engine can extract.',
+			),
+			array(
+				'section' => 'context',
+				'purpose' => 'Explain why the topic matters to the target audience using only supported facts.',
+			),
+			array(
+				'section' => 'main_body',
+				'purpose' => 'Use practical headings, steps, examples, comparisons, or checklists where the source supports them.',
+			),
+			array(
+				'section' => 'geo_summary',
+				'purpose' => 'Include a fact-dense summary suitable for generated search citation.',
+			),
+			array(
+				'section' => 'conclusion',
+				'purpose' => 'Close with a practical next step without claiming guaranteed ranking or outcomes.',
+			),
+		);
+
+		if ( ! empty( $rules['allow_faq_generation'] ) ) {
+			$structure[] = array(
+				'section' => 'faq',
+				'purpose' => 'Add 3 to 5 grounded FAQ items only when the brief allows FAQ suggestions.',
+			);
+		}
+
+		return $structure;
+	}
+
 	private function sanitize_string_list( $value ): array {
 		$items = is_array( $value ) ? $value : array_filter( array_map( 'trim', explode( "\n", (string) $value ) ) );
 		return array_values(
@@ -1194,6 +2209,18 @@ final class Provider_Client {
 		);
 
 		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'magick-ai-toolbox' );
+	}
+
+	private function content_discoverability_field_group( string $field ): string {
+		if ( in_array( $field, array( 'faq', 'answer_summary' ), true ) ) {
+			return 'aeo';
+		}
+
+		if ( in_array( $field, array( 'geo_summary', 'structured_data_hints' ), true ) ) {
+			return 'geo';
+		}
+
+		return 'seo';
 	}
 
 	private function content_discoverability_candidate( string $field, array $source, array $context ) {
