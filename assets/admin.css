@@ -837,6 +837,127 @@ pre.magick-ai-toolbox__result {
 	gap: 8px;
 }
 
+.magick-ai-toolbox__inline-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 8px 0 0;
+}
+
+.magick-ai-toolbox__inline-actions span {
+	color: #646970;
+}
+
+.magick-ai-toolbox__media-picker {
+	display: grid;
+	grid-template-columns: 148px minmax(0, 1fr);
+	gap: 12px;
+	align-items: start;
+	margin: 12px 0;
+}
+
+.magick-ai-toolbox__media-preview {
+	display: grid;
+	place-items: center;
+	min-height: 112px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	color: #646970;
+	text-align: center;
+}
+
+.magick-ai-toolbox__media-thumb {
+	width: 100%;
+	max-height: 148px;
+	object-fit: contain;
+	background: #fff;
+}
+
+.magick-ai-toolbox__derivative-preview {
+	margin: 12px 0 0;
+	padding: 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__derivative-preview img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	background: #f6f7f7;
+}
+
+.magick-ai-toolbox__derivative-preview figcaption {
+	margin: 8px 0 0;
+	color: #646970;
+	font-size: 12px;
+}
+
+.magick-ai-toolbox__batch-panel {
+	margin: 16px 0 0;
+	padding: 14px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-panel h3 {
+	margin: 0 0 4px;
+	font-size: 15px;
+	line-height: 1.35;
+}
+
+.magick-ai-toolbox__batch-panel p {
+	margin-bottom: 12px;
+}
+
+.magick-ai-toolbox__batch-plan {
+	margin: 12px 0 0;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-heading h4 {
+	margin: 0;
+	font-size: 14px;
+}
+
+.magick-ai-toolbox__batch-list {
+	display: grid;
+	gap: 8px;
+	margin: 10px 0 0;
+}
+
+.magick-ai-toolbox__batch-row {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 8px;
+	align-items: start;
+	padding: 9px 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__batch-row.is-skipped {
+	background: #f6f7f7;
+}
+
+.magick-ai-toolbox__batch-row-body {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+
+.magick-ai-toolbox__batch-row-body strong,
+.magick-ai-toolbox__batch-row-body small {
+	overflow-wrap: anywhere;
+}
+
+.magick-ai-toolbox__batch-row-body small {
+	color: #646970;
+}
+
 .magick-ai-toolbox__result-details {
 	margin: 8px 0 0;
 }
@@ -937,6 +1058,10 @@ pre.magick-ai-toolbox__result {
 
 	.magick-ai-toolbox__media-picker,
 	.magick-ai-toolbox__image-item {
+		grid-template-columns: 1fr;
+	}
+
+	.magick-ai-toolbox__media-picker {
 		grid-template-columns: 1fr;
 	}
 

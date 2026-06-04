@@ -1207,88 +1207,6 @@
 		renderStructuredResult(form, payload);
 	}
 
-	async function refreshSiteKnowledgeStatus(root) {
-		const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
-		if (summary) {
-			clearNode(summary);
-			summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Loading Cloud status...'));
-		}
-		const payload = await getJson(config.restUrl, 'site-knowledge/status');
-		if (summary) {
-			renderSiteKnowledgeStatusNode(summary, payload);
-			summary.appendChild(createRawDetails(payload, 'Status payload'));
-		}
-		return payload;
-	}
-
-	async function runSiteKnowledgeForm(form, endpoint) {
-		renderTextResult(form, config.labels && config.labels.running ? config.labels.running : 'Running...', 'pending');
-		const payload = await postJson(config.restUrl, endpoint, serialize(form));
-		renderStructuredResult(form, payload);
-		return payload;
-	}
-
-	function initSiteKnowledge() {
-		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
-			const renderStatusError = (error) => {
-				const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
-				if (summary) {
-					clearNode(summary);
-					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
-					summary.appendChild(createRawDetails(error, 'Status error'));
-				}
-			};
-			const statusButton = root.querySelector('[data-toolbox-site-knowledge-status]');
-			if (statusButton) {
-				statusButton.addEventListener('click', async () => {
-					try {
-						await refreshSiteKnowledgeStatus(root);
-					} catch (error) {
-						renderStatusError(error);
-					}
-				});
-			}
-
-			const syncForm = root.querySelector('[data-toolbox-site-knowledge-sync]');
-			if (syncForm) {
-				syncForm.addEventListener('submit', async (event) => {
-					event.preventDefault();
-					try {
-						await runSiteKnowledgeForm(syncForm, 'site-knowledge/sync');
-						await refreshSiteKnowledgeStatus(root);
-					} catch (error) {
-						renderTextResult(syncForm, error.message || 'Site knowledge sync failed.', 'error');
-					}
-				});
-			}
-
-			const searchForm = root.querySelector('[data-toolbox-site-knowledge-search]');
-			if (searchForm) {
-				searchForm.addEventListener('submit', async (event) => {
-					event.preventDefault();
-					try {
-						await runSiteKnowledgeForm(searchForm, 'site-knowledge/search');
-					} catch (error) {
-						renderTextResult(searchForm, error.message || 'Site knowledge search failed.', 'error');
-					}
-				});
-			}
-		});
-	}
-
-	function refreshAllSiteKnowledgeStatus() {
-		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
-			const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
-			refreshSiteKnowledgeStatus(root).catch((error) => {
-				if (summary) {
-					clearNode(summary);
-					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
-					summary.appendChild(createRawDetails(error, 'Status error'));
-				}
-			});
-		});
-	}
-
 	async function waitForMediaDerivativeResult(runId) {
 		let lastStatus = '';
 		for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -1438,6 +1356,10 @@
 	}
 
 	async function submitMediaDerivativeProposal(form) {
+		if (!config.adapterRestUrl) {
+			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+		}
+
 		const state = form.__magickMediaDerivativeState;
 		if (!state || !state.proposalPayload || !state.derivative) {
 			throw { message: 'Generate a derivative preview before submitting a Core proposal.' };
@@ -1452,6 +1374,88 @@
 			preview: state.proposalPayload,
 		});
 		renderProposalCreated(form, proposal);
+	}
+
+	async function refreshSiteKnowledgeStatus(root) {
+		const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
+		if (summary) {
+			clearNode(summary);
+			summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Loading Cloud status...'));
+		}
+		const payload = await getJson(config.restUrl, 'site-knowledge/status');
+		if (summary) {
+			renderSiteKnowledgeStatusNode(summary, payload);
+			summary.appendChild(createRawDetails(payload, 'Status payload'));
+		}
+		return payload;
+	}
+
+	async function runSiteKnowledgeForm(form, endpoint) {
+		renderTextResult(form, config.labels && config.labels.running ? config.labels.running : 'Running...', 'pending');
+		const payload = await postJson(config.restUrl, endpoint, serialize(form));
+		renderStructuredResult(form, payload);
+		return payload;
+	}
+
+	function initSiteKnowledge() {
+		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
+			const renderStatusError = (error) => {
+				const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
+				if (summary) {
+					clearNode(summary);
+					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
+					summary.appendChild(createRawDetails(error, 'Status error'));
+				}
+			};
+			const statusButton = root.querySelector('[data-toolbox-site-knowledge-status]');
+			if (statusButton) {
+				statusButton.addEventListener('click', async () => {
+					try {
+						await refreshSiteKnowledgeStatus(root);
+					} catch (error) {
+						renderStatusError(error);
+					}
+				});
+			}
+
+			const syncForm = root.querySelector('[data-toolbox-site-knowledge-sync]');
+			if (syncForm) {
+				syncForm.addEventListener('submit', async (event) => {
+					event.preventDefault();
+					try {
+						await runSiteKnowledgeForm(syncForm, 'site-knowledge/sync');
+						await refreshSiteKnowledgeStatus(root);
+					} catch (error) {
+						renderTextResult(syncForm, error.message || 'Site knowledge sync failed.', 'error');
+					}
+				});
+			}
+
+			const searchForm = root.querySelector('[data-toolbox-site-knowledge-search]');
+			if (searchForm) {
+				searchForm.addEventListener('submit', async (event) => {
+					event.preventDefault();
+					try {
+						await runSiteKnowledgeForm(searchForm, 'site-knowledge/search');
+					} catch (error) {
+						renderTextResult(searchForm, error.message || 'Site knowledge search failed.', 'error');
+					}
+				});
+			}
+		});
+	}
+
+	function refreshAllSiteKnowledgeStatus() {
+		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
+			const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
+			refreshSiteKnowledgeStatus(root).catch((error) => {
+				if (summary) {
+					clearNode(summary);
+					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
+					summary.appendChild(createRawDetails(error, 'Status error'));
+				}
+			});
+		});
 	}
 
 	async function submitMediaReferenceRepairProposal(form) {
