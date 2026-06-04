@@ -130,12 +130,14 @@ set featured images, approve proposals, or execute writes.
 `magick-ai/build-media-derivative-cloud-request` from Core media policy defaults
 and operator overrides. It is a planning artifact route. The admin media
 derivative preview surface may call Adapter's bounded media-derivative recipe
-to create one short-lived Cloud artifact and may submit a Core replacement
-proposal containing artifact evidence. It may render the same-origin signed Adapter
-preview proxy for operator review, but that URL is not a public Cloud URL or a
-WordPress media write. Toolbox must not store site media policy truth, own
-Cloud credentials, create an artifact registry, approve proposals, execute proposals, replace
-attachment files, or update attachment metadata.
+to create one short-lived Cloud artifact and, for the single-image optimize
+flow, may submit the returned Adapter `from_plan_request` so Core creates one
+batch proposal containing reviewed metadata and derivative adoption actions. It
+may render the same-origin signed Adapter preview proxy for operator review, but
+that URL is not a public Cloud URL or a WordPress media write. Toolbox must not
+store site media policy truth, own Cloud credentials, create an artifact
+registry, approve proposals, execute proposals, replace attachment files, or
+update attachment metadata.
 
 The same admin surface may call
 `magick-ai/build-media-derivative-batch-plan` through Adapter

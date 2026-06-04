@@ -73,8 +73,9 @@ All routes require a logged-in user with `manage_options`.
 
 Toolbox admin result panels can render governed `operator_feedback` payloads
 from Adapter/Core handoff failures. The feedback is for operator revision only;
-Toolbox may submit a media derivative Core replacement proposal from the Adapter
-recipe, but it does not approve proposals, execute proposals, or perform
+Toolbox may submit one Core media optimization proposal from the Adapter media
+derivative recipe after reviewed metadata and derivative artifact evidence are
+present, but it does not approve proposals, execute proposals, or perform
 WordPress writes.
 
 ## Abilities

@@ -965,7 +965,7 @@ final class Admin_Page {
 				'id'          => 'media-derivative',
 				'endpoint'    => 'media-derivative-handoff',
 				'title'       => __( 'Optimize Existing Image', 'magick-ai-toolbox' ),
-				'description' => __( 'Choose a media-library image, generate a preview, then submit the approved replacement request.', 'magick-ai-toolbox' ),
+				'description' => __( 'Choose a media-library image, review metadata, generate a preview, then submit one Core optimization proposal.', 'magick-ai-toolbox' ),
 				'custom'      => 'media_derivative',
 			),
 			array(
@@ -1382,6 +1382,38 @@ final class Admin_Page {
 				<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
 			</label>
 			<div class="magick-ai-toolbox__batch-panel">
+				<h3><?php esc_html_e( 'Reviewed media details', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'These fields are submitted with the derivative artifact as one Core media optimization proposal.', 'magick-ai-toolbox' ); ?></p>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Media title', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="media_title" placeholder="<?php esc_attr_e( 'Reviewed media title', 'magick-ai-toolbox' ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Alt text', 'magick-ai-toolbox' ); ?></span>
+						<input type="text" name="media_alt" placeholder="<?php esc_attr_e( 'Describe the image for accessibility', 'magick-ai-toolbox' ); ?>" />
+					</label>
+				</div>
+				<label>
+					<span><?php esc_html_e( 'Caption', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="media_caption" placeholder="<?php esc_attr_e( 'Optional reviewed caption', 'magick-ai-toolbox' ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Description', 'magick-ai-toolbox' ); ?></span>
+					<textarea name="media_description" rows="2" placeholder="<?php esc_attr_e( 'Optional reviewed attachment description', 'magick-ai-toolbox' ); ?>"></textarea>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Source type', 'magick-ai-toolbox' ); ?></span>
+					<select name="media_source_type">
+						<option value="ai_generated"><?php esc_html_e( 'AI generated', 'magick-ai-toolbox' ); ?></option>
+						<option value="owned"><?php esc_html_e( 'Owned image', 'magick-ai-toolbox' ); ?></option>
+						<option value="stock"><?php esc_html_e( 'Stock image', 'magick-ai-toolbox' ); ?></option>
+						<option value="external"><?php esc_html_e( 'External image', 'magick-ai-toolbox' ); ?></option>
+						<option value="test"><?php esc_html_e( 'Test media', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Watermark override', 'magick-ai-toolbox' ); ?></h3>
 				<p><?php esc_html_e( 'Use Core watermark policy by default. Override only changes this preview or batch run and still requires a configured Core logo attachment.', 'magick-ai-toolbox' ); ?></p>
 				<div class="magick-ai-toolbox__split">
@@ -1471,10 +1503,10 @@ final class Admin_Page {
 				</div>
 				<div class="magick-ai-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>
-			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Core remains the policy owner and final WordPress write owner.', 'magick-ai-toolbox' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Core remains the policy owner and final WordPress write owner, and creates one proposal for the metadata update and derivative adoption together.', 'magick-ai-toolbox' ); ?></p>
 			<div class="magick-ai-toolbox__inline-actions">
 				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'magick-ai-toolbox' ); ?></button>
-				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit replacement review', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit optimization review', 'magick-ai-toolbox' ); ?></button>
 			</div>
 			<details class="magick-ai-toolbox__result-details">
 				<summary><?php esc_html_e( 'Repair and handoff actions', 'magick-ai-toolbox' ); ?></summary>

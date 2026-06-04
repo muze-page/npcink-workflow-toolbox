@@ -1086,6 +1086,29 @@
 		return input;
 	}
 
+	function mediaDetailsInput(form) {
+		const raw = serialize(form);
+		const details = {};
+		const fields = {
+			media_title: 'title',
+			media_alt: 'alt',
+			media_caption: 'caption',
+			media_description: 'description',
+			media_source_type: 'source_type',
+		};
+		Object.keys(fields).forEach((field) => {
+			const value = raw[field];
+			if (value !== undefined && value !== null && String(value).trim() !== '') {
+				details[fields[field]] = String(value).trim();
+			}
+		});
+		return details;
+	}
+
+	function hasReviewedMediaDetails(details) {
+		return details && typeof details === 'object' && Object.keys(details).length > 0;
+	}
+
 	function mediaDerivativeWatermarkInput(raw) {
 		raw = raw || {};
 		const mode = String(raw.watermark_mode || 'core');
@@ -1320,8 +1343,19 @@
 			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
 		}
 		renderArtifactSummary(result, 'Derivative artifact', derivative);
+		if (state.fromPlanRequest) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Optimization plan is ready for one Core proposal approval.'));
+			renderArtifactSummary(result, 'Media optimization plan', state.fromPlanRequest.plan || {});
+		} else if (state.proposalEnvelope) {
+			const guard = state.proposalEnvelope.ability_guard || {};
+			const nextStep = state.proposalEnvelope.next_step || 'Add reviewed media details, then generate the preview again before Core proposal submission.';
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', nextStep));
+			if (guard.missing_capability_behavior) {
+				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'If Core lacks the media optimization plan ability, update Core and Abilities before continuing. Do not split this optimization into two proposals.'));
+			}
+		}
 		if (state.proposalPayload) {
-			renderArtifactSummary(result, 'Core proposal payload', state.proposalPayload);
+			renderArtifactSummary(result, 'Derivative-only payload', state.proposalPayload);
 		}
 		result.appendChild(createRawDetails(payload, 'Cloud result payload'));
 	}
@@ -1674,7 +1708,7 @@
 		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Adapter.' };
 	}
 
-	async function createMediaDerivativePreview(input) {
+	async function createMediaDerivativePreview(input, mediaDetails) {
 		if (!input.attachment_id) {
 			throw { message: 'Select an image attachment before generating a preview.' };
 		}
@@ -1691,19 +1725,26 @@
 			throw { message: 'Cloud result did not include a derivative artifact id.' };
 		}
 
-		const proposalEnvelope = await postJson(config.adapterRestUrl, 'media-derivative-proposal-payload', {
+		const proposalRequest = {
 			ability_response: createPayload.ability_response || {},
 			cloud_result: resultPayload.cloud_result || resultPayload,
 			derivative_artifact: derivative,
-		});
+		};
+		if (hasReviewedMediaDetails(mediaDetails)) {
+			proposalRequest.media_details_input = mediaDetails;
+		}
+		const proposalEnvelope = await postJson(config.adapterRestUrl, 'media-derivative-proposal-payload', proposalRequest);
 
 		return {
 			abilityInput: input,
+			mediaDetailsInput: mediaDetails || {},
 			create: createPayload,
 			result: resultPayload,
 			runId,
 			derivative,
 			proposalPayload: proposalEnvelope.proposal_payload || {},
+			proposalEnvelope,
+			fromPlanRequest: proposalEnvelope.from_plan_request || null,
 		};
 	}
 
@@ -1713,12 +1754,13 @@
 		}
 
 		const input = mediaDerivativeInput(form);
+		const mediaDetails = mediaDetailsInput(form);
 		renderTextResult(form, 'Submitting media derivative run...', 'pending');
-		const state = await createMediaDerivativePreview(input);
+		const state = await createMediaDerivativePreview(input, mediaDetails);
 		form.__magickMediaDerivativeState = state;
 		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
 		if (submitButton instanceof HTMLButtonElement) {
-			submitButton.disabled = false;
+			submitButton.disabled = !state.fromPlanRequest;
 		}
 		renderMediaDerivativeRun(form, state);
 	}
@@ -1839,19 +1881,31 @@
 		}
 
 		const state = form.__magickMediaDerivativeState;
-		if (!state || !state.proposalPayload || !state.derivative) {
+		if (!state || !state.proposalEnvelope || !state.derivative) {
 			throw { message: 'Generate a derivative preview before submitting a Core proposal.' };
 		}
+		if (!state.fromPlanRequest) {
+			throw {
+				message: 'Reviewed media details are required before Toolbox can submit one media optimization proposal. Add title, alt, caption, description, or source type, then generate the preview again.',
+				data: state.proposalEnvelope,
+			};
+		}
 
-		renderTextResult(form, 'Submitting Core proposal...', 'pending');
-		const proposal = await postJson(config.adapterRestUrl, 'proposals', {
-			ability_id: 'magick-ai/adopt-cloud-media-derivative',
-			title: 'Replace media file with Cloud derivative',
-			summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
-			input: proposalInputFromState(state),
-			preview: state.proposalPayload,
+		renderTextResult(form, 'Submitting Core optimization proposal...', 'pending');
+		const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', Object.assign({}, state.fromPlanRequest, {
+			plan_input: {
+				attachment_id: state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : 0,
+				source_type: state.mediaDetailsInput && state.mediaDetailsInput.source_type ? state.mediaDetailsInput.source_type : '',
+			},
+			caller: {
+				external_thread_id: 'toolbox-media-optimization',
+			},
+		}));
+		renderProposalCreated(form, proposalFromPlanResponse(bridge), {
+			title: 'Media optimization proposal submitted',
+			summary: 'Core created one proposal for reviewed media details and the Cloud derivative adoption.',
+			rawTitle: 'Core media optimization response',
 		});
-		renderProposalCreated(form, proposal);
 	}
 
 	async function refreshSiteKnowledgeStatus(root) {

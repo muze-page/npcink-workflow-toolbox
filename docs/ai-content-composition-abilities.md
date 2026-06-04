@@ -134,7 +134,7 @@ same ability contracts. The channel changes, but the write boundary does not.
 | Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
 | Run publish/readiness preflight | Adapter site-knowledge/support recipe | Publish preflight | No direct write; returns warnings and operator tasks |
 | Adopt one reviewed image candidate | Adapter `image_candidate_adoption_plan` recipe | Adopt New Image | Core proposal for media upload, metadata, and optional featured image |
-| Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | Core proposal for `magick-ai/adopt-cloud-media-derivative` |
+| Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | One Core media optimization proposal for reviewed metadata plus `magick-ai/adopt-cloud-media-derivative` |
 | Repair hard-coded media URLs | Adapter read ability plus Core from-plan | URL repair proposal button | Core proposal for exact-match patch actions |
 | Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan fallback | Core proposal for `magick-ai/create-draft` |
 | Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch fallback | Core proposal for draft, media upload, metadata, and featured-image abilities |

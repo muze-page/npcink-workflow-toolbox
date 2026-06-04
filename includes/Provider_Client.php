@@ -1821,14 +1821,22 @@ final class Provider_Client {
 			'core_policy'            => $this->sanitize_payload( $core_policy ),
 			'ability_id'             => 'magick-ai/build-media-derivative-cloud-request',
 			'ability_input'          => $this->sanitize_payload( $ability_input ),
+			'optimization_plan_ability_id' => 'magick-ai/build-media-optimization-plan',
+			'preferred_core_route'   => '/wp-json/magick-ai-adapter/v1/proposals/from-plan',
+			'required_reviewed_input' => array( 'media_details_input', 'derivative_artifact' ),
 			'warnings'               => $warnings,
 			'handoff'                => array(
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
+				'default_user_intent'    => 'optimize_this_media_item',
+				'do_not_split_user_intent' => true,
+				'legacy_derivative_only' => 'lower_level_review_only',
 				'next_steps'             => array(
 					'Run the local media derivative request ability with ability_input.',
 					'Use Cloud Addon only as a verified transport when available.',
-					'Review the derivative artifact through Core proposal governance before any WordPress media write.',
+					'Add reviewed media_details_input before Core proposal submission.',
+					'Submit Adapter from_plan_request to /proposals/from-plan so Core creates one media optimization proposal.',
+					'If Core lacks magick-ai/build-media-optimization-plan, update Core and Abilities instead of splitting the same user intent into two proposals.',
 				),
 			),
 		);
