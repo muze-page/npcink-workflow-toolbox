@@ -54,6 +54,76 @@
 		return text.slice(0, limit - 1).trim() + '...';
 	}
 
+	function stringifyDisplayValue(value) {
+		if (value === undefined || value === null || value === '') {
+			return '';
+		}
+		if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+			return String(value);
+		}
+		if (Array.isArray(value)) {
+			return value.map(stringifyDisplayValue).filter(Boolean).join('\n');
+		}
+
+		try {
+			return JSON.stringify(value, null, 2);
+		} catch (error) {
+			return String(value);
+		}
+	}
+
+	function collectErrorText(value, messages, seen) {
+		if (value === undefined || value === null || value === '') {
+			return;
+		}
+		if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+			const text = String(value).trim();
+			if (text && text !== 'Array') {
+				messages.push(text);
+			}
+			return;
+		}
+		if (Array.isArray(value)) {
+			value.forEach((item) => collectErrorText(item, messages, seen));
+			return;
+		}
+		if (typeof value !== 'object') {
+			return;
+		}
+		if (seen.has(value)) {
+			return;
+		}
+		seen.add(value);
+
+		['message', 'error', 'error_message', 'detail', 'description'].forEach((key) => {
+			collectErrorText(value[key], messages, seen);
+		});
+		if (value.code && typeof value.code !== 'object') {
+			messages.push('Code: ' + String(value.code));
+		}
+		if (value.status && typeof value.status !== 'object') {
+			messages.push('Status: ' + String(value.status));
+		}
+		collectErrorText(value.errors, messages, seen);
+		if (value.data && typeof value.data === 'object') {
+			['message', 'error', 'error_message', 'detail', 'status'].forEach((key) => {
+				collectErrorText(value.data[key], messages, seen);
+			});
+		}
+	}
+
+	function formatErrorMessage(error, fallback) {
+		const messages = [];
+		collectErrorText(error, messages, new WeakSet());
+		const unique = messages.filter((message, index) => message && messages.indexOf(message) === index);
+		if (unique.length) {
+			return unique.join('\n');
+		}
+
+		const text = stringifyDisplayValue(error).trim();
+		return text && text !== 'Array' ? text : (fallback || 'Request failed.');
+	}
+
 	function createLink(url, label) {
 		const link = el('a', '', label || url);
 		link.href = url;
@@ -96,7 +166,7 @@
 		});
 		const body = await response.json().catch(() => ({}));
 		if (!response.ok) {
-			throw body;
+			throw Object.assign({ status: response.status }, body || {});
 		}
 		return body;
 	}
@@ -110,7 +180,7 @@
 		});
 		const body = await response.json().catch(() => ({}));
 		if (!response.ok) {
-			throw body;
+			throw Object.assign({ status: response.status }, body || {});
 		}
 		return body;
 	}
@@ -184,8 +254,23 @@
 		result.classList.remove('is-empty');
 		clearNode(result);
 		const notice = el('div', 'magick-ai-toolbox__result-notice ' + (kind ? 'is-' + kind : ''));
-		notice.textContent = String(value || '');
+		notice.textContent = stringifyDisplayValue(value);
 		result.appendChild(notice);
+	}
+
+	function renderErrorResult(form, error, fallback) {
+		const result = form.querySelector('.magick-ai-toolbox__result');
+		if (!result) {
+			return;
+		}
+
+		result.hidden = false;
+		result.classList.remove('is-empty');
+		clearNode(result);
+		result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', formatErrorMessage(error, fallback)));
+		if (error && typeof error === 'object') {
+			result.appendChild(createRawDetails(error, 'Error payload'));
+		}
 	}
 
 	function extractOperatorFeedback(payload) {
@@ -1558,7 +1643,7 @@
 
 		const payload = await response.json();
 		if (!response.ok) {
-			throw payload;
+			throw Object.assign({ status: response.status }, payload || {});
 		}
 
 		if (payload && payload.text) {
@@ -2616,7 +2701,7 @@
 			if (renderOperatorFeedback(form, error)) {
 				return;
 			}
-			renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+			renderErrorResult(form, error, config.labels && config.labels.error ? config.labels.error : 'Request failed.');
 		});
 	});
 }());
