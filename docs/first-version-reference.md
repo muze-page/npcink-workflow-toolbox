@@ -151,6 +151,15 @@ Site knowledge status and sync:
   or rebuild work from public WordPress content. It does not write WordPress
   content and does not create a local indexing queue.
 
+Post editor content support:
+
+- `POST /wp-json/magick-ai-toolbox/v1/editor/content-support` runs one bounded
+  fixed flow from the current draft context.
+- Supported intents are `publish_preflight`, `taxonomy_tags`, `internal_links`,
+  `image_candidates`, and `discoverability`.
+- Returned artifacts are `editor_content_support_flow` suggestions. They do not
+  assign terms, insert links, import media, publish content, or write SEO fields.
+
 For content-support AI callers, the canonical composition sequence is:
 
 1. `magick-ai-toolbox/build-content-discoverability-brief`

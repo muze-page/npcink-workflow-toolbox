@@ -142,6 +142,10 @@ same ability contracts. The channel changes, but the write boundary does not.
 Toolbox may make these flows easier to click through, but it must not create a
 separate workflow runtime, direct write path, or approval store for them.
 
+The high-frequency WordPress entrypoint for these fixed flows is the Toolbox
+post editor **Magick AI Content Support** panel. The admin **Content Support**
+tab remains the management, testing, and cross-article surface.
+
 ## Ability Roles
 
 | Ability | Composition role | Output use |

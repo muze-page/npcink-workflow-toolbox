@@ -38,6 +38,8 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
+- Post editor Content Support panel for publish preflight, taxonomy/tag,
+  internal-link, and image-candidate fixed flows.
 - Clear empty/error/loading states.
 - Local WordPress activation smoke.
 
@@ -127,6 +129,5 @@ queues, retries, and scheduling require a separate runtime decision.
 - vector store ownership;
 - request log ownership;
 - cost and quota display;
-- editor-side UI;
 - multisite behavior;
 - scoped non-admin permissions.

@@ -92,6 +92,12 @@ Default buttons should solve around-the-body work before offering article draft
 handoffs. Draft handoffs are acceptable only after a reviewed human draft exists
 and the final write goes through Core proposal governance.
 
+High-frequency article support belongs in the WordPress post editor as a
+Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor
+panel may run fixed flows for publish preflight, taxonomy/tag candidates,
+internal-link candidates, and image candidates, but it must keep the same
+suggestion-only and Core-governed write posture as the admin surface.
+
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source
 metadata in its candidate payloads; Unsplash candidates must also preserve

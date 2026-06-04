@@ -67,6 +67,7 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
+- `POST /wp-json/magick-ai-toolbox/v1/editor/content-support`
 - `POST /wp-json/magick-ai-toolbox/v1/media-derivative-handoff`
 
 Toolbox admin result panels can render governed `operator_feedback` payloads
@@ -162,6 +163,13 @@ call Core, approve proposals, publish content, or write WordPress data.
 The admin **Content Support** surface includes a **Reviewed Draft Handoff**
 fallback panel that renders the plan artifacts, risk report, final
 `magick-ai/create-draft` action, and Core handoff route for operator review.
+
+The post editor also exposes a **Magick AI Content Support** document panel for
+the same productized support posture. Its buttons run fixed flows for publish
+preflight, taxonomy/tag candidates, internal-link candidates, and image-source
+candidates from the current draft context. The panel returns suggestions only;
+it does not insert links, assign terms, import media, publish content, or write
+SEO fields.
 
 The media derivative preview flow reads Core media optimization defaults when
 available, accepts one-run operator overrides, and lets an operator select one

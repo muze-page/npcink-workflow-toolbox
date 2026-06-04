@@ -20,6 +20,7 @@ final class Plugin {
 	private Provider_Client $client;
 	private Rest_Controller $rest_controller;
 	private Admin_Page $admin_page;
+	private Editor_Content_Support $editor_content_support;
 	private Abilities $abilities;
 
 	private function __construct() {
@@ -27,6 +28,7 @@ final class Plugin {
 		$this->client          = new Provider_Client( $this->settings );
 		$this->rest_controller = new Rest_Controller( $this->settings, $this->client );
 		$this->admin_page      = new Admin_Page( $this->settings );
+		$this->editor_content_support = new Editor_Content_Support();
 		$this->abilities       = new Abilities( $this->settings, $this->client );
 	}
 
@@ -42,6 +44,7 @@ final class Plugin {
 		add_action( 'admin_init', array( $this->settings, 'register' ) );
 		add_action( 'admin_menu', array( $this->admin_page, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this->editor_content_support, 'enqueue' ) );
 		add_action( 'rest_api_init', array( $this->rest_controller, 'register_routes' ) );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_with_magick_ai_abilities' ), 1 );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_native_category' ) );

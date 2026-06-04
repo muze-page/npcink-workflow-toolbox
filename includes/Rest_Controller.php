@@ -33,6 +33,7 @@ final class Rest_Controller {
 		$this->post( '/flows/article-plan', 'article_plan' );
 		$this->post( '/flows/image-candidate-adoption-plan', 'image_candidate_adoption_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
+		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
 
 		register_rest_route(
@@ -229,6 +230,103 @@ final class Rest_Controller {
 		return rest_ensure_response( $this->client->build_media_brief( (string) $context ) );
 	}
 
+	public function editor_content_support( WP_REST_Request $request ) {
+		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
+		if ( ! in_array( $intent, array( 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
+			return new WP_Error(
+				'magick_ai_toolbox_invalid_editor_support_intent',
+				__( 'A supported editor content-support intent is required.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$context = $this->editor_post_context( $request );
+		$query   = $this->editor_support_query( $context );
+		if ( '' === $query ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_editor_context',
+				__( 'A title, excerpt, or post content is required for editor content support.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$result = array(
+			'artifact_type'          => 'editor_content_support_flow',
+			'composition_role'       => 'editor_content_support',
+			'intent'                 => $intent,
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'post_context'           => $context,
+			'query'                  => $query,
+			'sections'               => array(),
+			'handoff'                => array(
+				'surface'                => 'post_editor_sidebar',
+				'final_writes'           => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+			),
+		);
+
+		if ( 'taxonomy_tags' === $intent ) {
+			$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
+		}
+
+		if ( 'internal_links' === $intent ) {
+			$result['sections']['site_knowledge'] = $this->editor_support_section(
+				$this->client->search_site_knowledge(
+					array(
+						'query'           => $query,
+						'intent'          => 'internal_links',
+						'current_post_id' => absint( $context['post_id'] ?? 0 ),
+						'max_results'     => 8,
+					)
+				)
+			);
+		}
+
+		if ( 'image_candidates' === $intent ) {
+			$result['sections']['image_candidates'] = $this->editor_support_section(
+				$this->client->image_candidates(
+					$query,
+					array(
+						'provider' => 'auto',
+						'per_page' => 6,
+					)
+				)
+			);
+		}
+
+		if ( 'discoverability' === $intent || 'publish_preflight' === $intent ) {
+			$result['sections']['discoverability'] = $this->editor_support_section(
+				$this->client->build_content_discoverability_brief(
+					array(
+						'post_id' => absint( $context['post_id'] ?? 0 ),
+						'title'   => (string) ( $context['title'] ?? '' ),
+						'topic'   => $query,
+						'excerpt' => (string) ( $context['excerpt'] ?? '' ),
+						'content' => (string) ( $context['content_text'] ?? '' ),
+					)
+				)
+			);
+		}
+
+		if ( 'publish_preflight' === $intent ) {
+			$result['sections']['checks'] = $this->editor_publish_preflight_checks( $context );
+			$result['sections']['duplicate_check'] = $this->editor_support_section(
+				$this->client->search_site_knowledge(
+					array(
+						'query'           => $query,
+						'intent'          => 'duplicate_check',
+						'current_post_id' => absint( $context['post_id'] ?? 0 ),
+						'max_results'     => 5,
+					)
+				)
+			);
+		}
+
+		return rest_ensure_response( $result );
+	}
+
 	public function media_derivative_handoff( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_media_derivative_handoff( is_array( $params ) ? $params : array() ) );
@@ -261,6 +359,170 @@ final class Rest_Controller {
 		}
 
 		return $value;
+	}
+
+	private function editor_post_context( WP_REST_Request $request ): array {
+		$content = trim( wp_strip_all_tags( (string) $request->get_param( 'content' ) ) );
+		return array(
+			'post_id'        => absint( $request->get_param( 'post_id' ) ),
+			'post_type'      => sanitize_key( (string) ( $request->get_param( 'post_type' ) ?: 'post' ) ),
+			'post_status'    => sanitize_key( (string) $request->get_param( 'post_status' ) ),
+			'title'          => sanitize_text_field( (string) $request->get_param( 'title' ) ),
+			'excerpt'        => sanitize_textarea_field( (string) $request->get_param( 'excerpt' ) ),
+			'content_text'   => wp_trim_words( $content, 220, '' ),
+			'category_ids'   => $this->csv_absint_list( (string) $request->get_param( 'category_ids' ) ),
+			'tag_ids'        => $this->csv_absint_list( (string) $request->get_param( 'tag_ids' ) ),
+			'featured_media' => absint( $request->get_param( 'featured_media' ) ),
+		);
+	}
+
+	private function editor_support_query( array $context ): string {
+		$query = trim(
+			implode(
+				' ',
+				array_filter(
+					array(
+						(string) ( $context['title'] ?? '' ),
+						(string) ( $context['excerpt'] ?? '' ),
+						(string) ( $context['content_text'] ?? '' ),
+					)
+				)
+			)
+		);
+
+		return wp_trim_words( $query, 80, '' );
+	}
+
+	private function editor_support_section( $value ): array {
+		if ( is_wp_error( $value ) ) {
+			return array(
+				'status'                 => 'error',
+				'code'                   => sanitize_key( (string) $value->get_error_code() ),
+				'message'                => sanitize_text_field( $value->get_error_message() ),
+				'write_posture'          => 'suggestion_only',
+				'direct_wordpress_write' => false,
+			);
+		}
+
+		return is_array( $value ) ? $value : array();
+	}
+
+	private function editor_taxonomy_term_candidates( array $context, string $query ): array {
+		$post_type  = sanitize_key( (string) ( $context['post_type'] ?? 'post' ) );
+		$taxonomies = array_values(
+			array_intersect(
+				get_object_taxonomies( $post_type ),
+				array( 'category', 'post_tag' )
+			)
+		);
+
+		$candidates = array();
+		foreach ( $taxonomies as $taxonomy ) {
+			$terms = get_terms(
+				array(
+					'taxonomy'   => $taxonomy,
+					'hide_empty' => false,
+					'number'     => 60,
+				)
+			);
+			if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+				continue;
+			}
+
+			foreach ( $terms as $term ) {
+				$score = $this->term_match_score( $term->name . ' ' . $term->slug . ' ' . $term->description, $query );
+				if ( $score <= 0 ) {
+					continue;
+				}
+
+				$candidates[] = array(
+					'term_id'  => (int) $term->term_id,
+					'taxonomy' => sanitize_key( $taxonomy ),
+					'name'     => sanitize_text_field( $term->name ),
+					'slug'     => sanitize_title( $term->slug ),
+					'score'    => $score,
+					'reason'   => __( 'Matched against the current title, excerpt, or draft body.', 'magick-ai-toolbox' ),
+				);
+			}
+		}
+
+		usort(
+			$candidates,
+			static function ( array $left, array $right ): int {
+				return (int) $right['score'] <=> (int) $left['score'];
+			}
+		);
+
+		return array(
+			'candidate_type'         => 'taxonomy_tag_candidates',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'items'                  => array_slice( $candidates, 0, 10 ),
+		);
+	}
+
+	private function term_match_score( string $term_text, string $query ): int {
+		$term_tokens  = $this->support_tokens( $term_text );
+		$query_tokens = $this->support_tokens( $query );
+		if ( array() === $term_tokens || array() === $query_tokens ) {
+			return 0;
+		}
+
+		return count( array_intersect( $term_tokens, $query_tokens ) );
+	}
+
+	private function support_tokens( string $text ): array {
+		$tokens = preg_split( '/[^\p{L}\p{N}]+/u', strtolower( $text ) );
+		if ( ! is_array( $tokens ) ) {
+			return array();
+		}
+
+		return array_values(
+			array_unique(
+				array_filter(
+					$tokens,
+					static function ( string $token ): bool {
+						return strlen( $token ) >= 2;
+					}
+				)
+			)
+		);
+	}
+
+	private function editor_publish_preflight_checks( array $context ): array {
+		$checks = array(
+			array(
+				'id'     => 'title',
+				'status' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? 'ok' : 'warning',
+				'label'  => __( 'Title', 'magick-ai-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? __( 'Title is present.', 'magick-ai-toolbox' ) : __( 'Add a specific title before publishing.', 'magick-ai-toolbox' ),
+			),
+			array(
+				'id'     => 'excerpt',
+				'status' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? 'ok' : 'warning',
+				'label'  => __( 'Excerpt', 'magick-ai-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present.', 'magick-ai-toolbox' ) : __( 'Add an excerpt or meta description candidate.', 'magick-ai-toolbox' ),
+			),
+			array(
+				'id'     => 'terms',
+				'status' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? 'ok' : 'warning',
+				'label'  => __( 'Terms', 'magick-ai-toolbox' ),
+				'detail' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? __( 'At least one category or tag is selected.', 'magick-ai-toolbox' ) : __( 'Review category and tag candidates before publishing.', 'magick-ai-toolbox' ),
+			),
+			array(
+				'id'     => 'featured_media',
+				'status' => ! empty( $context['featured_media'] ) ? 'ok' : 'warning',
+				'label'  => __( 'Featured image', 'magick-ai-toolbox' ),
+				'detail' => ! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'magick-ai-toolbox' ) : __( 'Review image candidates or select a featured image.', 'magick-ai-toolbox' ),
+			),
+		);
+
+		return array(
+			'candidate_type'         => 'publish_preflight_checks',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'items'                  => $checks,
+		);
 	}
 
 	private function csv_list( string $value ): array {

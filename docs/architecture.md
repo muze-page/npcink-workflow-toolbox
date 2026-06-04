@@ -12,9 +12,12 @@ Status: MVP architecture.
 | `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Magick AI submenu fallback. |
+| `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
+| `assets/editor-content-support.js` | Block editor sidebar panel for publish preflight, taxonomy/tag, internal-link, and image-candidate support flows. |
+| `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
 ## Current Data Storage
 
@@ -188,6 +191,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/image-candidate-adoption-plan`
 - `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
+- `POST /wp-json/magick-ai-toolbox/v1/editor/content-support`
 
 `/knowledge-search` remains as a compatibility alias for the first local MVP.
 New clients should use `/vector-search`.
@@ -198,6 +202,12 @@ the allowlist and boundary docs in the same change. The first version must not
 register routes whose purpose is publish, delivery, workflow-run display,
 queue/scheduler ownership, approval, write confirmation, featured-image
 mutation, media upload/import, SEO mutation, indexing, or re-indexing.
+
+`/editor/content-support` is the post-editor entrypoint for fixed, bounded
+support flows. It accepts current draft context plus one intent:
+`publish_preflight`, `taxonomy_tags`, `internal_links`, `image_candidates`, or
+`discoverability`. It returns an `editor_content_support_flow` artifact with
+suggestion-only sections and no direct WordPress write posture.
 
 ## Admin Surface
 
@@ -238,6 +248,23 @@ channel.
 
 This is a display contract only. It does not add Content Assistant article,
 comment, media, preview, confirm, or apply responsibilities to Toolbox.
+
+## Editor Surface
+
+Toolbox registers a **Magick AI Content Support** document panel in the block
+editor for users who can run the existing Toolbox REST tools. The panel is a
+high-frequency entrypoint for the same fixed workflows that the admin surface
+owns:
+
+- publish/readiness preflight;
+- taxonomy/tag candidates from existing WordPress terms;
+- internal-link candidates through Cloud-managed Site Knowledge;
+- image-source candidates through the configured Cloud image-source runtime.
+
+The editor panel reads the current draft title, excerpt, content, terms, status,
+and featured image id. It never mutates the draft, assigns terms, inserts links,
+imports media, publishes content, or writes SEO fields. Write-like follow-up
+must still go through Core proposals and reusable WordPress abilities.
 
 Connector settings use a compact status catalog before editable fields. The
 catalog separates `Local MVP config` providers from `Future connector owner`

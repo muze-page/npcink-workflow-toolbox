@@ -18,6 +18,7 @@ function toolbox_assert( bool $condition, string $message ): void {
 
 $main = file_get_contents( $root . '/magick-ai-toolbox.php' );
 toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Magick AI Toolbox' ), 'Plugin header is present.' );
+toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 
 $article_assistant_doc = file_get_contents( $root . '/docs/article-assistant-workbench.md' );
 foreach ( array( 'Surface Budget', 'Article Assistant Workbench', 'one article per run', 'Do not present it as an', 'article generator, autonomous writer', 'no Cloud article generation', 'not the default Toolbox product surface', 'no default button that promises to write the article body' ) as $required_article_assistant_doc ) {
@@ -159,6 +160,21 @@ toolbox_assert( false !== strpos( $admin_js, 'setSiteKnowledgeSyncBusy' ) && fal
 toolbox_assert( false !== strpos( $admin_js, 'updateSiteKnowledgeActionState' ) && false !== strpos( $admin_js, 'indexState' ), 'Admin JavaScript updates the Site Knowledge indexing action from start to refresh after coverage exists.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false !== strpos( $admin_js, 'payload.message' ), 'Admin JavaScript renders Site Knowledge evidence state and active-run guidance.' );
 
+$editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
+toolbox_assert( false !== strpos( $editor_support, 'assets/editor-content-support.js' ) && false !== strpos( $editor_support, 'assets/editor-content-support.css' ), 'Post editor content support enqueues its editor assets.' );
+toolbox_assert( false !== strpos( $editor_support, 'MagickAIToolboxEditorSupport' ) && false !== strpos( $editor_support, "wp_create_nonce( 'wp_rest' )" ), 'Post editor content support localizes REST configuration and nonce.' );
+
+$editor_js = file_get_contents( $root . '/assets/editor-content-support.js' );
+toolbox_assert( false !== strpos( $editor_js, 'PluginDocumentSettingPanel' ) && false !== strpos( $editor_js, 'Magick AI Content Support' ), 'Editor JavaScript registers a Magick AI Content Support document panel.' );
+foreach ( array( 'publish_preflight', 'taxonomy_tags', 'internal_links', 'image_candidates' ) as $editor_intent ) {
+	toolbox_assert( false !== strpos( $editor_js, $editor_intent ), "Editor Content Support exposes fixed flow intent {$editor_intent}." );
+}
+toolbox_assert( false !== strpos( $editor_js, 'editor/content-support' ) && false !== strpos( $editor_js, 'getEditedPostAttribute' ), 'Editor Content Support posts current draft context to the fixed flow route.' );
+toolbox_assert( false !== strpos( $editor_js, 'Suggestions only. Final writes require Core approval.' ), 'Editor Content Support preserves suggestion-only Core-governed copy.' );
+
+$editor_css = file_get_contents( $root . '/assets/editor-content-support.css' );
+toolbox_assert( false !== strpos( $editor_css, 'magick-ai-toolbox-editor-support__flow' ) && false !== strpos( $editor_css, 'magick-ai-toolbox-editor-support__result' ), 'Editor Content Support CSS styles fixed flow rows and result summaries.' );
+
 $admin_css = file_get_contents( $root . '/assets/admin.css' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-summary' ), 'Admin CSS styles summary-first result panels.' );
 toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-details' ), 'Admin CSS styles collapsed result detail disclosures.' );
@@ -174,6 +190,7 @@ toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__batch-panel' )
 $plugin = file_get_contents( $root . '/includes/Plugin.php' );
 toolbox_assert( false !== strpos( $plugin, 'register_with_magick_ai_abilities' ) && false !== strpos( $plugin, "'wp_abilities_api_categories_init'" ) && false !== strpos( $plugin, ', 1 );' ), 'Helper ability registration is deferred to the Abilities API category hook.' );
 toolbox_assert( false === strpos( $plugin, '$this->abilities->register_with_magick_ai_abilities();' ), 'Helper ability registration is not executed during plugin hook setup.' );
+toolbox_assert( false !== strpos( $plugin, 'Editor_Content_Support' ) && false !== strpos( $plugin, 'enqueue_block_editor_assets' ), 'Plugin registers the post editor content support surface.' );
 
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
 $allowed_rest_routes = array(
@@ -189,6 +206,7 @@ $allowed_rest_routes = array(
 	'/flows/article-plan',
 	'/flows/image-candidate-adoption-plan',
 	'/flows/media-brief',
+	'/editor/content-support',
 	'/media-derivative-handoff',
 );
 preg_match_all( "/\\\$this->post\\(\\s*'([^']+)'/", $rest, $post_route_matches );
@@ -205,6 +223,10 @@ sort( $allowed_rest_routes );
 sort( $registered_rest_routes );
 toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route matrix exactly matches the first-version allowed routes.' );
 toolbox_assert( false !== strpos( $rest, "'methods'             => 'GET'" ) && false !== strpos( $rest, "private function post( string \$route, string \$method ): void" ) && false !== strpos( $rest, "'methods'             => 'POST'" ), 'REST route matrix keeps status as GET and tool actions as POST.' );
+toolbox_assert( false !== strpos( $rest, 'editor_content_support' ) && false !== strpos( $rest, "'artifact_type'          => 'editor_content_support_flow'" ) && false !== strpos( $rest, 'editor_support_section' ), 'REST controller exposes a safe suggestion-only editor content support flow.' );
+foreach ( array( 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight' ) as $editor_rest_intent ) {
+	toolbox_assert( false !== strpos( $rest, "'{$editor_rest_intent}'" ), "REST editor content support accepts fixed intent {$editor_rest_intent}." );
+}
 foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue', 'scheduler', 'approval', 'approve', 'confirm', 'write', 'featured-image', 'media-upload', 'media-import', 'seo' ) as $forbidden_fragment ) {
 	$has_forbidden_route = false;
 	foreach ( $registered_rest_routes as $route ) {

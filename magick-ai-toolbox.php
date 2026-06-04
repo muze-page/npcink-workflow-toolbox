@@ -22,6 +22,7 @@ require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Settings.php';
 require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Provider_Client.php';
 require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Rest_Controller.php';
 require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Admin_Page.php';
+require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Editor_Content_Support.php';
 require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Abilities.php';
 require_once MAGICK_AI_TOOLBOX_DIR . 'includes/Plugin.php';
 
