@@ -181,6 +181,9 @@ toolbox_assert( false !== strpos( $client, 'enhance_results_with_jina_reader' ) 
 toolbox_assert( false !== strpos( $client, 'https://api.unsplash.com/search/photos' ), 'Image candidates use Unsplash photo search.' );
 toolbox_assert( false !== strpos( $client, 'https://pixabay.com/api/' ), 'Image candidates use Pixabay photo search.' );
 toolbox_assert( false !== strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates use Pexels photo search.' );
+toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
+toolbox_assert( false !== strpos( $client, "'source_type'                   => 'ai_generated'" ) && false !== strpos( $client, "'requires_human_license_review' => true" ), 'AI-generated image candidates preserve source type and license review status.' );
+toolbox_assert( false !== strpos( $client, 'sanitize_provider_error_data' ) && false !== strpos( $client, "'provider_status' => \$status" ), 'Image-source provider failures preserve safe diagnostic status data.' );
 toolbox_assert( false !== strpos( $client, '/points/query' ), 'Vector search uses Qdrant query points.' );
 toolbox_assert( false !== strpos( $client, '/embeddings' ), 'Text vector search uses the configured embedding endpoint.' );
 toolbox_assert( false !== strpos( $client, 'siliconflow' ), 'Embedding provider is normalized as SiliconFlow.' );
@@ -231,6 +234,7 @@ toolbox_assert( false !== strpos( $client, 'build_article_media_batch_write_plan
 toolbox_assert( false !== strpos( $client, "'artifact_type'             => 'article_media_batch_write_plan'" ), 'Article plus media batch write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'          => 'core_article_media_batch_write_plan'" ), 'Article plus media batch write plan declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'magick-ai/set-post-featured-image'" ), 'Article plus media batch write plan routes media upload and featured image writes through Core-governed abilities.' );
+toolbox_assert( false !== strpos( $client, "'file_name'         => \$file_name" ), 'Article plus media batch write plan preserves approved media file names.' );
 toolbox_assert( false !== strpos( $client, "'attach_to_post_id' => '\$outputs.' . \$create_id . '.post_id'" ) && false !== strpos( $client, "'attachment_id'  => '\$outputs.' . \$upload_id . '.attachment_id'" ), 'Article plus media batch write plan uses output references for dependent media writes.' );
 toolbox_assert( false !== strpos( $client, 'build_media_derivative_handoff' ), 'Provider client can build media derivative handoffs.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'media_derivative_handoff'" ), 'Media derivative handoff declares its artifact type.' );
@@ -280,6 +284,7 @@ toolbox_assert( false !== strpos( $rest, 'siliconflow_configured' ), 'Status rep
 toolbox_assert( false !== strpos( $rest, 'jina_configured' ), 'Status reports Jina configuration.' );
 toolbox_assert( false !== strpos( $rest, 'search_providers' ) && false !== strpos( $rest, 'bocha_configured' ) && false !== strpos( $rest, 'jina_reader_enabled' ), 'Status reports configured search providers and reader enhancement.' );
 toolbox_assert( false !== strpos( $rest, 'image_source_providers' ) && false !== strpos( $rest, 'pixabay_configured' ) && false !== strpos( $rest, 'pexels_configured' ), 'Status reports configured image-source providers.' );
+toolbox_assert( false !== strpos( $rest, 'include_ai_generated' ) && false !== strpos( $rest, 'generated_image_url' ), 'Image candidate REST route accepts explicit AI-generated candidate inputs.' );
 toolbox_assert( false !== strpos( $rest, 'embedding_dimensions' ), 'Status reports embedding dimensions.' );
 toolbox_assert( false !== strpos( $rest, 'query or vector field' ), 'Vector REST route accepts query or vector input.' );
 toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== strpos( $rest, 'site_knowledge_status' ) && false !== strpos( $rest, 'site_knowledge_search' ), 'REST routes expose Cloud-managed site knowledge operations.' );
@@ -296,6 +301,7 @@ toolbox_assert( false !== strpos( $abilities, 'public_context' ), 'Content conte
 toolbox_assert( false !== strpos( $abilities, 'planning_artifact' ), 'Article write plan ability declares planning artifact classification.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'research_evidence'" ), 'Web research ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'image_source_candidates'" ), 'Image-source ability declares its content composition role.' );
+toolbox_assert( false !== strpos( $abilities, 'include_ai_generated' ) && false !== strpos( $abilities, 'generated_image_url' ), 'Image-source ability accepts explicit AI-generated candidate inputs.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role' => 'local_style_context'" ), 'Vector ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_context'" ), 'Site knowledge search ability declares its composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_status'" ), 'Site knowledge status ability declares its composition role.' );
@@ -362,6 +368,7 @@ toolbox_assert( false !== strpos( $content_composition_doc, 'General Tool Usage'
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'local_style_context' ), 'AI content composition documentation maps vector search to local style context.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-site-knowledge' ) && false !== strpos( $content_composition_doc, 'related content' ), 'AI content composition documentation maps site knowledge to general search and recommendations.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-image-source' ) && false !== strpos( $content_composition_doc, 'download_location' ), 'AI content composition documentation maps image source search to attribution-preserving image candidates.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'source_type=ai_generated' ) && false !== strpos( $content_composition_doc, 'magick_ai_toolbox_ai_image_generation_request' ), 'AI content composition documentation separates generated-image candidates from public source search.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/web-research' ) && false !== strpos( $content_composition_doc, 'support answers' ), 'AI content composition documentation maps web research to general external source candidates.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'Tavily, Bocha, and Jina Reader output' ), 'AI content composition documentation preserves search and reader evidence boundaries.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'content indexing' ), 'AI content composition documentation blocks indexing ownership.' );

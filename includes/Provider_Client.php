@@ -244,11 +244,15 @@ final class Provider_Client {
 
 	public function image_candidates( string $query, array $options = array() ) {
 		$provider = sanitize_key( (string) ( $options['provider'] ?? $this->settings->get( 'image_provider' ) ?? 'auto' ) );
-		if ( ! in_array( $provider, array( 'auto', 'unsplash', 'pixabay', 'pexels' ), true ) ) {
+		if ( ! in_array( $provider, array( 'auto', 'unsplash', 'pixabay', 'pexels', 'ai_generated' ), true ) ) {
 			$provider = 'auto';
 		}
 
 		$providers = 'auto' === $provider ? $this->settings->configured_image_source_providers() : array( $provider );
+		if ( 'auto' === $provider && $this->should_include_ai_generated_images( $options ) ) {
+			$providers[] = 'ai_generated';
+			$providers   = array_values( array_unique( $providers ) );
+		}
 		if ( array() === $providers ) {
 			return $this->missing_secret_error( 'image_source_provider', __( 'Configure at least one image-source provider key before searching image candidates.', 'magick-ai-toolbox' ) );
 		}
@@ -272,6 +276,7 @@ final class Provider_Client {
 					'provider' => $source_provider,
 					'code'     => $result->get_error_code(),
 					'message'  => $result->get_error_message(),
+					'data'     => $this->sanitize_provider_error_data( $result->get_error_data() ),
 				);
 				continue;
 			}
@@ -313,6 +318,10 @@ final class Provider_Client {
 	}
 
 	private function search_image_provider( string $provider, string $query, array $options ) {
+		if ( 'ai_generated' === $provider ) {
+			return $this->search_ai_generated_images( $query, $options );
+		}
+
 		if ( 'pixabay' === $provider ) {
 			return $this->search_pixabay_images( $query, $options );
 		}
@@ -322,6 +331,105 @@ final class Provider_Client {
 		}
 
 		return $this->search_unsplash_images( $query, $options );
+	}
+
+	private function should_include_ai_generated_images( array $options ): bool {
+		if ( ! empty( $options['include_ai_generated'] ) ) {
+			return true;
+		}
+
+		foreach ( array( 'generated_image_url', 'ai_image_url', 'image_url', 'regular_url' ) as $key ) {
+			if ( '' !== trim( (string) ( $options[ $key ] ?? '' ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private function search_ai_generated_images( string $query, array $options ) {
+		$prompt = trim( sanitize_textarea_field( (string) ( $options['generation_prompt'] ?? $options['prompt'] ?? $query ) ) );
+		$url    = $this->first_non_empty_url(
+			array(
+				$options['generated_image_url'] ?? '',
+				$options['ai_image_url'] ?? '',
+				$options['image_url'] ?? '',
+				$options['regular_url'] ?? '',
+			)
+		);
+
+		if ( '' !== $url ) {
+			return array(
+				'provider' => 'ai_generated',
+				'images'   => array(
+					$this->normalize_ai_generated_image_candidate(
+						array_merge(
+							$options,
+							array(
+								'regular_url' => $url,
+								'prompt'      => $prompt,
+							)
+						),
+						$query,
+						$prompt
+					),
+				),
+				'raw'      => array(),
+			);
+		}
+
+		$request = array(
+			'query'       => $query,
+			'prompt'      => $prompt,
+			'orientation' => sanitize_key( (string) ( $options['orientation'] ?? '' ) ),
+			'color'       => sanitize_key( (string) ( $options['color'] ?? '' ) ),
+			'per_page'    => max( 1, min( 4, (int) ( $options['per_page'] ?? 1 ) ) ),
+			'purpose'     => sanitize_key( (string) ( $options['purpose'] ?? 'article_image_candidate' ) ),
+		);
+
+		$result = apply_filters( 'magick_ai_toolbox_ai_image_generation_request', null, $request, $options );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( null === $result ) {
+			return new WP_Error(
+				'magick_ai_toolbox_missing_ai_image_runtime',
+				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the magick_ai_toolbox_ai_image_generation_request filter.', 'magick-ai-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$candidates = $this->extract_ai_generated_image_candidates( $result );
+		if ( array() === $candidates ) {
+			return new WP_Error(
+				'magick_ai_toolbox_empty_ai_image_response',
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'magick-ai-toolbox' ),
+				array( 'status' => 502 )
+			);
+		}
+
+		$images = array();
+		foreach ( $candidates as $candidate ) {
+			$normalized = $this->normalize_ai_generated_image_candidate( $candidate, $query, $prompt );
+			if ( '' !== (string) ( $normalized['regular_url'] ?? '' ) ) {
+				$images[] = $normalized;
+			}
+		}
+
+		if ( array() === $images ) {
+			return new WP_Error(
+				'magick_ai_toolbox_empty_ai_image_response',
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'magick-ai-toolbox' ),
+				array( 'status' => 502 )
+			);
+		}
+
+		return array(
+			'provider' => 'ai_generated',
+			'images'   => array_slice( $images, 0, max( 1, min( 4, (int) ( $options['per_page'] ?? 1 ) ) ) ),
+			'raw'      => is_array( $result ) ? $this->sanitize_payload( $result ) : array(),
+		);
 	}
 
 	private function search_unsplash_images( string $query, array $options ) {
@@ -553,6 +661,107 @@ final class Provider_Client {
 		}
 
 		return $out;
+	}
+
+	private function first_non_empty_url( array $urls ): string {
+		foreach ( $urls as $url ) {
+			$clean = esc_url_raw( (string) $url );
+			if ( '' !== $clean ) {
+				return $clean;
+			}
+		}
+
+		return '';
+	}
+
+	private function extract_ai_generated_image_candidates( $result ): array {
+		if ( ! is_array( $result ) ) {
+			return array();
+		}
+
+		if ( is_array( $result['images'] ?? null ) ) {
+			return array_values( array_filter( $result['images'], 'is_array' ) );
+		}
+
+		if ( is_array( $result['candidates'] ?? null ) ) {
+			return array_values( array_filter( $result['candidates'], 'is_array' ) );
+		}
+
+		if ( $this->is_list( $result ) ) {
+			return array_values( array_filter( $result, 'is_array' ) );
+		}
+
+		return array( $result );
+	}
+
+	private function normalize_ai_generated_image_candidate( array $candidate, string $query, string $fallback_prompt ): array {
+		$url = $this->first_non_empty_url(
+			array(
+				$candidate['regular_url'] ?? '',
+				$candidate['url'] ?? '',
+				$candidate['image_url'] ?? '',
+				$candidate['generated_image_url'] ?? '',
+				$candidate['output_url'] ?? '',
+			)
+		);
+
+		$thumb_url = $this->first_non_empty_url(
+			array(
+				$candidate['thumb_url'] ?? '',
+				$candidate['thumbnail_url'] ?? '',
+				$candidate['small_url'] ?? '',
+				$url,
+			)
+		);
+		$small_url = $this->first_non_empty_url(
+			array(
+				$candidate['small_url'] ?? '',
+				$candidate['preview_url'] ?? '',
+				$url,
+			)
+		);
+		$provider = sanitize_key( (string) ( $candidate['generation_provider'] ?? $candidate['provider_name'] ?? 'ai_generated' ) );
+		$model    = sanitize_text_field( (string) ( $candidate['model'] ?? $candidate['generation_model'] ?? '' ) );
+		$prompt   = trim( sanitize_textarea_field( (string) ( $candidate['prompt'] ?? $candidate['generation_prompt'] ?? $fallback_prompt ) ) );
+		$alt      = trim( sanitize_textarea_field( (string) ( $candidate['alt_description'] ?? $candidate['alt'] ?? $candidate['description'] ?? $query ) ) );
+
+		return array(
+			'id'                            => sanitize_text_field( (string) ( $candidate['id'] ?? ( '' !== $url ? md5( $url ) : '' ) ) ),
+			'provider'                      => 'ai_generated',
+			'provider_name'                 => $provider,
+			'source_type'                   => 'ai_generated',
+			'description'                   => $alt,
+			'alt_description'               => $alt,
+			'thumb_url'                     => $thumb_url,
+			'small_url'                     => $small_url,
+			'regular_url'                   => $url,
+			'html_url'                      => esc_url_raw( (string) ( $candidate['html_url'] ?? $candidate['source_url'] ?? '' ) ),
+			'download_location'             => '',
+			'source_url'                    => esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) ),
+			'photographer'                  => '',
+			'photographer_url'              => '',
+			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'magick-ai-toolbox' ) ) ),
+			'generation_prompt'             => $prompt,
+			'generation_model'              => $model,
+			'generation_provider'           => $provider,
+			'license_review_status'         => sanitize_key( (string) ( $candidate['license_review_status'] ?? 'needs_human_review' ) ),
+			'requires_human_license_review' => true,
+		);
+	}
+
+	private function sanitize_provider_error_data( $data ): array {
+		if ( ! is_array( $data ) ) {
+			return array();
+		}
+
+		$allowed = array();
+		foreach ( array( 'status', 'provider_status', 'http_code', 'reason', 'request_id' ) as $key ) {
+			if ( isset( $data[ $key ] ) ) {
+				$allowed[ $key ] = is_numeric( $data[ $key ] ) ? (int) $data[ $key ] : sanitize_text_field( (string) $data[ $key ] );
+			}
+		}
+
+		return $allowed;
 	}
 
 	private function dedupe_results_by_url( array $results ): array {
@@ -1327,12 +1536,20 @@ final class Provider_Client {
 			$featured_id   = 'set_featured_image_' . $position;
 			$excerpt       = sanitize_textarea_field( (string) ( $article['excerpt'] ?? wp_trim_words( wp_strip_all_tags( $content ), 35, '' ) ) );
 			$provider      = sanitize_key( (string) ( $candidate['provider'] ?? 'external' ) );
-			$source_type   = in_array( $provider, array( 'unsplash', 'pixabay', 'pexels' ), true ) ? 'stock' : 'external';
+			$candidate_source_type = sanitize_key( (string) ( $candidate['source_type'] ?? '' ) );
+			if ( 'ai_generated' === $provider || 'ai_generated' === $candidate_source_type ) {
+				$source_type = 'ai_generated';
+			} elseif ( in_array( $provider, array( 'unsplash', 'pixabay', 'pexels' ), true ) || 'stock' === $candidate_source_type ) {
+				$source_type = 'stock';
+			} else {
+				$source_type = 'external';
+			}
 			$source_url    = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
 			$photographer  = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['photographer_name'] ?? '' ) );
 			$attribution   = sanitize_textarea_field( (string) ( $candidate['attribution'] ?? $candidate['attribution_text'] ?? '' ) );
 			$alt           = sanitize_textarea_field( (string) ( $candidate['alt_description'] ?? $candidate['description'] ?? $title ) );
 			$description   = sanitize_textarea_field( (string) ( $candidate['description'] ?? $alt ) );
+			$file_name     = sanitize_file_name( (string) ( $article['file_name'] ?? $candidate['file_name'] ?? '' ) );
 
 			$article_artifacts[] = array(
 				'article_goal_brief'      => is_array( $article['article_goal_brief'] ?? null ) ? $this->sanitize_payload( $article['article_goal_brief'] ) : array(
@@ -1389,6 +1606,7 @@ final class Provider_Client {
 				'input'             => array(
 					'url'               => $image_url,
 					'title'             => $title,
+					'file_name'         => $file_name,
 					'alt'               => $alt,
 					'caption'           => $attribution,
 					'description'       => $description,
@@ -2252,7 +2470,10 @@ final class Provider_Client {
 			return new WP_Error(
 				'magick_ai_toolbox_provider_invalid_json',
 				__( 'The provider returned an invalid JSON response.', 'magick-ai-toolbox' ),
-				array( 'status' => 502 )
+				array(
+					'status'          => 502,
+					'provider_status' => $status,
+				)
 			);
 		}
 

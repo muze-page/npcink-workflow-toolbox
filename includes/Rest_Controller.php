@@ -131,6 +131,10 @@ final class Rest_Controller {
 					'color'       => sanitize_key( (string) $request->get_param( 'color' ) ),
 					'provider'    => sanitize_key( (string) $request->get_param( 'provider' ) ),
 					'per_page'    => (int) ( $request->get_param( 'per_page' ) ?: 8 ),
+					'include_ai_generated' => ! empty( $request->get_param( 'include_ai_generated' ) ),
+					'generation_prompt'     => sanitize_textarea_field( (string) $request->get_param( 'generation_prompt' ) ),
+					'generated_image_url'   => esc_url_raw( (string) $request->get_param( 'generated_image_url' ) ),
+					'model'                 => sanitize_text_field( (string) $request->get_param( 'model' ) ),
 				)
 			)
 		);

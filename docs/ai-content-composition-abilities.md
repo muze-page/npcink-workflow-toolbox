@@ -91,7 +91,9 @@ sequence:
    - Convert a reviewed draft into a Core-ready `article_write_plan` handoff.
 10. `magick-ai-toolbox/build-article-media-batch-write-plan`
    - Convert reviewed drafts and selected image-source candidates into a
-     Core-ready `article_media_batch_write_plan` handoff.
+     Core-ready `article_media_batch_write_plan` handoff. Reviewed media
+     imports may include an optional `file_name` value supplied by the article
+     row or selected image candidate.
 
 The AI caller may skip unavailable optional steps, but it must preserve the
 write posture from the abilities it calls.
@@ -159,7 +161,11 @@ Every AI caller should:
 
 ## Image Usage
 
-`search-image-source` provides external image-source candidates. This ability is
+`search-image-source` provides image candidates. For public photo/source
+providers it returns external image-source candidates. In explicit
+`ai_generated` mode it may normalize a reviewed generated image URL supplied by
+the caller, or call a host-provided `magick_ai_toolbox_ai_image_generation_request`
+runtime seam and return generated-image candidates. This ability is
 general-purpose: article writing, media planning, page layout, product
 presentation, reference selection, and any other image-dependent AI workflow
 should call the same ability instead of integrating provider APIs directly.
@@ -171,10 +177,15 @@ caller must:
 - preserve `download_location`;
 - preserve photographer attribution and source URL;
 - avoid describing Unsplash, Pixabay, or Pexels as AI image generation;
+- mark generated-image candidates as `source_type=ai_generated` and keep the
+  prompt/model evidence plus human license review status;
+- preserve any reviewed `file_name` so the governed media upload can use a
+  customer-approved filename;
 - avoid importing media or setting featured images directly from Toolbox.
 
-AI-generated image abilities, if added later, should use a separate ability id
-and contract from image-source search.
+AI-generated candidates are not public image-source search results. They remain
+suggestion-only candidates until Core approval and a local WordPress media
+write ability handles import.
 
 ## Vector Usage
 

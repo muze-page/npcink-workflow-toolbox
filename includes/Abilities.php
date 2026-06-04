@@ -372,6 +372,10 @@ final class Abilities {
 				'color'       => sanitize_key( (string) ( $input['color'] ?? '' ) ),
 				'provider'    => sanitize_key( (string) ( $input['provider'] ?? '' ) ),
 				'per_page'    => (int) ( $input['per_page'] ?? 8 ),
+				'include_ai_generated' => ! empty( $input['include_ai_generated'] ),
+				'generation_prompt'     => sanitize_textarea_field( (string) ( $input['generation_prompt'] ?? '' ) ),
+				'generated_image_url'   => esc_url_raw( (string) ( $input['generated_image_url'] ?? '' ) ),
+				'model'                 => sanitize_text_field( (string) ( $input['model'] ?? '' ) ),
 			)
 		);
 	}

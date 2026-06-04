@@ -87,11 +87,19 @@ result URLs. It may add reader excerpts to search results, but it must not be
 treated as a search provider, crawler, citation verifier, or write path.
 
 Unsplash, Pixabay, and Pexels are exposed through the single
-`search-image-source` ability as image-source candidate search. This ability is
-general-purpose for any AI workflow that needs image candidates, not only
-article drafting. It is not AI image generation. Payloads must preserve
-provider name, source URL, photographer attribution, and Unsplash
+`search-image-source` ability as public image-source candidate search. This
+ability is general-purpose for any AI workflow that needs image candidates, not
+only article drafting. These providers are not AI image generation. Payloads
+must preserve provider name, source URL, photographer attribution, and Unsplash
 `download_location` when present.
+
+The same ability also accepts an explicit `ai_generated` candidate mode. In
+that mode a caller may provide a reviewed generated image URL, or a host may
+handle `magick_ai_toolbox_ai_image_generation_request` and return generated
+image candidates. Toolbox normalizes those candidates with
+`source_type=ai_generated`, prompt/model evidence, and human license review
+status. Toolbox does not own model routing, prompt management, provider
+credentials, billing, media import, or featured-image writes.
 
 SiliconFlow and Jina are exposed only as synchronous query embedding providers
 for vector search in the first version. They do not imply content indexing

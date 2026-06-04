@@ -175,6 +175,15 @@ flows. Toolbox must not describe this as image generation, import media, set
 featured images, or turn image-source search into a provider routing control
 plane.
 
+AI-generated images are a separate explicit candidate mode, not a relabeling of
+Unsplash, Pixabay, or Pexels. Toolbox may normalize a caller-supplied generated
+image URL or call a host-provided
+`magick_ai_toolbox_ai_image_generation_request` runtime seam to return
+suggestion-only candidates with `source_type=ai_generated`, prompt/model
+evidence, and human license review status. Toolbox must not own AI image model
+routing, prompt management, provider credentials, billing, media import,
+featured-image setting, or approval truth.
+
 ### Qdrant
 
 Qdrant owns vector collection query storage.

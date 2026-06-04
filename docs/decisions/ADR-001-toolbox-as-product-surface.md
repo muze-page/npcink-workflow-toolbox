@@ -96,7 +96,10 @@ Rejected as the only surface. Host/runtime integration remains a future option.
   must not become a crawler or search provider.
 - Unsplash, Pixabay, and Pexels must be treated as image-source connectors with
   attribution/source metadata, not as AI image-generation providers. Unsplash
-  candidates must preserve download tracking.
+  candidates must preserve download tracking. AI-generated image candidates are
+  a separate explicit mode that may normalize a reviewed generated-image URL or
+  use a host runtime seam; Toolbox must not own model routing, prompt
+  management, provider billing, media import, or featured-image writes.
 - Vector search may create a synchronous query embedding through SiliconFlow or
   Jina. WordPress content indexing, re-index jobs, and vector collection
   lifecycle remain separate decisions.

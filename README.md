@@ -205,12 +205,16 @@ Supported PHP constants:
 - `MAGICK_AI_TOOLBOX_SILICONFLOW_API_KEY`
 - `MAGICK_AI_TOOLBOX_JINA_API_KEY`
 
-Image-source search supports `auto`, `unsplash`, `pixabay`, and `pexels`
-provider modes. `auto` uses configured image-source provider keys on the
-server and returns one normalized `image_source_candidates` payload for any AI
-caller that needs images, whether the use case is article drafting, media
-planning, layout suggestions, reference selection, or another image-dependent
-workflow. This is still source search, not image generation or media import.
+Image-source search supports `auto`, `unsplash`, `pixabay`, `pexels`, and an
+explicit `ai_generated` candidate mode. `auto` uses configured public
+image-source provider keys on the server and returns one normalized
+`image_source_candidates` payload for any AI caller that needs images, whether
+the use case is article drafting, media planning, layout suggestions,
+reference selection, or another image-dependent workflow. `ai_generated` is
+separate from Unsplash/Pixabay/Pexels: callers may provide a reviewed generated
+image URL, or a host may handle `magick_ai_toolbox_ai_image_generation_request`
+and return generated-image candidates. Toolbox still does not own model
+routing, provider billing, media import, or final WordPress writes.
 
 Web research is also a general-purpose ability. `magick-ai-toolbox/web-research`
 supports `tavily`, `bocha`, and `auto` provider modes and returns normalized

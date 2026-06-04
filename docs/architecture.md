@@ -9,7 +9,7 @@ Status: MVP architecture.
 | `magick-ai-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
 | `Settings` | Option defaults, sanitization, connector secret lookup, and content context export. |
-| `Provider_Client` | Minimal Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, SiliconFlow, Jina, and Qdrant HTTP calls for MVP tool actions. |
+| `Provider_Client` | Minimal Tavily, Bocha, Jina Reader, Unsplash, Pixabay, Pexels, explicit AI-generated image candidate normalization, SiliconFlow, Jina, and Qdrant calls for MVP tool actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Magick AI submenu fallback. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
@@ -40,7 +40,8 @@ Current MVP provider flow:
 1. Admin user submits a tool form or REST request.
 2. `Rest_Controller` checks `manage_options`.
 3. `Provider_Client` calls Tavily, Bocha, optional Jina Reader, Unsplash,
-   Pixabay, Pexels, SiliconFlow, Jina, or Qdrant.
+   Pixabay, Pexels, a host AI image generation seam when explicitly requested,
+   SiliconFlow, Jina, or Qdrant.
 4. Toolbox returns normalized source results, image-source candidates, vector
    matches, or planning output. Raw provider payloads are included only when
    the debug setting is enabled.
@@ -60,6 +61,7 @@ Current connector routes:
 | Unsplash | Image-source candidates | `/image-candidates` |
 | Pixabay | Image-source candidates | `/image-candidates` |
 | Pexels | Image-source candidates | `/image-candidates` |
+| Host AI image generation seam | AI-generated image candidates | `/image-candidates` with `provider=ai_generated` |
 | SiliconFlow | Default query text embedding | `/vector-search` when input is text |
 | Jina AI | Optional query text embedding | `/vector-search` when input is text and Jina is selected |
 | Qdrant | Vector collection query | `/vector-search` |
@@ -87,6 +89,7 @@ Reserved provider slots:
 | External search | Tavily, Bocha | Additional search providers by later contract. |
 | Search result extraction | Jina Reader | Additional extraction providers by later contract. |
 | Image source | Unsplash, Pixabay, Pexels | Additional image-source providers by later contract. |
+| AI-generated image candidates | Caller-supplied generated URL or host filter | Durable AI image connector by later contract. |
 | Query embedding | SiliconFlow | Jina AI. |
 | Vector database | Qdrant | Pinecone, Weaviate. |
 

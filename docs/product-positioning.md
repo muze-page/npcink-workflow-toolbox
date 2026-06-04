@@ -69,7 +69,10 @@ writes, it belongs outside Toolbox.
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source
 metadata in its candidate payloads; Unsplash candidates must also preserve
-download tracking metadata.
+download tracking metadata. AI-generated image candidates are a separate
+explicit candidate mode: callers may provide reviewed generated image URLs, or
+a host may provide a bounded generation runtime seam. Toolbox must not own
+model routing, prompt management, provider billing, or media import.
 
 Qdrant is a vector database connector, not a complete knowledge system by
 itself. Toolbox may create a single query embedding through SiliconFlow or Jina
