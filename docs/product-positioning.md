@@ -13,6 +13,24 @@ Qdrant vector search, and repeatable AI-assisted planning workflows.
 Magick AI Toolbox turns third-party research, image-source, and vector-search
 connectors into safe, click-driven WordPress operator tools.
 
+## Relationship To OpenClaw
+
+Toolbox and OpenClaw should expose the same governed workflows through
+different operator entry points:
+
+- OpenClaw is the natural-language channel for broad requests.
+- Toolbox is the fixed-button product surface for the same repeatable flows.
+- Adapter publishes OpenClaw recipe guidance and forwards reviewed plans.
+- Core owns proposal, approval, preflight, and final WordPress write truth.
+- Abilities execute the reusable WordPress read/write callbacks.
+- Cloud may provide hosted runtime processing, but not write authority.
+
+When a workflow can be used both by OpenClaw and by a Toolbox button, the
+Toolbox button should reuse the same ability ids, plan artifact shapes, and
+Core proposal handoff as the OpenClaw recipe. Toolbox must not fork the flow
+into a separate approval path, media registry, prompt/model control plane, or
+WordPress write executor.
+
 ## Primary Users
 
 - WordPress administrators who want controlled AI tools without touching raw

@@ -33,6 +33,12 @@ Pixabay, and Pexels, SiliconFlow, Jina, Qdrant, and future connector APIs for
 bounded suggestion tasks and may register its actions through the WordPress
 Abilities API.
 
+For workflows that also exist as OpenClaw recipes, Toolbox buttons are the
+click-driven operator surface for the same local ability, plan artifact, Adapter
+recipe, and Core proposal contracts. Toolbox must not create a parallel recipe
+owner, approval path, workflow runtime, media registry, prompt/model control
+plane, or WordPress write executor.
+
 Toolbox does not own final WordPress write approval, Core audit truth, reusable
 first-party WordPress ability packs, queues, MCP, Agent Gateway, or OpenClaw
 control-plane state.

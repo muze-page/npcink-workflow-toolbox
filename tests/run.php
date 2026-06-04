@@ -24,6 +24,31 @@ foreach ( array( 'Surface Budget', 'Article Assistant Workbench', 'one article p
 	toolbox_assert( false !== strpos( $article_assistant_doc, $required_article_assistant_doc ), 'Article Assistant workbench doc preserves surface budget: ' . $required_article_assistant_doc );
 }
 
+$positioning_doc = file_get_contents( $root . '/docs/product-positioning.md' );
+foreach ( array( 'Relationship To OpenClaw', 'OpenClaw is the natural-language channel', 'Toolbox is the fixed-button product surface', 'same ability ids, plan artifact shapes', 'Core proposal handoff', 'separate approval path, media registry, prompt/model control plane, or', 'WordPress write executor' ) as $required_positioning_doc ) {
+	toolbox_assert( false !== strpos( $positioning_doc, $required_positioning_doc ), 'Product positioning preserves OpenClaw fixed-button mapping: ' . $required_positioning_doc );
+}
+
+$boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
+foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same local ability and Core proposal contracts', 'OpenClaw natural-language request', 'Toolbox fixed button', 'reviewed plan or candidate artifact', 'must not own OpenClaw projection truth', 'approval truth, prompt/model', 'media registry truth, or final WordPress write execution' ) as $required_boundary_doc ) {
+	toolbox_assert( false !== strpos( $boundary_doc, $required_boundary_doc ), 'Boundary doc preserves Toolbox/OpenClaw split: ' . $required_boundary_doc );
+}
+
+$composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
+foreach ( array( 'Fixed Button Mapping', 'OpenClaw natural-language recipes and Toolbox fixed buttons should compose the', 'same ability contracts', 'Article/media batch plan', 'Media Derivative Preview', 'Core proposal for `magick-ai/adopt-cloud-media-derivative`', 'separate workflow runtime, direct write path, or approval store' ) as $required_composition_doc ) {
+	toolbox_assert( false !== strpos( $composition_doc, $required_composition_doc ), 'Composition doc preserves fixed-button mapping: ' . $required_composition_doc );
+}
+
+$adr_product_surface = file_get_contents( $root . '/docs/decisions/ADR-001-toolbox-as-product-surface.md' );
+foreach ( array( 'click-driven operator surface for the same local ability', 'Core proposal contracts', 'parallel recipe', 'workflow runtime, media registry, prompt/model control', 'WordPress write executor' ) as $required_adr_text ) {
+	toolbox_assert( false !== strpos( $adr_product_surface, $required_adr_text ), 'ADR preserves Toolbox as OpenClaw fixed-flow surface: ' . $required_adr_text );
+}
+
+$readme = file_get_contents( $root . '/README.md' );
+foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
+	toolbox_assert( false !== strpos( $readme, $required_readme_text ), 'README preserves fixed-button positioning: ' . $required_readme_text );
+}
+
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );
 toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'magick-ai';" ), 'Admin page targets the shared Magick AI parent menu.' );
 toolbox_assert( false !== strpos( $admin_page, "private const MENU_SLUG        = 'magick-ai-toolbox';" ), 'Admin page uses stable Toolbox menu slug.' );

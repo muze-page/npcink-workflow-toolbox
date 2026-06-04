@@ -145,6 +145,13 @@ This is a local Article Assistant Workbench, not an article generator or Cloud
 writing feature. Keep it to one article, reviewed artifacts, and one optional
 Core-ready draft proposal.
 
+Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw
+flows. They should reuse the same ability ids, plan artifact shapes, Adapter
+recipe guidance, and Core proposal handoff as OpenClaw natural-language flows.
+Toolbox must not turn those buttons into a separate approval store, media
+registry, workflow runtime, prompt/model control plane, or WordPress write
+executor.
+
 The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.

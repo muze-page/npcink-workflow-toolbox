@@ -38,6 +38,31 @@ First-version write posture:
    abilities as inputs, not as write authority.
 6. Use WordPress abilities and Core proposals for final WordPress writes.
 
+## OpenClaw Button Surface Boundary
+
+Toolbox may turn repeatable OpenClaw flows into WordPress admin buttons. This is
+a UX projection of the same local ability and Core proposal contracts, not a
+second recipe owner.
+
+The safe pattern is:
+
+```text
+OpenClaw natural-language request
+or Toolbox fixed button
+-> Adapter/Core capability discovery
+-> Toolbox or Abilities suggestion/read ability
+-> reviewed plan or candidate artifact
+-> Core proposal
+-> approval and preflight
+-> WordPress ability write
+```
+
+Toolbox buttons must reuse the same ability ids, artifact contracts, and Core
+handoff routes that OpenClaw recipes use. They may collect operator inputs,
+display candidates, build preview artifacts, and submit reviewed proposals, but
+they must not own OpenClaw projection truth, approval truth, prompt/model
+routing truth, media registry truth, or final WordPress write execution.
+
 ## AI Tool Composition Boundary
 
 Toolbox may expose tool abilities needed by external AI workflows. Article

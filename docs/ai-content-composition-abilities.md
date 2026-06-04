@@ -98,6 +98,22 @@ sequence:
 The AI caller may skip unavailable optional steps, but it must preserve the
 write posture from the abilities it calls.
 
+## Fixed Button Mapping
+
+OpenClaw natural-language recipes and Toolbox fixed buttons should compose the
+same ability contracts. The channel changes, but the write boundary does not.
+
+| Operator intent | OpenClaw route | Toolbox button flow | Final write path |
+| --- | --- | --- | --- |
+| Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan | Core proposal for `magick-ai/create-draft` |
+| Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch plan | Core proposal for draft, media upload, metadata, and featured-image abilities |
+| Optimize existing media | Adapter media derivative recipe | Media Derivative Preview | Core proposal for `magick-ai/adopt-cloud-media-derivative` |
+| Repair hard-coded media URLs | Adapter read ability plus Core from-plan | URL repair proposal button | Core proposal for exact-match patch actions |
+| Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
+
+Toolbox may make these flows easier to click through, but it must not create a
+separate workflow runtime, direct write path, or approval store for them.
+
 ## Ability Roles
 
 | Ability | Composition role | Output use |
