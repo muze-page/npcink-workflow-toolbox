@@ -739,6 +739,7 @@
 		appendMeta(meta, 'Format', abilityInput.preferred_format ? String(abilityInput.preferred_format).toUpperCase() : '');
 		appendMeta(meta, 'Max width', abilityInput.target_max_width ? abilityInput.target_max_width + 'px' : '');
 		appendMeta(meta, 'Quality', abilityInput.quality);
+		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(abilityInput));
 		appendMeta(meta, 'Core policy', payload.core_policy_available ? 'Available' : 'Fallback defaults');
 		result.appendChild(meta);
 
@@ -786,7 +787,50 @@
 				input[key] = raw[key];
 			}
 		});
+		Object.assign(input, mediaDerivativeWatermarkInput(raw));
 		return input;
+	}
+
+	function mediaDerivativeWatermarkInput(raw) {
+		raw = raw || {};
+		const mode = String(raw.watermark_mode || 'core');
+		if (mode === 'off') {
+			return { watermark_enabled: false };
+		}
+		if (mode !== 'override') {
+			return {};
+		}
+
+		const opacity = parseInt(raw.watermark_opacity || '80', 10);
+		return {
+			watermark_enabled: true,
+			watermark: {
+				type: 'image',
+				position: String(raw.watermark_position || 'bottom_right'),
+				opacity: Math.max(0, Math.min(100, Number.isNaN(opacity) ? 80 : opacity)) / 100,
+				scale_percent: Math.max(1, Math.min(100, parseInt(raw.watermark_scale || '20', 10) || 20)),
+				margin_px: Math.max(0, Math.min(1000, parseInt(raw.watermark_margin || '24', 10) || 24)),
+			},
+		};
+	}
+
+	function mediaDerivativeWatermarkLabel(input) {
+		if (!input || typeof input !== 'object') {
+			return '';
+		}
+		if (input.watermark_enabled === false) {
+			return 'Disabled for this run';
+		}
+		if (input.watermark && typeof input.watermark === 'object') {
+			const watermark = input.watermark;
+			return [
+				watermark.position ? formatLabel(watermark.position) : 'Image',
+				watermark.opacity !== undefined ? String(Math.round(Number(watermark.opacity) * 100)) + '% opacity' : '',
+				watermark.scale_percent ? String(watermark.scale_percent) + '% scale' : '',
+				watermark.margin_px !== undefined ? String(watermark.margin_px) + 'px margin' : '',
+			].filter(Boolean).join(' · ');
+		}
+		return 'Core default';
 	}
 
 	function dimensionsFromText(value, fallbackWidth, fallbackHeight) {
@@ -819,6 +863,10 @@
 		}
 		if (raw.quality) {
 			input.quality = raw.quality;
+		}
+		const watermarkInput = mediaDerivativeWatermarkInput(raw);
+		if (watermarkInput.watermark) {
+			input.watermark = watermarkInput.watermark;
 		}
 		return input;
 	}
@@ -953,6 +1001,7 @@
 		appendMeta(meta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 		appendMeta(meta, 'Bytes', derivative.filesize_bytes);
 		appendMeta(meta, 'Expires', derivative.expires_at);
+		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 		result.appendChild(meta);
 
 		if (Array.isArray(derivative.processing_warnings) && derivative.processing_warnings.length) {
@@ -1144,6 +1193,7 @@
 		const meta = el('div', 'magick-ai-toolbox__result-meta');
 		appendMeta(meta, 'Previewed', states.length);
 		appendMeta(meta, 'Proposal path', 'Core review');
+		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
 
 		const list = el('div', 'magick-ai-toolbox__result-list');
@@ -1155,6 +1205,7 @@
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 			appendMeta(itemMeta, 'Expires', derivative.expires_at);
+			appendMeta(itemMeta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 			row.appendChild(itemMeta);
 			const previewUrl = withRestNonce(derivative.preview_url || '');
 			if (previewUrl) {
@@ -1423,10 +1474,11 @@
 		if (!candidates.length) {
 			throw { message: 'Select at least one batch candidate before generating previews.' };
 		}
+		const watermarkInput = mediaDerivativeWatermarkInput(serialize(form));
 		const states = [];
 		for (let index = 0; index < candidates.length; index += 1) {
 			const candidate = candidates[index] || {};
-			const input = Object.assign({}, candidate.cloud_request_input || {});
+			const input = Object.assign({}, candidate.cloud_request_input || {}, watermarkInput);
 			if (!input.attachment_id && candidate.attachment_id) {
 				input.attachment_id = candidate.attachment_id;
 			}

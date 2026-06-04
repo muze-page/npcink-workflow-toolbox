@@ -1723,6 +1723,7 @@ final class Provider_Client {
 		if ( '' !== trim( (string) ( $input['quality'] ?? '' ) ) ) {
 			$overrides['quality'] = absint( $input['quality'] );
 		}
+		$overrides = array_merge( $overrides, $this->media_derivative_watermark_overrides( $input ) );
 
 		$core_policy_available = function_exists( 'magick_ai_core_get_media_derivative_settings' );
 		$core_policy = $core_policy_available ? magick_ai_core_get_media_derivative_settings() : $this->fallback_media_derivative_policy();
@@ -1773,6 +1774,9 @@ final class Provider_Client {
 			'watermark_configured'     => false,
 			'watermark_attachment_id'  => 0,
 			'watermark_position'       => 'bottom_right',
+			'watermark_opacity'        => 80,
+			'watermark_scale'          => 20,
+			'watermark_margin'         => 24,
 			'use_cloud_when_available' => true,
 			'policy_owner'             => 'magick_ai_core',
 			'final_write_owner'        => 'local_wordpress_host',
@@ -1780,11 +1784,44 @@ final class Provider_Client {
 	}
 
 	private function fallback_media_derivative_ability_input( array $overrides, array $policy ): array {
-		return array(
+		$input = array(
 			'attachment_id'    => absint( $overrides['attachment_id'] ?? 0 ),
 			'preferred_format' => sanitize_key( (string) ( $overrides['target_format'] ?? $policy['target_format'] ?? 'webp' ) ),
 			'target_max_width' => max( 320, min( 7680, absint( $overrides['max_width'] ?? $policy['max_width'] ?? 1600 ) ) ),
 			'quality'          => max( 1, min( 100, absint( $overrides['quality'] ?? $policy['quality'] ?? 82 ) ) ),
+		);
+		if ( is_array( $overrides['watermark'] ?? null ) && ! empty( $overrides['watermark'] ) ) {
+			$input['watermark'] = $this->sanitize_payload( $overrides['watermark'] );
+		}
+		return $input;
+	}
+
+	private function media_derivative_watermark_overrides( array $input ): array {
+		$mode = sanitize_key( (string) ( $input['watermark_mode'] ?? 'core' ) );
+		if ( 'off' === $mode ) {
+			return array( 'watermark_enabled' => false );
+		}
+		if ( 'override' !== $mode ) {
+			return array();
+		}
+
+		$position = sanitize_key( (string) ( $input['watermark_position'] ?? 'bottom_right' ) );
+		if ( ! in_array( $position, array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' ), true ) ) {
+			$position = 'bottom_right';
+		}
+		$opacity = '' !== trim( (string) ( $input['watermark_opacity'] ?? '' ) )
+			? absint( $input['watermark_opacity'] )
+			: 80;
+
+		return array(
+			'watermark_enabled' => true,
+			'watermark'         => array(
+				'type'          => 'image',
+				'position'      => $position,
+				'opacity'       => round( max( 0, min( 100, $opacity ) ) / 100, 3 ),
+				'scale_percent' => max( 1, min( 100, absint( $input['watermark_scale'] ?? 20 ) ) ),
+				'margin_px'     => max( 0, min( 1000, absint( $input['watermark_margin'] ?? 24 ) ) ),
+			),
 		);
 	}
 

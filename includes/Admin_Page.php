@@ -1554,8 +1554,22 @@ final class Admin_Page {
 				'quality'                  => 82,
 				'watermark_enabled'        => false,
 				'watermark_configured'     => false,
+				'watermark_position'       => 'bottom_right',
+				'watermark_opacity'        => 80,
+				'watermark_scale'          => 20,
+				'watermark_margin'         => 24,
 				'use_cloud_when_available' => true,
 			);
+		$watermark_details = ! empty( $core_policy['watermark_configured'] )
+			? sprintf(
+				/* translators: 1: position, 2: opacity, 3: scale, 4: margin. */
+				__( '%1$s, %2$d%% opacity, %3$d%% scale, %4$dpx margin', 'magick-ai-toolbox' ),
+				ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
+				(int) ( $core_policy['watermark_opacity'] ?? 80 ),
+				(int) ( $core_policy['watermark_scale'] ?? 20 ),
+				(int) ( $core_policy['watermark_margin'] ?? 24 )
+			)
+			: __( 'off or incomplete', 'magick-ai-toolbox' );
 		?>
 		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" data-toolbox-media-derivative <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
@@ -1570,7 +1584,7 @@ final class Admin_Page {
 						esc_html( strtoupper( (string) $core_policy['target_format'] ) ),
 						(int) $core_policy['max_width'],
 						(int) $core_policy['quality'],
-						! empty( $core_policy['watermark_configured'] ) ? esc_html__( 'configured', 'magick-ai-toolbox' ) : esc_html__( 'off or incomplete', 'magick-ai-toolbox' )
+						esc_html( $watermark_details )
 					);
 					?>
 				</span>
@@ -1615,6 +1629,42 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Quality override', 'magick-ai-toolbox' ); ?></span>
 				<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
 			</label>
+			<div class="magick-ai-toolbox__batch-panel">
+				<h3><?php esc_html_e( 'Watermark override', 'magick-ai-toolbox' ); ?></h3>
+				<p><?php esc_html_e( 'Use Core watermark policy by default. Override only changes this preview or batch run and still requires a configured Core logo attachment.', 'magick-ai-toolbox' ); ?></p>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Watermark mode', 'magick-ai-toolbox' ); ?></span>
+						<select name="watermark_mode">
+							<option value="core"><?php esc_html_e( 'Use Core default', 'magick-ai-toolbox' ); ?></option>
+							<option value="off"><?php esc_html_e( 'Disable for this run', 'magick-ai-toolbox' ); ?></option>
+							<option value="override"><?php esc_html_e( 'Override placement', 'magick-ai-toolbox' ); ?></option>
+						</select>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Position', 'magick-ai-toolbox' ); ?></span>
+						<select name="watermark_position">
+							<?php foreach ( array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' ) as $position ) : ?>
+								<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ), $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+				</div>
+				<div class="magick-ai-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Opacity', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="0" max="100" step="1" name="watermark_opacity" value="<?php echo esc_attr( (string) ( $core_policy['watermark_opacity'] ?? 80 ) ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Scale', 'magick-ai-toolbox' ); ?></span>
+						<input type="number" min="1" max="100" step="1" name="watermark_scale" value="<?php echo esc_attr( (string) ( $core_policy['watermark_scale'] ?? 20 ) ); ?>" />
+					</label>
+				</div>
+				<label>
+					<span><?php esc_html_e( 'Margin', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="0" max="1000" step="1" name="watermark_margin" value="<?php echo esc_attr( (string) ( $core_policy['watermark_margin'] ?? 24 ) ); ?>" />
+				</label>
+			</div>
 			<div class="magick-ai-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Exclude formats from setting repair', 'magick-ai-toolbox' ); ?></span>
