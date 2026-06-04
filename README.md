@@ -49,6 +49,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Connector Ability Exposure](docs/connector-ability-exposure.md)
 - [Content Discoverability Context](docs/content-discoverability-context.md)
 - [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
+- [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
 - [Article Assistant Workbench](docs/article-assistant-workbench.md)
 - [Development Workflow](docs/development-workflow.md)

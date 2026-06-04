@@ -260,6 +260,7 @@ toolbox_assert( false !== strpos( $client, 'normalize_cloud_web_search_response'
 toolbox_assert( false !== strpos( $client, 'diagnose_automatic_web_search' ) && false !== strpos( $client, "'web_search_diagnostics'" ), 'Provider client can diagnose whether Toolbox workflows attach Cloud web search evidence.' );
 toolbox_assert( false !== strpos( $client, 'cloud_web_search_for_content' ) && false !== strpos( $client, "'external_research'      => \$external_research" ), 'Article and discoverability flows can attach Cloud web search evidence without local provider keys.' );
 toolbox_assert( false !== strpos( $client, 'execute_image_source_cloud_request' ) && false !== strpos( $client, 'magick_ai_toolbox_image_source_cloud_request' ), 'Image candidates use a Cloud-managed image-source runtime seam.' );
+toolbox_assert( false !== strpos( $client, "'policy'              => array(\n\t\t\t\t'allow_fallback' => true,\n\t\t\t)" ), 'Image-source runtime payload keeps Cloud policy limited to schema-supported fields.' );
 toolbox_assert( false === strpos( $client, 'https://api.unsplash.com/search/photos' ) && false === strpos( $client, 'https://pixabay.com/api/' ) && false === strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates do not directly call public image provider APIs locally.' );
 toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
 toolbox_assert( false !== strpos( $client, "'source_type'                   => 'ai_generated'" ) && false !== strpos( $client, "'requires_human_license_review' => true" ), 'AI-generated image candidates preserve source type and license review status.' );
@@ -434,6 +435,7 @@ toolbox_assert( false !== strpos( $readme, 'AI Content Composition Abilities' ),
 toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'README links the connector ability exposure contract.' );
 toolbox_assert( false !== strpos( $readme, 'Content Discoverability Context' ), 'README links the content context contract.' );
 toolbox_assert( false !== strpos( $readme, 'OpenClaw Content Discoverability Handoff' ), 'README links the OpenClaw content discoverability handoff.' );
+toolbox_assert( false !== strpos( $readme, 'OpenClaw SEO/GEO/AEO Acceptance Summary' ), 'README links the OpenClaw SEO/GEO/AEO acceptance summary.' );
 toolbox_assert( false !== strpos( $readme, 'Content Assistant Surface Lessons' ), 'README links the Content Assistant surface lessons contract.' );
 toolbox_assert( false !== strpos( $readme, 'Article Assistant Workbench' ), 'README links the Article Assistant workbench contract.' );
 
@@ -502,6 +504,30 @@ toolbox_assert( false !== $openclaw_handoff_doc && false !== strpos( $openclaw_h
 toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/validate-content-discoverability-context' ) && false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'OpenClaw handoff documentation records the required ability sequence.' );
 toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'GET /content-discoverability-brief?post_id=POST_ID' ), 'OpenClaw handoff documentation records Adapter shortcut usage.' );
 toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'Do not write WordPress data' ) && false !== strpos( $openclaw_handoff_doc, 'Final writes must go through Core proposal' ), 'OpenClaw handoff documentation preserves no-write guidance.' );
+
+$openclaw_acceptance_doc = file_get_contents( $root . '/docs/openclaw-seo-geo-aeo-acceptance-summary.md' );
+toolbox_assert( false !== $openclaw_acceptance_doc && false !== strpos( $openclaw_acceptance_doc, 'OpenClaw SEO/GEO/AEO Acceptance Summary' ), 'OpenClaw SEO/GEO/AEO acceptance summary exists.' );
+foreach (
+	array(
+		'content-discoverability-brief',
+		'article-writing-pack',
+		'magick-ai-toolbox/build-content-discoverability-brief',
+		'magick-ai-toolbox/build-ai-article-writing-pack',
+		'write_posture=suggestion_only',
+		'direct_wordpress_write=false',
+		'final_write_path=core_proposal_required',
+		'validation_status=ready',
+		'missing_required=0',
+		'missing_recommended=0',
+		'disallowed_topics',
+		'cautious_topics',
+		'no_structured_output_topics',
+		'human_confirmation_required',
+		'OpenClaw is an external natural-language channel',
+	) as $required_openclaw_acceptance
+) {
+	toolbox_assert( false !== strpos( $openclaw_acceptance_doc, $required_openclaw_acceptance ), 'OpenClaw SEO/GEO/AEO acceptance summary preserves: ' . $required_openclaw_acceptance );
+}
 
 $content_assistant_surface_doc = file_get_contents( $root . '/docs/content-assistant-surface-lessons.md' );
 toolbox_assert( false !== $content_assistant_surface_doc && false !== strpos( $content_assistant_surface_doc, 'summary -> detail' ), 'Content Assistant surface lessons document records summary-first display discipline.' );
