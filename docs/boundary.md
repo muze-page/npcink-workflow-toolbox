@@ -217,16 +217,17 @@ show Cloud-returned status, and search Cloud-managed site knowledge. Toolbox
 must not store vector provider keys, provider endpoints, collection names,
 embedding model settings, or vector database lifecycle controls.
 
-## Connector Status Catalog
+## Cloud Checks Surface
 
-The local connector settings page may show a compact read-only status catalog
-for current and reserved providers. Its job is to identify:
+The Toolbox **Cloud Checks** page shows compact tabs for Cloud-managed checks.
+Each tab should open directly into the useful verification tool instead of
+repeating ownership prose or provider catalogs.
 
-- whether the current MVP connector is configured;
-- whether the owner is `Local MVP config` or a `Future connector owner`;
-- whether a provider is active, missing local setup, or reserved only;
-- what boundary applies to the provider output.
+The verification surface may identify whether a Cloud-backed action is
+reachable from Toolbox, but it should keep provider ownership detail in Cloud
+or in documentation.
 
-The catalog must not become provider billing, quota, key-rotation, request-log,
-or marketplace ownership. Those are future connector-owner concerns, not the
-Toolbox MVP settings surface.
+The connector surface must not become provider billing, quota, key-rotation,
+request-log, marketplace, provider-routing, vector-provider, or vector
+lifecycle ownership. Those are Cloud or future connector-owner concerns, not
+the Toolbox MVP settings surface.

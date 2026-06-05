@@ -70,11 +70,12 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
-Connector settings now include a compact status catalog. It may show Cloud
-entry points and missing Cloud connection state, but it must stay a read-only
-orientation surface. Billing, quota, key rotation, request-log, marketplace,
-provider routing, vector provider settings, and vector lifecycle controls do
-not belong in Toolbox.
+Cloud Checks now open directly into verification tools for Cloud-managed
+search, image-source candidates, and site knowledge. The tabs may show compact
+Cloud readiness labels, but each panel should prioritize the operator test
+instead of repeating provider ownership detail. Billing, quota, key rotation,
+request-log, marketplace, provider routing, vector provider settings, and
+vector lifecycle controls do not belong in Toolbox.
 
 ## Content Discoverability Context
 

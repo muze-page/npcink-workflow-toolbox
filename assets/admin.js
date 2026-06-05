@@ -2224,16 +2224,16 @@
 			updateToolboxUrl({
 				toolbox_tab: 'tools',
 				toolbox_tool: activeTarget(document, '[data-toolbox-tool-target]', 'data-toolbox-tool-target'),
-				toolbox_connector: null,
+				toolbox_cloud_check: null,
 			});
 			return;
 		}
 
-		if (target === 'connectors') {
+		if (target === 'cloud-checks') {
 			updateToolboxUrl({
-				toolbox_tab: 'connectors',
+				toolbox_tab: 'cloud-checks',
 				toolbox_tool: null,
-				toolbox_connector: activeTarget(document, '[data-toolbox-connector-target]', 'data-toolbox-connector-target'),
+				toolbox_cloud_check: activeTarget(document, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target'),
 			});
 			return;
 		}
@@ -2241,7 +2241,7 @@
 		updateToolboxUrl({
 			toolbox_tab: target,
 			toolbox_tool: null,
-			toolbox_connector: null,
+			toolbox_cloud_check: null,
 		});
 	}
 
@@ -2288,32 +2288,32 @@
 			updateToolboxUrl({
 				toolbox_tab: 'tools',
 				toolbox_tool: target,
-				toolbox_connector: null,
+				toolbox_cloud_check: null,
 			});
 		}
 		return true;
 	}
 
-	function activateConnectorPanel(target, updateUrl) {
-		const workspace = document.querySelector('[data-toolbox-connectors]');
-		if (!workspace || !hasTarget(workspace, '[data-toolbox-connector-target]', 'data-toolbox-connector-target', target)) {
+	function activateCloudCheckPanel(target, updateUrl) {
+		const workspace = document.querySelector('[data-toolbox-cloud-checks]');
+		if (!workspace || !hasTarget(workspace, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target', target)) {
 			return false;
 		}
 
 		activateTarget(
 			workspace,
-			'[data-toolbox-connector-target]',
-			'[data-toolbox-connector-panel]',
-			'data-toolbox-connector-target',
-			'data-toolbox-connector-panel',
+			'[data-toolbox-cloud-check-target]',
+			'[data-toolbox-cloud-check-panel]',
+			'data-toolbox-cloud-check-target',
+			'data-toolbox-cloud-check-panel',
 			target
 		);
 
 		if (updateUrl) {
 			updateToolboxUrl({
-				toolbox_tab: 'connectors',
+				toolbox_tab: 'cloud-checks',
 				toolbox_tool: null,
-				toolbox_connector: target,
+				toolbox_cloud_check: target,
 			});
 		}
 		return true;
@@ -2323,14 +2323,14 @@
 		const params = new URL(window.location.href).searchParams;
 		const requestedTab = params.get('toolbox_tab') || '';
 		const requestedTool = params.get('toolbox_tool') || '';
-		const requestedConnector = params.get('toolbox_connector') || '';
+		const requestedCloudCheck = params.get('toolbox_cloud_check') || '';
 		let tab = requestedTab;
 
 		if (!tab) {
 			if (requestedTool && hasTarget(document, '[data-toolbox-tool-target]', 'data-toolbox-tool-target', requestedTool)) {
 				tab = 'tools';
-			} else if (requestedConnector && hasTarget(document, '[data-toolbox-connector-target]', 'data-toolbox-connector-target', requestedConnector)) {
-				tab = 'connectors';
+			} else if (requestedCloudCheck && hasTarget(document, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target', requestedCloudCheck)) {
+				tab = 'cloud-checks';
 			}
 		}
 
@@ -2340,8 +2340,8 @@
 		if (tab === 'tools' && requestedTool) {
 			activateToolPanel(requestedTool, false);
 		}
-		if (tab === 'connectors' && requestedConnector) {
-			activateConnectorPanel(requestedConnector, false);
+		if (tab === 'cloud-checks' && requestedCloudCheck) {
+			activateCloudCheckPanel(requestedCloudCheck, false);
 		}
 	}
 
@@ -2379,52 +2379,52 @@
 		});
 	}
 
-	function initConnectorSwitcher() {
-		document.querySelectorAll('[data-toolbox-connectors]').forEach((workspace) => {
+	function initCloudCheckSwitcher() {
+		document.querySelectorAll('[data-toolbox-cloud-checks]').forEach((workspace) => {
 			workspace.addEventListener('click', (event) => {
 				if (!(event.target instanceof Element)) {
 					return;
 				}
 
-				const button = event.target.closest('[data-toolbox-connector-target]');
+				const button = event.target.closest('[data-toolbox-cloud-check-target]');
 				if (!button || !workspace.contains(button)) {
 					return;
 				}
 
-				activateConnectorPanel(button.getAttribute('data-toolbox-connector-target'), true);
+				activateCloudCheckPanel(button.getAttribute('data-toolbox-cloud-check-target'), true);
 			});
 		});
 	}
 
-	function activateConnectorProvider(workspace, target) {
-		if (!workspace || !hasTarget(workspace, '[data-toolbox-connector-provider-target]', 'data-toolbox-connector-provider-target', target)) {
+	function activateCloudCheckGroup(workspace, target) {
+		if (!workspace || !hasTarget(workspace, '[data-toolbox-cloud-check-group-target]', 'data-toolbox-cloud-check-group-target', target)) {
 			return false;
 		}
 
 		activateTarget(
 			workspace,
-			'[data-toolbox-connector-provider-target]',
-			'[data-toolbox-connector-provider-panel]',
-			'data-toolbox-connector-provider-target',
-			'data-toolbox-connector-provider-panel',
+			'[data-toolbox-cloud-check-group-target]',
+			'[data-toolbox-cloud-check-group-panel]',
+			'data-toolbox-cloud-check-group-target',
+			'data-toolbox-cloud-check-group-panel',
 			target
 		);
 		return true;
 	}
 
-	function initConnectorProviderSwitcher() {
-		document.querySelectorAll('[data-toolbox-connector-providers]').forEach((workspace) => {
+	function initCloudCheckGroupSwitcher() {
+		document.querySelectorAll('[data-toolbox-cloud-check-groups]').forEach((workspace) => {
 			workspace.addEventListener('click', (event) => {
 				if (!(event.target instanceof Element)) {
 					return;
 				}
 
-				const button = event.target.closest('[data-toolbox-connector-provider-target]');
+				const button = event.target.closest('[data-toolbox-cloud-check-group-target]');
 				if (!button || !workspace.contains(button)) {
 					return;
 				}
 
-				activateConnectorProvider(workspace, button.getAttribute('data-toolbox-connector-provider-target'));
+				activateCloudCheckGroup(workspace, button.getAttribute('data-toolbox-cloud-check-group-target'));
 			});
 		});
 	}
@@ -2747,8 +2747,8 @@
 
 	initTopTabs();
 	initToolSwitcher();
-	initConnectorSwitcher();
-	initConnectorProviderSwitcher();
+	initCloudCheckSwitcher();
+	initCloudCheckGroupSwitcher();
 	initContextSectionSwitcher();
 	initContextGroupSwitcher();
 	initContextDrafts();

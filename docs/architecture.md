@@ -266,11 +266,11 @@ and featured image id. It never mutates the draft, assigns terms, inserts links,
 imports media, publishes content, or writes SEO fields. Write-like follow-up
 must still go through Core proposals and reusable WordPress abilities.
 
-Connector settings use a compact status catalog before editable fields. The
-catalog separates `Local MVP config` providers from `Future connector owner`
-slots, keeps reserved providers visible as planning context, and repeats the
-provider boundary where needed. It is not a billing, quota, request-log,
-marketplace, or key-rotation surface.
+Cloud Checks use compact tabs for Cloud-managed search, image-source, and
+site-knowledge checks. Each panel opens directly into the relevant verification
+tool instead of repeating provider ownership detail. The surface is not a
+billing, quota, request-log, marketplace, provider-routing, key-rotation,
+vector-provider, or vector-lifecycle surface.
 
 ## Dependency Direction
 

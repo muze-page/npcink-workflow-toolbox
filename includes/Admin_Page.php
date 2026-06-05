@@ -294,13 +294,11 @@ final class Admin_Page {
 			<h1><?php esc_html_e( 'Magick AI Toolbox', 'magick-ai-toolbox' ); ?></h1>
 			<p class="magick-ai-toolbox__scope"><?php esc_html_e( 'Review content context, site knowledge, image candidates, and governed handoffs. Human editors own article text; final WordPress writes still require Core proposal approval.', 'magick-ai-toolbox' ); ?></p>
 
-			<?php $this->render_status_strip( $settings, $content_context ); ?>
-
 			<nav class="magick-ai-toolbox__tabs" data-toolbox-tabs aria-label="<?php esc_attr_e( 'Toolbox sections', 'magick-ai-toolbox' ); ?>">
 				<button type="button" class="magick-ai-toolbox__tab is-active" data-toolbox-tab-target="context" aria-selected="true"><?php esc_html_e( 'Content Context', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="site-knowledge" aria-selected="false"><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></button>
 				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Content Support', 'magick-ai-toolbox' ); ?></button>
-				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="connectors" aria-selected="false"><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></button>
+				<button type="button" class="magick-ai-toolbox__tab" data-toolbox-tab-target="cloud-checks" aria-selected="false"><?php esc_html_e( 'Cloud Checks', 'magick-ai-toolbox' ); ?></button>
 			</nav>
 
 			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="context" aria-label="<?php esc_attr_e( 'Content context', 'magick-ai-toolbox' ); ?>">
@@ -315,23 +313,10 @@ final class Admin_Page {
 				<?php $this->render_tool_cards(); ?>
 			</section>
 
-			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="connectors" aria-label="<?php esc_attr_e( 'Connector settings', 'magick-ai-toolbox' ); ?>" hidden>
-				<?php $this->render_connector_settings_form( $settings ); ?>
+			<section class="magick-ai-toolbox__panel" data-toolbox-tab-panel="cloud-checks" aria-label="<?php esc_attr_e( 'Cloud checks', 'magick-ai-toolbox' ); ?>" hidden>
+				<?php $this->render_cloud_checks_panel( $settings ); ?>
 			</section>
 		</div>
-		<?php
-	}
-
-	private function render_status_strip( array $settings, array $context ): void {
-		$image_ready          = ! empty( $settings['enable_image_source'] ) && $this->settings->has_image_source_provider();
-		$context_count      = $this->count_content_context_fields( $context );
-		?>
-			<div class="magick-ai-toolbox__status-strip" aria-label="<?php esc_attr_e( 'Toolbox status', 'magick-ai-toolbox' ); ?>">
-				<?php $this->render_status_pill( __( 'Web Search', 'magick-ai-toolbox' ), 'inactive', __( 'Cloud managed', 'magick-ai-toolbox' ) ); ?>
-				<?php $this->render_status_pill( __( 'Images', 'magick-ai-toolbox' ), $image_ready ? 'ok' : 'warning', $image_ready ? __( 'Cloud source ready', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ) ); ?>
-				<?php $this->render_status_pill( __( 'Site Knowledge', 'magick-ai-toolbox' ), 'inactive', __( 'Cloud managed', 'magick-ai-toolbox' ) ); ?>
-				<?php $this->render_status_pill( __( 'Context', 'magick-ai-toolbox' ), $context_count > 0 ? 'ok' : 'inactive', sprintf( /* translators: %d: number of filled content context fields. */ _n( '%d field filled', '%d fields filled', $context_count, 'magick-ai-toolbox' ), $context_count ) ); ?>
-			</div>
 		<?php
 	}
 
@@ -382,8 +367,8 @@ final class Admin_Page {
 	private function render_site_knowledge_search_check( bool $advanced = false ): void {
 		?>
 		<form class="magick-ai-toolbox__inline-form" data-toolbox-site-knowledge-search>
-			<h3><?php echo esc_html( $advanced ? __( 'Advanced search check', 'magick-ai-toolbox' ) : __( 'Vector search test', 'magick-ai-toolbox' ) ); ?></h3>
-			<p><?php esc_html_e( 'Verify that Cloud-managed site knowledge is searchable by AI callers. This is read-only and never writes WordPress content.', 'magick-ai-toolbox' ); ?></p>
+			<h3><?php echo esc_html( $advanced ? __( 'Advanced search check', 'magick-ai-toolbox' ) : __( 'Search check', 'magick-ai-toolbox' ) ); ?></h3>
+			<p><?php esc_html_e( 'Run a read-only query against Cloud-managed site knowledge.', 'magick-ai-toolbox' ); ?></p>
 			<label>
 				<span><?php esc_html_e( 'Query', 'magick-ai-toolbox' ); ?></span>
 				<input type="text" name="query" placeholder="<?php esc_attr_e( 'Search public site knowledge', 'magick-ai-toolbox' ); ?>" />
@@ -421,262 +406,179 @@ final class Admin_Page {
 				<input type="hidden" name="current_post_id" value="0" />
 				<input type="hidden" name="max_results" value="8" />
 			<?php endif; ?>
-			<button type="submit" class="button"><?php echo esc_html( $advanced ? __( 'Search index', 'magick-ai-toolbox' ) : __( 'Test vector search', 'magick-ai-toolbox' ) ); ?></button>
+			<button type="submit" class="button"><?php echo esc_html( $advanced ? __( 'Search index', 'magick-ai-toolbox' ) : __( 'Run check', 'magick-ai-toolbox' ) ); ?></button>
 			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php
 	}
 
-	private function render_status_pill( string $label, string $status, string $detail ): void {
-		?>
-		<div class="magick-ai-toolbox__status-pill is-<?php echo esc_attr( $status ); ?>">
-			<span class="magick-ai-toolbox__status-label"><?php echo esc_html( $label ); ?></span>
-			<span class="magick-ai-toolbox__status-detail"><?php echo esc_html( $detail ); ?></span>
-		</div>
-		<?php
-	}
-
-	private function count_content_context_fields( array $context ): int {
-		$counted_keys = array(
-			'site_positioning',
-			'target_audience',
-			'brand_voice',
-			'primary_keywords',
-			'long_tail_keywords',
-			'entity_keywords',
-			'allowed_claims',
-			'forbidden_claims',
-			'seo_rules',
-			'aeo_rules',
-			'geo_rules',
-		);
-		$count        = 0;
-
-		foreach ( $counted_keys as $key ) {
-			$value = $context[ $key ] ?? '';
-			if ( is_array( $value ) ? ! empty( $value ) : '' !== trim( (string) $value ) ) {
-				++$count;
-			}
-		}
-
-		return $count;
-	}
-
-	private function render_connector_settings_form( array $settings ): void {
+	private function render_cloud_checks_panel( array $settings ): void {
 		$image_ready = $this->settings->has_image_source_provider();
 		?>
 		<div class="magick-ai-toolbox__panel-header">
-			<h2><?php esc_html_e( 'Connectors', 'magick-ai-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Review Cloud-managed web search and image-source ownership. Toolbox does not store provider keys locally.', 'magick-ai-toolbox' ); ?></p>
+			<h2><?php esc_html_e( 'Cloud Checks', 'magick-ai-toolbox' ); ?></h2>
+			<p><?php esc_html_e( 'Run Cloud-managed search, image-source, and site-knowledge checks from Toolbox.', 'magick-ai-toolbox' ); ?></p>
 		</div>
 
-		<div class="magick-ai-toolbox__connector-workspace" data-toolbox-connectors>
-			<nav class="magick-ai-toolbox__connector-tabs" aria-label="<?php esc_attr_e( 'Connector groups', 'magick-ai-toolbox' ); ?>">
-				<button type="button" class="magick-ai-toolbox__connector-tab is-active" data-toolbox-connector-target="search" aria-selected="true">
+		<div class="magick-ai-toolbox__cloud-check-workspace" data-toolbox-cloud-checks>
+			<nav class="magick-ai-toolbox__cloud-check-tabs" aria-label="<?php esc_attr_e( 'Cloud check groups', 'magick-ai-toolbox' ); ?>">
+				<button type="button" class="magick-ai-toolbox__cloud-check-tab is-active" data-toolbox-cloud-check-target="search" aria-selected="true">
 					<span><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></span>
 					<small><?php esc_html_e( 'Cloud managed', 'magick-ai-toolbox' ); ?></small>
 				</button>
-				<button type="button" class="magick-ai-toolbox__connector-tab" data-toolbox-connector-target="image" aria-selected="false">
+				<button type="button" class="magick-ai-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="image" aria-selected="false">
 					<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
 					<small><?php echo esc_html( $image_ready ? __( 'Cloud managed', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ) ); ?></small>
 				</button>
-				<button type="button" class="magick-ai-toolbox__connector-tab" data-toolbox-connector-target="vector" aria-selected="false">
+				<button type="button" class="magick-ai-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="vector" aria-selected="false">
 					<span><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></span>
 					<small><?php esc_html_e( 'Cloud managed', 'magick-ai-toolbox' ); ?></small>
 				</button>
 			</nav>
 
-			<div class="magick-ai-toolbox__connector-panels">
-				<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="search">
-					<h2><?php esc_html_e( 'Search', 'magick-ai-toolbox' ); ?></h2>
-					<p><?php esc_html_e( 'Cloud owns provider keys, quotas, health, and provider selection. Use this test to verify that Cloud-managed web search is reachable from Toolbox.', 'magick-ai-toolbox' ); ?></p>
-					<?php
-					$this->render_connector_status_catalog(
-						array(
-							array(
-								'label'  => __( 'Web Search', 'magick-ai-toolbox' ),
-								'state'  => 'inactive',
-								'status' => __( 'Cloud managed', 'magick-ai-toolbox' ),
-								'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
-								'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
-								'intro'  => __( 'Tavily, Bocha, Jina Reader, and Apify settings stay in Cloud.', 'magick-ai-toolbox' ),
-								'note'   => __( 'Toolbox sends a suggestion-only runtime request and never stores local search provider keys.', 'magick-ai-toolbox' ),
-							),
-						)
-					);
-					?>
-					<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
-						<h3><?php esc_html_e( 'Cloud search test', 'magick-ai-toolbox' ); ?></h3>
-						<label>
-							<span><?php esc_html_e( 'Query', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="query" value="latest WordPress AI search trends" />
-						</label>
-						<div class="magick-ai-toolbox__split">
-							<label>
-								<span><?php esc_html_e( 'Intent', 'magick-ai-toolbox' ); ?></span>
-								<select name="intent">
-									<option value="news"><?php esc_html_e( 'News', 'magick-ai-toolbox' ); ?></option>
-									<option value="fact_check"><?php esc_html_e( 'Fact check', 'magick-ai-toolbox' ); ?></option>
-									<option value="writing_context"><?php esc_html_e( 'Writing context', 'magick-ai-toolbox' ); ?></option>
-									<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'magick-ai-toolbox' ); ?></option>
-									<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'magick-ai-toolbox' ); ?></option>
-									<option value="external_links"><?php esc_html_e( 'External links', 'magick-ai-toolbox' ); ?></option>
-								</select>
-							</label>
-							<label>
-								<span><?php esc_html_e( 'Provider', 'magick-ai-toolbox' ); ?></span>
-								<select name="provider">
-									<option value="auto"><?php esc_html_e( 'Auto', 'magick-ai-toolbox' ); ?></option>
-									<option value="tavily"><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></option>
-									<option value="bocha"><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></option>
-									<option value="apify"><?php esc_html_e( 'Apify', 'magick-ai-toolbox' ); ?></option>
-								</select>
-							</label>
+			<div class="magick-ai-toolbox__cloud-check-panels">
+				<section class="magick-ai-toolbox__card" data-toolbox-cloud-check-panel="search">
+					<div class="magick-ai-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
+						<nav class="magick-ai-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Search checks', 'magick-ai-toolbox' ); ?>">
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="search-test" aria-selected="true">
+								<span><?php esc_html_e( 'Search test', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Read-only query', 'magick-ai-toolbox' ); ?></small>
+							</button>
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="search-diagnostic" aria-selected="false">
+								<span><?php esc_html_e( 'Diagnostic', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Workflow evidence', 'magick-ai-toolbox' ); ?></small>
+							</button>
+						</nav>
+						<div>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-test">
+								<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
+									<h3><?php esc_html_e( 'Cloud search test', 'magick-ai-toolbox' ); ?></h3>
+									<label>
+										<span><?php esc_html_e( 'Query', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="query" value="latest WordPress AI search trends" />
+									</label>
+									<div class="magick-ai-toolbox__split">
+										<label>
+											<span><?php esc_html_e( 'Intent', 'magick-ai-toolbox' ); ?></span>
+											<select name="intent">
+												<option value="news"><?php esc_html_e( 'News', 'magick-ai-toolbox' ); ?></option>
+												<option value="fact_check"><?php esc_html_e( 'Fact check', 'magick-ai-toolbox' ); ?></option>
+												<option value="writing_context"><?php esc_html_e( 'Writing context', 'magick-ai-toolbox' ); ?></option>
+												<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'magick-ai-toolbox' ); ?></option>
+												<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'magick-ai-toolbox' ); ?></option>
+												<option value="external_links"><?php esc_html_e( 'External links', 'magick-ai-toolbox' ); ?></option>
+											</select>
+										</label>
+										<label>
+											<span><?php esc_html_e( 'Provider', 'magick-ai-toolbox' ); ?></span>
+											<select name="provider">
+												<option value="auto"><?php esc_html_e( 'Auto', 'magick-ai-toolbox' ); ?></option>
+												<option value="tavily"><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></option>
+												<option value="bocha"><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></option>
+												<option value="apify"><?php esc_html_e( 'Apify', 'magick-ai-toolbox' ); ?></option>
+											</select>
+										</label>
+									</div>
+									<div class="magick-ai-toolbox__split">
+										<label>
+											<span><?php esc_html_e( 'Max results', 'magick-ai-toolbox' ); ?></span>
+											<input type="number" name="max_results" min="1" max="5" value="3" />
+										</label>
+										<label>
+											<span><?php esc_html_e( 'Recency days', 'magick-ai-toolbox' ); ?></span>
+											<input type="number" name="recency_days" min="0" max="30" value="7" />
+										</label>
+									</div>
+									<label class="magick-ai-toolbox__check">
+										<input type="checkbox" name="enhance_with_reader" value="1" />
+										<span><?php esc_html_e( 'Enhance returned pages with Jina Reader when Cloud enables it', 'magick-ai-toolbox' ); ?></span>
+									</label>
+									<button type="submit" class="button button-primary"><?php esc_html_e( 'Run search test', 'magick-ai-toolbox' ); ?></button>
+									<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+								</form>
+							</div>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-diagnostic" hidden>
+								<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="web-search/diagnostics">
+									<h3><?php esc_html_e( 'Workflow diagnostic', 'magick-ai-toolbox' ); ?></h3>
+									<p><?php esc_html_e( 'Run a Toolbox content workflow and verify whether it attached Cloud web search evidence.', 'magick-ai-toolbox' ); ?></p>
+									<div class="magick-ai-toolbox__split">
+										<label>
+											<span><?php esc_html_e( 'Scenario', 'magick-ai-toolbox' ); ?></span>
+											<select name="scenario">
+												<option value="article_assistant"><?php esc_html_e( 'Article Assistant', 'magick-ai-toolbox' ); ?></option>
+												<option value="discoverability"><?php esc_html_e( 'Discoverability', 'magick-ai-toolbox' ); ?></option>
+												<option value="publish_preflight"><?php esc_html_e( 'Publish preflight', 'magick-ai-toolbox' ); ?></option>
+											</select>
+										</label>
+										<label>
+											<span><?php esc_html_e( 'Topic', 'magick-ai-toolbox' ); ?></span>
+											<input type="text" name="topic" value="latest WordPress AI search trends" />
+										</label>
+									</div>
+									<label>
+										<span><?php esc_html_e( 'Working title', 'magick-ai-toolbox' ); ?></span>
+										<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'magick-ai-toolbox' ); ?>" />
+									</label>
+									<button type="submit" class="button"><?php esc_html_e( 'Run workflow diagnostic', 'magick-ai-toolbox' ); ?></button>
+									<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+								</form>
+							</div>
 						</div>
-						<div class="magick-ai-toolbox__split">
-							<label>
-								<span><?php esc_html_e( 'Max results', 'magick-ai-toolbox' ); ?></span>
-								<input type="number" name="max_results" min="1" max="5" value="3" />
-							</label>
-							<label>
-								<span><?php esc_html_e( 'Recency days', 'magick-ai-toolbox' ); ?></span>
-								<input type="number" name="recency_days" min="0" max="30" value="7" />
-							</label>
-						</div>
-						<label class="magick-ai-toolbox__check">
-							<input type="checkbox" name="enhance_with_reader" value="1" />
-							<span><?php esc_html_e( 'Enhance returned pages with Jina Reader when Cloud enables it', 'magick-ai-toolbox' ); ?></span>
-						</label>
-						<button type="submit" class="button button-primary"><?php esc_html_e( 'Run search test', 'magick-ai-toolbox' ); ?></button>
-						<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
-					</form>
-					<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="web-search/diagnostics">
-						<h3><?php esc_html_e( 'Workflow diagnostic', 'magick-ai-toolbox' ); ?></h3>
-						<p><?php esc_html_e( 'Run a Toolbox content workflow and verify whether it attached Cloud web search evidence.', 'magick-ai-toolbox' ); ?></p>
-						<div class="magick-ai-toolbox__split">
-							<label>
-								<span><?php esc_html_e( 'Scenario', 'magick-ai-toolbox' ); ?></span>
-								<select name="scenario">
-									<option value="article_assistant"><?php esc_html_e( 'Article Assistant', 'magick-ai-toolbox' ); ?></option>
-									<option value="discoverability"><?php esc_html_e( 'Discoverability', 'magick-ai-toolbox' ); ?></option>
-									<option value="publish_preflight"><?php esc_html_e( 'Publish preflight', 'magick-ai-toolbox' ); ?></option>
-								</select>
-							</label>
-							<label>
-								<span><?php esc_html_e( 'Topic', 'magick-ai-toolbox' ); ?></span>
-								<input type="text" name="topic" value="latest WordPress AI search trends" />
-							</label>
-						</div>
-						<label>
-							<span><?php esc_html_e( 'Working title', 'magick-ai-toolbox' ); ?></span>
-							<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'magick-ai-toolbox' ); ?>" />
-						</label>
-						<button type="submit" class="button"><?php esc_html_e( 'Run workflow diagnostic', 'magick-ai-toolbox' ); ?></button>
-						<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
-					</form>
+					</div>
 				</section>
 
-				<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="image" hidden>
-					<h2><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></h2>
-					<p><?php esc_html_e( 'Public image-source providers are configured in Cloud. Toolbox only requests reviewed image candidates and keeps final WordPress media writes behind Core approval.', 'magick-ai-toolbox' ); ?></p>
-					<?php
-					$this->render_connector_status_catalog(
-						array(
-							array(
-								'label'  => __( 'Cloud image sources', 'magick-ai-toolbox' ),
-								'state'  => $image_ready ? 'ok' : 'warning',
-								'status' => $image_ready ? __( 'Available', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ),
-								'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
-								'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
-								'intro'  => __( 'Cloud owns provider keys, quotas, health, and provider selection for public image references.', 'magick-ai-toolbox' ),
-								'note'   => __( 'Returned candidates still use image_candidate.v1 and must be adopted through Core proposal governance.', 'magick-ai-toolbox' ),
-							),
-						)
-					);
-					$this->render_image_source_candidates_smoke_form();
-					?>
+				<section class="magick-ai-toolbox__card" data-toolbox-cloud-check-panel="image" hidden>
+					<div class="magick-ai-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
+						<nav class="magick-ai-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Image checks', 'magick-ai-toolbox' ); ?>">
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="image-smoke" aria-selected="true">
+								<span><?php esc_html_e( 'Smoke test', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Candidates', 'magick-ai-toolbox' ); ?></small>
+							</button>
+						</nav>
+						<div>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-smoke">
+								<?php $this->render_image_source_candidates_smoke_form(); ?>
+							</div>
+						</div>
+					</div>
 				</section>
 
-				<section class="magick-ai-toolbox__card" data-toolbox-connector-panel="vector" hidden>
-					<div data-toolbox-site-knowledge>
-						<div class="magick-ai-toolbox__section-heading">
-							<div>
-								<h2><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></h2>
-								<p><?php esc_html_e( 'Cloud owns embeddings, vector storage, indexing, rerank, quotas, and detailed health. Toolbox only shows returned status and runs read-only search checks.', 'magick-ai-toolbox' ); ?></p>
+				<section class="magick-ai-toolbox__card" data-toolbox-cloud-check-panel="vector" hidden>
+					<div class="magick-ai-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
+						<nav class="magick-ai-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Vector checks', 'magick-ai-toolbox' ); ?>">
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="vector-status" aria-selected="true">
+								<span><?php esc_html_e( 'Status', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Coverage', 'magick-ai-toolbox' ); ?></small>
+							</button>
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="vector-search" aria-selected="false">
+								<span><?php esc_html_e( 'Search check', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Read-only query', 'magick-ai-toolbox' ); ?></small>
+							</button>
+						</nav>
+						<div data-toolbox-site-knowledge>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="vector-status">
+								<div class="magick-ai-toolbox__section-heading">
+									<div>
+										<h3><?php esc_html_e( 'Status', 'magick-ai-toolbox' ); ?></h3>
+										<p><?php esc_html_e( 'Cloud coverage summary for this WordPress site.', 'magick-ai-toolbox' ); ?></p>
+									</div>
+									<div class="magick-ai-toolbox__inline-actions">
+										<button type="button" class="button" data-toolbox-site-knowledge-status><?php esc_html_e( 'Refresh', 'magick-ai-toolbox' ); ?></button>
+										<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=magick-ai-toolbox&toolbox_tab=site-knowledge' ) ); ?>"><?php esc_html_e( 'Manage index', 'magick-ai-toolbox' ); ?></a>
+									</div>
+								</div>
+								<div class="magick-ai-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
+									<div class="magick-ai-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'magick-ai-toolbox' ); ?></div>
+								</div>
 							</div>
-							<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=magick-ai-toolbox&toolbox_tab=site-knowledge' ) ); ?>"><?php esc_html_e( 'Open index', 'magick-ai-toolbox' ); ?></a>
-						</div>
-						<?php
-						$this->render_connector_status_catalog(
-							array(
-								array(
-									'label'  => __( 'Cloud site knowledge', 'magick-ai-toolbox' ),
-									'state'  => 'inactive',
-									'status' => __( 'Cloud managed', 'magick-ai-toolbox' ),
-									'owner'  => __( 'Cloud service', 'magick-ai-toolbox' ),
-									'url'    => admin_url( 'admin.php?page=magick-ai-cloud-addon' ),
-									'intro'  => __( 'Provider keys, embedding models, dimensions, indexes, and vector database settings stay in Cloud.', 'magick-ai-toolbox' ),
-									'note'   => __( 'Use Site Knowledge to start or refresh indexing. Use this panel only to confirm AI callers can retrieve indexed context.', 'magick-ai-toolbox' ),
-								),
-							)
-						);
-						?>
-						<div class="magick-ai-toolbox__section-heading">
-							<div>
-								<h3><?php esc_html_e( 'Vector status', 'magick-ai-toolbox' ); ?></h3>
-								<p><?php esc_html_e( 'Read-only Cloud coverage summary for this WordPress site.', 'magick-ai-toolbox' ); ?></p>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="vector-search" hidden>
+								<?php $this->render_site_knowledge_search_check(); ?>
 							</div>
-							<button type="button" class="button" data-toolbox-site-knowledge-status><?php esc_html_e( 'Refresh status', 'magick-ai-toolbox' ); ?></button>
 						</div>
-						<div class="magick-ai-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
-							<div class="magick-ai-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'magick-ai-toolbox' ); ?></div>
-						</div>
-						<?php $this->render_site_knowledge_search_check(); ?>
 					</div>
 				</section>
 			</div>
 		</div>
-
-		<form class="magick-ai-toolbox__settings-form" method="post" action="options.php">
-			<?php settings_fields( 'magick_ai_toolbox' ); ?>
-			<details class="magick-ai-toolbox__disclosure">
-				<summary>
-					<span><?php esc_html_e( 'Advanced / Debug', 'magick-ai-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Feature toggles and raw response output', 'magick-ai-toolbox' ); ?></small>
-				</summary>
-				<div class="magick-ai-toolbox__disclosure-body">
-					<?php $this->render_checkbox( 'enable_image_source', __( 'Image source search', 'magick-ai-toolbox' ), $settings ); ?>
-					<?php $this->render_checkbox( 'include_raw_responses', __( 'Include provider raw responses', 'magick-ai-toolbox' ), $settings ); ?>
-				</div>
-			</details>
-
-			<?php submit_button( __( 'Save settings', 'magick-ai-toolbox' ) ); ?>
-		</form>
-		<?php
-	}
-
-	private function render_connector_status_catalog( array $rows ): void {
-		?>
-		<dl class="magick-ai-toolbox__connector-status" aria-label="<?php esc_attr_e( 'Connector status catalog', 'magick-ai-toolbox' ); ?>">
-			<?php foreach ( $rows as $row ) : ?>
-				<div class="magick-ai-toolbox__connector-status-row is-<?php echo esc_attr( (string) $row['state'] ); ?>">
-					<dt>
-						<span><?php echo esc_html( (string) $row['label'] ); ?></span>
-						<small><?php echo esc_html( (string) $row['owner'] ); ?></small>
-					</dt>
-					<dd>
-						<strong><?php echo esc_html( (string) $row['status'] ); ?></strong>
-						<?php if ( ! empty( $row['url'] ) ) : ?>
-							<a href="<?php echo esc_url( (string) $row['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( (string) $row['url'] ); ?></a>
-						<?php endif; ?>
-						<?php if ( ! empty( $row['intro'] ) ) : ?>
-							<span><?php echo esc_html( (string) $row['intro'] ); ?></span>
-						<?php endif; ?>
-						<span><?php echo esc_html( (string) $row['note'] ); ?></span>
-					</dd>
-				</div>
-			<?php endforeach; ?>
-		</dl>
 		<?php
 	}
 

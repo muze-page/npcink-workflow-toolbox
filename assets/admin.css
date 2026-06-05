@@ -9,48 +9,6 @@
 	font-size: 14px;
 }
 
-.magick-ai-toolbox__status-strip {
-	display: grid;
-	grid-template-columns: repeat(5, minmax(0, 1fr));
-	gap: 10px;
-	margin: 0 0 18px;
-}
-
-.magick-ai-toolbox__status-pill {
-	display: flex;
-	justify-content: space-between;
-	gap: 12px;
-	align-items: center;
-	min-height: 38px;
-	padding: 8px 10px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-left-width: 4px;
-	border-radius: 6px;
-	box-sizing: border-box;
-}
-
-.magick-ai-toolbox__status-pill.is-ok {
-	border-left-color: #00a32a;
-}
-
-.magick-ai-toolbox__status-pill.is-warning {
-	border-left-color: #dba617;
-}
-
-.magick-ai-toolbox__status-pill.is-inactive {
-	border-left-color: #8c8f94;
-}
-
-.magick-ai-toolbox__status-label {
-	font-weight: 600;
-}
-
-.magick-ai-toolbox__status-detail {
-	color: #50575e;
-	text-align: right;
-}
-
 .magick-ai-toolbox__tabs {
 	display: flex;
 	gap: 4px;
@@ -211,12 +169,12 @@
 	max-width: 920px;
 }
 
-.magick-ai-toolbox__connector-workspace {
+.magick-ai-toolbox__cloud-check-workspace {
 	display: grid;
 	gap: 12px;
 }
 
-.magick-ai-toolbox__connector-tabs {
+.magick-ai-toolbox__cloud-check-tabs {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
@@ -224,7 +182,7 @@
 	margin: 0 0 2px;
 }
 
-.magick-ai-toolbox__connector-tab {
+.magick-ai-toolbox__cloud-check-tab {
 	appearance: none;
 	display: grid;
 	gap: 2px;
@@ -239,77 +197,24 @@
 	text-align: left;
 }
 
-.magick-ai-toolbox__connector-tab:hover,
-.magick-ai-toolbox__connector-tab:focus {
+.magick-ai-toolbox__cloud-check-tab:hover,
+.magick-ai-toolbox__cloud-check-tab:focus {
 	border-color: #2271b1;
 }
 
-.magick-ai-toolbox__connector-tab.is-active {
+.magick-ai-toolbox__cloud-check-tab.is-active {
 	background: #f0f6fc;
 	border-color: #2271b1;
 	box-shadow: inset 0 -3px 0 #2271b1;
 }
 
-.magick-ai-toolbox__connector-tab span {
+.magick-ai-toolbox__cloud-check-tab span {
 	font-weight: 600;
 }
 
-.magick-ai-toolbox__connector-tab small {
+.magick-ai-toolbox__cloud-check-tab small {
 	color: #646970;
 	line-height: 1.35;
-}
-
-.magick-ai-toolbox__connector-provider-workspace {
-	display: grid;
-	grid-template-columns: 220px minmax(0, 1fr);
-	gap: 18px;
-	align-items: start;
-	margin: 18px 0 0;
-}
-
-.magick-ai-toolbox__connector-provider-list {
-	display: grid;
-	gap: 8px;
-}
-
-.magick-ai-toolbox__connector-provider-button {
-	appearance: none;
-	display: grid;
-	gap: 3px;
-	width: 100%;
-	min-height: 54px;
-	padding: 11px 12px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 6px;
-	color: #1d2327;
-	cursor: pointer;
-	font: inherit;
-	text-align: left;
-}
-
-.magick-ai-toolbox__connector-provider-button:hover,
-.magick-ai-toolbox__connector-provider-button:focus {
-	border-color: #2271b1;
-}
-
-.magick-ai-toolbox__connector-provider-button.is-active {
-	background: #f0f6fc;
-	border-color: #2271b1;
-	box-shadow: inset 3px 0 0 #2271b1;
-}
-
-.magick-ai-toolbox__connector-provider-button span {
-	font-weight: 600;
-}
-
-.magick-ai-toolbox__connector-provider-button small {
-	color: #646970;
-	line-height: 1.35;
-}
-
-.magick-ai-toolbox__connector-provider-panel {
-	min-height: 240px;
 }
 
 .magick-ai-toolbox__context-workspace {
@@ -360,7 +265,8 @@
 	line-height: 1.35;
 }
 
-.magick-ai-toolbox__context-group-workspace {
+.magick-ai-toolbox__context-group-workspace,
+.magick-ai-toolbox__cloud-check-group-workspace {
 	display: grid;
 	grid-template-columns: 220px minmax(0, 1fr);
 	gap: 18px;
@@ -368,12 +274,14 @@
 	margin: 18px 0 0;
 }
 
-.magick-ai-toolbox__context-group-list {
+.magick-ai-toolbox__context-group-list,
+.magick-ai-toolbox__cloud-check-group-list {
 	display: grid;
 	gap: 8px;
 }
 
-.magick-ai-toolbox__context-group-button {
+.magick-ai-toolbox__context-group-button,
+.magick-ai-toolbox__cloud-check-group-button {
 	appearance: none;
 	display: grid;
 	gap: 3px;
@@ -390,26 +298,32 @@
 }
 
 .magick-ai-toolbox__context-group-button:hover,
-.magick-ai-toolbox__context-group-button:focus {
+.magick-ai-toolbox__context-group-button:focus,
+.magick-ai-toolbox__cloud-check-group-button:hover,
+.magick-ai-toolbox__cloud-check-group-button:focus {
 	border-color: #2271b1;
 }
 
-.magick-ai-toolbox__context-group-button.is-active {
+.magick-ai-toolbox__context-group-button.is-active,
+.magick-ai-toolbox__cloud-check-group-button.is-active {
 	background: #f0f6fc;
 	border-color: #2271b1;
 	box-shadow: inset 3px 0 0 #2271b1;
 }
 
-.magick-ai-toolbox__context-group-button span {
+.magick-ai-toolbox__context-group-button span,
+.magick-ai-toolbox__cloud-check-group-button span {
 	font-weight: 600;
 }
 
-.magick-ai-toolbox__context-group-button small {
+.magick-ai-toolbox__context-group-button small,
+.magick-ai-toolbox__cloud-check-group-button small {
 	color: #646970;
 	line-height: 1.35;
 }
 
-.magick-ai-toolbox__context-group-panel {
+.magick-ai-toolbox__context-group-panel,
+.magick-ai-toolbox__cloud-check-group-panel {
 	min-height: 220px;
 }
 
@@ -475,56 +389,21 @@
 	color: #1d2327;
 }
 
-.magick-ai-toolbox__connector-status {
-	display: grid;
-	gap: 8px;
-	margin: 12px 0 4px;
-}
-
-.magick-ai-toolbox__connector-status-row {
-	display: grid;
-	grid-template-columns: minmax(160px, 0.5fr) minmax(0, 1fr);
-	gap: 12px;
-	padding: 10px 12px;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	border-left: 4px solid #8c8f94;
-}
-
-.magick-ai-toolbox__connector-status-row.is-ok {
-	border-left-color: #00a32a;
-}
-
-.magick-ai-toolbox__connector-status-row.is-warning {
-	border-left-color: #dba617;
-}
-
-.magick-ai-toolbox__connector-status-row dt,
-.magick-ai-toolbox__connector-status-row dd {
-	display: grid;
-	gap: 3px;
-	margin: 0;
-}
-
-.magick-ai-toolbox__connector-status-row dt span,
-.magick-ai-toolbox__connector-status-row dd strong {
-	font-weight: 600;
-}
-
-.magick-ai-toolbox__connector-status-row dt small,
-.magick-ai-toolbox__connector-status-row dd span {
-	color: #646970;
-	line-height: 1.35;
-}
-
-.magick-ai-toolbox__connector-status-row dd a {
-	overflow-wrap: anywhere;
-}
-
 .magick-ai-toolbox__inline-form {
 	margin: 16px 0 0;
 	padding: 14px 0 0;
 	border-top: 1px solid #dcdcde;
+}
+
+.magick-ai-toolbox__card > .magick-ai-toolbox__inline-form:first-child,
+.magick-ai-toolbox__cloud-check-group-panel > .magick-ai-toolbox__inline-form:first-child {
+	margin-top: 0;
+	padding-top: 0;
+	border-top: 0;
+}
+
+.magick-ai-toolbox__inline-form > .button {
+	margin-top: 16px;
 }
 
 .magick-ai-toolbox__inline-form h3 {
@@ -1049,7 +928,6 @@ pre.magick-ai-toolbox__result {
 }
 
 @media (max-width: 1100px) {
-	.magick-ai-toolbox__status-strip,
 	.magick-ai-toolbox__tool-workspace,
 	.magick-ai-toolbox__split {
 		grid-template-columns: 1fr;
@@ -1061,13 +939,11 @@ pre.magick-ai-toolbox__result {
 		overflow-x: auto;
 	}
 
-	.magick-ai-toolbox__status-pill,
 	.magick-ai-toolbox__disclosure summary {
 		align-items: flex-start;
 		flex-direction: column;
 	}
 
-	.magick-ai-toolbox__status-detail,
 	.magick-ai-toolbox__disclosure summary small {
 		text-align: left;
 	}
@@ -1076,19 +952,8 @@ pre.magick-ai-toolbox__result {
 		grid-template-columns: 1fr;
 	}
 
-	.magick-ai-toolbox__connector-status-row {
-		grid-template-columns: 1fr;
-	}
-
-	.magick-ai-toolbox__connector-provider-workspace {
-		grid-template-columns: 1fr;
-	}
-
-	.magick-ai-toolbox__connector-provider-list {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-
-	.magick-ai-toolbox__context-group-workspace {
+	.magick-ai-toolbox__context-group-workspace,
+	.magick-ai-toolbox__cloud-check-group-workspace {
 		grid-template-columns: 1fr;
 	}
 
