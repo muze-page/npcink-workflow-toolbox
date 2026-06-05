@@ -54,6 +54,36 @@
 		return text.slice(0, limit - 1).trim() + '...';
 	}
 
+	function appendHighlightedText(container, text, query) {
+		const source = String(text || '');
+		const needle = String(query || '').trim();
+		if (!source || !needle) {
+			container.textContent = source;
+			return;
+		}
+
+		const sourceLower = source.toLowerCase();
+		const needleLower = needle.toLowerCase();
+		let start = 0;
+		let index = sourceLower.indexOf(needleLower, start);
+		if (index < 0) {
+			container.textContent = source;
+			return;
+		}
+
+		while (index >= 0) {
+			if (index > start) {
+				container.appendChild(document.createTextNode(source.slice(start, index)));
+			}
+			container.appendChild(el('mark', '', source.slice(index, index + needle.length)));
+			start = index + needle.length;
+			index = sourceLower.indexOf(needleLower, start);
+		}
+		if (start < source.length) {
+			container.appendChild(document.createTextNode(source.slice(start)));
+		}
+	}
+
 	function stringifyDisplayValue(value) {
 		if (value === undefined || value === null || value === '') {
 			return '';
@@ -634,6 +664,7 @@
 		);
 		appendMeta(meta, 'Indexed posts', coverage.indexed_posts);
 		appendMeta(meta, 'Indexed chunks', coverage.indexed_chunks);
+		appendMeta(meta, 'Truncated documents', coverage.truncated_documents);
 		appendMeta(meta, 'Failures', progress.failed_documents);
 		appendMeta(meta, 'Last sync', coverage.last_sync_at);
 		appendMeta(meta, 'Active run', activeRun.run_id);
@@ -694,6 +725,7 @@
 		appendMeta(meta, 'Accepted documents', sync.accepted_documents);
 		appendMeta(meta, 'Indexed documents', sync.indexed_documents);
 		appendMeta(meta, 'Indexed chunks', sync.indexed_chunks);
+		appendMeta(meta, 'Truncated documents', sync.truncated_documents);
 		appendMeta(meta, 'Failed documents', sync.failed_documents);
 		result.appendChild(meta);
 		if (payload.message) {
@@ -705,12 +737,17 @@
 
 	function renderSiteKnowledgeResults(form, payload) {
 		const results = Array.isArray(payload.results) ? payload.results : [];
+		const exactResults = results.filter((item) => item && item.exact_query_match === true);
+		const visibleResults = exactResults.length ? exactResults : results;
+		const hiddenSemanticCount = exactResults.length ? Math.max(0, results.length - exactResults.length) : 0;
+		const queryInput = form ? form.querySelector('[name="query"]') : null;
+		const query = queryInput ? queryInput.value : '';
 		const result = renderShell(
 			form,
 			payload,
 			'Site knowledge search',
-			results.length
-				? results.length + ' site knowledge results returned for review.'
+			visibleResults.length
+				? visibleResults.length + ' site knowledge results returned for review.'
 				: 'No indexed site knowledge results were returned.'
 		);
 		if (!result) {
@@ -724,19 +761,27 @@
 			appendMeta(meta, 'Evidence', payload.evidence_gate.status ? formatLabel(payload.evidence_gate.status) : '');
 		}
 		result.appendChild(meta);
+		if (hiddenSemanticCount > 0) {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', hiddenSemanticCount + ' semantic-only result' + (hiddenSemanticCount === 1 ? '' : 's') + ' hidden because exact query matches were found. Expand Search payload to inspect them.'));
+		}
 
-		if (results.length) {
+		if (visibleResults.length) {
 			const section = createSection('Results');
 			const list = el('div', 'magick-ai-toolbox__result-list');
-			results.forEach((item) => {
+			visibleResults.forEach((item) => {
 				const row = el('article', 'magick-ai-toolbox__result-item');
 				row.appendChild(el('h4', '', item.title || 'Indexed source'));
 				if (item.url) {
 					row.appendChild(createLink(item.url, item.url));
 				}
-				row.appendChild(el('p', '', truncate(item.chunk || '', 320)));
+				const context = item.match_context || item.chunk || '';
+				const contextNode = el('p', '');
+				appendHighlightedText(contextNode, truncate(context, 420), item.exact_query_match ? query : '');
+				row.appendChild(contextNode);
 				const rowMeta = el('div', 'magick-ai-toolbox__result-meta');
 				appendMeta(rowMeta, 'Score', item.score);
+				appendMeta(rowMeta, 'Match', item.match_type ? formatLabel(item.match_type) : '');
+				appendMeta(rowMeta, 'Exact hits', item.match_count);
 				appendMeta(rowMeta, 'Source', item.source_type ? formatLabel(item.source_type) : '');
 				appendMeta(rowMeta, 'Use', item.suggested_use ? formatLabel(item.suggested_use) : '');
 				appendMeta(rowMeta, 'Post', item.post_id);

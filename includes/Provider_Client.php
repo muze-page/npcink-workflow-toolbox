@@ -12,6 +12,8 @@ use WP_Error;
 defined( 'ABSPATH' ) || exit;
 
 final class Provider_Client {
+	private const SITE_KNOWLEDGE_CONTENT_CHARS = 30000;
+
 	private Settings $settings;
 
 	public function __construct( Settings $settings ) {
@@ -2434,7 +2436,7 @@ final class Provider_Client {
 				'url'             => function_exists( 'get_permalink' ) ? esc_url_raw( (string) get_permalink( $post ) ) : '',
 				'modified_gmt'    => sanitize_text_field( (string) ( $post->post_modified_gmt ?? '' ) ),
 				'excerpt'         => sanitize_textarea_field( (string) $excerpt ),
-				'content_excerpt' => wp_trim_words( $content, 600, '' ),
+				'content_excerpt' => $this->trim_site_knowledge_content( $content ),
 				'content_hash'    => md5( $content ),
 			);
 		}
@@ -2450,6 +2452,25 @@ final class Provider_Client {
 		}
 
 		return $documents;
+	}
+
+	private function trim_site_knowledge_content( string $content ): string {
+		$content = trim( preg_replace( '/\s+/', ' ', $content ) ?? $content );
+		if ( '' === $content ) {
+			return '';
+		}
+
+		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+			if ( self::SITE_KNOWLEDGE_CONTENT_CHARS >= mb_strlen( $content ) ) {
+				return sanitize_textarea_field( $content );
+			}
+			return sanitize_textarea_field( mb_substr( $content, 0, self::SITE_KNOWLEDGE_CONTENT_CHARS ) );
+		}
+
+		if ( self::SITE_KNOWLEDGE_CONTENT_CHARS >= strlen( $content ) ) {
+			return sanitize_textarea_field( $content );
+		}
+		return sanitize_textarea_field( substr( $content, 0, self::SITE_KNOWLEDGE_CONTENT_CHARS ) );
 	}
 
 	private function collect_site_knowledge_comments( array $post_ids, int $max_comments ): array {
