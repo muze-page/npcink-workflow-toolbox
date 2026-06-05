@@ -15,7 +15,7 @@ Toolbox must not:
 
 - show Cloud-generated article artifacts for writing review;
 - import Cloud `bulk_article_run_v1` items;
-- convert Cloud article items into `magick-ai-toolbox/build-article-write-plan`
+- convert Cloud article items into `npcink-toolbox/build-article-write-plan`
   input;
 - add a bulk article import panel;
 - submit bulk proposals automatically;
@@ -30,11 +30,11 @@ understood as local `article_draft_v1` recipe UX:
 ```text
 local Ability recipe
   -> operator-reviewed local artifacts
-  -> magick-ai-toolbox/build-article-write-plan
+  -> npcink-toolbox/build-article-write-plan
   -> Adapter or Core /proposals/from-plan
   -> Core proposal review
   -> Core approval and commit preflight
-  -> Adapter executes magick-ai/create-draft through WordPress Abilities API
+  -> Adapter executes npcink-abilities-toolkit/create-draft through WordPress Abilities API
 ```
 
 ## Allowed Toolbox Role

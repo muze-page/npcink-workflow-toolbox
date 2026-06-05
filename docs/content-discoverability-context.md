@@ -30,13 +30,13 @@ Toolbox does not own:
 Content context is stored separately from provider settings:
 
 ```text
-magick_ai_toolbox_content_context
+npcink_toolbox_content_context
 ```
 
 Do not merge this into:
 
 ```text
-magick_ai_toolbox_settings
+npcink_toolbox_settings
 ```
 
 The provider settings option may contain API keys and connector endpoints.
@@ -49,10 +49,10 @@ credentials.
 Current read-only/context abilities:
 
 ```text
-magick-ai-toolbox/get-content-discoverability-context
-magick-ai-toolbox/validate-content-discoverability-context
-magick-ai-toolbox/build-content-discoverability-brief
-magick-ai-toolbox/build-ai-article-writing-pack
+npcink-toolbox/get-content-discoverability-context
+npcink-toolbox/validate-content-discoverability-context
+npcink-toolbox/build-content-discoverability-brief
+npcink-toolbox/build-ai-article-writing-pack
 ```
 
 Scopes:
@@ -183,14 +183,14 @@ AI sessions can see exactly what third-party callers will receive.
 
 Third-party AI should:
 
-1. read `magick-ai-toolbox/get-content-discoverability-context`;
-2. call `magick-ai-toolbox/validate-content-discoverability-context` and stop
+1. read `npcink-toolbox/get-content-discoverability-context`;
+2. call `npcink-toolbox/validate-content-discoverability-context` and stop
    for operator input if required fields are missing;
-3. call `magick-ai-toolbox/build-content-discoverability-brief` for one post or
+3. call `npcink-toolbox/build-content-discoverability-brief` for one post or
    topic;
 4. consume the brief's `seo`, `aeo`, `geo`, `exceptions`, and `special_cases`
    blocks as the primary SEO/AEO/GEO contract;
-5. use `magick-ai-toolbox/build-ai-article-writing-pack` only as a convenience
+5. use `npcink-toolbox/build-ai-article-writing-pack` only as a convenience
    fallback for broad natural-language article requests;
 6. combine the brief or writing pack with read-only site/post abilities when needed;
 7. produce suggestions for the fields listed in `proposal_allowed_fields`;
@@ -224,8 +224,8 @@ prints pass/fail status and the sampled post id.
 The smoke verifies:
 
 - the four content discoverability and writing-pack abilities are registered through
-  `magick_ai_abilities_get_registered()`;
-- each ability is read-only, REST-discoverable, projected into the Magick
+  `npcink_abilities_toolkit_get_registered()`;
+- each ability is read-only, REST-discoverable, projected into the Npcink
   compatibility catalog, exposes no provider secrets, and declares no direct
   WordPress write path;
 - the saved content context validates as `ready` or `ready_with_warnings`;
@@ -247,7 +247,7 @@ Missing `wp_*` Agent Gateway exposure is a host-side admission task.
 
 Possible later abilities:
 
-- `magick-ai-toolbox/build-content-discoverability-batch-brief`
+- `npcink-toolbox/build-content-discoverability-batch-brief`
 
 Do not add an update-context ability for third-party AI in the first version.
 If an external update path becomes necessary, it must be governed by Core and

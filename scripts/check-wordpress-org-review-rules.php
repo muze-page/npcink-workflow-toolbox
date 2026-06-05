@@ -2,7 +2,7 @@
 /**
  * Guards against WordPress.org review patterns that should block release.
  *
- * @package MagickAIToolbox
+ * @package NpcinkToolbox
  */
 
 $root     = dirname( __DIR__ );

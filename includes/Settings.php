@@ -2,17 +2,17 @@
 /**
  * Settings storage and sanitization.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Settings {
 	public function register(): void {
 		register_setting(
-			'magick_ai_toolbox',
+			'npcink_toolbox',
 			Plugin::OPTION_NAME,
 			array(
 				'type'              => 'array',
@@ -22,7 +22,7 @@ final class Settings {
 		);
 
 		register_setting(
-			'magick_ai_toolbox_content_context',
+			'npcink_toolbox_content_context',
 			Plugin::CONTEXT_OPTION_NAME,
 			array(
 				'type'              => 'array',
@@ -134,20 +134,20 @@ final class Settings {
 		$context = $this->get_content_context_for_ability();
 		$checks  = array();
 
-		$this->append_context_check( $checks, 'site_positioning', __( 'Site positioning is filled.', 'magick-ai-toolbox' ), $context['site_positioning'], 'required' );
-		$this->append_context_check( $checks, 'target_audience', __( 'Target audience is filled.', 'magick-ai-toolbox' ), $context['target_audience'], 'required' );
-		$this->append_context_check( $checks, 'brand_voice', __( 'Brand voice is filled.', 'magick-ai-toolbox' ), $context['brand_voice'], 'required' );
-		$this->append_context_check( $checks, 'keywords.primary', __( 'Primary keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['primary'], 'required' );
-		$this->append_context_check( $checks, 'rules.seo', __( 'SEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['seo'], 'required' );
-		$this->append_context_check( $checks, 'rules.aeo', __( 'AEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['aeo'], 'required' );
-		$this->append_context_check( $checks, 'rules.geo', __( 'GEO rules are filled.', 'magick-ai-toolbox' ), $context['rules']['geo'], 'required' );
-		$this->append_context_check( $checks, 'proposal_allowed_fields', __( 'Proposal suggestion fields are selected.', 'magick-ai-toolbox' ), $context['proposal_allowed_fields'], 'required' );
+		$this->append_context_check( $checks, 'site_positioning', __( 'Site positioning is filled.', 'npcink-toolbox' ), $context['site_positioning'], 'required' );
+		$this->append_context_check( $checks, 'target_audience', __( 'Target audience is filled.', 'npcink-toolbox' ), $context['target_audience'], 'required' );
+		$this->append_context_check( $checks, 'brand_voice', __( 'Brand voice is filled.', 'npcink-toolbox' ), $context['brand_voice'], 'required' );
+		$this->append_context_check( $checks, 'keywords.primary', __( 'Primary keywords are filled.', 'npcink-toolbox' ), $context['keywords']['primary'], 'required' );
+		$this->append_context_check( $checks, 'rules.seo', __( 'SEO rules are filled.', 'npcink-toolbox' ), $context['rules']['seo'], 'required' );
+		$this->append_context_check( $checks, 'rules.aeo', __( 'AEO rules are filled.', 'npcink-toolbox' ), $context['rules']['aeo'], 'required' );
+		$this->append_context_check( $checks, 'rules.geo', __( 'GEO rules are filled.', 'npcink-toolbox' ), $context['rules']['geo'], 'required' );
+		$this->append_context_check( $checks, 'proposal_allowed_fields', __( 'Proposal suggestion fields are selected.', 'npcink-toolbox' ), $context['proposal_allowed_fields'], 'required' );
 
-		$this->append_context_check( $checks, 'keywords.long_tail', __( 'Long-tail keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['long_tail'], 'recommended' );
-		$this->append_context_check( $checks, 'keywords.entities', __( 'Entity keywords are filled.', 'magick-ai-toolbox' ), $context['keywords']['entities'], 'recommended' );
-		$this->append_context_check( $checks, 'claims.allowed', __( 'Allowed claims are filled.', 'magick-ai-toolbox' ), $context['claims']['allowed'], 'recommended' );
-		$this->append_context_check( $checks, 'claims.forbidden', __( 'Forbidden claims are filled.', 'magick-ai-toolbox' ), $context['claims']['forbidden'], 'recommended' );
-		$this->append_context_check( $checks, 'exceptions', __( 'Exception and special-case rules are filled when needed.', 'magick-ai-toolbox' ), $context['exceptions'], 'recommended' );
+		$this->append_context_check( $checks, 'keywords.long_tail', __( 'Long-tail keywords are filled.', 'npcink-toolbox' ), $context['keywords']['long_tail'], 'recommended' );
+		$this->append_context_check( $checks, 'keywords.entities', __( 'Entity keywords are filled.', 'npcink-toolbox' ), $context['keywords']['entities'], 'recommended' );
+		$this->append_context_check( $checks, 'claims.allowed', __( 'Allowed claims are filled.', 'npcink-toolbox' ), $context['claims']['allowed'], 'recommended' );
+		$this->append_context_check( $checks, 'claims.forbidden', __( 'Forbidden claims are filled.', 'npcink-toolbox' ), $context['claims']['forbidden'], 'recommended' );
+		$this->append_context_check( $checks, 'exceptions', __( 'Exception and special-case rules are filled when needed.', 'npcink-toolbox' ), $context['exceptions'], 'recommended' );
 
 		$missing_required    = array_values( array_filter( $checks, static fn( array $check ): bool => 'required' === $check['severity'] && ! $check['passed'] ) );
 		$missing_recommended = array_values( array_filter( $checks, static fn( array $check ): bool => 'recommended' === $check['severity'] && ! $check['passed'] ) );

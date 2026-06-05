@@ -25,7 +25,7 @@ The current budget is:
 
 - one article per run;
 - optional reviewed draft body supplied or approved locally by the operator;
-- one optional `article_write_plan` for `magick-ai/create-draft`;
+- one optional `article_write_plan` for `npcink-abilities-toolkit/create-draft`;
 - no prompt library, authoring runtime, scheduler, background writing job, or
   batch article console;
 - no default button that promises to write the article body;
@@ -34,8 +34,8 @@ The current budget is:
 
 ## Contract
 
-- REST route: `POST /wp-json/magick-ai-toolbox/v1/flows/article-assistant`
-- Ability id: `magick-ai-toolbox/build-article-assistant`
+- REST route: `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
+- Ability id: `npcink-toolbox/build-article-assistant`
 - Artifact type: `article_assistant_workbench`
 - Composition role: `article_assistant_workbench`
 - Recipe id: `article_draft_v1`

@@ -2,10 +2,10 @@
 /**
  * Lightweight WordPress content-change bridge for Cloud Site Knowledge.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 use WP_Comment;
 use WP_Post;
@@ -13,9 +13,9 @@ use WP_Post;
 defined( 'ABSPATH' ) || exit;
 
 final class Site_Knowledge_Auto_Sync {
-	private const QUEUE_OPTION     = 'magick_ai_toolbox_site_knowledge_auto_sync_queue';
-	private const CRON_HOOK        = 'magick_ai_toolbox_process_site_knowledge_auto_sync';
-	private const RECONCILE_HOOK   = 'magick_ai_toolbox_reconcile_site_knowledge_auto_sync';
+	private const QUEUE_OPTION     = 'npcink_toolbox_site_knowledge_auto_sync_queue';
+	private const CRON_HOOK        = 'npcink_toolbox_process_site_knowledge_auto_sync';
+	private const RECONCILE_HOOK   = 'npcink_toolbox_reconcile_site_knowledge_auto_sync';
 	private const DEFAULT_POST_TYPES = array( 'post', 'page' );
 	private const BATCH_SIZE       = 25;
 	private const DEBOUNCE_SECONDS = 180;
@@ -89,8 +89,8 @@ final class Site_Knowledge_Auto_Sync {
 			'cron_command'            => $curl_command,
 			'wp_cli_command'          => $wp_cli_command,
 			'message'                 => $is_overdue
-				? __( 'Site Knowledge auto-sync is queued but WP-Cron appears delayed. Configure a server cron for low-traffic sites.', 'magick-ai-toolbox' )
-				: __( 'Site Knowledge auto-sync is debounced and processed by WP-Cron. Use a server cron in production for low-traffic sites.', 'magick-ai-toolbox' ),
+				? __( 'Site Knowledge auto-sync is queued but WP-Cron appears delayed. Configure a server cron for low-traffic sites.', 'npcink-toolbox' )
+				: __( 'Site Knowledge auto-sync is debounced and processed by WP-Cron. Use a server cron in production for low-traffic sites.', 'npcink-toolbox' ),
 		);
 	}
 
@@ -263,7 +263,7 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	private function enqueue_post_ids( array $post_ids ): void {
-		if ( ! apply_filters( 'magick_ai_toolbox_site_knowledge_auto_sync_enabled', true, $post_ids ) ) {
+		if ( ! apply_filters( 'npcink_toolbox_site_knowledge_auto_sync_enabled', true, $post_ids ) ) {
 			return;
 		}
 
@@ -289,7 +289,7 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	private function site_knowledge_post_types(): array {
-		$post_types = apply_filters( 'magick_ai_toolbox_site_knowledge_post_types', self::DEFAULT_POST_TYPES );
+		$post_types = apply_filters( 'npcink_toolbox_site_knowledge_post_types', self::DEFAULT_POST_TYPES );
 		if ( ! is_array( $post_types ) ) {
 			$post_types = self::DEFAULT_POST_TYPES;
 		}

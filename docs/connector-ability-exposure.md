@@ -29,25 +29,25 @@ Toolbox is not:
 
 External AI callers should discover and call Toolbox abilities such as:
 
-- `magick-ai-toolbox/search-image-source`
-- `magick-ai-toolbox/vector-search`
-- `magick-ai-toolbox/search-site-knowledge`
-- `magick-ai-toolbox/get-site-knowledge-status`
-- `magick-ai-toolbox/request-site-knowledge-sync`
-- `magick-ai-toolbox/build-article-brief`
-- `magick-ai-toolbox/build-article-write-plan`
-- `magick-ai-toolbox/build-article-batch-write-plan`
-- `magick-ai-toolbox/build-article-media-batch-write-plan`
-- `magick-ai-toolbox/build-image-candidate-adoption-plan`
-- `magick-ai-toolbox/build-media-brief`
-- `magick-ai-toolbox/get-content-discoverability-context`
-- `magick-ai-toolbox/validate-content-discoverability-context`
-- `magick-ai-toolbox/build-content-discoverability-brief`
-- `magick-ai-toolbox/build-ai-article-writing-pack`
+- `npcink-toolbox/search-image-source`
+- `npcink-toolbox/vector-search`
+- `npcink-toolbox/search-site-knowledge`
+- `npcink-toolbox/get-site-knowledge-status`
+- `npcink-toolbox/request-site-knowledge-sync`
+- `npcink-toolbox/build-article-brief`
+- `npcink-toolbox/build-article-write-plan`
+- `npcink-toolbox/build-article-batch-write-plan`
+- `npcink-toolbox/build-article-media-batch-write-plan`
+- `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-toolbox/build-media-brief`
+- `npcink-toolbox/get-content-discoverability-context`
+- `npcink-toolbox/validate-content-discoverability-context`
+- `npcink-toolbox/build-content-discoverability-brief`
+- `npcink-toolbox/build-ai-article-writing-pack`
 
 The caller provides task input. Toolbox reads local configuration or delegates
 to Cloud runtime ownership, normalizes the response, and returns a
-suggestion-oriented payload. Cloud-managed web search is executed by Magick AI
+suggestion-oriented payload. Cloud-managed web search is executed by Npcink
 Cloud, not by a local Toolbox provider route.
 
 For SEO, AEO, and GEO context readiness, operators can run:
@@ -57,13 +57,13 @@ wp eval-file tests/smoke-content-discoverability.php -- [post_id]
 ```
 
 This smoke verifies the content discoverability ability registrations, local
-Magick catalog projection, context validation, and one suggestion-only brief.
+Npcink catalog projection, context validation, and one suggestion-only brief.
 It may also report Agent Gateway direct tool-map status when the host projection
 matrix is present. Missing `wp_*` Agent Gateway exposure is a host-side
 admission task, not a Toolbox route or registry task.
 
 For SEO, AEO, and GEO usage, external AI callers should treat
-`magick-ai-toolbox/build-content-discoverability-brief` as the primary
+`npcink-toolbox/build-content-discoverability-brief` as the primary
 lightweight contract. It exposes `seo`, `aeo`, `geo`, `exceptions`,
 `special_cases`, and proposal fields. `build-ai-article-writing-pack` is only a
 convenience fallback for broad natural-language article requests.
@@ -77,7 +77,7 @@ The caller must not receive provider API keys. Provider secrets remain in:
 
 ## Provider Boundaries
 
-Cloud-managed web search is owned by Magick AI Cloud. Toolbox does not store web
+Cloud-managed web search is owned by Npcink Cloud. Toolbox does not store web
 search provider keys, expose a local web search ability, or register a local
 web search REST route. This capability is general-purpose for any AI workflow
 that needs external source candidates, not only article drafting. Results are
@@ -94,7 +94,7 @@ must preserve provider name, source URL, photographer attribution, and Unsplash
 
 The same ability also accepts an explicit `ai_generated` candidate mode. In
 that mode a caller may provide a reviewed generated image URL, or a host may
-handle `magick_ai_toolbox_ai_image_generation_request` and return generated
+handle `npcink_toolbox_ai_image_generation_request` and return generated
 image candidates. Toolbox normalizes those candidates with
 `source_type=ai_generated`, prompt/model evidence, and human license review
 status. Toolbox does not own model routing, prompt management, provider
@@ -108,7 +108,7 @@ callers may pass the explicit source type. The contract includes
 and warnings so OpenClaw, Toolbox buttons, and Core proposal intake can consume
 one candidate shape.
 
-`magick-ai-toolbox/build-image-candidate-adoption-plan` converts one reviewed
+`npcink-toolbox/build-image-candidate-adoption-plan` converts one reviewed
 `image_candidate.v1` into an `image_candidate_adoption_plan` with governed
 write actions for media upload, metadata update, and optional featured-image
 setting. It is read-only and suggestion-only; final adoption still goes through
@@ -116,7 +116,7 @@ Core proposals and WordPress abilities.
 
 Vector provider configuration is not exposed locally. Embedding providers,
 embedding dimensions, vector database endpoints, collection names, rerank, and
-detailed index health are managed in Magick AI Cloud.
+detailed index health are managed in Npcink Cloud.
 
 Cloud-managed site knowledge is exposed through three high-level abilities:
 
@@ -132,7 +132,7 @@ These abilities are general-purpose. Article drafting, admin search,
 recommendations, internal-link tooling, and refresh workflows should call the
 same site knowledge abilities instead of integrating vector databases or
 embedding providers directly. Toolbox calls Cloud through the Cloud Addon
-runtime client or the `magick_ai_toolbox_site_knowledge_cloud_request` host
+runtime client or the `npcink_toolbox_site_knowledge_cloud_request` host
 filter. It does
 not store Cloud credentials, create a second ability registry, write WordPress
 content, or own Cloud vector collection lifecycle.
@@ -171,8 +171,8 @@ must go through reusable WordPress abilities and Core proposal governance.
 
 `build-article-batch-write-plan` and `build-article-media-batch-write-plan`
 return Core handoff artifacts only. They may describe write action candidates
-such as `magick-ai/create-draft`, `magick-ai/upload-media-from-url`,
-`magick-ai/update-media-details`, or `magick-ai/set-post-featured-image`, but
+such as `npcink-abilities-toolkit/create-draft`, `npcink-abilities-toolkit/upload-media-from-url`,
+`npcink-abilities-toolkit/update-media-details`, or `npcink-abilities-toolkit/set-post-featured-image`, but
 Toolbox does not approve, execute, upload media, or set featured images.
 
 Do not add `confirm_token`, `write_confirmed`, direct publish, direct media

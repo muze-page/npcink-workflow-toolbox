@@ -5,7 +5,7 @@
  * Run with WP-CLI:
  * wp eval-file tests/smoke-content-discoverability.php -- [post_id]
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,10 +14,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $toolbox_smoke_target_abilities = array(
-	'magick-ai-toolbox/get-content-discoverability-context'      => 'cap.toolbox.context.read',
-	'magick-ai-toolbox/validate-content-discoverability-context' => 'cap.toolbox.context.read',
-	'magick-ai-toolbox/build-content-discoverability-brief'      => 'cap.toolbox.workflow_suggest',
-	'magick-ai-toolbox/build-ai-article-writing-pack'            => 'cap.toolbox.workflow_suggest',
+	'npcink-toolbox/get-content-discoverability-context'      => 'cap.toolbox.context.read',
+	'npcink-toolbox/validate-content-discoverability-context' => 'cap.toolbox.context.read',
+	'npcink-toolbox/build-content-discoverability-brief'      => 'cap.toolbox.workflow_suggest',
+	'npcink-toolbox/build-ai-article-writing-pack'            => 'cap.toolbox.workflow_suggest',
 );
 
 function toolbox_content_smoke_pass( string $message ): void {
@@ -71,8 +71,8 @@ function toolbox_content_smoke_index_catalog( array $catalog ): array {
 		}
 
 		$meta           = is_array( $entry['meta'] ?? null ) ? $entry['meta'] : array();
-		$magick_meta    = is_array( $meta['magick'] ?? null ) ? $meta['magick'] : array();
-		$wp_ability_id = sanitize_text_field( (string) ( $magick_meta['wp_ability_id'] ?? '' ) );
+		$npcink_meta    = is_array( $meta['npcink'] ?? null ) ? $meta['npcink'] : array();
+		$wp_ability_id = sanitize_text_field( (string) ( $npcink_meta['wp_ability_id'] ?? '' ) );
 		if ( '' !== $wp_ability_id ) {
 			$index[ $wp_ability_id ] = $entry;
 		}
@@ -94,12 +94,12 @@ function toolbox_content_smoke_catalog(): array {
 		'skip_cache'           => true,
 	);
 
-	if ( function_exists( 'magick_ai_open_platform_get_ability_catalog' ) ) {
-		$catalog = magick_ai_open_platform_get_ability_catalog( $args );
+	if ( function_exists( 'npcink_ai_open_platform_get_ability_catalog' ) ) {
+		$catalog = npcink_ai_open_platform_get_ability_catalog( $args );
 		return is_array( $catalog ) ? $catalog : array();
 	}
 
-	$catalog = apply_filters( 'magick_ai_open_platform_ability_catalog', array(), $args );
+	$catalog = apply_filters( 'npcink_ai_open_platform_ability_catalog', array(), $args );
 	return is_array( $catalog ) ? $catalog : array();
 }
 
@@ -124,7 +124,7 @@ function toolbox_content_smoke_find_sample_post_id( array $script_args ): int {
 }
 
 function toolbox_content_smoke_find_agent_gateway_tools( array $target_ability_ids ): array {
-	if ( ! function_exists( 'magick_ai_open_platform_get_projection_matrix' ) ) {
+	if ( ! function_exists( 'npcink_ai_open_platform_get_projection_matrix' ) ) {
 		return array(
 			'available' => false,
 			'found'     => array(),
@@ -132,7 +132,7 @@ function toolbox_content_smoke_find_agent_gateway_tools( array $target_ability_i
 		);
 	}
 
-	$projection = magick_ai_open_platform_get_projection_matrix(
+	$projection = npcink_ai_open_platform_get_projection_matrix(
 		array(
 			'include_disabled'     => true,
 			'include_internal'     => true,
@@ -161,11 +161,11 @@ function toolbox_content_smoke_find_agent_gateway_tools( array $target_ability_i
 $script_args = isset( $args ) && is_array( $args ) ? $args : array();
 
 toolbox_content_smoke_assert(
-	function_exists( 'magick_ai_abilities_get_registered' ),
-	'Magick AI Abilities registry is available.'
+	function_exists( 'npcink_abilities_toolkit_get_registered' ),
+	'Npcink Abilities Toolkit registry is available.'
 );
 
-$definitions = magick_ai_abilities_get_registered();
+$definitions = npcink_abilities_toolkit_get_registered();
 $definitions = is_array( $definitions ) ? $definitions : array();
 
 foreach ( $toolbox_smoke_target_abilities as $ability_id => $expected_scope ) {
@@ -173,7 +173,7 @@ foreach ( $toolbox_smoke_target_abilities as $ability_id => $expected_scope ) {
 	$meta       = is_array( $definition['meta'] ?? null ) ? $definition['meta'] : array();
 
 	toolbox_content_smoke_assert( ! empty( $definition ), "{$ability_id} is registered." );
-	toolbox_content_smoke_assert( true === (bool) ( $definition['project_to_magick_catalog'] ?? false ), "{$ability_id} opts into Magick catalog projection." );
+	toolbox_content_smoke_assert( true === (bool) ( $definition['project_to_npcink_catalog'] ?? false ), "{$ability_id} opts into Npcink catalog projection." );
 	toolbox_content_smoke_assert( true === (bool) ( $meta['show_in_rest'] ?? false ), "{$ability_id} is REST-discoverable." );
 	toolbox_content_smoke_assert( true === (bool) ( $meta['readonly'] ?? false ), "{$ability_id} is readonly." );
 	toolbox_content_smoke_assert( false === (bool) ( $meta['direct_wordpress_write'] ?? true ), "{$ability_id} disables direct WordPress writes." );
@@ -186,11 +186,11 @@ $catalog       = toolbox_content_smoke_catalog();
 $catalog_index = toolbox_content_smoke_index_catalog( $catalog );
 foreach ( array_keys( $toolbox_smoke_target_abilities ) as $ability_id ) {
 	$row = is_array( $catalog_index[ $ability_id ] ?? null ) ? $catalog_index[ $ability_id ] : array();
-	toolbox_content_smoke_assert( ! empty( $row ), "{$ability_id} appears in the Magick compatibility catalog." );
+	toolbox_content_smoke_assert( ! empty( $row ), "{$ability_id} appears in the Npcink compatibility catalog." );
 	toolbox_content_smoke_assert( 'wp_ability' === (string) ( $row['executor_type'] ?? '' ), "{$ability_id} projects as a wp_ability executor." );
 }
 
-$validation = toolbox_content_smoke_call( $definitions, 'magick-ai-toolbox/validate-content-discoverability-context' );
+$validation = toolbox_content_smoke_call( $definitions, 'npcink-toolbox/validate-content-discoverability-context' );
 $validation = is_array( $validation ) ? $validation : array();
 $status     = sanitize_key( (string) ( $validation['status'] ?? '' ) );
 toolbox_content_smoke_assert(
@@ -204,7 +204,7 @@ toolbox_content_smoke_info( 'Sample post id: ' . $sample_post_id );
 
 $brief = toolbox_content_smoke_call(
 	$definitions,
-	'magick-ai-toolbox/build-content-discoverability-brief',
+	'npcink-toolbox/build-content-discoverability-brief',
 	array(
 		'post_id' => $sample_post_id,
 	)
@@ -225,7 +225,7 @@ toolbox_content_smoke_assert( ! empty( $brief['handoff'] ) && is_array( $brief['
 
 $pack = toolbox_content_smoke_call(
 	$definitions,
-	'magick-ai-toolbox/build-ai-article-writing-pack',
+	'npcink-toolbox/build-ai-article-writing-pack',
 	array(
 		'post_id' => $sample_post_id,
 	)

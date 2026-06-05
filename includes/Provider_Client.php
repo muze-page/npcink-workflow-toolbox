@@ -2,10 +2,10 @@
 /**
  * Minimal third-party provider client for Toolbox actions.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 use WP_Error;
 
@@ -101,15 +101,15 @@ final class Provider_Client {
 			'purpose'     => sanitize_key( (string) ( $options['purpose'] ?? 'article_image_candidate' ) ),
 		);
 
-		$result = apply_filters( 'magick_ai_toolbox_ai_image_generation_request', null, $request, $options );
+		$result = apply_filters( 'npcink_toolbox_ai_image_generation_request', null, $request, $options );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
 		if ( null === $result ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_ai_image_runtime',
-				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the magick_ai_toolbox_ai_image_generation_request filter.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_ai_image_runtime',
+				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -117,8 +117,8 @@ final class Provider_Client {
 		$candidates = $this->extract_ai_generated_image_candidates( $result );
 		if ( array() === $candidates ) {
 			return new WP_Error(
-				'magick_ai_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_empty_ai_image_response',
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-toolbox' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -133,8 +133,8 @@ final class Provider_Client {
 
 		if ( array() === $images ) {
 			return new WP_Error(
-				'magick_ai_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_empty_ai_image_response',
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-toolbox' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -339,7 +339,7 @@ final class Provider_Client {
 			'source_url'                    => esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) ),
 			'photographer'                  => '',
 			'photographer_url'              => '',
-			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'magick-ai-toolbox' ) ) ),
+			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'npcink-toolbox' ) ) ),
 			'prompt'                        => $prompt,
 			'model'                         => $model,
 			'generation_prompt'             => $prompt,
@@ -368,8 +368,8 @@ final class Provider_Client {
 	public function vector_search( string $input, int $max_results = 4, string $input_type = 'auto' ) {
 		if ( '' === trim( $input ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_vector_input',
-				__( 'A query or vector field is required for vector search.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_vector_input',
+				__( 'A query or vector field is required for vector search.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -379,8 +379,8 @@ final class Provider_Client {
 				'provider'          => 'cloud_site_knowledge',
 				'provider_mode'     => 'cloud_managed',
 				'status'            => 'cloud_managed',
-				'message'           => __( 'Low-level vector provider configuration has moved to Magick AI Cloud. Use search-site-knowledge for Cloud-managed semantic site context.', 'magick-ai-toolbox' ),
-				'target_ability_id' => 'magick-ai-toolbox/search-site-knowledge',
+				'message'           => __( 'Low-level vector provider configuration has moved to Npcink Cloud. Use search-site-knowledge for Cloud-managed semantic site context.', 'npcink-toolbox' ),
+				'target_ability_id' => 'npcink-toolbox/search-site-knowledge',
 				'results'           => array(),
 				'requested_input'   => array(
 					'input_type'  => sanitize_key( $input_type ),
@@ -396,8 +396,8 @@ final class Provider_Client {
 		$query = trim( sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ) );
 		if ( '' === $query ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_site_knowledge_query',
-				__( 'A query is required for site knowledge search.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_site_knowledge_query',
+				__( 'A query is required for site knowledge search.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -435,7 +435,7 @@ final class Provider_Client {
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-search',
+			'npcink-cloud/site-knowledge-search',
 			'site_knowledge_search.v1',
 			'inline',
 			$payload,
@@ -452,7 +452,7 @@ final class Provider_Client {
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-status',
+			'npcink-cloud/site-knowledge-status',
 			'site_knowledge_status.v1',
 			'inline',
 			$payload,
@@ -481,7 +481,7 @@ final class Provider_Client {
 		}
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-sync',
+			'npcink-cloud/site-knowledge-sync',
 			'site_knowledge_sync.v1',
 			'whole_run_offload',
 			$payload,
@@ -497,7 +497,7 @@ final class Provider_Client {
 			'active_sources' => array(),
 			'results'        => array(),
 			'status'         => 'cloud_managed',
-			'message'        => __( 'External web search is provided by Magick AI Cloud. Toolbox no longer stores local web search provider configuration.', 'magick-ai-toolbox' ),
+			'message'        => __( 'External web search is provided by Npcink Cloud. Toolbox no longer stores local web search provider configuration.', 'npcink-toolbox' ),
 		);
 	}
 
@@ -529,8 +529,8 @@ final class Provider_Client {
 		$query = trim( sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ) );
 		if ( '' === $query ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_web_search_query',
-				__( 'A query is required for Cloud web search testing.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_web_search_query',
+				__( 'A query is required for Cloud web search testing.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -556,7 +556,7 @@ final class Provider_Client {
 		);
 
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-cloud/web-search',
+			'ability_name'        => 'npcink-cloud/web-search',
 			'ability_family'      => 'knowledge',
 			'contract_version'    => 'web_search.v1',
 			'channel'             => 'toolbox_admin',
@@ -574,16 +574,16 @@ final class Provider_Client {
 			),
 		);
 
-		$runtime_payload = apply_filters( 'magick_ai_toolbox_web_search_runtime_payload', $runtime_payload, $runtime_input );
+		$runtime_payload = apply_filters( 'npcink_toolbox_web_search_runtime_payload', $runtime_payload, $runtime_input );
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_web_search_runtime_payload',
-				__( 'The web search runtime payload was not valid.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_web_search_runtime_payload',
+				__( 'The web search runtime payload was not valid.', 'npcink-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		$handled = apply_filters( 'magick_ai_toolbox_web_search_cloud_request', null, $runtime_payload, $runtime_input );
+		$handled = apply_filters( 'npcink_toolbox_web_search_cloud_request', null, $runtime_payload, $runtime_input );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
@@ -594,8 +594,8 @@ final class Provider_Client {
 		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_web_search_cloud_unavailable',
-				__( 'Connect Magick AI Cloud before testing managed web search.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_web_search_cloud_unavailable',
+				__( 'Connect Npcink Cloud before testing managed web search.', 'npcink-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -614,8 +614,8 @@ final class Provider_Client {
 		$topic = trim( sanitize_text_field( (string) ( $input['topic'] ?? $input['query'] ?? '' ) ) );
 		if ( '' === $topic ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_web_search_diagnostic_topic',
-				__( 'A topic is required for the Cloud web search workflow diagnostic.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_web_search_diagnostic_topic',
+				__( 'A topic is required for the Cloud web search workflow diagnostic.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -712,8 +712,8 @@ final class Provider_Client {
 		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $topic ) ) );
 		if ( '' === $topic ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_article_assistant_topic',
-				__( 'A topic is required to build an article assistant workbench.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_article_assistant_topic',
+				__( 'A topic is required to build an article assistant workbench.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -812,7 +812,7 @@ final class Provider_Client {
 			'version'                => 1,
 			'source_recipe_id'       => 'article_draft_v1',
 			'source_recipe_ref'      => 'workflow/wordpress_article_draft',
-			'source_recipe_provider' => 'magick-ai-abilities',
+			'source_recipe_provider' => 'npcink-abilities-toolkit',
 			'recipe_execution'       => 'local_operator_orchestration',
 			'write_posture'          => 'core_proposal_handoff',
 			'final_write_path'       => 'core_proposal_required',
@@ -831,11 +831,11 @@ final class Provider_Client {
 			'article_risk_report'    => $risk_report,
 			'article_write_plan'     => is_wp_error( $write_plan ) ? array( 'error' => $write_plan->get_error_message() ) : $write_plan,
 			'handoff'                => array(
-				'assistant_ability_id'   => 'magick-ai-toolbox/build-article-assistant',
-				'write_plan_ability_id'  => 'magick-ai-toolbox/build-article-write-plan',
+				'assistant_ability_id'   => 'npcink-toolbox/build-article-assistant',
+				'write_plan_ability_id'  => 'npcink-toolbox/build-article-write-plan',
 				'recipe_id'              => 'article_draft_v1',
 				'recipe_ref'             => 'workflow/wordpress_article_draft',
-				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 				'next_steps'             => array(
@@ -852,8 +852,8 @@ final class Provider_Client {
 		$content = trim( sanitize_textarea_field( (string) ( $input['content_markdown'] ?? ( $input['content'] ?? '' ) ) ) );
 		if ( '' === $title || '' === $content ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_article_plan_input',
-				__( 'A title and content_markdown are required to build an article write plan.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_article_plan_input',
+				__( 'A title and content_markdown are required to build an article write plan.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -912,7 +912,7 @@ final class Provider_Client {
 			'version'                => 1,
 			'source_recipe_id'       => 'article_draft_v1',
 			'source_recipe_ref'      => 'workflow/wordpress_article_draft',
-			'source_recipe_provider' => 'magick-ai-abilities',
+			'source_recipe_provider' => 'npcink-abilities-toolkit',
 			'recipe_execution'       => 'local_operator_orchestration',
 			'write_posture'          => 'core_proposal_handoff',
 			'direct_wordpress_write' => false,
@@ -930,7 +930,7 @@ final class Provider_Client {
 			'write_actions'          => array(
 				array(
 					'action_id'         => 'create_article_draft',
-					'target_ability_id' => 'magick-ai/create-draft',
+					'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
 					'recipe_step'       => 'host_governed_create_draft',
 					'input'             => array(
 						'title'   => $title,
@@ -944,14 +944,14 @@ final class Provider_Client {
 					'requires_approval' => true,
 					'commit_execution'  => false,
 					'proposal_ready'    => $ready_for_proposal,
-					'reason'            => __( 'Create a reviewed AI-assisted article draft through Core governance.', 'magick-ai-toolbox' ),
+					'reason'            => __( 'Create a reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
 				),
 			),
 			'handoff'                => array(
-				'plan_ability_id'        => 'magick-ai-toolbox/build-article-write-plan',
+				'plan_ability_id'        => 'npcink-toolbox/build-article-write-plan',
 				'recipe_id'              => 'article_draft_v1',
 				'recipe_ref'             => 'workflow/wordpress_article_draft',
-				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
@@ -962,8 +962,8 @@ final class Provider_Client {
 		$articles = is_array( $input['articles'] ?? null ) ? array_values( $input['articles'] ) : array();
 		if ( count( $articles ) < 2 || count( $articles ) > 5 ) {
 			return new WP_Error(
-				'magick_ai_toolbox_article_batch_size_invalid',
-				__( 'Article batch write plans require 2 to 5 reviewed draft articles.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_article_batch_size_invalid',
+				__( 'Article batch write plans require 2 to 5 reviewed draft articles.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -985,8 +985,8 @@ final class Provider_Client {
 			$content = trim( sanitize_textarea_field( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ) ) );
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
-					'magick_ai_toolbox_article_batch_item_invalid',
-					__( 'Every article batch item requires title and content_markdown.', 'magick-ai-toolbox' ),
+					'npcink_toolbox_article_batch_item_invalid',
+					__( 'Every article batch item requires title and content_markdown.', 'npcink-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -1022,7 +1022,7 @@ final class Provider_Client {
 			);
 			$write_actions[] = array(
 				'action_id'         => $action_id,
-				'target_ability_id' => 'magick-ai/create-draft',
+				'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
 				'recipe_step'       => 'host_governed_create_draft',
 				'input'             => array(
 					'title'          => $title,
@@ -1037,7 +1037,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
 			);
 			$preview[] = array(
 				'action_id' => $action_id,
@@ -1053,7 +1053,7 @@ final class Provider_Client {
 			'version'                   => 1,
 			'source_recipe_id'          => 'article_batch_draft_v1',
 			'source_recipe_ref'         => 'workflow/wordpress_article_batch_draft',
-			'source_recipe_provider'    => 'magick-ai-toolbox',
+			'source_recipe_provider'    => 'npcink-toolbox',
 			'recipe_execution'          => 'local_operator_orchestration',
 			'write_posture'             => 'core_proposal_handoff',
 			'direct_wordpress_write'    => false,
@@ -1076,10 +1076,10 @@ final class Provider_Client {
 			),
 			'write_actions'             => $write_actions,
 			'handoff'                   => array(
-				'plan_ability_id'        => 'magick-ai-toolbox/build-article-batch-write-plan',
+				'plan_ability_id'        => 'npcink-toolbox/build-article-batch-write-plan',
 				'recipe_id'              => 'article_batch_draft_v1',
 				'recipe_ref'             => 'workflow/wordpress_article_batch_draft',
-				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
@@ -1090,8 +1090,8 @@ final class Provider_Client {
 		$articles = is_array( $input['articles'] ?? null ) ? array_values( $input['articles'] ) : array();
 		if ( count( $articles ) < 1 || count( $articles ) > 5 ) {
 			return new WP_Error(
-				'magick_ai_toolbox_article_media_batch_size_invalid',
-				__( 'Article media batch write plans require 1 to 5 reviewed draft articles.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_article_media_batch_size_invalid',
+				__( 'Article media batch write plans require 1 to 5 reviewed draft articles.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1116,8 +1116,8 @@ final class Provider_Client {
 			$content = trim( sanitize_textarea_field( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ) ) );
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
-					'magick_ai_toolbox_article_media_batch_item_invalid',
-					__( 'Every article media batch item requires title and content_markdown.', 'magick-ai-toolbox' ),
+					'npcink_toolbox_article_media_batch_item_invalid',
+					__( 'Every article media batch item requires title and content_markdown.', 'npcink-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -1142,8 +1142,8 @@ final class Provider_Client {
 			$image_url = (string) ( $candidate['regular_url'] ?? $candidate['small_url'] ?? $candidate['url'] ?? '' );
 			if ( '' === $image_url ) {
 				return new WP_Error(
-					'magick_ai_toolbox_article_media_url_missing',
-					__( 'Every article media batch item requires a selected image URL.', 'magick-ai-toolbox' ),
+					'npcink_toolbox_article_media_url_missing',
+					__( 'Every article media batch item requires a selected image URL.', 'npcink-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -1202,7 +1202,7 @@ final class Provider_Client {
 
 			$write_actions[] = array(
 				'action_id'         => $create_id,
-				'target_ability_id' => 'magick-ai/create-draft',
+				'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
 				'recipe_step'       => 'host_governed_create_draft',
 				'input'             => array(
 					'title'          => $title,
@@ -1218,11 +1218,11 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $upload_id,
-				'target_ability_id' => 'magick-ai/upload-media-from-url',
+				'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url',
 				'recipe_step'       => 'host_governed_upload_featured_image',
 				'depends_on'        => array( $create_id ),
 				'input'             => array(
@@ -1246,11 +1246,11 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Upload the reviewed image-source candidate into the media library after Core approval.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Upload the reviewed image-source candidate into the media library after Core approval.', 'npcink-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $metadata_id,
-				'target_ability_id' => 'magick-ai/update-media-details',
+				'target_ability_id' => 'npcink-abilities-toolkit/update-media-details',
 				'recipe_step'       => 'host_governed_update_featured_image_metadata',
 				'depends_on'        => array( $upload_id ),
 				'input'             => array(
@@ -1270,11 +1270,11 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Apply reviewed image attribution and accessibility metadata after upload.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Apply reviewed image attribution and accessibility metadata after upload.', 'npcink-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $featured_id,
-				'target_ability_id' => 'magick-ai/set-post-featured-image',
+				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
 				'recipe_step'       => 'host_governed_set_featured_image',
 				'depends_on'        => array( $create_id, $upload_id ),
 				'input'             => array(
@@ -1288,7 +1288,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Set the uploaded, reviewed media item as the draft featured image after Core approval.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Set the uploaded, reviewed media item as the draft featured image after Core approval.', 'npcink-toolbox' ),
 			);
 
 			$media_workflow[] = array(
@@ -1317,7 +1317,7 @@ final class Provider_Client {
 			'version'                   => 1,
 			'source_recipe_id'          => 'article_media_batch_draft_v1',
 			'source_recipe_ref'         => 'workflow/wordpress_article_media_batch_draft',
-			'source_recipe_provider'    => 'magick-ai-toolbox',
+			'source_recipe_provider'    => 'npcink-toolbox',
 			'recipe_execution'          => 'local_operator_orchestration',
 			'write_posture'             => 'core_proposal_handoff',
 			'direct_wordpress_write'    => false,
@@ -1341,10 +1341,10 @@ final class Provider_Client {
 			),
 			'write_actions'             => $write_actions,
 			'handoff'                   => array(
-				'plan_ability_id'        => 'magick-ai-toolbox/build-article-media-batch-write-plan',
+				'plan_ability_id'        => 'npcink-toolbox/build-article-media-batch-write-plan',
 				'recipe_id'              => 'article_media_batch_draft_v1',
 				'recipe_ref'             => 'workflow/wordpress_article_media_batch_draft',
-				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
@@ -1388,8 +1388,8 @@ final class Provider_Client {
 		}
 		if ( empty( $candidate ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_image_candidate_required',
-				__( 'A selected image URL or image_candidate object is required before building an adoption plan.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_image_candidate_required',
+				__( 'A selected image URL or image_candidate object is required before building an adoption plan.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1405,15 +1405,15 @@ final class Provider_Client {
 		);
 		if ( '' === $image_url ) {
 			return new WP_Error(
-				'magick_ai_toolbox_image_candidate_url_missing',
-				__( 'The selected image candidate must include a download_url, regular_url, small_url, or url.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_image_candidate_url_missing',
+				__( 'The selected image candidate must include a download_url, regular_url, small_url, or url.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
 
 		$post_id = absint( $input['post_id'] ?? 0 );
 		$set_featured_image = $post_id > 0 && ! empty( $input['set_featured_image'] );
-		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $candidate['title'] ?? $candidate['description'] ?? __( 'Selected image candidate', 'magick-ai-toolbox' ) ) ) );
+		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $candidate['title'] ?? $candidate['description'] ?? __( 'Selected image candidate', 'npcink-toolbox' ) ) ) );
 		$alt = trim( sanitize_textarea_field( (string) ( $input['alt'] ?? $candidate['alt_description'] ?? $candidate['description'] ?? $title ) ) );
 		$description = trim( sanitize_textarea_field( (string) ( $input['description'] ?? $candidate['description'] ?? $alt ) ) );
 		$attribution = trim( sanitize_textarea_field( (string) ( $input['attribution_text'] ?? $candidate['attribution'] ?? '' ) ) );
@@ -1462,18 +1462,18 @@ final class Provider_Client {
 		$write_actions = array(
 			array(
 				'action_id'         => $upload_id,
-				'target_ability_id' => 'magick-ai/upload-media-from-url',
+				'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url',
 				'recipe_step'       => 'host_governed_upload_image_candidate',
 				'input'             => $upload_input,
 				'risk'              => 'medium',
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => true,
-				'reason'            => __( 'Import the reviewed image candidate into the media library after Core approval.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Import the reviewed image candidate into the media library after Core approval.', 'npcink-toolbox' ),
 			),
 			array(
 				'action_id'         => $metadata_id,
-				'target_ability_id' => 'magick-ai/update-media-details',
+				'target_ability_id' => 'npcink-abilities-toolkit/update-media-details',
 				'recipe_step'       => 'host_governed_update_image_candidate_metadata',
 				'depends_on'        => array( $upload_id ),
 				'input'             => array(
@@ -1495,14 +1495,14 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => true,
-				'reason'            => __( 'Apply reviewed image candidate metadata after media import.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Apply reviewed image candidate metadata after media import.', 'npcink-toolbox' ),
 			),
 		);
 
 		if ( $set_featured_image ) {
 			$write_actions[] = array(
 				'action_id'         => $featured_id,
-				'target_ability_id' => 'magick-ai/set-post-featured-image',
+				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
 				'recipe_step'       => 'host_governed_set_image_candidate_featured_image',
 				'depends_on'        => array( $upload_id ),
 				'input'             => array(
@@ -1516,7 +1516,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => true,
-				'reason'            => __( 'Set the imported image candidate as the post featured image after Core approval.', 'magick-ai-toolbox' ),
+				'reason'            => __( 'Set the imported image candidate as the post featured image after Core approval.', 'npcink-toolbox' ),
 			);
 		}
 
@@ -1527,7 +1527,7 @@ final class Provider_Client {
 			'candidate_contract_version'  => 'image_candidate.v1',
 			'source_recipe_id'            => 'image_candidate_adoption_v1',
 			'source_recipe_ref'           => 'workflow/image_candidate_adoption',
-			'source_recipe_provider'      => 'magick-ai-toolbox',
+			'source_recipe_provider'      => 'npcink-toolbox',
 			'recipe_execution'            => 'local_operator_orchestration',
 			'write_posture'               => 'core_proposal_handoff',
 			'direct_wordpress_write'      => false,
@@ -1558,10 +1558,10 @@ final class Provider_Client {
 			),
 			'write_actions'               => $write_actions,
 			'handoff'                     => array(
-				'plan_ability_id'        => 'magick-ai-toolbox/build-image-candidate-adoption-plan',
+				'plan_ability_id'        => 'npcink-toolbox/build-image-candidate-adoption-plan',
 				'recipe_id'              => 'image_candidate_adoption_v1',
 				'recipe_ref'             => 'workflow/image_candidate_adoption',
-				'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
@@ -1662,9 +1662,9 @@ final class Provider_Client {
 			'proposal_template'      => $proposal_template,
 			'candidate_suggestions'  => $candidates,
 			'handoff'                => array(
-				'brief_ability_id'       => 'magick-ai-toolbox/build-content-discoverability-brief',
-				'context_ability_id'     => 'magick-ai-toolbox/get-content-discoverability-context',
-				'validation_ability_id'  => 'magick-ai-toolbox/validate-content-discoverability-context',
+				'brief_ability_id'       => 'npcink-toolbox/build-content-discoverability-brief',
+				'context_ability_id'     => 'npcink-toolbox/get-content-discoverability-context',
+				'validation_ability_id'  => 'npcink-toolbox/validate-content-discoverability-context',
 				'final_writes'           => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
@@ -1675,8 +1675,8 @@ final class Provider_Client {
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'discoverability' ) );
 		if ( ! in_array( $intent, array( 'discoverability', 'publish_preflight', 'image_candidates' ), true ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_free_gpt55_intent',
-				__( 'A supported free GPT-5.5 content-support intent is required.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_free_gpt55_intent',
+				__( 'A supported free GPT-5.5 content-support intent is required.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1687,8 +1687,8 @@ final class Provider_Client {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		if ( '' === trim( $title . $excerpt . $content ) && 0 === $post_id ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_free_gpt55_context',
-				__( 'A title, brief, draft text, or post ID is required for free GPT-5.5 content support.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_free_gpt55_context',
+				__( 'A title, brief, draft text, or post ID is required for free GPT-5.5 content support.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1706,7 +1706,7 @@ final class Provider_Client {
 		);
 
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-toolbox/free-gpt55-content-support',
+			'ability_name'        => 'npcink-toolbox/free-gpt55-content-support',
 			'contract_version'    => 'free_gpt55_content_support.v1',
 			'profile_id'          => 'text.free-gpt55',
 			'execution_pattern'   => 'inline',
@@ -1714,7 +1714,7 @@ final class Provider_Client {
 				'messages' => array(
 					array(
 						'role'    => 'system',
-						'content' => 'You are Magick AI Toolbox. Return concise, reviewable WordPress content-support suggestions. Do not claim to write, publish, approve, or bypass governance.',
+						'content' => 'You are Npcink Toolbox. Return concise, reviewable WordPress content-support suggestions. Do not claim to write, publish, approve, or bypass governance.',
 					),
 					array(
 						'role'    => 'user',
@@ -1736,16 +1736,16 @@ final class Provider_Client {
 			),
 		);
 
-		$runtime_payload = apply_filters( 'magick_ai_toolbox_free_gpt55_runtime_payload', $runtime_payload, $input );
+		$runtime_payload = apply_filters( 'npcink_toolbox_free_gpt55_runtime_payload', $runtime_payload, $input );
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_free_gpt55_runtime_payload',
-				__( 'The free GPT-5.5 runtime payload was not valid.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_free_gpt55_runtime_payload',
+				__( 'The free GPT-5.5 runtime payload was not valid.', 'npcink-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		$handled = apply_filters( 'magick_ai_toolbox_free_gpt55_cloud_request', null, $runtime_payload, $input );
+		$handled = apply_filters( 'npcink_toolbox_free_gpt55_cloud_request', null, $runtime_payload, $input );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
@@ -1756,8 +1756,8 @@ final class Provider_Client {
 		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_free_gpt55_cloud_unavailable',
-				__( 'Connect Magick AI Cloud before using free GPT-5.5 tools.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_free_gpt55_cloud_unavailable',
+				__( 'Connect Npcink Cloud before using free GPT-5.5 tools.', 'npcink-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -1860,9 +1860,9 @@ final class Provider_Client {
 				'Do not write WordPress data. Final WordPress writes must go through Core proposal approval and commit preflight.',
 			),
 			'handoff'              => array(
-				'pack_ability_id'       => 'magick-ai-toolbox/build-ai-article-writing-pack',
-				'brief_ability_id'      => 'magick-ai-toolbox/build-content-discoverability-brief',
-				'write_plan_ability_id' => 'magick-ai-toolbox/build-article-write-plan',
+				'pack_ability_id'       => 'npcink-toolbox/build-ai-article-writing-pack',
+				'brief_ability_id'      => 'npcink-toolbox/build-content-discoverability-brief',
+				'write_plan_ability_id' => 'npcink-toolbox/build-article-write-plan',
 				'final_writes'          => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 				'next_steps'            => array(
@@ -1882,8 +1882,8 @@ final class Provider_Client {
 		$attachment_id = absint( $input['attachment_id'] ?? 0 );
 		if ( $attachment_id <= 0 ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_attachment_id',
-				__( 'An attachment_id is required to build a media derivative handoff.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_attachment_id',
+				__( 'An attachment_id is required to build a media derivative handoff.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1908,11 +1908,11 @@ final class Provider_Client {
 
 		$warnings = array();
 		if ( ! $core_policy_available ) {
-			$warnings[] = __( 'Magick AI Core media policy helper is unavailable; fallback defaults were used for this one-run handoff.', 'magick-ai-toolbox' );
+			$warnings[] = __( 'Npcink Governance Core media policy helper is unavailable; fallback defaults were used for this one-run handoff.', 'npcink-toolbox' );
 		}
 		$watermark_mode = sanitize_key( (string) ( $input['watermark_mode'] ?? $input['watermark_type'] ?? 'core' ) );
 		if ( ! empty( $core_policy['watermark_enabled'] ) && empty( $core_policy['watermark_configured'] ) && ! in_array( $watermark_mode, array( 'off', 'text' ), true ) ) {
-			$warnings[] = __( 'Watermark is enabled in policy but no logo attachment is configured.', 'magick-ai-toolbox' );
+			$warnings[] = __( 'Watermark is enabled in policy but no logo attachment is configured.', 'npcink-toolbox' );
 		}
 
 		return array(
@@ -1925,10 +1925,10 @@ final class Provider_Client {
 			'attachment_id'          => $attachment_id,
 			'core_policy_available'  => $core_policy_available,
 			'core_policy'            => $this->sanitize_payload( $core_policy ),
-			'ability_id'             => 'magick-ai/build-media-derivative-cloud-request',
+			'ability_id'             => 'npcink-abilities-toolkit/build-media-derivative-cloud-request',
 			'ability_input'          => $this->sanitize_payload( $ability_input ),
-			'optimization_plan_ability_id' => 'magick-ai/build-media-optimization-plan',
-			'preferred_core_route'   => '/wp-json/magick-ai-adapter/v1/proposals/from-plan',
+			'optimization_plan_ability_id' => 'npcink-abilities-toolkit/build-media-optimization-plan',
+			'preferred_core_route'   => '/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan',
 			'required_reviewed_input' => array( 'media_details_input', 'derivative_artifact' ),
 			'warnings'               => $warnings,
 			'handoff'                => array(
@@ -1942,7 +1942,7 @@ final class Provider_Client {
 					'Use Cloud Addon only as a verified transport when available.',
 					'Add reviewed media_details_input before Core proposal submission.',
 					'Submit Adapter from_plan_request to /proposals/from-plan so Core creates one media optimization proposal.',
-					'If Core lacks magick-ai/build-media-optimization-plan, update Core and Abilities instead of splitting the same user intent into two proposals.',
+					'If Core lacks npcink-abilities-toolkit/build-media-optimization-plan, update Core and Abilities instead of splitting the same user intent into two proposals.',
 				),
 			),
 		);
@@ -2073,16 +2073,16 @@ final class Provider_Client {
 			),
 		);
 
-		$runtime_payload = apply_filters( 'magick_ai_toolbox_site_knowledge_runtime_payload', $runtime_payload, $ability_name, $contract_version );
+		$runtime_payload = apply_filters( 'npcink_toolbox_site_knowledge_runtime_payload', $runtime_payload, $ability_name, $contract_version );
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_site_knowledge_runtime_payload',
-				__( 'The site knowledge runtime payload was not valid.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_site_knowledge_runtime_payload',
+				__( 'The site knowledge runtime payload was not valid.', 'npcink-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		$handled = apply_filters( 'magick_ai_toolbox_site_knowledge_cloud_request', null, $runtime_payload, $ability_name, $contract_version );
+		$handled = apply_filters( 'npcink_toolbox_site_knowledge_cloud_request', null, $runtime_payload, $ability_name, $contract_version );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
@@ -2093,8 +2093,8 @@ final class Provider_Client {
 		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_site_knowledge_cloud_unavailable',
-				__( 'Connect Magick AI Cloud before using site knowledge abilities.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_site_knowledge_cloud_unavailable',
+				__( 'Connect Npcink Cloud before using site knowledge abilities.', 'npcink-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2125,7 +2125,7 @@ final class Provider_Client {
 			'candidate_contract' => 'image_candidate.v1',
 		);
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-toolbox/search-image-source',
+			'ability_name'        => 'npcink-toolbox/search-image-source',
 			'contract_version'    => 'image_source_cloud_request.v1',
 			'execution_pattern'   => 'step_offload',
 			'input'               => $this->sanitize_payload( $input ),
@@ -2139,16 +2139,16 @@ final class Provider_Client {
 			),
 		);
 
-		$runtime_payload = apply_filters( 'magick_ai_toolbox_image_source_runtime_payload', $runtime_payload, $query, $options );
+		$runtime_payload = apply_filters( 'npcink_toolbox_image_source_runtime_payload', $runtime_payload, $query, $options );
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_image_source_runtime_payload',
-				__( 'The image-source runtime payload was not valid.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_image_source_runtime_payload',
+				__( 'The image-source runtime payload was not valid.', 'npcink-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		$handled = apply_filters( 'magick_ai_toolbox_image_source_cloud_request', null, $runtime_payload, $query, $options );
+		$handled = apply_filters( 'npcink_toolbox_image_source_cloud_request', null, $runtime_payload, $query, $options );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
@@ -2159,8 +2159,8 @@ final class Provider_Client {
 		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_image_source_cloud_unavailable',
-				__( 'Connect Magick AI Cloud before searching managed image-source candidates. You can still use Adopt New Image with a reviewed image URL.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_image_source_cloud_unavailable',
+				__( 'Connect Npcink Cloud before searching managed image-source candidates. You can still use Adopt New Image with a reviewed image URL.', 'npcink-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2201,7 +2201,7 @@ final class Provider_Client {
 				'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
 				'provider_mode'        => 'cloud_auto',
 				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
-				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/web-search' ) ),
+				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/web-search' ) ),
 				'cloud_runtime'        => 'magick_ai_cloud_addon',
 				'status'               => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
 				'run_id'               => sanitize_text_field( (string) ( $response['run_id'] ?? ( ( $response['data']['run_id'] ?? null ) ?: ( $result['run_id'] ?? '' ) ) ) ),
@@ -2309,7 +2309,7 @@ final class Provider_Client {
 				'resolved_provider'          => $resolved_provider,
 				'auto_strategy'              => sanitize_key( (string) ( $result['auto_strategy'] ?? '' ) ),
 				'candidate_contract_version' => 'image_candidate.v1',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/search-image-source' ) ),
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/search-image-source' ) ),
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
 				'active_sources'             => $active_sources,
 				'provider_errors'            => is_array( $result['provider_errors'] ?? null ) ? $this->sanitize_payload( $result['provider_errors'] ) : array(),
@@ -2343,7 +2343,7 @@ final class Provider_Client {
 			array(
 				'provider'                   => 'magick_ai_cloud',
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/free-gpt55-content-support' ) ),
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/free-gpt55-content-support' ) ),
 				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'free_gpt55_content_support.v1' ) ),
 				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.free-gpt55' ) ),
 				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? 'gpt-5.5' ) ),
@@ -2523,14 +2523,14 @@ final class Provider_Client {
 				'progress'          => array(
 					'status'              => 'running',
 					'stage'               => 'queued',
-					'message'             => __( 'Cloud indexing is already running for this site.', 'magick-ai-toolbox' ),
+					'message'             => __( 'Cloud indexing is already running for this site.', 'npcink-toolbox' ),
 					'processed_documents' => 0,
 					'total_documents'     => 0,
 					'indexed_chunks'      => 0,
 					'failed_documents'    => 0,
 					'percent'             => 0,
 				),
-				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'magick-ai-toolbox' ),
+				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'npcink-toolbox' ),
 				'handoff'           => array(
 					'cloud_runtime'          => 'magick_ai_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
@@ -2617,7 +2617,7 @@ final class Provider_Client {
 	}
 
 	private function site_knowledge_post_types(): array {
-		$post_types = apply_filters( 'magick_ai_toolbox_site_knowledge_post_types', array( 'post', 'page' ) );
+		$post_types = apply_filters( 'npcink_toolbox_site_knowledge_post_types', array( 'post', 'page' ) );
 		if ( ! is_array( $post_types ) ) {
 			$post_types = array( 'post', 'page' );
 		}
@@ -2737,8 +2737,8 @@ final class Provider_Client {
 		$data = json_decode( $raw, true );
 		if ( ! is_array( $data ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_provider_invalid_json',
-				__( 'The provider returned an invalid JSON response.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_provider_invalid_json',
+				__( 'The provider returned an invalid JSON response.', 'npcink-toolbox' ),
 				array(
 					'status'          => 502,
 					'provider_status' => $status,
@@ -2747,9 +2747,9 @@ final class Provider_Client {
 		}
 
 		if ( 200 > $status || 299 < $status ) {
-			$message = sanitize_text_field( (string) ( $data['error']['message'] ?? $data['message'] ?? __( 'The provider request failed.', 'magick-ai-toolbox' ) ) );
+			$message = sanitize_text_field( (string) ( $data['error']['message'] ?? $data['message'] ?? __( 'The provider request failed.', 'npcink-toolbox' ) ) );
 			return new WP_Error(
-				'magick_ai_toolbox_provider_error',
+				'npcink_toolbox_provider_error',
 				$message,
 				array(
 					'status'          => $status,
@@ -2782,8 +2782,8 @@ final class Provider_Client {
 		$raw    = (string) wp_remote_retrieve_body( $response );
 		if ( 200 > $status || 299 < $status ) {
 			return new WP_Error(
-				'magick_ai_toolbox_provider_error',
-				__( 'The provider text request failed.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_provider_error',
+				__( 'The provider text request failed.', 'npcink-toolbox' ),
 				array(
 					'status'          => $status,
 					'provider_status' => $status,
@@ -2911,32 +2911,32 @@ final class Provider_Client {
 		$sections = array(
 			array(
 				'section'         => 'direct_answer',
-				'heading_hint'    => __( 'Direct answer', 'magick-ai-toolbox' ),
-				'purpose'         => __( 'State the useful answer or thesis with only supported facts.', 'magick-ai-toolbox' ),
+				'heading_hint'    => __( 'Direct answer', 'npcink-toolbox' ),
+				'purpose'         => __( 'State the useful answer or thesis with only supported facts.', 'npcink-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'context',
-				'heading_hint'    => __( 'Context', 'magick-ai-toolbox' ),
-				'purpose'         => __( 'Explain why the topic matters to the target reader.', 'magick-ai-toolbox' ),
+				'heading_hint'    => __( 'Context', 'npcink-toolbox' ),
+				'purpose'         => __( 'Explain why the topic matters to the target reader.', 'npcink-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'main_body',
-				'heading_hint'    => __( 'Practical breakdown', 'magick-ai-toolbox' ),
-				'purpose'         => __( 'Organize steps, examples, comparisons, or tradeoffs that the evidence supports.', 'magick-ai-toolbox' ),
+				'heading_hint'    => __( 'Practical breakdown', 'npcink-toolbox' ),
+				'purpose'         => __( 'Organize steps, examples, comparisons, or tradeoffs that the evidence supports.', 'npcink-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'geo_summary',
-				'heading_hint'    => __( 'AI-readable summary', 'magick-ai-toolbox' ),
-				'purpose'         => __( 'Summarize the grounded conclusion without ranking or outcome guarantees.', 'magick-ai-toolbox' ),
+				'heading_hint'    => __( 'AI-readable summary', 'npcink-toolbox' ),
+				'purpose'         => __( 'Summarize the grounded conclusion without ranking or outcome guarantees.', 'npcink-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'conclusion',
-				'heading_hint'    => __( 'Next step', 'magick-ai-toolbox' ),
-				'purpose'         => __( 'Close with a practical next step for the reader.', 'magick-ai-toolbox' ),
+				'heading_hint'    => __( 'Next step', 'npcink-toolbox' ),
+				'purpose'         => __( 'Close with a practical next step for the reader.', 'npcink-toolbox' ),
 				'evidence_needed' => false,
 			),
 		);
@@ -3103,8 +3103,8 @@ final class Provider_Client {
 			$images = is_array( $result['images'] ?? null ) ? array_values( $result['images'] ) : array();
 			if ( empty( $images ) || ! is_array( $images[0] ?? null ) ) {
 				return new WP_Error(
-					'magick_ai_toolbox_article_media_candidate_missing',
-					__( 'Image-source search did not return a usable candidate for an article media batch item.', 'magick-ai-toolbox' ),
+					'npcink_toolbox_article_media_candidate_missing',
+					__( 'Image-source search did not return a usable candidate for an article media batch item.', 'npcink-toolbox' ),
 					array( 'status' => 502 )
 				);
 			}
@@ -3113,8 +3113,8 @@ final class Provider_Client {
 
 		if ( empty( $candidate ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_article_media_candidate_required',
-				__( 'Every article media batch item requires image_candidate, featured_image, image_url, or search_images=true.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_article_media_candidate_required',
+				__( 'Every article media batch item requires image_candidate, featured_image, image_url, or search_images=true.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3150,8 +3150,8 @@ final class Provider_Client {
 			$post = get_post( $post_id );
 			if ( ! $post ) {
 				return new WP_Error(
-					'magick_ai_toolbox_post_not_found',
-					__( 'The requested post was not found.', 'magick-ai-toolbox' ),
+					'npcink_toolbox_post_not_found',
+					__( 'The requested post was not found.', 'npcink-toolbox' ),
 					array( 'status' => 404 )
 				);
 			}
@@ -3175,8 +3175,8 @@ final class Provider_Client {
 
 		if ( '' === $title && '' === $topic ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_discoverability_source',
-				__( 'A post_id, topic, or title is required to build a content discoverability brief.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_discoverability_source',
+				__( 'A post_id, topic, or title is required to build a content discoverability brief.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3202,17 +3202,17 @@ final class Provider_Client {
 
 	private function content_discoverability_field_instruction( string $field ): string {
 		$instructions = array(
-			'seo_title'             => __( 'Suggest a concise search title based on the source topic and primary keywords. Avoid clickbait and unsupported claims.', 'magick-ai-toolbox' ),
-			'seo_description'       => __( 'Suggest a meta description that summarizes the reader problem, topic, and value using verified source facts only.', 'magick-ai-toolbox' ),
-			'slug'                  => __( 'Suggest a short, readable URL slug from the title or topic.', 'magick-ai-toolbox' ),
-			'excerpt'               => __( 'Suggest an editorial excerpt grounded in the supplied content.', 'magick-ai-toolbox' ),
-			'faq'                   => __( 'Suggest FAQ question and answer pairs only when the context allows FAQ generation and the source supports the answers.', 'magick-ai-toolbox' ),
-			'answer_summary'        => __( 'Suggest a direct one-sentence AEO answer summary grounded in the supplied source.', 'magick-ai-toolbox' ),
-			'geo_summary'           => __( 'Suggest a standalone GEO summary that is easy for AI systems to quote without adding unsupported facts.', 'magick-ai-toolbox' ),
-			'structured_data_hints' => __( 'Suggest schema hints only when the source supports them; do not claim schema has been applied.', 'magick-ai-toolbox' ),
+			'seo_title'             => __( 'Suggest a concise search title based on the source topic and primary keywords. Avoid clickbait and unsupported claims.', 'npcink-toolbox' ),
+			'seo_description'       => __( 'Suggest a meta description that summarizes the reader problem, topic, and value using verified source facts only.', 'npcink-toolbox' ),
+			'slug'                  => __( 'Suggest a short, readable URL slug from the title or topic.', 'npcink-toolbox' ),
+			'excerpt'               => __( 'Suggest an editorial excerpt grounded in the supplied content.', 'npcink-toolbox' ),
+			'faq'                   => __( 'Suggest FAQ question and answer pairs only when the context allows FAQ generation and the source supports the answers.', 'npcink-toolbox' ),
+			'answer_summary'        => __( 'Suggest a direct one-sentence AEO answer summary grounded in the supplied source.', 'npcink-toolbox' ),
+			'geo_summary'           => __( 'Suggest a standalone GEO summary that is easy for AI systems to quote without adding unsupported facts.', 'npcink-toolbox' ),
+			'structured_data_hints' => __( 'Suggest schema hints only when the source supports them; do not claim schema has been applied.', 'npcink-toolbox' ),
 		);
 
-		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'magick-ai-toolbox' );
+		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'npcink-toolbox' );
 	}
 
 	private function content_discoverability_field_group( string $field ): string {
@@ -3261,18 +3261,18 @@ final class Provider_Client {
 				array(
 					'question' => sprintf(
 						/* translators: %s: topic. */
-						__( 'What should readers know about %s?', 'magick-ai-toolbox' ),
+						__( 'What should readers know about %s?', 'npcink-toolbox' ),
 						$topic
 					),
-					'answer_guidance' => __( 'Answer only with facts supported by the supplied source and site context.', 'magick-ai-toolbox' ),
+					'answer_guidance' => __( 'Answer only with facts supported by the supplied source and site context.', 'npcink-toolbox' ),
 				),
 				array(
 					'question' => sprintf(
 						/* translators: %s: topic. */
-						__( 'How does %s affect the target audience?', 'magick-ai-toolbox' ),
+						__( 'How does %s affect the target audience?', 'npcink-toolbox' ),
 						$topic
 					),
-					'answer_guidance' => __( 'Connect the answer to target audience needs without inventing outcomes or guarantees.', 'magick-ai-toolbox' ),
+					'answer_guidance' => __( 'Connect the answer to target audience needs without inventing outcomes or guarantees.', 'npcink-toolbox' ),
 				),
 			);
 		}

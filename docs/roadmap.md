@@ -94,7 +94,7 @@ Target features:
 Open decision:
 
 - whether Cloud-owned vector indexing is implemented directly in Cloud service
-  APIs or through a future `magick-ai-knowledge` connector, while Toolbox stays
+  APIs or through a future `npcink-knowledge` connector, while Toolbox stays
   the local Ability exposure surface.
 - which embedding provider owns text-to-vector conversion.
 

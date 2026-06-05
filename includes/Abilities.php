@@ -2,10 +2,10 @@
 /**
  * Abilities API registrations for Toolbox actions.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -19,23 +19,23 @@ final class Abilities {
 		$this->client   = $client;
 	}
 
-	public function register_with_magick_ai_abilities(): void {
-		if ( $this->registered_with_helpers || ! function_exists( 'magick_ai_abilities_register_readonly' ) ) {
+	public function register_with_npcink_abilities_toolkit(): void {
+		if ( $this->registered_with_helpers || ! function_exists( 'npcink_abilities_toolkit_register_readonly' ) ) {
 			return;
 		}
 
-		if ( function_exists( 'magick_ai_abilities_register_category' ) ) {
-			magick_ai_abilities_register_category(
-				'magick-ai-toolbox',
+		if ( function_exists( 'npcink_abilities_toolkit_register_category' ) ) {
+			npcink_abilities_toolkit_register_category(
+				'npcink-toolbox',
 				array(
-					'label'       => __( 'Magick AI Toolbox', 'magick-ai-toolbox' ),
-					'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'magick-ai-toolbox' ),
+					'label'       => __( 'Npcink Toolbox', 'npcink-toolbox' ),
+					'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
 				)
 			);
 		}
 
 		foreach ( $this->definitions() as $ability_id => $definition ) {
-			magick_ai_abilities_register_readonly( $ability_id, $definition );
+			npcink_abilities_toolkit_register_readonly( $ability_id, $definition );
 		}
 
 		$this->registered_with_helpers = true;
@@ -46,15 +46,15 @@ final class Abilities {
 			return;
 		}
 
-		if ( function_exists( 'wp_has_ability_category' ) && wp_has_ability_category( 'magick-ai-toolbox' ) ) {
+		if ( function_exists( 'wp_has_ability_category' ) && wp_has_ability_category( 'npcink-toolbox' ) ) {
 			return;
 		}
 
 		wp_register_ability_category(
-			'magick-ai-toolbox',
+			'npcink-toolbox',
 			array(
-				'label'       => __( 'Magick AI Toolbox', 'magick-ai-toolbox' ),
-				'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'magick-ai-toolbox' ),
+				'label'       => __( 'Npcink Toolbox', 'npcink-toolbox' ),
+				'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
 			)
 		);
 	}
@@ -70,7 +70,7 @@ final class Abilities {
 				array(
 					'label'               => $definition['label'],
 					'description'         => $definition['description'],
-					'category'            => 'magick-ai-toolbox',
+					'category'            => 'npcink-toolbox',
 					'input_schema'        => $definition['input_schema'],
 					'output_schema'       => $definition['output_schema'],
 					'execute_callback'    => $definition['execute_callback'],
@@ -90,9 +90,9 @@ final class Abilities {
 
 	private function definitions(): array {
 		return array(
-			'magick-ai-toolbox/search-image-source'                => $this->definition(
-				__( 'Search Image Source', 'magick-ai-toolbox' ),
-				__( 'Search configured image source candidates without importing media.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/search-image-source'                => $this->definition(
+				__( 'Search Image Source', 'npcink-toolbox' ),
+				__( 'Search configured image source candidates without importing media.', 'npcink-toolbox' ),
 				array( 'query' ),
 				array( $this, 'search_image_source' ),
 				'cap.toolbox.image_source',
@@ -100,9 +100,9 @@ final class Abilities {
 					'composition_role' => 'image_source_candidates',
 				)
 			),
-			'magick-ai-toolbox/vector-search'                      => $this->definition(
-				__( 'Vector Search', 'magick-ai-toolbox' ),
-				__( 'Compatibility pointer for Cloud-managed site knowledge. Vector provider configuration is managed in Magick AI Cloud.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/vector-search'                      => $this->definition(
+				__( 'Vector Search', 'npcink-toolbox' ),
+				__( 'Compatibility pointer for Cloud-managed site knowledge. Vector provider configuration is managed in Npcink Cloud.', 'npcink-toolbox' ),
 				array( 'query' ),
 				array( $this, 'vector_search' ),
 				'cap.toolbox.vector_search',
@@ -113,9 +113,9 @@ final class Abilities {
 					'knowledge_layer' => 'cloud_managed_site_knowledge',
 				)
 			),
-			'magick-ai-toolbox/search-site-knowledge'              => $this->definition(
-				__( 'Search Site Knowledge', 'magick-ai-toolbox' ),
-				__( 'Search Cloud-managed site knowledge for semantic search, related content, writing context, internal links, or refresh suggestions without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/search-site-knowledge'              => $this->definition(
+				__( 'Search Site Knowledge', 'npcink-toolbox' ),
+				__( 'Search Cloud-managed site knowledge for semantic search, related content, writing context, internal links, or refresh suggestions without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'query' ),
 				array( $this, 'search_site_knowledge' ),
 				'cap.toolbox.knowledge.search',
@@ -126,9 +126,9 @@ final class Abilities {
 					'cloud_contract'      => 'site_knowledge_search.v1',
 				)
 			),
-			'magick-ai-toolbox/get-site-knowledge-status'          => $this->definition(
-				__( 'Get Site Knowledge Status', 'magick-ai-toolbox' ),
-				__( 'Read Cloud-managed site knowledge coverage and sync status without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/get-site-knowledge-status'          => $this->definition(
+				__( 'Get Site Knowledge Status', 'npcink-toolbox' ),
+				__( 'Read Cloud-managed site knowledge coverage and sync status without writing WordPress content.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'get_site_knowledge_status' ),
 				'cap.toolbox.knowledge.read',
@@ -139,9 +139,9 @@ final class Abilities {
 					'cloud_contract'      => 'site_knowledge_status.v1',
 				)
 			),
-			'magick-ai-toolbox/request-site-knowledge-sync'        => $this->definition(
-				__( 'Request Site Knowledge Sync', 'magick-ai-toolbox' ),
-				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/request-site-knowledge-sync'        => $this->definition(
+				__( 'Request Site Knowledge Sync', 'npcink-toolbox' ),
+				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'request_site_knowledge_sync' ),
 				'cap.toolbox.knowledge.sync',
@@ -152,9 +152,9 @@ final class Abilities {
 					'cloud_contract'      => 'site_knowledge_sync.v1',
 				)
 			),
-			'magick-ai-toolbox/build-article-brief'                => $this->definition(
-				__( 'Build Article Brief', 'magick-ai-toolbox' ),
-				__( 'Build a research-backed article planning brief without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-article-brief'                => $this->definition(
+				__( 'Build Article Brief', 'npcink-toolbox' ),
+				__( 'Build a research-backed article planning brief without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'topic' ),
 				array( $this, 'build_article_brief' ),
 				'cap.toolbox.workflow_suggest',
@@ -162,9 +162,9 @@ final class Abilities {
 					'composition_role' => 'article_planning_bundle',
 				)
 			),
-			'magick-ai-toolbox/build-article-assistant'            => $this->definition(
-				__( 'Build Article Assistant Workbench', 'magick-ai-toolbox' ),
-				__( 'Build one local article_draft_v1 workbench artifact from topic, evidence, site context, draft notes, and reviewed draft input without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-article-assistant'            => $this->definition(
+				__( 'Build Article Assistant Workbench', 'npcink-toolbox' ),
+				__( 'Build one local article_draft_v1 workbench artifact from topic, evidence, site context, draft notes, and reviewed draft input without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'topic' ),
 				array( $this, 'build_article_assistant' ),
 				'cap.toolbox.workflow_suggest',
@@ -177,9 +177,9 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/build-article-write-plan'           => $this->definition(
-				__( 'Build Article Write Plan', 'magick-ai-toolbox' ),
-				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-article-write-plan'           => $this->definition(
+				__( 'Build Article Write Plan', 'npcink-toolbox' ),
+				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'title', 'content_markdown' ),
 				array( $this, 'build_article_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -192,9 +192,9 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/build-article-batch-write-plan'     => $this->definition(
-				__( 'Build Article Batch Write Plan', 'magick-ai-toolbox' ),
-				__( 'Build a Core-ready article_batch_write_plan for 2 to 5 reviewed drafts without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-article-batch-write-plan'     => $this->definition(
+				__( 'Build Article Batch Write Plan', 'npcink-toolbox' ),
+				__( 'Build a Core-ready article_batch_write_plan for 2 to 5 reviewed drafts without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'articles' ),
 				array( $this, 'build_article_batch_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -207,9 +207,9 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/build-article-media-batch-write-plan' => $this->definition(
-				__( 'Build Article Media Batch Write Plan', 'magick-ai-toolbox' ),
-				__( 'Build a Core-ready article_media_batch_write_plan for reviewed drafts plus selected image-source candidates without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-article-media-batch-write-plan' => $this->definition(
+				__( 'Build Article Media Batch Write Plan', 'npcink-toolbox' ),
+				__( 'Build a Core-ready article_media_batch_write_plan for reviewed drafts plus selected image-source candidates without writing WordPress content.', 'npcink-toolbox' ),
 				array( 'articles' ),
 				array( $this, 'build_article_media_batch_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -222,9 +222,9 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/build-image-candidate-adoption-plan' => $this->definition(
-				__( 'Build Image Candidate Adoption Plan', 'magick-ai-toolbox' ),
-				__( 'Build a Core-ready image_candidate_adoption_plan for one reviewed image candidate without importing media or writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-image-candidate-adoption-plan' => $this->definition(
+				__( 'Build Image Candidate Adoption Plan', 'npcink-toolbox' ),
+				__( 'Build a Core-ready image_candidate_adoption_plan for one reviewed image candidate without importing media or writing WordPress content.', 'npcink-toolbox' ),
 				array( 'image_candidate' ),
 				array( $this, 'build_image_candidate_adoption_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -238,9 +238,9 @@ final class Abilities {
 					'candidate_contract'  => 'image_candidate.v1',
 				)
 			),
-			'magick-ai-toolbox/build-media-brief'                  => $this->definition(
-				__( 'Build Media Brief', 'magick-ai-toolbox' ),
-				__( 'Build image prompt and media SEO suggestions from supplied post context.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-media-brief'                  => $this->definition(
+				__( 'Build Media Brief', 'npcink-toolbox' ),
+				__( 'Build image prompt and media SEO suggestions from supplied post context.', 'npcink-toolbox' ),
 				array( 'post_context' ),
 				array( $this, 'build_media_brief' ),
 				'cap.toolbox.workflow_suggest',
@@ -248,9 +248,9 @@ final class Abilities {
 					'composition_role' => 'media_planning_bundle',
 				)
 			),
-			'magick-ai-toolbox/build-media-derivative-handoff'     => $this->definition(
-				__( 'Build Media Derivative Handoff', 'magick-ai-toolbox' ),
-				__( 'Build a one-run Core/Abilities media derivative handoff from Core defaults without writing WordPress media.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-media-derivative-handoff'     => $this->definition(
+				__( 'Build Media Derivative Handoff', 'npcink-toolbox' ),
+				__( 'Build a one-run Core/Abilities media derivative handoff from Core defaults without writing WordPress media.', 'npcink-toolbox' ),
 				array( 'attachment_id' ),
 				array( $this, 'build_media_derivative_handoff' ),
 				'cap.toolbox.workflow_suggest',
@@ -261,9 +261,9 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'magick-ai-toolbox/get-content-discoverability-context' => $this->definition(
-				__( 'Get Content Discoverability Context', 'magick-ai-toolbox' ),
-				__( 'Return the operator-maintained SEO, AEO, and GEO context for third-party AI callers without exposing provider secrets or writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/get-content-discoverability-context' => $this->definition(
+				__( 'Get Content Discoverability Context', 'npcink-toolbox' ),
+				__( 'Return the operator-maintained SEO, AEO, and GEO context for third-party AI callers without exposing provider secrets or writing WordPress content.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'get_content_discoverability_context' ),
 				'cap.toolbox.context.read',
@@ -274,9 +274,9 @@ final class Abilities {
 					'write_posture'       => 'suggestion_only',
 				)
 			),
-			'magick-ai-toolbox/validate-content-discoverability-context' => $this->definition(
-				__( 'Validate Content Discoverability Context', 'magick-ai-toolbox' ),
-				__( 'Check whether the operator-maintained SEO, AEO, and GEO context has enough fields for third-party AI suggestion workflows.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/validate-content-discoverability-context' => $this->definition(
+				__( 'Validate Content Discoverability Context', 'npcink-toolbox' ),
+				__( 'Check whether the operator-maintained SEO, AEO, and GEO context has enough fields for third-party AI suggestion workflows.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'validate_content_discoverability_context' ),
 				'cap.toolbox.context.read',
@@ -287,9 +287,9 @@ final class Abilities {
 					'write_posture'       => 'suggestion_only',
 				)
 			),
-			'magick-ai-toolbox/build-content-discoverability-brief' => $this->definition(
-				__( 'Build Content Discoverability Brief', 'magick-ai-toolbox' ),
-				__( 'Build a suggestion-only SEO, AEO, and GEO brief from operator context and supplied post or topic input without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-content-discoverability-brief' => $this->definition(
+				__( 'Build Content Discoverability Brief', 'npcink-toolbox' ),
+				__( 'Build a suggestion-only SEO, AEO, and GEO brief from operator context and supplied post or topic input without writing WordPress content.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'build_content_discoverability_brief' ),
 				'cap.toolbox.workflow_suggest',
@@ -300,9 +300,9 @@ final class Abilities {
 					'write_posture'       => 'suggestion_only',
 				)
 			),
-			'magick-ai-toolbox/build-ai-article-writing-pack' => $this->definition(
-				__( 'Build AI Article Writing Pack', 'magick-ai-toolbox' ),
-				__( 'Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content.', 'magick-ai-toolbox' ),
+			'npcink-toolbox/build-ai-article-writing-pack' => $this->definition(
+				__( 'Build AI Article Writing Pack', 'npcink-toolbox' ),
+				__( 'Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content.', 'npcink-toolbox' ),
 				array(),
 				array( $this, 'build_ai_article_writing_pack' ),
 				'cap.toolbox.workflow_suggest',
@@ -338,7 +338,7 @@ final class Abilities {
 		return array(
 			'label'               => $label,
 			'description'         => $description,
-			'category'            => 'magick-ai-toolbox',
+			'category'            => 'npcink-toolbox',
 			'capability'          => 'manage_options',
 			'required_scope'      => $required_scope,
 			'input_schema'        => array(
@@ -353,7 +353,7 @@ final class Abilities {
 			),
 			'execute_callback'    => $callback,
 			'meta'                => array_merge( $default_meta, $meta ),
-			'project_to_magick_catalog' => true,
+			'project_to_npcink_catalog' => true,
 		);
 	}
 
@@ -446,7 +446,7 @@ final class Abilities {
 	}
 
 	private function can_execute_ability( string $ability_id ): bool {
-		return (bool) apply_filters( 'magick_ai_toolbox_ability_permission', current_user_can( 'manage_options' ), $ability_id );
+		return (bool) apply_filters( 'npcink_toolbox_ability_permission', current_user_can( 'manage_options' ), $ability_id );
 	}
 
 	private function sanitize_string_list( $value ): array {

@@ -1,7 +1,7 @@
 (function (wp) {
 	'use strict';
 
-	const config = window.MagickAIToolboxEditorSupport || {};
+	const config = window.NpcinkToolboxEditorSupport || {};
 	const element = wp.element || {};
 	const components = wp.components || {};
 	const data = wp.data || {};
@@ -19,10 +19,10 @@
 
 	const Button = components.Button || 'button';
 	const Notice = components.Notice || function NoticeFallback(props) {
-		return createElement('div', { className: 'magick-ai-toolbox-editor-support__notice' }, props.children);
+		return createElement('div', { className: 'npcink-toolbox-editor-support__notice' }, props.children);
 	};
 	const Spinner = components.Spinner || function SpinnerFallback() {
-		return createElement('span', { className: 'magick-ai-toolbox-editor-support__spinner' }, '...');
+		return createElement('span', { className: 'npcink-toolbox-editor-support__spinner' }, '...');
 	};
 	const ExternalLink = components.ExternalLink || function ExternalLinkFallback(props) {
 		return createElement('a', { href: props.href, target: '_blank', rel: 'noreferrer' }, props.children);
@@ -31,23 +31,23 @@
 	const flows = [
 		{
 			intent: 'publish_preflight',
-			label: __('Publish preflight', 'magick-ai-toolbox'),
-			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'magick-ai-toolbox'),
+			label: __('Publish preflight', 'npcink-toolbox'),
+			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'npcink-toolbox'),
 		},
 		{
 			intent: 'taxonomy_tags',
-			label: __('Recommend terms', 'magick-ai-toolbox'),
-			description: __('Suggest existing categories and tags from the current draft context.', 'magick-ai-toolbox'),
+			label: __('Recommend terms', 'npcink-toolbox'),
+			description: __('Suggest existing categories and tags from the current draft context.', 'npcink-toolbox'),
 		},
 		{
 			intent: 'internal_links',
-			label: __('Find internal links', 'magick-ai-toolbox'),
-			description: __('Use Site Knowledge to find related public content for links.', 'magick-ai-toolbox'),
+			label: __('Find internal links', 'npcink-toolbox'),
+			description: __('Use Site Knowledge to find related public content for links.', 'npcink-toolbox'),
 		},
 		{
 			intent: 'image_candidates',
-			label: __('Find image candidates', 'magick-ai-toolbox'),
-			description: __('Search configured image-source providers for featured or inline candidates.', 'magick-ai-toolbox'),
+			label: __('Find image candidates', 'npcink-toolbox'),
+			description: __('Search configured image-source providers for featured or inline candidates.', 'npcink-toolbox'),
 		},
 	];
 
@@ -101,14 +101,14 @@
 
 	function renderItems(items, emptyLabel) {
 		if (!Array.isArray(items) || !items.length) {
-			return createElement('p', { className: 'magick-ai-toolbox-editor-support__muted' }, emptyLabel || __('No candidates returned.', 'magick-ai-toolbox'));
+			return createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, emptyLabel || __('No candidates returned.', 'npcink-toolbox'));
 		}
 
 		return createElement(
 			'ul',
-			{ className: 'magick-ai-toolbox-editor-support__list' },
+			{ className: 'npcink-toolbox-editor-support__list' },
 			items.slice(0, 8).map((item, index) => {
-				const title = item.name || item.title || item.label || item.source_title || item.url || item.download_url || item.id || __('Candidate', 'magick-ai-toolbox');
+				const title = item.name || item.title || item.label || item.source_title || item.url || item.download_url || item.id || __('Candidate', 'npcink-toolbox');
 				const detail = item.reason || item.detail || item.excerpt || item.source_url || item.status || item.taxonomy || item.provider || '';
 				return createElement(
 					'li',
@@ -144,35 +144,35 @@
 		blocks.push(
 			createElement(
 				'div',
-				{ key: 'summary', className: 'magick-ai-toolbox-editor-support__summary' },
-				createElement('strong', null, payload.intent ? payload.intent.replace(/_/g, ' ') : __('Content support', 'magick-ai-toolbox')),
-				createElement('span', null, __('Suggestions only. Final writes require Core approval.', 'magick-ai-toolbox'))
+				{ key: 'summary', className: 'npcink-toolbox-editor-support__summary' },
+				createElement('strong', null, payload.intent ? payload.intent.replace(/_/g, ' ') : __('Content support', 'npcink-toolbox')),
+				createElement('span', null, __('Suggestions only. Final writes require Core approval.', 'npcink-toolbox'))
 			)
 		);
 
 		if (sections.checks) {
-			blocks.push(createElement('h4', { key: 'checks-title' }, __('Checks', 'magick-ai-toolbox')));
-			blocks.push(renderItems(sections.checks.items || [], __('No checks returned.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'checks-title' }, __('Checks', 'npcink-toolbox')));
+			blocks.push(renderItems(sections.checks.items || [], __('No checks returned.', 'npcink-toolbox')));
 		}
 
 		if (sections.taxonomy_terms) {
-			blocks.push(createElement('h4', { key: 'terms-title' }, __('Term candidates', 'magick-ai-toolbox')));
-			blocks.push(renderItems(sections.taxonomy_terms.items || [], __('No matching existing terms found.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'terms-title' }, __('Term candidates', 'npcink-toolbox')));
+			blocks.push(renderItems(sections.taxonomy_terms.items || [], __('No matching existing terms found.', 'npcink-toolbox')));
 		}
 
 		if (sections.site_knowledge) {
-			blocks.push(createElement('h4', { key: 'links-title' }, __('Site Knowledge', 'magick-ai-toolbox')));
-			blocks.push(renderItems(extractKnowledgeItems(sections.site_knowledge), __('No related content returned.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'links-title' }, __('Site Knowledge', 'npcink-toolbox')));
+			blocks.push(renderItems(extractKnowledgeItems(sections.site_knowledge), __('No related content returned.', 'npcink-toolbox')));
 		}
 
 		if (sections.duplicate_check) {
-			blocks.push(createElement('h4', { key: 'duplicate-title' }, __('Duplicate check', 'magick-ai-toolbox')));
-			blocks.push(renderItems(extractKnowledgeItems(sections.duplicate_check), __('No duplicate-risk candidates returned.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'duplicate-title' }, __('Duplicate check', 'npcink-toolbox')));
+			blocks.push(renderItems(extractKnowledgeItems(sections.duplicate_check), __('No duplicate-risk candidates returned.', 'npcink-toolbox')));
 		}
 
 		if (sections.image_candidates) {
-			blocks.push(createElement('h4', { key: 'images-title' }, __('Image candidates', 'magick-ai-toolbox')));
-			blocks.push(renderItems(extractImageItems(sections.image_candidates), __('No image candidates returned.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'images-title' }, __('Image candidates', 'npcink-toolbox')));
+			blocks.push(renderItems(extractImageItems(sections.image_candidates), __('No image candidates returned.', 'npcink-toolbox')));
 		}
 
 		if (sections.discoverability && sections.discoverability.candidate_suggestions) {
@@ -180,11 +180,11 @@
 				name: field,
 				detail: String(sections.discoverability.candidate_suggestions[field] || ''),
 			}));
-			blocks.push(createElement('h4', { key: 'discoverability-title' }, __('Discoverability', 'magick-ai-toolbox')));
-			blocks.push(renderItems(suggestions, __('No discoverability candidates returned.', 'magick-ai-toolbox')));
+			blocks.push(createElement('h4', { key: 'discoverability-title' }, __('Discoverability', 'npcink-toolbox')));
+			blocks.push(renderItems(suggestions, __('No discoverability candidates returned.', 'npcink-toolbox')));
 		}
 
-		return createElement('div', { className: 'magick-ai-toolbox-editor-support__result' }, blocks);
+		return createElement('div', { className: 'npcink-toolbox-editor-support__result' }, blocks);
 	}
 
 	function ContentSupportPanel() {
@@ -205,7 +205,7 @@
 				});
 				setResult(await postJson('editor/content-support', payload));
 			} catch (requestError) {
-				setError(requestError && requestError.message ? requestError.message : __('Request failed.', 'magick-ai-toolbox'));
+				setError(requestError && requestError.message ? requestError.message : __('Request failed.', 'npcink-toolbox'));
 			} finally {
 				setRunning('');
 			}
@@ -214,15 +214,15 @@
 		return createElement(
 			editPost.PluginDocumentSettingPanel,
 			{
-				name: 'magick-ai-content-support',
-				title: __('Magick AI Content Support', 'magick-ai-toolbox'),
-				className: 'magick-ai-toolbox-editor-support',
+				name: 'npcink-content-support',
+				title: __('Npcink Content Support', 'npcink-toolbox'),
+				className: 'npcink-toolbox-editor-support',
 			},
-			createElement('p', { className: 'magick-ai-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'magick-ai-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
 			flows.map((flow) =>
 				createElement(
 					'div',
-					{ className: 'magick-ai-toolbox-editor-support__flow', key: flow.intent },
+					{ className: 'npcink-toolbox-editor-support__flow', key: flow.intent },
 					createElement('div', null, createElement('strong', null, flow.label), createElement('span', null, flow.description)),
 					createElement(
 						Button,
@@ -232,18 +232,18 @@
 							disabled: Boolean(running),
 							onClick: () => runFlow(flow.intent),
 						},
-						running === flow.intent ? __('Running', 'magick-ai-toolbox') : __('Run', 'magick-ai-toolbox')
+						running === flow.intent ? __('Running', 'npcink-toolbox') : __('Run', 'npcink-toolbox')
 					)
 				)
 			),
-			running ? createElement('div', { className: 'magick-ai-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Running content support flow...', 'magick-ai-toolbox'))) : null,
+			running ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Running content support flow...', 'npcink-toolbox'))) : null,
 			error ? createElement(Notice, { status: 'error', isDismissible: false }, error) : null,
 			result ? renderResult(result) : null,
-			config.adminUrl ? createElement('p', { className: 'magick-ai-toolbox-editor-support__admin-link' }, createElement(ExternalLink, { href: config.adminUrl }, __('Open Toolbox Content Support', 'magick-ai-toolbox'))) : null
+			config.adminUrl ? createElement('p', { className: 'npcink-toolbox-editor-support__admin-link' }, createElement(ExternalLink, { href: config.adminUrl }, __('Open Toolbox Content Support', 'npcink-toolbox'))) : null
 		);
 	}
 
-	plugins.registerPlugin('magick-ai-toolbox-editor-content-support', {
+	plugins.registerPlugin('npcink-toolbox-editor-content-support', {
 		render: ContentSupportPanel,
 	});
 })(window.wp || {});

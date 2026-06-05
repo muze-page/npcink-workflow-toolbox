@@ -1,4 +1,4 @@
-# AGENTS.md - Magick AI Toolbox
+# AGENTS.md - Npcink Toolbox
 
 ## Session Startup Protocol
 
@@ -18,7 +18,7 @@ Every new AI development session should start with:
 
 ## Product Boundary
 
-Magick AI Toolbox is the WordPress operator-facing AI tool surface.
+Npcink Toolbox is the WordPress operator-facing AI tool surface.
 
 Toolbox owns:
 
@@ -35,7 +35,7 @@ Toolbox does not own:
 - Core governance truth, approval records, or audit logs;
 - final WordPress write authorization;
 - reusable first-party WordPress ability definitions already owned by
-  `magick-ai-abilities`;
+  `npcink-abilities-toolkit`;
 - workflow runtime, queues, schedulers, retries, or leases;
 - MCP, Agent Gateway, Open API, or OpenClaw control-plane state;
 - long-term provider billing, quota, key rotation, or request log ownership;
@@ -102,7 +102,7 @@ composer validate --no-check-publish
 WordPress activation smoke, when a local site and WP-CLI are available:
 
 ```bash
-wp --path="/path/to/wordpress" plugin activate magick-ai-toolbox
+wp --path="/path/to/wordpress" plugin activate npcink-toolbox
 ```
 
 Before finishing a code session, run the narrowest useful gate and report

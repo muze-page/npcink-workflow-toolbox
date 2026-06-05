@@ -45,17 +45,17 @@ When a local WordPress site and WP-CLI are available, mount or install the
 plugin and activate it:
 
 ```bash
-wp --path="/path/to/wordpress" plugin activate magick-ai-toolbox
+wp --path="/path/to/wordpress" plugin activate npcink-toolbox
 ```
 
 Then verify:
 
 - the plugin activates without fatal errors;
-- `Magick AI -> Toolbox` loads when a Magick AI parent menu exists;
-- `Tools -> Magick AI Toolbox` loads when installed standalone without a
-  Magick AI parent menu;
+- `Npcink -> Toolbox` loads when a Npcink parent menu exists;
+- `Tools -> Npcink Toolbox` loads when installed standalone without a
+  Npcink parent menu;
 - settings save;
-- `/wp-json/magick-ai-toolbox/v1/status` returns the expected capability-gated
+- `/wp-json/npcink-toolbox/v1/status` returns the expected capability-gated
   status for an authenticated administrator;
 - Abilities API discovery includes the Toolbox ability ids when the Abilities
   API is available.

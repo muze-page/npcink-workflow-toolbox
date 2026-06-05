@@ -10,11 +10,11 @@ Accepted
 
 ## Context
 
-Magick AI already has separate projects for governance and reusable WordPress
+Npcink already has separate projects for governance and reusable WordPress
 abilities:
 
-- `magick-ai-core` governs proposal records, approvals, preflight, and audit.
-- `magick-ai-abilities` registers reusable WordPress Abilities API definitions.
+- `npcink-governance-core` governs proposal records, approvals, preflight, and audit.
+- `npcink-abilities-toolkit` registers reusable WordPress Abilities API definitions.
 
 The desired new functionality includes external web research, image-source
 search, vector search, and fixed-flow operator buttons. These features are
@@ -24,10 +24,10 @@ semantic runtime.
 
 ## Decision
 
-Create `magick-ai-toolbox` as a standalone WordPress plugin.
+Create `npcink-toolbox` as a standalone WordPress plugin.
 
 Toolbox owns the operator-facing product surface for external tools and fixed
-workflow buttons. Magick AI Cloud owns web search provider configuration and
+workflow buttons. Npcink Cloud owns web search provider configuration and
 execution. Toolbox may call Cloud-managed image-source providers,
 Cloud-managed site knowledge, and future non-search connector APIs for bounded
 suggestion tasks and may register its actions through the WordPress Abilities

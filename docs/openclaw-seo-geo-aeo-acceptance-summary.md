@@ -26,10 +26,10 @@ Use these abilities for third-party AI consumption:
 
 | Intent | Adapter shortcut | Toolbox ability | Role |
 | --- | --- | --- | --- |
-| Validate filled site context | `GET /content-discoverability-validation` | `magick-ai-toolbox/validate-content-discoverability-context` | Context readiness check |
-| Read site context | `GET /content-discoverability-context` | `magick-ai-toolbox/get-content-discoverability-context` | Read-only site rule source |
-| SEO/GEO/AEO suggestions | `GET /content-discoverability-brief?post_id=POST_ID` | `magick-ai-toolbox/build-content-discoverability-brief` | Primary contract |
-| Broad article request | `GET /article-writing-pack?topic=AI_TOPIC` | `magick-ai-toolbox/build-ai-article-writing-pack` | Fallback article pack |
+| Validate filled site context | `GET /content-discoverability-validation` | `npcink-toolbox/validate-content-discoverability-context` | Context readiness check |
+| Read site context | `GET /content-discoverability-context` | `npcink-toolbox/get-content-discoverability-context` | Read-only site rule source |
+| SEO/GEO/AEO suggestions | `GET /content-discoverability-brief?post_id=POST_ID` | `npcink-toolbox/build-content-discoverability-brief` | Primary contract |
+| Broad article request | `GET /article-writing-pack?topic=AI_TOPIC` | `npcink-toolbox/build-ai-article-writing-pack` | Fallback article pack |
 
 The primary SEO/GEO/AEO entrypoint is `content-discoverability-brief`.
 `article-writing-pack` is only for broad natural-language article requests such
@@ -125,7 +125,7 @@ Exception groups now cover:
 - `human_confirmation_required`.
 
 These rules are stored in the WordPress option
-`magick_ai_toolbox_content_context`. They are runtime site configuration, not a
+`npcink_toolbox_content_context`. They are runtime site configuration, not a
 source-controlled code artifact.
 
 ## Local Acceptance Evidence
@@ -145,7 +145,7 @@ missing_recommended=0
 SEO/GEO/AEO brief result:
 
 ```text
-ability=magick-ai-toolbox/build-content-discoverability-brief
+ability=npcink-toolbox/build-content-discoverability-brief
 artifact=content_discoverability_brief
 status=ready
 direct_write=false
@@ -154,7 +154,7 @@ direct_write=false
 Broad article request result:
 
 ```text
-ability=magick-ai-toolbox/build-ai-article-writing-pack
+ability=npcink-toolbox/build-ai-article-writing-pack
 artifact=ai_article_writing_pack
 direct_write=false
 ```

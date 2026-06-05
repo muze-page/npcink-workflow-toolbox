@@ -1,6 +1,6 @@
-# Magick AI Toolbox Boundary
+# Npcink Toolbox Boundary
 
-Magick AI Toolbox owns product-facing tools and fixed-flow buttons.
+Npcink Toolbox owns product-facing tools and fixed-flow buttons.
 
 Owned here:
 
@@ -18,7 +18,7 @@ Not owned here:
 - Core governance truth;
 - final WordPress write approval;
 - reusable first-party WordPress ability definitions already owned by
-  `magick-ai-abilities`;
+  `npcink-abilities-toolkit`;
 - workflow runtime, queues, or MCP control-plane state;
 - long-term provider billing, quota, and request log ownership.
 - content indexing jobs, re-indexing, and vector collection lifecycle in the
@@ -118,7 +118,7 @@ boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
 
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
-`magick-ai-toolbox/build-article-write-plan`. It is a planning artifact route,
+`npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
 
 `/free-gpt55/content-support` sends one bounded suggestion request to Cloud
@@ -133,7 +133,7 @@ Core proposal intake, but it must not import media, update attachment metadata,
 set featured images, approve proposals, or execute writes.
 
 `/media-derivative-handoff` prepares one-run ability input for
-`magick-ai/build-media-derivative-cloud-request` from Core media policy defaults
+`npcink-abilities-toolkit/build-media-derivative-cloud-request` from Core media policy defaults
 and operator overrides. Watermark overrides must distinguish text and
 image/logo modes: text watermarks pass text/font/color/background/margin fields
 without requiring a logo artifact, while image/logo watermarks use the Core
@@ -150,7 +150,7 @@ registry, approve proposals, execute proposals, replace attachment files, or
 update attachment metadata.
 
 The same admin surface may call
-`magick-ai/build-media-derivative-batch-plan` through Adapter
+`npcink-abilities-toolkit/build-media-derivative-batch-plan` through Adapter
 `run-read-ability` for bounded bulk requests such as date-range format
 conversion. The batch surface may show candidates, skipped reasons, selected
 per-attachment previews, and selected Core proposal submissions. It must still
@@ -159,13 +159,13 @@ must not create a Toolbox-side media registry, approval queue, scheduler, or
 write executor.
 
 After a local media replacement has been approved and executed, the admin
-surface may ask Adapter to run `magick-ai/build-media-reference-repair-plan`
+surface may ask Adapter to run `npcink-abilities-toolkit/build-media-reference-repair-plan`
 and submit non-empty exact-match `patch-post-content` actions to Core
 `/proposals/from-plan`. Toolbox must not search-replace post content directly,
 rewrite sized variants automatically, or treat the repair plan as write truth.
 
 For plugin/theme settings that contain hard-coded media URLs, the admin surface
-may ask Adapter to run `magick-ai/build-media-settings-reference-repair-plan`
+may ask Adapter to run `npcink-abilities-toolkit/build-media-settings-reference-repair-plan`
 with local exclusion filters such as blocked formats and minimum dimensions,
 then submit non-empty exact-match `patch-setting-value` actions to Core
 `/proposals/from-plan`. Toolbox must not update options, theme mods, serialized
@@ -173,8 +173,8 @@ settings, or excluded small/logo/icon media directly.
 
 ## Content Context Boundary
 
-Toolbox may store the non-secret `magick_ai_toolbox_content_context` option and
-expose it through `magick-ai-toolbox/get-content-discoverability-context`.
+Toolbox may store the non-secret `npcink_toolbox_content_context` option and
+expose it through `npcink-toolbox/get-content-discoverability-context`.
 
 The context can include site positioning, audience, brand voice, keywords,
 allowed claims, forbidden claims, exception/special-case rules, SEO rules, AEO
@@ -190,7 +190,7 @@ as permission to bypass Core governance.
 
 ### Cloud-Managed Web Search
 
-Magick AI Cloud owns external web search provider configuration, execution, and
+Npcink Cloud owns external web search provider configuration, execution, and
 provider routing. Toolbox must not store local web search provider keys,
 register a local web search REST route, or expose a local web search ability.
 Toolbox must not treat search results as verified truth; Cloud search results
@@ -211,7 +211,7 @@ plane.
 AI-generated images are a separate explicit candidate mode, not a relabeling of
 Unsplash, Pixabay, or Pexels. Toolbox may normalize a caller-supplied generated
 image URL or call a host-provided
-`magick_ai_toolbox_ai_image_generation_request` runtime seam to return
+`npcink_toolbox_ai_image_generation_request` runtime seam to return
 suggestion-only candidates with `source_type=ai_generated`, prompt/model
 evidence, and human license review status. Toolbox must not own AI image model
 routing, prompt management, provider credentials, billing, media import,
@@ -219,7 +219,7 @@ featured-image setting, or approval truth.
 
 ### Cloud Site Knowledge
 
-Magick AI Cloud owns vector storage, embedding provider configuration,
+Npcink Cloud owns vector storage, embedding provider configuration,
 embedding dimensions, indexing, rerank, quotas, and detailed run health.
 
 Toolbox may collect bounded public WordPress manifests, request Cloud sync,

@@ -2,8 +2,8 @@
 
 Status: active guidance for Toolbox product-surface work.
 
-This note records what `magick-ai-toolbox` may absorb from
-`magick-ai-content-assistant` without crossing the Toolbox boundary.
+This note records what `npcink-toolbox` may absorb from
+`npcink-content-assistant` without crossing the Toolbox boundary.
 
 ## Absorb
 
@@ -45,7 +45,7 @@ For Toolbox, the equivalent rule is:
 Toolbox may run configured external research, optional result reading,
 Cloud-managed image-source search, Cloud-managed site knowledge, and bounded
 fixed-flow planning actions. The result must
-remain a suggestion, candidate set, or handoff note until Magick AI Core and the
+remain a suggestion, candidate set, or handoff note until Npcink Governance Core and the
 appropriate WordPress ability approve and execute any final write.
 
 ## Result Surface Contract

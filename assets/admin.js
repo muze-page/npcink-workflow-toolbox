@@ -1,7 +1,7 @@
 (function () {
 	'use strict';
 
-	const config = window.MagickAIToolbox || {};
+	const config = window.NpcinkToolbox || {};
 
 	function serialize(form) {
 		const data = {};
@@ -33,9 +33,9 @@
 			return;
 		}
 
-		const item = el('span', 'magick-ai-toolbox__result-meta-item');
-		item.appendChild(el('span', 'magick-ai-toolbox__result-meta-label', label));
-		item.appendChild(el('span', 'magick-ai-toolbox__result-meta-value', value));
+		const item = el('span', 'npcink-toolbox__result-meta-item');
+		item.appendChild(el('span', 'npcink-toolbox__result-meta-label', label));
+		item.appendChild(el('span', 'npcink-toolbox__result-meta-value', value));
 		container.appendChild(item);
 	}
 
@@ -52,7 +52,7 @@
 			return raw;
 		}
 
-		const config = window.MagickAIToolbox && window.MagickAIToolbox.dateTime ? window.MagickAIToolbox.dateTime : {};
+		const config = window.NpcinkToolbox && window.NpcinkToolbox.dateTime ? window.NpcinkToolbox.dateTime : {};
 		if (config.timeZone && !/^[+-]/.test(String(config.timeZone))) {
 			try {
 				const parts = new Intl.DateTimeFormat('en-US', {
@@ -235,7 +235,7 @@
 
 	function toolboxAdminUrl(params) {
 		const url = new URL(window.location.href);
-		url.searchParams.set('page', 'magick-ai-toolbox');
+		url.searchParams.set('page', 'npcink-toolbox');
 		Object.keys(params || {}).forEach((key) => {
 			const value = params[key];
 			if (value === null || value === undefined || value === '') {
@@ -305,15 +305,15 @@
 	}
 
 	function createSection(title) {
-		const section = el('section', 'magick-ai-toolbox__result-section');
+		const section = el('section', 'npcink-toolbox__result-section');
 		section.appendChild(el('h3', '', title));
 		return section;
 	}
 
 	function createRawDetails(payload, title) {
-		const details = el('details', 'magick-ai-toolbox__result-details');
+		const details = el('details', 'npcink-toolbox__result-details');
 		details.appendChild(el('summary', '', title || 'Complete payload'));
-		const pre = el('pre', 'magick-ai-toolbox__result-raw');
+		const pre = el('pre', 'npcink-toolbox__result-raw');
 		pre.textContent = JSON.stringify(payload, null, 2);
 		details.appendChild(pre);
 		return details;
@@ -328,7 +328,7 @@
 	}
 
 	function renderShell(form, payload, title, summary) {
-		const result = form.querySelector('.magick-ai-toolbox__result');
+		const result = form.querySelector('.npcink-toolbox__result');
 		if (!result) {
 			return null;
 		}
@@ -337,13 +337,13 @@
 		result.classList.remove('is-empty');
 		clearNode(result);
 
-		const summaryNode = el('div', 'magick-ai-toolbox__result-summary');
-		summaryNode.appendChild(el('div', 'magick-ai-toolbox__result-kicker', providerLabel(payload)));
+		const summaryNode = el('div', 'npcink-toolbox__result-summary');
+		summaryNode.appendChild(el('div', 'npcink-toolbox__result-kicker', providerLabel(payload)));
 		summaryNode.appendChild(el('h3', '', title));
 		summaryNode.appendChild(el('p', '', summary));
 		result.appendChild(summaryNode);
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Provider', providerLabel(payload));
 		appendMeta(meta, 'Query', payload && payload.query);
 		appendMeta(meta, 'Topic', payload && payload.topic);
@@ -360,7 +360,7 @@
 	}
 
 	function renderTextResult(form, value, kind) {
-		const result = form.querySelector('.magick-ai-toolbox__result');
+		const result = form.querySelector('.npcink-toolbox__result');
 		if (!result) {
 			return;
 		}
@@ -368,13 +368,13 @@
 		result.hidden = false;
 		result.classList.remove('is-empty');
 		clearNode(result);
-		const notice = el('div', 'magick-ai-toolbox__result-notice ' + (kind ? 'is-' + kind : ''));
+		const notice = el('div', 'npcink-toolbox__result-notice ' + (kind ? 'is-' + kind : ''));
 		notice.textContent = stringifyDisplayValue(value);
 		result.appendChild(notice);
 	}
 
 	function renderErrorResult(form, error, fallback) {
-		const result = form.querySelector('.magick-ai-toolbox__result');
+		const result = form.querySelector('.npcink-toolbox__result');
 		if (!result) {
 			return;
 		}
@@ -382,7 +382,7 @@
 		result.hidden = false;
 		result.classList.remove('is-empty');
 		clearNode(result);
-		result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', formatErrorMessage(error, fallback)));
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-error', formatErrorMessage(error, fallback)));
 		if (error && typeof error === 'object') {
 			result.appendChild(createRawDetails(error, 'Error payload'));
 		}
@@ -420,7 +420,7 @@
 			return true;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Status', feedback.status ? formatLabel(feedback.status) : '');
 		appendMeta(meta, 'Severity', feedback.severity ? formatLabel(feedback.severity) : '');
 		appendMeta(meta, 'Retry after revision', feedback.can_retry_after_revision === true ? 'Yes' : 'No');
@@ -436,7 +436,7 @@
 
 		if (Array.isArray(feedback.reasons) && feedback.reasons.length) {
 			const section = createSection('Reasons');
-			const list = el('ul', 'magick-ai-toolbox__step-list');
+			const list = el('ul', 'npcink-toolbox__step-list');
 			feedback.reasons.forEach((reason) => {
 				list.appendChild(el('li', '', reason));
 			});
@@ -445,12 +445,12 @@
 		}
 
 		if (Array.isArray(feedback.revision_fields) && feedback.revision_fields.length) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Revise fields: ' + feedback.revision_fields.join(', ')));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Revise fields: ' + feedback.revision_fields.join(', ')));
 		}
 
 		if (Array.isArray(feedback.next_steps) && feedback.next_steps.length) {
 			const section = createSection('Next steps');
-			const list = el('ol', 'magick-ai-toolbox__step-list');
+			const list = el('ol', 'npcink-toolbox__step-list');
 			feedback.next_steps.forEach((step) => {
 				list.appendChild(el('li', '', step));
 			});
@@ -468,9 +468,9 @@
 		}
 
 		const section = createSection('Sources');
-		const list = el('div', 'magick-ai-toolbox__result-list');
+		const list = el('div', 'npcink-toolbox__result-list');
 		results.forEach((item) => {
-			const row = el('article', 'magick-ai-toolbox__result-item');
+			const row = el('article', 'npcink-toolbox__result-item');
 			const title = el('h4', '', item.title || item.url || 'Source');
 			row.appendChild(title);
 			if (item.url) {
@@ -479,7 +479,7 @@
 			if (item.content) {
 				row.appendChild(el('p', '', truncate(item.content, 260)));
 			}
-			const meta = el('div', 'magick-ai-toolbox__result-meta');
+			const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Score', item.score);
 			if (meta.childNodes.length) {
 				row.appendChild(meta);
@@ -496,24 +496,24 @@
 		}
 
 		const section = createSection('Image-source candidates');
-		const list = el('div', 'magick-ai-toolbox__image-list');
+		const list = el('div', 'npcink-toolbox__image-list');
 		images.forEach((image) => {
-			const row = el('article', 'magick-ai-toolbox__image-item');
+			const row = el('article', 'npcink-toolbox__image-item');
 			const previewUrl = image.thumbnail_url || image.thumb_url || image.small_url || image.download_url || image.regular_url;
 			if (previewUrl) {
-				const preview = el('img', 'magick-ai-toolbox__image-thumb');
+				const preview = el('img', 'npcink-toolbox__image-thumb');
 				preview.src = previewUrl;
 				preview.alt = image.alt_description || image.description || '';
 				preview.loading = 'lazy';
 				row.appendChild(preview);
 			}
 
-			const body = el('div', 'magick-ai-toolbox__image-body');
+			const body = el('div', 'npcink-toolbox__image-body');
 			body.appendChild(el('h4', '', image.description || image.alt_description || image.id || 'Image candidate'));
 			if (image.attribution) {
 				body.appendChild(el('p', '', image.attribution));
 			}
-			const links = el('div', 'magick-ai-toolbox__result-actions');
+			const links = el('div', 'npcink-toolbox__result-actions');
 			if (image.html_url) {
 				links.appendChild(createLink(image.html_url, 'Open on ' + formatLabel(image.provider || 'source')));
 			}
@@ -523,7 +523,7 @@
 			if (links.childNodes.length) {
 				body.appendChild(links);
 			}
-			const meta = el('div', 'magick-ai-toolbox__result-meta');
+			const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Provider', image.provider ? formatLabel(image.provider) : '');
 			appendMeta(meta, 'ID', image.id);
 			appendMeta(meta, 'Suggested filename', image.suggested_filename);
@@ -535,12 +535,12 @@
 				body.appendChild(meta);
 			}
 			if (image.requires_human_license_review) {
-				body.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'License or source review is required before Core approval.'));
+				body.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'License or source review is required before Core approval.'));
 			}
 			if (image.download_location || image.suggested_filename || image.filename_basis) {
-				const details = el('details', 'magick-ai-toolbox__result-details');
+				const details = el('details', 'npcink-toolbox__result-details');
 				details.appendChild(el('summary', '', 'Attribution metadata'));
-				const pre = el('pre', 'magick-ai-toolbox__result-raw');
+				const pre = el('pre', 'npcink-toolbox__result-raw');
 				pre.textContent = JSON.stringify({
 					attribution: image.attribution || '',
 					download_location: image.download_location || '',
@@ -564,11 +564,11 @@
 		}
 
 		const section = createSection('Vector matches');
-		const list = el('div', 'magick-ai-toolbox__result-list');
+		const list = el('div', 'npcink-toolbox__result-list');
 		points.forEach((point, index) => {
-			const row = el('article', 'magick-ai-toolbox__result-item');
+			const row = el('article', 'npcink-toolbox__result-item');
 			row.appendChild(el('h4', '', point.id ? 'Point ' + point.id : 'Match ' + (index + 1)));
-			const meta = el('div', 'magick-ai-toolbox__result-meta');
+			const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Score', point.score);
 			appendMeta(meta, 'Version', point.version);
 			if (meta.childNodes.length) {
@@ -589,13 +589,13 @@
 		}
 
 		const section = createSection('Governed handoff');
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Write posture', handoff.write_posture || 'suggestion_only');
 		appendMeta(meta, 'Final write path', handoff.final_write_path || 'Core proposal required');
 		section.appendChild(meta);
 
 		if (Array.isArray(handoff.next_steps) && handoff.next_steps.length) {
-			const list = el('ol', 'magick-ai-toolbox__step-list');
+			const list = el('ol', 'npcink-toolbox__step-list');
 			handoff.next_steps.forEach((step) => {
 				list.appendChild(el('li', '', step));
 			});
@@ -610,7 +610,7 @@
 		}
 
 		const section = createSection(title);
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		Object.keys(artifact).slice(0, 4).forEach((key) => {
 			const value = artifact[key];
 			if (Array.isArray(value)) {
@@ -642,7 +642,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Cloud runtime', payload.cloud_runtime || 'magick_ai_cloud_addon');
 		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
 		appendMeta(meta, 'Auto strategy', payload.auto_strategy ? formatLabel(payload.auto_strategy) : '');
@@ -663,7 +663,7 @@
 			result.appendChild(meta);
 		}
 
-		result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Cloud returned image candidates only. Media import still requires an Adopt New Image plan and Core approval.'));
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Cloud returned image candidates only. Media import still requires an Adopt New Image plan and Core approval.'));
 		renderImageList(result, payload.images);
 		if (payload.raw) {
 			result.appendChild(createRawDetails(payload.raw, 'Provider raw response'));
@@ -704,12 +704,12 @@
 
 		const status = String(payload && payload.status ? payload.status : 'unknown');
 		const noticeKind = status === 'ready' ? 'ok' : (status === 'failed' ? 'error' : 'pending');
-		container.appendChild(el('div', 'magick-ai-toolbox__result-notice is-' + noticeKind, 'Status: ' + formatLabel(status)));
+		container.appendChild(el('div', 'npcink-toolbox__result-notice is-' + noticeKind, 'Status: ' + formatLabel(status)));
 		if (progress.message) {
-			container.appendChild(el('div', 'magick-ai-toolbox__result-notice is-' + noticeKind, progress.message));
+			container.appendChild(el('div', 'npcink-toolbox__result-notice is-' + noticeKind, progress.message));
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Stage', progress.stage ? formatLabel(progress.stage) : '');
 		appendMeta(meta, 'Progress', typeof progress.percent === 'number' ? progress.percent + '%' : '');
 		appendMeta(
@@ -731,9 +731,9 @@
 		}
 
 		if (coverage.post_type_coverage || coverage.source_type_coverage) {
-			const details = el('details', 'magick-ai-toolbox__result-details');
+			const details = el('details', 'npcink-toolbox__result-details');
 			details.appendChild(el('summary', '', 'Coverage detail'));
-			const pre = el('pre', 'magick-ai-toolbox__result-raw');
+			const pre = el('pre', 'npcink-toolbox__result-raw');
 			pre.textContent = JSON.stringify({
 				post_type_coverage: coverage.post_type_coverage || {},
 				source_type_coverage: coverage.source_type_coverage || {},
@@ -749,9 +749,9 @@
 	function renderSiteKnowledgeAutoSync(container, health) {
 		const status = String(health.status || 'idle');
 		const noticeKind = status === 'delayed' ? 'warning' : 'pending';
-		container.appendChild(el('div', 'magick-ai-toolbox__result-notice is-' + noticeKind, health.message || 'Site Knowledge auto-sync uses WP-Cron for background refreshes.'));
+		container.appendChild(el('div', 'npcink-toolbox__result-notice is-' + noticeKind, health.message || 'Site Knowledge auto-sync uses WP-Cron for background refreshes.'));
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Auto-sync', formatLabel(status));
 		appendMeta(meta, 'Queued changes', health.queue_count);
 		appendMeta(meta, 'Next queue run', formatDateTime(health.next_queue_run_at));
@@ -764,17 +764,17 @@
 		}
 
 		if (health.cron_command || health.wp_cli_command) {
-			const details = el('details', 'magick-ai-toolbox__result-details');
+			const details = el('details', 'npcink-toolbox__result-details');
 			details.appendChild(el('summary', '', 'Server cron suggestion'));
 			if (health.cron_command) {
 				details.appendChild(el('p', 'description', 'Use this when your host supports URL-based scheduled tasks.'));
-				const curl = el('pre', 'magick-ai-toolbox__result-raw');
+				const curl = el('pre', 'npcink-toolbox__result-raw');
 				curl.textContent = String(health.cron_command);
 				details.appendChild(curl);
 			}
 			if (health.wp_cli_command) {
 				details.appendChild(el('p', 'description', 'Use this when your server supports WP-CLI.'));
-				const cli = el('pre', 'magick-ai-toolbox__result-raw');
+				const cli = el('pre', 'npcink-toolbox__result-raw');
 				cli.textContent = String(health.wp_cli_command);
 				details.appendChild(cli);
 			}
@@ -793,7 +793,7 @@
 			return;
 		}
 
-		const panel = el('div', 'magick-ai-toolbox__knowledge-summary');
+		const panel = el('div', 'npcink-toolbox__knowledge-summary');
 		renderSiteKnowledgeStatusNode(panel, payload);
 		result.appendChild(panel);
 		result.appendChild(createRawDetails(payload, 'Status payload'));
@@ -813,7 +813,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Run', payload.run_id);
 		appendMeta(meta, 'Action', sync.sync_mode ? 'Index refresh' : '');
@@ -824,7 +824,7 @@
 		appendMeta(meta, 'Failed documents', sync.failed_documents);
 		result.appendChild(meta);
 		if (payload.message) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', payload.message));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', payload.message));
 		}
 		renderHandoff(result, payload.handoff);
 		result.appendChild(createRawDetails(payload, 'Sync payload'));
@@ -849,7 +849,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		if (payload.evidence_gate && typeof payload.evidence_gate === 'object') {
@@ -865,17 +865,17 @@
 		}
 		result.appendChild(meta);
 		if (payload.rerank && typeof payload.rerank === 'object' && payload.rerank.status === 'failed') {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Cloud rerank failed; vector order was used as the fallback.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Cloud rerank failed; vector order was used as the fallback.'));
 		}
 		if (hiddenSemanticCount > 0) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', hiddenSemanticCount + ' semantic-only result' + (hiddenSemanticCount === 1 ? '' : 's') + ' hidden because exact query matches were found. Expand Search payload to inspect them.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', hiddenSemanticCount + ' semantic-only result' + (hiddenSemanticCount === 1 ? '' : 's') + ' hidden because exact query matches were found. Expand Search payload to inspect them.'));
 		}
 
 		if (visibleResults.length) {
 			const section = createSection('Results');
-			const list = el('div', 'magick-ai-toolbox__result-list');
+			const list = el('div', 'npcink-toolbox__result-list');
 			visibleResults.forEach((item) => {
-				const row = el('article', 'magick-ai-toolbox__result-item');
+				const row = el('article', 'npcink-toolbox__result-item');
 				row.appendChild(el('h4', '', item.title || 'Indexed source'));
 				if (item.url) {
 					row.appendChild(createLink(item.url, item.url));
@@ -884,7 +884,7 @@
 				const contextNode = el('p', '');
 				appendHighlightedText(contextNode, truncate(context, 420), item.exact_query_match ? query : '');
 				row.appendChild(contextNode);
-				const rowMeta = el('div', 'magick-ai-toolbox__result-meta');
+				const rowMeta = el('div', 'npcink-toolbox__result-meta');
 				appendMeta(rowMeta, 'Score', item.score);
 				appendMeta(rowMeta, 'Match', item.match_type ? formatLabel(item.match_type) : '');
 				appendMeta(rowMeta, 'Exact hits', item.match_count);
@@ -914,7 +914,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
 		appendMeta(meta, 'Provider calls', payload.provider_call_count);
@@ -932,15 +932,15 @@
 
 		if (results.length) {
 			const section = createSection('Results');
-			const list = el('div', 'magick-ai-toolbox__result-list');
+			const list = el('div', 'npcink-toolbox__result-list');
 			results.forEach((item) => {
-				const row = el('article', 'magick-ai-toolbox__result-item');
+				const row = el('article', 'npcink-toolbox__result-item');
 				row.appendChild(el('h4', '', item.title || item.url || 'Search result'));
 				if (item.url) {
 					row.appendChild(createLink(item.url, item.url));
 				}
 				row.appendChild(el('p', '', truncate(item.snippet || '', 360)));
-				const rowMeta = el('div', 'magick-ai-toolbox__result-meta');
+				const rowMeta = el('div', 'npcink-toolbox__result-meta');
 				appendMeta(rowMeta, 'Score', item.score);
 				appendMeta(rowMeta, 'Source', item.source ? formatLabel(item.source) : '');
 				appendMeta(rowMeta, 'Write posture', item.write_posture ? formatLabel(item.write_posture) : '');
@@ -969,7 +969,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Scenario', payload.scenario ? formatLabel(payload.scenario) : '');
 		appendMeta(meta, 'Triggered', payload.search_triggered === true ? 'Yes' : 'No');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
@@ -985,20 +985,20 @@
 		result.appendChild(meta);
 
 		if (payload.search_triggered !== true) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Check Cloud connection before relying on external evidence.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Check Cloud connection before relying on external evidence.'));
 		}
 
 		if (Array.isArray(search.sources) && search.sources.length) {
 			const section = createSection('Attached sources');
-			const list = el('div', 'magick-ai-toolbox__result-list');
+			const list = el('div', 'npcink-toolbox__result-list');
 			search.sources.forEach((item) => {
-				const row = el('article', 'magick-ai-toolbox__result-item');
+				const row = el('article', 'npcink-toolbox__result-item');
 				row.appendChild(el('h4', '', item.title || item.url || 'Attached source'));
 				if (item.url) {
 					row.appendChild(createLink(item.url, item.url));
 				}
 				row.appendChild(el('p', '', truncate(item.summary || item.snippet || '', 280)));
-				const rowMeta = el('div', 'magick-ai-toolbox__result-meta');
+				const rowMeta = el('div', 'npcink-toolbox__result-meta');
 				appendMeta(rowMeta, 'Source', item.source_type ? formatLabel(item.source_type) : item.source ? formatLabel(item.source) : '');
 				appendMeta(rowMeta, 'Status', item.verification_status ? formatLabel(item.verification_status) : '');
 				row.appendChild(rowMeta);
@@ -1024,7 +1024,7 @@
 		}
 
 		if (payload.research && payload.research.error) {
-			const notice = el('div', 'magick-ai-toolbox__result-notice is-warning', payload.research.error);
+			const notice = el('div', 'npcink-toolbox__result-notice is-warning', payload.research.error);
 			notice.appendChild(createLink(
 				toolboxAdminUrl({
 					toolbox_tab: 'cloud-checks',
@@ -1037,7 +1037,7 @@
 			result.appendChild(notice);
 		} else if (payload.research) {
 			const section = createSection('External search');
-			section.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Live Cloud web search verification belongs in Cloud Checks. Use this bundle for combined fallback planning and handoff context.'));
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Live Cloud web search verification belongs in Cloud Checks. Use this bundle for combined fallback planning and handoff context.'));
 			section.appendChild(createLink(
 				toolboxAdminUrl({
 					toolbox_tab: 'cloud-checks',
@@ -1051,13 +1051,13 @@
 		}
 
 		if (payload.images && payload.images.error) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.images.error));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', payload.images.error));
 		} else if (payload.images) {
 			renderImageList(result, payload.images.images);
 		}
 
 		if (payload.knowledge && payload.knowledge.error) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.knowledge.error));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', payload.knowledge.error));
 		} else if (payload.knowledge) {
 			renderPointList(result, payload.knowledge.points);
 		}
@@ -1077,7 +1077,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Profile', payload.hosted_profile || 'text.free-gpt55');
 		appendMeta(meta, 'Model', payload.model_id || 'gpt-5.5');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
@@ -1086,12 +1086,12 @@
 		result.appendChild(meta);
 
 		if (payload.output_text) {
-			const pre = el('pre', 'magick-ai-toolbox__result-raw');
+			const pre = el('pre', 'npcink-toolbox__result-raw');
 			pre.textContent = String(payload.output_text);
 			result.appendChild(pre);
 		}
 
-		result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Core proposal approval is required before any WordPress write.'));
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Core proposal approval is required before any WordPress write.'));
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
@@ -1105,14 +1105,14 @@
 	function renderSupportItems(container, title, items, emptyMessage) {
 		const section = createSection(title);
 		if (!Array.isArray(items) || !items.length) {
-			section.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', emptyMessage || 'No suggestions returned.'));
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', emptyMessage || 'No suggestions returned.'));
 			container.appendChild(section);
 			return;
 		}
 
-		const list = el('div', 'magick-ai-toolbox__result-list');
+		const list = el('div', 'npcink-toolbox__result-list');
 		items.slice(0, 10).forEach((item, index) => {
-			const row = el('article', 'magick-ai-toolbox__result-item');
+			const row = el('article', 'npcink-toolbox__result-item');
 			const titleText = item.name || item.title || item.label || item.source_title || item.url || item.id || 'Candidate ' + (index + 1);
 			row.appendChild(el('h4', '', titleText));
 			const detail = item.reason || item.detail || item.excerpt || item.snippet || item.source_url || item.status || '';
@@ -1122,7 +1122,7 @@
 			if (item.url) {
 				row.appendChild(createLink(item.url, item.url));
 			}
-			const meta = el('div', 'magick-ai-toolbox__result-meta');
+			const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Score', item.score);
 			appendMeta(meta, 'Taxonomy', item.taxonomy ? formatLabel(item.taxonomy) : '');
 			appendMeta(meta, 'Post', item.post_id);
@@ -1150,7 +1150,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
 		appendMeta(meta, 'Write posture', payload.write_posture || 'suggestion_only');
 		appendMeta(meta, 'Final path', payload.final_write_path || 'core_proposal_required');
@@ -1173,7 +1173,7 @@
 		}
 		if (sections.image_candidates) {
 			if (sections.image_candidates.status === 'error') {
-				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', sections.image_candidates.message || 'Image candidate search failed.'));
+				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', sections.image_candidates.message || 'Image candidate search failed.'));
 			} else {
 				renderImageList(result, sections.image_candidates.images || sections.image_candidates.image_candidates || sections.image_candidates.candidates);
 			}
@@ -1207,7 +1207,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Artifact', payload.artifact_type);
 		appendMeta(meta, 'Batch', payload.batch_id);
 		appendMeta(meta, 'Risk', risk.risk_level ? formatLabel(risk.risk_level) : '');
@@ -1217,10 +1217,10 @@
 		result.appendChild(meta);
 
 		if (Array.isArray(risk.blocked_claims) && risk.blocked_claims.length) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', 'Blocked claims must be resolved before Core handoff.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-error', 'Blocked claims must be resolved before Core handoff.'));
 		}
 		if (risk.risk_level === 'high') {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'High-risk plans are expected to fail Core proposal intake until revised.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'High-risk plans are expected to fail Core proposal intake until revised.'));
 		}
 
 		renderArtifactSummary(result, 'Goal brief', payload.article_goal_brief);
@@ -1249,7 +1249,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Recipe', payload.source_recipe_id);
 		appendMeta(meta, 'Risk', risk.risk_level ? formatLabel(risk.risk_level) : '');
 		appendMeta(meta, 'Ready', ready ? 'Yes' : 'No');
@@ -1262,16 +1262,16 @@
 		result.appendChild(meta);
 
 		if (Array.isArray(risk.needs_review) && risk.needs_review.length) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Review required: ' + risk.needs_review.join(', ')));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Review required: ' + risk.needs_review.join(', ')));
 		}
 		if (Array.isArray(risk.blocked_claims) && risk.blocked_claims.length) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', 'Blocked claims must be removed before Core handoff.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-error', 'Blocked claims must be removed before Core handoff.'));
 		}
 
 		renderArtifactSummary(result, 'Goal brief', payload.article_goal_brief);
 		renderArtifactSummary(result, 'Evidence pack', payload.research_evidence_pack);
 		if (payload.image_candidates && payload.image_candidates.error) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.image_candidates.error));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', payload.image_candidates.error));
 		} else if (payload.image_candidates) {
 			renderImageList(result, payload.image_candidates.images);
 		}
@@ -1297,7 +1297,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Attachment', payload.attachment_id);
 		appendMeta(meta, 'Ability', payload.ability_id);
 		appendMeta(meta, 'Format', abilityInput.preferred_format ? String(abilityInput.preferred_format).toUpperCase() : '');
@@ -1309,7 +1309,7 @@
 
 		if (Array.isArray(payload.warnings) && payload.warnings.length) {
 			payload.warnings.forEach((warning) => {
-				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', warning));
+				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', warning));
 			});
 		}
 
@@ -1332,7 +1332,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Source type', candidate.source_type ? formatLabel(candidate.source_type) : '');
 		appendMeta(meta, 'Provider', candidate.provider ? formatLabel(candidate.provider) : '');
 		appendMeta(meta, 'License', candidate.license_review_status ? formatLabel(candidate.license_review_status) : '');
@@ -1347,7 +1347,7 @@
 			image.alt = candidate.alt_description || candidate.description || 'Selected image candidate';
 			image.src = preview.thumbnail_url || candidate.thumbnail_url || candidate.download_url;
 			image.loading = 'lazy';
-			image.className = 'magick-ai-toolbox__image-preview';
+			image.className = 'npcink-toolbox__image-preview';
 			section.appendChild(image);
 			if (candidate.download_url) {
 				section.appendChild(createLink(candidate.download_url, 'Open selected image'));
@@ -1359,10 +1359,10 @@
 		}
 
 		if (candidate.attribution || preview.attribution) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Attribution: ' + (candidate.attribution || preview.attribution)));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Attribution: ' + (candidate.attribution || preview.attribution)));
 		}
 		if (candidate.requires_human_license_review) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'License or source review is required before approval.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'License or source review is required before approval.'));
 		}
 
 		renderArtifactSummary(result, 'Candidate evidence', candidate);
@@ -1599,7 +1599,7 @@
 		}
 
 		const scopeField = form.querySelector('[name="batch_scope_preset"]');
-		const advanced = form.querySelector('.magick-ai-toolbox__advanced-filters');
+		const advanced = form.querySelector('.npcink-toolbox__advanced-filters');
 		if (scopeField instanceof HTMLSelectElement && advanced instanceof HTMLDetailsElement && scopeField.value === 'custom') {
 			advanced.open = true;
 		}
@@ -1721,7 +1721,7 @@
 				cloud_run_id: state.runId || '',
 			},
 			expected_derivative_mime_type: artifact.mime_type || '',
-			backup_suffix: 'magick-ai-cloud-backup',
+			backup_suffix: 'npcink-cloud-backup',
 			dry_run: true,
 			commit: false,
 			idempotency_key: 'media-derivative-' + String(artifact.artifact_id || artifact.id || state.runId || Date.now()),
@@ -1764,7 +1764,7 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Run', state.runId);
 		appendMeta(meta, 'Artifact', derivative.artifact_id || derivative.id);
 		appendMeta(meta, 'Format', derivative.format ? String(derivative.format).toUpperCase() : '');
@@ -1777,13 +1777,13 @@
 
 		if (Array.isArray(derivative.processing_warnings) && derivative.processing_warnings.length) {
 			derivative.processing_warnings.forEach((warning) => {
-				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', warning));
+				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', warning));
 			});
 		}
 
 		const previewUrl = withRestNonce(derivative.preview_url || '');
 		if (previewUrl) {
-			const preview = el('figure', 'magick-ai-toolbox__derivative-preview');
+			const preview = el('figure', 'npcink-toolbox__derivative-preview');
 			const image = el('img');
 			image.src = previewUrl;
 			image.alt = 'Generated derivative preview';
@@ -1791,20 +1791,20 @@
 			preview.appendChild(image);
 			preview.appendChild(el('figcaption', '', 'Same-origin signed preview proxy. This is not a public Cloud URL or a WordPress media write.'));
 			result.appendChild(preview);
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Preview is served through Adapter and Cloud Addon with local authorization.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Preview is served through Adapter and Cloud Addon with local authorization.'));
 		} else {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
 		}
 		renderArtifactSummary(result, 'Derivative artifact', derivative);
 		if (state.fromPlanRequest) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Optimization plan is ready for one Core proposal approval.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Optimization plan is ready for one Core proposal approval.'));
 			renderArtifactSummary(result, 'Media optimization plan', state.fromPlanRequest.plan || {});
 		} else if (state.proposalEnvelope) {
 			const guard = state.proposalEnvelope.ability_guard || {};
 			const nextStep = state.proposalEnvelope.next_step || 'Add reviewed media details, then generate the preview again before Core proposal submission.';
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', nextStep));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', nextStep));
 			if (guard.missing_capability_behavior) {
-				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'If Core lacks the media optimization plan ability, update Core and Abilities before continuing. Do not split this optimization into two proposals.'));
+				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'If Core lacks the media optimization plan ability, update Core and Abilities before continuing. Do not split this optimization into two proposals.'));
 			}
 		}
 		if (state.proposalPayload) {
@@ -1824,9 +1824,9 @@
 		panel.hidden = false;
 		panel.innerHTML = '';
 
-		const heading = el('div', 'magick-ai-toolbox__batch-heading');
+		const heading = el('div', 'npcink-toolbox__batch-heading');
 		heading.appendChild(el('h4', '', 'Batch plan'));
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Candidates', summary.candidate_count || candidates.length);
 		appendMeta(meta, 'Skipped', summary.skipped_count || skipped.length);
 		appendMeta(meta, 'Matched', summary.total_matched);
@@ -1835,18 +1835,18 @@
 		panel.appendChild(heading);
 
 		if (!candidates.length) {
-			panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'No candidates are ready for derivative previews. Review skipped reasons or adjust filters.'));
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No candidates are ready for derivative previews. Review skipped reasons or adjust filters.'));
 		}
 
-		const list = el('div', 'magick-ai-toolbox__batch-list');
+		const list = el('div', 'npcink-toolbox__batch-list');
 		candidates.forEach((candidate, index) => {
-			const row = el('label', 'magick-ai-toolbox__batch-row');
+			const row = el('label', 'npcink-toolbox__batch-row');
 			const checkbox = document.createElement('input');
 			checkbox.type = 'checkbox';
 			checkbox.checked = true;
 			checkbox.setAttribute('data-toolbox-media-batch-candidate', String(candidate.attachment_id || ''));
 			row.appendChild(checkbox);
-			const body = el('span', 'magick-ai-toolbox__batch-row-body');
+			const body = el('span', 'npcink-toolbox__batch-row-body');
 			body.appendChild(el('strong', '', '#' + String(candidate.attachment_id || '') + ' ' + String(candidate.title || 'Untitled media')));
 			const detail = [
 				candidate.source_format ? String(candidate.source_format).toUpperCase() : '',
@@ -1862,12 +1862,12 @@
 		panel.appendChild(list);
 
 		if (skipped.length) {
-			const details = el('details', 'magick-ai-toolbox__result-details');
+			const details = el('details', 'npcink-toolbox__result-details');
 			details.appendChild(el('summary', '', 'Skipped media'));
-			const skippedList = el('div', 'magick-ai-toolbox__batch-list');
+			const skippedList = el('div', 'npcink-toolbox__batch-list');
 			skipped.slice(0, 20).forEach((item) => {
-				const row = el('div', 'magick-ai-toolbox__batch-row is-skipped');
-				const body = el('span', 'magick-ai-toolbox__batch-row-body');
+				const row = el('div', 'npcink-toolbox__batch-row is-skipped');
+				const body = el('span', 'npcink-toolbox__batch-row-body');
 				body.appendChild(el('strong', '', '#' + String(item.attachment_id || '') + ' ' + String(item.title || 'Skipped media')));
 				body.appendChild(el('small', '', String(item.reason || 'skipped')));
 				row.appendChild(body);
@@ -1890,9 +1890,9 @@
 		panel.hidden = false;
 		clearNode(panel);
 
-		const heading = el('div', 'magick-ai-toolbox__batch-heading');
+		const heading = el('div', 'npcink-toolbox__batch-heading');
 		heading.appendChild(el('h4', '', 'URL resolution'));
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Status', resolution.match_status ? formatLabel(resolution.match_status) : '');
 		appendMeta(meta, 'Quality', resolution.resolution_quality ? formatLabel(resolution.resolution_quality) : '');
 		appendMeta(meta, 'Attachment', resolution.attachment_id);
@@ -1908,23 +1908,23 @@
 				relative_file: resolution.requested_relative_file || '',
 			};
 			renderSelectedMedia(form, mediaResolutionCandidateAttachment(resolved));
-			panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-ok', 'Attachment ID resolved locally. Generate a preview before submitting a Core proposal.'));
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Attachment ID resolved locally. Generate a preview before submitting a Core proposal.'));
 		} else if (!candidates.length) {
-			panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'No attachment candidate matched this local uploads URL.'));
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No attachment candidate matched this local uploads URL.'));
 		} else {
-			panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Review candidate evidence before choosing one attachment.'));
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Review candidate evidence before choosing one attachment.'));
 		}
 
 		if (Array.isArray(resolution.warnings) && resolution.warnings.length) {
 			resolution.warnings.forEach((warning) => {
-				panel.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', warning));
+				panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', warning));
 			});
 		}
 
 		if (candidates.length) {
-			const list = el('div', 'magick-ai-toolbox__batch-list');
+			const list = el('div', 'npcink-toolbox__batch-list');
 			candidates.forEach((candidate) => {
-				const row = el('div', 'magick-ai-toolbox__batch-row');
+				const row = el('div', 'npcink-toolbox__batch-row');
 				row.setAttribute('data-toolbox-media-resolution-candidate', String(candidate.attachment_id || ''));
 				row.__magickMediaResolutionCandidate = candidate;
 				const button = el('button', 'button button-small', 'Use attachment');
@@ -1932,7 +1932,7 @@
 				button.setAttribute('data-toolbox-use-media-resolution-candidate', String(candidate.attachment_id || ''));
 				row.appendChild(button);
 
-				const body = el('span', 'magick-ai-toolbox__batch-row-body');
+				const body = el('span', 'npcink-toolbox__batch-row-body');
 				body.appendChild(el('strong', '', '#' + String(candidate.attachment_id || '') + ' ' + String(candidate.title || 'Media attachment')));
 				const detail = [
 					candidate.match_type ? formatLabel(candidate.match_type) : '',
@@ -1955,7 +1955,7 @@
 		return rows
 			.filter((checkbox) => checkbox instanceof HTMLInputElement && checkbox.checked)
 			.map((checkbox) => {
-				const row = checkbox.closest('.magick-ai-toolbox__batch-row');
+				const row = checkbox.closest('.npcink-toolbox__batch-row');
 				return row && row.__magickMediaBatchCandidate ? row.__magickMediaBatchCandidate : null;
 			})
 			.filter(Boolean);
@@ -1972,18 +1972,18 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Previewed', states.length);
 		appendMeta(meta, 'Proposal path', 'Core review');
 		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
 
-		const list = el('div', 'magick-ai-toolbox__result-list');
+		const list = el('div', 'npcink-toolbox__result-list');
 		states.forEach((state) => {
 			const derivative = state.derivative || {};
-			const row = el('article', 'magick-ai-toolbox__result-item');
+			const row = el('article', 'npcink-toolbox__result-item');
 			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(derivative.format || '').toUpperCase()));
-			const itemMeta = el('div', 'magick-ai-toolbox__result-meta');
+			const itemMeta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 			appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at));
@@ -2012,13 +2012,13 @@
 			return;
 		}
 
-		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Proposal', proposalId);
 		appendMeta(meta, 'Status', proposal && proposal.status ? formatLabel(proposal.status) : '');
 		appendMeta(meta, 'Ability', proposal && proposal.ability_id);
 		result.appendChild(meta);
 		if (proposalId && config.coreAdminUrl) {
-			const actions = el('div', 'magick-ai-toolbox__result-actions');
+			const actions = el('div', 'npcink-toolbox__result-actions');
 			actions.appendChild(createLink(config.coreAdminUrl + '&proposal_id=' + encodeURIComponent(proposalId), 'Open in Core review'));
 			result.appendChild(actions);
 		}
@@ -2224,7 +2224,7 @@
 
 	async function runMediaDerivative(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const input = mediaDerivativeInput(form);
@@ -2246,7 +2246,7 @@
 
 	async function resolveMediaAttachmentUrl(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 		const url = mediaUrlValue(form);
 		if (!url) {
@@ -2255,7 +2255,7 @@
 
 		renderTextResult(form, 'Resolving media URL...', 'pending');
 		const resolutionEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
-			ability_id: 'magick-ai/resolve-media-attachment-by-url',
+			ability_id: 'npcink-abilities-toolkit/resolve-media-attachment-by-url',
 			input: {
 				url,
 				max_candidates: 10,
@@ -2272,13 +2272,13 @@
 
 	async function buildMediaDerivativeBatchPlan(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const input = mediaDerivativeBatchPlanInput(form);
 		renderTextResult(form, 'Building media derivative batch plan...', 'pending');
 		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
-			ability_id: 'magick-ai/build-media-derivative-batch-plan',
+			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
 			input,
 		});
 		const plan = planDataFromEnvelope(planEnvelope) || {};
@@ -2298,7 +2298,7 @@
 
 	async function runMediaDerivativeBatchPreviews(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const candidates = selectedMediaBatchCandidates(form);
@@ -2327,7 +2327,7 @@
 
 	async function submitMediaDerivativeBatchProposals(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const states = Array.isArray(form.__magickMediaDerivativeBatchStates) ? form.__magickMediaDerivativeBatchStates : [];
@@ -2340,7 +2340,7 @@
 			const state = states[index];
 			renderTextResult(form, 'Submitting Core proposal ' + String(index + 1) + ' of ' + String(states.length) + '...', 'pending');
 			proposals.push(await postJson(config.adapterRestUrl, 'proposals', {
-				ability_id: 'magick-ai/adopt-cloud-media-derivative',
+				ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative',
 				title: 'Replace media file with Cloud derivative',
 				summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
 				input: proposalInputFromState(state),
@@ -2348,7 +2348,7 @@
 			}));
 		}
 		renderMediaDerivativeBatchResults(form, states, 'Batch proposals submitted', 'Selected derivative artifacts are now in Core review. WordPress writes still require Core approval and preflight.');
-		const result = form.querySelector('.magick-ai-toolbox__result');
+		const result = form.querySelector('.npcink-toolbox__result');
 		if (result) {
 			result.appendChild(createRawDetails({ proposals }, 'Core proposals'));
 		}
@@ -2356,7 +2356,7 @@
 
 	async function submitMediaDerivativeProposal(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const state = form.__magickMediaDerivativeState;
@@ -2391,7 +2391,7 @@
 		const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
 		if (summary) {
 			clearNode(summary);
-			summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Loading Cloud status...'));
+			summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Loading Cloud status...'));
 		}
 		const payload = await getJson(config.restUrl, 'site-knowledge/status');
 		if (summary) {
@@ -2476,7 +2476,7 @@
 				const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
 				if (summary) {
 					clearNode(summary);
-					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
+					summary.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
 					summary.appendChild(createRawDetails(error, 'Status error'));
 				}
 			};
@@ -2539,7 +2539,7 @@
 			refreshSiteKnowledgeStatus(root).catch((error) => {
 				if (summary) {
 					clearNode(summary);
-					summary.appendChild(el('div', 'magick-ai-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
+					summary.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error.message || 'Site knowledge status failed.'));
 					summary.appendChild(createRawDetails(error, 'Status error'));
 				}
 			});
@@ -2548,7 +2548,7 @@
 
 	async function submitMediaReferenceRepairProposal(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const input = referenceRepairInput(form);
@@ -2558,7 +2558,7 @@
 
 		renderTextResult(form, 'Building media URL repair plan...', 'pending');
 		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
-			ability_id: 'magick-ai/build-media-reference-repair-plan',
+			ability_id: 'npcink-abilities-toolkit/build-media-reference-repair-plan',
 			input,
 		});
 		const plan = planDataFromEnvelope(planEnvelope) || {};
@@ -2572,7 +2572,7 @@
 			);
 			if (result) {
 				if (Array.isArray(plan.manual_review) && plan.manual_review.length) {
-					result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Manual review found references that are not safe for exact automatic replacement.'));
+					result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Manual review found references that are not safe for exact automatic replacement.'));
 				}
 				result.appendChild(createRawDetails(planEnvelope, 'Reference repair plan'));
 			}
@@ -2581,7 +2581,7 @@
 
 		renderTextResult(form, 'Submitting URL repair proposal...', 'pending');
 		const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
-			plan_ability_id: 'magick-ai/build-media-reference-repair-plan',
+			plan_ability_id: 'npcink-abilities-toolkit/build-media-reference-repair-plan',
 			plan,
 			plan_input: input,
 		});
@@ -2594,7 +2594,7 @@
 
 	async function submitMediaSettingsReferenceRepairProposal(form) {
 		if (!config.adapterRestUrl) {
-			throw { message: 'Magick AI Adapter REST URL is unavailable.' };
+			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
 		const input = settingsReferenceRepairInput(form);
@@ -2604,7 +2604,7 @@
 
 		renderTextResult(form, 'Building settings URL repair plan...', 'pending');
 		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
-			ability_id: 'magick-ai/build-media-settings-reference-repair-plan',
+			ability_id: 'npcink-abilities-toolkit/build-media-settings-reference-repair-plan',
 			input,
 		});
 		const plan = planDataFromEnvelope(planEnvelope) || {};
@@ -2618,7 +2618,7 @@
 			);
 			if (result) {
 				if (Array.isArray(plan.manual_review) && plan.manual_review.length) {
-					result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Manual review found setting references that are not safe for exact automatic replacement.'));
+					result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Manual review found setting references that are not safe for exact automatic replacement.'));
 				}
 				result.appendChild(createRawDetails(planEnvelope, 'Settings reference repair plan'));
 			}
@@ -2627,7 +2627,7 @@
 
 		renderTextResult(form, 'Submitting settings URL repair proposal...', 'pending');
 		const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
-			plan_ability_id: 'magick-ai/build-media-settings-reference-repair-plan',
+			plan_ability_id: 'npcink-abilities-toolkit/build-media-settings-reference-repair-plan',
 			plan,
 			plan_input: input,
 		});
@@ -2640,7 +2640,7 @@
 
 	function activateTarget(container, buttonSelector, panelSelector, targetAttribute, panelAttribute, target) {
 		const buttons = container.querySelectorAll(buttonSelector);
-		const panelRoot = container.matches('[data-toolbox-tabs]') ? (container.closest('.magick-ai-toolbox') || document) : container;
+		const panelRoot = container.matches('[data-toolbox-tabs]') ? (container.closest('.npcink-toolbox') || document) : container;
 		const panels = panelRoot.querySelectorAll(panelSelector);
 
 		buttons.forEach((button) => {
@@ -2991,7 +2991,7 @@
 	}
 
 	function setContextField(form, key, value) {
-		const option = config.contextOption || 'magick_ai_toolbox_content_context';
+		const option = config.contextOption || 'npcink_toolbox_content_context';
 		const fieldName = option + '[' + key + ']';
 		let field = null;
 		form.querySelectorAll('[name]').forEach((candidate) => {
@@ -3012,7 +3012,7 @@
 	}
 
 	function setProposalFields(form, fields) {
-		const option = config.contextOption || 'magick_ai_toolbox_content_context';
+		const option = config.contextOption || 'npcink_toolbox_content_context';
 		const fieldName = option + '[proposal_allowed_fields][]';
 		const allowed = Array.isArray(fields) ? fields : [];
 
@@ -3039,7 +3039,7 @@
 			setContextField(form, key, draft[key]);
 		});
 
-		form.querySelectorAll('.magick-ai-toolbox__disclosure').forEach((details) => {
+		form.querySelectorAll('.npcink-toolbox__disclosure').forEach((details) => {
 			if (details instanceof HTMLDetailsElement) {
 				details.open = true;
 			}
@@ -3102,7 +3102,7 @@
 		clearNode(preview);
 		const url = attachment && attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment && attachment.url;
 		if (url) {
-			const image = el('img', 'magick-ai-toolbox__media-thumb');
+			const image = el('img', 'npcink-toolbox__media-thumb');
 			image.src = url;
 			image.alt = attachment && attachment.alt ? attachment.alt : '';
 			preview.appendChild(image);

@@ -2,14 +2,14 @@
 
 Status: active for the first Toolbox build.
 
-Magick AI Toolbox is the WordPress operator-facing AI tool surface: it gives
+Npcink Toolbox is the WordPress operator-facing AI tool surface: it gives
 site owners and editors buttons for Cloud-managed web search, Cloud-managed
 image-source candidates, Cloud-managed site knowledge abilities, and repeatable
 AI-assisted content-support workflows.
 
 ## One-Sentence Positioning
 
-Magick AI Toolbox turns WordPress content-support abilities into safe,
+Npcink Toolbox turns WordPress content-support abilities into safe,
 click-driven operator tools around human-written articles.
 
 ## Relationship To OpenClaw
@@ -36,7 +36,7 @@ WordPress write executor.
   provider APIs.
 - Editors who need taxonomy/tag, internal-link, image-source, SEO/AEO/GEO, and
   publish-readiness support around human-written articles.
-- Magick AI operators who need fixed workflow buttons that produce reviewable
+- Npcink operators who need fixed workflow buttons that produce reviewable
   handoffs.
 
 ## Core Jobs
@@ -58,10 +58,10 @@ WordPress write executor.
 
 ## Non-Goals
 
-Magick AI Toolbox does not own:
+Npcink Toolbox does not own:
 
 - Core proposal records, approvals, audit logs, or app-key governance;
-- reusable WordPress ability packages owned by `magick-ai-abilities`;
+- reusable WordPress ability packages owned by `npcink-abilities-toolkit`;
 - final WordPress write execution;
 - provider marketplace, billing, long-term quota, request-log products, or
   multi-provider routing;
@@ -72,9 +72,9 @@ Magick AI Toolbox does not own:
 
 | Project | Owns |
 | --- | --- |
-| `magick-ai-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
-| `magick-ai-abilities` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
-| `magick-ai-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. |
+| `npcink-governance-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
+| `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
+| `npcink-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
 
 ## Design Rule

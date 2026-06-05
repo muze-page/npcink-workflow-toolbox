@@ -2,12 +2,12 @@
 
 Status: active handoff note for future AI sessions.
 
-This file summarizes the first working shape of `magick-ai-toolbox` after the
+This file summarizes the first working shape of `npcink-toolbox` after the
 provider, Abilities API, settings, lifecycle, and local smoke-test work.
 
 ## Product Boundary
 
-Magick AI Toolbox is an operator-facing AI tool plugin. It returns suggestions,
+Npcink Toolbox is an operator-facing AI tool plugin. It returns suggestions,
 source candidates, image candidates, vector matches, and planning artifacts.
 
 Toolbox must not:
@@ -22,7 +22,7 @@ Toolbox must not:
 - leak provider keys into logs, REST responses, proposals, docs, prompts, or
   handoff text.
 
-Write-like outcomes must be handed to WordPress abilities and Magick AI Core
+Write-like outcomes must be handed to WordPress abilities and Npcink Governance Core
 proposal approval.
 
 ## Providers
@@ -31,12 +31,12 @@ Current runtime providers:
 
 | Capability | Provider | Runtime status |
 | --- | --- | --- |
-| Cloud-managed web search | Magick AI Cloud | General external source candidates. Cloud owns provider configuration and routing. |
+| Cloud-managed web search | Npcink Cloud | General external source candidates. Cloud owns provider configuration and routing. |
 | Image source candidates | Unsplash | Active provider; preserve attribution and `download_location`. |
 | Image source candidates | Pixabay | Active provider when configured; preserve attribution and source URL. |
 | Image source candidates | Pexels | Active provider when configured; preserve attribution and source URL. |
 | AI-generated image candidates | Caller URL or host filter | Explicit `ai_generated` mode; preserve prompt/model evidence and human license review status. |
-| Site knowledge vector infrastructure | Magick AI Cloud | Cloud-managed embedding, vector storage, indexing, rerank, status, and search. |
+| Site knowledge vector infrastructure | Npcink Cloud | Cloud-managed embedding, vector storage, indexing, rerank, status, and search. |
 
 ## Cloud-Managed Vector
 
@@ -56,13 +56,13 @@ The settings page supports stored options plus env/constant fallback.
 Provider connector settings are stored in:
 
 ```text
-magick_ai_toolbox_settings
+npcink_toolbox_settings
 ```
 
 Secrets:
 
-- `TAVILY_API_KEY` / `MAGICK_AI_TOOLBOX_TAVILY_API_KEY`
-- `BOCHA_API_KEY` / `MAGICK_AI_TOOLBOX_BOCHA_API_KEY`
+- `TAVILY_API_KEY` / `NPCINK_TOOLBOX_TAVILY_API_KEY`
+- `BOCHA_API_KEY` / `NPCINK_TOOLBOX_BOCHA_API_KEY`
 
 Provider raw payloads are excluded by default. Enable
 `include_raw_responses` only for debugging.
@@ -97,7 +97,7 @@ The admin page also includes an operator-filled Content Context form for SEO,
 AEO, and GEO guidance. It is stored separately from connector settings:
 
 ```text
-magick_ai_toolbox_content_context
+npcink_toolbox_content_context
 ```
 
 This option may contain:
@@ -124,51 +124,51 @@ direct_wordpress_write: false
 
 ## Abilities API
 
-Toolbox ability ids stay under `magick-ai-toolbox/*`:
+Toolbox ability ids stay under `npcink-toolbox/*`:
 
-- `magick-ai-toolbox/search-image-source`
-- `magick-ai-toolbox/vector-search`
-- `magick-ai-toolbox/search-site-knowledge`
-- `magick-ai-toolbox/get-site-knowledge-status`
-- `magick-ai-toolbox/request-site-knowledge-sync`
-- `magick-ai-toolbox/build-article-brief`
-- `magick-ai-toolbox/build-article-write-plan`
-- `magick-ai-toolbox/build-image-candidate-adoption-plan`
-- `magick-ai-toolbox/build-media-brief`
-- `magick-ai-toolbox/get-content-discoverability-context`
-- `magick-ai-toolbox/validate-content-discoverability-context`
-- `magick-ai-toolbox/build-content-discoverability-brief`
+- `npcink-toolbox/search-image-source`
+- `npcink-toolbox/vector-search`
+- `npcink-toolbox/search-site-knowledge`
+- `npcink-toolbox/get-site-knowledge-status`
+- `npcink-toolbox/request-site-knowledge-sync`
+- `npcink-toolbox/build-article-brief`
+- `npcink-toolbox/build-article-write-plan`
+- `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-toolbox/build-media-brief`
+- `npcink-toolbox/get-content-discoverability-context`
+- `npcink-toolbox/validate-content-discoverability-context`
+- `npcink-toolbox/build-content-discoverability-brief`
 
 General-purpose provider abilities:
 
 - Cloud-managed web search is the external source-candidate capability for any
   workflow that needs web evidence, comparison material, Chinese source lookup,
   public references, support context, source coverage, or article preparation.
-  Magick AI Cloud owns provider configuration and execution; Toolbox does not
+  Npcink Cloud owns provider configuration and execution; Toolbox does not
   register a local search ability.
-- `magick-ai-toolbox/search-image-source` is the image-candidate ability for
+- `npcink-toolbox/search-image-source` is the image-candidate ability for
   any workflow that needs sourced images. It returns `image_candidate.v1`
   candidates for stock, AI-generated, owned, or external image sources.
-- `magick-ai-toolbox/build-image-candidate-adoption-plan` turns one reviewed
+- `npcink-toolbox/build-image-candidate-adoption-plan` turns one reviewed
   `image_candidate.v1` into a Core-ready `image_candidate_adoption_plan` for
   media upload, metadata, and optional featured-image proposal intake.
-- `magick-ai-toolbox/search-site-knowledge` is the Cloud-managed site knowledge
+- `npcink-toolbox/search-site-knowledge` is the Cloud-managed site knowledge
   ability for semantic site search, related content, writing context, internal
   links, refresh suggestions, or image context.
-- `magick-ai-toolbox/vector-search` is a Cloud-managed site knowledge
+- `npcink-toolbox/vector-search` is a Cloud-managed site knowledge
   compatibility pointer for older clients.
 
 Site knowledge status and sync:
 
-- `magick-ai-toolbox/get-site-knowledge-status` reads Cloud-managed coverage
+- `npcink-toolbox/get-site-knowledge-status` reads Cloud-managed coverage
   and freshness state.
-- `magick-ai-toolbox/request-site-knowledge-sync` requests bounded Cloud sync
+- `npcink-toolbox/request-site-knowledge-sync` requests bounded Cloud sync
   or rebuild work from public WordPress content. It does not write WordPress
   content and does not create a local indexing queue.
 
 Post editor content support:
 
-- `POST /wp-json/magick-ai-toolbox/v1/editor/content-support` runs one bounded
+- `POST /wp-json/npcink-toolbox/v1/editor/content-support` runs one bounded
   fixed flow from the current draft context.
 - Supported intents are `publish_preflight`, `taxonomy_tags`, `internal_links`,
   `image_candidates`, and `discoverability`.
@@ -177,15 +177,15 @@ Post editor content support:
 
 For content-support AI callers, the canonical composition sequence is:
 
-1. `magick-ai-toolbox/build-content-discoverability-brief`
-2. `magick-ai-toolbox/search-site-knowledge`
-3. `magick-ai-toolbox/search-image-source`
-4. `magick-ai-toolbox/build-image-candidate-adoption-plan` after operator
+1. `npcink-toolbox/build-content-discoverability-brief`
+2. `npcink-toolbox/search-site-knowledge`
+3. `npcink-toolbox/search-image-source`
+4. `npcink-toolbox/build-image-candidate-adoption-plan` after operator
    review
-5. `magick-ai-toolbox/build-media-brief`
-6. `magick-ai-toolbox/build-ai-article-writing-pack` only as a broad
+5. `npcink-toolbox/build-media-brief`
+6. `npcink-toolbox/build-ai-article-writing-pack` only as a broad
    writing-support fallback
-7. `magick-ai-toolbox/build-article-write-plan` only after a reviewed human
+7. `npcink-toolbox/build-article-write-plan` only after a reviewed human
    draft exists
 
 The sequence is a recommendation for composing tool inputs, not a workflow
@@ -203,18 +203,18 @@ Stable first-version scopes:
 - `cap.toolbox.context.read`
 
 Content context consumers should call
-`magick-ai-toolbox/validate-content-discoverability-context` before using the
+`npcink-toolbox/validate-content-discoverability-context` before using the
 context for third-party AI workflows. For one post or topic, call
-`magick-ai-toolbox/build-content-discoverability-brief` to get the
+`npcink-toolbox/build-content-discoverability-brief` to get the
 suggestion-only SEO/AEO/GEO instruction pack, proposal template, conservative
 candidate values, and Core handoff reminders.
 
-Do not rename these scopes unless Magick AI Core explicitly changes the app-key
+Do not rename these scopes unless Npcink Governance Core explicitly changes the app-key
 scope contract.
 
 ## Ability Registration Lifecycle
 
-Do not call `register_with_magick_ai_abilities()` synchronously during plugin
+Do not call `register_with_npcink_abilities_toolkit()` synchronously during plugin
 hook setup. That triggers translation too early on modern WordPress.
 
 Current lifecycle:
@@ -223,7 +223,7 @@ Current lifecycle:
   priority `1`;
 - native category registration skips if helper registration already succeeded;
 - native category registration also checks `wp_has_ability_category()` before
-  registering `magick-ai-toolbox`;
+  registering `npcink-toolbox`;
 - native ability registration skips when helper registration already succeeded.
 
 This prevents early textdomain notices and duplicate Toolbox category notices.
@@ -232,13 +232,13 @@ This prevents early textdomain notices and duplicate Toolbox category notices.
 
 Preferred menu:
 
-- `Magick AI -> Toolbox`
-- `admin.php?page=magick-ai-toolbox`
+- `Npcink -> Toolbox`
+- `admin.php?page=npcink-toolbox`
 
-When no shared Magick AI parent menu exists:
+When no shared Npcink parent menu exists:
 
-- `Tools -> Magick AI Toolbox`
-- `tools.php?page=magick-ai-toolbox`
+- `Tools -> Npcink Toolbox`
+- `tools.php?page=npcink-toolbox`
 
 Submenu position is `45`, after Abilities and before Cloud Addon.
 
@@ -259,7 +259,7 @@ Verified local site path:
 Verified plugin symlink:
 
 ```bash
-/Users/muze/Local Sites/magick-ai/app/public/wp-content/plugins/magick-ai-toolbox -> /Users/muze/gitee/magick-ai-toolbox
+/Users/muze/Local Sites/magick-ai/app/public/wp-content/plugins/npcink-toolbox -> /Users/muze/gitee/magick-ai-toolbox
 ```
 
 Global `wp` may not be installed. The verified fallback is a temporary WP-CLI
@@ -277,20 +277,20 @@ Do not write local admin passwords into repository files.
 Useful smoke commands:
 
 ```bash
-"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" plugin activate magick-ai-toolbox
+"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" plugin activate npcink-toolbox
 
-"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" plugin status magick-ai-toolbox
+"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" plugin status npcink-toolbox
 
-"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" eval 'wp_set_current_user( 1 ); do_action( "rest_api_init" ); $request = new WP_REST_Request( "GET", "/magick-ai-toolbox/v1/status" ); $response = rest_do_request( $request ); echo "status=" . $response->get_status() . "\n";'
+"$WP_CLI_PHP" -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" "$WP_CLI" --path="$WP_PATH" eval 'wp_set_current_user( 1 ); do_action( "rest_api_init" ); $request = new WP_REST_Request( "GET", "/npcink-toolbox/v1/status" ); $response = rest_do_request( $request ); echo "status=" . $response->get_status() . "\n";'
 ```
 
 Adapter and Abilities smoke commands can use the same variables:
 
 ```bash
-cd /Users/muze/gitee/magick-ai-abilities
+cd /Users/muze/gitee/npcink-abilities-toolkit
 WP_CLI=/tmp/wp-cli.phar WP_CLI_PHP="$WP_CLI_PHP" WP_CLI_ERROR_REPORTING=8191 WP_CLI_MYSQL_SOCKET="$WP_CLI_MYSQL_SOCKET" WP_PATH="$WP_PATH" composer smoke:wp
 
-cd /Users/muze/gitee/magick-ai-adapter
+cd /Users/muze/gitee/npcink-openclaw-adapter
 WP_CLI=/tmp/wp-cli.phar WP_CLI_PHP="$WP_CLI_PHP" WP_CLI_ERROR_REPORTING=8191 WP_CLI_MYSQL_SOCKET="$WP_CLI_MYSQL_SOCKET" WP_PATH="$WP_PATH" composer smoke:wp
 ```
 

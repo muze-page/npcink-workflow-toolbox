@@ -2,17 +2,17 @@
 /**
  * Main plugin coordinator.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Plugin {
-	public const OPTION_NAME         = 'magick_ai_toolbox_settings';
-	public const CONTEXT_OPTION_NAME = 'magick_ai_toolbox_content_context';
-	public const REST_NAMESPACE      = 'magick-ai-toolbox/v1';
+	public const OPTION_NAME         = 'npcink_toolbox_settings';
+	public const CONTEXT_OPTION_NAME = 'npcink_toolbox_content_context';
+	public const REST_NAMESPACE      = 'npcink-toolbox/v1';
 
 	private static ?Plugin $instance = null;
 
@@ -49,7 +49,7 @@ final class Plugin {
 		add_action( 'enqueue_block_editor_assets', array( $this->editor_content_support, 'enqueue' ) );
 		$this->site_knowledge_auto_sync->register_hooks();
 		add_action( 'rest_api_init', array( $this->rest_controller, 'register_routes' ) );
-		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_with_magick_ai_abilities' ), 1 );
+		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_with_npcink_abilities_toolkit' ), 1 );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_native_category' ) );
 		add_action( 'wp_abilities_api_init', array( $this->abilities, 'register_native_abilities' ) );
 	}

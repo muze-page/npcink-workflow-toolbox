@@ -28,15 +28,15 @@ one kind of evidence:
 
 - Cloud-managed web search for external source candidates, comparison material,
   current public references, support context, source coverage, or article
-  preparation. Magick AI Cloud owns web search provider configuration and
+  preparation. Npcink Cloud owns web search provider configuration and
   execution;
-- `magick-ai-toolbox/search-image-source` for featured, inline, layout,
+- `npcink-toolbox/search-image-source` for featured, inline, layout,
   presentation, reference, or media-planning image candidates;
-- `magick-ai-toolbox/search-site-knowledge` for semantic site search, related
+- `npcink-toolbox/search-site-knowledge` for semantic site search, related
   content, writing context, internal-link candidates, refresh suggestions,
   image-context lookup, FAQ candidates, content gap analysis, or publish
   preflight duplicate checks from Cloud-managed site knowledge;
-- `magick-ai-toolbox/vector-search` only as a Cloud-managed site knowledge
+- `npcink-toolbox/vector-search` only as a Cloud-managed site knowledge
   compatibility pointer for older clients.
 
 Do not call article-specific planning abilities unless the workflow is actually
@@ -47,7 +47,7 @@ building or handing off an article.
 For SEO, AEO, and GEO guidance, the primary contract is the lightweight brief:
 
 ```text
-magick-ai-toolbox/build-content-discoverability-brief
+npcink-toolbox/build-content-discoverability-brief
 ```
 
 It returns per-section `seo`, `aeo`, and `geo` blocks plus
@@ -55,20 +55,20 @@ It returns per-section `seo`, `aeo`, and `geo` blocks plus
 
 For normal WordPress editorial support, compose abilities in this order:
 
-1. `magick-ai-toolbox/build-content-discoverability-brief`
+1. `npcink-toolbox/build-content-discoverability-brief`
    - Build suggestion-only SEO/AEO/GEO guidance, taxonomy/tag candidates,
      internal-link hints, and proposal fields for one topic or post.
-2. `magick-ai-toolbox/search-site-knowledge`
+2. `npcink-toolbox/search-site-knowledge`
    - Retrieve related content, internal-link candidates, duplicate-risk
      signals, refresh suggestions, or image context from Cloud-managed site
      knowledge.
-3. `magick-ai-toolbox/search-image-source`
+3. `npcink-toolbox/search-image-source`
    - Retrieve featured, inline, layout, reference, or media-planning image
      candidates and preserve attribution.
-4. `magick-ai-toolbox/build-image-candidate-adoption-plan`
+4. `npcink-toolbox/build-image-candidate-adoption-plan`
    - After operator review, build a Core-ready media adoption plan when the
      operator wants to import a selected image candidate.
-5. `magick-ai-toolbox/build-media-brief`
+5. `npcink-toolbox/build-media-brief`
    - Build image prompts, alt/caption suggestions, and governed media handoff
      notes for an existing post.
 
@@ -77,7 +77,7 @@ natural-language request such as "write an article about AI", use the high-level
 fallback entrypoint:
 
 ```text
-magick-ai-toolbox/build-ai-article-writing-pack
+npcink-toolbox/build-ai-article-writing-pack
 ```
 
 That ability internally composes the local content context, context validation,
@@ -88,31 +88,31 @@ ability. It is not the primary SEO/AEO/GEO contract.
 For one reviewed article draft or article-planning fallback run, an AI caller
 should use this sequence:
 
-1. `magick-ai-toolbox/get-content-discoverability-context`
+1. `npcink-toolbox/get-content-discoverability-context`
    - Read site positioning, target audience, brand voice, keywords, forbidden
      claims, and proposal fields.
-2. `magick-ai-toolbox/validate-content-discoverability-context`
+2. `npcink-toolbox/validate-content-discoverability-context`
    - Stop for operator input if required context is missing.
 3. Cloud-managed web search
-   - Gather external source candidates for the topic through Magick AI Cloud.
-4. `magick-ai-toolbox/vector-search`
+   - Gather external source candidates for the topic through Npcink Cloud.
+4. `npcink-toolbox/vector-search`
    - Retrieve local style, historical content, internal-link, or image-context
      references from an already configured collection.
-5. `magick-ai-toolbox/search-image-source`
+5. `npcink-toolbox/search-image-source`
    - Retrieve external image-source candidates and preserve attribution and
      `download_location`.
-6. `magick-ai-toolbox/build-content-discoverability-brief`
+6. `npcink-toolbox/build-content-discoverability-brief`
    - Build suggestion-only SEO, AEO, and GEO instructions and proposal fields
      for one supplied topic or post.
-7. `magick-ai-toolbox/build-ai-article-writing-pack`
+7. `npcink-toolbox/build-ai-article-writing-pack`
    - Build a single OpenClaw-friendly writing context pack for natural-language
      article requests.
-8. `magick-ai-toolbox/build-article-brief`
+8. `npcink-toolbox/build-article-brief`
    - Build a research/image/vector planning bundle when a compact operator
      brief is useful.
-9. `magick-ai-toolbox/build-article-write-plan`
+9. `npcink-toolbox/build-article-write-plan`
    - Convert a reviewed draft into a Core-ready `article_write_plan` handoff.
-10. `magick-ai-toolbox/build-article-media-batch-write-plan`
+10. `npcink-toolbox/build-article-media-batch-write-plan`
    - Convert reviewed drafts and selected image-source candidates into a
      Core-ready `article_media_batch_write_plan` handoff. Reviewed media
      imports may include an optional `file_name` value supplied by the article
@@ -128,43 +128,43 @@ same ability contracts. The channel changes, but the write boundary does not.
 
 | Operator intent | OpenClaw route | Toolbox button flow | Final write path |
 | --- | --- | --- | --- |
-| Suggest taxonomy/tags | Adapter taxonomy terms recipe | Taxonomy/tag recommendations | Core proposal for `magick-ai/set-post-terms` after review |
+| Suggest taxonomy/tags | Adapter taxonomy terms recipe | Taxonomy/tag recommendations | Core proposal for `npcink-abilities-toolkit/set-post-terms` after review |
 | Find internal-link opportunities | Adapter/site-knowledge support recipe | Internal-link candidates | No direct write; future reviewed content patch must go through Core |
 | Find image candidates | Adapter image-source support recipe | Image candidates | No direct write until a candidate adoption plan is reviewed |
 | Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
 | Run publish/readiness preflight | Adapter site-knowledge/support recipe | Publish preflight | No direct write; returns warnings and operator tasks |
 | Adopt one reviewed image candidate | Adapter `image_candidate_adoption_plan` recipe | Adopt New Image | Core proposal for media upload, metadata, and optional featured image |
-| Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | One Core media optimization proposal for reviewed metadata plus `magick-ai/adopt-cloud-media-derivative` |
+| Optimize existing media | Adapter media derivative recipe | Optimize Existing Image | One Core media optimization proposal for reviewed metadata plus `npcink-abilities-toolkit/adopt-cloud-media-derivative` |
 | Repair hard-coded media URLs | Adapter read ability plus Core from-plan | URL repair proposal button | Core proposal for exact-match patch actions |
-| Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan fallback | Core proposal for `magick-ai/create-draft` |
+| Draft one reviewed article | Adapter `article_draft_plan` recipe | Article Write Plan fallback | Core proposal for `npcink-abilities-toolkit/create-draft` |
 | Build article plus featured images | Adapter `article_media_batch_plan` recipe | Article/media batch fallback | Core proposal for draft, media upload, metadata, and featured-image abilities |
 
 Toolbox may make these flows easier to click through, but it must not create a
 separate workflow runtime, direct write path, or approval store for them.
 
 The high-frequency WordPress entrypoint for these fixed flows is the Toolbox
-post editor **Magick AI Content Support** panel. The admin **Content Support**
+post editor **Npcink Content Support** panel. The admin **Content Support**
 tab remains the management, testing, and cross-article surface.
 
 ## Ability Roles
 
 | Ability | Composition role | Output use |
 | --- | --- | --- |
-| `magick-ai-toolbox/get-content-discoverability-context` | `site_context` | Site-level content rules. |
-| `magick-ai-toolbox/validate-content-discoverability-context` | `context_preflight` | Readiness checks before drafting. |
-| `magick-ai-toolbox/vector-search` | `site_knowledge_context` | Cloud-managed site knowledge compatibility pointer. New callers should use `search-site-knowledge`. |
-| `magick-ai-toolbox/search-site-knowledge` | `site_knowledge_context` | Cloud-managed site search, related content, writing context, internal links, refresh suggestions, or image context. |
-| `magick-ai-toolbox/get-site-knowledge-status` | `site_knowledge_status` | Cloud-managed site knowledge coverage and freshness status. |
-| `magick-ai-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content sync or rebuild request for Cloud-managed site knowledge. |
-| `magick-ai-toolbox/search-image-source` | `image_source_candidates` | External image-source candidates with attribution metadata. |
-| `magick-ai-toolbox/build-content-discoverability-brief` | `seo_aeo_geo_brief` | Suggestion-only SEO/AEO/GEO instructions and proposal template. |
-| `magick-ai-toolbox/build-ai-article-writing-pack` | `ai_article_writing_pack` | Convenience fallback for OpenClaw-style natural-language article requests. |
-| `magick-ai-toolbox/build-article-brief` | `article_planning_bundle` | Compact research, image, vector, and handoff notes. |
-| `magick-ai-toolbox/build-article-write-plan` | `core_article_write_plan` | Reviewed draft plan for Core proposal intake. |
-| `magick-ai-toolbox/build-article-batch-write-plan` | `core_article_batch_write_plan` | Reviewed draft batch plan for one Core batch proposal. |
-| `magick-ai-toolbox/build-article-media-batch-write-plan` | `core_article_media_batch_write_plan` | Reviewed article plus image-source plan for Core-governed draft, media upload, metadata, and featured-image actions. |
-| `magick-ai-toolbox/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
-| `magick-ai-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
+| `npcink-toolbox/get-content-discoverability-context` | `site_context` | Site-level content rules. |
+| `npcink-toolbox/validate-content-discoverability-context` | `context_preflight` | Readiness checks before drafting. |
+| `npcink-toolbox/vector-search` | `site_knowledge_context` | Cloud-managed site knowledge compatibility pointer. New callers should use `search-site-knowledge`. |
+| `npcink-toolbox/search-site-knowledge` | `site_knowledge_context` | Cloud-managed site search, related content, writing context, internal links, refresh suggestions, or image context. |
+| `npcink-toolbox/get-site-knowledge-status` | `site_knowledge_status` | Cloud-managed site knowledge coverage and freshness status. |
+| `npcink-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content sync or rebuild request for Cloud-managed site knowledge. |
+| `npcink-toolbox/search-image-source` | `image_source_candidates` | External image-source candidates with attribution metadata. |
+| `npcink-toolbox/build-content-discoverability-brief` | `seo_aeo_geo_brief` | Suggestion-only SEO/AEO/GEO instructions and proposal template. |
+| `npcink-toolbox/build-ai-article-writing-pack` | `ai_article_writing_pack` | Convenience fallback for OpenClaw-style natural-language article requests. |
+| `npcink-toolbox/build-article-brief` | `article_planning_bundle` | Compact research, image, vector, and handoff notes. |
+| `npcink-toolbox/build-article-write-plan` | `core_article_write_plan` | Reviewed draft plan for Core proposal intake. |
+| `npcink-toolbox/build-article-batch-write-plan` | `core_article_batch_write_plan` | Reviewed draft batch plan for one Core batch proposal. |
+| `npcink-toolbox/build-article-media-batch-write-plan` | `core_article_media_batch_write_plan` | Reviewed article plus image-source plan for Core-governed draft, media upload, metadata, and featured-image actions. |
+| `npcink-toolbox/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
+| `npcink-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
 
 ## Output Contract
 
@@ -211,7 +211,7 @@ Every AI caller should:
 `search-image-source` provides image candidates. For public photo/source
 providers it returns external image-source candidates. In explicit
 `ai_generated` mode it may normalize a reviewed generated image URL supplied by
-the caller, or call a host-provided `magick_ai_toolbox_ai_image_generation_request`
+the caller, or call a host-provided `npcink_toolbox_ai_image_generation_request`
 runtime seam and return generated-image candidates. This ability is
 general-purpose: article writing, media planning, page layout, product
 presentation, reference selection, and any other image-dependent AI workflow
@@ -239,7 +239,7 @@ caller must:
 AI-generated candidates are not public image-source search results. They remain
 suggestion-only candidates until Core approval and a local WordPress media
 write ability handles import. To adopt one reviewed candidate, callers should
-build `magick-ai-toolbox/build-image-candidate-adoption-plan` and send the
+build `npcink-toolbox/build-image-candidate-adoption-plan` and send the
 returned `image_candidate_adoption_plan` to Core from-plan intake.
 
 ## Vector Usage

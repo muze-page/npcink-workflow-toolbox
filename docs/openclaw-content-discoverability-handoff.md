@@ -2,7 +2,7 @@
 
 Status: active handoff prompt source.
 
-This document gives OpenClaw and `magick-ai-adapter` the fixed SEO, AEO, and
+This document gives OpenClaw and `npcink-openclaw-adapter` the fixed SEO, AEO, and
 GEO suggestion flow for Toolbox content context. It is prompt guidance and
 channel handoff documentation only. It does not create OpenClaw projection
 truth, Core governance records, or final WordPress writes.
@@ -26,26 +26,26 @@ Layer ownership stays fixed:
 OpenClaw must start with Adapter:
 
 ```text
-GET /wp-json/magick-ai-adapter/v1/health
-GET /wp-json/magick-ai-adapter/v1/help
-GET /wp-json/magick-ai-adapter/v1/capabilities
+GET /wp-json/npcink-openclaw-adapter/v1/health
+GET /wp-json/npcink-openclaw-adapter/v1/help
+GET /wp-json/npcink-openclaw-adapter/v1/capabilities
 ```
 
 Require the three Toolbox ability ids to appear in Core capabilities as
 `direct_read` abilities before using them:
 
 ```text
-magick-ai-toolbox/validate-content-discoverability-context
-magick-ai-toolbox/get-content-discoverability-context
-magick-ai-toolbox/build-content-discoverability-brief
+npcink-toolbox/validate-content-discoverability-context
+npcink-toolbox/get-content-discoverability-context
+npcink-toolbox/build-content-discoverability-brief
 ```
 
 Then run the suggestion flow:
 
-1. Call `magick-ai-toolbox/validate-content-discoverability-context`.
+1. Call `npcink-toolbox/validate-content-discoverability-context`.
 2. Stop for operator input if the validation status is `needs_attention`.
-3. Call `magick-ai-toolbox/get-content-discoverability-context`.
-4. Call `magick-ai-toolbox/build-content-discoverability-brief` for one
+3. Call `npcink-toolbox/get-content-discoverability-context`.
+4. Call `npcink-toolbox/build-content-discoverability-brief` for one
    `post_id` or supplied topic/title/content.
 5. Return proposal-ready suggestions only for fields listed in
    `proposal_allowed_fields`.
@@ -65,15 +65,15 @@ GET /content-discoverability-brief?post_id=POST_ID
 Use this block when giving OpenClaw task instructions:
 
 ```text
-You are a third-party AI caller using Magick AI Adapter.
+You are a third-party AI caller using Npcink Adapter.
 Connect only to Adapter, not directly to Core or Toolbox REST.
 
 Before SEO/AEO/GEO suggestions:
 1. GET /health, GET /help, and GET /capabilities.
 2. Verify these ability ids are direct_read on wp_abilities_rest:
-   - magick-ai-toolbox/validate-content-discoverability-context
-   - magick-ai-toolbox/get-content-discoverability-context
-   - magick-ai-toolbox/build-content-discoverability-brief
+   - npcink-toolbox/validate-content-discoverability-context
+   - npcink-toolbox/get-content-discoverability-context
+   - npcink-toolbox/build-content-discoverability-brief
 3. Run validate-content-discoverability-context first.
 4. If status is needs_attention, stop and ask the operator to update Toolbox
    Content Context.

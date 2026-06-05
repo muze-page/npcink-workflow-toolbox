@@ -2,10 +2,10 @@
 /**
  * REST endpoints for Toolbox admin actions and future clients.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 use WP_Error;
 use WP_REST_Request;
@@ -61,7 +61,7 @@ final class Rest_Controller {
 	}
 
 	public function permission( $request = null ): bool {
-		return (bool) apply_filters( 'magick_ai_toolbox_rest_permission', current_user_can( 'manage_options' ), $request );
+		return (bool) apply_filters( 'npcink_toolbox_rest_permission', current_user_can( 'manage_options' ), $request );
 	}
 
 	public function status(): WP_REST_Response {
@@ -121,8 +121,8 @@ final class Rest_Controller {
 		$vector = trim( sanitize_textarea_field( (string) $request->get_param( 'vector' ) ) );
 		if ( '' === $query && '' === $vector ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_vector_input',
-				__( 'A query or vector field is required for vector search.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_vector_input',
+				__( 'A query or vector field is required for vector search.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -253,8 +253,8 @@ final class Rest_Controller {
 		$post_id = absint( $request->get_param( 'post_id' ) );
 		if ( 0 === $post_id ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_post_id',
-				__( 'A post_id is required for the media brief flow.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_post_id',
+				__( 'A post_id is required for the media brief flow.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -262,8 +262,8 @@ final class Rest_Controller {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return new WP_Error(
-				'magick_ai_toolbox_post_not_found',
-				__( 'The requested post was not found.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_post_not_found',
+				__( 'The requested post was not found.', 'npcink-toolbox' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -287,8 +287,8 @@ final class Rest_Controller {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
 		if ( ! in_array( $intent, array( 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
-				'magick_ai_toolbox_invalid_editor_support_intent',
-				__( 'A supported editor content-support intent is required.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_invalid_editor_support_intent',
+				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -297,8 +297,8 @@ final class Rest_Controller {
 		$query   = $this->editor_support_query( $context );
 		if ( '' === $query ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_editor_context',
-				__( 'A title, excerpt, or post content is required for editor content support.', 'magick-ai-toolbox' ),
+				'npcink_toolbox_missing_editor_context',
+				__( 'A title, excerpt, or post content is required for editor content support.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -403,10 +403,10 @@ final class Rest_Controller {
 		$value = trim( sanitize_textarea_field( (string) $request->get_param( $key ) ) );
 		if ( '' === $value ) {
 			return new WP_Error(
-				'magick_ai_toolbox_missing_' . sanitize_key( $key ),
+				'npcink_toolbox_missing_' . sanitize_key( $key ),
 				sprintf(
 					/* translators: %s: field name. */
-					__( '%s is required.', 'magick-ai-toolbox' ),
+					__( '%s is required.', 'npcink-toolbox' ),
 					$key
 				),
 				array( 'status' => 400 )
@@ -496,7 +496,7 @@ final class Rest_Controller {
 					'name'     => sanitize_text_field( $term->name ),
 					'slug'     => sanitize_title( $term->slug ),
 					'score'    => $score,
-					'reason'   => __( 'Matched against the current title, excerpt, or draft body.', 'magick-ai-toolbox' ),
+					'reason'   => __( 'Matched against the current title, excerpt, or draft body.', 'npcink-toolbox' ),
 				);
 			}
 		}
@@ -549,26 +549,26 @@ final class Rest_Controller {
 			array(
 				'id'     => 'title',
 				'status' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? 'ok' : 'warning',
-				'label'  => __( 'Title', 'magick-ai-toolbox' ),
-				'detail' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? __( 'Title is present.', 'magick-ai-toolbox' ) : __( 'Add a specific title before publishing.', 'magick-ai-toolbox' ),
+				'label'  => __( 'Title', 'npcink-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? __( 'Title is present.', 'npcink-toolbox' ) : __( 'Add a specific title before publishing.', 'npcink-toolbox' ),
 			),
 			array(
 				'id'     => 'excerpt',
 				'status' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? 'ok' : 'warning',
-				'label'  => __( 'Excerpt', 'magick-ai-toolbox' ),
-				'detail' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present.', 'magick-ai-toolbox' ) : __( 'Add an excerpt or meta description candidate.', 'magick-ai-toolbox' ),
+				'label'  => __( 'Excerpt', 'npcink-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present.', 'npcink-toolbox' ) : __( 'Add an excerpt or meta description candidate.', 'npcink-toolbox' ),
 			),
 			array(
 				'id'     => 'terms',
 				'status' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? 'ok' : 'warning',
-				'label'  => __( 'Terms', 'magick-ai-toolbox' ),
-				'detail' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? __( 'At least one category or tag is selected.', 'magick-ai-toolbox' ) : __( 'Review category and tag candidates before publishing.', 'magick-ai-toolbox' ),
+				'label'  => __( 'Terms', 'npcink-toolbox' ),
+				'detail' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? __( 'At least one category or tag is selected.', 'npcink-toolbox' ) : __( 'Review category and tag candidates before publishing.', 'npcink-toolbox' ),
 			),
 			array(
 				'id'     => 'featured_media',
 				'status' => ! empty( $context['featured_media'] ) ? 'ok' : 'warning',
-				'label'  => __( 'Featured image', 'magick-ai-toolbox' ),
-				'detail' => ! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'magick-ai-toolbox' ) : __( 'Review image candidates or select a featured image.', 'magick-ai-toolbox' ),
+				'label'  => __( 'Featured image', 'npcink-toolbox' ),
+				'detail' => ! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-toolbox' ) : __( 'Review image candidates or select a featured image.', 'npcink-toolbox' ),
 			),
 		);
 
@@ -602,10 +602,10 @@ final class Rest_Controller {
 
 	private function disabled_error( string $label ): WP_Error {
 		return new WP_Error(
-			'magick_ai_toolbox_disabled',
+			'npcink_toolbox_disabled',
 			sprintf(
 				/* translators: %s: feature label. */
-				__( 'Enable %s in Magick AI Toolbox settings before running this tool.', 'magick-ai-toolbox' ),
+				__( 'Enable %s in Npcink Toolbox settings before running this tool.', 'npcink-toolbox' ),
 				$label
 			),
 			array( 'status' => 403 )

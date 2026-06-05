@@ -1,5 +1,5 @@
 {
-  "name": "magick-ai/magick-ai-toolbox",
+  "name": "npcink/npcink-toolbox",
   "description": "WordPress AI toolbox plugin for Cloud-managed web search, Cloud-managed image-source candidates, Qdrant vector search, and fixed-flow operator actions.",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
@@ -10,8 +10,8 @@
     "lint:php": "php tests/lint.php",
     "test": "php tests/run.php",
     "check:wporg": "@php scripts/check-wordpress-org-review-rules.php",
-    "package:release": "rm -rf build/magick-ai-toolbox build/magick-ai-toolbox.zip && mkdir -p build && rsync -a --delete --exclude-from=.distignore ./ build/magick-ai-toolbox/ && cd build && zip -qr magick-ai-toolbox.zip magick-ai-toolbox",
-    "plugin-check:release": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color plugin check magick-ai-toolbox --format=table --exclude-directories=tests,.git,vendor,node_modules,build,docs --exclude-files=.gitignore,.distignore,AGENTS.md,README.md,composer.json,composer.lock,phpcs.xml,phpcs.xml.dist,phpstan.neon,phpstan.neon.dist",
+    "package:release": "rm -rf build/npcink-toolbox build/npcink-toolbox.zip && mkdir -p build && rsync -a --delete --exclude-from=.distignore ./ build/npcink-toolbox/ && cd build && zip -qr npcink-toolbox.zip npcink-toolbox",
+    "plugin-check:release": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color plugin check npcink-toolbox --format=table --exclude-directories=tests,.git,vendor,node_modules,build,docs,scripts --exclude-files=.gitignore,.distignore,AGENTS.md,README.md,composer.json,composer.lock,phpcs.xml,phpcs.xml.dist,phpstan.neon,phpstan.neon.dist",
     "release:verify": [
       "@test:all",
       "@check:wporg",

@@ -2,10 +2,10 @@
 /**
  * Post editor entrypoint for fixed content-support flows.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
-namespace Magick_AI_Toolbox;
+namespace Npcink_Toolbox;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,27 +16,27 @@ final class Editor_Content_Support {
 		}
 
 		wp_enqueue_style(
-			'magick-ai-toolbox-editor-content-support',
-			MAGICK_AI_TOOLBOX_URL . 'assets/editor-content-support.css',
+			'npcink-toolbox-editor-content-support',
+			NPCINK_TOOLBOX_URL . 'assets/editor-content-support.css',
 			array(),
-			MAGICK_AI_TOOLBOX_VERSION
+			NPCINK_TOOLBOX_VERSION
 		);
 
 		wp_enqueue_script(
-			'magick-ai-toolbox-editor-content-support',
-			MAGICK_AI_TOOLBOX_URL . 'assets/editor-content-support.js',
+			'npcink-toolbox-editor-content-support',
+			NPCINK_TOOLBOX_URL . 'assets/editor-content-support.js',
 			array( 'wp-api-fetch', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-element', 'wp-i18n', 'wp-plugins' ),
-			MAGICK_AI_TOOLBOX_VERSION,
+			NPCINK_TOOLBOX_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'magick-ai-toolbox-editor-content-support',
-			'MagickAIToolboxEditorSupport',
+			'npcink-toolbox-editor-content-support',
+			'NpcinkToolboxEditorSupport',
 			array(
 				'restUrl'  => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
 				'nonce'    => wp_create_nonce( 'wp_rest' ),
-				'adminUrl' => esc_url_raw( admin_url( 'admin.php?page=magick-ai-toolbox&toolbox_tab=tools' ) ),
+				'adminUrl' => esc_url_raw( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=tools' ) ),
 			)
 		);
 	}

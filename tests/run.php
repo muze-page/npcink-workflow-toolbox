@@ -2,7 +2,7 @@
 /**
  * Static contract checks for the first Toolbox release.
  *
- * @package Magick_AI_Toolbox
+ * @package Npcink_Toolbox
  */
 
 $root = dirname( __DIR__ );
@@ -16,8 +16,8 @@ function toolbox_assert( bool $condition, string $message ): void {
 	echo "PASS: {$message}\n";
 }
 
-$main = file_get_contents( $root . '/magick-ai-toolbox.php' );
-toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Magick AI Toolbox' ), 'Plugin header is present.' );
+$main = file_get_contents( $root . '/npcink-toolbox.php' );
+toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Toolbox' ), 'Plugin header is present.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Site_Knowledge_Auto_Sync.php' ), 'Plugin bootstrap loads the Site Knowledge auto-sync bridge.' );
 toolbox_assert( false !== strpos( $main, 'register_deactivation_hook' ) && false !== strpos( $main, 'Site_Knowledge_Auto_Sync::class' ), 'Plugin deactivation clears Site Knowledge auto-sync cron hooks.' );
@@ -59,11 +59,11 @@ foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repea
 }
 
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );
-toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'magick-ai';" ), 'Admin page targets the shared Magick AI parent menu.' );
-toolbox_assert( false !== strpos( $admin_page, "private const MENU_SLUG        = 'magick-ai-toolbox';" ), 'Admin page uses stable Toolbox menu slug.' );
+toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'npcink';" ), 'Admin page targets the shared Npcink parent menu.' );
+toolbox_assert( false !== strpos( $admin_page, "private const MENU_SLUG        = 'npcink-toolbox';" ), 'Admin page uses stable Toolbox menu slug.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_submenu_page' ) && false !== strpos( $admin_page, '45' ), 'Admin page registers after Abilities and before Cloud Addon.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_management_page' ), 'Admin page keeps a Tools fallback for standalone installs.' );
-toolbox_assert( false === strpos( $admin_page, 'magick-ai-toolbox__status-strip' ), 'Admin page omits the stale local status strip now owned by Cloud and focused panels.' );
+toolbox_assert( false === strpos( $admin_page, 'npcink-toolbox__status-strip' ), 'Admin page omits the stale local status strip now owned by Cloud and focused panels.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tabs' ), 'Admin page separates context, site knowledge, tools, and Cloud checks into top-level tabs.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="context" aria-selected="true"' ), 'Content Context is the default admin tab.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="site-knowledge"' ) && false !== strpos( $admin_page, 'data-toolbox-site-knowledge' ), 'Admin page exposes a Site Knowledge operation panel.' );
@@ -82,7 +82,7 @@ toolbox_assert( false !== strpos( $admin_page, "'endpoint'    => 'free-gpt55/con
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-target="cloud-checks" aria-selected="false"' ) && false !== strpos( $admin_page, 'Cloud Checks' ), 'Cloud checks use their own top-level tab id and label.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tab-panel="cloud-checks"' ), 'Cloud checks are moved out of the default tools view.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-cloud-checks' ) && false !== strpos( $admin_page, 'data-toolbox-cloud-check-panel' ), 'Cloud checks use a single active verification workspace.' );
-toolbox_assert( false !== strpos( $admin_page, 'magick-ai-toolbox__cloud-check-tabs' ) && false !== strpos( $admin_page, 'magick-ai-toolbox__cloud-check-tab' ), 'Cloud check groups use horizontal sub tabs near the check heading.' );
+toolbox_assert( false !== strpos( $admin_page, 'npcink-toolbox__cloud-check-tabs' ) && false !== strpos( $admin_page, 'npcink-toolbox__cloud-check-tab' ), 'Cloud check groups use horizontal sub tabs near the check heading.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-cloud-check-groups' ) && false !== strpos( $admin_page, 'data-toolbox-cloud-check-group-target="search-test"' ) && false !== strpos( $admin_page, 'data-toolbox-cloud-check-group-target="site-knowledge-search"' ), 'Cloud checks mirror the Context left-list and right-detail layout.' );
 toolbox_assert( false === strpos( $admin_page, 'data-toolbox-connector-providers' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-target' ) && false === strpos( $admin_page, 'data-toolbox-connector-provider-panel' ), 'Cloud checks no longer expose provider rail configuration locally.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-cloud-check-target="search" aria-selected="true"' ), 'Search is the default Cloud check section for Cloud web search testing.' );
@@ -95,13 +95,13 @@ toolbox_assert( false !== strpos( $admin_page, 'Manage index' ) && false !== str
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-cloud-check-panel="image"' ) && false !== strpos( $admin_page, 'Image source smoke test' ) && false !== strpos( $admin_page, 'Test Cloud image source' ) && false !== strpos( $admin_page, 'Candidate count' ) && false !== strpos( $admin_page, '<option value="auto">' ), 'Image connector exposes a Cloud auto provider smoke-test flow.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-cloud-check-group-target="image-derivative-preview"' ) && false !== strpos( $admin_page, 'data-toolbox-media-derivative-preview-only' ) && false !== strpos( $admin_page, 'Open Optimize Existing Image' ), 'Cloud Checks Image splits preview-only media derivative checks from Core handoff.' );
 toolbox_assert( false === strpos( $admin_page, '<option value="tavily">' ) && false === strpos( $admin_page, '<option value="bocha">' ) && false === strpos( $admin_page, '<option value="apify">' ) && false === strpos( $admin_page, 'Enhance returned pages with Jina Reader' ), 'Cloud Search checks use Cloud auto execution without provider or Jina controls.' );
-toolbox_assert( false === strpos( $admin_page, 'magick-ai-toolbox__connector-status' ) && false === strpos( $admin_page, 'Connector status catalog' ), 'Connector panels go directly from tabs into verification tools.' );
+toolbox_assert( false === strpos( $admin_page, 'npcink-toolbox__connector-status' ) && false === strpos( $admin_page, 'Connector status catalog' ), 'Connector panels go directly from tabs into verification tools.' );
 toolbox_assert( false === strpos( $admin_page, 'Local MVP config' ) && false === strpos( $admin_page, 'Future connector owner' ), 'Connector panels no longer present local or reserved vector provider ownership.' );
 toolbox_assert( false === strpos( $admin_page, 'Pinecone' ) && false === strpos( $admin_page, 'Weaviate' ), 'Provider lists do not expose reserved vector slots locally.' );
 toolbox_assert( false === strpos( $admin_page, 'search-bocha' ) && false === strpos( $admin_page, 'search-jina-reader' ) && false === strpos( $admin_page, 'tavily_api_key' ), 'Search provider keys and panels are removed from the connector UI.' );
 toolbox_assert( false === strpos( $admin_page, 'unsplash_access_key' ) && false === strpos( $admin_page, 'pixabay_api_key' ) && false === strpos( $admin_page, 'pexels_api_key' ), 'Public image-source provider keys are not configurable in local Toolbox.' );
 toolbox_assert( false === strpos( $admin_page, 'bocha_api_key' ) && false === strpos( $admin_page, 'enable_jina_reader' ), 'Bocha and Jina Reader search settings are not configurable locally.' );
-toolbox_assert( false === strpos( $admin_page, 'admin.php?page=magick-ai-cloud-addon' ) && false === strpos( $admin_page, 'https://qdrant.tech/' ), 'Connector verification panels omit Cloud provider catalog links and local vector vendor links.' );
+toolbox_assert( false === strpos( $admin_page, 'admin.php?page=npcink-cloud-addon' ) && false === strpos( $admin_page, 'https://qdrant.tech/' ), 'Connector verification panels omit Cloud provider catalog links and local vector vendor links.' );
 toolbox_assert( false !== strpos( $admin_page, 'Search' ) && false !== strpos( $admin_page, 'Cloud managed' ), 'Cloud check tabs keep Cloud-managed readiness labels.' );
 toolbox_assert( false === strpos( $admin_page, 'Cloud owns the vector database' ) && false !== strpos( $admin_page, 'Image source smoke test' ), 'Connector verification copy preserves image-source testing without vector detail.' );
 toolbox_assert( false === strpos( $admin_page, 'Jina test setup' ) && false === strpos( $admin_page, 'jina-embeddings-v3' ), 'Vector connector does not include local embedding setup guidance.' );
@@ -120,7 +120,7 @@ toolbox_assert( false === strpos( $admin_page, 'Content Support Brief' ), 'Combi
 toolbox_assert( false !== strpos( $admin_page, 'Article Assistant Fallback' ) && false !== strpos( $admin_page, 'render_article_assistant_tool' ), 'Tool actions include a dedicated Article Assistant fallback workbench panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'reviewed_draft_markdown' ) && false !== strpos( $admin_page, 'Build assistant artifact' ), 'Article Assistant panel collects optional reviewed draft input for Core-ready handoff.' );
 toolbox_assert( false !== strpos( $admin_page, 'Reviewed Draft Handoff' ) && false !== strpos( $admin_page, 'render_article_plan_tool' ), 'Tool actions include a dedicated Reviewed Draft Handoff fallback panel.' );
-toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !== strpos( $admin_page, 'Final execution remains magick-ai/create-draft after Core approval.' ), 'Article Write Plan panel collects reviewed draft content and preserves Core handoff copy.' );
+toolbox_assert( false !== strpos( $admin_page, 'content_markdown' ) && false !== strpos( $admin_page, 'Final execution remains npcink-abilities-toolkit/create-draft after Core approval.' ), 'Article Write Plan panel collects reviewed draft content and preserves Core handoff copy.' );
 toolbox_assert( false !== strpos( $admin_page, 'Adopt New Image' ) && false !== strpos( $admin_page, 'render_image_candidate_adoption_tool' ), 'Tool actions include an Adopt New Image panel.' );
 toolbox_assert( false !== strpos( $admin_page, 'Selected image URL' ) && false !== strpos( $admin_page, 'Source type' ) && false !== strpos( $admin_page, 'Advanced candidate details' ) && false !== strpos( $admin_page, 'Build import proposal plan' ), 'Adopt New Image panel hides image_candidate internals behind a simpler button flow.' );
 toolbox_assert( false !== strpos( $admin_page, 'Candidate JSON' ) && false !== strpos( $admin_page, 'Toolbox does not import media directly' ), 'Adopt New Image panel keeps advanced candidate JSON optional and preserves no-write copy.' );
@@ -137,20 +137,20 @@ toolbox_assert( false !== strpos( $admin_page, 'Watermark override' ) && false !
 toolbox_assert( false !== strpos( $admin_page, 'name="watermark_text"' ) && false !== strpos( $admin_page, 'name="watermark_font_size"' ) && false !== strpos( $admin_page, 'name="watermark_color"' ) && false !== strpos( $admin_page, 'name="watermark_background"' ), 'Media Derivative Preview exposes text watermark fields for OpenClaw-equivalent Cloud request payloads.' );
 toolbox_assert( false !== strpos( $admin_page, 'Core remains the policy owner and final WordPress write owner' ), 'Media Derivative Preview copy keeps Core as policy and final write owner.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-context-group-target="boundaries-preview"' ) && false !== strpos( $admin_page, 'data-toolbox-context-group-panel="boundaries-preview" hidden' ) && false !== strpos( $admin_page, 'Ability preview' ), 'Lower-frequency details stay out of the default working view.' );
-toolbox_assert( false !== strpos( $admin_page, '<div class="magick-ai-toolbox__result is-empty"' ), 'Tool result panels use structured result containers instead of raw preformatted output.' );
+toolbox_assert( false !== strpos( $admin_page, '<div class="npcink-toolbox__result is-empty"' ), 'Tool result panels use structured result containers instead of raw preformatted output.' );
 toolbox_assert( false !== strpos( $admin_page, 'contextDrafts' ) && false !== strpos( $admin_page, 'get_ai_blog_context_template' ), 'Content context exposes an editable AI technology blog draft template.' );
 toolbox_assert( false !== strpos( $admin_page, 'get_site_content_context_suggestion' ) && false !== strpos( $admin_page, 'get_posts(' ) && false !== strpos( $admin_page, 'get_terms(' ), 'Content context can draft suggestions from current public site content signals.' );
 toolbox_assert( false !== strpos( $admin_page, "data-toolbox-context-draft=\"aiBlog\"" ) && false !== strpos( $admin_page, "data-toolbox-context-draft=\"site\"" ), 'Content context includes template and current-site draft buttons.' );
 toolbox_assert( false !== strpos( $admin_page, 'SEO fields AI may suggest' ) && false !== strpos( $admin_page, 'AEO fields AI may suggest' ) && false !== strpos( $admin_page, 'GEO fields AI may suggest' ), 'Content context groups proposal fields by SEO, AEO, and GEO.' );
 toolbox_assert( false !== strpos( $admin_page, 'Drafts are editable suggestions and do not change posts, media, SEO meta, or provider settings.' ), 'Content context draft copy preserves suggestion-only boundaries.' );
 toolbox_assert( false !== strpos( $admin_page, 'JSON_UNESCAPED_UNICODE' ), 'Content context ability preview keeps non-Latin text readable.' );
-toolbox_assert( false !== strpos( $admin_page, 'wp_enqueue_media' ) && false !== strpos( $admin_page, "'adapterRestUrl'" ) && false !== strpos( $admin_page, "rest_url( 'magick-ai-adapter/v1' )" ), 'Media Derivative Preview loads the WordPress media picker and Adapter REST URL.' );
+toolbox_assert( false !== strpos( $admin_page, 'wp_enqueue_media' ) && false !== strpos( $admin_page, "'adapterRestUrl'" ) && false !== strpos( $admin_page, "rest_url( 'npcink-openclaw-adapter/v1' )" ), 'Media Derivative Preview loads the WordPress media picker and Adapter REST URL.' );
 toolbox_assert( false !== strpos( $admin_page, "'dateTime'      => \$this->datetime_display_config()" ), 'Admin page localizes WordPress datetime display config for dynamic results.' );
 toolbox_assert( false !== strpos( $admin_page, 'datetime_display_config' ) && false !== strpos( $admin_page, "'format'        => 'Y-m-d H:i:s'" ) && false !== strpos( $admin_page, 'wp_timezone_string' ), 'Admin page exposes the WordPress site timezone and standard display format.' );
 
 $admin_js = file_get_contents( $root . '/assets/admin.js' );
 toolbox_assert( false !== strpos( $admin_js, 'initTopTabs' ) && false !== strpos( $admin_js, 'initToolSwitcher' ), 'Admin JavaScript initializes section tabs and tool switching.' );
-toolbox_assert( false !== strpos( $admin_js, 'function formatDateTime' ) && false !== strpos( $admin_js, 'window.MagickAIToolbox.dateTime' ) && false !== strpos( $admin_js, "return parts.year + '-' + parts.month + '-' + parts.day + ' ' + hour" ), 'Admin JavaScript formats visible timestamps through the localized WordPress timezone.' );
+toolbox_assert( false !== strpos( $admin_js, 'function formatDateTime' ) && false !== strpos( $admin_js, 'window.NpcinkToolbox.dateTime' ) && false !== strpos( $admin_js, "return parts.year + '-' + parts.month + '-' + parts.day + ' ' + hour" ), 'Admin JavaScript formats visible timestamps through the localized WordPress timezone.' );
 toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Last sync', formatDateTime(coverage.last_sync_at))" ), 'Site Knowledge last sync display uses WordPress datetime formatting.' );
 toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Expires', formatDateTime(derivative.expires_at))" ) && false !== strpos( $admin_js, "appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at))" ), 'Media derivative expiry display uses WordPress datetime formatting.' );
 toolbox_assert( false !== strpos( $admin_js, 'initCloudCheckSwitcher' ) && false !== strpos( $admin_js, 'data-toolbox-cloud-check-target' ), 'Admin JavaScript initializes Cloud check section switching.' );
@@ -187,17 +187,17 @@ toolbox_assert( false !== strpos( $admin_js, 'Suggested filename' ) && false !==
 toolbox_assert( false !== strpos( $admin_js, 'One-run planning artifact' ) && false !== strpos( $admin_js, 'Core policy' ), 'Media derivative renderer keeps one-run Core policy handoff visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'initMediaDerivativeControls' ) && false !== strpos( $admin_js, 'runMediaDerivative' ) && false !== strpos( $admin_js, 'submitMediaDerivativeProposal' ) && false !== strpos( $admin_js, 'submitMediaReferenceRepairProposal' ) && false !== strpos( $admin_js, 'submitMediaSettingsReferenceRepairProposal' ), 'Admin JavaScript runs the media derivative preview, replacement proposal, post reference repair, and settings reference repair proposal flows through Adapter routes.' );
 toolbox_assert( false !== strpos( $admin_js, 'data-toolbox-media-derivative-preview-only' ) && false !== strpos( $admin_js, 'createMediaDerivativePreview(input, mediaDetails, previewOnly)' ) && false !== strpos( $admin_js, 'This check does not submit a Core proposal or write media.' ), 'Admin JavaScript keeps Cloud Check media derivative previews proposal-free.' );
-toolbox_assert( false !== strpos( $admin_js, 'media-derivative-runs' ) && false !== strpos( $admin_js, 'media-derivative-proposal-payload' ) && false !== strpos( $admin_js, "ability_id: 'magick-ai/adopt-cloud-media-derivative'" ), 'Media derivative preview uses Adapter recipe routes and submits a governed local replacement proposal.' );
-toolbox_assert( false !== strpos( $admin_js, 'resolveMediaAttachmentUrl' ) && false !== strpos( $admin_js, "ability_id: 'magick-ai/resolve-media-attachment-by-url'" ) && false !== strpos( $admin_js, 'data-toolbox-use-media-resolution-candidate' ), 'Media derivative URL resolution calls the local read-only resolver ability and lets the operator choose a candidate.' );
-toolbox_assert( false !== strpos( $admin_js, 'buildMediaDerivativeBatchPlan' ) && false !== strpos( $admin_js, "ability_id: 'magick-ai/build-media-derivative-batch-plan'" ) && false !== strpos( $admin_js, 'runMediaDerivativeBatchPreviews' ) && false !== strpos( $admin_js, 'submitMediaDerivativeBatchProposals' ), 'Media derivative batch flow builds a read-only plan, previews selected candidates, and submits selected Core proposals.' );
+toolbox_assert( false !== strpos( $admin_js, 'media-derivative-runs' ) && false !== strpos( $admin_js, 'media-derivative-proposal-payload' ) && false !== strpos( $admin_js, "ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative'" ), 'Media derivative preview uses Adapter recipe routes and submits a governed local replacement proposal.' );
+toolbox_assert( false !== strpos( $admin_js, 'resolveMediaAttachmentUrl' ) && false !== strpos( $admin_js, "ability_id: 'npcink-abilities-toolkit/resolve-media-attachment-by-url'" ) && false !== strpos( $admin_js, 'data-toolbox-use-media-resolution-candidate' ), 'Media derivative URL resolution calls the local read-only resolver ability and lets the operator choose a candidate.' );
+toolbox_assert( false !== strpos( $admin_js, 'buildMediaDerivativeBatchPlan' ) && false !== strpos( $admin_js, "ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan'" ) && false !== strpos( $admin_js, 'runMediaDerivativeBatchPreviews' ) && false !== strpos( $admin_js, 'submitMediaDerivativeBatchProposals' ), 'Media derivative batch flow builds a read-only plan, previews selected candidates, and submits selected Core proposals.' );
 toolbox_assert( false !== strpos( $admin_js, 'resolveMediaBatchScopePreset' ) && false !== strpos( $admin_js, 'resolveMediaBatchRecipeDefaults' ) && false !== strpos( $admin_js, 'current_month' ) && false !== strpos( $admin_js, 'smart_optimize' ), 'Media derivative batch flow derives Adapter inputs from fixed scope and processing-goal presets.' );
 toolbox_assert( false !== strpos( $admin_js, 'syncMediaBatchFixedFlow' ) && false !== strpos( $admin_js, "recipeField.value === 'resize_only'" ) && false !== strpos( $admin_js, "scopeField.value === 'custom'" ), 'Media derivative batch flow keeps visible controls aligned with fixed presets.' );
 toolbox_assert( false !== strpos( $admin_js, 'mediaDerivativeWatermarkInput' ) && false !== strpos( $admin_js, 'watermark_enabled: false' ) && false !== strpos( $admin_js, 'Object.assign({}, candidate.cloud_request_input || {}, watermarkInput)' ), 'Media derivative preview and batch flows preserve Core default watermarks and support explicit one-run watermark overrides.' );
 toolbox_assert( false !== strpos( $admin_js, "type: 'text'" ) && false !== strpos( $admin_js, 'watermark_text' ) && false !== strpos( $admin_js, 'font_size' ) && false !== strpos( $admin_js, 'Text "' ) && false !== strpos( $admin_js, 'Image logo' ), 'Media derivative JavaScript builds and labels both text and image watermark payloads.' );
 toolbox_assert( false !== strpos( $admin_js, 'cloud_media_derivative_watermark_source_missing' ) && false !== strpos( $admin_js, 'Switch this run to Text watermark' ), 'Media derivative errors give actionable watermark mode guidance.' );
-toolbox_assert( false !== strpos( $admin_js, "ability_id: 'magick-ai/build-media-reference-repair-plan'" ) && false !== strpos( $admin_js, "'proposals/from-plan'" ) && false !== strpos( $admin_js, 'patch-post-content actions' ), 'Media reference repair flow builds a read-only plan and submits it to Core from-plan intake.' );
-toolbox_assert( false !== strpos( $admin_js, "ability_id: 'magick-ai/build-media-settings-reference-repair-plan'" ) && false !== strpos( $admin_js, 'patch-setting-value actions' ) && false !== strpos( $admin_js, 'excluded_formats' ), 'Media settings reference repair flow builds a filtered read-only plan and submits it to Core from-plan intake.' );
-toolbox_assert( false !== strpos( $admin_js, 'derivative_artifact' ) && false !== strpos( $admin_js, 'magick-ai-cloud-backup' ), 'Media derivative replacement proposal carries artifact evidence and backup intent.' );
+toolbox_assert( false !== strpos( $admin_js, "ability_id: 'npcink-abilities-toolkit/build-media-reference-repair-plan'" ) && false !== strpos( $admin_js, "'proposals/from-plan'" ) && false !== strpos( $admin_js, 'patch-post-content actions' ), 'Media reference repair flow builds a read-only plan and submits it to Core from-plan intake.' );
+toolbox_assert( false !== strpos( $admin_js, "ability_id: 'npcink-abilities-toolkit/build-media-settings-reference-repair-plan'" ) && false !== strpos( $admin_js, 'patch-setting-value actions' ) && false !== strpos( $admin_js, 'excluded_formats' ), 'Media settings reference repair flow builds a filtered read-only plan and submits it to Core from-plan intake.' );
+toolbox_assert( false !== strpos( $admin_js, 'derivative_artifact' ) && false !== strpos( $admin_js, 'npcink-cloud-backup' ), 'Media derivative replacement proposal carries artifact evidence and backup intent.' );
 toolbox_assert( false !== strpos( $admin_js, 'withRestNonce' ) && false !== strpos( $admin_js, 'derivative.preview_url' ) && false !== strpos( $admin_js, 'Same-origin signed preview proxy' ), 'Media derivative preview renders the local signed Adapter proxy URL with a REST nonce.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderOperatorFeedback' ) && false !== strpos( $admin_js, 'operator_feedback' ), 'Admin JavaScript renders operator feedback from governed handoffs.' );
 toolbox_assert( false !== strpos( $admin_js, 'formatErrorMessage' ) && false !== strpos( $admin_js, 'renderErrorResult' ) && false !== strpos( $admin_js, 'Error payload' ), 'Admin JavaScript renders nested REST and Cloud errors without collapsing them to Array.' );
@@ -223,7 +223,7 @@ toolbox_assert( false !== strpos( $development_workflow, 'WordPress site timezon
 
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
 toolbox_assert( false !== strpos( $editor_support, 'assets/editor-content-support.js' ) && false !== strpos( $editor_support, 'assets/editor-content-support.css' ), 'Post editor content support enqueues its editor assets.' );
-toolbox_assert( false !== strpos( $editor_support, 'MagickAIToolboxEditorSupport' ) && false !== strpos( $editor_support, "wp_create_nonce( 'wp_rest' )" ), 'Post editor content support localizes REST configuration and nonce.' );
+toolbox_assert( false !== strpos( $editor_support, 'NpcinkToolboxEditorSupport' ) && false !== strpos( $editor_support, "wp_create_nonce( 'wp_rest' )" ), 'Post editor content support localizes REST configuration and nonce.' );
 
 $auto_sync = file_get_contents( $root . '/includes/Site_Knowledge_Auto_Sync.php' );
 toolbox_assert( false !== strpos( $auto_sync, 'transition_post_status' ) && false !== strpos( $auto_sync, "add_action( 'save_post'" ), 'Site Knowledge auto-sync watches allow-listed public content publish and update events.' );
@@ -231,14 +231,14 @@ toolbox_assert( false !== strpos( $auto_sync, 'trashed_post' ) && false !== strp
 toolbox_assert( false !== strpos( $auto_sync, 'transition_comment_status' ) && false !== strpos( $auto_sync, 'comment_post' ) && false !== strpos( $auto_sync, 'edit_comment' ), 'Site Knowledge auto-sync watches approved comment publish and edit events.' );
 toolbox_assert( false !== strpos( $auto_sync, 'trashed_comment' ) && false !== strpos( $auto_sync, 'deleted_comment' ), 'Site Knowledge auto-sync watches approved comment removal events.' );
 toolbox_assert( false !== strpos( $auto_sync, 'request_site_knowledge_sync' ) && false !== strpos( $auto_sync, "'sync_mode' => 'refresh'" ) && false !== strpos( $auto_sync, "'post_ids'  =>" ) && false !== strpos( $auto_sync, 'array_slice( $post_ids' ), 'Site Knowledge auto-sync uses Cloud refresh for affected post IDs.' );
-toolbox_assert( false !== strpos( $auto_sync, 'wp_schedule_single_event' ) && false !== strpos( $auto_sync, 'magick_ai_toolbox_site_knowledge_auto_sync_queue' ), 'Site Knowledge auto-sync queues debounced background work instead of blocking content actions.' );
+toolbox_assert( false !== strpos( $auto_sync, 'wp_schedule_single_event' ) && false !== strpos( $auto_sync, 'npcink_toolbox_site_knowledge_auto_sync_queue' ), 'Site Knowledge auto-sync queues debounced background work instead of blocking content actions.' );
 toolbox_assert( false !== strpos( $auto_sync, 'wp_schedule_event' ) && false !== strpos( $auto_sync, "'daily'" ) && false !== strpos( $auto_sync, 'queue_recent_public_content' ), 'Site Knowledge auto-sync runs a low-frequency reconciliation safety net.' );
 toolbox_assert( false !== strpos( $auto_sync, 'MAX_RETRY_ATTEMPTS' ) && false !== strpos( $auto_sync, 'retry_or_drop_queue' ), 'Site Knowledge auto-sync limits background retries when Cloud is unavailable.' );
-toolbox_assert( false !== strpos( $auto_sync, 'DEFAULT_POST_TYPES' ) && false !== strpos( $auto_sync, 'magick_ai_toolbox_site_knowledge_post_types' ) && false !== strpos( $auto_sync, "'attachment' !== \$post_type" ), 'Site Knowledge auto-sync uses an explicit allow-list and excludes attachments by default.' );
+toolbox_assert( false !== strpos( $auto_sync, 'DEFAULT_POST_TYPES' ) && false !== strpos( $auto_sync, 'npcink_toolbox_site_knowledge_post_types' ) && false !== strpos( $auto_sync, "'attachment' !== \$post_type" ), 'Site Knowledge auto-sync uses an explicit allow-list and excludes attachments by default.' );
 toolbox_assert( false !== strpos( $auto_sync, 'health_snapshot' ) && false !== strpos( $auto_sync, 'DISABLE_WP_CRON' ) && false !== strpos( $auto_sync, 'cron_command' ), 'Site Knowledge auto-sync exposes local queue health and server cron guidance.' );
 
 $editor_js = file_get_contents( $root . '/assets/editor-content-support.js' );
-toolbox_assert( false !== strpos( $editor_js, 'PluginDocumentSettingPanel' ) && false !== strpos( $editor_js, 'Magick AI Content Support' ), 'Editor JavaScript registers a Magick AI Content Support document panel.' );
+toolbox_assert( false !== strpos( $editor_js, 'PluginDocumentSettingPanel' ) && false !== strpos( $editor_js, 'Npcink Content Support' ), 'Editor JavaScript registers a Npcink Content Support document panel.' );
 foreach ( array( 'publish_preflight', 'taxonomy_tags', 'internal_links', 'image_candidates' ) as $editor_intent ) {
 	toolbox_assert( false !== strpos( $editor_js, $editor_intent ), "Editor Content Support exposes fixed flow intent {$editor_intent}." );
 }
@@ -246,27 +246,27 @@ toolbox_assert( false !== strpos( $editor_js, 'editor/content-support' ) && fals
 toolbox_assert( false !== strpos( $editor_js, 'Suggestions only. Final writes require Core approval.' ), 'Editor Content Support preserves suggestion-only Core-governed copy.' );
 
 $editor_css = file_get_contents( $root . '/assets/editor-content-support.css' );
-toolbox_assert( false !== strpos( $editor_css, 'magick-ai-toolbox-editor-support__flow' ) && false !== strpos( $editor_css, 'magick-ai-toolbox-editor-support__result' ), 'Editor Content Support CSS styles fixed flow rows and result summaries.' );
+toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__flow' ) && false !== strpos( $editor_css, 'npcink-toolbox-editor-support__result' ), 'Editor Content Support CSS styles fixed flow rows and result summaries.' );
 
 $admin_css = file_get_contents( $root . '/assets/admin.css' );
-toolbox_assert( false !== strpos( $admin_css, '.magick-ai-toolbox__usage-list' ), 'Admin CSS styles Site Knowledge usage scenarios as compact utility rows.' );
-toolbox_assert( false !== strpos( $admin_css, '.magick-ai-toolbox__tool-group-label' ), 'Admin CSS styles grouped Content Support tool labels.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-summary' ), 'Admin CSS styles summary-first result panels.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__result-details' ), 'Admin CSS styles collapsed result detail disclosures.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__image-preview' ), 'Admin CSS styles adoption result image previews.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__image-thumb' ), 'Admin CSS supports browser image-source previews.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__cloud-check-tabs' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__cloud-check-tab.is-active' ), 'Admin CSS styles Cloud Check sub tabs.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__cloud-check-group-workspace' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__cloud-check-group-button.is-active' ), 'Admin CSS styles Cloud Check detail groups like Context detail groups.' );
-toolbox_assert( false === strpos( $admin_css, 'magick-ai-toolbox__connector-provider-workspace' ) && false === strpos( $admin_css, 'magick-ai-toolbox__connector-provider-button.is-active' ), 'Admin CSS removes dead connector provider rail styles.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__inline-form > .button' ) && false !== strpos( $admin_css, 'margin-top: 16px' ), 'Admin CSS keeps inline form buttons separated from preceding fields.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__context-tabs' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__context-group-workspace' ), 'Admin CSS styles content context tabs and field rail.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__media-picker' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__inline-actions' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__derivative-preview' ), 'Admin CSS supports media derivative picker, action controls, and derivative preview image.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__url-resolution' ), 'Admin CSS supports media URL resolution evidence.' );
-toolbox_assert( false !== strpos( $admin_css, 'magick-ai-toolbox__batch-panel' ) && false !== strpos( $admin_css, 'magick-ai-toolbox__batch-row' ), 'Admin CSS supports media derivative batch planning rows.' );
+toolbox_assert( false !== strpos( $admin_css, '.npcink-toolbox__usage-list' ), 'Admin CSS styles Site Knowledge usage scenarios as compact utility rows.' );
+toolbox_assert( false !== strpos( $admin_css, '.npcink-toolbox__tool-group-label' ), 'Admin CSS styles grouped Content Support tool labels.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__result-summary' ), 'Admin CSS styles summary-first result panels.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__result-details' ), 'Admin CSS styles collapsed result detail disclosures.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__image-preview' ), 'Admin CSS styles adoption result image previews.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__image-thumb' ), 'Admin CSS supports browser image-source previews.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__cloud-check-tabs' ) && false !== strpos( $admin_css, 'npcink-toolbox__cloud-check-tab.is-active' ), 'Admin CSS styles Cloud Check sub tabs.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__cloud-check-group-workspace' ) && false !== strpos( $admin_css, 'npcink-toolbox__cloud-check-group-button.is-active' ), 'Admin CSS styles Cloud Check detail groups like Context detail groups.' );
+toolbox_assert( false === strpos( $admin_css, 'npcink-toolbox__connector-provider-workspace' ) && false === strpos( $admin_css, 'npcink-toolbox__connector-provider-button.is-active' ), 'Admin CSS removes dead connector provider rail styles.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__inline-form > .button' ) && false !== strpos( $admin_css, 'margin-top: 16px' ), 'Admin CSS keeps inline form buttons separated from preceding fields.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__context-tabs' ) && false !== strpos( $admin_css, 'npcink-toolbox__context-group-workspace' ), 'Admin CSS styles content context tabs and field rail.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__media-picker' ) && false !== strpos( $admin_css, 'npcink-toolbox__inline-actions' ) && false !== strpos( $admin_css, 'npcink-toolbox__derivative-preview' ), 'Admin CSS supports media derivative picker, action controls, and derivative preview image.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__url-resolution' ), 'Admin CSS supports media URL resolution evidence.' );
+toolbox_assert( false !== strpos( $admin_css, 'npcink-toolbox__batch-panel' ) && false !== strpos( $admin_css, 'npcink-toolbox__batch-row' ), 'Admin CSS supports media derivative batch planning rows.' );
 
 $plugin = file_get_contents( $root . '/includes/Plugin.php' );
-toolbox_assert( false !== strpos( $plugin, 'register_with_magick_ai_abilities' ) && false !== strpos( $plugin, "'wp_abilities_api_categories_init'" ) && false !== strpos( $plugin, ', 1 );' ), 'Helper ability registration is deferred to the Abilities API category hook.' );
-toolbox_assert( false === strpos( $plugin, '$this->abilities->register_with_magick_ai_abilities();' ), 'Helper ability registration is not executed during plugin hook setup.' );
+toolbox_assert( false !== strpos( $plugin, 'register_with_npcink_abilities_toolkit' ) && false !== strpos( $plugin, "'wp_abilities_api_categories_init'" ) && false !== strpos( $plugin, ', 1 );' ), 'Helper ability registration is deferred to the Abilities API category hook.' );
+toolbox_assert( false === strpos( $plugin, '$this->abilities->register_with_npcink_abilities_toolkit();' ), 'Helper ability registration is not executed during plugin hook setup.' );
 toolbox_assert( false !== strpos( $plugin, 'Editor_Content_Support' ) && false !== strpos( $plugin, 'enqueue_block_editor_assets' ), 'Plugin registers the post editor content support surface.' );
 
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
@@ -316,38 +316,38 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'magick-ai-toolbox/search-image-source', 'magick-ai-toolbox/vector-search', 'magick-ai-toolbox/search-site-knowledge', 'magick-ai-toolbox/get-site-knowledge-status', 'magick-ai-toolbox/request-site-knowledge-sync', 'magick-ai-toolbox/build-article-brief', 'magick-ai-toolbox/build-article-assistant', 'magick-ai-toolbox/build-article-write-plan', 'magick-ai-toolbox/build-image-candidate-adoption-plan', 'magick-ai-toolbox/build-media-brief', 'magick-ai-toolbox/build-media-derivative-handoff', 'magick-ai-toolbox/get-content-discoverability-context', 'magick-ai-toolbox/validate-content-discoverability-context', 'magick-ai-toolbox/build-content-discoverability-brief', 'magick-ai-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
+foreach ( array( 'npcink-toolbox/search-image-source', 'npcink-toolbox/vector-search', 'npcink-toolbox/search-site-knowledge', 'npcink-toolbox/get-site-knowledge-status', 'npcink-toolbox/request-site-knowledge-sync', 'npcink-toolbox/build-article-brief', 'npcink-toolbox/build-article-assistant', 'npcink-toolbox/build-article-write-plan', 'npcink-toolbox/build-image-candidate-adoption-plan', 'npcink-toolbox/build-media-brief', 'npcink-toolbox/build-media-derivative-handoff', 'npcink-toolbox/get-content-discoverability-context', 'npcink-toolbox/validate-content-discoverability-context', 'npcink-toolbox/build-content-discoverability-brief', 'npcink-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
-toolbox_assert( false === strpos( $abilities, 'magick-ai-toolbox/web-research' ), 'Toolbox no longer registers a local web-research ability.' );
+toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/web-research' ), 'Toolbox no longer registers a local web-research ability.' );
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
 toolbox_assert( false === strpos( $client, 'https://api.tavily.com/search' ) && false === strpos( $client, 'search_bocha_web' ) && false === strpos( $client, 'enhance_results_with_jina_reader' ), 'Provider client no longer calls local web search providers.' );
-toolbox_assert( false !== strpos( $client, 'test_cloud_web_search' ) && false !== strpos( $client, "'ability_name'        => 'magick-ai-cloud/web-search'" ), 'Provider client can test Cloud-managed web search through the Cloud runtime seam.' );
+toolbox_assert( false !== strpos( $client, 'test_cloud_web_search' ) && false !== strpos( $client, "'ability_name'        => 'npcink-cloud/web-search'" ), 'Provider client can test Cloud-managed web search through the Cloud runtime seam.' );
 toolbox_assert( false === strpos( $client, 'enhance_with_reader' ) && false === strpos( $client, "array( 'auto', 'tavily', 'bocha', 'apify' )" ), 'Provider client Cloud search test does not expose Toolbox-side provider routing or Jina Reader toggles.' );
 toolbox_assert( false !== strpos( $client, 'normalize_cloud_web_search_response' ) && false !== strpos( $client, "'web_search_results'" ), 'Provider client normalizes Cloud web search test output for operator review.' );
 toolbox_assert( false !== strpos( $client, 'diagnose_automatic_web_search' ) && false !== strpos( $client, "'web_search_diagnostics'" ), 'Provider client can diagnose whether Toolbox workflows attach Cloud web search evidence.' );
 toolbox_assert( false !== strpos( $client, "'usage_summary'" ) && false !== strpos( $client, "'provider_call_count'" ) && false !== strpos( $client, "'error_code'" ), 'Provider client returns Cloud search usage summary fields for diagnostics.' );
 toolbox_assert( false !== strpos( $client, 'cloud_web_search_for_content' ) && false !== strpos( $client, "'external_research'      => \$external_research" ) && false !== strpos( $client, "'cloud_evidence'         => \$cloud_evidence" ), 'Article and discoverability flows can attach Cloud web search evidence without local provider keys.' );
 toolbox_assert( false !== strpos( $client, 'cloud_web_search_evidence' ) && false !== strpos( $client, "'web_search' => array(" ) && false !== strpos( $client, 'cloud_managed_toolbox_content_search' ), 'Provider client promotes ready Cloud search results into cloud_evidence.web_search.' );
-toolbox_assert( false !== strpos( $client, 'execute_image_source_cloud_request' ) && false !== strpos( $client, 'magick_ai_toolbox_image_source_cloud_request' ), 'Image candidates use a Cloud-managed image-source runtime seam.' );
+toolbox_assert( false !== strpos( $client, 'execute_image_source_cloud_request' ) && false !== strpos( $client, 'npcink_toolbox_image_source_cloud_request' ), 'Image candidates use a Cloud-managed image-source runtime seam.' );
 toolbox_assert( false !== strpos( $client, "'policy'              => array(\n\t\t\t\t'allow_fallback' => true,\n\t\t\t)" ), 'Image-source runtime payload keeps Cloud policy limited to schema-supported fields.' );
 toolbox_assert( false === strpos( $client, 'https://api.unsplash.com/search/photos' ) && false === strpos( $client, 'https://pixabay.com/api/' ) && false === strpos( $client, 'https://api.pexels.com/v1/search' ), 'Image candidates do not directly call public image provider APIs locally.' );
-toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
+toolbox_assert( false !== strpos( $client, 'npcink_toolbox_ai_image_generation_request' ) && false !== strpos( $client, "'ai_generated'" ), 'Image candidates support an explicit AI-generated candidate runtime seam.' );
 toolbox_assert( false !== strpos( $client, "'source_type'                   => 'ai_generated'" ) && false !== strpos( $client, "'requires_human_license_review' => true" ), 'AI-generated image candidates preserve source type and license review status.' );
 toolbox_assert( false !== strpos( $client, 'normalize_image_candidate_contract' ) && false !== strpos( $client, "'candidate_contract_version' => 'image_candidate.v1'" ), 'Image candidates normalize to image_candidate.v1.' );
 toolbox_assert( false !== strpos( $client, 'normalize_image_source_candidates_response' ) && false !== strpos( $client, '$result = $this->extract_cloud_runtime_result( $response );' ), 'Image candidates unwrap nested Cloud runtime result envelopes.' );
 toolbox_assert( false !== strpos( $client, "'source_type']                   = \$source_type" ) && false !== strpos( $client, "'download_url']" ) && false !== strpos( $client, "'thumbnail_url']" ) && false !== strpos( $client, "'provider_origin']" ), 'Image candidate v1 output includes source type, download URL, thumbnail URL, and provider origin.' );
 toolbox_assert( false !== strpos( $client, "'suggested_filename']" ) && false !== strpos( $client, "'filename_basis']" ) && false !== strpos( $client, "'final_sanitize_unique_required' => true" ), 'Image candidate v1 output carries a bounded filename suggestion for WordPress-side finalization.' );
 toolbox_assert( false !== strpos( $client, 'build_image_candidate_adoption_plan' ) && false !== strpos( $client, "'artifact_type'               => 'image_candidate_adoption_plan'" ), 'Provider client can build image candidate adoption plans.' );
-toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'magick-ai/set-post-featured-image'" ), 'Image candidate adoption plan routes media import and featured image writes through Core-governed abilities.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image'" ), 'Image candidate adoption plan routes media import and featured image writes through Core-governed abilities.' );
 toolbox_assert( false !== strpos( $client, "'proposed_filename'           => \$file_name" ) && false !== strpos( $client, "'filename_policy'             => \$filename_policy" ), 'Image candidate adoption plan previews the proposed filename without becoming the write owner.' );
 toolbox_assert( false !== strpos( $client, 'sanitize_provider_error_data' ) && false !== strpos( $client, "'provider_status' => \$status" ), 'Image-source provider failures preserve safe diagnostic status data.' );
 toolbox_assert( false === strpos( $client, '/points/query' ), 'Vector search no longer calls Qdrant query points locally.' );
 toolbox_assert( false === strpos( $client, '/embeddings' ), 'Vector search no longer calls embedding endpoints locally.' );
 toolbox_assert( false === strpos( $client, 'create_siliconflow_embedding' ) && false === strpos( $client, 'create_jina_embedding' ), 'Provider client no longer contains local embedding provider implementations.' );
-toolbox_assert( false !== strpos( $client, 'Low-level vector provider configuration has moved to Magick AI Cloud' ), 'Vector search returns a Cloud-managed compatibility pointer.' );
-toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai-toolbox/search-site-knowledge'" ), 'Vector compatibility output points callers to Cloud-managed Site Knowledge.' );
+toolbox_assert( false !== strpos( $client, 'Low-level vector provider configuration has moved to Npcink Cloud' ), 'Vector search returns a Cloud-managed compatibility pointer.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-toolbox/search-site-knowledge'" ), 'Vector compatibility output points callers to Cloud-managed Site Knowledge.' );
 toolbox_assert( false !== strpos( $client, 'provider_origin' ) && false !== strpos( $client, "'cloud_runtime'              => 'magick_ai_cloud_addon'" ), 'Cloud image-source responses preserve candidate provenance.' );
 toolbox_assert( false !== strpos( $client, "'provider_mode'" ) && false !== strpos( $client, "'active_sources'" ) && false !== strpos( $client, "'resolved_provider'" ) && false !== strpos( $client, "'auto_strategy'" ), 'Image-source output records provider mode, resolved provider, strategy, and active sources.' );
 toolbox_assert( false !== strpos( $client, 'with_optional_raw' ), 'Provider raw responses are optional.' );
@@ -362,10 +362,10 @@ toolbox_assert( false !== strpos( $client, 'search_site_knowledge' ) && false !=
 toolbox_assert( false !== strpos( $client, "'faq_candidates'" ) && false !== strpos( $client, "'content_gap_analysis'" ) && false !== strpos( $client, "'duplicate_check'" ), 'Provider client allows high-value site knowledge search intents.' );
 toolbox_assert( false !== strpos( $client, 'get_site_knowledge_status' ) && false !== strpos( $client, "'site_knowledge_status.v1'" ), 'Provider client exposes Cloud-managed site knowledge status.' );
 toolbox_assert( false !== strpos( $client, 'request_site_knowledge_sync' ) && false !== strpos( $client, "'site_knowledge_sync.v1'" ), 'Provider client exposes Cloud-managed site knowledge sync requests.' );
-toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_site_knowledge_cloud_request' ) && false !== strpos( $client, 'magick_ai_cloud_addon_runtime_client' ), 'Site knowledge execution uses a host filter or Cloud Addon runtime seam.' );
+toolbox_assert( false !== strpos( $client, 'npcink_toolbox_site_knowledge_cloud_request' ) && false !== strpos( $client, 'magick_ai_cloud_addon_runtime_client' ), 'Site knowledge execution uses a host filter or Cloud Addon runtime seam.' );
 toolbox_assert( false !== strpos( $client, "'ability_name'        => \$ability_name" ) && false !== strpos( $client, "'execution_pattern'   => \$execution_pattern" ), 'Site knowledge runtime payload preserves ability name and execution pattern.' );
 toolbox_assert( false !== strpos( $client, 'collect_site_knowledge_documents' ) && false !== strpos( $client, "'post_status'    => 'publish'" ) && false !== strpos( $client, "'post_type'      => \$this->site_knowledge_post_types()" ), 'Site knowledge sync uses bounded public allow-listed WordPress content manifests.' );
-toolbox_assert( false !== strpos( $client, 'magick_ai_toolbox_site_knowledge_post_types' ) && false !== strpos( $client, "'attachment' !== \$post_type" ), 'Provider client shares the explicit Site Knowledge content-type allow-list.' );
+toolbox_assert( false !== strpos( $client, 'npcink_toolbox_site_knowledge_post_types' ) && false !== strpos( $client, "'attachment' !== \$post_type" ), 'Provider client shares the explicit Site Knowledge content-type allow-list.' );
 toolbox_assert( false !== strpos( $client, 'SITE_KNOWLEDGE_CONTENT_CHARS = 30000' ) && false !== strpos( $client, 'trim_site_knowledge_content' ) && false === strpos( $client, 'wp_trim_words( $content, 600' ), 'Site knowledge sync sends bounded public content to Cloud instead of a short word excerpt.' );
 toolbox_assert( false !== strpos( $client, 'collect_site_knowledge_comments' ) && false !== strpos( $client, "'status'   => 'approve'" ) && false !== strpos( $client, "'type'     => 'comment'" ) && false !== strpos( $client, "'comment_status'  => 'approve'" ), 'Site knowledge sync includes bounded approved comment manifests.' );
 toolbox_assert( false !== strpos( $client, 'extract_cloud_runtime_result' ) && false !== strpos( $client, "'result_json'" ), 'Provider client unwraps nested Cloud runtime result payloads.' );
@@ -378,16 +378,16 @@ toolbox_assert( false !== strpos( $client, 'Create WordPress draft or media prop
 toolbox_assert( false !== strpos( $client, 'build_article_assistant' ), 'Provider client can build local article assistant workbench artifacts.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_assistant_workbench'" ), 'Article Assistant declares the workbench artifact type.' );
 toolbox_assert( false !== strpos( $client, "'workflow_runtime'       => false" ) && false !== strpos( $client, "'batch_execution'        => false" ), 'Article Assistant explicitly avoids workflow runtime and batch execution ownership.' );
-toolbox_assert( false !== strpos( $client, "'assistant_ability_id'   => 'magick-ai-toolbox/build-article-assistant'" ), 'Article Assistant handoff carries its ability id.' );
+toolbox_assert( false !== strpos( $client, "'assistant_ability_id'   => 'npcink-toolbox/build-article-assistant'" ), 'Article Assistant handoff carries its ability id.' );
 toolbox_assert( false !== strpos( $client, 'build_article_write_plan' ), 'Provider client can build Core-ready article write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_write_plan'" ), 'Article write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'core_article_write_plan'" ), 'Article write plan declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'source_recipe_id'       => 'article_draft_v1'" ) && false !== strpos( $client, "'source_recipe_ref'      => 'workflow/wordpress_article_draft'" ), 'Article write plan is explicitly tied to the local article_draft_v1 Ability recipe.' );
-toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/create-draft'" ), 'Article write plan targets the governed create-draft ability.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/create-draft'" ), 'Article write plan targets the governed create-draft ability.' );
 toolbox_assert( false !== strpos( $client, "'recipe_step'       => 'host_governed_create_draft'" ), 'Article write plan marks create-draft as the host-governed recipe step.' );
 toolbox_assert( false !== strpos( $client, "'status'  => 'draft'" ), 'Article write plan is draft-only.' );
 toolbox_assert( false !== strpos( $client, "'recipe_id'              => 'article_draft_v1'" ), 'Article write plan handoff carries the local recipe id.' );
-toolbox_assert( false !== strpos( $client, "'core_route'             => '/wp-json/magick-ai-core/v1/proposals/from-plan'" ), 'Article write plan points to Core plan intake.' );
+toolbox_assert( false !== strpos( $client, "'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan'" ), 'Article write plan points to Core plan intake.' );
 toolbox_assert( false !== strpos( $client, 'build_article_batch_write_plan' ), 'Provider client can build Core-ready article batch write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'             => 'article_batch_write_plan'" ), 'Article batch write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'          => 'core_article_batch_write_plan'" ), 'Article batch write plan declares its composition role.' );
@@ -397,7 +397,7 @@ toolbox_assert( false !== strpos( $client, "'publish_allowed'           => false
 toolbox_assert( false !== strpos( $client, 'build_article_media_batch_write_plan' ), 'Provider client can build Core-ready article plus media batch write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'             => 'article_media_batch_write_plan'" ), 'Article plus media batch write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'          => 'core_article_media_batch_write_plan'" ), 'Article plus media batch write plan declares its composition role.' );
-toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'magick-ai/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'magick-ai/set-post-featured-image'" ), 'Article plus media batch write plan routes media upload and featured image writes through Core-governed abilities.' );
+toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image'" ), 'Article plus media batch write plan routes media upload and featured image writes through Core-governed abilities.' );
 toolbox_assert( false !== strpos( $client, "'file_name'         => \$file_name" ), 'Article plus media batch write plan preserves approved media file names.' );
 toolbox_assert( false !== strpos( $client, "'attach_to_post_id' => '\$outputs.' . \$create_id . '.post_id'" ) && false !== strpos( $client, "'attachment_id'  => '\$outputs.' . \$upload_id . '.attachment_id'" ), 'Article plus media batch write plan uses output references for dependent media writes.' );
 toolbox_assert( false !== strpos( $client, 'build_image_candidate_adoption_plan' ), 'Provider client can build image candidate adoption plans.' );
@@ -405,15 +405,15 @@ toolbox_assert( false !== strpos( $client, "\$input['download_url']" ) && false 
 toolbox_assert( false !== strpos( $client, 'build_media_derivative_handoff' ), 'Provider client can build media derivative handoffs.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'media_derivative_handoff'" ), 'Media derivative handoff declares its artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'media_derivative_operator_handoff'" ), 'Media derivative handoff declares its composition role.' );
-toolbox_assert( false !== strpos( $client, "'ability_id'             => 'magick-ai/build-media-derivative-cloud-request'" ), 'Media derivative handoff points to the local Abilities request builder.' );
-toolbox_assert( false !== strpos( $client, "'optimization_plan_ability_id' => 'magick-ai/build-media-optimization-plan'" ) && false !== strpos( $client, "'preferred_core_route'   => '/wp-json/magick-ai-adapter/v1/proposals/from-plan'" ), 'Media derivative handoff defaults full optimization to Core from-plan.' );
+toolbox_assert( false !== strpos( $client, "'ability_id'             => 'npcink-abilities-toolkit/build-media-derivative-cloud-request'" ), 'Media derivative handoff points to the local Abilities request builder.' );
+toolbox_assert( false !== strpos( $client, "'optimization_plan_ability_id' => 'npcink-abilities-toolkit/build-media-optimization-plan'" ) && false !== strpos( $client, "'preferred_core_route'   => '/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan'" ), 'Media derivative handoff defaults full optimization to Core from-plan.' );
 toolbox_assert( false !== strpos( $client, "'do_not_split_user_intent' => true" ) && false !== strpos( $client, 'instead of splitting the same user intent into two proposals' ), 'Media derivative handoff blocks split proposal fallback for full optimization.' );
 toolbox_assert( false !== strpos( $client, 'magick_ai_core_build_media_derivative_ability_input' ), 'Media derivative handoff reads Core media policy ability input when available.' );
 toolbox_assert( false !== strpos( $client, 'fallback_media_derivative_policy' ), 'Media derivative handoff has a fallback when Core is unavailable.' );
 toolbox_assert( false !== strpos( $client, 'media_derivative_watermark_overrides' ) && false !== strpos( $client, "'watermark_enabled' => false" ) && false !== strpos( $client, "'scale_percent' =>" ), 'Media derivative handoff supports explicit one-run watermark overrides while leaving Core as policy owner.' );
 toolbox_assert( false !== strpos( $client, "'type'       => 'text'" ) && false !== strpos( $client, "'font_size'  =>" ) && false !== strpos( $client, 'sanitize_media_derivative_watermark_color' ), 'Media derivative handoff sanitizes text watermark overrides without requiring a logo artifact.' );
 toolbox_assert( false !== strpos( $client, 'build_content_discoverability_brief' ), 'Provider client can build content discoverability briefs.' );
-toolbox_assert( false !== strpos( $client, 'run_free_gpt55_content_support' ) && false !== strpos( $client, "'profile_id'          => 'text.free-gpt55'" ) && false !== strpos( $client, "'ability_name'        => 'magick-ai-toolbox/free-gpt55-content-support'" ), 'Provider client runs free GPT-5.5 content support through the dedicated hosted profile.' );
+toolbox_assert( false !== strpos( $client, 'run_free_gpt55_content_support' ) && false !== strpos( $client, "'profile_id'          => 'text.free-gpt55'" ) && false !== strpos( $client, "'ability_name'        => 'npcink-toolbox/free-gpt55-content-support'" ), 'Provider client runs free GPT-5.5 content support through the dedicated hosted profile.' );
 toolbox_assert( false !== strpos( $client, 'free_gpt55_content_support_prompt' ) && false !== strpos( $client, 'direct_wordpress_write' ) && false !== strpos( $client, 'core_proposal_required' ), 'Free GPT-5.5 prompt preserves suggestion-only Core approval boundaries.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'content_discoverability_brief'" ), 'Content discoverability brief declares its artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'seo_aeo_geo_brief'" ), 'Content discoverability brief declares its composition role.' );
@@ -422,13 +422,13 @@ toolbox_assert( false !== strpos( $client, "'final_write_path'       => 'core_pr
 toolbox_assert( false !== strpos( $client, "'seo'                    =>" ) && false !== strpos( $client, "'aeo'                    =>" ) && false !== strpos( $client, "'geo'                    =>" ) && false !== strpos( $client, 'content_discoverability_field_group' ), 'Content discoverability brief exposes SEO/AEO/GEO section blocks.' );
 toolbox_assert( false !== strpos( $client, "'exceptions'             =>" ) && false !== strpos( $client, "'special_cases'          =>" ), 'Content discoverability brief exposes exception and special-case rules.' );
 toolbox_assert( false !== strpos( $client, 'proposal_template' ) && false !== strpos( $client, 'candidate_suggestions' ), 'Content discoverability brief returns proposal templates and conservative candidates.' );
-toolbox_assert( false !== strpos( $client, "'brief_ability_id'       => 'magick-ai-toolbox/build-content-discoverability-brief'" ), 'Content discoverability brief returns ability handoff metadata.' );
+toolbox_assert( false !== strpos( $client, "'brief_ability_id'       => 'npcink-toolbox/build-content-discoverability-brief'" ), 'Content discoverability brief returns ability handoff metadata.' );
 toolbox_assert( false !== strpos( $client, 'build_ai_article_writing_pack' ), 'Provider client can build AI article writing packs.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'ai_article_writing_pack'" ), 'AI article writing pack declares its artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'ai_article_writing_pack'" ), 'AI article writing pack declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'primary_contract'       => false" ) && false !== strpos( $client, "'contract_role'          => 'openclaw_natural_language_fallback'" ), 'AI article writing pack is marked as a fallback contract.' );
 toolbox_assert( false !== strpos( $client, 'article_prompt_pack' ) && false !== strpos( $client, 'suggested_article_structure' ), 'AI article writing pack returns prompt guidance and structure.' );
-toolbox_assert( false !== strpos( $client, "'pack_ability_id'       => 'magick-ai-toolbox/build-ai-article-writing-pack'" ), 'AI article writing pack returns ability handoff metadata.' );
+toolbox_assert( false !== strpos( $client, "'pack_ability_id'       => 'npcink-toolbox/build-ai-article-writing-pack'" ), 'AI article writing pack returns ability handoff metadata.' );
 
 $settings = file_get_contents( $root . '/includes/Settings.php' );
 toolbox_assert( false === strpos( $settings, 'BAAI/bge-m3' ), 'Local Settings no longer store a default embedding model.' );
@@ -466,7 +466,7 @@ toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== st
 toolbox_assert( false !== strpos( $rest, "Site_Knowledge_Auto_Sync::health_snapshot()" ) && false !== strpos( $rest, "\$status['auto_sync']" ), 'Site Knowledge status REST response includes local auto-sync health.' );
 toolbox_assert( false === strpos( $rest, 'enhance_with_reader' ) && false === strpos( $rest, 'web_research' ) && false === strpos( $rest, 'jina_reader' ), 'REST exposes Cloud web search testing without local web research or reader enhancement inputs.' );
 toolbox_assert( false !== strpos( $rest, "'provider'    => sanitize_key" ), 'Image candidate REST route accepts provider selection.' );
-toolbox_assert( false !== strpos( $rest, 'magick_ai_toolbox_rest_permission' ), 'REST permission can be mediated by a host scope filter.' );
+toolbox_assert( false !== strpos( $rest, 'npcink_toolbox_rest_permission' ), 'REST permission can be mediated by a host scope filter.' );
 
 toolbox_assert( false === strpos( $abilities, 'cap.toolbox.search' ), 'Removed local web ability no longer exposes a Toolbox search scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.vector_search' ), 'Vector ability exposes a Toolbox vector scope.' );
@@ -495,8 +495,8 @@ toolbox_assert( false !== strpos( $abilities, 'core_proposal_handoff' ), 'Articl
 toolbox_assert( false !== strpos( $abilities, 'validate_content_discoverability_context' ), 'Content context validation ability has an execution callback.' );
 toolbox_assert( false !== strpos( $abilities, 'build_content_discoverability_brief' ), 'Content discoverability brief ability has an execution callback.' );
 toolbox_assert( false !== strpos( $abilities, 'build_ai_article_writing_pack' ), 'AI article writing pack ability has an execution callback.' );
-toolbox_assert( false !== strpos( $abilities, 'build_article_batch_write_plan' ) && false !== strpos( $abilities, 'magick-ai-toolbox/build-article-batch-write-plan' ), 'Article batch write plan ability has an execution callback.' );
-toolbox_assert( false !== strpos( $abilities, 'build_article_media_batch_write_plan' ) && false !== strpos( $abilities, 'magick-ai-toolbox/build-article-media-batch-write-plan' ), 'Article plus media batch write plan ability has an execution callback.' );
+toolbox_assert( false !== strpos( $abilities, 'build_article_batch_write_plan' ) && false !== strpos( $abilities, 'npcink-toolbox/build-article-batch-write-plan' ), 'Article batch write plan ability has an execution callback.' );
+toolbox_assert( false !== strpos( $abilities, 'build_article_media_batch_write_plan' ) && false !== strpos( $abilities, 'npcink-toolbox/build-article-media-batch-write-plan' ), 'Article plus media batch write plan ability has an execution callback.' );
 toolbox_assert( false !== strpos( $abilities, 'search_site_knowledge' ) && false !== strpos( $abilities, 'get_site_knowledge_status' ) && false !== strpos( $abilities, 'request_site_knowledge_sync' ), 'Site knowledge abilities have execution callbacks.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_execution'       => 'server_side_toolbox'" ), 'Provider-backed abilities declare server-side execution.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_secret_exposure' => 'none'" ), 'Abilities declare that provider secrets are not exposed.' );
@@ -504,14 +504,14 @@ toolbox_assert( false !== strpos( $abilities, "'final_write_path'         => 'co
 toolbox_assert( false !== strpos( $abilities, "'direct_wordpress_write'   => false" ), 'Abilities declare direct WordPress writes disabled.' );
 toolbox_assert( false !== strpos( $abilities, 'get_content_discoverability_context' ), 'Content context ability has an execution callback.' );
 toolbox_assert( false !== strpos( $abilities, "array( 'query' )" ), 'Vector ability accepts query input for AI callers.' );
-toolbox_assert( false !== strpos( $abilities, 'magick_ai_toolbox_ability_permission' ), 'Ability permission can be mediated by a host scope filter.' );
+toolbox_assert( false !== strpos( $abilities, 'npcink_toolbox_ability_permission' ), 'Ability permission can be mediated by a host scope filter.' );
 toolbox_assert( false !== strpos( $abilities, '$this->registered_with_helpers || ! function_exists( \'wp_register_ability_category\' )' ), 'Native category registration skips when helper registration already succeeded.' );
 toolbox_assert( false !== strpos( $abilities, 'wp_has_ability_category' ), 'Native category registration checks for an existing WordPress ability category.' );
 
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Cloud-managed image-source candidates' ), 'README documents Cloud-managed image-source providers.' );
-toolbox_assert( false !== strpos( $readme, 'Cloud-managed web search' ) && false === strpos( $readme, 'magick-ai-toolbox/web-research' ), 'README documents Cloud-managed web search without local web-research ability.' );
-toolbox_assert( false !== strpos( $readme, 'Cloud-managed site knowledge' ) && false !== strpos( $readme, 'magick-ai-toolbox/search-site-knowledge' ), 'README documents Cloud-managed site knowledge abilities.' );
+toolbox_assert( false !== strpos( $readme, 'Cloud-managed web search' ) && false === strpos( $readme, 'npcink-toolbox/web-research' ), 'README documents Cloud-managed web search without local web-research ability.' );
+toolbox_assert( false !== strpos( $readme, 'Cloud-managed site knowledge' ) && false !== strpos( $readme, 'npcink-toolbox/search-site-knowledge' ), 'README documents Cloud-managed site knowledge abilities.' );
 toolbox_assert( false === strpos( $readme, 'Pinecone and Weaviate' ), 'README does not advertise reserved local vector providers.' );
 toolbox_assert( false !== strpos( $readme, 'AI Content Composition Abilities' ), 'README links the AI content composition abilities contract.' );
 toolbox_assert( false !== strpos( $readme, 'Connector Ability Exposure' ), 'README links the connector ability exposure contract.' );
@@ -533,9 +533,9 @@ toolbox_assert( false !== $architecture_doc && false !== strpos( $architecture_d
 toolbox_assert( false !== strpos( $architecture_doc, 'Reviewed Draft Handoff' ) && false !== strpos( $architecture_doc, 'submit the plan to Core' ) && false !== strpos( $architecture_doc, 'approve execution' ), 'Architecture documentation records the reviewed draft handoff UI boundary.' );
 toolbox_assert( false !== strpos( $architecture_doc, 'groups fixed buttons by operator job' ) && false !== strpos( $architecture_doc, 'Article Planning Bundle' ) && false !== strpos( $architecture_doc, 'not the default support' ), 'Architecture documentation records grouped fixed Content Support flows and fallback bundle status.' );
 toolbox_assert( false !== strpos( $architecture_doc, 'artifact_type' ) && false !== strpos( $architecture_doc, 'composition_role' ), 'Architecture documentation records the compact provider payload contract.' );
-toolbox_assert( false !== strpos( $architecture_doc, 'Cloud-managed web search' ) && false === strpos( $architecture_doc, '`magick-ai-toolbox/web-research`' ), 'Architecture documentation records Cloud ownership for web search.' );
+toolbox_assert( false !== strpos( $architecture_doc, 'Cloud-managed web search' ) && false === strpos( $architecture_doc, '`npcink-toolbox/web-research`' ), 'Architecture documentation records Cloud ownership for web search.' );
 toolbox_assert( false === strpos( $architecture_doc, '| Bocha | External web search | `/web-research` |' ) && false === strpos( $architecture_doc, '| Jina Reader | Search result URL extraction | `/web-research` enhancement only |' ), 'Architecture documentation no longer records local Bocha or Jina Reader search roles.' );
-toolbox_assert( false !== strpos( $architecture_doc, '`search-site-knowledge` is the high-level ability' ) && false !== strpos( $architecture_doc, 'magick_ai_toolbox_site_knowledge_runtime_payload' ), 'Architecture documentation records the Cloud site knowledge ability seam.' );
+toolbox_assert( false !== strpos( $architecture_doc, '`search-site-knowledge` is the high-level ability' ) && false !== strpos( $architecture_doc, 'npcink_toolbox_site_knowledge_runtime_payload' ), 'Architecture documentation records the Cloud site knowledge ability seam.' );
 
 $first_version_doc = file_get_contents( $root . '/docs/first-version-reference.md' );
 toolbox_assert( false !== $first_version_doc && false !== strpos( $first_version_doc, 'REST Route Matrix' ) && false !== strpos( $first_version_doc, 'Cloud Checks now open directly into verification tools' ), 'First-version reference captures route matrix and Cloud Checks guidance.' );
@@ -545,11 +545,11 @@ toolbox_assert( false !== strpos( $first_version_doc, 'fixed, single-job support
 $content_composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
 toolbox_assert( false !== $content_composition_doc && false !== strpos( $content_composition_doc, 'Content Support First' ), 'AI content composition documentation records the content-support-first sequence.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'General Tool Usage' ) && false !== strpos( $content_composition_doc, 'article drafting is only one consumer' ), 'AI content composition documentation keeps provider abilities general-purpose.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'Cloud-managed site knowledge compatibility pointer' ), 'AI content composition documentation maps vector search to a Cloud-managed compatibility pointer.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-site-knowledge' ) && false !== strpos( $content_composition_doc, 'related content' ), 'AI content composition documentation maps site knowledge to general search and recommendations.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'magick-ai-toolbox/search-image-source' ) && false !== strpos( $content_composition_doc, 'download_location' ), 'AI content composition documentation maps image source search to attribution-preserving image candidates.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'source_type=ai_generated' ) && false !== strpos( $content_composition_doc, 'magick_ai_toolbox_ai_image_generation_request' ), 'AI content composition documentation separates generated-image candidates from public source search.' );
-toolbox_assert( false !== strpos( $content_composition_doc, 'Cloud-managed web search' ) && false === strpos( $content_composition_doc, 'magick-ai-toolbox/web-research' ), 'AI content composition documentation maps web research to Cloud.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'npcink-toolbox/vector-search' ) && false !== strpos( $content_composition_doc, 'Cloud-managed site knowledge compatibility pointer' ), 'AI content composition documentation maps vector search to a Cloud-managed compatibility pointer.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'npcink-toolbox/search-site-knowledge' ) && false !== strpos( $content_composition_doc, 'related content' ), 'AI content composition documentation maps site knowledge to general search and recommendations.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'npcink-toolbox/search-image-source' ) && false !== strpos( $content_composition_doc, 'download_location' ), 'AI content composition documentation maps image source search to attribution-preserving image candidates.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'source_type=ai_generated' ) && false !== strpos( $content_composition_doc, 'npcink_toolbox_ai_image_generation_request' ), 'AI content composition documentation separates generated-image candidates from public source search.' );
+toolbox_assert( false !== strpos( $content_composition_doc, 'Cloud-managed web search' ) && false === strpos( $content_composition_doc, 'npcink-toolbox/web-research' ), 'AI content composition documentation maps web research to Cloud.' );
 toolbox_assert( false === strpos( $content_composition_doc, 'Tavily, Bocha, and Jina Reader output' ), 'AI content composition documentation no longer presents local search provider output.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'content indexing' ), 'AI content composition documentation blocks indexing ownership.' );
 toolbox_assert( false !== strpos( $content_composition_doc, 'Final WordPress writes still require Core proposal approval' ), 'AI content composition documentation preserves Core write governance.' );
@@ -562,13 +562,13 @@ toolbox_assert( false !== strpos( $connector_exposure_doc, 'Cloud-managed web se
 toolbox_assert( false === strpos( $connector_exposure_doc, 'Tavily and Bocha' ) && false === strpos( $connector_exposure_doc, 'bounded post-search enhancement' ), 'Connector exposure documentation removes local Bocha and Jina Reader boundaries.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, '`search-site-knowledge` for semantic site search' ) && false !== strpos( $connector_exposure_doc, 'cap.toolbox.knowledge.search' ), 'Connector exposure documentation records site knowledge abilities and scopes.' );
 toolbox_assert( false !== strpos( $connector_exposure_doc, 'Do not add `confirm_token`, `write_confirmed`' ), 'Connector exposure documentation blocks direct write confirmation contracts.' );
-toolbox_assert( false !== strpos( $connector_exposure_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'Connector exposure documentation lists the content discoverability brief ability.' );
+toolbox_assert( false !== strpos( $connector_exposure_doc, 'npcink-toolbox/build-content-discoverability-brief' ), 'Connector exposure documentation lists the content discoverability brief ability.' );
 
 $content_context_doc = file_get_contents( $root . '/docs/content-discoverability-context.md' );
-toolbox_assert( false !== $content_context_doc && false !== strpos( $content_context_doc, 'magick-ai-toolbox/get-content-discoverability-context' ), 'Content context documentation records the ability id.' );
-toolbox_assert( false !== strpos( $content_context_doc, 'magick-ai-toolbox/validate-content-discoverability-context' ), 'Content context documentation records the validation ability id.' );
-toolbox_assert( false !== strpos( $content_context_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'Content context documentation records the brief ability id.' );
-toolbox_assert( false !== strpos( $content_context_doc, 'magick-ai-toolbox/build-ai-article-writing-pack' ), 'Content context documentation records the article writing pack ability id.' );
+toolbox_assert( false !== $content_context_doc && false !== strpos( $content_context_doc, 'npcink-toolbox/get-content-discoverability-context' ), 'Content context documentation records the ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'npcink-toolbox/validate-content-discoverability-context' ), 'Content context documentation records the validation ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'npcink-toolbox/build-content-discoverability-brief' ), 'Content context documentation records the brief ability id.' );
+toolbox_assert( false !== strpos( $content_context_doc, 'npcink-toolbox/build-ai-article-writing-pack' ), 'Content context documentation records the article writing pack ability id.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'primary lightweight SEO/AEO/GEO contract' ) && false !== strpos( $content_context_doc, 'special_cases' ), 'Content context documentation records the lightweight contract and special cases.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'does not call a model and does not write WordPress data' ), 'Content context documentation keeps brief generation bounded.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smoke-content-discoverability.php' ), 'Content context documentation records the local readiness smoke command.' );
@@ -576,16 +576,16 @@ toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Ga
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );
 
 $content_context_smoke = file_get_contents( $root . '/tests/smoke-content-discoverability.php' );
-toolbox_assert( false !== $content_context_smoke && false !== strpos( $content_context_smoke, 'magick_ai_abilities_get_registered' ), 'Content context smoke checks the Magick AI Abilities registry.' );
-toolbox_assert( false !== strpos( $content_context_smoke, 'magick_ai_open_platform_ability_catalog' ) && false !== strpos( $content_context_smoke, 'magick_ai_open_platform_get_ability_catalog' ), 'Content context smoke checks Magick catalog projection.' );
-toolbox_assert( false !== strpos( $content_context_smoke, 'magick_ai_open_platform_get_projection_matrix' ) && false !== strpos( $content_context_smoke, 'Core-side allowed_channels/tool-name admission is required' ), 'Content context smoke reports Agent Gateway admission status without owning it.' );
+toolbox_assert( false !== $content_context_smoke && false !== strpos( $content_context_smoke, 'npcink_abilities_toolkit_get_registered' ), 'Content context smoke checks the Npcink Abilities Toolkit registry.' );
+toolbox_assert( false !== strpos( $content_context_smoke, 'npcink_ai_open_platform_ability_catalog' ) && false !== strpos( $content_context_smoke, 'npcink_ai_open_platform_get_ability_catalog' ), 'Content context smoke checks Npcink catalog projection.' );
+toolbox_assert( false !== strpos( $content_context_smoke, 'npcink_ai_open_platform_get_projection_matrix' ) && false !== strpos( $content_context_smoke, 'Core-side allowed_channels/tool-name admission is required' ), 'Content context smoke reports Agent Gateway admission status without owning it.' );
 toolbox_assert( false !== strpos( $content_context_smoke, "direct_wordpress_write'] ?? true" ) && false !== strpos( $content_context_smoke, "'suggestion_only'" ), 'Content context smoke verifies suggestion-only no-write outputs.' );
 toolbox_assert( false !== strpos( $content_context_smoke, 'build-ai-article-writing-pack' ) && false !== strpos( $content_context_smoke, 'ai_article_writing_pack' ), 'Content context smoke verifies the AI article writing pack.' );
 toolbox_assert( false === strpos( $content_context_smoke, 'update_post_meta' ) && false === strpos( $content_context_smoke, 'wp_update_post' ), 'Content context smoke does not write WordPress content.' );
 
 $openclaw_handoff_doc = file_get_contents( $root . '/docs/openclaw-content-discoverability-handoff.md' );
 toolbox_assert( false !== $openclaw_handoff_doc && false !== strpos( $openclaw_handoff_doc, 'OpenClaw Content Discoverability Handoff' ), 'OpenClaw handoff documentation exists.' );
-toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/validate-content-discoverability-context' ) && false !== strpos( $openclaw_handoff_doc, 'magick-ai-toolbox/build-content-discoverability-brief' ), 'OpenClaw handoff documentation records the required ability sequence.' );
+toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'npcink-toolbox/validate-content-discoverability-context' ) && false !== strpos( $openclaw_handoff_doc, 'npcink-toolbox/build-content-discoverability-brief' ), 'OpenClaw handoff documentation records the required ability sequence.' );
 toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'GET /content-discoverability-brief?post_id=POST_ID' ), 'OpenClaw handoff documentation records Adapter shortcut usage.' );
 toolbox_assert( false !== strpos( $openclaw_handoff_doc, 'Do not write WordPress data' ) && false !== strpos( $openclaw_handoff_doc, 'Final writes must go through Core proposal' ), 'OpenClaw handoff documentation preserves no-write guidance.' );
 
@@ -595,8 +595,8 @@ foreach (
 	array(
 		'content-discoverability-brief',
 		'article-writing-pack',
-		'magick-ai-toolbox/build-content-discoverability-brief',
-		'magick-ai-toolbox/build-ai-article-writing-pack',
+		'npcink-toolbox/build-content-discoverability-brief',
+		'npcink-toolbox/build-ai-article-writing-pack',
 		'write_posture=suggestion_only',
 		'direct_wordpress_write=false',
 		'final_write_path=core_proposal_required',
@@ -622,6 +622,6 @@ toolbox_assert( false === strpos( $client, 'write_confirmed' ), 'Legacy write_co
 toolbox_assert( false === strpos( $client, 'confirm_token' ), 'Legacy confirm_token contract is absent.' );
 
 $uninstall = file_get_contents( $root . '/uninstall.php' );
-toolbox_assert( false !== strpos( $uninstall, 'magick_ai_toolbox_content_context' ), 'Uninstall removes content context option.' );
+toolbox_assert( false !== strpos( $uninstall, 'npcink_toolbox_content_context' ), 'Uninstall removes content context option.' );
 
 echo "Static contract checks passed.\n";

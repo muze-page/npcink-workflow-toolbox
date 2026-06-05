@@ -16,7 +16,7 @@ site positioning, target audience, keywords, brand voice, or forbidden claims.
 
 Toolbox already owns the operator-facing tool surface and suggestion workflows.
 Core owns proposal records, approval, audit, and final WordPress write
-governance. `magick-ai-abilities` owns reusable first-party WordPress atomic
+governance. `npcink-abilities-toolkit` owns reusable first-party WordPress atomic
 abilities. OpenClaw and Agent Gateway consume projected local truth and must
 not become second control planes or second registry truth.
 
@@ -26,13 +26,13 @@ Store a non-secret content-discoverability context in Toolbox and expose it
 through a read-only Toolbox ability:
 
 ```text
-magick-ai-toolbox/get-content-discoverability-context
+npcink-toolbox/get-content-discoverability-context
 ```
 
 Use a dedicated option:
 
 ```text
-magick_ai_toolbox_content_context
+npcink_toolbox_content_context
 ```
 
 The ability returns suggestion-only SEO, AEO, and GEO guidance for third-party
@@ -55,7 +55,7 @@ Cons:
 
 Rejected for first version.
 
-### Put The Context In `magick-ai-abilities`
+### Put The Context In `npcink-abilities-toolkit`
 
 Pros:
 

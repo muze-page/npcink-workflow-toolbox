@@ -1,0 +1,38 @@
+<?php
+/**
+ * Plugin Name: Npcink Toolbox
+ * Description: Operator-facing AI tools for Cloud-managed web search, Cloud-managed image-source candidates, Qdrant vector search, and repeatable content workflows.
+ * Version: 0.1.0
+ * Requires at least: 6.9
+ * Requires PHP: 8.0
+ * Author: Npcink
+ * License: GPL-2.0-or-later
+ * Text Domain: npcink-toolbox
+ *
+ * @package Npcink_Toolbox
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'NPCINK_TOOLBOX_VERSION', '0.1.0' );
+define( 'NPCINK_TOOLBOX_FILE', __FILE__ );
+define( 'NPCINK_TOOLBOX_DIR', plugin_dir_path( __FILE__ ) );
+define( 'NPCINK_TOOLBOX_URL', plugin_dir_url( __FILE__ ) );
+
+require_once NPCINK_TOOLBOX_DIR . 'includes/Settings.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Provider_Client.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Knowledge_Auto_Sync.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Rest_Controller.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Admin_Page.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Editor_Content_Support.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Abilities.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Plugin.php';
+
+register_deactivation_hook( NPCINK_TOOLBOX_FILE, array( \Npcink_Toolbox\Site_Knowledge_Auto_Sync::class, 'deactivate' ) );
+
+add_action(
+	'plugins_loaded',
+	static function () {
+		\Npcink_Toolbox\Plugin::instance()->register_hooks();
+	}
+);

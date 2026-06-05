@@ -1,13 +1,13 @@
-# Magick AI Toolbox
+# Npcink Toolbox
 
-Magick AI Toolbox is an operator-facing WordPress plugin for Cloud-managed web
+Npcink Toolbox is an operator-facing WordPress plugin for Cloud-managed web
 search, Cloud-managed image-source candidates, Cloud-managed site knowledge,
 and fixed-flow AI actions.
 
 It is intentionally separate from:
 
-- `magick-ai-core`, which owns governance, proposal records, approval, and audit;
-- `magick-ai-abilities`, which owns reusable WordPress Abilities API contracts;
+- `npcink-governance-core`, which owns governance, proposal records, approval, and audit;
+- `npcink-abilities-toolkit`, which owns reusable WordPress Abilities API contracts;
 - provider connector plugins, which can later own richer key management,
   provider selection, quota, and request logs.
 
@@ -15,8 +15,8 @@ It is intentionally separate from:
 
 The first version provides:
 
-- a Magick AI admin page at **Magick AI -> Toolbox** when a Magick AI host menu
-  exists, with a **Tools -> Magick AI Toolbox** fallback for standalone installs;
+- a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
+  exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
 - a **Free GPT-5.5** entry group in Content Support for one-click hosted article
   optimization, AI checkup, and image/ALT ideation flows;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
@@ -62,16 +62,16 @@ Project goals, ownership, and future-session instructions are documented in:
 
 All routes require a logged-in user with `manage_options`.
 
-- `GET /wp-json/magick-ai-toolbox/v1/status`
-- `POST /wp-json/magick-ai-toolbox/v1/image-candidates`
-- `POST /wp-json/magick-ai-toolbox/v1/vector-search`
-- `POST /wp-json/magick-ai-toolbox/v1/knowledge-search`
-- `POST /wp-json/magick-ai-toolbox/v1/flows/article-brief`
-- `POST /wp-json/magick-ai-toolbox/v1/flows/article-assistant`
-- `POST /wp-json/magick-ai-toolbox/v1/flows/article-plan`
-- `POST /wp-json/magick-ai-toolbox/v1/flows/media-brief`
-- `POST /wp-json/magick-ai-toolbox/v1/editor/content-support`
-- `POST /wp-json/magick-ai-toolbox/v1/media-derivative-handoff`
+- `GET /wp-json/npcink-toolbox/v1/status`
+- `POST /wp-json/npcink-toolbox/v1/image-candidates`
+- `POST /wp-json/npcink-toolbox/v1/vector-search`
+- `POST /wp-json/npcink-toolbox/v1/knowledge-search`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
+- `POST /wp-json/npcink-toolbox/v1/editor/content-support`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 
 Toolbox admin result panels can render governed `operator_feedback` payloads
 from Adapter/Core handoff failures. The feedback is for operator revision only;
@@ -91,25 +91,25 @@ General AI composition guidance is kept in
 
 When the WordPress Abilities API is available, Toolbox registers:
 
-- `magick-ai-toolbox/search-image-source`
-- `magick-ai-toolbox/vector-search`
-- `magick-ai-toolbox/search-site-knowledge`
-- `magick-ai-toolbox/get-site-knowledge-status`
-- `magick-ai-toolbox/request-site-knowledge-sync`
-- `magick-ai-toolbox/build-article-brief`
-- `magick-ai-toolbox/build-article-assistant`
-- `magick-ai-toolbox/build-article-write-plan`
-- `magick-ai-toolbox/build-article-batch-write-plan`
-- `magick-ai-toolbox/build-article-media-batch-write-plan`
-- `magick-ai-toolbox/build-media-brief`
-- `magick-ai-toolbox/get-content-discoverability-context`
-- `magick-ai-toolbox/validate-content-discoverability-context`
-- `magick-ai-toolbox/build-content-discoverability-brief`
-- `magick-ai-toolbox/build-ai-article-writing-pack`
+- `npcink-toolbox/search-image-source`
+- `npcink-toolbox/vector-search`
+- `npcink-toolbox/search-site-knowledge`
+- `npcink-toolbox/get-site-knowledge-status`
+- `npcink-toolbox/request-site-knowledge-sync`
+- `npcink-toolbox/build-article-brief`
+- `npcink-toolbox/build-article-assistant`
+- `npcink-toolbox/build-article-write-plan`
+- `npcink-toolbox/build-article-batch-write-plan`
+- `npcink-toolbox/build-article-media-batch-write-plan`
+- `npcink-toolbox/build-media-brief`
+- `npcink-toolbox/get-content-discoverability-context`
+- `npcink-toolbox/validate-content-discoverability-context`
+- `npcink-toolbox/build-content-discoverability-brief`
+- `npcink-toolbox/build-ai-article-writing-pack`
 
-When `magick-ai-abilities` is active, Toolbox uses its public registration
-helpers so the tools can be discovered by existing Magick AI consumers.
-Toolbox ability ids stay under `magick-ai-toolbox/*` so they do not collide with
+When `npcink-abilities-toolkit` is active, Toolbox uses its public registration
+helpers so the tools can be discovered by existing Npcink consumers.
+Toolbox ability ids stay under `npcink-toolbox/*` so they do not collide with
 Core governance abilities or first-party WordPress abilities.
 
 Ability metadata includes Toolbox scopes such as `cap.toolbox.image_source`,
@@ -117,34 +117,34 @@ Ability metadata includes Toolbox scopes such as `cap.toolbox.image_source`,
 `cap.toolbox.context.read`. The first admin REST surface remains
 `manage_options` gated; external AI/app-key authorization should be enforced by
 Core or the host that consumes the ability scope metadata. First-version host
-integration hooks are `magick_ai_toolbox_rest_permission` and
-`magick_ai_toolbox_ability_permission`.
+integration hooks are `npcink_toolbox_rest_permission` and
+`npcink_toolbox_ability_permission`.
 
 ## Content Discoverability Context
 
 The admin page includes a Content Context form for operator-maintained SEO, AEO,
 and GEO guidance: site positioning, target audience, brand voice, keywords,
 allowed and forbidden claims, exception rules, SEO/AEO/GEO rules, and proposal
-fields AI may suggest. It is stored in `magick_ai_toolbox_content_context`,
+fields AI may suggest. It is stored in `npcink_toolbox_content_context`,
 separate from connector settings that may contain provider keys.
 
 The context is exposed only as read-only, suggestion-only guidance through
-`magick-ai-toolbox/get-content-discoverability-context`. Third-party AI callers
-may also call `magick-ai-toolbox/validate-content-discoverability-context` to
-check filling quality and `magick-ai-toolbox/build-content-discoverability-brief`
+`npcink-toolbox/get-content-discoverability-context`. Third-party AI callers
+may also call `npcink-toolbox/validate-content-discoverability-context` to
+check filling quality and `npcink-toolbox/build-content-discoverability-brief`
 to get the primary lightweight content-support contract: SEO/AEO/GEO guidance,
 taxonomy/tag candidates, internal-link hints, proposal fields, and conservative
 candidates from supplied post or topic input. Final WordPress writes still
 require Core proposal approval.
 
 For natural-language article requests from OpenClaw or another external AI,
-`magick-ai-toolbox/build-ai-article-writing-pack` composes the context,
+`npcink-toolbox/build-ai-article-writing-pack` composes the context,
 validation result, discoverability brief, writing instructions, and guardrails
 into one suggestion-only pack. It is a convenience fallback for broad prompts,
 not the default SEO/AEO/GEO, taxonomy, link, image, or publish-readiness
 surface.
 
-The Article Assistant flow and `magick-ai-toolbox/build-article-assistant`
+The Article Assistant flow and `npcink-toolbox/build-article-assistant`
 ability compose one local `article_draft_v1` workbench artifact from topic,
 evidence candidates, image-source candidates, site context, operator notes, and
 an optional reviewed draft. It does not run a cloud writer or workflow runtime.
@@ -161,14 +161,14 @@ Toolbox must not turn those buttons into a separate approval store, media
 registry, workflow runtime, prompt/model control plane, or WordPress write
 executor.
 
-The article plan flow and `magick-ai-toolbox/build-article-write-plan` ability
+The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
 The admin **Content Support** surface includes a **Reviewed Draft Handoff**
 fallback panel that renders the plan artifacts, risk report, final
-`magick-ai/create-draft` action, and Core handoff route for operator review.
+`npcink-abilities-toolkit/create-draft` action, and Core handoff route for operator review.
 
-The post editor also exposes a **Magick AI Content Support** document panel for
+The post editor also exposes a **Npcink Content Support** document panel for
 the same productized support posture. Its buttons run fixed flows for publish
 preflight, taxonomy/tag candidates, internal-link candidates, and image-source
 candidates from the current draft context. The panel returns suggestions only;
@@ -193,7 +193,7 @@ watermark overrides pass text, font, color, background, margin, position, and
 opacity directly to the same Cloud request shape used by OpenClaw handoffs. If
 an operator starts from a hard-coded
 local uploads URL, the same surface can call the local read-only
-`magick-ai/resolve-media-attachment-by-url` ability through Adapter
+`npcink-abilities-toolkit/resolve-media-attachment-by-url` ability through Adapter
 `run-read-ability`, show bounded match evidence, and fill the attachment ID for
 the same preview/proposal flow. The admin action surface dispatches the
 bounded Adapter media-derivative recipe, polls the short-lived Cloud artifact
@@ -228,7 +228,7 @@ normalized `image_source_candidates` payload for any AI caller that needs
 images, whether the use case is article drafting, media planning, layout
 suggestions, reference selection, or another image-dependent workflow.
 `ai_generated` remains explicit: callers may provide a reviewed generated image
-URL, or a host may handle `magick_ai_toolbox_ai_image_generation_request` and
+URL, or a host may handle `npcink_toolbox_ai_image_generation_request` and
 return generated-image candidates. Toolbox still does not own model routing,
 provider billing, media import, or final WordPress writes.
 
@@ -239,15 +239,15 @@ preserving legacy URL fields for existing callers. The normalized fields include
 provenance, and warnings. Stock providers return `source_type=stock`;
 generated candidates return `source_type=ai_generated`.
 
-After an operator reviews one candidate, `magick-ai-toolbox/build-image-candidate-adoption-plan`
-or `POST /wp-json/magick-ai-toolbox/v1/flows/image-candidate-adoption-plan`
+After an operator reviews one candidate, `npcink-toolbox/build-image-candidate-adoption-plan`
+or `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
 can build an `image_candidate_adoption_plan`. That plan targets only
-`magick-ai/upload-media-from-url`, `magick-ai/update-media-details`, and
-optional `magick-ai/set-post-featured-image` through Core proposal intake. It
+`npcink-abilities-toolkit/upload-media-from-url`, `npcink-abilities-toolkit/update-media-details`, and
+optional `npcink-abilities-toolkit/set-post-featured-image` through Core proposal intake. It
 does not import media, update metadata, set a featured image, or write
 WordPress directly.
 
-Cloud-managed web search is provided by Magick AI Cloud. Toolbox no longer
+Cloud-managed web search is provided by Npcink Cloud. Toolbox no longer
 stores local web search provider keys, registers a local web search ability,
 or exposes a local web search REST route. AI workflows that need current
 external evidence, comparison material, Chinese source lookup, source coverage,
@@ -266,8 +266,8 @@ candidates, refresh suggestions, image-context lookup, FAQ candidates, content
 gap analysis, and publish preflight duplicate checks. Toolbox registers
 `search-site-knowledge`, `get-site-knowledge-status`, and
 `request-site-knowledge-sync` as WordPress Abilities. These abilities call
-Magick AI Cloud through the Cloud Addon runtime seam or the
-`magick_ai_toolbox_site_knowledge_cloud_request` host filter; Toolbox does not
+Npcink Cloud through the Cloud Addon runtime seam or the
+`npcink_toolbox_site_knowledge_cloud_request` host filter; Toolbox does not
 store Cloud credentials, own vector collection lifecycle, or write WordPress
 content.
 
@@ -281,7 +281,7 @@ When an allow-listed public post type is published, updated while published,
 leaves public status, is trashed, or is permanently deleted, Toolbox queues a
 bounded Cloud Site Knowledge refresh for that object. The default allow-list is
 `post` and `page`; hosts may extend it with
-`magick_ai_toolbox_site_knowledge_post_types` for public content types such as
+`npcink_toolbox_site_knowledge_post_types` for public content types such as
 docs, products, or FAQs. Attachments are excluded from this text indexing path
 by default. When a comment is approved, edited while approved, trashed, deleted,
 or moved out of approved status, Toolbox queues a refresh for the parent
