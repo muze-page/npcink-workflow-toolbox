@@ -198,7 +198,9 @@ and can submit a Core replacement proposal with the artifact evidence. The same
 surface can build a bounded batch conversion plan, show candidates and skipped
 reasons, generate selected previews, and submit selected Core replacement
 proposals; it still processes each candidate through the governed per-attachment
-Adapter recipe. Toolbox
+Adapter recipe. The admin batch surface is intentionally a fixed operator flow:
+operators choose a media range and processing goal first, while date, exclusion,
+and dimension filters remain in an advanced disclosure for exceptions. Toolbox
 can also build a local media reference repair plan for exact hard-coded URL
 matches and submit that plan to Core from-plan intake as `patch-post-content`
 actions. For theme/plugin settings that store hard-coded media URLs, Toolbox can

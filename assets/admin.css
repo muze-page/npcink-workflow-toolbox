@@ -92,6 +92,32 @@
 	gap: 10px;
 }
 
+.magick-ai-toolbox__usage-list {
+	display: grid;
+	gap: 8px;
+	margin: 0 0 14px;
+	padding: 0;
+	list-style: none;
+}
+
+.magick-ai-toolbox__usage-list li {
+	display: grid;
+	gap: 2px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-left: 3px solid #72aee6;
+}
+
+.magick-ai-toolbox__usage-list strong {
+	color: #1d2327;
+}
+
+.magick-ai-toolbox__usage-list span {
+	color: #50575e;
+	line-height: 1.4;
+}
+
 .magick-ai-toolbox__tool-workspace {
 	display: grid;
 	grid-template-columns: 300px minmax(0, 1fr);
@@ -576,6 +602,31 @@
 	color: #50575e;
 }
 
+.magick-ai-toolbox__flow-steps {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 12px;
+	padding: 0;
+	list-style: none;
+}
+
+.magick-ai-toolbox__flow-steps li {
+	padding: 4px 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	font-size: 12px;
+	line-height: 1.4;
+	color: #2c3338;
+}
+
+.magick-ai-toolbox__advanced-filters {
+	margin: 10px 0 0;
+	padding: 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
 .magick-ai-toolbox__batch-plan {
 	margin: 12px 0 0;
 	padding: 10px;
@@ -831,6 +882,31 @@ pre.magick-ai-toolbox__result {
 
 .magick-ai-toolbox__batch-panel p {
 	margin-bottom: 12px;
+}
+
+.magick-ai-toolbox__flow-steps {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 12px;
+	padding: 0;
+	list-style: none;
+}
+
+.magick-ai-toolbox__flow-steps li {
+	padding: 4px 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	font-size: 12px;
+	line-height: 1.4;
+	color: #2c3338;
+}
+
+.magick-ai-toolbox__advanced-filters {
+	margin: 10px 0 0;
+	padding: 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
 }
 
 .magick-ai-toolbox__batch-plan {

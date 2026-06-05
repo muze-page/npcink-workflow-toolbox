@@ -336,7 +336,7 @@ final class Admin_Page {
 		?>
 		<div class="magick-ai-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Start Cloud-managed indexing for public posts, pages, and approved comments. Toolbox collects a bounded manifest; Cloud owns embeddings, vector storage, and run detail.', 'magick-ai-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Start or refresh Cloud-managed indexing for public site content. Toolbox sends the manifest; Cloud owns embeddings, vector storage, rerank, and run detail.', 'magick-ai-toolbox' ); ?></p>
 		</div>
 
 		<div class="magick-ai-toolbox__site-knowledge" data-toolbox-site-knowledge>
@@ -371,6 +371,35 @@ final class Admin_Page {
 					</div>
 					<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 				</form>
+			</section>
+
+			<section class="magick-ai-toolbox__card">
+				<div class="magick-ai-toolbox__section-heading">
+					<div>
+						<h3><?php esc_html_e( 'Used by Content Support', 'magick-ai-toolbox' ); ?></h3>
+						<p><?php esc_html_e( 'After the index is ready, these Toolbox actions can use Cloud Site Knowledge automatically.', 'magick-ai-toolbox' ); ?></p>
+					</div>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=magick-ai-toolbox&toolbox_tab=tools&toolbox_tool=internal-links' ) ); ?>"><?php esc_html_e( 'Open Content Support', 'magick-ai-toolbox' ); ?></a>
+				</div>
+				<ul class="magick-ai-toolbox__usage-list">
+					<li>
+						<strong><?php esc_html_e( 'Internal Link Candidates', 'magick-ai-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Find related public posts and pages for editor-reviewed links.', 'magick-ai-toolbox' ); ?></span>
+					</li>
+					<li>
+						<strong><?php esc_html_e( 'Publish Preflight', 'magick-ai-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Check duplicate risk, source coverage, and missing site references before publishing.', 'magick-ai-toolbox' ); ?></span>
+					</li>
+					<li>
+						<strong><?php esc_html_e( 'Discoverability Brief', 'magick-ai-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Ground SEO, AEO, and GEO suggestions in existing site context.', 'magick-ai-toolbox' ); ?></span>
+					</li>
+					<li>
+						<strong><?php esc_html_e( 'Article Planning Bundle and OpenClaw', 'magick-ai-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Use the same Cloud-managed knowledge ability for planning bundles and natural-language requests.', 'magick-ai-toolbox' ); ?></span>
+					</li>
+				</ul>
+				<p class="description"><?php esc_html_e( 'Final WordPress edits still require the normal Core proposal and editor approval path.', 'magick-ai-toolbox' ); ?></p>
 			</section>
 		</div>
 		<?php
@@ -905,7 +934,7 @@ final class Admin_Page {
 				'id'          => 'discoverability-brief',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Discoverability Brief', 'magick-ai-toolbox' ),
-				'description' => __( 'Build SEO, AEO, GEO, taxonomy, and proposal-field suggestions for one topic or draft.', 'magick-ai-toolbox' ),
+				'description' => __( 'Build SEO, AEO, GEO, taxonomy, and proposal-field suggestions with saved context and Site Knowledge when available.', 'magick-ai-toolbox' ),
 				'intent'      => 'discoverability',
 				'button'      => __( 'Build suggestions', 'magick-ai-toolbox' ),
 				'custom'      => 'content_support_flow',
@@ -915,7 +944,7 @@ final class Admin_Page {
 				'id'          => 'publish-preflight',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Publish Preflight', 'magick-ai-toolbox' ),
-				'description' => __( 'Check source coverage, duplicate risk, missing terms, excerpt, and media readiness.', 'magick-ai-toolbox' ),
+				'description' => __( 'Check source coverage, duplicate risk, missing terms, excerpt, and media readiness against current site context.', 'magick-ai-toolbox' ),
 				'intent'      => 'publish_preflight',
 				'button'      => __( 'Run preflight', 'magick-ai-toolbox' ),
 				'custom'      => 'content_support_flow',
@@ -1613,20 +1642,36 @@ final class Admin_Page {
 			</div>
 			<div class="magick-ai-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Batch conversion plan', 'magick-ai-toolbox' ); ?></h3>
-				<p><?php esc_html_e( 'Build a bounded local candidate plan first, then generate previews and Core proposals only for reviewed selections.', 'magick-ai-toolbox' ); ?></p>
+				<p><?php esc_html_e( 'Fixed batch flow: choose a scope and goal, build a bounded plan, generate selected previews, then submit only reviewed Core proposals.', 'magick-ai-toolbox' ); ?></p>
+				<ol class="magick-ai-toolbox__flow-steps" aria-label="<?php esc_attr_e( 'Batch optimization steps', 'magick-ai-toolbox' ); ?>">
+					<li><?php esc_html_e( 'Scope', 'magick-ai-toolbox' ); ?></li>
+					<li><?php esc_html_e( 'Plan', 'magick-ai-toolbox' ); ?></li>
+					<li><?php esc_html_e( 'Preview', 'magick-ai-toolbox' ); ?></li>
+					<li><?php esc_html_e( 'Core review', 'magick-ai-toolbox' ); ?></li>
+				</ol>
 				<div class="magick-ai-toolbox__split">
 					<label>
-						<span><?php esc_html_e( 'Date from', 'magick-ai-toolbox' ); ?></span>
-						<input type="date" name="batch_date_from" />
+						<span><?php esc_html_e( 'Media range', 'magick-ai-toolbox' ); ?></span>
+						<select name="batch_scope_preset">
+							<option value="current_month"><?php esc_html_e( 'This month', 'magick-ai-toolbox' ); ?></option>
+							<option value="previous_month"><?php esc_html_e( 'Previous month', 'magick-ai-toolbox' ); ?></option>
+							<option value="custom"><?php esc_html_e( 'Custom range', 'magick-ai-toolbox' ); ?></option>
+							<option value="all"><?php esc_html_e( 'All eligible media', 'magick-ai-toolbox' ); ?></option>
+						</select>
 					</label>
 					<label>
-						<span><?php esc_html_e( 'Date to', 'magick-ai-toolbox' ); ?></span>
-						<input type="date" name="batch_date_to" />
+						<span><?php esc_html_e( 'Processing goal', 'magick-ai-toolbox' ); ?></span>
+						<select name="batch_recipe">
+							<option value="smart_optimize"><?php esc_html_e( 'Smart optimize', 'magick-ai-toolbox' ); ?></option>
+							<option value="convert_format"><?php esc_html_e( 'Convert format', 'magick-ai-toolbox' ); ?></option>
+							<option value="resize_only"><?php esc_html_e( 'Resize only', 'magick-ai-toolbox' ); ?></option>
+							<option value="watermark"><?php esc_html_e( 'Apply watermark', 'magick-ai-toolbox' ); ?></option>
+						</select>
 					</label>
 				</div>
 				<div class="magick-ai-toolbox__split">
 					<label>
-						<span><?php esc_html_e( 'Batch target format', 'magick-ai-toolbox' ); ?></span>
+						<span><?php esc_html_e( 'Output format', 'magick-ai-toolbox' ); ?></span>
 						<select name="batch_target_format">
 							<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
 								<option value="<?php echo esc_attr( $format ); ?>" <?php selected( 'webp', $format ); ?>><?php echo esc_html( strtoupper( $format ) ); ?></option>
@@ -1634,20 +1679,34 @@ final class Admin_Page {
 						</select>
 					</label>
 					<label>
-						<span><?php esc_html_e( 'Exclude formats', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="batch_exclude_formats" value="webp" />
-					</label>
-				</div>
-				<div class="magick-ai-toolbox__split">
-					<label>
-						<span><?php esc_html_e( 'Min dimensions', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="batch_min_dimensions" value="0x0" />
-					</label>
-					<label>
 						<span><?php esc_html_e( 'Max candidates', 'magick-ai-toolbox' ); ?></span>
 						<input type="number" min="1" max="50" step="1" name="batch_max_items" value="20" />
 					</label>
 				</div>
+				<details class="magick-ai-toolbox__result-details magick-ai-toolbox__advanced-filters">
+					<summary><?php esc_html_e( 'Advanced filters', 'magick-ai-toolbox' ); ?></summary>
+					<p class="description"><?php esc_html_e( 'Use these only when the fixed scope needs a tighter date, format, or dimension filter.', 'magick-ai-toolbox' ); ?></p>
+					<div class="magick-ai-toolbox__split">
+						<label>
+							<span><?php esc_html_e( 'Date from', 'magick-ai-toolbox' ); ?></span>
+							<input type="date" name="batch_date_from" />
+						</label>
+						<label>
+							<span><?php esc_html_e( 'Date to', 'magick-ai-toolbox' ); ?></span>
+							<input type="date" name="batch_date_to" />
+						</label>
+					</div>
+					<div class="magick-ai-toolbox__split">
+						<label>
+							<span><?php esc_html_e( 'Exclude formats', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="batch_exclude_formats" value="webp,gif,svg" />
+						</label>
+						<label>
+							<span><?php esc_html_e( 'Min dimensions', 'magick-ai-toolbox' ); ?></span>
+							<input type="text" name="batch_min_dimensions" value="800x800" />
+						</label>
+					</div>
+				</details>
 				<div class="magick-ai-toolbox__inline-actions">
 					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build batch plan', 'magick-ai-toolbox' ); ?></button>
 					<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'magick-ai-toolbox' ); ?></button>

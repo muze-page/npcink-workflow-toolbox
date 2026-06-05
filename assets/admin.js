@@ -1448,23 +1448,119 @@
 		return { width, height };
 	}
 
+	function localDateString(date) {
+		const pad = (number) => String(number).padStart(2, '0');
+		return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+	}
+
+	function monthBounds(offset) {
+		const now = new Date();
+		const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+		const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+		return {
+			date_from: localDateString(start),
+			date_to: localDateString(end),
+		};
+	}
+
+	function resolveMediaBatchScopePreset(raw) {
+		raw = raw || {};
+		const preset = String(raw.batch_scope_preset || 'current_month');
+		let scope = {};
+		if (preset === 'current_month') {
+			scope = monthBounds(0);
+		} else if (preset === 'previous_month') {
+			scope = monthBounds(-1);
+		} else if (preset === 'custom') {
+			scope = {};
+		}
+
+		if (raw.batch_date_from) {
+			scope.date_from = String(raw.batch_date_from);
+		}
+		if (raw.batch_date_to) {
+			scope.date_to = String(raw.batch_date_to);
+		}
+		return scope;
+	}
+
+	function resolveMediaBatchRecipeDefaults(raw) {
+		raw = raw || {};
+		const recipe = String(raw.batch_recipe || 'smart_optimize');
+		const selectedFormat = String(raw.batch_target_format || 'webp');
+		if (recipe === 'resize_only') {
+			return {
+				recipe,
+				target_format: 'original',
+				exclude_formats: 'gif,svg',
+				min_dimensions: '800x800',
+			};
+		}
+		if (recipe === 'convert_format') {
+			return {
+				recipe,
+				target_format: selectedFormat,
+				exclude_formats: selectedFormat + ',gif,svg',
+				min_dimensions: '0x0',
+			};
+		}
+		if (recipe === 'watermark') {
+			return {
+				recipe,
+				target_format: selectedFormat,
+				exclude_formats: 'gif,svg',
+				min_dimensions: '0x0',
+			};
+		}
+		return {
+			recipe,
+			target_format: selectedFormat || 'webp',
+			exclude_formats: 'webp,gif,svg',
+			min_dimensions: '800x800',
+		};
+	}
+
+	function syncMediaBatchFixedFlow(form) {
+		const recipeField = form.querySelector('[name="batch_recipe"]');
+		const formatField = form.querySelector('[name="batch_target_format"]');
+		if (recipeField instanceof HTMLSelectElement && formatField instanceof HTMLSelectElement) {
+			if (recipeField.value === 'resize_only') {
+				formatField.value = 'original';
+			} else if (recipeField.value === 'smart_optimize' && formatField.value === 'original') {
+				formatField.value = 'webp';
+			}
+		}
+
+		const scopeField = form.querySelector('[name="batch_scope_preset"]');
+		const advanced = form.querySelector('.magick-ai-toolbox__advanced-filters');
+		if (scopeField instanceof HTMLSelectElement && advanced instanceof HTMLDetailsElement && scopeField.value === 'custom') {
+			advanced.open = true;
+		}
+	}
+
 	function mediaDerivativeBatchPlanInput(form) {
 		const raw = serialize(form);
-		const dimensions = dimensionsFromText(raw.batch_min_dimensions || '0x0', 0, 0);
-		const targetFormat = String(raw.batch_target_format || 'webp');
+		const scope = resolveMediaBatchScopePreset(raw);
+		const recipe = resolveMediaBatchRecipeDefaults(raw);
+		const rawDimensions = String(raw.batch_min_dimensions || '').trim();
+		const dimensionsValue = rawDimensions && !(rawDimensions === '800x800' && recipe.recipe !== 'smart_optimize') ? rawDimensions : recipe.min_dimensions || '0x0';
+		const dimensions = dimensionsFromText(dimensionsValue, 0, 0);
+		const targetFormat = String(recipe.target_format || raw.batch_target_format || 'webp');
+		const rawExcludeFormats = String(raw.batch_exclude_formats || '').trim();
+		const excludeFormatsValue = rawExcludeFormats && !(rawExcludeFormats === 'webp,gif,svg' && recipe.recipe !== 'smart_optimize') ? rawExcludeFormats : recipe.exclude_formats || targetFormat;
 		const input = {
 			mime_type: 'image',
 			target_format: targetFormat,
-			exclude_formats: commaList(raw.batch_exclude_formats || targetFormat),
+			exclude_formats: commaList(excludeFormatsValue),
 			min_width: dimensions.width,
 			min_height: dimensions.height,
 			max_items: parseInt(raw.batch_max_items || '20', 10) || 20,
 		};
-		if (raw.batch_date_from) {
-			input.date_from = String(raw.batch_date_from);
+		if (scope.date_from) {
+			input.date_from = String(scope.date_from);
 		}
-		if (raw.batch_date_to) {
-			input.date_to = String(raw.batch_date_to) + ' 23:59:59';
+		if (scope.date_to) {
+			input.date_to = String(scope.date_to) + ' 23:59:59';
 		}
 		if (raw.max_width) {
 			input.target_max_width = raw.max_width;
@@ -2948,6 +3044,13 @@
 			const idField = form.querySelector('[data-toolbox-media-attachment]');
 			const repairButton = form.querySelector('[data-toolbox-submit-reference-repair]');
 			const settingsRepairButton = form.querySelector('[data-toolbox-submit-settings-repair]');
+			syncMediaBatchFixedFlow(form);
+			['batch_recipe', 'batch_scope_preset'].forEach((name) => {
+				const field = form.querySelector('[name="' + name + '"]');
+				if (field instanceof HTMLSelectElement) {
+					field.addEventListener('change', () => syncMediaBatchFixedFlow(form));
+				}
+			});
 			if (idField instanceof HTMLInputElement) {
 				idField.addEventListener('input', () => {
 					if (repairButton instanceof HTMLButtonElement) {
