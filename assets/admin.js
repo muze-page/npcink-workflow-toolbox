@@ -190,6 +190,20 @@
 		return link;
 	}
 
+	function toolboxAdminUrl(params) {
+		const url = new URL(window.location.href);
+		url.searchParams.set('page', 'magick-ai-toolbox');
+		Object.keys(params || {}).forEach((key) => {
+			const value = params[key];
+			if (value === null || value === undefined || value === '') {
+				url.searchParams.delete(key);
+			} else {
+				url.searchParams.set(key, value);
+			}
+		});
+		return url.toString();
+	}
+
 	function joinRestUrl(base, path) {
 		return String(base || '').replace(/\/$/, '') + '/' + String(path || '').replace(/^\//, '');
 	}
@@ -929,9 +943,30 @@
 		}
 
 		if (payload.research && payload.research.error) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.research.error));
+			const notice = el('div', 'magick-ai-toolbox__result-notice is-warning', payload.research.error);
+			notice.appendChild(createLink(
+				toolboxAdminUrl({
+					toolbox_tab: 'cloud-checks',
+					toolbox_cloud_check: 'search',
+					toolbox_cloud_check_group: 'search-test',
+					toolbox_tool: null,
+				}),
+				'Open Cloud Search test'
+			));
+			result.appendChild(notice);
 		} else if (payload.research) {
-			renderSourceList(result, payload.research.results);
+			const section = createSection('External search');
+			section.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Live Cloud web search verification belongs in Cloud Checks. Use this bundle for combined fallback planning and handoff context.'));
+			section.appendChild(createLink(
+				toolboxAdminUrl({
+					toolbox_tab: 'cloud-checks',
+					toolbox_cloud_check: 'search',
+					toolbox_cloud_check_group: 'search-test',
+					toolbox_tool: null,
+				}),
+				'Open Cloud Search test'
+			));
+			result.appendChild(section);
 		}
 
 		if (payload.images && payload.images.error) {
