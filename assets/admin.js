@@ -760,7 +760,18 @@
 		if (payload.evidence_gate && typeof payload.evidence_gate === 'object') {
 			appendMeta(meta, 'Evidence', payload.evidence_gate.status ? formatLabel(payload.evidence_gate.status) : '');
 		}
+		if (payload.rerank && typeof payload.rerank === 'object') {
+			appendMeta(meta, 'Rerank', payload.rerank.status ? formatLabel(payload.rerank.status) : '');
+			appendMeta(meta, 'Rerank provider', payload.rerank.provider ? formatLabel(payload.rerank.provider) : '');
+			appendMeta(meta, 'Rerank model', payload.rerank.model);
+			appendMeta(meta, 'Rerank candidates', payload.rerank.candidate_count);
+			appendMeta(meta, 'Reranked', payload.rerank.reranked_count);
+			appendMeta(meta, 'Rerank fallback', payload.rerank.fallback ? formatLabel(payload.rerank.fallback) : '');
+		}
 		result.appendChild(meta);
+		if (payload.rerank && typeof payload.rerank === 'object' && payload.rerank.status === 'failed') {
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', 'Cloud rerank failed; vector order was used as the fallback.'));
+		}
 		if (hiddenSemanticCount > 0) {
 			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-pending', hiddenSemanticCount + ' semantic-only result' + (hiddenSemanticCount === 1 ? '' : 's') + ' hidden because exact query matches were found. Expand Search payload to inspect them.'));
 		}
@@ -811,11 +822,9 @@
 		const meta = el('div', 'magick-ai-toolbox__result-meta');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
-		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
 		appendMeta(meta, 'Provider calls', payload.provider_call_count);
 		appendMeta(meta, 'Run', payload.run_id);
 		if (payload.usage_summary && typeof payload.usage_summary === 'object') {
-			appendMeta(meta, 'Reader', payload.usage_summary.reader_status ? formatLabel(payload.usage_summary.reader_status) : '');
 			appendMeta(meta, 'Failure', payload.usage_summary.failure_reason ? formatLabel(payload.usage_summary.failure_reason) : '');
 		}
 		if (payload.evidence_gate && typeof payload.evidence_gate === 'object') {
@@ -847,16 +856,6 @@
 			result.appendChild(section);
 		}
 
-		if (payload.reader_enhancement && typeof payload.reader_enhancement === 'object' && payload.reader_enhancement.status) {
-			const reader = createSection('Reader enhancement');
-			const readerMeta = el('div', 'magick-ai-toolbox__result-meta');
-			appendMeta(readerMeta, 'Status', formatLabel(payload.reader_enhancement.status));
-			appendMeta(readerMeta, 'Provider', payload.reader_enhancement.provider ? formatLabel(payload.reader_enhancement.provider) : '');
-			appendMeta(readerMeta, 'Pages', payload.reader_enhancement.page_count);
-			reader.appendChild(readerMeta);
-			result.appendChild(reader);
-		}
-
 		renderHandoff(result, payload.handoff);
 		result.appendChild(createRawDetails(payload, 'Search payload'));
 	}
@@ -881,19 +880,17 @@
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Workflow', payload.workflow_artifact_type ? formatLabel(payload.workflow_artifact_type) : '');
 		appendMeta(meta, 'Provider', payload.cloud_provider ? formatLabel(payload.cloud_provider) : '');
-		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
 		appendMeta(meta, 'Provider calls', payload.provider_call_count);
 		appendMeta(meta, 'Results', payload.result_count);
 		appendMeta(meta, 'Sources', payload.source_count);
 		appendMeta(meta, 'Error code', payload.error_code ? formatLabel(payload.error_code) : '');
 		if (payload.usage_summary && typeof payload.usage_summary === 'object') {
-			appendMeta(meta, 'Reader', payload.usage_summary.reader_status ? formatLabel(payload.usage_summary.reader_status) : '');
 			appendMeta(meta, 'Evidence', payload.usage_summary.evidence_status ? formatLabel(payload.usage_summary.evidence_status) : '');
 		}
 		result.appendChild(meta);
 
 		if (payload.search_triggered !== true) {
-			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Check Cloud connection and provider configuration before relying on external evidence.'));
+			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', 'Check Cloud connection before relying on external evidence.'));
 		}
 
 		if (Array.isArray(search.sources) && search.sources.length) {
@@ -924,8 +921,8 @@
 		const result = renderShell(
 			form,
 			payload,
-			'Article brief',
-			'Planning artifact only. Review sources, candidates, and handoff notes before creating a Core proposal.'
+			'Article planning bundle',
+			'Fallback planning bundle only. Review sources, candidates, and handoff notes before creating a Core proposal.'
 		);
 		if (!result) {
 			return;
@@ -947,6 +944,101 @@
 			result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', payload.knowledge.error));
 		} else if (payload.knowledge) {
 			renderPointList(result, payload.knowledge.points);
+		}
+
+		renderHandoff(result, payload.handoff);
+		result.appendChild(createRawDetails(payload, 'Complete payload'));
+	}
+
+	function supportItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		return section.items || section.results || section.candidates || [];
+	}
+
+	function renderSupportItems(container, title, items, emptyMessage) {
+		const section = createSection(title);
+		if (!Array.isArray(items) || !items.length) {
+			section.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', emptyMessage || 'No suggestions returned.'));
+			container.appendChild(section);
+			return;
+		}
+
+		const list = el('div', 'magick-ai-toolbox__result-list');
+		items.slice(0, 10).forEach((item, index) => {
+			const row = el('article', 'magick-ai-toolbox__result-item');
+			const titleText = item.name || item.title || item.label || item.source_title || item.url || item.id || 'Candidate ' + (index + 1);
+			row.appendChild(el('h4', '', titleText));
+			const detail = item.reason || item.detail || item.excerpt || item.snippet || item.source_url || item.status || '';
+			if (detail) {
+				row.appendChild(el('p', '', truncate(detail, 260)));
+			}
+			if (item.url) {
+				row.appendChild(createLink(item.url, item.url));
+			}
+			const meta = el('div', 'magick-ai-toolbox__result-meta');
+			appendMeta(meta, 'Score', item.score);
+			appendMeta(meta, 'Taxonomy', item.taxonomy ? formatLabel(item.taxonomy) : '');
+			appendMeta(meta, 'Post', item.post_id);
+			appendMeta(meta, 'Status', item.status ? formatLabel(item.status) : '');
+			appendMeta(meta, 'Provider', item.provider ? formatLabel(item.provider) : '');
+			if (meta.childNodes.length) {
+				row.appendChild(meta);
+			}
+			list.appendChild(row);
+		});
+		section.appendChild(list);
+		container.appendChild(section);
+	}
+
+	function renderEditorContentSupport(form, payload) {
+		const sections = payload.sections && typeof payload.sections === 'object' ? payload.sections : {};
+		const title = payload.intent ? formatLabel(payload.intent) : 'Content support';
+		const result = renderShell(
+			form,
+			payload,
+			title,
+			'Fixed support flow returned suggestions only. Final WordPress writes still require Core proposal approval.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'magick-ai-toolbox__result-meta');
+		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
+		appendMeta(meta, 'Write posture', payload.write_posture || 'suggestion_only');
+		appendMeta(meta, 'Final path', payload.final_write_path || 'core_proposal_required');
+		if (payload.post_context && payload.post_context.post_id) {
+			appendMeta(meta, 'Post', payload.post_context.post_id);
+		}
+		result.appendChild(meta);
+
+		if (sections.checks) {
+			renderSupportItems(result, 'Checks', supportItems(sections.checks), 'No checks returned.');
+		}
+		if (sections.taxonomy_terms) {
+			renderSupportItems(result, 'Taxonomy and tag candidates', supportItems(sections.taxonomy_terms), 'No matching existing terms found.');
+		}
+		if (sections.site_knowledge) {
+			renderSupportItems(result, 'Internal link candidates', supportItems(sections.site_knowledge), 'No related public content returned.');
+		}
+		if (sections.duplicate_check) {
+			renderSupportItems(result, 'Duplicate risk', supportItems(sections.duplicate_check), 'No duplicate-risk candidates returned.');
+		}
+		if (sections.image_candidates) {
+			if (sections.image_candidates.status === 'error') {
+				result.appendChild(el('div', 'magick-ai-toolbox__result-notice is-warning', sections.image_candidates.message || 'Image candidate search failed.'));
+			} else {
+				renderImageList(result, sections.image_candidates.images || sections.image_candidates.image_candidates || sections.image_candidates.candidates);
+			}
+		}
+		if (sections.discoverability && sections.discoverability.candidate_suggestions) {
+			const suggestions = Object.keys(sections.discoverability.candidate_suggestions).map((field) => ({
+				name: formatLabel(field),
+				detail: String(sections.discoverability.candidate_suggestions[field] || ''),
+			}));
+			renderSupportItems(result, 'Discoverability suggestions', suggestions, 'No discoverability suggestions returned.');
 		}
 
 		renderHandoff(result, payload.handoff);
@@ -1747,6 +1839,11 @@
 			return;
 		}
 
+		if (payload.artifact_type === 'editor_content_support_flow') {
+			renderEditorContentSupport(form, payload);
+			return;
+		}
+
 		if (payload.artifact_type === 'article_write_plan') {
 			renderArticlePlan(form, payload);
 			return;
@@ -1828,7 +1925,7 @@
 		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Adapter.' };
 	}
 
-	async function createMediaDerivativePreview(input, mediaDetails) {
+	async function createMediaDerivativePreview(input, mediaDetails, previewOnly) {
 		if (!input.attachment_id) {
 			throw { message: 'Select an image attachment before generating a preview.' };
 		}
@@ -1843,6 +1940,17 @@
 		const derivative = derivativeFromResult(resultPayload);
 		if (!derivative || !derivative.artifact_id) {
 			throw { message: 'Cloud result did not include a derivative artifact id.' };
+		}
+
+		if (previewOnly) {
+			return {
+				abilityInput: input,
+				mediaDetailsInput: mediaDetails || {},
+				create: createPayload,
+				result: resultPayload,
+				runId,
+				derivative,
+			};
 		}
 
 		const proposalRequest = {
@@ -1875,14 +1983,19 @@
 
 		const input = mediaDerivativeInput(form);
 		const mediaDetails = mediaDetailsInput(form);
+		const previewOnly = form.hasAttribute('data-toolbox-media-derivative-preview-only');
 		renderTextResult(form, 'Submitting media derivative run...', 'pending');
-		const state = await createMediaDerivativePreview(input, mediaDetails);
+		const state = await createMediaDerivativePreview(input, mediaDetails, previewOnly);
 		form.__magickMediaDerivativeState = state;
 		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
 		if (submitButton instanceof HTMLButtonElement) {
 			submitButton.disabled = !state.fromPlanRequest;
 		}
-		renderMediaDerivativeRun(form, state);
+		renderMediaDerivativeRun(
+			form,
+			state,
+			previewOnly ? 'Cloud generated a short-lived derivative preview. This check does not submit a Core proposal or write media.' : ''
+		);
 	}
 
 	async function resolveMediaAttachmentUrl(form) {
@@ -2327,12 +2440,21 @@
 		window.history.replaceState({}, '', url.toString());
 	}
 
+	function activeCloudCheckGroup() {
+		const panel = document.querySelector('[data-toolbox-cloud-check-panel]:not([hidden])');
+		if (!panel) {
+			return '';
+		}
+		return activeTarget(panel, '[data-toolbox-cloud-check-group-target]', 'data-toolbox-cloud-check-group-target');
+	}
+
 	function updateUrlForTopTab(target) {
 		if (target === 'tools') {
 			updateToolboxUrl({
 				toolbox_tab: 'tools',
 				toolbox_tool: activeTarget(document, '[data-toolbox-tool-target]', 'data-toolbox-tool-target'),
 				toolbox_cloud_check: null,
+				toolbox_cloud_check_group: null,
 			});
 			return;
 		}
@@ -2342,6 +2464,7 @@
 				toolbox_tab: 'cloud-checks',
 				toolbox_tool: null,
 				toolbox_cloud_check: activeTarget(document, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target'),
+				toolbox_cloud_check_group: activeCloudCheckGroup(),
 			});
 			return;
 		}
@@ -2350,6 +2473,7 @@
 			toolbox_tab: target,
 			toolbox_tool: null,
 			toolbox_cloud_check: null,
+			toolbox_cloud_check_group: null,
 		});
 	}
 
@@ -2397,6 +2521,7 @@
 				toolbox_tab: 'tools',
 				toolbox_tool: target,
 				toolbox_cloud_check: null,
+				toolbox_cloud_check_group: null,
 			});
 		}
 		return true;
@@ -2422,6 +2547,7 @@
 				toolbox_tab: 'cloud-checks',
 				toolbox_tool: null,
 				toolbox_cloud_check: target,
+				toolbox_cloud_check_group: activeCloudCheckGroup(),
 			});
 		}
 		return true;
@@ -2432,6 +2558,7 @@
 		const requestedTab = params.get('toolbox_tab') || '';
 		const requestedTool = params.get('toolbox_tool') || '';
 		const requestedCloudCheck = params.get('toolbox_cloud_check') || '';
+		const requestedCloudCheckGroup = params.get('toolbox_cloud_check_group') || '';
 		let tab = requestedTab;
 
 		if (!tab) {
@@ -2450,6 +2577,11 @@
 		}
 		if (tab === 'cloud-checks' && requestedCloudCheck) {
 			activateCloudCheckPanel(requestedCloudCheck, false);
+		}
+		if (tab === 'cloud-checks' && requestedCloudCheckGroup) {
+			const panel = document.querySelector('[data-toolbox-cloud-check-panel]:not([hidden])');
+			const workspace = panel ? panel.querySelector('[data-toolbox-cloud-check-groups]') : null;
+			activateCloudCheckGroup(workspace, requestedCloudCheckGroup, false);
 		}
 	}
 
@@ -2504,7 +2636,7 @@
 		});
 	}
 
-	function activateCloudCheckGroup(workspace, target) {
+	function activateCloudCheckGroup(workspace, target, updateUrl) {
 		if (!workspace || !hasTarget(workspace, '[data-toolbox-cloud-check-group-target]', 'data-toolbox-cloud-check-group-target', target)) {
 			return false;
 		}
@@ -2517,6 +2649,14 @@
 			'data-toolbox-cloud-check-group-panel',
 			target
 		);
+		if (updateUrl) {
+			updateToolboxUrl({
+				toolbox_tab: 'cloud-checks',
+				toolbox_tool: null,
+				toolbox_cloud_check: activeTarget(document, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target'),
+				toolbox_cloud_check_group: target,
+			});
+		}
 		return true;
 	}
 
@@ -2532,7 +2672,7 @@
 					return;
 				}
 
-				activateCloudCheckGroup(workspace, button.getAttribute('data-toolbox-cloud-check-group-target'));
+				activateCloudCheckGroup(workspace, button.getAttribute('data-toolbox-cloud-check-group-target'), true);
 			});
 		});
 	}

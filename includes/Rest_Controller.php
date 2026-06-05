@@ -147,7 +147,6 @@ final class Rest_Controller {
 				array(
 					'query'               => $query,
 					'intent'              => sanitize_key( (string) ( $request->get_param( 'intent' ) ?: 'news' ) ),
-					'provider'            => sanitize_key( (string) ( $request->get_param( 'provider' ) ?: 'auto' ) ),
 					'max_results'         => max( 1, min( 5, (int) ( $request->get_param( 'max_results' ) ?: 3 ) ) ),
 					'recency_days'        => max( 0, min( 30, (int) ( $request->get_param( 'recency_days' ) ?: 7 ) ) ),
 				)

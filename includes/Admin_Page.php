@@ -430,8 +430,8 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Image', 'magick-ai-toolbox' ); ?></span>
 					<small><?php echo esc_html( $image_ready ? __( 'Cloud managed', 'magick-ai-toolbox' ) : __( 'Cloud connection needed', 'magick-ai-toolbox' ) ); ?></small>
 				</button>
-				<button type="button" class="magick-ai-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="vector" aria-selected="false">
-					<span><?php esc_html_e( 'Vector', 'magick-ai-toolbox' ); ?></span>
+				<button type="button" class="magick-ai-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="site-knowledge" aria-selected="false">
+					<span><?php esc_html_e( 'Site Knowledge', 'magick-ai-toolbox' ); ?></span>
 					<small><?php esc_html_e( 'Cloud managed', 'magick-ai-toolbox' ); ?></small>
 				</button>
 			</nav>
@@ -470,29 +470,16 @@ final class Admin_Page {
 											</select>
 										</label>
 										<label>
-											<span><?php esc_html_e( 'Provider', 'magick-ai-toolbox' ); ?></span>
-											<select name="provider">
-												<option value="auto"><?php esc_html_e( 'Auto', 'magick-ai-toolbox' ); ?></option>
-												<option value="tavily"><?php esc_html_e( 'Tavily', 'magick-ai-toolbox' ); ?></option>
-												<option value="bocha"><?php esc_html_e( 'Bocha', 'magick-ai-toolbox' ); ?></option>
-												<option value="apify"><?php esc_html_e( 'Apify', 'magick-ai-toolbox' ); ?></option>
-											</select>
-										</label>
-									</div>
-									<div class="magick-ai-toolbox__split">
-										<label>
 											<span><?php esc_html_e( 'Max results', 'magick-ai-toolbox' ); ?></span>
 											<input type="number" name="max_results" min="1" max="5" value="3" />
 										</label>
+									</div>
+									<div class="magick-ai-toolbox__split">
 										<label>
 											<span><?php esc_html_e( 'Recency days', 'magick-ai-toolbox' ); ?></span>
 											<input type="number" name="recency_days" min="0" max="30" value="7" />
 										</label>
 									</div>
-									<label class="magick-ai-toolbox__check">
-										<input type="checkbox" name="enhance_with_reader" value="1" />
-										<span><?php esc_html_e( 'Enhance returned pages with Jina Reader when Cloud enables it', 'magick-ai-toolbox' ); ?></span>
-									</label>
 									<button type="submit" class="button button-primary"><?php esc_html_e( 'Run search test', 'magick-ai-toolbox' ); ?></button>
 									<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 								</form>
@@ -534,29 +521,47 @@ final class Admin_Page {
 								<span><?php esc_html_e( 'Smoke test', 'magick-ai-toolbox' ); ?></span>
 								<small><?php esc_html_e( 'Candidates', 'magick-ai-toolbox' ); ?></small>
 							</button>
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-derivative-preview" aria-selected="false">
+								<span><?php esc_html_e( 'Existing image preview', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Derivative', 'magick-ai-toolbox' ); ?></small>
+							</button>
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-handoff" aria-selected="false">
+								<span><?php esc_html_e( 'Handoff', 'magick-ai-toolbox' ); ?></span>
+								<small><?php esc_html_e( 'Core review', 'magick-ai-toolbox' ); ?></small>
+							</button>
 						</nav>
 						<div>
 							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-smoke">
 								<?php $this->render_image_source_candidates_smoke_form(); ?>
 							</div>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-derivative-preview" hidden>
+								<?php $this->render_image_derivative_preview_check(); ?>
+							</div>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-handoff" hidden>
+								<div class="magick-ai-toolbox__example">
+									<strong><?php esc_html_e( 'Core handoff stays in Content Support', 'magick-ai-toolbox' ); ?></strong>
+									<span><?php esc_html_e( 'Use the full Optimize Existing Image flow when a reviewed preview should become one Core proposal, or when batch and URL repair actions are needed.', 'magick-ai-toolbox' ); ?></span>
+								</div>
+								<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=magick-ai-toolbox&toolbox_tab=tools&toolbox_tool=media-derivative' ) ); ?>"><?php esc_html_e( 'Open Optimize Existing Image', 'magick-ai-toolbox' ); ?></a>
+							</div>
 						</div>
 					</div>
 				</section>
 
-				<section class="magick-ai-toolbox__card" data-toolbox-cloud-check-panel="vector" hidden>
+				<section class="magick-ai-toolbox__card" data-toolbox-cloud-check-panel="site-knowledge" hidden>
 					<div class="magick-ai-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
-						<nav class="magick-ai-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Vector checks', 'magick-ai-toolbox' ); ?>">
-							<button type="button" class="magick-ai-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="vector-status" aria-selected="true">
+						<nav class="magick-ai-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Site Knowledge checks', 'magick-ai-toolbox' ); ?>">
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="site-knowledge-status" aria-selected="true">
 								<span><?php esc_html_e( 'Status', 'magick-ai-toolbox' ); ?></span>
 								<small><?php esc_html_e( 'Coverage', 'magick-ai-toolbox' ); ?></small>
 							</button>
-							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="vector-search" aria-selected="false">
+							<button type="button" class="magick-ai-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="site-knowledge-search" aria-selected="false">
 								<span><?php esc_html_e( 'Search check', 'magick-ai-toolbox' ); ?></span>
 								<small><?php esc_html_e( 'Read-only query', 'magick-ai-toolbox' ); ?></small>
 							</button>
 						</nav>
 						<div data-toolbox-site-knowledge>
-							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="vector-status">
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-status">
 								<div class="magick-ai-toolbox__section-heading">
 									<div>
 										<h3><?php esc_html_e( 'Status', 'magick-ai-toolbox' ); ?></h3>
@@ -571,7 +576,7 @@ final class Admin_Page {
 									<div class="magick-ai-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'magick-ai-toolbox' ); ?></div>
 								</div>
 							</div>
-							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="vector-search" hidden>
+							<div class="magick-ai-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-search" hidden>
 								<?php $this->render_site_knowledge_search_check(); ?>
 							</div>
 						</div>
@@ -884,15 +889,67 @@ final class Admin_Page {
 	private function render_tool_cards(): void {
 		$tools = array(
 			array(
-				'id'          => 'article-brief',
-				'endpoint'    => 'flows/article-brief',
-				'title'       => __( 'Content Support Brief', 'magick-ai-toolbox' ),
-				'description' => __( 'Build source notes, outline guidance, image candidates, and governance handoff notes around a human-written article.', 'magick-ai-toolbox' ),
-				'field'       => 'topic',
-				'placeholder' => __( 'Article topic', 'magick-ai-toolbox' ),
-				'button'      => __( 'Build brief', 'magick-ai-toolbox' ),
+				'group'       => __( 'Everyday Support', 'magick-ai-toolbox' ),
+				'id'          => 'discoverability-brief',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Discoverability Brief', 'magick-ai-toolbox' ),
+				'description' => __( 'Build SEO, AEO, GEO, taxonomy, and proposal-field suggestions for one topic or draft.', 'magick-ai-toolbox' ),
+				'intent'      => 'discoverability',
+				'button'      => __( 'Build suggestions', 'magick-ai-toolbox' ),
+				'custom'      => 'content_support_flow',
 			),
 			array(
+				'group'       => __( 'Everyday Support', 'magick-ai-toolbox' ),
+				'id'          => 'publish-preflight',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Publish Preflight', 'magick-ai-toolbox' ),
+				'description' => __( 'Check source coverage, duplicate risk, missing terms, excerpt, and media readiness.', 'magick-ai-toolbox' ),
+				'intent'      => 'publish_preflight',
+				'button'      => __( 'Run preflight', 'magick-ai-toolbox' ),
+				'custom'      => 'content_support_flow',
+			),
+			array(
+				'group'       => __( 'Everyday Support', 'magick-ai-toolbox' ),
+				'id'          => 'taxonomy-tags',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Taxonomy/Tag Candidates', 'magick-ai-toolbox' ),
+				'description' => __( 'Suggest matching existing categories and tags from the supplied draft context.', 'magick-ai-toolbox' ),
+				'intent'      => 'taxonomy_tags',
+				'button'      => __( 'Find terms', 'magick-ai-toolbox' ),
+				'custom'      => 'content_support_flow',
+			),
+			array(
+				'group'       => __( 'Everyday Support', 'magick-ai-toolbox' ),
+				'id'          => 'internal-links',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Internal Link Candidates', 'magick-ai-toolbox' ),
+				'description' => __( 'Use Cloud-managed Site Knowledge to find related public content for operator-reviewed links.', 'magick-ai-toolbox' ),
+				'intent'      => 'internal_links',
+				'button'      => __( 'Find links', 'magick-ai-toolbox' ),
+				'custom'      => 'content_support_flow',
+			),
+			array(
+				'group'       => __( 'Everyday Support', 'magick-ai-toolbox' ),
+				'id'          => 'image-candidates',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Image Candidates', 'magick-ai-toolbox' ),
+				'description' => __( 'Find image-source candidates for featured or inline use. Import still requires a governed handoff.', 'magick-ai-toolbox' ),
+				'intent'      => 'image_candidates',
+				'button'      => __( 'Find images', 'magick-ai-toolbox' ),
+				'custom'      => 'content_support_flow',
+			),
+			array(
+				'group'       => __( 'Fallback Bundles', 'magick-ai-toolbox' ),
+				'id'          => 'article-brief',
+				'endpoint'    => 'flows/article-brief',
+				'title'       => __( 'Article Planning Bundle', 'magick-ai-toolbox' ),
+				'description' => __( 'Build one combined research, image, knowledge, outline, and handoff bundle when an operator needs a compact fallback package.', 'magick-ai-toolbox' ),
+				'field'       => 'topic',
+				'placeholder' => __( 'Article topic', 'magick-ai-toolbox' ),
+				'button'      => __( 'Build bundle', 'magick-ai-toolbox' ),
+			),
+			array(
+				'group'       => __( 'Fallback Bundles', 'magick-ai-toolbox' ),
 				'id'          => 'article-assistant',
 				'endpoint'    => 'flows/article-assistant',
 				'title'       => __( 'Article Assistant Fallback', 'magick-ai-toolbox' ),
@@ -900,6 +957,7 @@ final class Admin_Page {
 				'custom'      => 'article_assistant',
 			),
 			array(
+				'group'       => __( 'Governed Handoffs', 'magick-ai-toolbox' ),
 				'id'          => 'article-plan',
 				'endpoint'    => 'flows/article-plan',
 				'title'       => __( 'Reviewed Draft Handoff', 'magick-ai-toolbox' ),
@@ -907,6 +965,15 @@ final class Admin_Page {
 				'custom'      => 'article_plan',
 			),
 			array(
+				'group'       => __( 'Governed Handoffs', 'magick-ai-toolbox' ),
+				'id'          => 'image-candidate-adoption',
+				'endpoint'    => 'flows/image-candidate-adoption-plan',
+				'title'       => __( 'Adopt New Image', 'magick-ai-toolbox' ),
+				'description' => __( 'Use a reviewed stock, generated, owned, or external image as a media import proposal.', 'magick-ai-toolbox' ),
+				'custom'      => 'image_candidate_adoption',
+			),
+			array(
+				'group'       => __( 'Media', 'magick-ai-toolbox' ),
 				'id'          => 'media-brief',
 				'endpoint'    => 'flows/media-brief',
 				'title'       => __( 'Media Brief', 'magick-ai-toolbox' ),
@@ -916,24 +983,26 @@ final class Admin_Page {
 				'button'      => __( 'Plan media', 'magick-ai-toolbox' ),
 			),
 			array(
+				'group'       => __( 'Media', 'magick-ai-toolbox' ),
 				'id'          => 'media-derivative',
 				'endpoint'    => 'media-derivative-handoff',
 				'title'       => __( 'Optimize Existing Image', 'magick-ai-toolbox' ),
 				'description' => __( 'Choose a media-library image, review metadata, generate a preview, then submit one Core optimization proposal.', 'magick-ai-toolbox' ),
 				'custom'      => 'media_derivative',
 			),
-			array(
-				'id'          => 'image-candidate-adoption',
-				'endpoint'    => 'flows/image-candidate-adoption-plan',
-				'title'       => __( 'Adopt New Image', 'magick-ai-toolbox' ),
-				'description' => __( 'Use a reviewed stock, generated, owned, or external image as a media import proposal.', 'magick-ai-toolbox' ),
-				'custom'      => 'image_candidate_adoption',
-			),
 		);
 		?>
 		<div class="magick-ai-toolbox__tool-workspace" data-toolbox-tools>
 			<div class="magick-ai-toolbox__tool-list" aria-label="<?php esc_attr_e( 'Tool actions', 'magick-ai-toolbox' ); ?>">
-				<?php foreach ( $tools as $index => $tool ) : ?>
+				<?php
+				$current_group = '';
+				foreach ( $tools as $index => $tool ) :
+					$group = (string) ( $tool['group'] ?? '' );
+					if ( '' !== $group && $group !== $current_group ) :
+						$current_group = $group;
+						?>
+						<div class="magick-ai-toolbox__tool-group-label"><?php echo esc_html( $group ); ?></div>
+					<?php endif; ?>
 					<button type="button" class="magick-ai-toolbox__tool-button <?php echo 0 === $index ? 'is-active' : ''; ?>" data-toolbox-tool-target="<?php echo esc_attr( (string) $tool['id'] ); ?>" aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>">
 						<span><?php echo esc_html( (string) $tool['title'] ); ?></span>
 						<small><?php echo esc_html( (string) $tool['description'] ); ?></small>
@@ -944,6 +1013,18 @@ final class Admin_Page {
 			<div class="magick-ai-toolbox__tool-panels">
 				<?php
 				foreach ( $tools as $index => $tool ) {
+					if ( 'content_support_flow' === (string) ( $tool['custom'] ?? '' ) ) {
+						$this->render_content_support_flow_tool(
+							(string) $tool['endpoint'],
+							(string) $tool['title'],
+							(string) $tool['description'],
+							(string) $tool['id'],
+							(string) $tool['intent'],
+							(string) $tool['button'],
+							0 === $index
+						);
+						continue;
+					}
 					if ( 'article_assistant' === (string) ( $tool['custom'] ?? '' ) ) {
 						$this->render_article_assistant_tool(
 							(string) $tool['endpoint'],
@@ -1002,6 +1083,40 @@ final class Admin_Page {
 		<?php
 	}
 
+	private function render_content_support_flow_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $active = false ): void {
+		?>
+		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<h2><?php echo esc_html( $title ); ?></h2>
+			<p><?php echo esc_html( $description ); ?></p>
+			<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
+			<input type="hidden" name="post_type" value="post" />
+			<input type="hidden" name="post_status" value="draft" />
+			<div class="magick-ai-toolbox__example">
+				<strong><?php esc_html_e( 'Fixed support flow', 'magick-ai-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'This runs one bounded suggestion flow from the supplied draft context. It does not write posts, assign terms, insert links, import media, or publish.', 'magick-ai-toolbox' ); ?></span>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Post ID (optional)', 'magick-ai-toolbox' ); ?></span>
+				<input type="number" min="0" step="1" name="post_id" placeholder="<?php esc_attr_e( 'Use 0 for topic-only runs', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Title or topic', 'magick-ai-toolbox' ); ?></span>
+				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Working title or article topic', 'magick-ai-toolbox' ); ?>" />
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Excerpt or short brief', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="excerpt" rows="3" placeholder="<?php esc_attr_e( 'Optional summary, angle, audience, or constraints', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Draft text or notes', 'magick-ai-toolbox' ); ?></span>
+				<textarea name="content" rows="5" placeholder="<?php esc_attr_e( 'Optional draft body, notes, or source outline', 'magick-ai-toolbox' ); ?>"></textarea>
+			</label>
+			<button type="submit" class="button button-primary"><?php echo esc_html( $button ); ?></button>
+			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
+		<?php
+	}
+
 	private function render_image_source_candidates_smoke_form(): void {
 		?>
 		<form class="magick-ai-toolbox__inline-form" data-toolbox-endpoint="image-candidates">
@@ -1046,6 +1161,205 @@ final class Admin_Page {
 				</label>
 			</div>
 			<button type="submit" class="button button-primary"><?php esc_html_e( 'Test Cloud image source', 'magick-ai-toolbox' ); ?></button>
+			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
+		<?php
+	}
+
+	private function get_media_derivative_core_policy(): array {
+		if ( function_exists( 'magick_ai_core_get_media_derivative_settings' ) ) {
+			return magick_ai_core_get_media_derivative_settings();
+		}
+
+		return array(
+			'target_format'            => 'webp',
+			'max_width'                => 1600,
+			'quality'                  => 82,
+			'watermark_enabled'        => false,
+			'watermark_configured'     => false,
+			'watermark_type'           => 'image',
+			'watermark_text'           => 'AI',
+			'watermark_position'       => 'bottom_right',
+			'watermark_opacity'        => 80,
+			'watermark_scale'          => 20,
+			'watermark_font_size'      => 48,
+			'watermark_color'          => '#FFFFFF',
+			'watermark_background'     => 'rgba(0,0,0,0.35)',
+			'watermark_margin'         => 24,
+			'use_cloud_when_available' => true,
+		);
+	}
+
+	private function get_media_derivative_watermark_details( array $core_policy ): string {
+		if ( 'text' === (string) ( $core_policy['watermark_type'] ?? '' ) ) {
+			return sprintf(
+				/* translators: 1: text, 2: position, 3: opacity, 4: font size, 5: margin. */
+				__( 'text "%1$s", %2$s, %3$d%% opacity, %4$dpx font, %5$dpx margin', 'magick-ai-toolbox' ),
+				(string) ( $core_policy['watermark_text'] ?? 'AI' ),
+				ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
+				(int) ( $core_policy['watermark_opacity'] ?? 80 ),
+				(int) ( $core_policy['watermark_font_size'] ?? 48 ),
+				(int) ( $core_policy['watermark_margin'] ?? 24 )
+			);
+		}
+
+		if ( empty( $core_policy['watermark_configured'] ) ) {
+			return __( 'off or incomplete', 'magick-ai-toolbox' );
+		}
+
+		return sprintf(
+			/* translators: 1: position, 2: opacity, 3: scale, 4: margin. */
+			__( '%1$s, %2$d%% opacity, %3$d%% scale, %4$dpx margin', 'magick-ai-toolbox' ),
+			ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
+			(int) ( $core_policy['watermark_opacity'] ?? 80 ),
+			(int) ( $core_policy['watermark_scale'] ?? 20 ),
+			(int) ( $core_policy['watermark_margin'] ?? 24 )
+		);
+	}
+
+	private function render_media_derivative_core_defaults( array $core_policy ): void {
+		?>
+		<div class="magick-ai-toolbox__example">
+			<strong><?php esc_html_e( 'Core defaults', 'magick-ai-toolbox' ); ?></strong>
+			<span>
+				<?php
+				printf(
+					/* translators: 1: format, 2: max width, 3: quality. */
+					esc_html__( '%1$s, %2$dpx, quality %3$d. Watermark: %4$s.', 'magick-ai-toolbox' ),
+					esc_html( strtoupper( (string) $core_policy['target_format'] ) ),
+					(int) $core_policy['max_width'],
+					(int) $core_policy['quality'],
+					esc_html( $this->get_media_derivative_watermark_details( $core_policy ) )
+				);
+				?>
+			</span>
+		</div>
+		<?php
+	}
+
+	private function render_media_derivative_picker_controls(): void {
+		?>
+		<div class="magick-ai-toolbox__media-picker">
+			<div class="magick-ai-toolbox__media-preview" data-toolbox-media-preview>
+				<span><?php esc_html_e( 'No image selected', 'magick-ai-toolbox' ); ?></span>
+			</div>
+			<div>
+				<label>
+					<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" data-toolbox-media-attachment />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Image URL', 'magick-ai-toolbox' ); ?></span>
+					<input type="url" name="attachment_url" placeholder="<?php esc_attr_e( 'Paste a local uploads URL', 'magick-ai-toolbox' ); ?>" data-toolbox-media-url />
+				</label>
+				<div class="magick-ai-toolbox__inline-actions">
+					<button type="button" class="button" data-toolbox-select-media><?php esc_html_e( 'Select from media library', 'magick-ai-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-resolve-media-url><?php esc_html_e( 'Resolve URL', 'magick-ai-toolbox' ); ?></button>
+					<span data-toolbox-media-name><?php esc_html_e( 'Choose one local image attachment.', 'magick-ai-toolbox' ); ?></span>
+				</div>
+				<div class="magick-ai-toolbox__url-resolution" data-toolbox-media-url-resolution hidden></div>
+			</div>
+		</div>
+		<?php
+	}
+
+	private function render_media_derivative_format_controls( array $core_policy ): void {
+		?>
+		<div class="magick-ai-toolbox__split">
+			<label>
+				<span><?php esc_html_e( 'Format override', 'magick-ai-toolbox' ); ?></span>
+				<select name="target_format">
+					<option value=""><?php esc_html_e( 'Use Core default', 'magick-ai-toolbox' ); ?></option>
+					<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
+						<option value="<?php echo esc_attr( $format ); ?>"><?php echo esc_html( strtoupper( $format ) ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</label>
+			<label>
+				<span><?php esc_html_e( 'Max width override', 'magick-ai-toolbox' ); ?></span>
+				<input type="number" min="320" max="7680" step="1" name="max_width" placeholder="<?php echo esc_attr( (string) $core_policy['max_width'] ); ?>" />
+			</label>
+		</div>
+		<label>
+			<span><?php esc_html_e( 'Quality override', 'magick-ai-toolbox' ); ?></span>
+			<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
+		</label>
+		<?php
+	}
+
+	private function render_media_derivative_watermark_controls( array $core_policy ): void {
+		?>
+		<div class="magick-ai-toolbox__batch-panel">
+			<h3><?php esc_html_e( 'Watermark override', 'magick-ai-toolbox' ); ?></h3>
+			<p><?php esc_html_e( 'Use Core watermark policy by default. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Core logo source for this run.', 'magick-ai-toolbox' ); ?></p>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Watermark mode', 'magick-ai-toolbox' ); ?></span>
+					<select name="watermark_mode">
+						<option value="core"><?php esc_html_e( 'Use Core default', 'magick-ai-toolbox' ); ?></option>
+						<option value="off"><?php esc_html_e( 'No watermark', 'magick-ai-toolbox' ); ?></option>
+						<option value="text"><?php esc_html_e( 'Text watermark', 'magick-ai-toolbox' ); ?></option>
+						<option value="image"><?php esc_html_e( 'Image/logo watermark', 'magick-ai-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Position', 'magick-ai-toolbox' ); ?></span>
+					<select name="watermark_position">
+						<?php foreach ( array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' ) as $position ) : ?>
+							<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ), $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Text', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" maxlength="64" name="watermark_text" value="<?php echo esc_attr( (string) ( $core_policy['watermark_text'] ?? 'AI' ) ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Font size', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="8" max="256" step="1" name="watermark_font_size" value="<?php echo esc_attr( (string) ( $core_policy['watermark_font_size'] ?? 48 ) ); ?>" />
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Text color', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="watermark_color" value="<?php echo esc_attr( (string) ( $core_policy['watermark_color'] ?? '#FFFFFF' ) ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Background', 'magick-ai-toolbox' ); ?></span>
+					<input type="text" name="watermark_background" value="<?php echo esc_attr( (string) ( $core_policy['watermark_background'] ?? 'rgba(0,0,0,0.35)' ) ); ?>" />
+				</label>
+			</div>
+			<div class="magick-ai-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Opacity', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="0" max="100" step="1" name="watermark_opacity" value="<?php echo esc_attr( (string) ( $core_policy['watermark_opacity'] ?? 80 ) ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Image scale', 'magick-ai-toolbox' ); ?></span>
+					<input type="number" min="1" max="100" step="1" name="watermark_scale" value="<?php echo esc_attr( (string) ( $core_policy['watermark_scale'] ?? 20 ) ); ?>" />
+				</label>
+			</div>
+			<label>
+				<span><?php esc_html_e( 'Margin', 'magick-ai-toolbox' ); ?></span>
+				<input type="number" min="0" max="1000" step="1" name="watermark_margin" value="<?php echo esc_attr( (string) ( $core_policy['watermark_margin'] ?? 24 ) ); ?>" />
+			</label>
+		</div>
+		<?php
+	}
+
+	private function render_image_derivative_preview_check(): void {
+		$core_policy = $this->get_media_derivative_core_policy();
+		?>
+		<form class="magick-ai-toolbox__inline-form" data-toolbox-media-derivative data-toolbox-media-derivative-preview-only>
+			<h3><?php esc_html_e( 'Existing image preview', 'magick-ai-toolbox' ); ?></h3>
+			<p><?php esc_html_e( 'Generate a short-lived Cloud derivative preview for one existing media-library image. This check does not submit a Core proposal or write media.', 'magick-ai-toolbox' ); ?></p>
+			<?php $this->render_media_derivative_core_defaults( $core_policy ); ?>
+			<?php $this->render_media_derivative_picker_controls(); ?>
+			<?php $this->render_media_derivative_format_controls( $core_policy ); ?>
+			<?php $this->render_media_derivative_watermark_controls( $core_policy ); ?>
+			<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'magick-ai-toolbox' ); ?></button>
 			<div class="magick-ai-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php
@@ -1234,105 +1548,14 @@ final class Admin_Page {
 	}
 
 	private function render_media_derivative_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
-		$core_policy = function_exists( 'magick_ai_core_get_media_derivative_settings' )
-			? magick_ai_core_get_media_derivative_settings()
-			: array(
-				'target_format'            => 'webp',
-				'max_width'                => 1600,
-				'quality'                  => 82,
-				'watermark_enabled'        => false,
-				'watermark_configured'     => false,
-				'watermark_type'           => 'image',
-				'watermark_text'           => 'AI',
-				'watermark_position'       => 'bottom_right',
-				'watermark_opacity'        => 80,
-				'watermark_scale'          => 20,
-				'watermark_font_size'      => 48,
-				'watermark_color'          => '#FFFFFF',
-				'watermark_background'     => 'rgba(0,0,0,0.35)',
-				'watermark_margin'         => 24,
-				'use_cloud_when_available' => true,
-			);
-		$watermark_details = ! empty( $core_policy['watermark_configured'] )
-			? sprintf(
-				/* translators: 1: position, 2: opacity, 3: scale, 4: margin. */
-				__( '%1$s, %2$d%% opacity, %3$d%% scale, %4$dpx margin', 'magick-ai-toolbox' ),
-				ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
-				(int) ( $core_policy['watermark_opacity'] ?? 80 ),
-				(int) ( $core_policy['watermark_scale'] ?? 20 ),
-				(int) ( $core_policy['watermark_margin'] ?? 24 )
-			)
-			: __( 'off or incomplete', 'magick-ai-toolbox' );
-		if ( 'text' === (string) ( $core_policy['watermark_type'] ?? '' ) ) {
-			$watermark_details = sprintf(
-				/* translators: 1: text, 2: position, 3: opacity, 4: font size, 5: margin. */
-				__( 'text "%1$s", %2$s, %3$d%% opacity, %4$dpx font, %5$dpx margin', 'magick-ai-toolbox' ),
-				(string) ( $core_policy['watermark_text'] ?? 'AI' ),
-				ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
-				(int) ( $core_policy['watermark_opacity'] ?? 80 ),
-				(int) ( $core_policy['watermark_font_size'] ?? 48 ),
-				(int) ( $core_policy['watermark_margin'] ?? 24 )
-			);
-		}
+		$core_policy = $this->get_media_derivative_core_policy();
 		?>
 		<form class="magick-ai-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" data-toolbox-media-derivative <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
-			<div class="magick-ai-toolbox__example">
-				<strong><?php esc_html_e( 'Core defaults', 'magick-ai-toolbox' ); ?></strong>
-				<span>
-					<?php
-					printf(
-						/* translators: 1: format, 2: max width, 3: quality. */
-						esc_html__( '%1$s, %2$dpx, quality %3$d. Watermark: %4$s.', 'magick-ai-toolbox' ),
-						esc_html( strtoupper( (string) $core_policy['target_format'] ) ),
-						(int) $core_policy['max_width'],
-						(int) $core_policy['quality'],
-						esc_html( $watermark_details )
-					);
-					?>
-				</span>
-			</div>
-			<div class="magick-ai-toolbox__media-picker">
-				<div class="magick-ai-toolbox__media-preview" data-toolbox-media-preview>
-					<span><?php esc_html_e( 'No image selected', 'magick-ai-toolbox' ); ?></span>
-				</div>
-				<div>
-					<label>
-						<span><?php esc_html_e( 'Attachment ID', 'magick-ai-toolbox' ); ?></span>
-						<input type="number" min="1" step="1" name="attachment_id" placeholder="<?php esc_attr_e( 'Attachment ID', 'magick-ai-toolbox' ); ?>" data-toolbox-media-attachment />
-					</label>
-					<label>
-						<span><?php esc_html_e( 'Image URL', 'magick-ai-toolbox' ); ?></span>
-						<input type="url" name="attachment_url" placeholder="<?php esc_attr_e( 'Paste a local uploads URL', 'magick-ai-toolbox' ); ?>" data-toolbox-media-url />
-					</label>
-					<div class="magick-ai-toolbox__inline-actions">
-						<button type="button" class="button" data-toolbox-select-media><?php esc_html_e( 'Select from media library', 'magick-ai-toolbox' ); ?></button>
-						<button type="button" class="button" data-toolbox-resolve-media-url><?php esc_html_e( 'Resolve URL', 'magick-ai-toolbox' ); ?></button>
-						<span data-toolbox-media-name><?php esc_html_e( 'Choose one local image attachment.', 'magick-ai-toolbox' ); ?></span>
-					</div>
-					<div class="magick-ai-toolbox__url-resolution" data-toolbox-media-url-resolution hidden></div>
-				</div>
-			</div>
-			<div class="magick-ai-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Format override', 'magick-ai-toolbox' ); ?></span>
-					<select name="target_format">
-						<option value=""><?php esc_html_e( 'Use Core default', 'magick-ai-toolbox' ); ?></option>
-						<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
-							<option value="<?php echo esc_attr( $format ); ?>"><?php echo esc_html( strtoupper( $format ) ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Max width override', 'magick-ai-toolbox' ); ?></span>
-					<input type="number" min="320" max="7680" step="1" name="max_width" placeholder="<?php echo esc_attr( (string) $core_policy['max_width'] ); ?>" />
-				</label>
-			</div>
-			<label>
-				<span><?php esc_html_e( 'Quality override', 'magick-ai-toolbox' ); ?></span>
-				<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
-			</label>
+			<?php $this->render_media_derivative_core_defaults( $core_policy ); ?>
+			<?php $this->render_media_derivative_picker_controls(); ?>
+			<?php $this->render_media_derivative_format_controls( $core_policy ); ?>
 			<div class="magick-ai-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Reviewed media details', 'magick-ai-toolbox' ); ?></h3>
 				<p><?php esc_html_e( 'These fields are submitted with the derivative artifact as one Core media optimization proposal.', 'magick-ai-toolbox' ); ?></p>
@@ -1365,63 +1588,7 @@ final class Admin_Page {
 					</select>
 				</label>
 			</div>
-			<div class="magick-ai-toolbox__batch-panel">
-				<h3><?php esc_html_e( 'Watermark override', 'magick-ai-toolbox' ); ?></h3>
-				<p><?php esc_html_e( 'Use Core watermark policy by default. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Core logo source for this run.', 'magick-ai-toolbox' ); ?></p>
-				<div class="magick-ai-toolbox__split">
-					<label>
-						<span><?php esc_html_e( 'Watermark mode', 'magick-ai-toolbox' ); ?></span>
-						<select name="watermark_mode">
-							<option value="core"><?php esc_html_e( 'Use Core default', 'magick-ai-toolbox' ); ?></option>
-							<option value="off"><?php esc_html_e( 'No watermark', 'magick-ai-toolbox' ); ?></option>
-							<option value="text"><?php esc_html_e( 'Text watermark', 'magick-ai-toolbox' ); ?></option>
-							<option value="image"><?php esc_html_e( 'Image/logo watermark', 'magick-ai-toolbox' ); ?></option>
-						</select>
-					</label>
-					<label>
-						<span><?php esc_html_e( 'Position', 'magick-ai-toolbox' ); ?></span>
-						<select name="watermark_position">
-							<?php foreach ( array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' ) as $position ) : ?>
-								<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ), $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					</label>
-				</div>
-				<div class="magick-ai-toolbox__split">
-					<label>
-						<span><?php esc_html_e( 'Text', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" maxlength="64" name="watermark_text" value="<?php echo esc_attr( (string) ( $core_policy['watermark_text'] ?? 'AI' ) ); ?>" />
-					</label>
-					<label>
-						<span><?php esc_html_e( 'Font size', 'magick-ai-toolbox' ); ?></span>
-						<input type="number" min="8" max="256" step="1" name="watermark_font_size" value="<?php echo esc_attr( (string) ( $core_policy['watermark_font_size'] ?? 48 ) ); ?>" />
-					</label>
-				</div>
-				<div class="magick-ai-toolbox__split">
-					<label>
-						<span><?php esc_html_e( 'Text color', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="watermark_color" value="<?php echo esc_attr( (string) ( $core_policy['watermark_color'] ?? '#FFFFFF' ) ); ?>" />
-					</label>
-					<label>
-						<span><?php esc_html_e( 'Background', 'magick-ai-toolbox' ); ?></span>
-						<input type="text" name="watermark_background" value="<?php echo esc_attr( (string) ( $core_policy['watermark_background'] ?? 'rgba(0,0,0,0.35)' ) ); ?>" />
-					</label>
-				</div>
-				<div class="magick-ai-toolbox__split">
-					<label>
-						<span><?php esc_html_e( 'Opacity', 'magick-ai-toolbox' ); ?></span>
-						<input type="number" min="0" max="100" step="1" name="watermark_opacity" value="<?php echo esc_attr( (string) ( $core_policy['watermark_opacity'] ?? 80 ) ); ?>" />
-					</label>
-					<label>
-						<span><?php esc_html_e( 'Image scale', 'magick-ai-toolbox' ); ?></span>
-						<input type="number" min="1" max="100" step="1" name="watermark_scale" value="<?php echo esc_attr( (string) ( $core_policy['watermark_scale'] ?? 20 ) ); ?>" />
-					</label>
-				</div>
-				<label>
-					<span><?php esc_html_e( 'Margin', 'magick-ai-toolbox' ); ?></span>
-					<input type="number" min="0" max="1000" step="1" name="watermark_margin" value="<?php echo esc_attr( (string) ( $core_policy['watermark_margin'] ?? 24 ) ); ?>" />
-				</label>
-			</div>
+			<?php $this->render_media_derivative_watermark_controls( $core_policy ); ?>
 			<div class="magick-ai-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Exclude formats from setting repair', 'magick-ai-toolbox' ); ?></span>

@@ -71,11 +71,25 @@ The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
 Cloud Checks now open directly into verification tools for Cloud-managed
-search, image-source candidates, and site knowledge. The tabs may show compact
-Cloud readiness labels, but each panel should prioritize the operator test
-instead of repeating provider ownership detail. Billing, quota, key rotation,
-request-log, marketplace, provider routing, vector provider settings, and
-vector lifecycle controls do not belong in Toolbox.
+search, image-source candidates, preview-only media derivatives, and Site
+Knowledge. The tabs may show compact Cloud readiness labels, but each panel
+should prioritize the Toolbox ability reachability check instead of repeating
+provider ownership detail. Search checks use Cloud auto execution only; provider
+selection, Jina Reader toggles, routing diagnostics, Cloud API key verification,
+entitlement, billing, quota, and request logs belong in Cloud Addon or Cloud
+service-plane surfaces. Image derivative checks may generate short-lived Cloud
+preview artifacts only, with one-run text or image/logo watermark overrides
+that stay compatible with OpenClaw media derivative handoffs; Core proposal,
+batch proposal, and URL repair handoffs stay in Content Support. Marketplace,
+provider routing, vector provider settings, and vector lifecycle controls do
+not belong in Toolbox.
+
+The admin Content Support tab should default to fixed, single-job support
+buttons before fallback bundles. Everyday buttons use the existing
+`/editor/content-support` intents for discoverability, publish preflight,
+taxonomy/tag candidates, internal links, and image candidates. Media tools,
+governed handoffs, and the combined Article Planning Bundle are visually
+separate groups so the bundle does not look like the primary workflow.
 
 ## Content Discoverability Context
 

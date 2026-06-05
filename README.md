@@ -173,6 +173,13 @@ candidates from the current draft context. The panel returns suggestions only;
 it does not insert links, assign terms, import media, publish content, or write
 SEO fields.
 
+The admin **Content Support** tab mirrors that fixed-flow posture. Its default
+Everyday Support group runs one bounded job at a time: discoverability brief,
+publish preflight, taxonomy/tag candidates, internal-link candidates, or image
+candidates. Media work, governed handoffs, and the combined Article Planning
+Bundle are visually separate groups; the bundle is a fallback package, not the
+primary support workflow.
+
 The media derivative preview flow reads Core media optimization defaults when
 available, accepts one-run operator overrides, and lets an operator select one
 image attachment from the media library. Operators can keep the Core default
@@ -268,10 +275,19 @@ The admin **Site Knowledge** tab lets operators refresh, rebuild, or delete the
 Cloud-managed index and inspect coverage without configuring vector provider
 keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
 Toolbox only starts sync from local public content and displays returned status.
-The **Cloud Checks -> Vector** panel is a read-only verification surface for the
-same Cloud-managed site knowledge status and search check; it does not expose
-provider keys, embedding settings, collection names, or vector database
+The **Cloud Checks -> Site Knowledge** panel is a read-only verification surface
+for the same Cloud-managed site knowledge status and search check; it does not
+expose provider keys, embedding settings, collection names, or vector database
 configuration.
+The **Cloud Checks -> Search** panel uses Cloud auto execution for a bounded
+Toolbox reachability check; provider selection, Jina Reader toggles, routing
+diagnostics, entitlement, quota, billing, and request logs belong in Cloud
+Addon or Cloud service-plane surfaces.
+The **Cloud Checks -> Image** panel checks Cloud image-source candidates and can
+generate a short-lived derivative preview for one existing media-library image,
+including text or image/logo watermark overrides for that run. Core proposal
+submission, batch proposal submission, and URL repair handoffs remain in
+**Content Support -> Optimize Existing Image**.
 
 Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include raw provider payloads for debugging.

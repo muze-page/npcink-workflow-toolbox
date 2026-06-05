@@ -231,6 +231,20 @@ The verification surface may identify whether a Cloud-backed action is
 reachable from Toolbox, but it should keep provider ownership detail in Cloud
 or in documentation.
 
+Cloud web search checks must use the Cloud-managed auto route. Toolbox must not
+expose provider selection, Jina Reader toggles, provider routing diagnostics,
+quota, billing, request logs, entitlement, or key verification controls here.
+Cloud Addon owns the WordPress-side connection and authorization check; Cloud
+service-plane surfaces own provider/runtime diagnostics.
+
+Cloud Checks may include a preview-only media derivative check under Image. It
+may select a local attachment, resolve a local uploads URL, apply one-run
+format/size/quality overrides, and show the short-lived Cloud preview artifact.
+It must not submit Core proposals, run batch proposal submission, repair URLs,
+replace media files, update attachment metadata, or treat preview artifacts as
+WordPress media writes. Those handoff actions stay in Content Support and Core
+governance.
+
 The connector surface must not become provider billing, quota, key-rotation,
 request-log, marketplace, provider-routing, vector-provider, or vector
 lifecycle ownership. Those are Cloud or future connector-owner concerns, not

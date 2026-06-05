@@ -540,21 +540,14 @@ final class Provider_Client {
 			$intent = 'news';
 		}
 
-		$provider = sanitize_key( (string) ( $input['provider'] ?? 'auto' ) );
-		if ( ! in_array( $provider, array( 'auto', 'tavily', 'bocha', 'apify' ), true ) ) {
-			$provider = 'auto';
-		}
-
 		$max_results  = max( 1, min( 5, absint( $input['max_results'] ?? 3 ) ) );
 		$recency_days = max( 0, min( 30, absint( $input['recency_days'] ?? 7 ) ) );
 		$runtime_input = array(
 			'contract_version'    => 'web_search.v1',
 			'query'               => $query,
 			'intent'              => $intent,
-			'provider'            => $provider,
 			'max_results'         => $max_results,
 			'recency_days'        => $recency_days,
-			'enhance_with_reader' => ! empty( $input['enhance_with_reader'] ),
 			'evidence_policy'     => array(
 				'required_sources' => 1,
 				'no_hit_policy'    => 'abstain',
@@ -2104,8 +2097,8 @@ final class Provider_Client {
 
 		$payload = $this->with_output_contract(
 			array(
-				'provider'             => sanitize_key( (string) ( $result['provider'] ?? $input['provider'] ?? 'cloud_web_search' ) ),
-				'provider_mode'        => sanitize_key( (string) ( $input['provider'] ?? 'auto' ) ),
+				'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
+				'provider_mode'        => 'cloud_auto',
 				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
 				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/web-search' ) ),
 				'cloud_runtime'        => 'magick_ai_cloud_addon',
@@ -2116,14 +2109,12 @@ final class Provider_Client {
 				'max_results'          => max( 1, min( 10, (int) ( $input['max_results'] ?? 3 ) ) ),
 				'result_count'         => count( $results ),
 				'evidence_gate'        => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
-				'reader_enhancement'   => is_array( $result['reader_enhancement'] ?? null ) ? $this->sanitize_payload( $result['reader_enhancement'] ) : array(),
 				'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 				'usage_summary'        => array(
-					'provider'             => sanitize_key( (string) ( $result['provider'] ?? $input['provider'] ?? 'cloud_web_search' ) ),
-					'provider_mode'        => sanitize_key( (string) ( $input['provider'] ?? 'auto' ) ),
+					'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
+					'provider_mode'        => 'cloud_auto',
 					'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 					'result_count'         => count( $results ),
-					'reader_status'        => sanitize_key( (string) ( $result['reader_enhancement']['status'] ?? '' ) ),
 					'evidence_status'      => sanitize_key( (string) ( $result['evidence_gate']['status'] ?? '' ) ),
 					'failure_reason'       => sanitize_text_field( (string) ( $result['error_code'] ?? $response['error_code'] ?? '' ) ),
 				),

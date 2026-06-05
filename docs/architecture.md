@@ -240,6 +240,14 @@ draft title, draft body, SEO hints, and risk level. Its result renderer shows
 `magick-ai/create-draft` action, and the Core from-plan handoff route. It does
 not submit the plan to Core or approve execution.
 
+The admin **Content Support** tab groups fixed buttons by operator job. The
+default **Everyday Support** group uses the same fixed
+`/editor/content-support` intents as the post editor panel: discoverability,
+publish preflight, taxonomy/tag candidates, internal-link candidates, and image
+candidates. Media work and governed handoffs are separate groups. The combined
+`Article Planning Bundle` is kept as a fallback bundle, not the default support
+flow.
+
 Toolbox also renders additive `operator_feedback` payloads from governed
 handoff failures, including reasons, revision fields, next steps, retry state,
 and Core evidence. This is display-only feedback for the operator; Core remains
@@ -266,11 +274,18 @@ and featured image id. It never mutates the draft, assigns terms, inserts links,
 imports media, publishes content, or writes SEO fields. Write-like follow-up
 must still go through Core proposals and reusable WordPress abilities.
 
-Cloud Checks use compact tabs for Cloud-managed search, image-source, and
-site-knowledge checks. Each panel opens directly into the relevant verification
-tool instead of repeating provider ownership detail. The surface is not a
-billing, quota, request-log, marketplace, provider-routing, key-rotation,
-vector-provider, or vector-lifecycle surface.
+Cloud Checks use compact tabs for Cloud-managed search, image-source,
+preview-only media derivative, and Site Knowledge checks. Each panel opens
+directly into the relevant Toolbox ability reachability check instead of
+repeating provider ownership detail. Search checks use Cloud auto execution
+only; provider selection, Jina Reader toggles, routing diagnostics, Cloud API
+key verification, entitlement, quota, billing, and request logs belong in Cloud
+Addon or Cloud service-plane surfaces. Image derivative checks may generate
+short-lived Cloud previews only, including one-run text or image/logo watermark
+overrides that match the Adapter/OpenClaw media derivative request shape; Core
+proposal submission, batch proposal submission, and URL repair handoffs stay in
+Content Support. The surface is not a billing, quota, request-log, marketplace,
+provider-routing, key-rotation, vector-provider, or vector-lifecycle surface.
 
 ## Dependency Direction
 
