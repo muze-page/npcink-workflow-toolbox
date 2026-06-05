@@ -137,9 +137,14 @@ toolbox_assert( false !== strpos( $admin_page, 'SEO fields AI may suggest' ) && 
 toolbox_assert( false !== strpos( $admin_page, 'Drafts are editable suggestions and do not change posts, media, SEO meta, or provider settings.' ), 'Content context draft copy preserves suggestion-only boundaries.' );
 toolbox_assert( false !== strpos( $admin_page, 'JSON_UNESCAPED_UNICODE' ), 'Content context ability preview keeps non-Latin text readable.' );
 toolbox_assert( false !== strpos( $admin_page, 'wp_enqueue_media' ) && false !== strpos( $admin_page, "'adapterRestUrl'" ) && false !== strpos( $admin_page, "rest_url( 'magick-ai-adapter/v1' )" ), 'Media Derivative Preview loads the WordPress media picker and Adapter REST URL.' );
+toolbox_assert( false !== strpos( $admin_page, "'dateTime'      => \$this->datetime_display_config()" ), 'Admin page localizes WordPress datetime display config for dynamic results.' );
+toolbox_assert( false !== strpos( $admin_page, 'datetime_display_config' ) && false !== strpos( $admin_page, "'format'        => 'Y-m-d H:i:s'" ) && false !== strpos( $admin_page, 'wp_timezone_string' ), 'Admin page exposes the WordPress site timezone and standard display format.' );
 
 $admin_js = file_get_contents( $root . '/assets/admin.js' );
 toolbox_assert( false !== strpos( $admin_js, 'initTopTabs' ) && false !== strpos( $admin_js, 'initToolSwitcher' ), 'Admin JavaScript initializes section tabs and tool switching.' );
+toolbox_assert( false !== strpos( $admin_js, 'function formatDateTime' ) && false !== strpos( $admin_js, 'window.MagickAIToolbox.dateTime' ) && false !== strpos( $admin_js, "return parts.year + '-' + parts.month + '-' + parts.day + ' ' + hour" ), 'Admin JavaScript formats visible timestamps through the localized WordPress timezone.' );
+toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Last sync', formatDateTime(coverage.last_sync_at))" ), 'Site Knowledge last sync display uses WordPress datetime formatting.' );
+toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Expires', formatDateTime(derivative.expires_at))" ) && false !== strpos( $admin_js, "appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at))" ), 'Media derivative expiry display uses WordPress datetime formatting.' );
 toolbox_assert( false !== strpos( $admin_js, 'initCloudCheckSwitcher' ) && false !== strpos( $admin_js, 'data-toolbox-cloud-check-target' ), 'Admin JavaScript initializes Cloud check section switching.' );
 toolbox_assert( false !== strpos( $admin_js, 'initCloudCheckGroupSwitcher' ) && false !== strpos( $admin_js, 'data-toolbox-cloud-check-group-target' ), 'Admin JavaScript initializes Cloud check left-list detail switching.' );
 toolbox_assert( false === strpos( $admin_js, 'initConnectorProviderSwitcher' ) && false === strpos( $admin_js, 'data-toolbox-connector-provider-target' ), 'Admin JavaScript no longer initializes removed connector provider switching.' );
@@ -200,6 +205,9 @@ toolbox_assert( false !== strpos( $admin_js, 'updateSiteKnowledgeActionState' ) 
 toolbox_assert( false !== strpos( $admin_js, "modeInput.value = hasIndex ? 'rebuild' : 'refresh'" ), 'Admin JavaScript maps the simple Refresh index action to a Cloud rebuild when an index already exists.' );
 toolbox_assert( false !== strpos( $admin_js, 'progress.message' ) && false !== strpos( $admin_js, 'Active run' ) && false !== strpos( $admin_js, 'Indexing...' ), 'Admin JavaScript renders Site Knowledge progress and disables indexing while Cloud is active.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false !== strpos( $admin_js, 'payload.message' ), 'Admin JavaScript renders Site Knowledge evidence state and active-run guidance.' );
+
+$development_workflow = file_get_contents( $root . '/docs/development-workflow.md' );
+toolbox_assert( false !== strpos( $development_workflow, 'WordPress site timezone' ) && false !== strpos( $development_workflow, 'Y-m-d H:i:s' ) && false !== strpos( $development_workflow, 'Keep machine timestamps unchanged' ), 'Development workflow documents the wp-admin time display standard.' );
 
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
 toolbox_assert( false !== strpos( $editor_support, 'assets/editor-content-support.js' ) && false !== strpos( $editor_support, 'assets/editor-content-support.css' ), 'Post editor content support enqueues its editor assets.' );

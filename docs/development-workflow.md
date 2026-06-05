@@ -65,6 +65,10 @@ Then verify:
 - Keep admin UI server-rendered unless a real build need appears.
 - Keep JavaScript dependency-free in the current stage.
 - Escape output late and sanitize input early.
+- Keep machine timestamps unchanged in REST payloads, raw result details, cache
+  contracts, and Cloud/Adapter correlation fields. Any timestamp shown in the
+  Toolbox wp-admin UI must be formatted through the WordPress site timezone as
+  `Y-m-d H:i:s`.
 - Never return provider keys in REST responses.
 - Never write provider keys into docs or tests.
 - Treat Toolbox abilities as server-side provider wrappers; AI callers pass task

@@ -84,6 +84,7 @@ final class Admin_Page {
 				'adapterRestUrl' => esc_url_raw( rest_url( 'magick-ai-adapter/v1' ) ),
 				'coreAdminUrl'  => esc_url_raw( admin_url( 'admin.php?page=magick-ai-core' ) ),
 				'nonce'         => wp_create_nonce( 'wp_rest' ),
+				'dateTime'      => $this->datetime_display_config(),
 				'contextOption' => Plugin::CONTEXT_OPTION_NAME,
 				'contextDrafts' => array(
 					'aiBlog' => $this->get_ai_blog_context_template(),
@@ -94,6 +95,17 @@ final class Admin_Page {
 					'error'   => __( 'Request failed.', 'magick-ai-toolbox' ),
 				)
 			)
+		);
+	}
+
+	private function datetime_display_config(): array {
+		$timezone = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'UTC' );
+		$now      = new \DateTimeImmutable( 'now', $timezone );
+
+		return array(
+			'format'        => 'Y-m-d H:i:s',
+			'timeZone'      => function_exists( 'wp_timezone_string' ) ? wp_timezone_string() : 'UTC',
+			'offsetMinutes' => (int) floor( $timezone->getOffset( $now ) / 60 ),
 		);
 	}
 

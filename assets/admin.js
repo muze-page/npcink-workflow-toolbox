@@ -39,6 +39,49 @@
 		container.appendChild(item);
 	}
 
+	function formatDateTime(value) {
+		const raw = String(value || '').trim();
+		if (!raw) {
+			return '';
+		}
+
+		const hasTimezone = /(?:Z|UTC|[+-]\d{2}:?\d{2})$/i.test(raw);
+		const normalized = hasTimezone ? raw.replace(/\s+UTC$/i, 'Z') : raw.replace(' ', 'T') + 'Z';
+		const date = new Date(normalized);
+		if (Number.isNaN(date.getTime())) {
+			return raw;
+		}
+
+		const config = window.MagickAIToolbox && window.MagickAIToolbox.dateTime ? window.MagickAIToolbox.dateTime : {};
+		if (config.timeZone && !/^[+-]/.test(String(config.timeZone))) {
+			try {
+				const parts = new Intl.DateTimeFormat('en-US', {
+					timeZone: config.timeZone,
+					year: 'numeric',
+					month: '2-digit',
+					day: '2-digit',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false
+				}).formatToParts(date).reduce((carry, part) => {
+					carry[part.type] = part.value;
+					return carry;
+				}, {});
+
+				const hour = parts.hour === '24' ? '00' : parts.hour;
+				return parts.year + '-' + parts.month + '-' + parts.day + ' ' + hour + ':' + parts.minute + ':' + parts.second;
+			} catch (error) {
+				// Fall through to the offset formatter below when Intl rejects a timezone.
+			}
+		}
+
+		const offsetMinutes = Number.isFinite(Number(config.offsetMinutes)) ? Number(config.offsetMinutes) : 0;
+		const shifted = new Date(date.getTime() + offsetMinutes * 60000);
+		const pad = (number) => String(number).padStart(2, '0');
+		return shifted.getUTCFullYear() + '-' + pad(shifted.getUTCMonth() + 1) + '-' + pad(shifted.getUTCDate()) + ' ' + pad(shifted.getUTCHours()) + ':' + pad(shifted.getUTCMinutes()) + ':' + pad(shifted.getUTCSeconds());
+	}
+
 	function formatLabel(value) {
 		return String(value || '')
 			.replace(/[_-]+/g, ' ')
@@ -680,7 +723,7 @@
 		appendMeta(meta, 'Indexed chunks', coverage.indexed_chunks);
 		appendMeta(meta, 'Truncated documents', coverage.truncated_documents);
 		appendMeta(meta, 'Failures', progress.failed_documents);
-		appendMeta(meta, 'Last sync', coverage.last_sync_at);
+		appendMeta(meta, 'Last sync', formatDateTime(coverage.last_sync_at));
 		appendMeta(meta, 'Active run', activeRun.run_id);
 		appendMeta(meta, 'Comments', coverage.comments_enabled === true ? 'Enabled in Cloud' : 'Disabled in Cloud');
 		if (meta.childNodes.length) {
@@ -1565,7 +1608,7 @@
 		appendMeta(meta, 'MIME', derivative.mime_type);
 		appendMeta(meta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 		appendMeta(meta, 'Bytes', derivative.filesize_bytes);
-		appendMeta(meta, 'Expires', derivative.expires_at);
+		appendMeta(meta, 'Expires', formatDateTime(derivative.expires_at));
 		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 		result.appendChild(meta);
 
@@ -1780,7 +1823,7 @@
 			const itemMeta = el('div', 'magick-ai-toolbox__result-meta');
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
-			appendMeta(itemMeta, 'Expires', derivative.expires_at);
+			appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at));
 			appendMeta(itemMeta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 			row.appendChild(itemMeta);
 			const previewUrl = withRestNonce(derivative.preview_url || '');
