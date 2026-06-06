@@ -106,10 +106,15 @@ planning flows:
 - `/knowledge-search`
 - `/ai/content-support`
 - `/ai/site-helpers`
+- `/ai/image-generation`
 - `/flows/article-brief`
+- `/flows/article-assistant`
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
+- `/flows/site-knowledge-review-plan`
 - `/flows/media-brief`
+- `/editor/content-support`
+- `/media-derivative-handoff`
 - `/media-derivative-handoff`
 
 Do not add Toolbox REST routes for publishing, delivery, workflow runs, queues,
@@ -122,17 +127,28 @@ proposal handoffs, not executed by Toolbox.
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
 
+`/flows/site-knowledge-review-plan` prepares a Core-ready but blocked
+`site_knowledge_review_plan` from a Cloud Site Knowledge agent handoff. It may
+preserve evidence refs and describe one non-ready draft-review action for Core
+from-plan intake, but it must not generate article content, approve proposals,
+pass preflight, or execute WordPress writes. The resulting Core proposal still
+requires human `title` and `content` input before any later approval path can be
+considered.
+
 `/ai/content-support` sends one bounded suggestion request to the Cloud hosted
 AI runtime. It returns review-only content-support suggestions and must not
 create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are title/summary suggestions, compact outline
-support, and short-draft polish. They must stay lightweight and must not be
-presented as one-click long-form article generation. Default draft-support
-results must include a small quality contract: expected output shape, operator
-review checklist, and reject-if rules for full-article output, unsupported
-claims, or write-like actions. Site-level and media-helper AI routes must be
-added as separate narrow surfaces; they must not be hidden compatibility modes
-inside the draft-support route.
+support, short-draft polish, and summary/category/tag optimization. They must
+stay lightweight and must not be presented as one-click long-form article
+generation. Default draft-support results must include a small quality
+contract: expected output shape, operator review checklist, and reject-if rules
+for full-article output, unsupported claims, or write-like actions. Summary
+and terms optimization may suggest excerpts, categories, and tags, but it must
+not update excerpts, assign terms, mutate SEO fields, own content indexing, or
+be treated as full RAG. Site-level and media-helper AI routes must be added as
+separate narrow surfaces; they must not be hidden compatibility modes inside
+the draft-support route.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and
@@ -142,6 +158,12 @@ the result is suggestion-only. This route must not claim full-site crawling,
 site-health scoring, analytics/indexing coverage, image-pixel inspection,
 media-library batch updates, local queues, proposal creation, approval, or
 WordPress writes.
+
+`/ai/image-generation` sends one reviewed-prompt image generation request
+through Cloud Addon runtime and returns candidate-only `image_candidate.v1`
+evidence. It must not import media, set featured images, own prompt/model
+routing, store provider credentials, approve proposals, or write WordPress
+data.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may
@@ -155,6 +177,12 @@ Core stays the approval, preflight, proposal, and audit owner, and Abilities
 stay the final WordPress write executor. Toolbox must treat any automatic
 completion as an Adapter/Core/Abilities result, not as a Toolbox-owned direct
 write.
+
+`/flows/site-knowledge-review-plan` prepares a blocked Core review handoff from
+Cloud Site Knowledge agent evidence. It may preserve evidence refs, blocked
+outputs, and human-required title/content fields for Core review, but it must
+not approve, preflight, execute, schedule, queue, or directly write WordPress
+content.
 
 `media_optimization_v1` is the fixed governed name for the existing
 **Optimize Existing Image** surface. It may guide one operator intent through
@@ -241,9 +269,10 @@ plane.
 
 AI-generated images are a separate explicit candidate mode, not a relabeling of
 Unsplash, Pixabay, or Pexels. Toolbox may normalize a caller-supplied generated
-image URL or call a host-provided
-`npcink_toolbox_ai_image_generation_request` runtime seam to return
-suggestion-only candidates with `source_type=ai_generated`, prompt/model
+image URL, call a host-provided
+`npcink_toolbox_ai_image_generation_request` runtime seam, or dispatch a
+reviewed `ai_generation_handoff` through the Cloud Addon runtime client to
+return suggestion-only candidates with `source_type=ai_generated`, prompt/model
 evidence, and human license review status. Toolbox must not own AI image model
 routing, prompt management, provider credentials, billing, media import,
 featured-image setting, or approval truth.

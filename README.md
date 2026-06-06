@@ -73,9 +73,12 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/knowledge-search`
 - `POST /wp-json/npcink-toolbox/v1/ai/content-support`
 - `POST /wp-json/npcink-toolbox/v1/ai/site-helpers`
+- `POST /wp-json/npcink-toolbox/v1/ai/image-generation`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
@@ -93,6 +96,8 @@ Toolbox may submit one Core media optimization proposal from the Adapter media
 derivative recipe after reviewed metadata and derivative artifact evidence are
 present, but it does not approve proposals, execute proposals, or perform
 WordPress writes.
+The Site Knowledge review plan route builds a blocked Core handoff plan from
+Cloud evidence only; it does not approve, preflight, or execute that plan.
 
 ## Abilities
 
@@ -184,10 +189,15 @@ fallback panel that renders the plan artifacts, risk report, final
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
 opened from the editor top toolbar. Its buttons run fixed flows for publish
-preflight, taxonomy/tag candidates, internal-link candidates, and image-source
-candidates from the current draft context. The panel returns suggestions only;
-it does not insert links, assign terms, import media, publish content, or write
-SEO fields.
+preflight, summary/category/tag optimization, taxonomy/tag candidates,
+internal-link candidates, and image-source candidates from the current draft
+context. The summary/category/tag optimization flow returns an
+`article_discoverability_optimization.v1` artifact that combines hosted AI
+summary suggestions, existing-term candidates, Cloud-managed Site Knowledge
+related-content evidence, Cloud-managed web-search evidence, and saved content
+context. The panel returns suggestions only; it does not insert links, assign
+terms, update excerpts or SEO fields, import media, publish content, or write
+WordPress data.
 The image-source button opens a Cloud image recommendation modal: it
 automatically searches from the selected paragraph or selected block when
 available, combines that with the current draft context, and also lets the
@@ -200,6 +210,11 @@ license-review, and Unsplash download tracking metadata preserved; media import
 and featured-image changes still flow through a governed adoption plan. The
 editor modal lets the operator select one candidate and adopt it as the
 featured image in one visible action.
+When Cloud includes an `ai_generation_handoff`, the Toolbox result can show a
+reviewed-prompt AI image generation action. The action calls the Cloud Addon
+runtime seam with `image.grok-imagine-quality`, returns AI-generated
+`image_candidate.v1` candidates, and still requires the local adoption/Core
+review path before any media import or featured-image write.
 Toolbox builds the adoption plan with proposed media title, alt text,
 description, attribution, filename, and featured-image step, submits it through
 Adapter's plan-to-proposal bridge, then calls Adapter's unified
@@ -243,10 +258,11 @@ small amount of public-site or media metadata, Cloud produces reviewable
 suggestions, and no media library, post, SEO, proposal, crawler, or queue state
 is changed locally.
 Everyday Support remains available for the same bounded jobs:
-discoverability brief, publish preflight, taxonomy/tag candidates,
-internal-link candidates, or image candidates. Media work, governed handoffs,
-and the combined Article Planning Bundle are visually separate groups; the
-bundle is a fallback package, not the primary support workflow.
+discoverability brief, publish preflight, summary/category/tag optimization,
+taxonomy/tag candidates, internal-link candidates, or image candidates. Media
+work, governed handoffs, and the combined Article Planning Bundle are visually
+separate groups; the bundle is a fallback package, not the primary support
+workflow.
 
 `media_optimization_v1` names the existing **Optimize Existing Image** surface
 as a fixed governed workflow, not a new workflow runtime or persistent run
@@ -257,8 +273,7 @@ default watermark, disable it for the run, use a text watermark, or use the
 configured Core image/logo watermark source with one-run placement settings.
 Text watermark overrides pass text, font, color, background, margin, position,
 and opacity directly to the same Cloud request shape used by OpenClaw handoffs.
-If
-an operator starts from a hard-coded
+If an operator starts from a hard-coded
 local uploads URL, the same surface can call the local read-only
 `npcink-abilities-toolkit/resolve-media-attachment-by-url` ability through Adapter
 `run-read-ability`, show bounded match evidence, and fill the attachment ID for

@@ -573,6 +573,160 @@
 		container.appendChild(section);
 	}
 
+	function aiGenerationHandoff(payload) {
+		if (!payload || typeof payload !== 'object') {
+			return null;
+		}
+		if (payload.ai_generation_handoff && typeof payload.ai_generation_handoff === 'object') {
+			return payload.ai_generation_handoff;
+		}
+		if (payload.handoff && payload.handoff.ai_generation_handoff && typeof payload.handoff.ai_generation_handoff === 'object') {
+			return payload.handoff.ai_generation_handoff;
+		}
+		return null;
+	}
+
+	function defaultAiImagePrompt(payload, handoff) {
+		const brief = payload && payload.visual_brief && typeof payload.visual_brief === 'object' ? payload.visual_brief : {};
+		const plan = handoff && handoff.prompt_prefill_plan && typeof handoff.prompt_prefill_plan === 'object' ? handoff.prompt_prefill_plan : {};
+		const fields = Array.isArray(plan.local_prompt_fields) ? plan.local_prompt_fields : [];
+		const subject = brief.visual_intent || payload.optimized_query || payload.query || '';
+		const style = brief.style || (fields.indexOf('style') >= 0 ? 'editorial, natural light, high quality' : '');
+		const composition = brief.preferred_orientation ? 'Composition: ' + formatLabel(brief.preferred_orientation) + ' image suitable for a WordPress article.' : 'Composition: image suitable for a WordPress article.';
+		const constraints = 'Avoid visible text, brand logos, watermarks, distorted hands or faces, and copyrighted characters.';
+		return [
+			'Create an original image for: ' + subject,
+			composition,
+			style ? 'Style: ' + style : '',
+			constraints
+		].filter(Boolean).join('\n');
+	}
+
+	function aiGenerationAspectRatio(payload, handoff) {
+		const defaults = handoff && handoff.input_defaults && typeof handoff.input_defaults === 'object' ? handoff.input_defaults : {};
+		const ratio = String(defaults.aspect_ratio || '').trim();
+		if (ratio) {
+			return ratio;
+		}
+		const brief = payload && payload.visual_brief && typeof payload.visual_brief === 'object' ? payload.visual_brief : {};
+		if (brief.preferred_orientation === 'portrait') {
+			return '3:4';
+		}
+		if (brief.preferred_orientation === 'squarish') {
+			return '1:1';
+		}
+		return '16:9';
+	}
+
+	function appendAiGenerationResult(container, payload) {
+		const existing = container.querySelector('[data-toolbox-ai-generation-result]');
+		if (existing) {
+			existing.remove();
+		}
+
+		const section = createSection('AI-generated image candidates');
+		section.setAttribute('data-toolbox-ai-generation-result', 'true');
+		const count = Array.isArray(payload.images) ? payload.images.length : 0;
+		section.appendChild(el('div', count ? 'npcink-toolbox__result-notice is-ok' : 'npcink-toolbox__result-notice is-warning', count ? 'Cloud returned AI-generated image candidates. Review the image and source status before adoption.' : 'Cloud did not return a usable image URL.'));
+		if (!count && payload.message) {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', payload.message));
+		}
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Model', payload.model_id || (payload.usage_summary && payload.usage_summary.model_id));
+		appendMeta(meta, 'Run', payload.run_id);
+		appendMeta(meta, 'Candidates', count);
+		if (payload.ai_generation && payload.ai_generation.aspect_ratio) {
+			appendMeta(meta, 'Aspect ratio', payload.ai_generation.aspect_ratio);
+		}
+		if (meta.childNodes.length) {
+			section.appendChild(meta);
+		}
+		renderImageList(section, payload.images);
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Generated images are candidates only. Use Adopt New Image and Core review before importing or inserting media.'));
+		section.appendChild(createRawDetails(payload, 'AI generation payload'));
+		container.appendChild(section);
+	}
+
+	function appendAiImageGenerationHandoff(form, container, payload) {
+		const handoff = aiGenerationHandoff(payload);
+		if (!handoff || handoff.trigger !== 'manual_user_action') {
+			return;
+		}
+
+		const section = createSection('AI image generation');
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Generate an original image only after reviewing the prompt. Cloud returns candidates; WordPress media writes stay local.'));
+		const promptLabel = el('label', '');
+		promptLabel.appendChild(el('span', '', 'Reviewed prompt'));
+		const prompt = el('textarea', '');
+		prompt.name = 'ai_generation_prompt';
+		prompt.rows = 5;
+		prompt.value = defaultAiImagePrompt(payload, handoff);
+		promptLabel.appendChild(prompt);
+		section.appendChild(promptLabel);
+
+		const controls = el('div', 'npcink-toolbox__split');
+		const ratioLabel = el('label', '');
+		ratioLabel.appendChild(el('span', '', 'Aspect ratio'));
+		const ratio = el('select', '');
+		ratio.name = 'ai_generation_aspect_ratio';
+		['16:9', '1:1', '4:3', '3:4', '9:16'].forEach((value) => {
+			const option = el('option', '', value);
+			option.value = value;
+			if (value === aiGenerationAspectRatio(payload, handoff)) {
+				option.selected = true;
+			}
+			ratio.appendChild(option);
+		});
+		ratioLabel.appendChild(ratio);
+		controls.appendChild(ratioLabel);
+
+		const countLabel = el('label', '');
+		countLabel.appendChild(el('span', '', 'Count'));
+		const count = el('input', '');
+		count.type = 'number';
+		count.min = '1';
+		count.max = '4';
+		count.step = '1';
+		count.value = '1';
+		countLabel.appendChild(count);
+		controls.appendChild(countLabel);
+		section.appendChild(controls);
+
+		const actions = el('div', 'npcink-toolbox__result-actions');
+		const button = el('button', 'button button-primary', 'Generate AI image');
+		button.type = 'button';
+		button.addEventListener('click', async () => {
+			const reviewedPrompt = String(prompt.value || '').trim();
+			if (!reviewedPrompt) {
+				appendAiGenerationResult(container, { images: [], message: 'Prompt is required.' });
+				return;
+			}
+			button.disabled = true;
+			const originalText = button.textContent;
+			button.textContent = t('Generating...');
+			try {
+				const response = await postJson(config.restUrl, 'ai/image-generation', {
+					prompt: reviewedPrompt,
+					aspect_ratio: ratio.value,
+					resolution: handoff.input_defaults && handoff.input_defaults.resolution ? handoff.input_defaults.resolution : 'high',
+					response_format: 'url',
+					n: count.value,
+					handoff
+				});
+				appendAiGenerationResult(container, response);
+			} catch (error) {
+				appendAiGenerationResult(container, { images: [], message: formatErrorMessage(error, 'AI image generation failed.'), error });
+			} finally {
+				button.disabled = false;
+				button.textContent = originalText;
+			}
+		});
+		actions.appendChild(button);
+		section.appendChild(actions);
+		section.appendChild(createRawDetails(handoff, 'AI generation handoff'));
+		container.appendChild(section);
+	}
+
 	function renderPointList(container, points) {
 		if (!Array.isArray(points) || !points.length) {
 			return;
@@ -596,6 +750,114 @@
 		});
 		section.appendChild(list);
 		container.appendChild(section);
+	}
+
+	function siteKnowledgeProposalCandidate(handoff) {
+		const proposalInput = handoff && handoff.proposal_input && typeof handoff.proposal_input === 'object' ? handoff.proposal_input : {};
+		const evidenceRefs = Array.isArray(proposalInput.evidence_refs) ? proposalInput.evidence_refs : [];
+		const blockedOutputs = Array.isArray(proposalInput.blocked_outputs) ? proposalInput.blocked_outputs : [];
+
+		return {
+			artifact_type: 'site_knowledge_core_proposal_candidate',
+			version: 1,
+			status: 'candidate_ready_for_operator_review',
+			core_submission: 'not_submitted',
+			approval_state: 'operator_review_required',
+			agent_id: handoff.agent_id || '',
+			agent_version: handoff.agent_version || '',
+			workflow: handoff.workflow || proposalInput.workflow || '',
+			cloud_output: handoff.cloud_output || proposalInput.cloud_output || '',
+			intent: proposalInput.intent || handoff.workflow || '',
+			local_next_action: handoff.local_next_action || proposalInput.local_next_action || '',
+			write_posture: handoff.write_posture || 'suggestion_only',
+			final_writes: handoff.final_writes || 'core_proposal_required',
+			direct_wordpress_write: false,
+			evidence_gate_status: handoff.evidence_gate_status || '',
+			evidence_count: handoff.evidence_count || evidenceRefs.length,
+			evidence_refs: evidenceRefs,
+			blocked_outputs: blockedOutputs,
+			next_steps: [
+				'Review evidence and decide whether a local write plan is warranted.',
+				'Create a specific Core proposal only after a human chooses the target WordPress action.',
+				'Keep Core approval, preflight, audit, and final WordPress writes local.'
+			]
+		};
+	}
+
+	function appendSiteKnowledgeProposalCandidate(container, handoff) {
+		const existing = container.querySelector('[data-toolbox-site-knowledge-candidate]');
+		if (existing) {
+			existing.remove();
+		}
+
+		const candidate = siteKnowledgeProposalCandidate(handoff);
+		const section = createSection('Local Core proposal candidate');
+		section.setAttribute('data-toolbox-site-knowledge-candidate', 'true');
+
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Status', formatLabel(candidate.status));
+		appendMeta(meta, 'Core submission', formatLabel(candidate.core_submission));
+		appendMeta(meta, 'Approval', formatLabel(candidate.approval_state));
+		appendMeta(meta, 'Evidence', candidate.evidence_count);
+		section.appendChild(meta);
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Candidate prepared locally only. It has not been submitted to Core, approved, preflighted, or executed.'));
+
+		if (config.coreAdminUrl) {
+			const actions = el('div', 'npcink-toolbox__result-actions');
+			actions.appendChild(createLink(config.coreAdminUrl, 'Open Core review'));
+			section.appendChild(actions);
+		}
+
+		section.appendChild(createRawDetails(candidate, 'Local proposal candidate packet'));
+		container.appendChild(section);
+	}
+
+	async function submitSiteKnowledgeReviewProposal(container, handoff, button) {
+		const form = container.closest('form');
+		if (!form) {
+			return;
+		}
+
+		const originalText = button ? button.textContent : '';
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Submitting Core review...';
+		}
+
+		try {
+			if (!config.adapterRestUrl) {
+				throw { message: 'Npcink Adapter REST URL is unavailable.' };
+			}
+			renderTextResult(form, 'Building Site Knowledge review plan...', 'pending');
+			const plan = await postJson(config.restUrl, 'flows/site-knowledge-review-plan', {
+				proposal_input: handoff && handoff.proposal_input ? handoff.proposal_input : {},
+				handoff: handoff || {},
+			});
+			const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
+				plan_ability_id: 'npcink-toolbox/build-site-knowledge-review-plan',
+				plan,
+				plan_input: {
+					source: 'site_knowledge_agent_handoff',
+					proposal_input: handoff && handoff.proposal_input ? handoff.proposal_input : {},
+				},
+				caller: {
+					external_thread_id: 'toolbox-site-knowledge-review',
+					source: 'toolbox_site_knowledge_agent',
+				},
+			});
+			renderProposalCreated(form, proposalFromPlanResponse(bridge), {
+				title: 'Site Knowledge review proposal submitted',
+				summary: 'Core created a blocked review proposal from Site Knowledge evidence. Human title and content input are required before approval, preflight, or execution can proceed.',
+				rawTitle: 'Core Site Knowledge review response',
+			});
+		} catch (error) {
+			renderErrorResult(form, error, 'Could not submit the Site Knowledge review proposal.');
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = originalText;
+			}
+		}
 	}
 
 	function renderHandoff(container, handoff) {
@@ -627,6 +889,21 @@
 		}
 		if (handoff.handoff_type === 'proposal_input') {
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Proposal candidate only. Review evidence, then use Core governance for approval, preflight, audit, and final WordPress writes.'));
+			const actions = el('div', 'npcink-toolbox__result-actions');
+			const button = el('button', 'button', 'Prepare local proposal candidate');
+			button.type = 'button';
+			button.setAttribute('data-toolbox-site-knowledge-proposal-candidate', 'true');
+			button.addEventListener('click', () => appendSiteKnowledgeProposalCandidate(container, handoff));
+			actions.appendChild(button);
+			const submitButton = el('button', 'button button-primary', 'Submit Core review proposal');
+			submitButton.type = 'button';
+			submitButton.setAttribute('data-toolbox-site-knowledge-review-submit', 'true');
+			submitButton.addEventListener('click', () => submitSiteKnowledgeReviewProposal(container, handoff, submitButton));
+			actions.appendChild(submitButton);
+			if (config.coreAdminUrl) {
+				actions.appendChild(createLink(config.coreAdminUrl, 'Open Core review'));
+			}
+			section.appendChild(actions);
 		}
 		if (handoff.proposal_input && typeof handoff.proposal_input === 'object' && Object.keys(handoff.proposal_input).length) {
 			const proposalInput = handoff.proposal_input;
@@ -715,6 +992,7 @@
 
 		result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Cloud returned image candidates only. Media import still requires an Adopt New Image plan and Core approval.'));
 		renderImageList(result, payload.images);
+		appendAiImageGenerationHandoff(form, result, payload);
 		if (payload.raw) {
 			result.appendChild(createRawDetails(payload.raw, 'Provider raw response'));
 		}
@@ -1277,6 +1555,50 @@
 		container.appendChild(section);
 	}
 
+	function discoverabilitySuggestionItems(section) {
+		const suggestions = section && section.candidate_suggestions && typeof section.candidate_suggestions === 'object' ? section.candidate_suggestions : {};
+		return Object.keys(suggestions).map((field) => ({
+			name: formatLabel(field),
+			detail: String(suggestions[field] || ''),
+		}));
+	}
+
+	function renderSummaryTermsOptimization(container, section) {
+		if (!section || typeof section !== 'object') {
+			return;
+		}
+
+		const summary = section.summary_candidates && typeof section.summary_candidates === 'object' ? section.summary_candidates : {};
+		const shell = createSection('Summary and terms optimization');
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Artifact', section.artifact_type ? formatLabel(section.artifact_type) : '');
+		appendMeta(meta, 'Write posture', section.write_posture || 'suggestion_only');
+		appendMeta(meta, 'Final path', section.final_write_path || 'core_proposal_required');
+		if (meta.childNodes.length) {
+			shell.appendChild(meta);
+		}
+		if (summary.status === 'error') {
+			shell.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', summary.message || 'AI summary candidates were unavailable.'));
+		} else if (summary.output_text) {
+			const pre = el('pre', 'npcink-toolbox__result-pre');
+			pre.textContent = truncate(summary.output_text, 900);
+			shell.appendChild(pre);
+		}
+		container.appendChild(shell);
+
+		renderSupportItems(container, 'Category candidates', section.category_candidates || [], 'No matching existing categories found.');
+		renderSupportItems(container, 'Tag candidates', section.tag_candidates || [], 'No matching existing tags found.');
+		if (section.discoverability) {
+			renderSupportItems(container, 'Discoverability suggestions', discoverabilitySuggestionItems(section.discoverability), 'No discoverability suggestions returned.');
+		}
+		if (section.related_content) {
+			renderSupportItems(container, 'Related Site Knowledge', supportItems(section.related_content), 'No related public content returned.');
+		}
+		if (Array.isArray(section.risk_notes)) {
+			renderSupportItems(container, 'Review notes', section.risk_notes.map((note) => ({ name: note })), 'No review notes returned.');
+		}
+	}
+
 	function renderEditorContentSupport(form, payload) {
 		const sections = payload.sections && typeof payload.sections === 'object' ? payload.sections : {};
 		const title = payload.intent ? formatLabel(payload.intent) : 'Content support';
@@ -1302,6 +1624,9 @@
 		if (sections.checks) {
 			renderSupportItems(result, 'Checks', supportItems(sections.checks), 'No checks returned.');
 		}
+		if (sections.summary_terms_optimization) {
+			renderSummaryTermsOptimization(result, sections.summary_terms_optimization);
+		}
 		if (sections.taxonomy_terms) {
 			renderSupportItems(result, 'Taxonomy and tag candidates', supportItems(sections.taxonomy_terms), 'No matching existing terms found.');
 		}
@@ -1319,11 +1644,7 @@
 			}
 		}
 		if (sections.discoverability && sections.discoverability.candidate_suggestions) {
-			const suggestions = Object.keys(sections.discoverability.candidate_suggestions).map((field) => ({
-				name: formatLabel(field),
-				detail: String(sections.discoverability.candidate_suggestions[field] || ''),
-			}));
-			renderSupportItems(result, 'Discoverability suggestions', suggestions, 'No discoverability suggestions returned.');
+			renderSupportItems(result, 'Discoverability suggestions', discoverabilitySuggestionItems(sections.discoverability), 'No discoverability suggestions returned.');
 		}
 
 		renderHandoff(result, payload.handoff);

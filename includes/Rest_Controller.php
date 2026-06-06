@@ -32,10 +32,12 @@ final class Rest_Controller {
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/ai/content-support', 'hosted_ai_content_support' );
 		$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' );
+		$this->post( '/ai/image-generation', 'ai_image_generation' );
 		$this->post( '/flows/article-brief', 'article_brief' );
 		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
 		$this->post( '/flows/image-candidate-adoption-plan', 'image_candidate_adoption_plan' );
+		$this->post( '/flows/site-knowledge-review-plan', 'site_knowledge_review_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
@@ -84,6 +86,14 @@ final class Rest_Controller {
 				'web_search_registered'    => true,
 				'web_search_enabled'       => $cloud_ready,
 				'image_source_owner'       => 'cloud_runtime',
+				'ai_image_generation'      => array(
+					'registered'              => true,
+					'available'               => $cloud_ready,
+					'hosted_profile'          => 'image.grok-imagine-quality',
+					'entry_surface'           => 'image_source_ai_generation_handoff',
+					'posture'                 => 'candidate_only_core_approval_required',
+					'direct_wordpress_write'  => false,
+				),
 				'vector_owner'             => 'cloud_runtime',
 				'cloud_runtime'            => $cloud_runtime,
 				'hosted_ai'               => array(
@@ -251,6 +261,11 @@ final class Rest_Controller {
 		return rest_ensure_response( $this->client->run_hosted_ai_site_helper( is_array( $params ) ? $params : array() ) );
 	}
 
+	public function ai_image_generation( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->run_ai_image_generation( is_array( $params ) ? $params : array() ) );
+	}
+
 	public function article_assistant( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_article_assistant( is_array( $params ) ? $params : array() ) );
@@ -264,6 +279,11 @@ final class Rest_Controller {
 	public function image_candidate_adoption_plan( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_image_candidate_adoption_plan( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function site_knowledge_review_plan( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->build_site_knowledge_review_plan( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function media_brief( WP_REST_Request $request ) {
@@ -302,7 +322,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'writing_support', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'writing_support', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
@@ -355,6 +375,10 @@ final class Rest_Controller {
 
 		if ( 'taxonomy_tags' === $intent ) {
 			$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
+		}
+
+		if ( 'summary_terms_optimization' === $intent ) {
+			$result['sections']['summary_terms_optimization'] = $this->editor_summary_terms_optimization( $context, $query );
 		}
 
 		if ( 'internal_links' === $intent ) {
@@ -651,6 +675,86 @@ final class Rest_Controller {
 		}
 
 		return is_array( $value ) ? $value : array();
+	}
+
+	private function editor_summary_terms_optimization( array $context, string $query ): array {
+		$taxonomy_terms = $this->editor_taxonomy_term_candidates( $context, $query );
+		$summary_ai     = $this->editor_support_section(
+			$this->client->run_hosted_ai_content_support(
+				array(
+					'intent'  => 'summary_terms_optimization',
+					'post_id' => absint( $context['post_id'] ?? 0 ),
+					'title'   => (string) ( $context['title'] ?? '' ),
+					'excerpt' => (string) ( $context['excerpt'] ?? '' ),
+					'content' => (string) ( $context['content_text'] ?? '' ),
+				)
+			)
+		);
+		$related_content = $this->editor_support_section(
+			$this->client->search_site_knowledge(
+				array(
+					'query'           => $query,
+					'intent'          => 'related_content',
+					'current_post_id' => absint( $context['post_id'] ?? 0 ),
+					'max_results'     => 6,
+				)
+			)
+		);
+		$discoverability = $this->editor_support_section(
+			$this->client->build_content_discoverability_brief(
+				array(
+					'post_id'                 => absint( $context['post_id'] ?? 0 ),
+					'title'                   => (string) ( $context['title'] ?? '' ),
+					'topic'                   => $query,
+					'excerpt'                 => (string) ( $context['excerpt'] ?? '' ),
+					'content'                 => (string) ( $context['content_text'] ?? '' ),
+					'external_search_intent'  => 'writing_context',
+					'include_external_search' => true,
+				)
+			)
+		);
+
+		$items      = is_array( $taxonomy_terms['items'] ?? null ) ? $taxonomy_terms['items'] : array();
+		$categories = array_values(
+			array_filter(
+				$items,
+				static fn( array $item ): bool => 'category' === (string) ( $item['taxonomy'] ?? '' )
+			)
+		);
+		$tags       = array_values(
+			array_filter(
+				$items,
+				static fn( array $item ): bool => 'post_tag' === (string) ( $item['taxonomy'] ?? '' )
+			)
+		);
+
+		return array(
+			'artifact_type'          => 'article_discoverability_optimization.v1',
+			'composition_role'       => 'summary_taxonomy_tag_candidates',
+			'candidate_type'         => 'summary_terms_optimization',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'summary_candidates'     => $summary_ai,
+			'category_candidates'    => array_slice( $categories, 0, 5 ),
+			'tag_candidates'         => array_slice( $tags, 0, 8 ),
+			'taxonomy_terms'         => $taxonomy_terms,
+			'related_content'        => $related_content,
+			'discoverability'        => $discoverability,
+			'risk_notes'             => array(
+				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
+				__( 'Prefer existing categories and tags; treat proposed new tags as operator-review candidates only.', 'npcink-toolbox' ),
+				__( 'Use related Site Knowledge results to avoid duplicate coverage and taxonomy drift.', 'npcink-toolbox' ),
+			),
+			'handoff'                => array(
+				'final_writes'           => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'next_steps'             => array(
+					__( 'Review the summary, category, and tag candidates in the editor.', 'npcink-toolbox' ),
+					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-toolbox' ),
+				),
+			),
+		);
 	}
 
 	private function editor_taxonomy_term_candidates( array $context, string $query ): array {

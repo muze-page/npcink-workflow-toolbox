@@ -39,6 +39,7 @@ External AI callers should discover and call Toolbox abilities such as:
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
 - `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
 - `npcink-toolbox/validate-content-discoverability-context`
@@ -113,6 +114,11 @@ one candidate shape.
 write actions for media upload, metadata update, and optional featured-image
 setting. It is read-only and suggestion-only; final adoption still goes through
 Core proposals and WordPress abilities.
+
+`npcink-toolbox/build-site-knowledge-review-plan` converts one reviewed Cloud
+Site Knowledge agent handoff into a blocked `site_knowledge_review_plan`.
+It preserves evidence refs and may create a Core review proposal, but it
+requires human title/content input before any later approval or preflight path.
 
 Vector provider configuration is not exposed locally. Embedding providers,
 embedding dimensions, vector database endpoints, collection names, rerank, and

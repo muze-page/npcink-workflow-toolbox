@@ -100,6 +100,18 @@ final class Abilities {
 					'composition_role' => 'image_source_candidates',
 				)
 			),
+			'npcink-toolbox/generate-image'                     => $this->definition(
+				__( 'Generate Image Candidate', 'npcink-toolbox' ),
+				__( 'Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media.', 'npcink-toolbox' ),
+				array( 'prompt' ),
+				array( $this, 'generate_image_candidate' ),
+				'cap.toolbox.image_source',
+				array(
+					'composition_role'  => 'image_source_candidates',
+					'provider_execution' => 'cloud_runtime_via_addon',
+					'write_posture'     => 'candidate_only_core_approval_required',
+				)
+			),
 			'npcink-toolbox/vector-search'                      => $this->definition(
 				__( 'Vector Search', 'npcink-toolbox' ),
 				__( 'Compatibility pointer for Cloud-managed site knowledge. Vector provider configuration is managed in Npcink Cloud.', 'npcink-toolbox' ),
@@ -238,6 +250,21 @@ final class Abilities {
 					'candidate_contract'  => 'image_candidate.v1',
 				)
 			),
+			'npcink-toolbox/build-site-knowledge-review-plan' => $this->definition(
+				__( 'Build Site Knowledge Review Plan', 'npcink-toolbox' ),
+				__( 'Build a Core review proposal plan from a Cloud Site Knowledge agent handoff without writing WordPress content.', 'npcink-toolbox' ),
+				array( 'proposal_input' ),
+				array( $this, 'build_site_knowledge_review_plan' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'core_site_knowledge_review_plan',
+					'local_recipe_id'     => 'site_knowledge_review_v1',
+					'ability_recipe_ref'  => 'workflow/site_knowledge_review',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'core_proposal_handoff',
+				)
+			),
 			'npcink-toolbox/build-media-brief'                  => $this->definition(
 				__( 'Build Media Brief', 'npcink-toolbox' ),
 				__( 'Build image prompt and media SEO suggestions from supplied post context.', 'npcink-toolbox' ),
@@ -374,6 +401,10 @@ final class Abilities {
 		);
 	}
 
+	public function generate_image_candidate( $input = array() ) {
+		return $this->client->run_ai_image_generation( is_array( $input ) ? $input : array() );
+	}
+
 	public function vector_search( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
 		$query = sanitize_textarea_field( (string) ( $input['query'] ?? '' ) );
@@ -418,6 +449,10 @@ final class Abilities {
 
 	public function build_image_candidate_adoption_plan( $input = array() ) {
 		return $this->client->build_image_candidate_adoption_plan( is_array( $input ) ? $input : array() );
+	}
+
+	public function build_site_knowledge_review_plan( $input = array() ) {
+		return $this->client->build_site_knowledge_review_plan( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_media_brief( $input = array() ) {

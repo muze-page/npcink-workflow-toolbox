@@ -139,6 +139,11 @@
 			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'npcink-toolbox'),
 		},
 		{
+			intent: 'summary_terms_optimization',
+			label: __('Optimize summary and terms', 'npcink-toolbox'),
+			description: __('Use AI, Site Knowledge, and saved context to suggest excerpt, category, and tag candidates.', 'npcink-toolbox'),
+		},
+		{
 			intent: 'taxonomy_tags',
 			label: __('Recommend terms', 'npcink-toolbox'),
 			description: __('Suggest existing categories and tags from the current draft context.', 'npcink-toolbox'),
@@ -526,6 +531,9 @@
 	function formatIntentLabel(value) {
 		if (value === 'writing_support') {
 			return __('Writing preparation', 'npcink-toolbox');
+		}
+		if (value === 'summary_terms_optimization') {
+			return __('Summary and terms optimization', 'npcink-toolbox');
 		}
 		return formatMetaLabel(value);
 	}
@@ -1065,6 +1073,52 @@
 		});
 	}
 
+	function discoverabilitySuggestionItems(section) {
+		const suggestions = section && section.candidate_suggestions ? section.candidate_suggestions : {};
+		return Object.keys(suggestions).map((field) => ({
+			name: field,
+			detail: String(suggestions[field] || ''),
+		}));
+	}
+
+	function renderSummaryOptimization(section) {
+		if (!section || typeof section !== 'object') {
+			return null;
+		}
+
+		const blocks = [];
+		const summary = section.summary_candidates && typeof section.summary_candidates === 'object' ? section.summary_candidates : {};
+		const summaryText = summary.output_text || '';
+		blocks.push(createElement('h4', { key: 'summary-optimization-title' }, __('Summary and terms optimization', 'npcink-toolbox')));
+		if (summary.status === 'error') {
+			blocks.push(createElement('p', { key: 'summary-ai-error', className: 'npcink-toolbox-editor-support__muted' }, summary.message || __('AI summary candidates were unavailable.', 'npcink-toolbox')));
+		} else if (summaryText) {
+			blocks.push(createElement('p', { key: 'summary-ai-output' }, truncateText(summaryText, 700)));
+		}
+
+		blocks.push(createElement('h4', { key: 'summary-category-title' }, __('Category candidates', 'npcink-toolbox')));
+		blocks.push(renderItems(section.category_candidates || [], __('No matching existing categories found.', 'npcink-toolbox')));
+		blocks.push(createElement('h4', { key: 'summary-tag-title' }, __('Tag candidates', 'npcink-toolbox')));
+		blocks.push(renderItems(section.tag_candidates || [], __('No matching existing tags found.', 'npcink-toolbox')));
+
+		if (section.discoverability) {
+			blocks.push(createElement('h4', { key: 'summary-discoverability-title' }, __('Discoverability suggestions', 'npcink-toolbox')));
+			blocks.push(renderItems(discoverabilitySuggestionItems(section.discoverability), __('No discoverability candidates returned.', 'npcink-toolbox')));
+		}
+
+		if (section.related_content) {
+			blocks.push(createElement('h4', { key: 'summary-related-title' }, __('Related Site Knowledge', 'npcink-toolbox')));
+			blocks.push(renderItems(extractKnowledgeItems(section.related_content), __('No related content returned.', 'npcink-toolbox')));
+		}
+
+		if (Array.isArray(section.risk_notes) && section.risk_notes.length) {
+			blocks.push(createElement('h4', { key: 'summary-risk-title' }, __('Review notes', 'npcink-toolbox')));
+			blocks.push(renderItems(section.risk_notes.map((note) => ({ name: note })), __('No review notes returned.', 'npcink-toolbox')));
+		}
+
+		return createElement('div', { className: 'npcink-toolbox-editor-support__optimization' }, blocks);
+	}
+
 	function renderResult(payload) {
 		if (!payload || typeof payload !== 'object') {
 			return null;
@@ -1091,6 +1145,10 @@
 			blocks.push(renderItems(sections.checks.items || [], __('No checks returned.', 'npcink-toolbox')));
 		}
 
+		if (sections.summary_terms_optimization) {
+			blocks.push(renderSummaryOptimization(sections.summary_terms_optimization));
+		}
+
 		if (sections.taxonomy_terms) {
 			blocks.push(createElement('h4', { key: 'terms-title' }, __('Term candidates', 'npcink-toolbox')));
 			blocks.push(renderItems(sections.taxonomy_terms.items || [], __('No matching existing terms found.', 'npcink-toolbox')));
@@ -1112,12 +1170,8 @@
 		}
 
 		if (sections.discoverability && sections.discoverability.candidate_suggestions) {
-			const suggestions = Object.keys(sections.discoverability.candidate_suggestions).map((field) => ({
-				name: field,
-				detail: String(sections.discoverability.candidate_suggestions[field] || ''),
-			}));
 			blocks.push(createElement('h4', { key: 'discoverability-title' }, __('Discoverability', 'npcink-toolbox')));
-			blocks.push(renderItems(suggestions, __('No discoverability candidates returned.', 'npcink-toolbox')));
+			blocks.push(renderItems(discoverabilitySuggestionItems(sections.discoverability), __('No discoverability candidates returned.', 'npcink-toolbox')));
 		}
 
 		return createElement('div', { className: 'npcink-toolbox-editor-support__result' }, blocks);

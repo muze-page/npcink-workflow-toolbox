@@ -1065,6 +1065,16 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'id'          => 'summary-terms-optimization',
+				'endpoint'    => 'editor/content-support',
+				'title'       => __( 'Summary and Terms Optimization', 'npcink-toolbox' ),
+				'description' => __( 'Use hosted AI, Cloud-managed Site Knowledge, web-search evidence, and saved content context to suggest article summary, category, and tag candidates.', 'npcink-toolbox' ),
+				'intent'      => 'summary_terms_optimization',
+				'button'      => __( 'Optimize metadata', 'npcink-toolbox' ),
+				'custom'      => 'content_support_flow',
+			),
+			array(
+				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
 				'id'          => 'taxonomy-tags',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Taxonomy/Tag Candidates', 'npcink-toolbox' ),
@@ -1329,7 +1339,7 @@ final class Admin_Page {
 			<?php endif; ?>
 			<div class="npcink-toolbox__example">
 				<strong><?php esc_html_e( 'Cloud smoke test', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, and license review status. This does not import media or write WordPress.', 'npcink-toolbox' ); ?></span>
+				<span><?php esc_html_e( 'A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, license review status, and any reviewed AI image generation handoff. This does not import media or write WordPress.', 'npcink-toolbox' ); ?></span>
 			</div>
 			<label>
 				<span><?php esc_html_e( 'Image search query', 'npcink-toolbox' ); ?></span>

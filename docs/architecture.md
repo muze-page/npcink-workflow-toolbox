@@ -202,11 +202,15 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/knowledge-search`
 - `POST /wp-json/npcink-toolbox/v1/ai/content-support`
 - `POST /wp-json/npcink-toolbox/v1/ai/site-helpers`
+- `POST /wp-json/npcink-toolbox/v1/ai/image-generation`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 
 `/status` reports Cloud-backed surfaces as registered capabilities plus current
 availability. `web_search_registered`, `vector_search_registered`,
@@ -220,6 +224,16 @@ samples recent public-site or media metadata locally, and returns a
 `hosted_ai_site_helper` artifact. It must not become a crawler, scoring
 engine, batch media updater, proposal creator, or local queue.
 
+`/ai/image-generation` is a candidate-only image-source extension. It accepts a
+reviewed prompt from an image-source handoff, calls Cloud Addon runtime, and
+returns `image_candidate.v1` evidence. It must not import media, set featured
+images, own model routing, or write WordPress data.
+
+`/flows/site-knowledge-review-plan` builds a blocked review plan from Cloud Site
+Knowledge evidence so an operator can hand it to Core when a specific local
+review is warranted. It is not a workflow runtime, queue, approval route,
+preflight route, or write executor.
+
 `/knowledge-search` remains as a compatibility alias for the first local MVP.
 New clients should use `/vector-search`.
 
@@ -232,9 +246,15 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`publish_preflight`, `taxonomy_tags`, `internal_links`, `image_candidates`, or
-`discoverability`. It returns an `editor_content_support_flow` artifact with
-suggestion-only sections and no direct WordPress write posture.
+`publish_preflight`, `summary_terms_optimization`, `taxonomy_tags`,
+`internal_links`, `image_candidates`, or `discoverability`. It returns an
+`editor_content_support_flow` artifact with suggestion-only sections and no
+direct WordPress write posture. The summary/terms optimization intent returns
+an `article_discoverability_optimization.v1` section that combines hosted AI
+summary suggestions, existing category/tag candidates, Cloud-managed Site
+Knowledge related-content evidence, Cloud-managed web-search evidence, and
+saved content-context guidance. It is not a term assignment, excerpt update,
+SEO mutation, content indexing, or local RAG/index lifecycle route.
 
 ## Admin Surface
 
@@ -270,10 +290,10 @@ not submit the plan to Core or approve execution.
 The admin **Content Support** tab groups fixed buttons by operator job. The
 default **Everyday Support** group uses the same fixed
 `/editor/content-support` intents as the post editor panel: discoverability,
-writing preparation, publish preflight, taxonomy/tag candidates, internal-link
-candidates, and image candidates. Media work and governed handoffs are separate
-groups. The combined `Article Planning Bundle` is kept as a fallback bundle,
-not the default support flow.
+writing preparation, publish preflight, summary/category/tag optimization,
+taxonomy/tag candidates, internal-link candidates, and image candidates. Media
+work and governed handoffs are separate groups. The combined `Article Planning Bundle`
+is kept as a fallback bundle, not the default support flow.
 
 Toolbox also renders additive `operator_feedback` payloads from governed
 handoff failures, including reasons, revision fields, next steps, retry state,

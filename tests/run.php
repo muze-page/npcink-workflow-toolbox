@@ -137,7 +137,7 @@ toolbox_assert( false === strpos( $admin_page, 'Jina test setup' ) && false === 
 toolbox_assert( false === strpos( $admin_page, 'Advanced / Debug' ) && false === strpos( $admin_page, 'Image source search' ) && false === strpos( $admin_page, 'Include provider raw responses' ), 'Cloud checks keep verification focused and hide unrelated debug toggles.' );
 toolbox_assert( false !== strpos( $admin_page, 'data-toolbox-tools' ) && false !== strpos( $admin_page, 'data-toolbox-tool-panel' ), 'Tool actions use a single active tool workspace instead of a card matrix.' );
 toolbox_assert( false !== strpos( $admin_page, 'Everyday Support' ) && false !== strpos( $admin_page, 'Fallback Bundles' ) && false !== strpos( $admin_page, 'Governed Handoffs' ) && false !== strpos( $admin_page, 'Media' ), 'Tool actions visually separate fixed support flows, fallback bundles, governed handoffs, and media work.' );
-toolbox_assert( false !== strpos( $admin_page, 'Discoverability Brief' ) && false !== strpos( $admin_page, 'Publish Preflight' ) && false !== strpos( $admin_page, 'Taxonomy/Tag Candidates' ) && false !== strpos( $admin_page, 'Internal Link Candidates' ) && false !== strpos( $admin_page, 'Image Candidates' ), 'Tool actions expose fixed Content Support flows as first-class buttons.' );
+toolbox_assert( false !== strpos( $admin_page, 'Discoverability Brief' ) && false !== strpos( $admin_page, 'Publish Preflight' ) && false !== strpos( $admin_page, 'Summary and Terms Optimization' ) && false !== strpos( $admin_page, 'Taxonomy/Tag Candidates' ) && false !== strpos( $admin_page, 'Internal Link Candidates' ) && false !== strpos( $admin_page, 'Image Candidates' ), 'Tool actions expose fixed Content Support flows as first-class buttons.' );
 $handoff_group_pos = strpos( $admin_page, "'group'       => __( 'Governed Handoffs'" );
 $adopt_image_pos   = strpos( $admin_page, "'id'          => 'image-candidate-adoption'" );
 $media_group_pos   = strpos( $admin_page, "'group'       => __( 'Media'" );
@@ -198,6 +198,7 @@ toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Provider calls',
 toolbox_assert( false !== strpos( $admin_js, 'renderWebSearchDiagnostics' ) && false !== strpos( $admin_js, "payload.artifact_type === 'web_search_diagnostics'" ), 'Admin JavaScript renders Cloud web search workflow diagnostics through a dedicated view.' );
 toolbox_assert( false !== strpos( $admin_js, "appendMeta(meta, 'Error code', payload.error_code" ) && false !== strpos( $admin_js, 'payload.usage_summary.evidence_status' ), 'Admin JavaScript surfaces workflow search diagnostic errors and evidence status.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderEditorContentSupport' ) && false !== strpos( $admin_js, "payload.artifact_type === 'editor_content_support_flow'" ), 'Admin JavaScript renders fixed Content Support flow artifacts as structured suggestions.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderSummaryTermsOptimization' ) && false !== strpos( $admin_js, 'Summary and terms optimization' ) && false !== strpos( $admin_js, 'Related Site Knowledge' ), 'Admin JavaScript renders summary/category/tag optimization as structured suggestions.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderHostedAiContentSupport' ) && false !== strpos( $admin_js, "payload.artifact_type === 'hosted_ai_content_support'" ) && false !== strpos( $admin_js, 'text.ai' ), 'Admin JavaScript renders hosted AI runtime suggestions.' );
 toolbox_assert( false !== strpos( $admin_js, 'Title and summary suggestions' ) && false !== strpos( $admin_js, 'Outline suggestions' ) && false !== strpos( $admin_js, 'Polish suggestions' ), 'Admin JavaScript labels the hosted AI draft-support result modes.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderHostedAiSiteHelper' ) && false !== strpos( $admin_js, "payload.artifact_type === 'hosted_ai_site_helper'" ), 'Admin JavaScript renders AI site-helper suggestions through a dedicated view.' );
@@ -219,6 +220,8 @@ toolbox_assert( false !== strpos( $admin_js, 'renderImageCandidateAdoptionPlan' 
 toolbox_assert( false !== strpos( $admin_js, 'Image import proposal plan' ) && false !== strpos( $admin_js, 'License or source review is required before approval.' ), 'Image candidate adoption renderer keeps next steps and review status visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderImageSourceCandidates' ) && false !== strpos( $admin_js, "payload.artifact_type === 'image_source_candidates'" ) && false !== strpos( $admin_js, 'Resolved provider' ) && false !== strpos( $admin_js, 'Auto strategy' ), 'Admin JavaScript renders Cloud image-source candidates with auto provider evidence.' );
 toolbox_assert( false !== strpos( $admin_js, 'Suggested filename' ) && false !== strpos( $admin_js, 'Cloud returned image candidates only' ), 'Image-source renderer shows filename evidence and no-write guidance.' );
+toolbox_assert( false !== strpos( $admin_js, 'appendAiImageGenerationHandoff' ) && false !== strpos( $admin_js, 'Reviewed prompt' ) && false !== strpos( $admin_js, "postJson(config.restUrl, 'ai/image-generation'" ), 'Admin JavaScript renders reviewed-prompt AI image generation from image-source handoff.' );
+toolbox_assert( false !== strpos( $admin_js, 'Generated images are candidates only' ) && false !== strpos( $admin_js, 'Use Adopt New Image and Core review' ), 'Admin JavaScript keeps AI-generated images candidate-only before local adoption.' );
 toolbox_assert( false !== strpos( $admin_js, 'One-run planning artifact' ) && false !== strpos( $admin_js, 'Core policy' ), 'Media derivative renderer keeps one-run Core policy handoff visible.' );
 toolbox_assert( false !== strpos( $admin_js, 'initMediaDerivativeControls' ) && false !== strpos( $admin_js, 'runMediaDerivative' ) && false !== strpos( $admin_js, 'submitMediaDerivativeProposal' ) && false !== strpos( $admin_js, 'submitMediaReferenceRepairProposal' ) && false !== strpos( $admin_js, 'submitMediaSettingsReferenceRepairProposal' ), 'Admin JavaScript runs the media derivative preview, replacement proposal, post reference repair, and settings reference repair proposal flows through Adapter routes.' );
 toolbox_assert( false !== strpos( $admin_js, 'data-toolbox-media-derivative-preview-only' ) && false !== strpos( $admin_js, 'createMediaDerivativePreview(input, mediaDetails, previewOnly)' ) && false !== strpos( $admin_js, 'This check does not submit a Core proposal or write media.' ), 'Admin JavaScript keeps Cloud Check media derivative previews proposal-free.' );
@@ -252,6 +255,8 @@ toolbox_assert( false !== strpos( $admin_js, "modeInput.value = hasIndex ? 'rebu
 toolbox_assert( false !== strpos( $admin_js, 'progress.message' ) && false !== strpos( $admin_js, 'Active run' ) && false !== strpos( $admin_js, 'Indexing...' ), 'Admin JavaScript renders Site Knowledge progress and disables indexing while Cloud is active.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false !== strpos( $admin_js, 'payload.message' ), 'Admin JavaScript renders Site Knowledge evidence state and active-run guidance.' );
 toolbox_assert( false !== strpos( $admin_js, 'payload.handoff || payload.agent_handoff' ) && false !== strpos( $admin_js, 'Agent proposal input' ) && false !== strpos( $admin_js, 'Proposal candidate only' ), 'Admin JavaScript renders Cloud Site Knowledge agent handoff as a local Core proposal candidate.' );
+toolbox_assert( false !== strpos( $admin_js, 'Prepare local proposal candidate' ) && false !== strpos( $admin_js, 'site_knowledge_core_proposal_candidate' ) && false !== strpos( $admin_js, "core_submission: 'not_submitted'" ), 'Admin JavaScript prepares a local Site Knowledge proposal candidate packet without Core submission.' );
+toolbox_assert( false !== strpos( $admin_js, 'Submit Core review proposal' ) && false !== strpos( $admin_js, "'flows/site-knowledge-review-plan'" ) && false !== strpos( $admin_js, "'npcink-toolbox/build-site-knowledge-review-plan'" ) && false !== strpos( $admin_js, "'proposals/from-plan'" ), 'Admin JavaScript submits Site Knowledge review plans through Adapter/Core from-plan intake.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderSiteKnowledgeAutoSync' ) && false !== strpos( $admin_js, 'Server cron suggestion' ) && false !== strpos( $admin_js, 'WP-Cron disabled' ), 'Admin JavaScript renders Site Knowledge auto-sync queue health and cron guidance.' );
 
 $development_workflow = file_get_contents( $root . '/docs/development-workflow.md' );
@@ -289,12 +294,13 @@ toolbox_assert( false !== strpos( $auto_sync, 'health_snapshot' ) && false !== s
 $editor_js = file_get_contents( $root . '/assets/editor-content-support.js' );
 toolbox_assert( false !== strpos( $editor_js, 'PluginSidebar' ) && false !== strpos( $editor_js, 'npcink-content-support-sidebar' ), 'Editor JavaScript registers a Npcink Content Support plugin sidebar.' );
 toolbox_assert( false === strpos( $editor_js, 'PluginDocumentSettingPanel' ) && false === strpos( $editor_js, 'openGeneralSidebar' ), 'Editor JavaScript does not add a duplicate document settings shortcut.' );
-foreach ( array( 'writing_support', 'publish_preflight', 'taxonomy_tags', 'internal_links', 'image_candidates' ) as $editor_intent ) {
+foreach ( array( 'writing_support', 'publish_preflight', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates' ) as $editor_intent ) {
 	toolbox_assert( false !== strpos( $editor_js, $editor_intent ), "Editor Content Support exposes fixed flow intent {$editor_intent}." );
 }
 toolbox_assert( false !== strpos( $editor_js, 'editor/content-support' ) && false !== strpos( $editor_js, 'getEditedPostAttribute' ), 'Editor Content Support posts current draft context to the fixed flow route.' );
 toolbox_assert( false !== strpos( $editor_js, 'Suggestions only. Final writes require Core approval.' ), 'Editor Content Support preserves suggestion-only Core-governed copy.' );
 toolbox_assert( false !== strpos( $editor_js, 'extractWritingSupportItems' ) && false !== strpos( $editor_js, 'No writing preparation evidence returned.' ), 'Editor Content Support renders writing preparation evidence as a compact suggestion list.' );
+toolbox_assert( false !== strpos( $editor_js, 'renderSummaryOptimization' ) && false !== strpos( $editor_js, 'Category candidates' ) && false !== strpos( $editor_js, 'Tag candidates' ), 'Editor Content Support renders summary/category/tag optimization as grouped suggestion sections.' );
 toolbox_assert( false !== strpos( $editor_js, 'Image source suggestions' ) && false !== strpos( $editor_js, 'openImageRecommendations' ), 'Editor Content Support opens image candidates in a source suggestion modal.' );
 toolbox_assert( false !== strpos( $editor_js, "postJson('image-candidates'" ) && false !== strpos( $editor_js, 'Search image sources' ), 'Editor image recommendation modal supports manual cloud image-source search.' );
 toolbox_assert( false !== strpos( $editor_js, 'renderImageCandidateCards' ) && false !== strpos( $editor_js, 'download_location' ), 'Editor image recommendation modal renders attribution-aware image candidate cards.' );
@@ -376,10 +382,12 @@ $allowed_rest_routes = array(
 	'/site-knowledge/status',
 	'/ai/content-support',
 	'/ai/site-helpers',
+	'/ai/image-generation',
 	'/flows/article-brief',
 	'/flows/article-assistant',
 	'/flows/article-plan',
 	'/flows/image-candidate-adoption-plan',
+	'/flows/site-knowledge-review-plan',
 	'/flows/media-brief',
 	'/editor/content-support',
 	'/media-derivative-handoff',
@@ -405,10 +413,11 @@ toolbox_assert( false !== strpos( $rest, 'selected_text' ) && false !== strpos( 
 toolbox_assert( false !== strpos( $rest, 'image_visual_context_from_request' ) && false !== strpos( $rest, 'editor_image_visual_context' ) && false !== strpos( $rest, 'sanitize_image_visual_context' ), 'REST image routes normalize bounded visual context for Cloud image search.' );
 toolbox_assert( false !== strpos( $rest, "'image_mode'          => \$mode" ) && false !== strpos( $rest, "'avoid_brand_logos'   => ! empty" ), 'REST visual context preserves image use and editorial-safe constraints.' );
 toolbox_assert( false !== strpos( $rest, "'setting_image'" ) && false !== strpos( $rest, "'setting' === \$mode" ), 'REST visual context accepts setting-image usage without adding a write route.' );
-foreach ( array( 'writing_support', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight' ) as $editor_rest_intent ) {
+foreach ( array( 'writing_support', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight' ) as $editor_rest_intent ) {
 	toolbox_assert( false !== strpos( $rest, "'{$editor_rest_intent}'" ), "REST editor content support accepts fixed intent {$editor_rest_intent}." );
 }
 toolbox_assert( false !== strpos( $rest, "'intent'          => 'writing_support_plan'" ) && false !== strpos( $rest, "\$result['sections']['writing_support']" ), 'REST editor writing support calls Cloud Site Knowledge writing support plan without adding a route.' );
+toolbox_assert( false !== strpos( $rest, "'article_discoverability_optimization.v1'" ) && false !== strpos( $rest, "'summary_taxonomy_tag_candidates'" ) && false !== strpos( $rest, "'intent'  => 'summary_terms_optimization'" ), 'REST editor summary/terms optimization returns a suggestion-only metadata artifact.' );
 foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue', 'scheduler', 'approval', 'approve', 'confirm', 'write', 'featured-image', 'media-upload', 'media-import', 'seo' ) as $forbidden_fragment ) {
 	$has_forbidden_route = false;
 	foreach ( $registered_rest_routes as $route ) {
@@ -418,7 +427,7 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'npcink-toolbox/search-image-source', 'npcink-toolbox/vector-search', 'npcink-toolbox/search-site-knowledge', 'npcink-toolbox/get-site-knowledge-status', 'npcink-toolbox/request-site-knowledge-sync', 'npcink-toolbox/build-article-brief', 'npcink-toolbox/build-article-assistant', 'npcink-toolbox/build-article-write-plan', 'npcink-toolbox/build-image-candidate-adoption-plan', 'npcink-toolbox/build-media-brief', 'npcink-toolbox/build-media-derivative-handoff', 'npcink-toolbox/get-content-discoverability-context', 'npcink-toolbox/validate-content-discoverability-context', 'npcink-toolbox/build-content-discoverability-brief', 'npcink-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
+foreach ( array( 'npcink-toolbox/search-image-source', 'npcink-toolbox/vector-search', 'npcink-toolbox/search-site-knowledge', 'npcink-toolbox/get-site-knowledge-status', 'npcink-toolbox/request-site-knowledge-sync', 'npcink-toolbox/build-article-brief', 'npcink-toolbox/build-article-assistant', 'npcink-toolbox/build-article-write-plan', 'npcink-toolbox/build-image-candidate-adoption-plan', 'npcink-toolbox/build-site-knowledge-review-plan', 'npcink-toolbox/build-media-brief', 'npcink-toolbox/build-media-derivative-handoff', 'npcink-toolbox/get-content-discoverability-context', 'npcink-toolbox/validate-content-discoverability-context', 'npcink-toolbox/build-content-discoverability-brief', 'npcink-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
 toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/web-research' ), 'Toolbox no longer registers a local web-research ability.' );
@@ -537,11 +546,14 @@ toolbox_assert( false !== strpos( $client, 'media_derivative_watermark_overrides
 toolbox_assert( false !== strpos( $client, "'type'       => 'text'" ) && false !== strpos( $client, "'font_size'  =>" ) && false !== strpos( $client, 'sanitize_media_derivative_watermark_color' ), 'Media derivative handoff sanitizes text watermark overrides without requiring a logo artifact.' );
 toolbox_assert( false !== strpos( $client, 'build_content_discoverability_brief' ), 'Provider client can build content discoverability briefs.' );
 toolbox_assert( false !== strpos( $client, 'run_hosted_ai_content_support' ) && false !== strpos( $client, "'profile_id'          => 'text.ai'" ) && false !== strpos( $client, "'ability_name'        => 'npcink-toolbox/ai-content-support'" ), 'Provider client runs hosted AI content support through the dedicated hosted profile.' );
-toolbox_assert( false !== strpos( $client, "array( 'title_summary', 'article_outline', 'polish_notes' )" ) && false !== strpos( $client, "'max_tokens'  => 650" ), 'Provider client keeps hosted AI draft-support intents lightweight and model-neutral.' );
+toolbox_assert( false !== strpos( $client, "array( 'title_summary', 'article_outline', 'polish_notes', 'summary_terms_optimization' )" ) && false !== strpos( $client, "'max_tokens'  => 650" ), 'Provider client keeps hosted AI draft-support intents lightweight and model-neutral.' );
+toolbox_assert( false !== strpos( $client, "'summary_terms_optimization' => array(" ) && false !== strpos( $client, "'category_candidates'" ) && false !== strpos( $client, "'tag_candidates'" ), 'Provider client gives summary/category/tag optimization a reviewable quality contract.' );
 toolbox_assert( false !== strpos( $client, 'hosted_ai_quality_contract' ) && false !== strpos( $client, "'quality_contract'" ) && false !== strpos( $client, "'review_checklist'" ) && false !== strpos( $client, "'reject_if'" ), 'Provider client attaches AI quality guardrails to prompts and normalized outputs.' );
 toolbox_assert( false === strpos( $client, "'article_optimization' =>" ) && false === strpos( $client, "'smart_recommendations' =>" ) && false === strpos( $client, "'site_checkup'      =>" ), 'Hosted AI draft support does not keep legacy site, media, or recommendation task prompts.' );
 toolbox_assert( false !== strpos( $client, 'hosted_ai_content_support_prompt' ) && false !== strpos( $client, 'direct_wordpress_write' ) && false !== strpos( $client, 'core_proposal_required' ) && false !== strpos( $client, 'Do not generate a full article' ), 'AI prompt preserves suggestion-only Core approval boundaries.' );
 toolbox_assert( false !== strpos( $client, 'run_hosted_ai_site_helper' ) && false !== strpos( $client, "'ability_name'        => 'npcink-toolbox/ai-site-helper'" ) && false !== strpos( $client, "'contract_version'    => 'hosted_ai_site_helper.v1'" ), 'Provider client runs AI site helpers through a separate hosted runtime contract.' );
+toolbox_assert( false !== strpos( $client, 'run_ai_image_generation' ) && false !== strpos( $client, "'image.grok-imagine-quality'" ) && false !== strpos( $client, "'execution_kind'      => 'image_generation'" ), 'Provider client runs reviewed AI image generation through the hosted image profile.' );
+toolbox_assert( false !== strpos( $client, 'prompt_reviewed_by_operator' ) && false !== strpos( $client, 'normalize_ai_image_generation_response' ) && false !== strpos( $client, "'source_type'                   => 'ai_generated'" ), 'Provider client normalizes generated images as candidate-only AI image sources.' );
 toolbox_assert( false !== strpos( $client, "array( 'media_alt_suggestions', 'content_snapshot_suggestions' )" ) && false !== strpos( $client, 'collect_hosted_ai_media_alt_snapshot( 10 )' ) && false !== strpos( $client, 'collect_hosted_ai_site_snapshot()' ), 'Provider client keeps AI site-helper sampling bounded and local-light.' );
 toolbox_assert( false !== strpos( $client, 'hosted_ai_site_helper_quality_contract' ) && false !== strpos( $client, 'needs_human_visual_check' ) && false !== strpos( $client, 'full site audit' ), 'Provider client attaches site-helper guardrails for media ALT and snapshot suggestions.' );
 toolbox_assert( false !== strpos( $client, "'writing_support_plan'" ), 'Provider client permits Cloud Site Knowledge writing support plan intent.' );
@@ -592,6 +604,7 @@ toolbox_assert( false !== strpos( $rest, "'vector_provider'          => 'cloud_s
 toolbox_assert( false !== strpos( $rest, "'hosted_ai'" ) && false !== strpos( $rest, "'hosted_profile'          => 'text.ai'" ) && false !== strpos( $rest, "'site_helpers_registered' => true" ) && false !== strpos( $rest, "'posture'                 => 'suggestion_only_core_approval_required'" ) && false === strpos( $rest, "'model_id'       =>" ), 'Status exposes model-neutral hosted AI metadata without adding write authority.' );
 toolbox_assert( false !== strpos( $rest, "\$this->post( '/ai/content-support', 'hosted_ai_content_support' )" ) && false !== strpos( $rest, 'run_hosted_ai_content_support' ), 'REST exposes the hosted AI content-support runtime route.' );
 toolbox_assert( false !== strpos( $rest, "\$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' )" ) && false !== strpos( $rest, 'run_hosted_ai_site_helper' ), 'REST exposes the dedicated AI site-helper runtime route.' );
+toolbox_assert( false !== strpos( $rest, "\$this->post( '/ai/image-generation', 'ai_image_generation' )" ) && false !== strpos( $rest, "'ai_image_generation'" ) && false !== strpos( $rest, "'direct_wordpress_write'  => false" ), 'REST exposes a narrow AI image generation route without WordPress write authority.' );
 toolbox_assert( false !== strpos( $rest, 'query or vector field' ), 'Vector REST route accepts query or vector input.' );
 toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== strpos( $rest, 'site_knowledge_status' ) && false !== strpos( $rest, 'site_knowledge_search' ), 'REST routes expose Cloud-managed site knowledge operations.' );
 toolbox_assert( false !== strpos( $rest, "Site_Knowledge_Auto_Sync::health_snapshot()" ) && false !== strpos( $rest, "\$status['auto_sync']" ), 'Site Knowledge status REST response includes local auto-sync health.' );
@@ -601,6 +614,7 @@ toolbox_assert( false !== strpos( $rest, 'npcink_toolbox_rest_permission' ), 'RE
 
 toolbox_assert( false === strpos( $abilities, 'cap.toolbox.search' ), 'Removed local web ability no longer exposes a Toolbox search scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.vector_search' ), 'Vector ability exposes a Toolbox vector scope.' );
+toolbox_assert( false !== strpos( $abilities, "'npcink-toolbox/generate-image'" ) && false !== strpos( $abilities, 'generate_image_candidate' ) && false !== strpos( $abilities, 'candidate_only_core_approval_required' ), 'Abilities expose reviewed AI image candidate generation without write authority.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.knowledge.search' ) && false !== strpos( $abilities, 'cap.toolbox.knowledge.read' ) && false !== strpos( $abilities, 'cap.toolbox.knowledge.sync' ), 'Site knowledge abilities expose stable knowledge scopes.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.workflow_suggest' ), 'Workflow abilities expose the stable Toolbox workflow scope.' );
 toolbox_assert( false !== strpos( $abilities, 'cap.toolbox.context.read' ), 'Content context ability exposes a read scope.' );
@@ -678,6 +692,7 @@ $first_version_doc = file_get_contents( $root . '/docs/first-version-reference.m
 toolbox_assert( false !== $first_version_doc && false !== strpos( $first_version_doc, 'REST Route Matrix' ) && false !== strpos( $first_version_doc, 'Cloud Checks now open directly into verification tools' ), 'First-version reference captures route matrix and Cloud Checks guidance.' );
 toolbox_assert( false !== strpos( $first_version_doc, 'canonical composition sequence' ) && false !== strpos( $first_version_doc, 'The sequence is a recommendation for composing tool inputs' ) && false !== strpos( $first_version_doc, 'runtime contract' ), 'First-version reference captures the AI content composition sequence.' );
 toolbox_assert( false !== strpos( $first_version_doc, 'fixed, single-job support' ) && false !== strpos( $first_version_doc, 'combined Article Planning Bundle' ) && false !== strpos( $first_version_doc, 'separate groups' ), 'First-version reference captures grouped fixed Content Support buttons before fallback bundles.' );
+toolbox_assert( false !== strpos( $first_version_doc, 'Site Knowledge Agent handoff acceptance' ) && false !== strpos( $first_version_doc, 'site_knowledge_core_proposal_candidate' ) && false !== strpos( $first_version_doc, 'core_submission=not_submitted' ) && false !== strpos( $first_version_doc, 'site_knowledge_review_plan' ), 'First-version reference captures Site Knowledge Agent handoff acceptance boundaries.' );
 
 $content_composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
 toolbox_assert( false !== $content_composition_doc && false !== strpos( $content_composition_doc, 'Content Support First' ), 'AI content composition documentation records the content-support-first sequence.' );

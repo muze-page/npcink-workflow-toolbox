@@ -135,6 +135,7 @@ Toolbox ability ids stay under `npcink-toolbox/*`:
 - `npcink-toolbox/build-article-brief`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
 - `npcink-toolbox/validate-content-discoverability-context`
@@ -150,6 +151,11 @@ General-purpose provider abilities:
 - `npcink-toolbox/search-image-source` is the image-candidate ability for
   any workflow that needs sourced images. It returns `image_candidate.v1`
   candidates for stock, AI-generated, owned, or external image sources.
+- `npcink-toolbox/generate-image` is the reviewed-prompt AI image candidate
+  ability exposed when Cloud image-source results include an
+  `ai_generation_handoff`. It calls hosted image generation through Cloud
+  Addon, returns candidates only, and does not import media or write
+  WordPress.
 - `npcink-toolbox/build-image-candidate-adoption-plan` turns one reviewed
   `image_candidate.v1` into a Core-ready `image_candidate_adoption_plan` for
   media upload, metadata, and optional featured-image proposal intake.
@@ -157,7 +163,15 @@ General-purpose provider abilities:
   ability for semantic site search, related content, writing context, internal
   links, refresh suggestions, or image context. When Cloud returns
   `agent_handoff`, Toolbox displays it as a local Core proposal candidate only;
-  it does not submit, approve, preflight, or execute the proposal.
+  the operator may prepare a local candidate packet for review or submit a
+  blocked Core review proposal through `site_knowledge_review_plan`, but
+  Toolbox does not approve, pass preflight, or execute the proposal.
+- `npcink-toolbox/build-site-knowledge-review-plan` turns a Cloud Site
+  Knowledge `proposal_input` into a Core-only `site_knowledge_review_plan`.
+  It preserves evidence refs, targets only a non-ready
+  `npcink-abilities-toolkit/create-draft` review action, requires human
+  `title` and `content` input, and does not generate or write WordPress
+  content.
 - `npcink-toolbox/vector-search` is a Cloud-managed site knowledge
   compatibility pointer for older clients.
 
@@ -169,15 +183,38 @@ Site knowledge status and sync:
   or rebuild work from public WordPress content. It does not write WordPress
   content and does not create a local indexing queue.
 
+Site Knowledge Agent handoff acceptance:
+
+- Cloud may return evidence-backed `agent_handoff` and `proposal_input`.
+- Toolbox may render `Governed handoff`, `Agent proposal input`, and a local
+  `site_knowledge_core_proposal_candidate` packet for operator review.
+- The local candidate packet must keep `core_submission=not_submitted`,
+  `direct_wordpress_write=false`, and `final_writes=core_proposal_required`.
+- Toolbox may submit the reviewed handoff only as
+  `npcink-toolbox/build-site-knowledge-review-plan` with
+  `artifact_type=site_knowledge_review_plan`.
+- The Core proposal created from that plan must remain blocked/not ready until a
+  human supplies draft `title` and `content`; Toolbox must not approve it, run
+  preflight, or execute WordPress writes.
+- Core remains the only owner of proposal approval, commit preflight, audit, and
+  final WordPress writes.
+
 Post editor content support:
 
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support` runs one bounded
   fixed flow from the current draft context.
 - Supported intents are `writing_support`, `publish_preflight`,
-  `taxonomy_tags`, `internal_links`, `image_candidates`, and
+  `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
+  `image_candidates`, and
   `discoverability`.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
+- `summary_terms_optimization` returns an
+  `article_discoverability_optimization.v1` section with hosted AI summary
+  candidates, existing category/tag candidates, related Site Knowledge, web
+  search evidence from the discoverability brief, and review notes. It does not
+  update excerpts, assign terms, mutate SEO fields, index content, or own a RAG
+  lifecycle.
 
 For content-support AI callers, the canonical composition sequence is:
 
@@ -313,10 +350,15 @@ The first-version route matrix is exact:
 - `POST /knowledge-search`
 - `POST /ai/content-support`
 - `POST /ai/site-helpers`
+- `POST /ai/image-generation`
 - `POST /flows/article-brief`
+- `POST /flows/article-assistant`
 - `POST /flows/article-plan`
 - `POST /flows/image-candidate-adoption-plan`
+- `POST /flows/site-knowledge-review-plan`
 - `POST /flows/media-brief`
+- `POST /editor/content-support`
+- `POST /media-derivative-handoff`
 
 Do not add routes for publish, delivery, workflow-run consoles, queues,
 schedulers, approval stores, write confirmation, featured-image mutation, media

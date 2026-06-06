@@ -68,7 +68,10 @@ For normal WordPress editorial support, compose abilities in this order:
 4. `npcink-toolbox/build-image-candidate-adoption-plan`
    - After operator review, build a Core-ready media adoption plan when the
      operator wants to import a selected image candidate.
-5. `npcink-toolbox/build-media-brief`
+5. `npcink-toolbox/build-site-knowledge-review-plan`
+   - After operator review, build a blocked Core review proposal plan from
+     Cloud Site Knowledge evidence without generating or writing content.
+6. `npcink-toolbox/build-media-brief`
    - Build image prompts, alt/caption suggestions, and governed media handoff
      notes for an existing post.
 
@@ -157,6 +160,7 @@ tab remains the management, testing, and cross-article surface.
 | `npcink-toolbox/get-site-knowledge-status` | `site_knowledge_status` | Cloud-managed site knowledge coverage and freshness status. |
 | `npcink-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content sync or rebuild request for Cloud-managed site knowledge. |
 | `npcink-toolbox/search-image-source` | `image_source_candidates` | External image-source candidates with attribution metadata. |
+| `npcink-toolbox/generate-image` | `image_source_candidates` | Reviewed-prompt Cloud AI image candidates from an image-source handoff. |
 | `npcink-toolbox/build-content-discoverability-brief` | `seo_aeo_geo_brief` | Suggestion-only SEO/AEO/GEO instructions and proposal template. |
 | `npcink-toolbox/build-ai-article-writing-pack` | `ai_article_writing_pack` | Convenience fallback for OpenClaw-style natural-language article requests. |
 | `npcink-toolbox/build-article-brief` | `article_planning_bundle` | Compact research, image, vector, and handoff notes. |
@@ -164,6 +168,7 @@ tab remains the management, testing, and cross-article surface.
 | `npcink-toolbox/build-article-batch-write-plan` | `core_article_batch_write_plan` | Reviewed draft batch plan for one Core batch proposal. |
 | `npcink-toolbox/build-article-media-batch-write-plan` | `core_article_media_batch_write_plan` | Reviewed article plus image-source plan for Core-governed draft, media upload, metadata, and featured-image actions. |
 | `npcink-toolbox/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
+| `npcink-toolbox/build-site-knowledge-review-plan` | `core_site_knowledge_review_plan` | Blocked Site Knowledge review plan with preserved evidence refs and human title/content input still required. |
 | `npcink-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
 
 ## Output Contract
@@ -242,6 +247,13 @@ write ability handles import. To adopt one reviewed candidate, callers should
 build `npcink-toolbox/build-image-candidate-adoption-plan` and send the
 returned `image_candidate_adoption_plan` to Core from-plan intake.
 
+Cloud Site Knowledge agent handoffs are narrower. To review an evidence-backed
+content gap or refresh suggestion, callers may build
+`npcink-toolbox/build-site-knowledge-review-plan` and send the returned
+`site_knowledge_review_plan` to Core from-plan intake. The resulting proposal
+must remain blocked until a human supplies draft `title` and `content`; Toolbox
+and Cloud must not approve, preflight, execute, or write WordPress content.
+
 ## Vector Usage
 
 Prefer `search-site-knowledge` when the workflow needs current site context:
@@ -261,8 +273,16 @@ collection lifecycle, or full RAG behavior.
 
 If Cloud returns `agent_handoff` for Site Knowledge, Toolbox may surface it as
 a governed local handoff candidate. `handoff_type=proposal_input` means "review
-this evidence before creating a Core proposal"; it is not automatic Core
-submission, approval, preflight, or WordPress writing.
+this evidence before creating a Core proposal". Toolbox may prepare a local
+candidate packet that keeps evidence refs, blocked outputs, and the next local
+review action visible, but that packet is still not a Core submission, approval,
+preflight, or WordPress write plan.
+
+If Cloud returns `ai_generation_handoff` for image-source candidates, Toolbox
+may show a reviewed prompt action for `npcink-toolbox/generate-image`. The
+operator must review or edit the prompt before dispatch. The result remains
+`image_candidate.v1` evidence for local adoption planning; it is not media
+import, featured-image mutation, approval, preflight, or a WordPress write.
 
 ## Handoff Rule
 

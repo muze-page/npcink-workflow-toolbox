@@ -59,6 +59,109 @@ final class Provider_Client {
 		return $this->execute_image_source_cloud_request( $query, $options, $provider );
 	}
 
+	public function run_ai_image_generation( array $input ) {
+		$prompt = trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) );
+		if ( '' === $prompt ) {
+			return new WP_Error(
+				'npcink_toolbox_missing_ai_image_prompt',
+				__( 'Review and enter an image generation prompt before calling Cloud.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$n = max( 1, min( 4, (int) ( $input['n'] ?? 1 ) ) );
+		$aspect_ratio = sanitize_text_field( (string) ( $input['aspect_ratio'] ?? '16:9' ) );
+		if ( ! in_array( $aspect_ratio, array( '1:1', '4:3', '3:4', '16:9', '9:16' ), true ) ) {
+			$aspect_ratio = '16:9';
+		}
+		$resolution = sanitize_key( (string) ( $input['resolution'] ?? 'high' ) );
+		if ( ! in_array( $resolution, array( 'low', 'medium', 'high' ), true ) ) {
+			$resolution = 'high';
+		}
+		$response_format = sanitize_key( (string) ( $input['response_format'] ?? 'url' ) );
+		if ( ! in_array( $response_format, array( 'url', 'b64_json' ), true ) ) {
+			$response_format = 'url';
+		}
+
+		$handoff = is_array( $input['handoff'] ?? null ) ? $input['handoff'] : array();
+		$template = is_array( $handoff['runtime_request_template'] ?? null ) ? $handoff['runtime_request_template'] : array();
+		$ability_name = sanitize_text_field( (string) ( $template['ability_name'] ?? 'magick-ai-cloud/generate-image' ) );
+		if ( ! in_array( $ability_name, array( 'magick-ai-cloud/generate-image', 'magick-ai-toolbox/generate-image', 'npcink-toolbox/generate-image' ), true ) ) {
+			$ability_name = 'magick-ai-cloud/generate-image';
+		}
+
+		$runtime_payload = array(
+			'ability_name'        => $ability_name,
+			'contract_version'    => 'image_generation_request.v1',
+			'execution_pattern'   => 'inline',
+			'execution_kind'      => 'image_generation',
+			'profile_id'          => sanitize_text_field( (string) ( $template['profile_id'] ?? 'image.grok-imagine-quality' ) ),
+			'input'               => array(
+				'prompt'          => $prompt,
+				'aspect_ratio'    => $aspect_ratio,
+				'resolution'      => $resolution,
+				'response_format' => $response_format,
+				'n'               => $n,
+				'purpose'         => sanitize_key( (string) ( $input['purpose'] ?? 'image_source_candidate_generation' ) ),
+				'review'          => array(
+					'prompt_reviewed_by_operator' => true,
+					'write_posture'               => 'candidate_only',
+					'direct_wordpress_write'      => false,
+				),
+			),
+			'data_classification' => 'internal',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 3600,
+			'timeout_seconds'     => 60,
+			'retry_max'           => 0,
+			'policy'              => array(
+				'allow_fallback' => false,
+			),
+		);
+
+		if ( isset( $handoff['query_hash'] ) ) {
+			$runtime_payload['input']['source_handoff'] = array(
+				'action_id'  => sanitize_key( (string) ( $handoff['action_id'] ?? 'ai_generate_image' ) ),
+				'query_hash' => sanitize_text_field( (string) $handoff['query_hash'] ),
+			);
+		}
+
+		$runtime_payload = apply_filters( 'npcink_toolbox_ai_image_generation_runtime_payload', $runtime_payload, $input );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'npcink_toolbox_invalid_ai_image_generation_runtime_payload',
+				__( 'The AI image generation runtime payload was not valid.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_ai_image_generation_cloud_request', null, $runtime_payload, $input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_ai_image_generation_response( $handled, $runtime_payload );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_ai_image_generation_cloud_unavailable',
+				__( 'Connect Npcink Cloud before generating AI image candidates.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'ai_image_generation' );
+		$idempotency_key = $this->trace_id( 'ai_image_generation_request' );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_ai_image_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
 	private function should_include_ai_generated_images( array $options ): bool {
 		if ( ! empty( $options['include_ai_generated'] ) ) {
 			return true;
@@ -328,6 +431,15 @@ final class Provider_Client {
 
 		if ( is_array( $result['candidates'] ?? null ) ) {
 			return array_values( array_filter( $result['candidates'], 'is_array' ) );
+		}
+
+		foreach ( array( 'data', 'result', 'output', 'response' ) as $key ) {
+			if ( is_array( $result[ $key ] ?? null ) ) {
+				$nested = $this->extract_ai_generated_image_candidates( $result[ $key ] );
+				if ( array() !== $nested ) {
+					return $nested;
+				}
+			}
 		}
 
 		if ( $this->is_list( $result ) ) {
@@ -1614,6 +1726,137 @@ final class Provider_Client {
 		);
 	}
 
+	public function build_site_knowledge_review_plan( array $input ) {
+		$proposal_input = $input['proposal_input'] ?? array();
+		if ( is_string( $proposal_input ) ) {
+			$decoded        = json_decode( $proposal_input, true );
+			$proposal_input = is_array( $decoded ) ? $decoded : array();
+		}
+		$proposal_input = is_array( $proposal_input ) ? $proposal_input : array();
+
+		$handoff = $input['handoff'] ?? array();
+		if ( is_string( $handoff ) ) {
+			$decoded = json_decode( $handoff, true );
+			$handoff = is_array( $decoded ) ? $decoded : array();
+		}
+		$handoff = is_array( $handoff ) ? $handoff : array();
+
+		$evidence_refs = is_array( $proposal_input['evidence_refs'] ?? null ) ? array_values( $proposal_input['evidence_refs'] ) : array();
+		if ( empty( $evidence_refs ) && is_array( $handoff['proposal_input']['evidence_refs'] ?? null ) ) {
+			$evidence_refs = array_values( $handoff['proposal_input']['evidence_refs'] );
+		}
+		if ( empty( $evidence_refs ) ) {
+			return new WP_Error(
+				'npcink_toolbox_site_knowledge_review_evidence_required',
+				__( 'Site Knowledge review plans require evidence_refs from the Cloud handoff.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$blocked_outputs = is_array( $proposal_input['blocked_outputs'] ?? null ) ? array_values( $proposal_input['blocked_outputs'] ) : array();
+		$workflow        = sanitize_key( (string) ( $handoff['workflow'] ?? ( $proposal_input['workflow'] ?? 'site_knowledge_review' ) ) );
+		$intent          = sanitize_key( (string) ( $proposal_input['intent'] ?? $workflow ) );
+		$cloud_output    = sanitize_key( (string) ( $handoff['cloud_output'] ?? ( $proposal_input['cloud_output'] ?? 'proposal_candidate' ) ) );
+		$next_action     = sanitize_key( (string) ( $proposal_input['local_next_action'] ?? ( $handoff['local_next_action'] ?? 'operator_review' ) ) );
+		$title_hint      = sanitize_text_field( (string) ( $proposal_input['title_hint'] ?? ( $input['title_hint'] ?? '' ) ) );
+		$content_hint    = sanitize_textarea_field( (string) ( $proposal_input['content_hint'] ?? ( $input['content_hint'] ?? '' ) ) );
+		if ( '' === trim( $title_hint ) ) {
+			$title_hint = __( 'Site Knowledge review draft requires a human title', 'npcink-toolbox' );
+		}
+		if ( '' === trim( $content_hint ) ) {
+			$content_hint = __( 'Human draft content is required before this Site Knowledge review proposal can proceed.', 'npcink-toolbox' );
+		}
+		$agent_id        = sanitize_key( (string) ( $handoff['agent_id'] ?? ( $proposal_input['agent_id'] ?? 'site_knowledge_suggestion_agent' ) ) );
+		$agent_version   = sanitize_text_field( (string) ( $handoff['agent_version'] ?? ( $proposal_input['agent_version'] ?? '' ) ) );
+		$evidence_status = sanitize_key( (string) ( $handoff['evidence_gate_status'] ?? ( $proposal_input['evidence_gate_status'] ?? '' ) ) );
+		$evidence_count  = absint( $handoff['evidence_count'] ?? ( $proposal_input['evidence_count'] ?? count( $evidence_refs ) ) );
+		$action_id       = 'review_site_knowledge_gap';
+
+		$preview = array(
+			array(
+				'action_id'            => $action_id,
+				'workflow'             => $workflow,
+				'intent'               => $intent,
+				'cloud_output'         => $cloud_output,
+				'local_next_action'    => $next_action,
+				'evidence_count'       => $evidence_count,
+				'evidence_gate_status' => $evidence_status,
+				'proposal_ready'       => false,
+			),
+		);
+
+		return array(
+			'artifact_type'          => 'site_knowledge_review_plan',
+			'composition_role'       => 'core_site_knowledge_review_plan',
+			'version'                => 1,
+			'source_recipe_id'       => 'site_knowledge_review_v1',
+			'source_recipe_ref'      => 'workflow/site_knowledge_review',
+			'source_recipe_provider' => 'npcink-toolbox',
+			'recipe_execution'       => 'local_operator_orchestration',
+			'write_posture'          => 'core_proposal_handoff',
+			'direct_wordpress_write' => false,
+			'batch_id'               => 'site_knowledge_review_' . substr( md5( $workflow . '|' . $intent . '|' . wp_json_encode( $evidence_refs ) ), 0, 12 ),
+			'requires_approval'      => true,
+			'dry_run'                => true,
+			'commit_execution'       => false,
+			'proposal_mode'          => 'single',
+			'agent_id'               => $agent_id,
+			'agent_version'          => $agent_version,
+			'workflow'               => $workflow,
+			'intent'                 => $intent,
+			'cloud_output'           => $cloud_output,
+			'local_next_action'      => $next_action,
+			'evidence_gate_status'   => $evidence_status,
+			'evidence_count'         => $evidence_count,
+			'evidence_refs'          => $this->sanitize_payload( $evidence_refs ),
+			'blocked_outputs'        => $this->sanitize_payload( $blocked_outputs ),
+			'proposal_input'         => $this->sanitize_payload( $proposal_input ),
+			'preview'                => $preview,
+			'manual_review'          => array(
+				array(
+					'code'   => 'human_draft_required',
+					'fields' => array( 'title', 'content' ),
+					'reason' => __( 'Site Knowledge evidence can justify a review proposal, but a human must decide the final draft title and content before commit preflight.', 'npcink-toolbox' ),
+				),
+			),
+			'write_actions'          => array(
+				array(
+					'action_id'         => $action_id,
+					'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
+					'recipe_step'       => 'host_governed_review_draft',
+					'input'             => array(
+						'title'           => $title_hint,
+						'content'         => $content_hint,
+						'status'          => 'draft',
+						'meta'            => array(
+							'site_knowledge_evidence_refs' => $this->sanitize_payload( $evidence_refs ),
+							'site_knowledge_workflow'      => $workflow,
+							'site_knowledge_intent'        => $intent,
+						),
+						'dry_run'         => true,
+						'commit'          => false,
+						'idempotency_key' => 'site-knowledge-review-' . substr( md5( $workflow . '|' . $intent . '|' . wp_json_encode( $evidence_refs ) ), 0, 12 ),
+					),
+					'risk'              => 'medium',
+					'requires_approval' => true,
+					'commit_execution'  => false,
+					'proposal_ready'    => false,
+					'requires_input'    => array( 'title', 'content' ),
+					'reason'            => __( 'Create a blocked Core review proposal from evidence-backed Site Knowledge suggestions; human draft input is required before execution can be considered.', 'npcink-toolbox' ),
+				),
+			),
+			'handoff'                => array(
+				'plan_ability_id'        => 'npcink-toolbox/build-site-knowledge-review-plan',
+				'recipe_id'              => 'site_knowledge_review_v1',
+				'recipe_ref'             => 'workflow/site_knowledge_review',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'proposal_ready'         => false,
+			),
+		);
+	}
+
 	public function build_content_discoverability_brief( array $input ) {
 		$source = $this->resolve_discoverability_source( $input );
 		if ( is_wp_error( $source ) ) {
@@ -1719,7 +1962,7 @@ final class Provider_Client {
 
 	public function run_hosted_ai_content_support( array $input ) {
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'discoverability' ) );
-		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes' ), true ) ) {
+		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'summary_terms_optimization' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_intent',
 				__( 'A supported hosted AI content-support intent is required.', 'npcink-toolbox' ),
@@ -2531,6 +2774,82 @@ final class Provider_Client {
 		);
 	}
 
+	private function normalize_ai_image_generation_response( array $response, array $runtime_payload ): array {
+		$result = $this->extract_cloud_runtime_result( $response );
+		$input  = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+		$prompt = trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) );
+		$model  = sanitize_text_field( (string) ( $result['model_id'] ?? $result['model'] ?? 'grok-imagine-image-quality' ) );
+
+		$candidates = $this->extract_ai_generated_image_candidates( $result );
+		$images     = array();
+		foreach ( array_slice( $candidates, 0, max( 1, min( 4, (int) ( $input['n'] ?? 1 ) ) ) ) as $candidate ) {
+			if ( ! is_array( $candidate ) ) {
+				continue;
+			}
+			$candidate['provider_origin']     = 'cloud';
+			$candidate['generation_provider'] = sanitize_key( (string) ( $candidate['generation_provider'] ?? 'magick_ai_cloud' ) );
+			$candidate['generation_model']    = sanitize_text_field( (string) ( $candidate['generation_model'] ?? $model ) );
+			$candidate['generation_prompt']   = sanitize_textarea_field( (string) ( $candidate['generation_prompt'] ?? $prompt ) );
+			$normalized                       = $this->normalize_ai_generated_image_candidate( $candidate, $prompt, $prompt );
+			if ( '' !== (string) ( $normalized['regular_url'] ?? '' ) ) {
+				$images[] = $this->normalize_image_candidate_contract( $normalized );
+			}
+		}
+
+		$payload = $this->with_output_contract(
+			array(
+				'provider'                   => 'magick_ai_cloud',
+				'provider_mode'              => 'ai_generated',
+				'requested_provider_mode'    => 'ai_generated',
+				'resolved_provider'          => 'grok_imagine',
+				'candidate_contract_version' => 'image_candidate.v1',
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/generate-image' ) ),
+				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'image_generation_request.v1' ) ),
+				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'image.grok-imagine-quality' ) ),
+				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? ( array() === $images ? 'empty' : 'ready' ) ) ),
+				'message'                    => sanitize_text_field( (string) ( $result['message'] ?? $response['message'] ?? '' ) ),
+				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $response['data']['run_id'] ?? ( $result['run_id'] ?? '' ) ) ) ),
+				'model_id'                   => $model,
+				'query'                      => '',
+				'generation_prompt'          => $prompt,
+				'result_count'               => count( $images ),
+				'candidate_source_count'     => count( $candidates ),
+				'active_sources'             => array(
+					array(
+						'provider' => 'ai_generated',
+						'count'    => count( $images ),
+					),
+				),
+				'usage_summary'              => array(
+					'provider'            => sanitize_key( (string) ( $result['provider'] ?? 'magick_ai_cloud' ) ),
+					'provider_mode'       => 'ai_generated',
+					'provider_call_count' => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 1 ) ),
+					'result_count'        => count( $images ),
+					'model_id'            => $model,
+				),
+				'images'                     => $images,
+				'handoff'                    => array(
+					'candidate_contract'     => 'image_candidate.v1',
+					'final_writes'           => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+				'ai_generation'              => array(
+					'prompt_reviewed_by_operator' => true,
+					'response_format'              => sanitize_key( (string) ( $input['response_format'] ?? 'url' ) ),
+					'aspect_ratio'                 => sanitize_text_field( (string) ( $input['aspect_ratio'] ?? '' ) ),
+					'resolution'                   => sanitize_key( (string) ( $input['resolution'] ?? '' ) ),
+					'write_posture'                => 'candidate_only',
+					'direct_wordpress_write'       => false,
+				),
+			),
+			'image_source_candidates',
+			'image_source_candidates'
+		);
+
+		return $this->with_optional_raw( $payload, is_array( $response['raw'] ?? null ) ? $response['raw'] : $response );
+	}
+
 	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
 		$result = $this->extract_cloud_runtime_result( $response );
 
@@ -2556,6 +2875,16 @@ final class Provider_Client {
 			$resolved_provider = sanitize_key( (string) ( $active_sources[0]['provider'] ?? '' ) );
 		}
 		$visual_brief = $this->normalize_image_visual_brief( $result, $runtime_payload );
+		$ai_generation_handoff = is_array( $result['ai_generation_handoff'] ?? null ) ? $this->sanitize_payload( $result['ai_generation_handoff'] ) : array();
+		$result_handoff        = is_array( $result['handoff'] ?? null ) ? $this->sanitize_payload( $result['handoff'] ) : array();
+		if ( array() !== $ai_generation_handoff ) {
+			$result_handoff['ai_generation_handoff'] = $ai_generation_handoff;
+			$actions = is_array( $result_handoff['available_actions'] ?? null ) ? $result_handoff['available_actions'] : array();
+			if ( ! in_array( 'ai_generation_handoff', $actions, true ) ) {
+				$actions[] = 'ai_generation_handoff';
+			}
+			$result_handoff['available_actions'] = array_values( $actions );
+		}
 
 		$payload = $this->with_output_contract(
 			array(
@@ -2585,7 +2914,8 @@ final class Provider_Client {
 					'candidate_contract'    => 'image_candidate.v1',
 					'final_writes'          => 'core_proposal_required',
 					'direct_wordpress_write' => false,
-				),
+				) + $result_handoff,
+				'ai_generation_handoff'      => $ai_generation_handoff,
 			),
 			'image_source_candidates',
 			'image_source_candidates'
@@ -2752,6 +3082,21 @@ final class Provider_Client {
 					'Compare the revised text against the original before using it.',
 					'Reject any wording that changes meaning or adds facts.',
 					'Keep claims, numbers, and product details under human review.',
+				),
+			),
+			'summary_terms_optimization' => array(
+				'output_shape'     => array(
+					'short_summary'        => 'one compact excerpt candidate grounded in the supplied draft',
+					'standard_summary'     => 'one slightly fuller summary for editor review',
+					'seo_meta_description' => 'one meta description candidate, no more than 160 characters',
+					'category_candidates'  => 'existing-category-first candidates with rationale and confidence',
+					'tag_candidates'       => 'existing-tag-first candidates; mark any proposed new tag separately',
+					'risk_notes'           => 'unsupported claims, duplicate-topic risk, or taxonomy-sprawl concerns',
+				),
+				'review_checklist' => array(
+					'Verify summary candidates do not add facts that are missing from the draft or evidence.',
+					'Prefer existing categories and tags before proposing new terms.',
+					'Route accepted excerpt, taxonomy, tag, or SEO changes through Core proposal approval.',
 				),
 			),
 		);
@@ -3025,6 +3370,7 @@ final class Provider_Client {
 			'title_summary'       => 'Generate only local draft-support suggestions: 5 title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary.',
 			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
 			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
+			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, and risk notes. Prefer existing terms when supplied and mark proposed new tags separately.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
 		$quality_contract = $this->hosted_ai_quality_contract( $intent );
 
@@ -3231,7 +3577,7 @@ final class Provider_Client {
 			return $data['run']['result'];
 		}
 
-		if ( array() !== $data && ( isset( $data['artifact_type'] ) || isset( $data['results'] ) || isset( $data['coverage'] ) || isset( $data['sync'] ) ) ) {
+		if ( array() !== $data && ( isset( $data['artifact_type'] ) || isset( $data['results'] ) || isset( $data['candidates'] ) || isset( $data['images'] ) || isset( $data['coverage'] ) || isset( $data['sync'] ) ) ) {
 			return $data;
 		}
 
