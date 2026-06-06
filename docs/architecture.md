@@ -294,11 +294,12 @@ and featured image id. It never mutates the draft, assigns terms, inserts links,
 imports media, publishes content, or writes SEO fields. Write-like follow-up
 must still go through Core proposals and reusable WordPress abilities.
 The image-source entry opens a Cloud recommendation modal that auto-searches
-from the current draft context and also accepts a manual image query. The modal
-renders image candidates with previews, source links, attribution, provider
-metadata, license-review state, and preserved Unsplash download tracking when
-present. It does not upload media, set featured images, or create a write
-proposal directly.
+from the selected paragraph or selected block when available, combines that
+focus with the current draft title/excerpt/body context, and also accepts a
+manual image query. The modal renders image candidates with previews, source
+links, attribution, provider metadata, license-review state, and preserved
+Unsplash download tracking when present. It does not upload media, set featured
+images, or create a write proposal directly.
 
 Cloud Checks use compact tabs for Cloud-managed search, image-source,
 preview-only media derivative, and Site Knowledge checks. Each panel opens

@@ -281,6 +281,7 @@ toolbox_assert( false !== strpos( $editor_js, 'renderImageDiagnostics' ) && fals
 toolbox_assert( false !== strpos( $editor_js, 'Cloud image search is unavailable.' ) && false !== strpos( $editor_js, 'Connect or verify Npcink Cloud Addon' ), 'Editor image recommendation modal distinguishes Cloud configuration errors from empty searches.' );
 toolbox_assert( false !== strpos( $editor_js, 'formatImageErrorMessage' ) && false !== strpos( $editor_js, 'image-source.managed' ), 'Editor image recommendation modal turns Cloud image-source routing errors into actionable operator copy.' );
 toolbox_assert( false !== strpos( $editor_js, 'hasDraftImageContext' ) && false !== strpos( $editor_js, 'manual search query' ), 'Editor image recommendation modal avoids draft-based Cloud calls for empty posts.' );
+toolbox_assert( false !== strpos( $editor_js, 'selectedBlockText' ) && false !== strpos( $editor_js, 'browserSelectedText' ) && false !== strpos( $editor_js, 'Selected paragraph context' ), 'Editor image recommendation modal can use the selected paragraph as image recommendation context.' );
 
 $editor_css = file_get_contents( $root . '/assets/editor-content-support.css' );
 toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__flow' ) && false !== strpos( $editor_css, 'npcink-toolbox-editor-support__result' ), 'Editor Content Support CSS styles fixed flow rows and result summaries.' );
@@ -289,6 +290,7 @@ toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__s
 toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__image-modal' ) && false !== strpos( $editor_css, 'npcink-toolbox-editor-support__image-grid' ) && false !== strpos( $editor_css, 'aspect-ratio: 4 / 3' ), 'Editor Content Support CSS styles cloud image recommendation modal cards.' );
 toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__image-workspace' ) && false !== strpos( $editor_css, 'grid-template-columns: minmax(0, 1fr) minmax(300px, 360px)' ), 'Editor image recommendation CSS lays out candidates beside the selected-image inspector.' );
 toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__seo-fields' ) && false !== strpos( $editor_css, 'npcink-toolbox-editor-support__selected-actions' ), 'Editor image recommendation CSS separates editable SEO fields from adoption actions.' );
+toolbox_assert( false !== strpos( $editor_css, 'npcink-toolbox-editor-support__selection-context' ), 'Editor image recommendation CSS styles selected paragraph context.' );
 
 $editor_entrypoint = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
 toolbox_assert( false !== strpos( $editor_entrypoint, 'adapterRestUrl' ) && false !== strpos( $editor_entrypoint, 'npcink-openclaw-adapter/v1' ), 'Editor Content Support localizes the Adapter REST base for governed adoption execution.' );
@@ -352,6 +354,7 @@ toolbox_assert( false !== strpos( $rest, "'methods'             => 'GET'" ) && f
 toolbox_assert( false !== strpos( $rest, 'editor_content_support' ) && false !== strpos( $rest, "'artifact_type'          => 'editor_content_support_flow'" ) && false !== strpos( $rest, 'editor_support_section' ), 'REST controller exposes a safe suggestion-only editor content support flow.' );
 toolbox_assert( false !== strpos( $rest, 'editor_image_support_query' ) && false !== strpos( $rest, 'digital marketing workspace analytics' ), 'REST editor image candidates use a short visual image-source query instead of the full support query.' );
 toolbox_assert( false !== strpos( $rest, "'seo'       => 'search engine optimization'" ) && false !== strpos( $rest, "'ai'        => 'artificial intelligence'" ), 'REST editor image query maps abstract SEO/AEO/GEO/AI topics to image-source search terms.' );
+toolbox_assert( false !== strpos( $rest, 'selected_text' ) && false !== strpos( $rest, 'selected_block_text' ) && false !== strpos( $rest, '$selection' ), 'REST editor image query prefers selected paragraph text while retaining article context.' );
 foreach ( array( 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight' ) as $editor_rest_intent ) {
 	toolbox_assert( false !== strpos( $rest, "'{$editor_rest_intent}'" ), "REST editor content support accepts fixed intent {$editor_rest_intent}." );
 }

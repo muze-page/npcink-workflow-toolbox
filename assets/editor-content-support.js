@@ -23,6 +23,33 @@
 
 	const Button = components.Button || 'button';
 	const PluginSidebar = PluginSidebarComponent;
+	const TextControl = components.TextControl || function TextControlFallback(props) {
+		return createElement(
+			'label',
+			{ className: 'npcink-toolbox-editor-support__field' },
+			createElement('span', null, props.label || ''),
+			createElement('input', {
+				type: 'text',
+				value: props.value || '',
+				placeholder: props.placeholder || '',
+				disabled: Boolean(props.disabled),
+				onChange: (event) => props.onChange && props.onChange(event.target.value),
+			})
+		);
+	};
+	const TextareaControl = components.TextareaControl || function TextareaControlFallback(props) {
+		return createElement(
+			'label',
+			{ className: 'npcink-toolbox-editor-support__field' },
+			createElement('span', null, props.label || ''),
+			createElement('textarea', {
+				value: props.value || '',
+				placeholder: props.placeholder || '',
+				disabled: Boolean(props.disabled),
+				onChange: (event) => props.onChange && props.onChange(event.target.value),
+			})
+		);
+	};
 	const Modal = components.Modal || function ModalFallback(props) {
 		return createElement(
 			'div',
@@ -75,6 +102,43 @@
 			return String(value.raw || '');
 		}
 		return String(value || '');
+	}
+
+	function plainTextFromHtml(value) {
+		const source = String(value || '');
+		if (!source) {
+			return '';
+		}
+		if (typeof window !== 'undefined' && window.document) {
+			const container = window.document.createElement('div');
+			container.innerHTML = source;
+			return String(container.textContent || container.innerText || '').replace(/\s+/g, ' ').trim();
+		}
+		return source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+	}
+
+	function selectedBlockText(block) {
+		if (!block || !block.attributes) {
+			return '';
+		}
+		const attributes = block.attributes;
+		const parts = [
+			attributes.content,
+			attributes.value,
+			attributes.text,
+			attributes.caption,
+			attributes.citation,
+			attributes.heading,
+		].filter(Boolean);
+		return truncateText(plainTextFromHtml(parts.join(' ')), 700);
+	}
+
+	function browserSelectedText() {
+		if (typeof window === 'undefined' || !window.getSelection) {
+			return '';
+		}
+		const selection = window.getSelection();
+		return truncateText(selection ? String(selection.toString() || '').replace(/\s+/g, ' ').trim() : '', 700);
 	}
 
 	function joinRestUrl(base, path) {
@@ -176,9 +240,11 @@
 	function usePostContext() {
 		return useSelect((select) => {
 			const editor = select('core/editor');
+			const blockEditor = select('core/block-editor');
 			if (!editor) {
 				return {};
 			}
+			const selectedBlock = blockEditor && blockEditor.getSelectedBlock ? blockEditor.getSelectedBlock() : null;
 
 			return {
 				post_id: editor.getCurrentPostId ? editor.getCurrentPostId() : 0,
@@ -190,6 +256,8 @@
 				category_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('categories') : []) || [],
 				tag_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('tags') : []) || [],
 				featured_media: editor.getEditedPostAttribute ? editor.getEditedPostAttribute('featured_media') : 0,
+				selected_block_name: selectedBlock && selectedBlock.name ? String(selectedBlock.name) : '',
+				selected_block_text: selectedBlockText(selectedBlock),
 			};
 		}, []);
 	}
@@ -298,7 +366,13 @@
 	}
 
 	function hasDraftImageContext(postContext) {
-		return Boolean(String(postContext.title || postContext.excerpt || postContext.content || '').trim());
+		return Boolean(String(postContext.selected_text || postContext.selected_block_text || postContext.title || postContext.excerpt || postContext.content || '').trim());
+	}
+
+	function imageRequestContext(postContext) {
+		return Object.assign({}, postContext, {
+			selected_text: browserSelectedText() || postContext.selected_text || '',
+		});
 	}
 
 	function formatMetaLabel(value) {
@@ -344,15 +418,29 @@
 				const candidateKey = imageStableKey(image, index);
 				const selected = selectedImage && imageStableKey(selectedImage, index) === candidateKey;
 				const meta = [
-					image.provider ? __('Provider: ', 'npcink-toolbox') + formatMetaLabel(image.provider) : '',
-					image.source_type ? __('Type: ', 'npcink-toolbox') + formatMetaLabel(image.source_type) : '',
-					image.license_review_status ? __('Review: ', 'npcink-toolbox') + formatMetaLabel(image.license_review_status) : '',
+					image.provider ? formatMetaLabel(image.provider) : '',
+					image.source_type ? formatMetaLabel(image.source_type) : '',
+					image.license_review_status ? formatMetaLabel(image.license_review_status) : '',
 					image.download_location ? __('Download tracking preserved', 'npcink-toolbox') : '',
 				].filter(Boolean);
 
 				return createElement(
 					'article',
-					{ className: 'npcink-toolbox-editor-support__image-card' + (selected ? ' is-selected' : ''), key: String(index) + '-' + candidateKey },
+					{
+						className: 'npcink-toolbox-editor-support__image-card' + (selected ? ' is-selected' : ''),
+						key: String(index) + '-' + candidateKey,
+						role: 'button',
+						tabIndex: 0,
+						'aria-pressed': selected ? 'true' : 'false',
+						onClick: () => onSelectImage(image),
+						onKeyDown: (event) => {
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault();
+								onSelectImage(image);
+							}
+						},
+					},
+					selected ? createElement('span', { className: 'npcink-toolbox-editor-support__selected-badge', 'aria-hidden': 'true' }, '✓') : null,
 					previewUrl
 						? createElement('img', {
 							className: 'npcink-toolbox-editor-support__image-thumb',
@@ -365,30 +453,21 @@
 						'div',
 						{ className: 'npcink-toolbox-editor-support__image-card-body' },
 						createElement('strong', null, truncateText(imageTitle(image), 86)),
+						image.attribution ? createElement('span', { className: 'npcink-toolbox-editor-support__image-card-source' }, image.attribution) : null,
 						createElement('div', { className: 'npcink-toolbox-editor-support__image-card-meta' },
 							image.provider ? createElement('span', null, formatMetaLabel(image.provider)) : null,
-							image.source_type ? createElement('span', null, formatMetaLabel(image.source_type)) : null,
-							image.license_review_status ? createElement('span', null, formatMetaLabel(image.license_review_status)) : null
+							image.source_type ? createElement('span', null, formatMetaLabel(image.source_type)) : null
 						),
 						createElement(
 							'div',
 							{ className: 'npcink-toolbox-editor-support__image-card-actions' },
-							createElement(
-								Button,
-								{
-									type: 'button',
-									variant: selected ? 'primary' : 'secondary',
-									onClick: () => onSelectImage(image),
-								},
-								selected ? __('Selected', 'npcink-toolbox') : __('Select', 'npcink-toolbox')
-							),
 							sourceUrl
-								? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer' }, __('Open source', 'npcink-toolbox'))
+								? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer', onClick: (event) => event.stopPropagation() }, __('Open source', 'npcink-toolbox'))
 								: null
 						),
 						createElement(
 							'details',
-							{ className: 'npcink-toolbox-editor-support__image-details' },
+							{ className: 'npcink-toolbox-editor-support__image-details', onClick: (event) => event.stopPropagation() },
 							createElement('summary', null, __('Source details', 'npcink-toolbox')),
 							image.attribution ? createElement('span', null, image.attribution) : null,
 							meta.length ? createElement('small', null, meta.join(' | ')) : null,
@@ -511,54 +590,131 @@
 		);
 	}
 
-	function renderSelectedImagePanel(selectedImage, postContext, adoptionRunning, adoptionResult, adoptionError, onAdoptImage) {
+	function imageDimensionLabel(image) {
+		const width = parseInt(image.width || image.image_width || '0', 10);
+		const height = parseInt(image.height || image.image_height || '0', 10);
+		if (width > 0 && height > 0) {
+			return String(width) + ' × ' + String(height);
+		}
+		return '';
+	}
+
+	function imageFormatLabel(image) {
+		const explicit = image.format || image.mime_type || image.mime || '';
+		if (explicit) {
+			return String(explicit).replace(/^image\//, '').toUpperCase();
+		}
+		return filenameExtensionFromUrl(imageDownloadUrl(image)).toUpperCase();
+	}
+
+	function renderInfoRow(label, value, key) {
+		if (!value) {
+			return null;
+		}
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__info-row', key },
+			createElement('span', null, label),
+			createElement('strong', null, value)
+		);
+	}
+
+	function renderSelectedImagePanel(selectedImage, seoFields, adoptionRunning, adoptionResult, adoptionError, onSeoFieldChange, onAdoptFeatured, onImportOnly) {
 		if (!selectedImage) {
 			return createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__selected-image is-empty' },
 				createElement('strong', null, __('Select an image to adopt', 'npcink-toolbox')),
-				createElement('span', null, __('The selected image can be imported with media SEO fields and set as this post featured image.', 'npcink-toolbox'))
+				createElement('span', null, __('Choose a source image on the left to review media details and SEO fields here.', 'npcink-toolbox'))
 			);
 		}
 
-		const seo = buildImageSeoFields(selectedImage, postContext);
+		const seo = seoFields || {};
 		const previewUrl = imagePreviewUrl(selectedImage);
+		const sourceUrl = imageSourceUrl(selectedImage);
+		const rows = [
+			renderInfoRow(__('Title', 'npcink-toolbox'), truncateText(imageTitle(selectedImage), 90), 'title'),
+			renderInfoRow(__('Source', 'npcink-toolbox'), selectedImage.provider ? formatMetaLabel(selectedImage.provider) : '', 'source'),
+			renderInfoRow(__('Type', 'npcink-toolbox'), selectedImage.source_type ? formatMetaLabel(selectedImage.source_type) : '', 'type'),
+			renderInfoRow(__('Size', 'npcink-toolbox'), imageDimensionLabel(selectedImage), 'size'),
+			renderInfoRow(__('Format', 'npcink-toolbox'), imageFormatLabel(selectedImage), 'format'),
+			renderInfoRow(__('Review', 'npcink-toolbox'), selectedImage.license_review_status ? formatMetaLabel(selectedImage.license_review_status) : '', 'review'),
+		].filter(Boolean);
 		return createElement(
 			'aside',
 			{ className: 'npcink-toolbox-editor-support__selected-image' },
+			createElement('h3', null, __('Selected image', 'npcink-toolbox')),
 			createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__selected-head' },
-				previewUrl ? createElement('img', { src: previewUrl, alt: seo.alt, loading: 'lazy' }) : null,
-				createElement(
-					'div',
-					null,
-					createElement('strong', null, seo.title),
-					createElement('span', null, __('Selected for featured image adoption', 'npcink-toolbox'))
-				)
+				previewUrl ? createElement('img', { src: previewUrl, alt: seo.alt || imageTitle(selectedImage), loading: 'lazy' }) : null
 			),
+			rows.length ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__info-list' },
+				rows
+			) : null,
+			sourceUrl ? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer' }, __('Open source', 'npcink-toolbox')) : null,
 			createElement(
 				'details',
 				{ className: 'npcink-toolbox-editor-support__image-details' },
-				createElement('summary', null, __('Media SEO preview', 'npcink-toolbox')),
-				createElement('small', null, __('Title: ', 'npcink-toolbox') + seo.title),
-				createElement('small', null, __('Alt text: ', 'npcink-toolbox') + seo.alt),
-				createElement('small', null, __('Description: ', 'npcink-toolbox') + seo.description),
-				seo.attribution_text ? createElement('small', null, __('Attribution: ', 'npcink-toolbox') + seo.attribution_text) : null,
-				createElement('small', null, __('Filename: ', 'npcink-toolbox') + seo.file_name)
+				createElement('summary', null, __('Source details', 'npcink-toolbox')),
+				selectedImage.attribution ? createElement('small', null, selectedImage.attribution) : null,
+				selectedImage.download_location ? createElement('small', null, __('Download tracking preserved', 'npcink-toolbox')) : null,
+				createElement('small', null, __('Filename: ', 'npcink-toolbox') + (seo.file_name || ''))
 			),
 			createElement(
-				Button,
-				{
-					type: 'button',
-					variant: 'primary',
-					isBusy: adoptionRunning,
+				'div',
+				{ className: 'npcink-toolbox-editor-support__seo-fields' },
+				createElement('h3', null, __('Media SEO', 'npcink-toolbox')),
+				createElement(TextareaControl, {
+					label: __('Alt text', 'npcink-toolbox'),
+					value: seo.alt || '',
 					disabled: adoptionRunning,
-					onClick: onAdoptImage,
-				},
-				adoptionRunning ? __('Adopting image', 'npcink-toolbox') : __('Adopt as featured image', 'npcink-toolbox')
+					__next40pxDefaultSize: true,
+					onChange: (value) => onSeoFieldChange('alt', value),
+				}),
+				createElement(TextControl, {
+					label: __('Title', 'npcink-toolbox'),
+					value: seo.title || '',
+					disabled: adoptionRunning,
+					__next40pxDefaultSize: true,
+					onChange: (value) => onSeoFieldChange('title', value),
+				}),
+				createElement(TextareaControl, {
+					label: __('Description', 'npcink-toolbox'),
+					value: seo.description || '',
+					disabled: adoptionRunning,
+					__next40pxDefaultSize: true,
+					onChange: (value) => onSeoFieldChange('description', value),
+				})
 			),
-			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, __('Uses Adapter/Core to approve, preflight, import, write media SEO fields, and set the featured image. Toolbox does not write media directly.', 'npcink-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__selected-actions' },
+				createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'primary',
+						isBusy: adoptionRunning,
+						disabled: adoptionRunning,
+						onClick: onAdoptFeatured,
+					},
+					adoptionRunning ? __('Adopting image', 'npcink-toolbox') : __('Adopt as featured image', 'npcink-toolbox')
+				),
+				createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'secondary',
+						disabled: adoptionRunning,
+						onClick: onImportOnly,
+					},
+					__('Import media only', 'npcink-toolbox')
+				)
+			),
+			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox')),
 			adoptionError ? createElement(Notice, { status: 'error', isDismissible: false }, adoptionError) : null,
 			renderAdoptionResult(adoptionResult)
 		);
@@ -668,6 +824,7 @@
 		const [imageGuidance, setImageGuidance] = useState('');
 		const [imageQuery, setImageQuery] = useState('');
 		const [selectedImage, setSelectedImage] = useState(null);
+		const [selectedImageSeo, setSelectedImageSeo] = useState(null);
 		const [imageAdoptionRunning, setImageAdoptionRunning] = useState(false);
 		const [imageAdoptionResult, setImageAdoptionResult] = useState(null);
 		const [imageAdoptionError, setImageAdoptionError] = useState('');
@@ -696,11 +853,12 @@
 		}
 
 		async function runAutoImageRecommendations() {
-			if (!hasDraftImageContext(postContext)) {
+			const imageContext = imageRequestContext(postContext);
+			if (!hasDraftImageContext(imageContext)) {
 				setImageRunning('');
 				setImageResult(null);
 				setImageError('');
-				setImageGuidance(__('Add a title, excerpt, or body text to use draft-based image recommendations, or enter a manual search query.', 'npcink-toolbox'));
+				setImageGuidance(__('Add a title, excerpt, body text, or select a paragraph to use draft-based image recommendations, or enter a manual search query.', 'npcink-toolbox'));
 				return;
 			}
 			setImageRunning('auto');
@@ -708,13 +866,14 @@
 			setImageGuidance('');
 			setImageResult(null);
 			setSelectedImage(null);
+			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 			try {
-				const payload = Object.assign({}, postContext, {
+				const payload = Object.assign({}, imageContext, {
 					intent: 'image_candidates',
-					category_ids: Array.isArray(postContext.category_ids) ? postContext.category_ids.join(',') : '',
-					tag_ids: Array.isArray(postContext.tag_ids) ? postContext.tag_ids.join(',') : '',
+					category_ids: Array.isArray(imageContext.category_ids) ? imageContext.category_ids.join(',') : '',
+					tag_ids: Array.isArray(imageContext.tag_ids) ? imageContext.tag_ids.join(',') : '',
 				});
 				setImageResult(await postJson('editor/content-support', payload));
 			} catch (requestError) {
@@ -738,6 +897,7 @@
 			setImageGuidance('');
 			setImageResult(null);
 			setSelectedImage(null);
+			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 			try {
@@ -758,6 +918,7 @@
 			setImageQuery('');
 			setImageGuidance('');
 			setSelectedImage(null);
+			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 			runAutoImageRecommendations();
@@ -765,20 +926,27 @@
 
 		function selectImageCandidate(image) {
 			setSelectedImage(image);
+			setSelectedImageSeo(buildImageSeoFields(image, postContext));
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 		}
 
-		function imageAdoptionPlanInput(seo) {
+		function updateSelectedImageSeo(field, value) {
+			setSelectedImageSeo((current) => Object.assign({}, current || {}, { [field]: value }));
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+		}
+
+		function imageAdoptionPlanInput(seo, setFeaturedImage) {
 			return Object.assign({}, seo, {
 				post_id: postContext.post_id || 0,
 				post_type: postContext.post_type || 'post',
 				image_candidate: selectedImage,
-				set_featured_image: true,
+				set_featured_image: Boolean(setFeaturedImage),
 			});
 		}
 
-		async function adoptSelectedImage() {
+		async function adoptSelectedImage(setFeaturedImage) {
 			if (!selectedImage) {
 				setImageAdoptionError(__('Select an image candidate first.', 'npcink-toolbox'));
 				return;
@@ -788,8 +956,8 @@
 			setImageAdoptionError('');
 			setImageAdoptionResult(null);
 			try {
-				const seo = buildImageSeoFields(selectedImage, postContext);
-				const planInput = imageAdoptionPlanInput(seo);
+				const seo = Object.assign({}, buildImageSeoFields(selectedImage, postContext), selectedImageSeo || {});
+				const planInput = imageAdoptionPlanInput(seo, setFeaturedImage);
 				const plan = await postJson('flows/image-candidate-adoption-plan', planInput);
 				try {
 					const core = await postAdapterAdoption(plan, planInput);
@@ -812,6 +980,8 @@
 
 			const images = extractImageCandidates(imageResult);
 			const queryLabel = imageResult && (imageResult.query || (imageResult.sections && imageResult.sections.image_candidates && imageResult.sections.image_candidates.query)) ? (imageResult.query || imageResult.sections.image_candidates.query) : '';
+			const selectedContext = imageResult && imageResult.post_context ? (imageResult.post_context.selected_text || imageResult.post_context.selected_block_text || '') : '';
+			const inspectorSeo = selectedImage ? Object.assign({}, buildImageSeoFields(selectedImage, postContext), selectedImageSeo || {}) : null;
 			return createElement(
 				Modal,
 				{
@@ -822,7 +992,7 @@
 				createElement(
 					'div',
 					{ className: 'npcink-toolbox-editor-support__image-modal-body' },
-					createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Search uses your current draft or a short visual query. Select one image to import it with media details and set it as the featured image through Adapter/Core.', 'npcink-toolbox')),
+					createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Search uses the selected paragraph when available, plus article context, or a short visual query. Select one image to import it with media details and set it as the featured image through Adapter/Core.', 'npcink-toolbox')),
 					createElement(
 						'form',
 						{ className: 'npcink-toolbox-editor-support__image-search', onSubmit: runImageSearch },
@@ -854,13 +1024,40 @@
 							__('Use draft', 'npcink-toolbox')
 						)
 					),
-					imageRunning ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Loading cloud image candidates...', 'npcink-toolbox'))) : null,
 					imageGuidance ? createElement(Notice, { status: 'info', isDismissible: false }, imageGuidance) : null,
 					imageError ? createElement(Notice, { status: 'error', isDismissible: false }, imageError) : null,
-					queryLabel ? createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Query: ', 'npcink-toolbox') + queryLabel) : null,
-					renderImageDiagnostics(imageResult),
-					imageResult && !imageRunning && images.length ? renderSelectedImagePanel(selectedImage, postContext, imageAdoptionRunning, imageAdoptionResult, imageAdoptionError, adoptSelectedImage) : null,
-					imageResult && !imageRunning ? renderImageCandidateCards(images, imageResult, selectedImage, selectImageCandidate) : null
+					createElement(
+						'div',
+						{ className: 'npcink-toolbox-editor-support__image-workspace' },
+						createElement(
+							'section',
+							{ className: 'npcink-toolbox-editor-support__image-results' },
+							selectedContext ? createElement(
+								'div',
+								{ className: 'npcink-toolbox-editor-support__selection-context' },
+								createElement('strong', null, __('Selected paragraph context', 'npcink-toolbox')),
+								createElement('span', null, truncateText(selectedContext, 180))
+							) : null,
+							queryLabel ? createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Query: ', 'npcink-toolbox') + queryLabel) : null,
+							renderImageDiagnostics(imageResult),
+							imageRunning ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Loading cloud image candidates...', 'npcink-toolbox'))) : null,
+							imageResult && !imageRunning ? renderImageCandidateCards(images, imageResult, selectedImage, selectImageCandidate) : null
+						),
+						createElement(
+							'section',
+							{ className: 'npcink-toolbox-editor-support__image-inspector' },
+							renderSelectedImagePanel(
+								selectedImage,
+								inspectorSeo,
+								imageAdoptionRunning,
+								imageAdoptionResult,
+								imageAdoptionError,
+								updateSelectedImageSeo,
+								() => adoptSelectedImage(true),
+								() => adoptSelectedImage(false)
+							)
+						)
+					)
 				)
 			);
 		}

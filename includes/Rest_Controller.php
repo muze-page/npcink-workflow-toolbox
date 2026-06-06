@@ -428,17 +428,22 @@ final class Rest_Controller {
 	}
 
 	private function editor_post_context( WP_REST_Request $request ): array {
-		$content = trim( wp_strip_all_tags( (string) $request->get_param( 'content' ) ) );
+		$content             = trim( wp_strip_all_tags( (string) $request->get_param( 'content' ) ) );
+		$selected_text       = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_text' ) ) );
+		$selected_block_text = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_block_text' ) ) );
 		return array(
-			'post_id'        => absint( $request->get_param( 'post_id' ) ),
-			'post_type'      => sanitize_key( (string) ( $request->get_param( 'post_type' ) ?: 'post' ) ),
-			'post_status'    => sanitize_key( (string) $request->get_param( 'post_status' ) ),
-			'title'          => sanitize_text_field( (string) $request->get_param( 'title' ) ),
-			'excerpt'        => sanitize_textarea_field( (string) $request->get_param( 'excerpt' ) ),
-			'content_text'   => wp_trim_words( $content, 220, '' ),
-			'category_ids'   => $this->csv_absint_list( (string) $request->get_param( 'category_ids' ) ),
-			'tag_ids'        => $this->csv_absint_list( (string) $request->get_param( 'tag_ids' ) ),
-			'featured_media' => absint( $request->get_param( 'featured_media' ) ),
+			'post_id'             => absint( $request->get_param( 'post_id' ) ),
+			'post_type'           => sanitize_key( (string) ( $request->get_param( 'post_type' ) ?: 'post' ) ),
+			'post_status'         => sanitize_key( (string) $request->get_param( 'post_status' ) ),
+			'title'               => sanitize_text_field( (string) $request->get_param( 'title' ) ),
+			'excerpt'             => sanitize_textarea_field( (string) $request->get_param( 'excerpt' ) ),
+			'content_text'        => wp_trim_words( $content, 220, '' ),
+			'selected_text'       => wp_trim_words( sanitize_textarea_field( $selected_text ), 110, '' ),
+			'selected_block_text' => wp_trim_words( sanitize_textarea_field( $selected_block_text ), 110, '' ),
+			'selected_block_name' => sanitize_text_field( (string) $request->get_param( 'selected_block_name' ) ),
+			'category_ids'        => $this->csv_absint_list( (string) $request->get_param( 'category_ids' ) ),
+			'tag_ids'             => $this->csv_absint_list( (string) $request->get_param( 'tag_ids' ) ),
+			'featured_media'      => absint( $request->get_param( 'featured_media' ) ),
 		);
 	}
 
@@ -460,14 +465,26 @@ final class Rest_Controller {
 	}
 
 	private function editor_image_support_query( array $context ): string {
+		$selection = trim(
+			implode(
+				' ',
+				array_filter(
+					array(
+						(string) ( $context['selected_text'] ?? '' ),
+						(string) ( $context['selected_block_text'] ?? '' ),
+					)
+				)
+			)
+		);
 		$seed = trim(
 			implode(
 				' ',
 				array_filter(
 					array(
+						$selection,
 						(string) ( $context['title'] ?? '' ),
 						(string) ( $context['excerpt'] ?? '' ),
-						(string) ( $context['content_text'] ?? '' ),
+						'' === $selection ? (string) ( $context['content_text'] ?? '' ) : '',
 					)
 				)
 			)
@@ -486,15 +503,27 @@ final class Rest_Controller {
 			'ai'        => 'artificial intelligence',
 			'wordpress' => 'wordpress publishing',
 			'content'   => 'content strategy',
+			'上下文'        => 'editorial context',
+			'文章'         => 'editorial content',
+			'段落'         => 'editorial paragraph',
+			'事实'         => 'evidence documentation',
+			'表达'         => 'clear communication',
+			'创作'         => 'creative writing workspace',
+			'读者'         => 'reader research',
 		);
 		foreach ( $term_map as $needle => $visual_term ) {
-			if ( preg_match( '/(?<![a-z0-9])' . preg_quote( $needle, '/' ) . '(?![a-z0-9])/', $lower_seed ) ) {
+			$pattern = preg_match( '/^[a-z0-9]+$/', $needle ) ? '/(?<![a-z0-9])' . preg_quote( $needle, '/' ) . '(?![a-z0-9])/' : '/' . preg_quote( $needle, '/' ) . '/u';
+			if ( preg_match( $pattern, $lower_seed ) ) {
 				$visual_terms[] = $visual_term;
 			}
 		}
 
 		if ( ! empty( $visual_terms ) ) {
-			return wp_trim_words( implode( ' ', array_unique( $visual_terms ) ) . ' digital marketing workspace analytics', 14, '' );
+			return wp_trim_words( implode( ' ', array_unique( $visual_terms ) ) . ' digital marketing workspace analytics', 16, '' );
+		}
+
+		if ( '' !== $selection ) {
+			return wp_trim_words( $selection, 12, '' );
 		}
 
 		$title = trim( sanitize_text_field( (string) ( $context['title'] ?? '' ) ) );

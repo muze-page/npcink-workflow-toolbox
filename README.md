@@ -183,12 +183,14 @@ candidates from the current draft context. The panel returns suggestions only;
 it does not insert links, assign terms, import media, publish content, or write
 SEO fields.
 The image-source button opens a Cloud image recommendation modal: it
-automatically searches from the current draft context and also lets the editor
-enter a manual query. Returned images remain `image_candidate.v1` suggestions
-with provider, attribution, source, license-review, and Unsplash download
-tracking metadata preserved; media import and featured-image changes still
-flow through a governed adoption plan. The editor modal lets the operator
-select one candidate and adopt it as the featured image in one visible action.
+automatically searches from the selected paragraph or selected block when
+available, combines that with the current draft context, and also lets the
+editor enter a manual query. Returned images remain `image_candidate.v1`
+suggestions with provider, attribution, source, license-review, and Unsplash
+download tracking metadata preserved; media import and featured-image changes
+still flow through a governed adoption plan. The editor modal lets the
+operator select one candidate and adopt it as the featured image in one visible
+action.
 Toolbox builds the adoption plan with proposed media title, alt text,
 description, attribution, filename, and featured-image step, submits it through
 Adapter's plan-to-proposal bridge, then calls Adapter's unified
