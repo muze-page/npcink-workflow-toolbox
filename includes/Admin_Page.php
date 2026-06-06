@@ -1024,6 +1024,26 @@ final class Admin_Page {
 				'powered_by'  => 'hosted_ai',
 			),
 			array(
+				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
+				'id'          => 'ai-media-alt-suggestions',
+				'endpoint'    => 'ai/site-helpers',
+				'title'       => __( 'Media ALT Suggestions', 'npcink-toolbox' ),
+				'description' => __( 'Sample recent image metadata with missing or weak ALT and return reviewable ALT/caption ideas.', 'npcink-toolbox' ),
+				'intent'      => 'media_alt_suggestions',
+				'button'      => __( 'Suggest media ALT', 'npcink-toolbox' ),
+				'custom'      => 'hosted_ai_site_helper',
+			),
+			array(
+				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
+				'id'          => 'ai-content-snapshot-suggestions',
+				'endpoint'    => 'ai/site-helpers',
+				'title'       => __( 'Content Snapshot Suggestions', 'npcink-toolbox' ),
+				'description' => __( 'Review a bounded public content snapshot and return a few content opportunities, not a full site audit.', 'npcink-toolbox' ),
+				'intent'      => 'content_snapshot_suggestions',
+				'button'      => __( 'Suggest content opportunities', 'npcink-toolbox' ),
+				'custom'      => 'hosted_ai_site_helper',
+			),
+			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
 				'id'          => 'discoverability-brief',
 				'endpoint'    => 'editor/content-support',
@@ -1162,6 +1182,19 @@ final class Admin_Page {
 						);
 						continue;
 					}
+					if ( 'hosted_ai_site_helper' === (string) ( $tool['custom'] ?? '' ) ) {
+						$this->render_hosted_ai_site_helper_tool(
+							(string) $tool['endpoint'],
+							(string) $tool['title'],
+							(string) $tool['description'],
+							(string) $tool['id'],
+							(string) $tool['intent'],
+							(string) $tool['button'],
+							0 === $index,
+							$cloud_ready
+						);
+						continue;
+					}
 					if ( 'article_assistant' === (string) ( $tool['custom'] ?? '' ) ) {
 						$this->render_article_assistant_tool(
 							(string) $tool['endpoint'],
@@ -1217,6 +1250,29 @@ final class Admin_Page {
 				?>
 			</div>
 		</div>
+		<?php
+	}
+
+	private function render_hosted_ai_site_helper_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $active = false, bool $cloud_ready = true ): void {
+		?>
+		<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<h2><?php echo esc_html( $title ); ?></h2>
+			<p><?php echo esc_html( $description ); ?></p>
+			<div class="npcink-toolbox__example is-ai">
+				<strong><?php esc_html_e( 'Hosted AI site helper', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Toolbox sends only a small public-site or media metadata sample to Cloud. Results are reviewable suggestions only; no media, content, SEO, or proposal data is changed.', 'npcink-toolbox' ); ?></span>
+			</div>
+			<?php if ( ! $cloud_ready ) : ?>
+				<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running AI site helpers.', 'npcink-toolbox' ); ?></div>
+			<?php endif; ?>
+			<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
+			<label>
+				<span><?php esc_html_e( 'Optional focus', 'npcink-toolbox' ); ?></span>
+				<textarea name="focus" rows="3" placeholder="<?php esc_attr_e( 'Optional priority, audience, image type, or content area to review', 'npcink-toolbox' ); ?>"></textarea>
+			</label>
+			<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
+			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
 		<?php
 	}
 

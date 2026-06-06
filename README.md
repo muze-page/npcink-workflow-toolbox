@@ -20,6 +20,8 @@ The first version provides:
 - an **AI Draft Support** entry group in Content Support for
   lightweight title/summary, outline, and polish suggestions rather than
   one-click long-form article generation;
+- an **AI Site Helpers** entry group for lightweight media ALT suggestions and
+  bounded public-content snapshot opportunities;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
@@ -67,6 +69,8 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/image-candidates`
 - `POST /wp-json/npcink-toolbox/v1/vector-search`
 - `POST /wp-json/npcink-toolbox/v1/knowledge-search`
+- `POST /wp-json/npcink-toolbox/v1/ai/content-support`
+- `POST /wp-json/npcink-toolbox/v1/ai/site-helpers`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
@@ -207,6 +211,11 @@ must not be presented as one-click article generation. Each hosted result
 carries a small quality contract with an expected output shape, review
 checklist, and reject-if rules so operators can discard unsupported or
 full-article output quickly.
+The separate AI Site Helpers group uses the same hosted AI posture for media
+ALT suggestions and bounded content snapshot opportunities. Toolbox samples a
+small amount of public-site or media metadata, Cloud produces reviewable
+suggestions, and no media library, post, SEO, proposal, crawler, or queue state
+is changed locally.
 Everyday Support remains available for the same bounded jobs:
 discoverability brief, publish preflight, taxonomy/tag candidates,
 internal-link candidates, or image candidates. Media work, governed handoffs,

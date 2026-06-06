@@ -201,6 +201,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/vector-search`
 - `POST /wp-json/npcink-toolbox/v1/knowledge-search`
 - `POST /wp-json/npcink-toolbox/v1/ai/content-support`
+- `POST /wp-json/npcink-toolbox/v1/ai/site-helpers`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
@@ -212,6 +213,12 @@ availability. `web_search_registered`, `vector_search_registered`,
 `cloud_runtime.available`, and `hosted_ai.available` distinguish an installed
 Toolbox UI contract from a connected Cloud Addon or host runtime that can
 actually execute the request.
+
+`/ai/site-helpers` is the hosted AI surface for lightweight media ALT and
+content snapshot suggestions. It accepts only narrow site-helper intents,
+samples recent public-site or media metadata locally, and returns a
+`hosted_ai_site_helper` artifact. It must not become a crawler, scoring
+engine, batch media updater, proposal creator, or local queue.
 
 `/knowledge-search` remains as a compatibility alias for the first local MVP.
 New clients should use `/vector-search`.

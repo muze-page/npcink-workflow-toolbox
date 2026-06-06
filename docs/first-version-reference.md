@@ -308,6 +308,7 @@ The first-version route matrix is exact:
 - `POST /vector-search`
 - `POST /knowledge-search`
 - `POST /ai/content-support`
+- `POST /ai/site-helpers`
 - `POST /flows/article-brief`
 - `POST /flows/article-plan`
 - `POST /flows/image-candidate-adoption-plan`

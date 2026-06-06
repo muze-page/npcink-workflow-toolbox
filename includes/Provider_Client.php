@@ -1804,6 +1804,95 @@ final class Provider_Client {
 		return $this->normalize_hosted_ai_content_support_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent );
 	}
 
+	public function run_hosted_ai_site_helper( array $input ) {
+		$intent = sanitize_key( (string) ( $input['intent'] ?? '' ) );
+		if ( ! in_array( $intent, array( 'media_alt_suggestions', 'content_snapshot_suggestions' ), true ) ) {
+			return new WP_Error(
+				'npcink_toolbox_invalid_hosted_ai_site_helper_intent',
+				__( 'A supported AI site-helper intent is required.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$focus            = sanitize_textarea_field( (string) ( $input['focus'] ?? '' ) );
+		$quality_contract = $this->hosted_ai_site_helper_quality_contract( $intent );
+		$context          = $this->settings->get_content_context_for_ability();
+		$source           = array(
+			'focus'          => wp_trim_words( $focus, 80, '' ),
+			'site_snapshot'  => 'content_snapshot_suggestions' === $intent ? $this->collect_hosted_ai_site_snapshot() : array(),
+			'media_snapshot' => 'media_alt_suggestions' === $intent ? $this->collect_hosted_ai_media_alt_snapshot( 10 ) : array(),
+			'source_policy'  => 'bounded_public_or_media_metadata_sample_only',
+		);
+		$prompt           = $this->hosted_ai_site_helper_prompt( $intent, $source, $context );
+
+		$runtime_payload = array(
+			'ability_name'        => 'npcink-toolbox/ai-site-helper',
+			'contract_version'    => 'hosted_ai_site_helper.v1',
+			'profile_id'          => 'text.ai',
+			'execution_pattern'   => 'inline',
+			'input'               => array(
+				'messages'         => array(
+					array(
+						'role'    => 'system',
+						'content' => 'You are Npcink Toolbox. Return concise, reviewable WordPress site-helper suggestions. Do not claim to crawl the full site, view image pixels, write media, publish, approve, or bypass governance.',
+					),
+					array(
+						'role'    => 'user',
+						'content' => $prompt,
+					),
+				),
+				'params'           => array(
+					'temperature' => 0.2,
+					'max_tokens'  => 800,
+				),
+				'quality_contract' => $quality_contract,
+			),
+			'data_classification' => 'public_site_content',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 86400,
+			'timeout_seconds'     => 30,
+			'retry_max'           => 0,
+			'policy'              => array(
+				'allow_fallback' => false,
+			),
+		);
+
+		$runtime_payload = apply_filters( 'npcink_toolbox_hosted_ai_site_helper_runtime_payload', $runtime_payload, $input );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'npcink_toolbox_invalid_hosted_ai_site_helper_runtime_payload',
+				__( 'The AI site-helper runtime payload was not valid.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_hosted_ai_site_helper_cloud_request', null, $runtime_payload, $input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_hosted_ai_site_helper_response( $handled, $runtime_payload, $intent );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_hosted_ai_site_helper_cloud_unavailable',
+				__( 'Connect Npcink Cloud before using AI site helpers.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'hosted_ai_site_helper' );
+		$idempotency_key = $this->trace_id( 'hosted_ai_site_helper_' . $intent );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_hosted_ai_site_helper_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent );
+	}
+
 	public function build_ai_article_writing_pack( array $input ) {
 		$brief = $this->build_content_discoverability_brief( $input );
 		if ( is_wp_error( $brief ) ) {
@@ -2435,6 +2524,48 @@ final class Provider_Client {
 		);
 	}
 
+	private function normalize_hosted_ai_site_helper_response( array $response, array $runtime_payload, string $intent ): array {
+		$result      = $this->extract_cloud_runtime_result( $response );
+		$output_text = sanitize_textarea_field(
+			(string) (
+				$result['output_text']
+				?? $result['text']
+				?? $result['content']
+				?? ( $result['message']['content'] ?? '' )
+			)
+		);
+		$quality_contract = $this->hosted_ai_site_helper_quality_contract( $intent );
+
+		return $this->with_output_contract(
+			array(
+				'provider'                   => 'magick_ai_cloud',
+				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-site-helper' ) ),
+				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_site_helper.v1' ) ),
+				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.ai' ) ),
+				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? '' ) ),
+				'intent'                     => sanitize_key( $intent ),
+				'status'                     => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'ready' ) ) ),
+				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
+				'output_text'                => $output_text,
+				'result'                     => $this->sanitize_payload( $result ),
+				'quality_contract'           => $this->sanitize_payload( $quality_contract ),
+				'output_shape'               => $this->sanitize_payload( $quality_contract['output_shape'] ?? array() ),
+				'review_checklist'           => $this->sanitize_string_list( $quality_contract['review_checklist'] ?? array() ),
+				'reject_if'                  => $this->sanitize_string_list( $quality_contract['reject_if'] ?? array() ),
+				'write_posture'              => 'suggestion_only',
+				'final_write_path'           => 'core_proposal_required',
+				'direct_wordpress_write'     => false,
+				'handoff'                    => array(
+					'final_writes'           => 'core_proposal_required',
+					'direct_wordpress_write' => false,
+				),
+			),
+			'hosted_ai_site_helper',
+			'hosted_ai_site_helper'
+		);
+	}
+
 	private function hosted_ai_quality_contract( string $intent ): array {
 		$contracts = array(
 			'title_summary'   => array(
@@ -2504,6 +2635,70 @@ final class Provider_Client {
 			'The result reads like a complete article body.',
 			'The result invents facts, sources, testimonials, rankings, or performance claims.',
 			'The result asks Toolbox to write, publish, approve, import, or mutate WordPress data.',
+		);
+
+		return $contract;
+	}
+
+	private function hosted_ai_site_helper_quality_contract( string $intent ): array {
+		$contracts = array(
+			'media_alt_suggestions'      => array(
+				'output_shape'     => array(
+					'sample_summary'        => 'brief note about sampled media metadata only',
+					'suggestions'           => 'list of attachment_id, current_alt_status, alt_candidates, caption_candidate, and needs_human_visual_check',
+					'assumptions_to_verify' => 'short list of visual or context assumptions the operator must check',
+				),
+				'review_checklist' => array(
+					'Visually inspect each image before using any ALT or caption suggestion.',
+					'Reject any suggestion that describes details not visible in the image or metadata.',
+					'Apply media changes only through a reviewed WordPress/Core write path.',
+				),
+				'reject_if'        => array(
+					'The result claims it viewed image pixels when only metadata was supplied.',
+					'The result asks Toolbox to batch update the media library.',
+					'The result returns ranking guarantees or accessibility certification claims.',
+				),
+			),
+			'content_snapshot_suggestions' => array(
+				'output_shape'     => array(
+					'snapshot_summary'      => 'brief summary of the bounded public content sample',
+					'opportunities'         => '3 to 5 concise content opportunities with rationale and suggested next tool',
+					'assumptions_to_verify' => 'short list of assumptions or missing evidence',
+				),
+				'review_checklist' => array(
+					'Treat these as content opportunities, not a full site audit.',
+					'Verify recommendations against actual public posts, pages, and current business priorities.',
+					'Use fixed Toolbox/Core flows for any follow-up edits or proposals.',
+				),
+				'reject_if'        => array(
+					'The result gives a full-site health score or crawler-style coverage claim.',
+					'The result claims search indexing, ranking, or analytics facts not present in the sample.',
+					'The result creates a task queue, approval flow, or automatic write plan.',
+				),
+			),
+		);
+
+		$contract = $contracts[ $intent ] ?? array(
+			'output_shape'     => array(
+				'suggestions'           => 'concise reviewable site-helper suggestions',
+				'assumptions_to_verify' => 'short list, only when needed',
+			),
+			'review_checklist' => array(
+				'Review suggestions before using them in any WordPress workflow.',
+				'Verify claims against the supplied public sample.',
+			),
+			'reject_if'        => array(
+				'The result asks to write WordPress data directly.',
+			),
+		);
+
+		$contract['quality_gate'] = 'operator_review_required';
+		$contract['max_output']   = 'brief_reviewable_suggestion';
+		$contract['must_do']      = array(
+			'Use only the supplied public-site or media metadata sample.',
+			'Make sample limitations visible.',
+			'Keep suggestions short and operator-reviewable.',
+			'Separate assumptions from recommended next actions.',
 		);
 
 		return $contract;
@@ -2713,6 +2908,44 @@ final class Provider_Client {
 				'No fake reviews, fake comments, or unsupported claims.',
 			),
 			'final_write_path'      => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+		);
+
+		$encoded = wp_json_encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
+		return is_string( $encoded ) ? $encoded : '';
+	}
+
+	private function hosted_ai_site_helper_prompt( string $intent, array $source, array $context ): string {
+		$task = array(
+			'media_alt_suggestions'      => 'Generate reviewable ALT and caption suggestions from sampled media-library metadata only. Do not claim to see the image pixels; require human visual confirmation for each item.',
+			'content_snapshot_suggestions' => 'Generate 3 to 5 content opportunity suggestions from a bounded public site-content snapshot only. Do not return a full site audit, crawler report, health score, or write plan.',
+		)[ $intent ] ?? 'Generate reviewable WordPress site-helper suggestions from the supplied sample only.';
+		$quality_contract = $this->hosted_ai_site_helper_quality_contract( $intent );
+
+		$payload = array(
+			'task'                   => $task,
+			'intent'                 => $intent,
+			'source'                 => $source,
+			'content_context'        => $this->sanitize_payload( $context ),
+			'quality_contract'       => $quality_contract,
+			'preferred_output_shape' => $quality_contract['output_shape'] ?? array(),
+			'output_requirements'    => array(
+				'Use concise headings.',
+				'Keep the answer short enough for an operator to review quickly.',
+				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
+				'Make sample limitations explicit.',
+				'Return suggestions only.',
+				'Do not write, update, publish, approve, crawl, enqueue, import, or mutate WordPress data.',
+				'Flag assumptions and claims that require operator confirmation.',
+			),
+			'forbidden_actions'      => array(
+				'No direct WordPress writes.',
+				'No media library updates.',
+				'No batch changes.',
+				'No full-site crawler or audit claims.',
+				'No SEO ranking guarantees.',
+			),
+			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 		);
 

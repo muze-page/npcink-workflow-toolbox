@@ -31,6 +31,7 @@ final class Rest_Controller {
 		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/ai/content-support', 'hosted_ai_content_support' );
+		$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' );
 		$this->post( '/flows/article-brief', 'article_brief' );
 		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
@@ -86,11 +87,12 @@ final class Rest_Controller {
 				'vector_owner'             => 'cloud_runtime',
 				'cloud_runtime'            => $cloud_runtime,
 				'hosted_ai'               => array(
-					'entry_surface'  => 'toolbox_content_support',
-					'hosted_profile' => 'text.ai',
-					'registered'     => true,
-					'available'      => $cloud_ready,
-					'posture'        => 'suggestion_only_core_approval_required',
+					'entry_surface'           => 'toolbox_content_support',
+					'hosted_profile'          => 'text.ai',
+					'registered'              => true,
+					'site_helpers_registered' => true,
+					'available'               => $cloud_ready,
+					'posture'                 => 'suggestion_only_core_approval_required',
 				),
 				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',
 			)
@@ -240,6 +242,11 @@ final class Rest_Controller {
 	public function hosted_ai_content_support( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->run_hosted_ai_content_support( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function hosted_ai_site_helper( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->run_hosted_ai_site_helper( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function article_assistant( WP_REST_Request $request ) {

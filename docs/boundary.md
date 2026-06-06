@@ -105,6 +105,7 @@ planning flows:
 - `/vector-search`
 - `/knowledge-search`
 - `/ai/content-support`
+- `/ai/site-helpers`
 - `/flows/article-brief`
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
@@ -132,6 +133,15 @@ review checklist, and reject-if rules for full-article output, unsupported
 claims, or write-like actions. Site-level and media-helper AI routes must be
 added as separate narrow surfaces; they must not be hidden compatibility modes
 inside the draft-support route.
+
+`/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
+runtime. Its first intents are `media_alt_suggestions` and
+`content_snapshot_suggestions`. Toolbox may sample recent image attachment
+metadata or a small public content snapshot, but Cloud owns the AI output and
+the result is suggestion-only. This route must not claim full-site crawling,
+site-health scoring, analytics/indexing coverage, image-pixel inspection,
+media-library batch updates, local queues, proposal creation, approval, or
+WordPress writes.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may

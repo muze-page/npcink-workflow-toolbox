@@ -1150,6 +1150,46 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
+	function renderHostedAiSiteHelper(form, payload) {
+		const intent = String(payload.intent || '');
+		const titleByIntent = {
+			media_alt_suggestions: 'Media ALT suggestions',
+			content_snapshot_suggestions: 'Content snapshot suggestions'
+		};
+		const summaryByIntent = {
+			media_alt_suggestions: 'Review ALT and caption ideas against the actual image before any media-library edit.',
+			content_snapshot_suggestions: 'Use these as content opportunities from a bounded sample, not as a full site audit.'
+		};
+		const result = renderShell(
+			form,
+			payload,
+			titleByIntent[intent] || 'AI site-helper suggestions',
+			summaryByIntent[intent] || 'Review the hosted suggestions before moving anything into a Core proposal.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Profile', payload.hosted_profile || 'text.ai');
+		appendMeta(meta, 'Model', payload.model_id || '');
+		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
+		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
+		appendMeta(meta, 'Run', payload.run_id || '');
+		result.appendChild(meta);
+
+		renderHostedAiQualityGuardrails(result, payload);
+
+		if (payload.output_text) {
+			const pre = el('pre', 'npcink-toolbox__result-raw');
+			pre.textContent = String(payload.output_text);
+			result.appendChild(pre);
+		}
+
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Suggestions only. No media or WordPress content was changed.'));
+		result.appendChild(createRawDetails(payload, 'Complete payload'));
+	}
+
 	function supportItems(section) {
 		if (!section || typeof section !== 'object') {
 			return [];
@@ -2142,6 +2182,11 @@
 
 		if (payload.artifact_type === 'hosted_ai_content_support') {
 			renderHostedAiContentSupport(form, payload);
+			return;
+		}
+
+		if (payload.artifact_type === 'hosted_ai_site_helper') {
+			renderHostedAiSiteHelper(form, payload);
 			return;
 		}
 

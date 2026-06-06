@@ -45,5 +45,7 @@ through host-governed WordPress abilities and Npcink Governance Core approval.
   language article requests.
 * Added an AI Draft Support entry group for lightweight title/summary,
   outline, and polish suggestions through the hosted runtime.
+* Added AI Site Helpers for review-only media ALT and bounded content snapshot
+  suggestions without local scanning or writes.
 * Added review checklist and reject-if guardrails for AI draft-support
   suggestions.

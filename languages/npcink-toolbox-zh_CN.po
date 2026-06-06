@@ -62,6 +62,42 @@ msgstr "试用工具箱操作"
 msgid "Cloud checks"
 msgstr "云端检查"
 
+msgid "AI Site Helpers"
+msgstr "AI 站点助手"
+
+msgid "Media ALT Suggestions"
+msgstr "媒体 ALT 建议"
+
+msgid "Sample recent image metadata with missing or weak ALT and return reviewable ALT/caption ideas."
+msgstr "采样近期缺失或较弱 ALT 的图片元数据，并返回可审阅的 ALT/说明文字建议。"
+
+msgid "Suggest media ALT"
+msgstr "建议媒体 ALT"
+
+msgid "Content Snapshot Suggestions"
+msgstr "内容快照建议"
+
+msgid "Review a bounded public content snapshot and return a few content opportunities, not a full site audit."
+msgstr "审阅有限的公开内容快照，并返回少量内容机会，而不是完整站点审计。"
+
+msgid "Suggest content opportunities"
+msgstr "建议内容机会"
+
+msgid "Hosted AI site helper"
+msgstr "托管 AI 站点助手"
+
+msgid "Toolbox sends only a small public-site or media metadata sample to Cloud. Results are reviewable suggestions only; no media, content, SEO, or proposal data is changed."
+msgstr "Toolbox 只向 Cloud 发送少量公开站点或媒体元数据样本。结果仅为可审阅建议；不会更改媒体、内容、SEO 或提案数据。"
+
+msgid "Connect Cloud Addon before running AI site helpers."
+msgstr "运行 AI 站点助手前请先连接 Cloud Addon。"
+
+msgid "Optional focus"
+msgstr "可选关注点"
+
+msgid "Optional priority, audience, image type, or content area to review"
+msgstr "可选优先级、受众、图片类型或要审阅的内容区域"
+
 msgid "Cloud runtime is not connected."
 msgstr "云端运行时尚未连接。"
 
