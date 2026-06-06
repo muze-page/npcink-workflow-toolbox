@@ -20,6 +20,18 @@ final class Provider_Client {
 		$this->settings = $settings;
 	}
 
+	private function cloud_runtime_client() {
+		if ( function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
+		return npcink_cloud_addon_runtime_client();
+		}
+
+		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return magick_ai_cloud_addon_runtime_client();
+		}
+
+		return null;
+	}
+
 	public function image_candidates( string $query, array $options = array() ) {
 		$provider = sanitize_key( (string) ( $options['provider'] ?? 'auto' ) );
 		if ( ! in_array( $provider, array( 'auto', 'cloud', 'unsplash', 'pixabay', 'pexels', 'ai_generated' ), true ) ) {
@@ -189,6 +201,10 @@ final class Provider_Client {
 				$candidate['generated_image_url'] ?? '',
 				$candidate['output_url'] ?? '',
 				$candidate['small_url'] ?? '',
+				$candidate['urls']['regular'] ?? '',
+				$candidate['urls']['full'] ?? '',
+				$candidate['src']['large'] ?? '',
+				$candidate['src']['original'] ?? '',
 			)
 		);
 		$thumbnail_url = $this->first_non_empty_url(
@@ -196,10 +212,14 @@ final class Provider_Client {
 				$candidate['thumbnail_url'] ?? '',
 				$candidate['thumb_url'] ?? '',
 				$candidate['small_url'] ?? '',
+				$candidate['urls']['small'] ?? '',
+				$candidate['urls']['thumb'] ?? '',
+				$candidate['src']['medium'] ?? '',
+				$candidate['src']['tiny'] ?? '',
 				$download_url,
 			)
 		);
-		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
+		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? $candidate['links']['html'] ?? $candidate['url'] ?? '' ) );
 		$prompt = trim( sanitize_textarea_field( (string) ( $candidate['prompt'] ?? $candidate['generation_prompt'] ?? '' ) ) );
 		$model = sanitize_text_field( (string) ( $candidate['model'] ?? $candidate['generation_model'] ?? '' ) );
 		$license_review_status = $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? '' ), $source_type );
@@ -225,6 +245,12 @@ final class Provider_Client {
 		$candidate['download_url']                  = $download_url;
 		$candidate['thumbnail_url']                 = $thumbnail_url;
 		$candidate['source_url']                    = $source_url;
+		$candidate['regular_url']                   = esc_url_raw( (string) ( $candidate['regular_url'] ?? $candidate['urls']['regular'] ?? $download_url ) );
+		$candidate['small_url']                     = esc_url_raw( (string) ( $candidate['small_url'] ?? $candidate['urls']['small'] ?? $thumbnail_url ) );
+		$candidate['html_url']                      = esc_url_raw( (string) ( $candidate['html_url'] ?? $candidate['links']['html'] ?? $source_url ) );
+		$candidate['download_location']             = esc_url_raw( (string) ( $candidate['download_location'] ?? $candidate['links']['download_location'] ?? '' ) );
+		$candidate['photographer']                  = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['user']['name'] ?? '' ) );
+		$candidate['photographer_url']              = esc_url_raw( (string) ( $candidate['photographer_url'] ?? $candidate['user']['links']['html'] ?? '' ) );
 		$candidate['prompt']                        = $prompt;
 		$candidate['model']                         = $model;
 		$candidate['license_review_status']         = $license_review_status;
@@ -238,8 +264,8 @@ final class Provider_Client {
 			'provider_origin'   => $candidate['provider_origin'],
 			'source_type'       => $source_type,
 			'source_url'        => $source_url,
-			'download_location' => esc_url_raw( (string) ( $candidate['download_location'] ?? '' ) ),
-			'photographer'      => sanitize_text_field( (string) ( $candidate['photographer'] ?? '' ) ),
+			'download_location' => $candidate['download_location'],
+			'photographer'      => $candidate['photographer'],
 			'generation_provider' => sanitize_key( (string) ( $candidate['generation_provider'] ?? $candidate['provider_name'] ?? '' ) ),
 			'generation_model'  => $model,
 		);
@@ -591,7 +617,7 @@ final class Provider_Client {
 			return $this->normalize_cloud_web_search_response( $handled, $runtime_payload );
 		}
 
-		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		$client = $this->cloud_runtime_client();
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_web_search_cloud_unavailable',
@@ -1024,7 +1050,7 @@ final class Provider_Client {
 				'action_id'         => $action_id,
 				'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
 				'recipe_step'       => 'host_governed_create_draft',
-				'input'             => array(
+			'input'             => array(
 					'title'          => $title,
 					'content'        => $content,
 					'content_format' => sanitize_key( (string) ( $article['content_format'] ?? 'plain' ) ),
@@ -1204,7 +1230,7 @@ final class Provider_Client {
 				'action_id'         => $create_id,
 				'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
 				'recipe_step'       => 'host_governed_create_draft',
-				'input'             => array(
+			'input'             => array(
 					'title'          => $title,
 					'content'        => $content,
 					'content_format' => sanitize_key( (string) ( $article['content_format'] ?? 'plain' ) ),
@@ -1225,7 +1251,7 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url',
 				'recipe_step'       => 'host_governed_upload_featured_image',
 				'depends_on'        => array( $create_id ),
-				'input'             => array(
+			'input'             => array(
 					'url'               => $image_url,
 					'title'             => $title,
 					'file_name'         => $file_name,
@@ -1253,7 +1279,7 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/update-media-details',
 				'recipe_step'       => 'host_governed_update_featured_image_metadata',
 				'depends_on'        => array( $upload_id ),
-				'input'             => array(
+			'input'             => array(
 					'attachment_id'     => '$outputs.' . $upload_id . '.attachment_id',
 					'alt'               => $alt,
 					'caption'           => $attribution,
@@ -1277,7 +1303,7 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
 				'recipe_step'       => 'host_governed_set_featured_image',
 				'depends_on'        => array( $create_id, $upload_id ),
-				'input'             => array(
+			'input'             => array(
 					'post_id'        => '$outputs.' . $create_id . '.post_id',
 					'attachment_id'  => '$outputs.' . $upload_id . '.attachment_id',
 					'dry_run'        => true,
@@ -1464,7 +1490,7 @@ final class Provider_Client {
 				'action_id'         => $upload_id,
 				'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url',
 				'recipe_step'       => 'host_governed_upload_image_candidate',
-				'input'             => $upload_input,
+			'input'             => $upload_input,
 				'risk'              => 'medium',
 				'requires_approval' => true,
 				'commit_execution'  => false,
@@ -1476,7 +1502,7 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/update-media-details',
 				'recipe_step'       => 'host_governed_update_image_candidate_metadata',
 				'depends_on'        => array( $upload_id ),
-				'input'             => array(
+			'input'             => array(
 					'attachment_id'     => '$outputs.' . $upload_id . '.attachment_id',
 					'title'             => $title,
 					'alt'               => $alt,
@@ -1505,7 +1531,7 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
 				'recipe_step'       => 'host_governed_set_image_candidate_featured_image',
 				'depends_on'        => array( $upload_id ),
-				'input'             => array(
+			'input'             => array(
 					'post_id'        => $post_id,
 					'attachment_id'  => '$outputs.' . $upload_id . '.attachment_id',
 					'dry_run'        => true,
@@ -1673,7 +1699,7 @@ final class Provider_Client {
 
 	public function run_free_gpt55_content_support( array $input ) {
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'discoverability' ) );
-		if ( ! in_array( $intent, array( 'article_optimization', 'discoverability', 'site_checkup', 'publish_preflight', 'media_alt', 'image_candidates', 'smart_recommendations' ), true ) ) {
+		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'article_optimization', 'discoverability', 'site_checkup', 'publish_preflight', 'media_alt', 'image_candidates', 'smart_recommendations' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_free_gpt55_intent',
 				__( 'A supported free GPT-5.5 content-support intent is required.', 'npcink-toolbox' ),
@@ -1685,6 +1711,7 @@ final class Provider_Client {
 		$excerpt = sanitize_textarea_field( (string) ( $input['excerpt'] ?? '' ) );
 		$content = wp_trim_words( wp_strip_all_tags( (string) ( $input['content'] ?? '' ) ), 420, '' );
 		$post_id = absint( $input['post_id'] ?? 0 );
+		$quality_contract = $this->free_gpt55_quality_contract( $intent );
 		$site_level_intents = array( 'site_checkup', 'media_alt', 'smart_recommendations' );
 		if ( '' === trim( $title . $excerpt . $content ) && 0 === $post_id && ! in_array( $intent, $site_level_intents, true ) ) {
 			return new WP_Error(
@@ -1732,8 +1759,11 @@ final class Provider_Client {
 				),
 				'params'   => array(
 					'temperature' => 0.2,
-					'max_tokens'  => in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ? 1200 : 900,
+					'max_tokens'  => in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes' ), true )
+						? 650
+						: ( in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ? 1200 : 900 ),
 				),
+				'quality_contract' => $quality_contract,
 			),
 			'data_classification' => 'public_site_content',
 			'storage_mode'        => 'result_only',
@@ -1762,7 +1792,7 @@ final class Provider_Client {
 			return $this->normalize_free_gpt55_content_support_response( $handled, $runtime_payload, $intent );
 		}
 
-		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		$client = $this->cloud_runtime_client();
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_free_gpt55_cloud_unavailable',
@@ -2099,7 +2129,7 @@ final class Provider_Client {
 			return $this->normalize_site_knowledge_cloud_response( $handled, $artifact_type, $composition_role, $runtime_payload );
 		}
 
-		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		$client = $this->cloud_runtime_client();
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_knowledge_cloud_unavailable',
@@ -2134,9 +2164,11 @@ final class Provider_Client {
 			'candidate_contract' => 'image_candidate.v1',
 		);
 		$runtime_payload = array(
-			'ability_name'        => 'npcink-toolbox/search-image-source',
+				'ability_name'        => 'magick-ai-toolbox/search-image-source',
 			'contract_version'    => 'image_source_cloud_request.v1',
-			'execution_pattern'   => 'step_offload',
+			'execution_pattern'   => 'inline',
+			'execution_kind'      => 'image_source',
+			'profile_id'          => 'image-source.managed',
 			'input'               => $this->sanitize_payload( $input ),
 			'data_classification' => 'public_reference_media',
 			'storage_mode'        => 'result_only',
@@ -2165,7 +2197,7 @@ final class Provider_Client {
 			return $this->normalize_image_source_candidates_response( $handled, $query, $provider, $runtime_payload );
 		}
 
-		$client = function_exists( 'magick_ai_cloud_addon_runtime_client' ) ? magick_ai_cloud_addon_runtime_client() : null;
+		$client = $this->cloud_runtime_client();
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_source_cloud_unavailable',
@@ -2209,7 +2241,7 @@ final class Provider_Client {
 			array(
 				'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
 				'provider_mode'        => 'cloud_auto',
-				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
+			'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
 				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/web-search' ) ),
 				'cloud_runtime'        => 'magick_ai_cloud_addon',
 				'status'               => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
@@ -2282,13 +2314,7 @@ final class Provider_Client {
 	private function normalize_image_source_candidates_response( array $response, string $query, string $provider_mode, array $runtime_payload = array() ): array {
 		$result = $this->extract_cloud_runtime_result( $response );
 
-		$images = array();
-		foreach ( array( 'images', 'candidates', 'image_candidates' ) as $key ) {
-			if ( is_array( $result[ $key ] ?? null ) ) {
-				$images = $result[ $key ];
-				break;
-			}
-		}
+		$images = $this->extract_image_source_candidate_items( $result );
 
 		$contract_images = array();
 		foreach ( array_slice( $this->dedupe_image_candidates( $images ), 0, max( 1, min( 30, (int) ( $runtime_payload['input']['per_page'] ?? 8 ) ) ) ) as $image ) {
@@ -2318,8 +2344,12 @@ final class Provider_Client {
 				'resolved_provider'          => $resolved_provider,
 				'auto_strategy'              => sanitize_key( (string) ( $result['auto_strategy'] ?? '' ) ),
 				'candidate_contract_version' => 'image_candidate.v1',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/search-image-source' ) ),
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/search-image-source' ) ),
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? 'unknown' ) ),
+				'message'                    => sanitize_text_field( (string) ( $result['message'] ?? $result['error_message'] ?? $response['message'] ?? '' ) ),
+				'candidate_source_count'     => count( $images ),
+				'result_count'               => count( $contract_images ),
 				'active_sources'             => $active_sources,
 				'provider_errors'            => is_array( $result['provider_errors'] ?? null ) ? $this->sanitize_payload( $result['provider_errors'] ) : array(),
 				'query'                      => $query,
@@ -2337,6 +2367,39 @@ final class Provider_Client {
 		return $this->with_optional_raw( $payload, is_array( $response['raw'] ?? null ) ? $response['raw'] : $response );
 	}
 
+	private function extract_image_source_candidate_items( array $result ): array {
+		if ( $this->is_list( $result ) ) {
+			return array_values( array_filter( $result, 'is_array' ) );
+		}
+
+		foreach ( array( 'images', 'candidates', 'image_candidates', 'results', 'items', 'photos' ) as $key ) {
+			if ( ! is_array( $result[ $key ] ?? null ) ) {
+				continue;
+			}
+
+			$value = $result[ $key ];
+			if ( $this->is_list( $value ) ) {
+				return array_values( array_filter( $value, 'is_array' ) );
+			}
+
+			$nested = $this->extract_image_source_candidate_items( $value );
+			if ( array() !== $nested ) {
+				return $nested;
+			}
+		}
+
+		foreach ( array( 'payload', 'data', 'result', 'output', 'response' ) as $key ) {
+			if ( is_array( $result[ $key ] ?? null ) ) {
+				$nested = $this->extract_image_source_candidate_items( $result[ $key ] );
+				if ( array() !== $nested ) {
+					return $nested;
+				}
+			}
+		}
+
+		return array();
+	}
+
 	private function normalize_free_gpt55_content_support_response( array $response, array $runtime_payload, string $intent ): array {
 		$result      = $this->extract_cloud_runtime_result( $response );
 		$output_text = sanitize_textarea_field(
@@ -2347,13 +2410,14 @@ final class Provider_Client {
 				?? ( $result['message']['content'] ?? '' )
 			)
 		);
+		$quality_contract = $this->free_gpt55_quality_contract( $intent );
 
 		return $this->with_output_contract(
 			array(
 				'provider'                   => 'magick_ai_cloud',
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/free-gpt55-content-support' ) ),
-				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'free_gpt55_content_support.v1' ) ),
+			'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'free_gpt55_content_support.v1' ) ),
 				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.free-gpt55' ) ),
 				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? 'gpt-5.5' ) ),
 				'intent'                     => sanitize_key( $intent ),
@@ -2361,6 +2425,10 @@ final class Provider_Client {
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
 				'output_text'                => $output_text,
 				'result'                     => $this->sanitize_payload( $result ),
+				'quality_contract'           => $this->sanitize_payload( $quality_contract ),
+				'output_shape'               => $this->sanitize_payload( $quality_contract['output_shape'] ?? array() ),
+				'review_checklist'           => $this->sanitize_string_list( $quality_contract['review_checklist'] ?? array() ),
+				'reject_if'                  => $this->sanitize_string_list( $quality_contract['reject_if'] ?? array() ),
 				'write_posture'              => 'suggestion_only',
 				'final_write_path'           => 'core_proposal_required',
 				'direct_wordpress_write'     => false,
@@ -2372,6 +2440,80 @@ final class Provider_Client {
 			'free_gpt55_content_support',
 			'free_gpt55_content_support'
 		);
+	}
+
+	private function free_gpt55_quality_contract( string $intent ): array {
+		$contracts = array(
+			'title_summary'   => array(
+				'output_shape'     => array(
+					'title_options'        => 'exactly 5 short title options',
+					'excerpt'              => 'one concise excerpt, no more than 160 characters',
+					'seo_title'            => 'one SEO title candidate',
+					'meta_description'     => 'one meta description candidate',
+					'direct_answer_summary' => 'one direct answer summary grounded in supplied context',
+					'assumptions_to_verify' => 'short list, only when needed',
+				),
+				'review_checklist' => array(
+					'Choose one title only after checking it matches the actual draft.',
+					'Verify the excerpt and meta description do not add unsupported claims.',
+					'Keep the direct answer summary factual and source-grounded.',
+				),
+			),
+			'article_outline' => array(
+				'output_shape'     => array(
+					'working_title'        => 'one draft title',
+					'reader_promise'       => 'one sentence',
+					'sections'             => '5 to 7 headings, each with 2 to 3 key points',
+					'missing_source_questions' => 'questions the editor must answer before drafting',
+				),
+				'review_checklist' => array(
+					'Confirm the outline is useful before writing any body copy.',
+					'Fill missing source questions before treating the outline as ready.',
+					'Remove sections that do not fit the site positioning or audience.',
+				),
+			),
+			'polish_notes'    => array(
+				'output_shape'     => array(
+					'revised_text'       => 'one polished version of the supplied short draft section',
+					'review_notes'       => 'brief explanation of clarity, tone, or structure changes',
+					'meaning_preserved'  => 'yes/no with a short caveat when needed',
+					'assumptions_to_verify' => 'short list, only when needed',
+				),
+				'review_checklist' => array(
+					'Compare the revised text against the original before using it.',
+					'Reject any wording that changes meaning or adds facts.',
+					'Keep claims, numbers, and product details under human review.',
+				),
+			),
+		);
+
+		$contract = $contracts[ $intent ] ?? array(
+			'output_shape'     => array(
+				'suggestions'           => 'concise reviewable suggestions',
+				'assumptions_to_verify' => 'short list, only when needed',
+				'next_review_step'      => 'one human review action',
+			),
+			'review_checklist' => array(
+				'Review suggestions before copying them into any proposal.',
+				'Verify all claims against supplied site or draft context.',
+				'Keep final WordPress writes behind Core proposal approval.',
+			),
+		);
+
+		$contract['quality_gate'] = 'operator_review_required';
+		$contract['max_output']   = 'brief_reviewable_suggestion';
+		$contract['must_do']      = array(
+			'Use only supplied topic, draft, post, site, or media context.',
+			'Separate assumptions from suggestions.',
+			'Keep each item short enough for quick editor review.',
+		);
+		$contract['reject_if']    = array(
+			'The result reads like a complete article body.',
+			'The result invents facts, sources, testimonials, rankings, or performance claims.',
+			'The result asks Toolbox to write, publish, approve, import, or mutate WordPress data.',
+		);
+
+		return $contract;
 	}
 
 	private function collect_free_gpt55_post_context( int $post_id ): array {
@@ -2547,6 +2689,9 @@ final class Provider_Client {
 
 	private function free_gpt55_content_support_prompt( string $intent, array $source, array $context ): string {
 		$task = array(
+			'title_summary'       => 'Generate only local draft-support suggestions: 5 title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary.',
+			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
+			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
 			'article_optimization' => 'Generate article enhancement suggestions: SEO title, meta description, excerpt, FAQ, AEO summary, GEO summary, taxonomy, internal-link ideas, and CTA notes.',
 			'discoverability'   => 'Generate SEO title, meta description, excerpt, FAQ, AEO summary, GEO summary, taxonomy, and internal-link suggestions.',
 			'site_checkup'      => 'Review the bounded public site snapshot and identify content, metadata, taxonomy, internal-link, and media-alt improvement opportunities.',
@@ -2555,15 +2700,21 @@ final class Provider_Client {
 			'image_candidates'  => 'Suggest image search queries, ALT text options, caption ideas, and media review notes.',
 			'smart_recommendations' => 'Recommend the next best Toolbox actions based on the public site snapshot, media ALT sample, and available GPT-5.5 content-support tools.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
+		$quality_contract = $this->free_gpt55_quality_contract( $intent );
 
 		$payload = array(
 			'task'                  => $task,
 			'intent'                => $intent,
 			'source'                => $source,
 			'content_context'       => $this->sanitize_payload( $context ),
+			'quality_contract'      => $quality_contract,
+			'preferred_output_shape' => $quality_contract['output_shape'] ?? array(),
 			'output_requirements'   => array(
 				'Use concise headings.',
+				'Keep the answer short enough for an editor to review quickly.',
+				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
 				'Return reviewable suggestions only.',
+				'Do not generate a full article unless the operator explicitly supplied a reviewed draft section to polish.',
 				'Do not write or publish WordPress content.',
 				'Flag assumptions and claims that require operator confirmation.',
 				'Prefer bullets that can be copied into Core proposal review.',
@@ -2592,9 +2743,9 @@ final class Provider_Client {
 		$payload = $this->with_output_contract(
 			array(
 				'provider'          => 'magick_ai_cloud',
-				'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
+			'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
 				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
-				'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
+			'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
 				'status'            => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
 				'run_id'            => sanitize_text_field( (string) ( $response['run_id'] ?? ( ( $response['data']['run_id'] ?? null ) ?: ( $result['run_id'] ?? '' ) ) ) ),
 				'results'           => $results,
@@ -2692,9 +2843,9 @@ final class Provider_Client {
 		return $this->with_output_contract(
 			array(
 				'provider'          => 'magick_ai_cloud',
-				'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
+			'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
 				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
-				'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
+			'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
 				'status'            => 'syncing',
 				'results'           => array(),
 				'coverage'          => array(),

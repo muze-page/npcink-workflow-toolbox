@@ -6,18 +6,36 @@
 	const components = wp.components || {};
 	const data = wp.data || {};
 	const editPost = wp.editPost || {};
+	const editor = wp.editor || {};
 	const plugins = wp.plugins || {};
 	const i18n = wp.i18n || {};
 	const createElement = element.createElement;
 	const useState = element.useState;
 	const useSelect = data.useSelect;
 	const __ = i18n.__ || ((value) => value);
+	const SIDEBAR_NAME = 'npcink-content-support-sidebar';
+	const PLUGIN_NAME = 'npcink-toolbox-editor-content-support';
+	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
 
-	if (!createElement || !useState || !useSelect || !plugins.registerPlugin || !editPost.PluginDocumentSettingPanel) {
+	if (!createElement || !useState || !useSelect || !plugins.registerPlugin || !PluginSidebarComponent) {
 		return;
 	}
 
 	const Button = components.Button || 'button';
+	const PluginSidebar = PluginSidebarComponent;
+	const Modal = components.Modal || function ModalFallback(props) {
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__modal-fallback', role: 'dialog', 'aria-modal': 'true' },
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__modal-fallback-head' },
+				createElement('strong', null, props.title || ''),
+				createElement('button', { type: 'button', onClick: props.onRequestClose }, __('Close', 'npcink-toolbox'))
+			),
+			props.children
+		);
+	};
 	const Notice = components.Notice || function NoticeFallback(props) {
 		return createElement('div', { className: 'npcink-toolbox-editor-support__notice' }, props.children);
 	};
@@ -27,6 +45,7 @@
 	const ExternalLink = components.ExternalLink || function ExternalLinkFallback(props) {
 		return createElement('a', { href: props.href, target: '_blank', rel: 'noreferrer' }, props.children);
 	};
+	const sidebarIcon = createElement('span', { className: 'npcink-toolbox-editor-support__toolbar-icon', 'aria-hidden': 'true' }, 'AI');
 
 	const flows = [
 		{
@@ -62,8 +81,8 @@
 		return String(base || '').replace(/\/$/, '') + '/' + String(path || '').replace(/^\//, '');
 	}
 
-	async function postJson(path, payload) {
-		const response = await fetch(joinRestUrl(config.restUrl, path), {
+	async function postJsonToUrl(url, payload) {
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -76,6 +95,82 @@
 			throw body;
 		}
 		return body;
+	}
+
+	async function postJson(path, payload) {
+		return postJsonToUrl(joinRestUrl(config.restUrl, path), payload);
+	}
+
+	function adapterRestUrl(path) {
+		return joinRestUrl(config.adapterRestUrl || '/wp-json/npcink-openclaw-adapter/v1', path);
+	}
+
+	function extractProposalId(value, depth) {
+		if (!value || depth > 6 || typeof value !== 'object') {
+			return '';
+		}
+		if (Array.isArray(value)) {
+			for (let index = 0; index < value.length; index += 1) {
+				const proposalId = extractProposalId(value[index], depth + 1);
+				if (proposalId) {
+					return proposalId;
+				}
+			}
+			return '';
+		}
+		const direct = value.proposal_id || value.core_proposal_id || '';
+		if (direct) {
+			return String(direct);
+		}
+		if (value.proposal && typeof value.proposal === 'object') {
+			const proposalId = value.proposal.proposal_id || value.proposal.id || value.proposal.core_proposal_id || '';
+			if (proposalId) {
+				return String(proposalId);
+			}
+		}
+		if (Array.isArray(value.proposals)) {
+			for (let index = 0; index < value.proposals.length; index += 1) {
+				const proposalId = extractProposalId(value.proposals[index], depth + 1);
+				if (proposalId) {
+					return proposalId;
+				}
+			}
+		}
+		const keys = Object.keys(value);
+		for (let index = 0; index < keys.length; index += 1) {
+			const proposalId = extractProposalId(value[keys[index]], depth + 1);
+			if (proposalId) {
+				return proposalId;
+			}
+		}
+		return '';
+	}
+
+	async function postAdapterAdoption(plan, planInput) {
+		const bridge = await postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
+			plan_ability_id: 'npcink-toolbox/build-image-candidate-adoption-plan',
+			plan,
+			plan_input: planInput,
+			caller: {
+				surface: 'toolbox_editor_content_support',
+				external_thread_id: 'toolbox-editor-featured-image',
+			},
+		});
+		const proposalId = extractProposalId(bridge, 0);
+		if (!proposalId) {
+			return { bridge, proposal_id: '', execution_error: {
+				message: __('Core did not create an executable adoption proposal from this image plan.', 'npcink-toolbox'),
+			} };
+		}
+		try {
+			const execution = await postJsonToUrl(
+				adapterRestUrl('proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute'),
+				{ note: __('Approved from the post editor image adoption action.', 'npcink-toolbox') }
+			);
+			return { bridge, proposal_id: proposalId, execution };
+		} catch (executionError) {
+			return { bridge, proposal_id: proposalId, execution_error: executionError };
+		}
 	}
 
 	function usePostContext() {
@@ -125,6 +220,380 @@
 			return [];
 		}
 		return section.image_candidates || section.images || section.candidates || [];
+	}
+
+	function extractImageCandidates(payload) {
+		if (!payload || typeof payload !== 'object') {
+			return [];
+		}
+		if (payload.sections && payload.sections.image_candidates) {
+			return extractImageItems(payload.sections.image_candidates);
+		}
+		return payload.image_candidates || payload.images || payload.candidates || [];
+	}
+
+	function imageTitle(image) {
+		return image.description || image.alt_description || image.title || image.prompt || image.id || __('Image candidate', 'npcink-toolbox');
+	}
+
+	function imagePreviewUrl(image) {
+		return image.thumbnail_url || image.thumb_url || image.small_url || image.preview_url || image.regular_url || image.download_url || image.url || '';
+	}
+
+	function imageSourceUrl(image) {
+		return image.html_url || image.source_url || image.photographer_url || image.regular_url || image.download_url || image.url || '';
+	}
+
+	function imageDownloadUrl(image) {
+		return image.download_url || image.regular_url || image.small_url || image.url || imagePreviewUrl(image);
+	}
+
+	function imageStableKey(image, index) {
+		return String(image.id || image.download_url || image.regular_url || imagePreviewUrl(image) || imageTitle(image) || index);
+	}
+
+	function truncateText(value, maxLength) {
+		const text = String(value || '').trim();
+		if (!text || text.length <= maxLength) {
+			return text;
+		}
+		return text.slice(0, maxLength - 1).trim() + '...';
+	}
+
+	function filenameExtensionFromUrl(url) {
+		const cleanUrl = String(url || '').split('?')[0].split('#')[0];
+		const match = cleanUrl.match(/\.([a-z0-9]{3,5})$/i);
+		if (!match) {
+			return 'jpg';
+		}
+		const ext = match[1].toLowerCase();
+		return ['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) >= 0 ? ext : 'jpg';
+	}
+
+	function filenameBase(value, fallback) {
+		const base = String(value || '')
+			.normalize ? String(value || '').normalize('NFKD') : String(value || '');
+		const slug = base
+			.toLowerCase()
+			.replace(/[\u0300-\u036f]/g, '')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '')
+			.slice(0, 72);
+		return slug || fallback || 'featured-image';
+	}
+
+	function buildImageSeoFields(image, postContext) {
+		const title = truncateText(imageTitle(image), 90) || __('Selected image candidate', 'npcink-toolbox');
+		const alt = truncateText(image.alt_description || image.description || postContext.title || title, 140) || title;
+		const description = truncateText(image.description || image.alt_description || postContext.excerpt || title, 220) || alt;
+		const attribution = truncateText(image.attribution || image.credit || image.photographer || '', 180);
+		const fileBase = filenameBase(postContext.title || title, postContext.post_id ? 'post-' + String(postContext.post_id) + '-featured-image' : 'featured-image');
+		return {
+			title,
+			alt,
+			description,
+			attribution_text: attribution,
+			file_name: fileBase + '.' + filenameExtensionFromUrl(imageDownloadUrl(image)),
+		};
+	}
+
+	function hasDraftImageContext(postContext) {
+		return Boolean(String(postContext.title || postContext.excerpt || postContext.content || '').trim());
+	}
+
+	function formatMetaLabel(value) {
+		return String(value || '').replace(/[_-]+/g, ' ');
+	}
+
+	function formatImageErrorMessage(error, fallback) {
+		const code = error && error.code ? String(error.code) : '';
+		const message = error && error.message ? String(error.message) : '';
+		if (code === 'cloud_routing_profile_not_found' || message.indexOf('image-source.managed') >= 0) {
+			return __('Npcink Cloud image-source profile is not configured. Configure image-source.managed in Cloud, then search again.', 'npcink-toolbox');
+		}
+		if (code === 'cloud_routing_execution_kind_mismatch' || message.indexOf('expects') >= 0) {
+			return __('Npcink Cloud routed this image-source request to the wrong runtime profile. Verify the Cloud image-source routing profile.', 'npcink-toolbox');
+		}
+		if (message.toLowerCase().indexOf('connect npcink cloud') >= 0) {
+			return __('Npcink Cloud Addon is not connected or not configured for managed image-source search.', 'npcink-toolbox');
+		}
+		return message || fallback;
+	}
+
+	function renderImageCandidateCards(images, payload, selectedImage, onSelectImage) {
+		if (!Array.isArray(images) || !images.length) {
+			const source = payload && payload.sections && payload.sections.image_candidates ? payload.sections.image_candidates : (payload || {});
+			const status = String(source.status || '').toLowerCase();
+			const message = String(source.message || '');
+			const hasProviderErrors = Array.isArray(source.provider_errors) && source.provider_errors.length > 0;
+			const isCloudError = status === 'error' || hasProviderErrors || message.toLowerCase().indexOf('connect npcink cloud') >= 0 || message.toLowerCase().indexOf('cloud') >= 0;
+			return createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__empty' },
+				createElement('strong', null, isCloudError ? __('Cloud image search is unavailable.', 'npcink-toolbox') : __('No image-source candidates found.', 'npcink-toolbox')),
+				createElement('span', null, isCloudError ? __('Connect or verify Npcink Cloud Addon, then run image-source search again.', 'npcink-toolbox') : __('Try a shorter visual query, such as product workspace, AI analytics, editorial planning, or another concrete scene.', 'npcink-toolbox'))
+			);
+		}
+
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__image-grid' },
+			images.slice(0, 8).map((image, index) => {
+				const previewUrl = imagePreviewUrl(image);
+				const sourceUrl = imageSourceUrl(image);
+				const candidateKey = imageStableKey(image, index);
+				const selected = selectedImage && imageStableKey(selectedImage, index) === candidateKey;
+				const meta = [
+					image.provider ? __('Provider: ', 'npcink-toolbox') + formatMetaLabel(image.provider) : '',
+					image.source_type ? __('Type: ', 'npcink-toolbox') + formatMetaLabel(image.source_type) : '',
+					image.license_review_status ? __('Review: ', 'npcink-toolbox') + formatMetaLabel(image.license_review_status) : '',
+					image.download_location ? __('Download tracking preserved', 'npcink-toolbox') : '',
+				].filter(Boolean);
+
+				return createElement(
+					'article',
+					{ className: 'npcink-toolbox-editor-support__image-card' + (selected ? ' is-selected' : ''), key: String(index) + '-' + candidateKey },
+					previewUrl
+						? createElement('img', {
+							className: 'npcink-toolbox-editor-support__image-thumb',
+							src: previewUrl,
+							alt: image.alt_description || image.description || '',
+							loading: 'lazy',
+						})
+						: createElement('div', { className: 'npcink-toolbox-editor-support__image-placeholder' }, __('No preview', 'npcink-toolbox')),
+					createElement(
+						'div',
+						{ className: 'npcink-toolbox-editor-support__image-card-body' },
+						createElement('strong', null, truncateText(imageTitle(image), 86)),
+						createElement('div', { className: 'npcink-toolbox-editor-support__image-card-meta' },
+							image.provider ? createElement('span', null, formatMetaLabel(image.provider)) : null,
+							image.source_type ? createElement('span', null, formatMetaLabel(image.source_type)) : null,
+							image.license_review_status ? createElement('span', null, formatMetaLabel(image.license_review_status)) : null
+						),
+						createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__image-card-actions' },
+							createElement(
+								Button,
+								{
+									type: 'button',
+									variant: selected ? 'primary' : 'secondary',
+									onClick: () => onSelectImage(image),
+								},
+								selected ? __('Selected', 'npcink-toolbox') : __('Select', 'npcink-toolbox')
+							),
+							sourceUrl
+								? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer' }, __('Open source', 'npcink-toolbox'))
+								: null
+						),
+						createElement(
+							'details',
+							{ className: 'npcink-toolbox-editor-support__image-details' },
+							createElement('summary', null, __('Source details', 'npcink-toolbox')),
+							image.attribution ? createElement('span', null, image.attribution) : null,
+							meta.length ? createElement('small', null, meta.join(' | ')) : null,
+							sourceUrl ? createElement('small', null, sourceUrl) : null
+						)
+					)
+				);
+			})
+		);
+	}
+
+	function adoptionCorePayload(result) {
+		if (!result || typeof result !== 'object') {
+			return {};
+		}
+		return result.core && typeof result.core === 'object' ? result.core : {};
+	}
+
+	function executionSucceeded(value) {
+		if (!value || typeof value !== 'object') {
+			return false;
+		}
+		const status = String(value.status || value.proposal_status || (value.execution && value.execution.status) || '').toLowerCase();
+		if (value.success === true || value.executed || value.write_executed || ['executed', 'completed', 'complete', 'succeeded', 'success'].indexOf(status) >= 0) {
+			return true;
+		}
+		const executedCount = parseInt(value.executed_count || '0', 10);
+		const failedCount = parseInt(value.failed_count || '0', 10);
+		return executedCount > 0 && failedCount === 0;
+	}
+
+	function adoptionStatus(result) {
+		const core = adoptionCorePayload(result);
+		const status = String(core.status || core.proposal_status || (core.proposal && core.proposal.status) || '').toLowerCase();
+		if (executionSucceeded(core) || executionSucceeded(core.execution)) {
+			return 'adopted';
+		}
+		if (core.execution_error || result.core_error) {
+			return 'needs_review';
+		}
+		if (extractProposalId(core, 0) || status) {
+			return 'submitted';
+		}
+		return 'prepared';
+	}
+
+	function findAttachmentId(value, depth) {
+		if (!value || depth > 5) {
+			return 0;
+		}
+		if (typeof value !== 'object') {
+			return 0;
+		}
+		const direct = parseInt(value.attachment_id || value.media_id || value.featured_media || '0', 10);
+		if (direct > 0) {
+			return direct;
+		}
+		const keys = Object.keys(value);
+		for (let index = 0; index < keys.length; index += 1) {
+			const found = findAttachmentId(value[keys[index]], depth + 1);
+			if (found > 0) {
+				return found;
+			}
+		}
+		return 0;
+	}
+
+	function syncFeaturedMediaFromCore(core) {
+		const attachmentId = findAttachmentId(core, 0);
+		if (attachmentId > 0 && data.dispatch) {
+			const editorDispatch = data.dispatch('core/editor');
+			if (editorDispatch && editorDispatch.editPost) {
+				editorDispatch.editPost({ featured_media: attachmentId });
+			}
+		}
+	}
+
+	function renderAdvancedAdoptionDetails(result) {
+		if (!result || typeof result !== 'object') {
+			return null;
+		}
+		return createElement(
+			'details',
+			{ className: 'npcink-toolbox-editor-support__adoption-advanced' },
+			createElement('summary', null, __('Advanced details', 'npcink-toolbox')),
+			createElement('pre', null, JSON.stringify({
+				plan: result.plan || null,
+				core: result.core || null,
+				core_error: result.core_error || null,
+			}, null, 2))
+		);
+	}
+
+	function renderAdoptionResult(result) {
+		if (!result || typeof result !== 'object') {
+			return null;
+		}
+
+		const status = adoptionStatus(result);
+		const core = adoptionCorePayload(result);
+		const proposalId = extractProposalId(core, 0);
+		const title = status === 'adopted'
+			? __('Featured image adopted', 'npcink-toolbox')
+			: (status === 'submitted' ? __('Adoption request sent', 'npcink-toolbox') : __('Automatic adoption not completed', 'npcink-toolbox'));
+		const summary = status === 'adopted'
+			? __('Adapter approved the Core proposal and executed the media import, SEO fields, and featured image action. Refresh the editor if the image does not update immediately.', 'npcink-toolbox')
+			: (status === 'submitted'
+				? __('Core created the adoption proposal. Automatic execution did not return a completed result; check Core for status.', 'npcink-toolbox')
+				: __('Automatic execution was unavailable or blocked by Adapter/Core policy. The Core proposal remains available for review.', 'npcink-toolbox'));
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__adoption-result is-' + status },
+			createElement('strong', null, title),
+			createElement('span', null, summary),
+			proposalId ? createElement('small', null, __('Proposal: ', 'npcink-toolbox') + String(proposalId)) : null,
+			proposalId && config.coreAdminUrl
+				? createElement('a', { href: config.coreAdminUrl + '&proposal_id=' + encodeURIComponent(proposalId), target: '_blank', rel: 'noreferrer' }, __('Open in Core', 'npcink-toolbox'))
+				: null,
+			renderAdvancedAdoptionDetails(result)
+		);
+	}
+
+	function renderSelectedImagePanel(selectedImage, postContext, adoptionRunning, adoptionResult, adoptionError, onAdoptImage) {
+		if (!selectedImage) {
+			return createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__selected-image is-empty' },
+				createElement('strong', null, __('Select an image to adopt', 'npcink-toolbox')),
+				createElement('span', null, __('The selected image can be imported with media SEO fields and set as this post featured image.', 'npcink-toolbox'))
+			);
+		}
+
+		const seo = buildImageSeoFields(selectedImage, postContext);
+		const previewUrl = imagePreviewUrl(selectedImage);
+		return createElement(
+			'aside',
+			{ className: 'npcink-toolbox-editor-support__selected-image' },
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__selected-head' },
+				previewUrl ? createElement('img', { src: previewUrl, alt: seo.alt, loading: 'lazy' }) : null,
+				createElement(
+					'div',
+					null,
+					createElement('strong', null, seo.title),
+					createElement('span', null, __('Selected for featured image adoption', 'npcink-toolbox'))
+				)
+			),
+			createElement(
+				'details',
+				{ className: 'npcink-toolbox-editor-support__image-details' },
+				createElement('summary', null, __('Media SEO preview', 'npcink-toolbox')),
+				createElement('small', null, __('Title: ', 'npcink-toolbox') + seo.title),
+				createElement('small', null, __('Alt text: ', 'npcink-toolbox') + seo.alt),
+				createElement('small', null, __('Description: ', 'npcink-toolbox') + seo.description),
+				seo.attribution_text ? createElement('small', null, __('Attribution: ', 'npcink-toolbox') + seo.attribution_text) : null,
+				createElement('small', null, __('Filename: ', 'npcink-toolbox') + seo.file_name)
+			),
+			createElement(
+				Button,
+				{
+					type: 'button',
+					variant: 'primary',
+					isBusy: adoptionRunning,
+					disabled: adoptionRunning,
+					onClick: onAdoptImage,
+				},
+				adoptionRunning ? __('Adopting image', 'npcink-toolbox') : __('Adopt as featured image', 'npcink-toolbox')
+			),
+			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, __('Uses Adapter/Core to approve, preflight, import, write media SEO fields, and set the featured image. Toolbox does not write media directly.', 'npcink-toolbox')),
+			adoptionError ? createElement(Notice, { status: 'error', isDismissible: false }, adoptionError) : null,
+			renderAdoptionResult(adoptionResult)
+		);
+	}
+
+	function renderImageDiagnostics(payload) {
+		if (!payload || typeof payload !== 'object') {
+			return null;
+		}
+
+		const source = payload.sections && payload.sections.image_candidates ? payload.sections.image_candidates : payload;
+		const cloudMessage = source.message ? String(source.message) : '';
+		const displayMessage = cloudMessage.toLowerCase().indexOf('connect npcink cloud') >= 0
+			? __('Npcink Cloud Addon is not connected or not configured for managed image-source search.', 'npcink-toolbox')
+			: cloudMessage;
+		const diagnostics = [
+			source.status ? __('Cloud status: ', 'npcink-toolbox') + formatMetaLabel(source.status) : '',
+			source.resolved_provider ? __('Source: ', 'npcink-toolbox') + formatMetaLabel(source.resolved_provider) : '',
+			source.result_count !== undefined ? __('Shown: ', 'npcink-toolbox') + String(source.result_count) : '',
+			source.candidate_source_count !== undefined ? __('Received: ', 'npcink-toolbox') + String(source.candidate_source_count) : '',
+			displayMessage ? __('Cloud note: ', 'npcink-toolbox') + displayMessage : '',
+		].filter(Boolean);
+
+		if (!diagnostics.length && (!Array.isArray(source.provider_errors) || !source.provider_errors.length)) {
+			return null;
+		}
+
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__diagnostics' },
+			diagnostics.map((item, index) => createElement('span', { key: String(index) }, item)),
+			Array.isArray(source.provider_errors) && source.provider_errors.length
+				? createElement('span', null, __('Provider errors were reported by Cloud.', 'npcink-toolbox'))
+				: null
+		);
 	}
 
 	function extractKnowledgeItems(section) {
@@ -187,13 +656,28 @@
 		return createElement('div', { className: 'npcink-toolbox-editor-support__result' }, blocks);
 	}
 
-	function ContentSupportPanel() {
+	function ContentSupportControls() {
 		const postContext = usePostContext();
 		const [running, setRunning] = useState('');
 		const [result, setResult] = useState(null);
 		const [error, setError] = useState('');
+		const [imageModalOpen, setImageModalOpen] = useState(false);
+		const [imageRunning, setImageRunning] = useState('');
+		const [imageResult, setImageResult] = useState(null);
+		const [imageError, setImageError] = useState('');
+		const [imageGuidance, setImageGuidance] = useState('');
+		const [imageQuery, setImageQuery] = useState('');
+		const [selectedImage, setSelectedImage] = useState(null);
+		const [imageAdoptionRunning, setImageAdoptionRunning] = useState(false);
+		const [imageAdoptionResult, setImageAdoptionResult] = useState(null);
+		const [imageAdoptionError, setImageAdoptionError] = useState('');
 
 		async function runFlow(intent) {
+			if (intent === 'image_candidates') {
+				openImageRecommendations();
+				return;
+			}
+
 			setRunning(intent);
 			setError('');
 			setResult(null);
@@ -211,13 +695,179 @@
 			}
 		}
 
+		async function runAutoImageRecommendations() {
+			if (!hasDraftImageContext(postContext)) {
+				setImageRunning('');
+				setImageResult(null);
+				setImageError('');
+				setImageGuidance(__('Add a title, excerpt, or body text to use draft-based image recommendations, or enter a manual search query.', 'npcink-toolbox'));
+				return;
+			}
+			setImageRunning('auto');
+			setImageError('');
+			setImageGuidance('');
+			setImageResult(null);
+			setSelectedImage(null);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+			try {
+				const payload = Object.assign({}, postContext, {
+					intent: 'image_candidates',
+					category_ids: Array.isArray(postContext.category_ids) ? postContext.category_ids.join(',') : '',
+					tag_ids: Array.isArray(postContext.tag_ids) ? postContext.tag_ids.join(',') : '',
+				});
+				setImageResult(await postJson('editor/content-support', payload));
+			} catch (requestError) {
+				setImageError(formatImageErrorMessage(requestError, __('Cloud image recommendation failed.', 'npcink-toolbox')));
+			} finally {
+				setImageRunning('');
+			}
+		}
+
+		async function runImageSearch(event) {
+			if (event && event.preventDefault) {
+				event.preventDefault();
+			}
+			const query = String(imageQuery || '').trim();
+			if (!query) {
+				setImageError(__('Enter a search query for cloud image candidates.', 'npcink-toolbox'));
+				return;
+			}
+			setImageRunning('search');
+			setImageError('');
+			setImageGuidance('');
+			setImageResult(null);
+			setSelectedImage(null);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+			try {
+				setImageResult(await postJson('image-candidates', {
+					query,
+					provider: 'auto',
+					per_page: 8,
+				}));
+			} catch (requestError) {
+				setImageError(formatImageErrorMessage(requestError, __('Cloud image search failed.', 'npcink-toolbox')));
+			} finally {
+				setImageRunning('');
+			}
+		}
+
+		function openImageRecommendations() {
+			setImageModalOpen(true);
+			setImageQuery('');
+			setImageGuidance('');
+			setSelectedImage(null);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+			runAutoImageRecommendations();
+		}
+
+		function selectImageCandidate(image) {
+			setSelectedImage(image);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+		}
+
+		function imageAdoptionPlanInput(seo) {
+			return Object.assign({}, seo, {
+				post_id: postContext.post_id || 0,
+				post_type: postContext.post_type || 'post',
+				image_candidate: selectedImage,
+				set_featured_image: true,
+			});
+		}
+
+		async function adoptSelectedImage() {
+			if (!selectedImage) {
+				setImageAdoptionError(__('Select an image candidate first.', 'npcink-toolbox'));
+				return;
+			}
+
+			setImageAdoptionRunning(true);
+			setImageAdoptionError('');
+			setImageAdoptionResult(null);
+			try {
+				const seo = buildImageSeoFields(selectedImage, postContext);
+				const planInput = imageAdoptionPlanInput(seo);
+				const plan = await postJson('flows/image-candidate-adoption-plan', planInput);
+				try {
+					const core = await postAdapterAdoption(plan, planInput);
+					syncFeaturedMediaFromCore(core);
+					setImageAdoptionResult({ plan, core });
+				} catch (coreError) {
+					setImageAdoptionResult({ plan, core_error: coreError });
+				}
+			} catch (requestError) {
+				setImageAdoptionError(requestError && requestError.message ? requestError.message : __('Could not adopt the selected image.', 'npcink-toolbox'));
+			} finally {
+				setImageAdoptionRunning(false);
+			}
+		}
+
+		function renderImageRecommendationModal() {
+			if (!imageModalOpen) {
+				return null;
+			}
+
+			const images = extractImageCandidates(imageResult);
+			const queryLabel = imageResult && (imageResult.query || (imageResult.sections && imageResult.sections.image_candidates && imageResult.sections.image_candidates.query)) ? (imageResult.query || imageResult.sections.image_candidates.query) : '';
+			return createElement(
+				Modal,
+				{
+					title: __('Image source suggestions', 'npcink-toolbox'),
+					onRequestClose: () => setImageModalOpen(false),
+					className: 'npcink-toolbox-editor-support__image-modal',
+				},
+				createElement(
+					'div',
+					{ className: 'npcink-toolbox-editor-support__image-modal-body' },
+					createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Search uses your current draft or a short visual query. Select one image to import it with media details and set it as the featured image through Adapter/Core.', 'npcink-toolbox')),
+					createElement(
+						'form',
+						{ className: 'npcink-toolbox-editor-support__image-search', onSubmit: runImageSearch },
+						createElement('input', {
+							type: 'search',
+							value: imageQuery,
+							placeholder: __('Search image sources', 'npcink-toolbox'),
+							onChange: (event) => setImageQuery(event.target.value),
+						}),
+						createElement(
+							Button,
+							{
+								type: 'submit',
+								variant: 'secondary',
+								isBusy: imageRunning === 'search',
+								disabled: Boolean(imageRunning),
+							},
+							imageRunning === 'search' ? __('Searching', 'npcink-toolbox') : __('Search', 'npcink-toolbox')
+						),
+						createElement(
+							Button,
+							{
+								type: 'button',
+								variant: 'tertiary',
+								isBusy: imageRunning === 'auto',
+								disabled: Boolean(imageRunning),
+								onClick: runAutoImageRecommendations,
+							},
+							__('Use draft', 'npcink-toolbox')
+						)
+					),
+					imageRunning ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Loading cloud image candidates...', 'npcink-toolbox'))) : null,
+					imageGuidance ? createElement(Notice, { status: 'info', isDismissible: false }, imageGuidance) : null,
+					imageError ? createElement(Notice, { status: 'error', isDismissible: false }, imageError) : null,
+					queryLabel ? createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Query: ', 'npcink-toolbox') + queryLabel) : null,
+					renderImageDiagnostics(imageResult),
+					imageResult && !imageRunning && images.length ? renderSelectedImagePanel(selectedImage, postContext, imageAdoptionRunning, imageAdoptionResult, imageAdoptionError, adoptSelectedImage) : null,
+					imageResult && !imageRunning ? renderImageCandidateCards(images, imageResult, selectedImage, selectImageCandidate) : null
+				)
+			);
+		}
+
 		return createElement(
-			editPost.PluginDocumentSettingPanel,
-			{
-				name: 'npcink-content-support',
-				title: __('Npcink Content Support', 'npcink-toolbox'),
-				className: 'npcink-toolbox-editor-support',
-			},
+			'div',
+			{ className: 'npcink-toolbox-editor-support__surface' },
 			createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
 			flows.map((flow) =>
 				createElement(
@@ -232,18 +882,33 @@
 							disabled: Boolean(running),
 							onClick: () => runFlow(flow.intent),
 						},
-						running === flow.intent ? __('Running', 'npcink-toolbox') : __('Run', 'npcink-toolbox')
+						flow.intent === 'image_candidates' ? __('Open', 'npcink-toolbox') : (running === flow.intent ? __('Running', 'npcink-toolbox') : __('Run', 'npcink-toolbox'))
 					)
 				)
 			),
 			running ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Running content support flow...', 'npcink-toolbox'))) : null,
 			error ? createElement(Notice, { status: 'error', isDismissible: false }, error) : null,
 			result ? renderResult(result) : null,
+			renderImageRecommendationModal(),
 			config.adminUrl ? createElement('p', { className: 'npcink-toolbox-editor-support__admin-link' }, createElement(ExternalLink, { href: config.adminUrl }, __('Open Toolbox Content Support', 'npcink-toolbox'))) : null
 		);
 	}
 
-	plugins.registerPlugin('npcink-toolbox-editor-content-support', {
-		render: ContentSupportPanel,
+	function ContentSupportPlugin() {
+		return createElement(
+			PluginSidebar,
+			{
+				name: SIDEBAR_NAME,
+				title: __('Npcink Content Support', 'npcink-toolbox'),
+				icon: sidebarIcon,
+				className: 'npcink-toolbox-editor-support',
+			},
+			createElement(ContentSupportControls, null)
+		);
+	}
+
+	plugins.registerPlugin(PLUGIN_NAME, {
+		icon: sidebarIcon,
+		render: ContentSupportPlugin,
 	});
 })(window.wp || {});

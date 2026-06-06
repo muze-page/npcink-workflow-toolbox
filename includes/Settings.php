@@ -196,11 +196,7 @@ final class Settings {
 			return true;
 		}
 
-		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
-			return false;
-		}
-
-		$client = magick_ai_cloud_addon_runtime_client();
+		$client = $this->cloud_runtime_client();
 		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
 	}
 
@@ -209,8 +205,12 @@ final class Settings {
 			return '';
 		}
 
-		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+		if ( ! function_exists( 'npcink_cloud_addon_runtime_client' ) && ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
 			return 'cloud_addon_not_installed';
+		}
+
+		if ( function_exists( 'npcink_cloud_addon_is_configured' ) && ! npcink_cloud_addon_is_configured() ) {
+			return 'cloud_addon_not_connected';
 		}
 
 		if ( function_exists( 'magick_ai_cloud_addon_is_configured' ) && ! magick_ai_cloud_addon_is_configured() ) {
@@ -218,6 +218,18 @@ final class Settings {
 		}
 
 		return 'cloud_runtime_unavailable';
+	}
+
+	private function cloud_runtime_client() {
+		if ( function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
+			return npcink_cloud_addon_runtime_client();
+		}
+
+		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return magick_ai_cloud_addon_runtime_client();
+		}
+
+		return null;
 	}
 
 	public function cloud_runtime_status(): array {

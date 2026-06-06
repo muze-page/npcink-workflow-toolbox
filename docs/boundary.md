@@ -125,17 +125,30 @@ not a WordPress write route and not a Core proposal execution route.
 Hosted Runtime with `profile_id=text.free-gpt55`. It returns review-only
 content-support suggestions and must not create proposals, approve proposals,
 publish content, or write WordPress data.
-Its allowed intents are article optimization, site checkup, media ALT
-suggestions, image/media ideation, publish preflight, discoverability, and
-next-action recommendations. Site-level intents may include bounded public site
-metadata or media-library metadata samples, but those samples are planning
-context only and do not authorize writes.
+Its default user-facing intents are title/summary suggestions, compact outline
+support, and short-draft polish. They must stay lightweight and must not be
+presented as one-click long-form article generation. Default draft-support
+results must include a small quality contract: expected output shape, operator
+review checklist, and reject-if rules for full-article output, unsupported
+claims, or write-like actions. Compatibility intents may still include article
+optimization, site checkup, media ALT suggestions, image/media ideation,
+publish preflight, discoverability, and next-action recommendations. Site-level
+intents may include bounded public site metadata or media-library metadata
+samples, but those samples are planning context only and do not authorize
+writes.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may
 describe media upload, metadata, and optional featured-image write actions for
 Core proposal intake, but it must not import media, update attachment metadata,
 set featured images, approve proposals, or execute writes.
+Editor-side adoption may submit that plan through Adapter `/proposals/from-plan`
+and then call Adapter `/proposals/{proposal_id}/approve-and-execute` for the
+created Core proposal. Adapter must remain only the unified user-action proxy:
+Core stays the approval, preflight, proposal, and audit owner, and Abilities
+stay the final WordPress write executor. Toolbox must treat any automatic
+completion as an Adapter/Core/Abilities result, not as a Toolbox-owned direct
+write.
 
 `/media-derivative-handoff` prepares one-run ability input for
 `npcink-abilities-toolkit/build-media-derivative-cloud-request` from Core media policy defaults

@@ -89,7 +89,9 @@ Toolbox uses local configuration or Cloud runtime ownership to execute the
 provider call, and the caller receives a normalized suggestion payload instead
 of provider secrets. For AI composition, callers should treat provider-backed
 abilities as reusable tool inputs. Cloud-managed web search is owned by Magick
-AI Cloud, `search-image-source` is the general image-candidate ability, and
+AI Cloud, `search-image-source` is the general local image-candidate ability
+that wraps the Cloud `magick-ai-toolbox/search-image-source` runtime ability on the
+`image-source.managed` profile, and
 `search-site-knowledge` is the general Cloud-managed semantic site-context
 ability. `vector-search` remains a compatibility pointer only. Article
 briefs, article writing packs, and article write plans are only one workflow
@@ -128,6 +130,17 @@ proposals, or execute writes.
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or
 execute writes.
+The editor image-source modal may call this route for the selected candidate
+and show proposed media title, alt text, description, attribution, filename,
+and featured-image action preview. It submits the returned plan through Adapter
+`/proposals/from-plan`, then asks Adapter `/proposals/{proposal_id}/approve-and-execute`
+to run the unified user action. Adapter calls Core approval and commit
+preflight before executing the allowlisted media abilities, so ordinary
+editor-owned image adoption can complete without a second manual review step
+when policy permits. Core policy remains the proposal, approval, preflight, and
+audit owner; Abilities remain the WordPress write executor; Toolbox is still a
+plan builder and handoff surface, not a WordPress media or SEO mutation
+surface.
 `npcink-toolbox/build-content-discoverability-brief` assembles a
 suggestion-only SEO, AEO, and GEO instruction pack and proposal template for a
 post or topic. It does not mutate SEO meta, slugs, excerpts, schema, or post
@@ -266,10 +279,10 @@ comment, media, preview, confirm, or apply responsibilities to Toolbox.
 
 ## Editor Surface
 
-Toolbox registers a **Npcink Content Support** document panel in the block
-editor for users who can run the existing Toolbox REST tools. The panel is a
-high-frequency entrypoint for the same fixed workflows that the admin surface
-owns:
+Toolbox registers a **Npcink Content Support** plugin sidebar in the block
+editor for users who can run the existing Toolbox REST tools. The sidebar is
+opened from the editor top toolbar. It is a high-frequency entrypoint for the
+same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
 - taxonomy/tag candidates from existing WordPress terms;
@@ -280,6 +293,12 @@ The editor panel reads the current draft title, excerpt, content, terms, status,
 and featured image id. It never mutates the draft, assigns terms, inserts links,
 imports media, publishes content, or writes SEO fields. Write-like follow-up
 must still go through Core proposals and reusable WordPress abilities.
+The image-source entry opens a Cloud recommendation modal that auto-searches
+from the current draft context and also accepts a manual image query. The modal
+renders image candidates with previews, source links, attribution, provider
+metadata, license-review state, and preserved Unsplash download tracking when
+present. It does not upload media, set featured images, or create a write
+proposal directly.
 
 Cloud Checks use compact tabs for Cloud-managed search, image-source,
 preview-only media derivative, and Site Knowledge checks. Each panel opens

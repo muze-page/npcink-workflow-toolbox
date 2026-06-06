@@ -420,11 +420,19 @@ final class Site_Knowledge_Auto_Sync {
 			return true;
 		}
 
-		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
-			return false;
+		$client = self::cloud_runtime_client();
+		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
+	}
+
+	private static function cloud_runtime_client() {
+		if ( function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
+			return npcink_cloud_addon_runtime_client();
 		}
 
-		$client = magick_ai_cloud_addon_runtime_client();
-		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
+		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return magick_ai_cloud_addon_runtime_client();
+		}
+
+		return null;
 	}
 }

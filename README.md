@@ -17,9 +17,9 @@ The first version provides:
 
 - a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
-- a **Free GPT-5.5** entry group in Content Support for one-click hosted article
-  optimization, site checkup, media ALT suggestions, and next-action
-  recommendations;
+- a **Free GPT-5.5 Draft Support** entry group in Content Support for
+  lightweight title/summary, outline, and polish suggestions rather than
+  one-click long-form article generation;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
@@ -176,16 +176,35 @@ The admin **Content Support** surface includes a **Reviewed Draft Handoff**
 fallback panel that renders the plan artifacts, risk report, final
 `npcink-abilities-toolkit/create-draft` action, and Core handoff route for operator review.
 
-The post editor also exposes a **Npcink Content Support** document panel for
-the same productized support posture. Its buttons run fixed flows for publish
+The post editor also exposes **Npcink Content Support** as a plugin sidebar
+opened from the editor top toolbar. Its buttons run fixed flows for publish
 preflight, taxonomy/tag candidates, internal-link candidates, and image-source
 candidates from the current draft context. The panel returns suggestions only;
 it does not insert links, assign terms, import media, publish content, or write
 SEO fields.
+The image-source button opens a Cloud image recommendation modal: it
+automatically searches from the current draft context and also lets the editor
+enter a manual query. Returned images remain `image_candidate.v1` suggestions
+with provider, attribution, source, license-review, and Unsplash download
+tracking metadata preserved; media import and featured-image changes still
+flow through a governed adoption plan. The editor modal lets the operator
+select one candidate and adopt it as the featured image in one visible action.
+Toolbox builds the adoption plan with proposed media title, alt text,
+description, attribution, filename, and featured-image step, submits it through
+Adapter's plan-to-proposal bridge, then calls Adapter's unified
+`approve-and-execute` action for the created Core proposal. Adapter calls Core
+approval and preflight, then executes the allowlisted WordPress ability writes
+when policy permits. Toolbox does not import media, mutate SEO/meta fields,
+approve, execute, or set the featured image directly.
 
 The admin **Content Support** tab mirrors that fixed-flow posture. Its default
-Free GPT-5.5 group runs the same governed content-support endpoints through the
-Cloud hosted runtime profile `text.free-gpt55` when that route is available.
+Free GPT-5.5 Draft Support group runs lightweight title/summary, outline, and
+polish helpers through the Cloud hosted runtime profile `text.free-gpt55` when
+that route is available. These helpers are deliberately scoped to local draft
+support and must not be presented as one-click article generation. Each hosted
+result carries a small quality contract with an expected output shape, review
+checklist, and reject-if rules so operators can discard unsupported or
+full-article output quickly.
 Everyday Support remains available for the same bounded jobs:
 discoverability brief, publish preflight, taxonomy/tag candidates,
 internal-link candidates, or image candidates. Media work, governed handoffs,
@@ -253,7 +272,10 @@ can build an `image_candidate_adoption_plan`. That plan targets only
 `npcink-abilities-toolkit/upload-media-from-url`, `npcink-abilities-toolkit/update-media-details`, and
 optional `npcink-abilities-toolkit/set-post-featured-image` through Core proposal intake. It
 does not import media, update metadata, set a featured image, or write
-WordPress directly.
+WordPress directly. The editor one-click adoption flow uses Adapter
+`/proposals/from-plan` followed by `/proposals/{proposal_id}/approve-and-execute`
+so the visible action can complete only through Core approval, preflight, audit,
+and allowlisted Abilities execution.
 
 Cloud-managed web search is provided by Npcink Cloud. Toolbox no longer
 stores local web search provider keys, registers a local web search ability,

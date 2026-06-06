@@ -43,3 +43,7 @@ through host-governed WordPress abilities and Npcink Governance Core approval.
 * Added content context validation and content discoverability brief abilities.
 * Added a high-level AI article writing pack ability for OpenClaw-style natural
   language article requests.
+* Added a Free GPT-5.5 Draft Support entry group for lightweight title/summary,
+  outline, and polish suggestions through the hosted runtime.
+* Added review checklist and reject-if guardrails for Free GPT-5.5 draft-support
+  suggestions.

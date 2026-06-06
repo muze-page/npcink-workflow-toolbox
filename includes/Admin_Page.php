@@ -991,46 +991,35 @@ final class Admin_Page {
 	private function render_tool_cards( bool $cloud_ready ): void {
 		$tools = array(
 			array(
-				'group'       => __( 'Free GPT-5.5', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-article-optimization',
+				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
+				'id'          => 'free-gpt55-title-summary',
 				'endpoint'    => 'free-gpt55/content-support',
-				'title'       => __( 'Optimize Current Article', 'npcink-toolbox' ),
-				'description' => __( 'Use the free hosted GPT-5.5 route to generate SEO, AEO, GEO, taxonomy, and excerpt suggestions from the supplied draft context.', 'npcink-toolbox' ),
-				'intent'      => 'article_optimization',
-				'button'      => __( 'Optimize with GPT-5.5', 'npcink-toolbox' ),
+				'title'       => __( 'Title and Summary Helper', 'npcink-toolbox' ),
+				'description' => __( 'Suggest reviewable titles, a short excerpt, and a direct answer summary from the supplied topic or draft.', 'npcink-toolbox' ),
+				'intent'      => 'title_summary',
+				'button'      => __( 'Suggest titles and summary', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
 				'powered_by'  => 'free_gpt55',
 			),
 			array(
-				'group'       => __( 'Free GPT-5.5', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-site-checkup',
+				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
+				'id'          => 'free-gpt55-outline',
 				'endpoint'    => 'free-gpt55/content-support',
-				'title'       => __( 'Run AI Checkup', 'npcink-toolbox' ),
-				'description' => __( 'Review a bounded public site snapshot for content, metadata, taxonomy, internal-link, and media-alt opportunities.', 'npcink-toolbox' ),
-				'intent'      => 'site_checkup',
-				'button'      => __( 'Run free checkup', 'npcink-toolbox' ),
+				'title'       => __( 'Outline Helper', 'npcink-toolbox' ),
+				'description' => __( 'Turn a topic, brief, or rough notes into a compact outline that an editor can expand manually.', 'npcink-toolbox' ),
+				'intent'      => 'article_outline',
+				'button'      => __( 'Build outline', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
 				'powered_by'  => 'free_gpt55',
 			),
 			array(
-				'group'       => __( 'Free GPT-5.5', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-image-alt',
+				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
+				'id'          => 'free-gpt55-polish',
 				'endpoint'    => 'free-gpt55/content-support',
-				'title'       => __( 'Generate Media Alt Ideas', 'npcink-toolbox' ),
-				'description' => __( 'Sample recent image attachments and generate accessibility-focused alt text and caption suggestions.', 'npcink-toolbox' ),
-				'intent'      => 'media_alt',
-				'button'      => __( 'Generate alt ideas', 'npcink-toolbox' ),
-				'custom'      => 'content_support_flow',
-				'powered_by'  => 'free_gpt55',
-			),
-			array(
-				'group'       => __( 'Free GPT-5.5', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-smart-recommendations',
-				'endpoint'    => 'free-gpt55/content-support',
-				'title'       => __( 'Recommend Next Toolbox Action', 'npcink-toolbox' ),
-				'description' => __( 'Use the current site and media snapshot to choose the highest-impact next Toolbox action for the operator.', 'npcink-toolbox' ),
-				'intent'      => 'smart_recommendations',
-				'button'      => __( 'Recommend next action', 'npcink-toolbox' ),
+				'title'       => __( 'Polish Helper', 'npcink-toolbox' ),
+				'description' => __( 'Rewrite a short draft section for clarity and tone while keeping the original meaning reviewable.', 'npcink-toolbox' ),
+				'intent'      => 'polish_notes',
+				'button'      => __( 'Polish draft', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
 				'powered_by'  => 'free_gpt55',
 			),
@@ -1239,14 +1228,8 @@ final class Admin_Page {
 				<?php if ( $free_gpt55 ) : ?>
 					<div class="npcink-toolbox__example is-free-gpt55">
 						<strong><?php esc_html_e( 'Free GPT-5.5 hosted route', 'npcink-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'Toolbox sends one suggestion request through the Cloud hosted runtime when the site is connected. The result stays review-only until Core approval.', 'npcink-toolbox' ); ?></span>
+						<span><?php esc_html_e( 'Toolbox sends one lightweight draft-support request through the Cloud hosted runtime when the site is connected. The result is a reviewable suggestion, not a finished article.', 'npcink-toolbox' ); ?></span>
 					</div>
-					<?php if ( in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ) : ?>
-						<div class="npcink-toolbox__example">
-							<strong><?php esc_html_e( 'Automatic public snapshot', 'npcink-toolbox' ); ?></strong>
-							<span><?php esc_html_e( 'This tool can run without draft text. Toolbox sends a bounded sample of public site metadata or media-library metadata for reviewable suggestions only.', 'npcink-toolbox' ); ?></span>
-						</div>
-					<?php endif; ?>
 					<?php if ( ! $cloud_ready ) : ?>
 						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running free GPT-5.5 hosted support.', 'npcink-toolbox' ); ?></div>
 					<?php endif; ?>

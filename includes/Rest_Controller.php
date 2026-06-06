@@ -304,6 +304,9 @@ final class Rest_Controller {
 
 		$context = $this->editor_post_context( $request );
 		$query   = $this->editor_support_query( $context );
+		if ( 'image_candidates' === $intent ) {
+			$query = $this->editor_image_support_query( $context );
+		}
 		if ( '' === $query ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_editor_context',
@@ -455,6 +458,57 @@ final class Rest_Controller {
 		);
 
 		return wp_trim_words( $query, 80, '' );
+	}
+
+	private function editor_image_support_query( array $context ): string {
+		$seed = trim(
+			implode(
+				' ',
+				array_filter(
+					array(
+						(string) ( $context['title'] ?? '' ),
+						(string) ( $context['excerpt'] ?? '' ),
+						(string) ( $context['content_text'] ?? '' ),
+					)
+				)
+			)
+		);
+
+		if ( '' === $seed ) {
+			return '';
+		}
+
+		$visual_terms = array();
+		$lower_seed   = strtolower( $seed );
+		$term_map     = array(
+			'seo'       => 'search engine optimization',
+			'aeo'       => 'answer engine optimization',
+			'geo'       => 'generative engine optimization',
+			'ai'        => 'artificial intelligence',
+			'wordpress' => 'wordpress publishing',
+			'content'   => 'content strategy',
+		);
+		foreach ( $term_map as $needle => $visual_term ) {
+			if ( preg_match( '/(?<![a-z0-9])' . preg_quote( $needle, '/' ) . '(?![a-z0-9])/', $lower_seed ) ) {
+				$visual_terms[] = $visual_term;
+			}
+		}
+
+		if ( ! empty( $visual_terms ) ) {
+			return wp_trim_words( implode( ' ', array_unique( $visual_terms ) ) . ' digital marketing workspace analytics', 14, '' );
+		}
+
+		$title = trim( sanitize_text_field( (string) ( $context['title'] ?? '' ) ) );
+		if ( '' !== $title ) {
+			return wp_trim_words( $title, 12, '' );
+		}
+
+		$excerpt = trim( sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ) );
+		if ( '' !== $excerpt ) {
+			return wp_trim_words( $excerpt, 12, '' );
+		}
+
+		return wp_trim_words( wp_strip_all_tags( (string) ( $context['content_text'] ?? '' ) ), 12, '' );
 	}
 
 	private function editor_support_section( $value ): array {
