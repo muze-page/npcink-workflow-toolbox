@@ -43,6 +43,7 @@ final class Plugin {
 	}
 
 	public function register_hooks(): void {
+		$this->load_textdomain();
 		add_action( 'admin_init', array( $this->settings, 'register' ) );
 		add_action( 'admin_menu', array( $this->admin_page, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
@@ -52,5 +53,13 @@ final class Plugin {
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_with_npcink_abilities_toolkit' ), 1 );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_native_category' ) );
 		add_action( 'wp_abilities_api_init', array( $this->abilities, 'register_native_abilities' ) );
+	}
+
+	private function load_textdomain(): void {
+		load_plugin_textdomain(
+			'npcink-toolbox',
+			false,
+			dirname( plugin_basename( NPCINK_TOOLBOX_FILE ) ) . '/languages'
+		);
 	}
 }

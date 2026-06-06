@@ -74,6 +74,11 @@ final class Admin_Page {
 			NPCINK_TOOLBOX_VERSION,
 			true
 		);
+		wp_set_script_translations(
+			'npcink-toolbox-admin',
+			'npcink-toolbox',
+			NPCINK_TOOLBOX_DIR . 'languages'
+		);
 		wp_enqueue_media();
 
 		wp_localize_script(

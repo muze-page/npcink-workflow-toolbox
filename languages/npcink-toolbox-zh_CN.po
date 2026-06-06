@@ -1,0 +1,258 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Npcink Toolbox 0.1.0\n"
+"Report-Msgid-Bugs-To: https://npc.ink/\n"
+"POT-Creation-Date: 2026-06-06 00:00+0800\n"
+"PO-Revision-Date: 2026-06-06 00:00+0800\n"
+"Last-Translator: Npcink\n"
+"Language-Team: Npcink\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Domain: npcink-toolbox\n"
+"X-Generator: Codex\n"
+
+msgid "Npcink Toolbox"
+msgstr "Npcink 工具箱"
+
+msgid "Toolbox"
+msgstr "工具箱"
+
+msgid "Operator-facing AI tools for Cloud-managed web search, Cloud-managed image-source candidates, Qdrant vector search, and repeatable content workflows."
+msgstr "面向运营者的 AI 工具，用于云端托管网页搜索、云端托管图片来源候选、Qdrant 向量搜索和可重复的内容工作流。"
+
+msgid "You do not have permission to access this page."
+msgstr "你没有权限访问此页面。"
+
+msgid "Running..."
+msgstr "正在运行..."
+
+msgid "Request failed."
+msgstr "请求失败。"
+
+msgid "Use free hosted GPT-5.5 for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval."
+msgstr "使用免费的托管 GPT-5.5 生成可审阅的内容支持建议，最终 WordPress 写入仍交由 Core 提案审批。"
+
+msgid "Toolbox sections"
+msgstr "工具箱分区"
+
+msgid "Content Context"
+msgstr "内容上下文"
+
+msgid "Site Knowledge"
+msgstr "站点知识"
+
+msgid "Content Support"
+msgstr "内容支持"
+
+msgid "Cloud Checks"
+msgstr "云端检查"
+
+msgid "Content context"
+msgstr "内容上下文"
+
+msgid "Site knowledge"
+msgstr "站点知识"
+
+msgid "Try Toolbox actions"
+msgstr "试用工具箱操作"
+
+msgid "Cloud checks"
+msgstr "云端检查"
+
+msgid "Cloud runtime is not connected."
+msgstr "云端运行时尚未连接。"
+
+msgid "Cloud-managed search, image-source, Site Knowledge, and free GPT-5.5 actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available."
+msgstr "在安装并验证 Cloud Addon 之前，云端托管搜索、图片来源、站点知识和免费 GPT-5.5 操作不可用。内容上下文和治理交接规划仍可使用。"
+
+msgid "Install and connect the Cloud Addon to enable hosted execution."
+msgstr "安装并连接 Cloud Addon 以启用托管执行。"
+
+msgid "Connect or verify the Cloud Addon to enable hosted execution."
+msgstr "连接或验证 Cloud Addon 以启用托管执行。"
+
+msgid "Publish preflight"
+msgstr "发布预检"
+
+msgid "Check missing terms, excerpt, image, duplicate risk, and discoverability hints."
+msgstr "检查缺失的分类/标签、摘要、图片、重复风险和可发现性提示。"
+
+msgid "Recommend terms"
+msgstr "推荐分类标签"
+
+msgid "Suggest existing categories and tags from the current draft context."
+msgstr "根据当前草稿上下文推荐已有分类和标签。"
+
+msgid "Find internal links"
+msgstr "查找内链"
+
+msgid "Use Site Knowledge to find related public content for links."
+msgstr "使用站点知识查找可用于内链的相关公开内容。"
+
+msgid "Find image candidates"
+msgstr "查找图片候选"
+
+msgid "Search configured image-source providers for featured or inline candidates."
+msgstr "搜索已配置的图片来源提供方，生成特色图或正文图片候选。"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "No candidates returned."
+msgstr "没有返回候选项。"
+
+msgid "Candidate"
+msgstr "候选项"
+
+msgid "Image candidate"
+msgstr "图片候选"
+
+msgid "Npcink Cloud image-source profile is not configured. Configure image-source.managed in Cloud, then search again."
+msgstr "Npcink Cloud 图片来源配置未完成。请在 Cloud 中配置 image-source.managed 后再次搜索。"
+
+msgid "Npcink Cloud routed this image-source request to the wrong runtime profile. Verify the Cloud image-source routing profile."
+msgstr "Npcink Cloud 将此图片来源请求路由到了错误的运行时配置。请检查 Cloud 图片来源路由配置。"
+
+msgid "Npcink Cloud Addon is not connected or not configured for managed image-source search."
+msgstr "Npcink Cloud Addon 未连接，或尚未配置托管图片来源搜索。"
+
+msgid "Cloud image search is unavailable."
+msgstr "云端图片搜索不可用。"
+
+msgid "No image-source candidates found."
+msgstr "未找到图片来源候选。"
+
+msgid "Connect or verify Npcink Cloud Addon, then run image-source search again."
+msgstr "连接或验证 Npcink Cloud Addon 后，再次运行图片来源搜索。"
+
+msgid "Try a shorter visual query, such as product workspace, AI analytics, editorial planning, or another concrete scene."
+msgstr "尝试更短的视觉查询，例如产品工作区、AI 分析、编辑规划，或其他具体场景。"
+
+msgid "Provider: "
+msgstr "提供方："
+
+msgid "Type: "
+msgstr "类型："
+
+msgid "Review: "
+msgstr "审阅："
+
+msgid "Download tracking preserved"
+msgstr "已保留下载追踪信息"
+
+msgid "No preview"
+msgstr "无预览"
+
+msgid "Open source"
+msgstr "打开来源"
+
+msgid "Cloud status: "
+msgstr "云端状态："
+
+msgid "Source: "
+msgstr "来源："
+
+msgid "Shown: "
+msgstr "已显示："
+
+msgid "Received: "
+msgstr "已接收："
+
+msgid "Cloud note: "
+msgstr "云端备注："
+
+msgid "Provider errors were reported by Cloud."
+msgstr "Cloud 返回了提供方错误。"
+
+msgid "Suggestions only. Final writes require Core approval."
+msgstr "仅提供建议。最终写入需要 Core 审批。"
+
+msgid "Checks"
+msgstr "检查项"
+
+msgid "No checks returned."
+msgstr "没有返回检查项。"
+
+msgid "Term candidates"
+msgstr "分类标签候选"
+
+msgid "No matching existing terms found."
+msgstr "未找到匹配的已有分类或标签。"
+
+msgid "No related content returned."
+msgstr "没有返回相关内容。"
+
+msgid "Duplicate check"
+msgstr "重复检查"
+
+msgid "No duplicate-risk candidates returned."
+msgstr "没有返回重复风险候选。"
+
+msgid "Image candidates"
+msgstr "图片候选"
+
+msgid "No image candidates returned."
+msgstr "没有返回图片候选。"
+
+msgid "Discoverability"
+msgstr "可发现性"
+
+msgid "No discoverability candidates returned."
+msgstr "没有返回可发现性候选。"
+
+msgid "Cloud image recommendation failed."
+msgstr "云端图片推荐失败。"
+
+msgid "Enter a search query for cloud image candidates."
+msgstr "请输入云端图片候选搜索词。"
+
+msgid "Cloud image search failed."
+msgstr "云端图片搜索失败。"
+
+msgid "Image source suggestions"
+msgstr "图片来源建议"
+
+msgid "Search uses your current draft or a short visual query. Results are source candidates only; importing media or setting a featured image still requires Core approval."
+msgstr "搜索会使用当前草稿或简短视觉查询。结果仅为来源候选；导入媒体或设置特色图仍需 Core 审批。"
+
+msgid "Search image sources"
+msgstr "搜索图片来源"
+
+msgid "Searching"
+msgstr "搜索中"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "Use draft"
+msgstr "使用草稿"
+
+msgid "Loading cloud image candidates..."
+msgstr "正在加载云端图片候选..."
+
+msgid "Query: "
+msgstr "查询："
+
+msgid "Run fixed support flows around the current draft. Article text stays with the editor."
+msgstr "围绕当前草稿运行固定支持流程。文章正文仍由编辑负责。"
+
+msgid "Open"
+msgstr "打开"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Run"
+msgstr "运行"
+
+msgid "Running content support flow..."
+msgstr "正在运行内容支持流程..."
+
+msgid "Open Toolbox Content Support"
+msgstr "打开工具箱内容支持"
+
+msgid "Npcink Content Support"
+msgstr "Npcink 内容支持"

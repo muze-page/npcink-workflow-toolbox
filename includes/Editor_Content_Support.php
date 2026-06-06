@@ -29,6 +29,11 @@ final class Editor_Content_Support {
 			NPCINK_TOOLBOX_VERSION,
 			true
 		);
+		wp_set_script_translations(
+			'npcink-toolbox-editor-content-support',
+			'npcink-toolbox',
+			NPCINK_TOOLBOX_DIR . 'languages'
+		);
 
 		wp_localize_script(
 			'npcink-toolbox-editor-content-support',

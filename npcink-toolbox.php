@@ -8,6 +8,7 @@
  * Author: Npcink
  * License: GPL-2.0-or-later
  * Text Domain: npcink-toolbox
+ * Domain Path: /languages
  *
  * @package Npcink_Toolbox
  */

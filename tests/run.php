@@ -18,9 +18,13 @@ function toolbox_assert( bool $condition, string $message ): void {
 
 $main = file_get_contents( $root . '/npcink-toolbox.php' );
 toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Toolbox' ), 'Plugin header is present.' );
+toolbox_assert( false !== strpos( $main, 'Text Domain: npcink-toolbox' ) && false !== strpos( $main, 'Domain Path: /languages' ), 'Plugin header declares the Toolbox text domain and languages path.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Site_Knowledge_Auto_Sync.php' ), 'Plugin bootstrap loads the Site Knowledge auto-sync bridge.' );
 toolbox_assert( false !== strpos( $main, 'register_deactivation_hook' ) && false !== strpos( $main, 'Site_Knowledge_Auto_Sync::class' ), 'Plugin deactivation clears Site Knowledge auto-sync cron hooks.' );
+
+$plugin = file_get_contents( $root . '/includes/Plugin.php' );
+toolbox_assert( false !== $plugin && false !== strpos( $plugin, 'load_plugin_textdomain' ) && false !== strpos( $plugin, "dirname( plugin_basename( NPCINK_TOOLBOX_FILE ) ) . '/languages'" ), 'Plugin loads translations from the bundled languages directory.' );
 
 $article_assistant_doc = file_get_contents( $root . '/docs/article-assistant-workbench.md' );
 foreach ( array( 'Surface Budget', 'Article Assistant Workbench', 'one article per run', 'Do not present it as an', 'article generator, autonomous writer', 'no Cloud article generation', 'not the default Toolbox product surface', 'no default button that promises to write the article body' ) as $required_article_assistant_doc ) {
@@ -61,6 +65,7 @@ foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repea
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );
 toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'npcink-ai';" ), 'Admin page targets the shared Npcink AI parent menu.' );
 toolbox_assert( false !== strpos( $admin_page, "private const MENU_SLUG        = 'npcink-toolbox';" ), 'Admin page uses stable Toolbox menu slug.' );
+toolbox_assert( false !== strpos( $admin_page, "wp_set_script_translations(\n\t\t\t'npcink-toolbox-admin'" ) && false !== strpos( $admin_page, "NPCINK_TOOLBOX_DIR . 'languages'" ), 'Admin page registers the Toolbox script translation path.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_submenu_page' ) && false !== strpos( $admin_page, '45' ), 'Admin page registers after Abilities and before Cloud Addon.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_management_page' ), 'Admin page keeps a Tools fallback for standalone installs.' );
 toolbox_assert( false === strpos( $admin_page, 'npcink-toolbox__status-strip' ), 'Admin page omits the stale local status strip now owned by Cloud and focused panels.' );
@@ -227,6 +232,13 @@ toolbox_assert( false !== strpos( $development_workflow, 'WordPress site timezon
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
 toolbox_assert( false !== strpos( $editor_support, 'assets/editor-content-support.js' ) && false !== strpos( $editor_support, 'assets/editor-content-support.css' ), 'Post editor content support enqueues its editor assets.' );
 toolbox_assert( false !== strpos( $editor_support, 'NpcinkToolboxEditorSupport' ) && false !== strpos( $editor_support, "wp_create_nonce( 'wp_rest' )" ), 'Post editor content support localizes REST configuration and nonce.' );
+toolbox_assert( false !== strpos( $editor_support, "wp_set_script_translations(\n\t\t\t'npcink-toolbox-editor-content-support'" ) && false !== strpos( $editor_support, "NPCINK_TOOLBOX_DIR . 'languages'" ), 'Post editor content support registers the Toolbox script translation path.' );
+
+$zh_cn_po = file_get_contents( $root . '/languages/npcink-toolbox-zh_CN.po' );
+toolbox_assert( false !== $zh_cn_po && false !== strpos( $zh_cn_po, 'Language: zh_CN' ) && false !== strpos( $zh_cn_po, 'msgstr "Npcink 工具箱"' ), 'Bundled zh_CN translation file includes the Chinese display name.' );
+toolbox_assert( file_exists( $root . '/languages/npcink-toolbox-zh_CN.mo' ), 'Bundled zh_CN machine object file is present.' );
+$editor_support_json = file_get_contents( $root . '/languages/npcink-toolbox-zh_CN-npcink-toolbox-editor-content-support.json' );
+toolbox_assert( false !== $editor_support_json && null !== json_decode( $editor_support_json, true ) && false !== strpos( $editor_support_json, '"Publish preflight": ["发布预检"]' ), 'Bundled zh_CN editor script translation JSON is valid and covers fixed-flow labels.' );
 
 $auto_sync = file_get_contents( $root . '/includes/Site_Knowledge_Auto_Sync.php' );
 toolbox_assert( false !== strpos( $auto_sync, 'transition_post_status' ) && false !== strpos( $auto_sync, "add_action( 'save_post'" ), 'Site Knowledge auto-sync watches allow-listed public content publish and update events.' );
