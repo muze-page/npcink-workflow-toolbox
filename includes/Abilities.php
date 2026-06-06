@@ -277,7 +277,7 @@ final class Abilities {
 			),
 			'npcink-toolbox/build-media-derivative-handoff'     => $this->definition(
 				__( 'Build Media Derivative Handoff', 'npcink-toolbox' ),
-				__( 'Build a one-run Core/Abilities media derivative handoff from Core defaults without writing WordPress media.', 'npcink-toolbox' ),
+				__( 'Build a one-run Core/Abilities media derivative handoff from Toolbox defaults without writing WordPress media.', 'npcink-toolbox' ),
 				array( 'attachment_id' ),
 				array( $this, 'build_media_derivative_handoff' ),
 				'cap.toolbox.workflow_suggest',

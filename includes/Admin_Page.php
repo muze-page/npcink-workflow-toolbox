@@ -1400,74 +1400,156 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function get_media_derivative_core_policy(): array {
-		if ( function_exists( 'magick_ai_core_get_media_derivative_settings' ) ) {
-			return magick_ai_core_get_media_derivative_settings();
-		}
-
-		return array(
-			'target_format'            => 'webp',
-			'max_width'                => 1600,
-			'quality'                  => 82,
-			'watermark_enabled'        => false,
-			'watermark_configured'     => false,
-			'watermark_type'           => 'image',
-			'watermark_text'           => 'AI',
-			'watermark_position'       => 'bottom_right',
-			'watermark_opacity'        => 80,
-			'watermark_scale'          => 20,
-			'watermark_font_size'      => 48,
-			'watermark_color'          => '#FFFFFF',
-			'watermark_background'     => 'rgba(0,0,0,0.35)',
-			'watermark_margin'         => 24,
-			'use_cloud_when_available' => true,
-		);
+	private function get_media_derivative_toolbox_policy(): array {
+		return $this->settings->media_optimization_policy_summary();
 	}
 
-	private function get_media_derivative_watermark_details( array $core_policy ): string {
-		if ( 'text' === (string) ( $core_policy['watermark_type'] ?? '' ) ) {
+	private function get_media_derivative_watermark_details( array $toolbox_policy ): string {
+		if ( 'text' === (string) ( $toolbox_policy['watermark_type'] ?? '' ) ) {
 			return sprintf(
 				/* translators: 1: text, 2: position, 3: opacity, 4: font size, 5: margin. */
 				__( 'text "%1$s", %2$s, %3$d%% opacity, %4$dpx font, %5$dpx margin', 'npcink-toolbox' ),
-				(string) ( $core_policy['watermark_text'] ?? 'AI' ),
-				ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
-				(int) ( $core_policy['watermark_opacity'] ?? 80 ),
-				(int) ( $core_policy['watermark_font_size'] ?? 48 ),
-				(int) ( $core_policy['watermark_margin'] ?? 24 )
+				(string) ( $toolbox_policy['watermark_text'] ?? 'AI' ),
+				ucwords( str_replace( '_', ' ', (string) ( $toolbox_policy['watermark_position'] ?? 'bottom_right' ) ) ),
+				(int) ( $toolbox_policy['watermark_opacity'] ?? 80 ),
+				(int) ( $toolbox_policy['watermark_font_size'] ?? 48 ),
+				(int) ( $toolbox_policy['watermark_margin'] ?? 24 )
 			);
 		}
 
-		if ( empty( $core_policy['watermark_configured'] ) ) {
+		if ( empty( $toolbox_policy['watermark_configured'] ) ) {
 			return __( 'off or incomplete', 'npcink-toolbox' );
 		}
 
 		return sprintf(
 			/* translators: 1: position, 2: opacity, 3: scale, 4: margin. */
 			__( '%1$s, %2$d%% opacity, %3$d%% scale, %4$dpx margin', 'npcink-toolbox' ),
-			ucwords( str_replace( '_', ' ', (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ) ) ),
-			(int) ( $core_policy['watermark_opacity'] ?? 80 ),
-			(int) ( $core_policy['watermark_scale'] ?? 20 ),
-			(int) ( $core_policy['watermark_margin'] ?? 24 )
+			ucwords( str_replace( '_', ' ', (string) ( $toolbox_policy['watermark_position'] ?? 'bottom_right' ) ) ),
+			(int) ( $toolbox_policy['watermark_opacity'] ?? 80 ),
+			(int) ( $toolbox_policy['watermark_scale'] ?? 20 ),
+			(int) ( $toolbox_policy['watermark_margin'] ?? 24 )
 		);
 	}
 
-	private function render_media_derivative_core_defaults( array $core_policy ): void {
+	private function render_media_derivative_toolbox_defaults( array $toolbox_policy ): void {
 		?>
 		<div class="npcink-toolbox__example">
-			<strong><?php esc_html_e( 'Core defaults', 'npcink-toolbox' ); ?></strong>
+			<strong><?php esc_html_e( 'Toolbox defaults', 'npcink-toolbox' ); ?></strong>
 			<span>
 				<?php
 				printf(
 					/* translators: 1: format, 2: max width, 3: quality. */
 					esc_html__( '%1$s, %2$dpx, quality %3$d. Watermark: %4$s.', 'npcink-toolbox' ),
-					esc_html( strtoupper( (string) $core_policy['target_format'] ) ),
-					(int) $core_policy['max_width'],
-					(int) $core_policy['quality'],
-					esc_html( $this->get_media_derivative_watermark_details( $core_policy ) )
+					esc_html( strtoupper( (string) $toolbox_policy['target_format'] ) ),
+					(int) $toolbox_policy['max_width'],
+					(int) $toolbox_policy['quality'],
+					esc_html( $this->get_media_derivative_watermark_details( $toolbox_policy ) )
 				);
 				?>
 			</span>
 		</div>
+		<?php
+	}
+
+	private function render_media_derivative_policy_settings( array $toolbox_policy ): void {
+		?>
+		<details class="npcink-toolbox__card npcink-toolbox__result-details">
+			<summary><?php esc_html_e( 'Media optimization defaults', 'npcink-toolbox' ); ?></summary>
+			<p class="description"><?php esc_html_e( 'Toolbox stores the operator defaults for media derivative previews and Core proposal handoffs. Core still owns proposal review, preflight, and audit.', 'npcink-toolbox' ); ?></p>
+			<form class="npcink-toolbox__settings-form" method="post" action="options.php">
+				<?php settings_fields( 'npcink_toolbox_media_optimization' ); ?>
+				<label class="npcink-toolbox__check">
+					<input type="checkbox" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[enabled]" value="1" <?php checked( ! empty( $toolbox_policy['enabled'] ) ); ?> />
+					<span><?php esc_html_e( 'Enable media optimization defaults', 'npcink-toolbox' ); ?></span>
+				</label>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Default format', 'npcink-toolbox' ); ?></span>
+						<select name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[target_format]">
+							<?php foreach ( $this->settings->allowed_media_derivative_formats() as $format ) : ?>
+								<option value="<?php echo esc_attr( $format ); ?>" <?php selected( (string) $toolbox_policy['target_format'], $format ); ?>><?php echo esc_html( strtoupper( $format ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Default max width', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="320" max="7680" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[max_width]" value="<?php echo esc_attr( (string) $toolbox_policy['max_width'] ); ?>" />
+					</label>
+				</div>
+				<label>
+					<span><?php esc_html_e( 'Default quality', 'npcink-toolbox' ); ?></span>
+					<input type="number" min="1" max="100" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[quality]" value="<?php echo esc_attr( (string) $toolbox_policy['quality'] ); ?>" />
+				</label>
+				<div class="npcink-toolbox__split">
+					<label class="npcink-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_enabled]" value="1" <?php checked( ! empty( $toolbox_policy['watermark_enabled'] ) ); ?> />
+						<span><?php esc_html_e( 'Use default watermark', 'npcink-toolbox' ); ?></span>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Default watermark type', 'npcink-toolbox' ); ?></span>
+						<select name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_type]">
+							<option value="image" <?php selected( (string) $toolbox_policy['watermark_type'], 'image' ); ?>><?php esc_html_e( 'Image/logo', 'npcink-toolbox' ); ?></option>
+							<option value="text" <?php selected( (string) $toolbox_policy['watermark_type'], 'text' ); ?>><?php esc_html_e( 'Text', 'npcink-toolbox' ); ?></option>
+						</select>
+					</label>
+				</div>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Logo attachment ID', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="0" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_attachment_id]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_attachment_id'] ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Position', 'npcink-toolbox' ); ?></span>
+						<select name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_position]">
+							<?php foreach ( $this->settings->allowed_media_watermark_positions() as $position ) : ?>
+								<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) $toolbox_policy['watermark_position'], $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+				</div>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Text', 'npcink-toolbox' ); ?></span>
+						<input type="text" maxlength="64" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_text]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_text'] ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Font size', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="8" max="256" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_font_size]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_font_size'] ); ?>" />
+					</label>
+				</div>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Opacity', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="0" max="100" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_opacity]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_opacity'] ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Image scale', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="1" max="100" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_scale]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_scale'] ); ?>" />
+					</label>
+				</div>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Text color', 'npcink-toolbox' ); ?></span>
+						<input type="text" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_color]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_color'] ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Background', 'npcink-toolbox' ); ?></span>
+						<input type="text" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_background]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_background'] ); ?>" />
+					</label>
+				</div>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Margin', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="0" max="1000" step="1" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[watermark_margin]" value="<?php echo esc_attr( (string) $toolbox_policy['watermark_margin'] ); ?>" />
+					</label>
+					<label class="npcink-toolbox__check">
+						<input type="checkbox" name="<?php echo esc_attr( Plugin::MEDIA_OPTION_NAME ); ?>[use_cloud_when_available]" value="1" <?php checked( ! empty( $toolbox_policy['use_cloud_when_available'] ) ); ?> />
+						<span><?php esc_html_e( 'Use Cloud execution when available', 'npcink-toolbox' ); ?></span>
+					</label>
+				</div>
+				<?php submit_button( __( 'Save media optimization defaults', 'npcink-toolbox' ) ); ?>
+			</form>
+		</details>
 		<?php
 	}
 
@@ -1497,13 +1579,13 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_media_derivative_format_controls( array $core_policy ): void {
+	private function render_media_derivative_format_controls( array $toolbox_policy ): void {
 		?>
 		<div class="npcink-toolbox__split">
 			<label>
 				<span><?php esc_html_e( 'Format override', 'npcink-toolbox' ); ?></span>
 				<select name="target_format">
-					<option value=""><?php esc_html_e( 'Use Core default', 'npcink-toolbox' ); ?></option>
+					<option value=""><?php esc_html_e( 'Use Toolbox default', 'npcink-toolbox' ); ?></option>
 					<?php foreach ( array( 'webp', 'avif', 'jpeg', 'png', 'original' ) as $format ) : ?>
 						<option value="<?php echo esc_attr( $format ); ?>"><?php echo esc_html( strtoupper( $format ) ); ?></option>
 					<?php endforeach; ?>
@@ -1511,26 +1593,26 @@ final class Admin_Page {
 			</label>
 			<label>
 				<span><?php esc_html_e( 'Max width override', 'npcink-toolbox' ); ?></span>
-				<input type="number" min="320" max="7680" step="1" name="max_width" placeholder="<?php echo esc_attr( (string) $core_policy['max_width'] ); ?>" />
+				<input type="number" min="320" max="7680" step="1" name="max_width" placeholder="<?php echo esc_attr( (string) $toolbox_policy['max_width'] ); ?>" />
 			</label>
 		</div>
 		<label>
 			<span><?php esc_html_e( 'Quality override', 'npcink-toolbox' ); ?></span>
-			<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $core_policy['quality'] ); ?>" />
+			<input type="number" min="1" max="100" step="1" name="quality" placeholder="<?php echo esc_attr( (string) $toolbox_policy['quality'] ); ?>" />
 		</label>
 		<?php
 	}
 
-	private function render_media_derivative_watermark_controls( array $core_policy ): void {
+	private function render_media_derivative_watermark_controls( array $toolbox_policy ): void {
 		?>
 		<div class="npcink-toolbox__batch-panel">
 			<h3><?php esc_html_e( 'Watermark override', 'npcink-toolbox' ); ?></h3>
-			<p><?php esc_html_e( 'Use Core watermark policy by default. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Core logo source for this run.', 'npcink-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Use Toolbox watermark defaults unless this run needs a specific override. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Toolbox logo source for this run.', 'npcink-toolbox' ); ?></p>
 			<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Watermark mode', 'npcink-toolbox' ); ?></span>
 					<select name="watermark_mode">
-						<option value="core"><?php esc_html_e( 'Use Core default', 'npcink-toolbox' ); ?></option>
+						<option value="default"><?php esc_html_e( 'Use Toolbox default', 'npcink-toolbox' ); ?></option>
 						<option value="off"><?php esc_html_e( 'No watermark', 'npcink-toolbox' ); ?></option>
 						<option value="text"><?php esc_html_e( 'Text watermark', 'npcink-toolbox' ); ?></option>
 						<option value="image"><?php esc_html_e( 'Image/logo watermark', 'npcink-toolbox' ); ?></option>
@@ -1540,7 +1622,7 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Position', 'npcink-toolbox' ); ?></span>
 					<select name="watermark_position">
 						<?php foreach ( array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' ) as $position ) : ?>
-							<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) ( $core_policy['watermark_position'] ?? 'bottom_right' ), $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
+							<option value="<?php echo esc_attr( $position ); ?>" <?php selected( (string) ( $toolbox_policy['watermark_position'] ?? 'bottom_right' ), $position ); ?>><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
 						<?php endforeach; ?>
 					</select>
 				</label>
@@ -1548,51 +1630,51 @@ final class Admin_Page {
 			<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Text', 'npcink-toolbox' ); ?></span>
-					<input type="text" maxlength="64" name="watermark_text" value="<?php echo esc_attr( (string) ( $core_policy['watermark_text'] ?? 'AI' ) ); ?>" />
+					<input type="text" maxlength="64" name="watermark_text" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_text'] ?? 'AI' ) ); ?>" />
 				</label>
 				<label>
 					<span><?php esc_html_e( 'Font size', 'npcink-toolbox' ); ?></span>
-					<input type="number" min="8" max="256" step="1" name="watermark_font_size" value="<?php echo esc_attr( (string) ( $core_policy['watermark_font_size'] ?? 48 ) ); ?>" />
+					<input type="number" min="8" max="256" step="1" name="watermark_font_size" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_font_size'] ?? 48 ) ); ?>" />
 				</label>
 			</div>
 			<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Text color', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="watermark_color" value="<?php echo esc_attr( (string) ( $core_policy['watermark_color'] ?? '#FFFFFF' ) ); ?>" />
+					<input type="text" name="watermark_color" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_color'] ?? '#FFFFFF' ) ); ?>" />
 				</label>
 				<label>
 					<span><?php esc_html_e( 'Background', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="watermark_background" value="<?php echo esc_attr( (string) ( $core_policy['watermark_background'] ?? 'rgba(0,0,0,0.35)' ) ); ?>" />
+					<input type="text" name="watermark_background" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_background'] ?? 'rgba(0,0,0,0.35)' ) ); ?>" />
 				</label>
 			</div>
 			<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Opacity', 'npcink-toolbox' ); ?></span>
-					<input type="number" min="0" max="100" step="1" name="watermark_opacity" value="<?php echo esc_attr( (string) ( $core_policy['watermark_opacity'] ?? 80 ) ); ?>" />
+					<input type="number" min="0" max="100" step="1" name="watermark_opacity" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_opacity'] ?? 80 ) ); ?>" />
 				</label>
 				<label>
 					<span><?php esc_html_e( 'Image scale', 'npcink-toolbox' ); ?></span>
-					<input type="number" min="1" max="100" step="1" name="watermark_scale" value="<?php echo esc_attr( (string) ( $core_policy['watermark_scale'] ?? 20 ) ); ?>" />
+					<input type="number" min="1" max="100" step="1" name="watermark_scale" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_scale'] ?? 20 ) ); ?>" />
 				</label>
 			</div>
 			<label>
 				<span><?php esc_html_e( 'Margin', 'npcink-toolbox' ); ?></span>
-				<input type="number" min="0" max="1000" step="1" name="watermark_margin" value="<?php echo esc_attr( (string) ( $core_policy['watermark_margin'] ?? 24 ) ); ?>" />
+				<input type="number" min="0" max="1000" step="1" name="watermark_margin" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_margin'] ?? 24 ) ); ?>" />
 			</label>
 		</div>
 		<?php
 	}
 
 	private function render_image_derivative_preview_check(): void {
-		$core_policy = $this->get_media_derivative_core_policy();
+		$toolbox_policy = $this->get_media_derivative_toolbox_policy();
 		?>
 		<form class="npcink-toolbox__inline-form" data-toolbox-media-derivative data-toolbox-media-derivative-preview-only>
 			<h3><?php esc_html_e( 'Existing image preview', 'npcink-toolbox' ); ?></h3>
 			<p><?php esc_html_e( 'Generate a short-lived Cloud derivative preview for one existing media-library image. This check does not submit a Core proposal or write media.', 'npcink-toolbox' ); ?></p>
-			<?php $this->render_media_derivative_core_defaults( $core_policy ); ?>
+			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_picker_controls(); ?>
-			<?php $this->render_media_derivative_format_controls( $core_policy ); ?>
-			<?php $this->render_media_derivative_watermark_controls( $core_policy ); ?>
+			<?php $this->render_media_derivative_format_controls( $toolbox_policy ); ?>
+			<?php $this->render_media_derivative_watermark_controls( $toolbox_policy ); ?>
 			<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
@@ -1782,14 +1864,17 @@ final class Admin_Page {
 	}
 
 	private function render_media_derivative_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
-		$core_policy = $this->get_media_derivative_core_policy();
+		$toolbox_policy = $this->get_media_derivative_toolbox_policy();
 		?>
+		<div data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
+			<?php $this->render_media_derivative_policy_settings( $toolbox_policy ); ?>
+		</div>
 		<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" data-toolbox-media-derivative <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
-			<?php $this->render_media_derivative_core_defaults( $core_policy ); ?>
+			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_picker_controls(); ?>
-			<?php $this->render_media_derivative_format_controls( $core_policy ); ?>
+			<?php $this->render_media_derivative_format_controls( $toolbox_policy ); ?>
 			<div class="npcink-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Reviewed media details', 'npcink-toolbox' ); ?></h3>
 				<p><?php esc_html_e( 'These fields are submitted with the derivative artifact as one Core media optimization proposal.', 'npcink-toolbox' ); ?></p>
@@ -1822,7 +1907,7 @@ final class Admin_Page {
 					</select>
 				</label>
 			</div>
-			<?php $this->render_media_derivative_watermark_controls( $core_policy ); ?>
+			<?php $this->render_media_derivative_watermark_controls( $toolbox_policy ); ?>
 			<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Exclude formats from setting repair', 'npcink-toolbox' ); ?></span>
@@ -1907,7 +1992,7 @@ final class Admin_Page {
 				</div>
 				<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>
-			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Core remains the policy owner and final WordPress write owner, and creates one proposal for the metadata update and derivative adoption together.', 'npcink-toolbox' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Toolbox owns media optimization defaults and reviewed handoff fields; Core creates one proposal for the metadata update and derivative adoption together.', 'npcink-toolbox' ); ?></p>
 			<div class="npcink-toolbox__inline-actions">
 				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit optimization review', 'npcink-toolbox' ); ?></button>

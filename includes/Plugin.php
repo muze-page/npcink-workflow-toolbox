@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 final class Plugin {
 	public const OPTION_NAME         = 'npcink_toolbox_settings';
 	public const CONTEXT_OPTION_NAME = 'npcink_toolbox_content_context';
+	public const MEDIA_OPTION_NAME   = 'npcink_toolbox_media_optimization_settings';
 	public const REST_NAMESPACE      = 'npcink-toolbox/v1';
 
 	private static ?Plugin $instance = null;

@@ -2284,19 +2284,13 @@ final class Provider_Client {
 		}
 		$overrides = array_merge( $overrides, $this->media_derivative_watermark_overrides( $input ) );
 
-		$core_policy_available = function_exists( 'magick_ai_core_get_media_derivative_settings' );
-		$core_policy = $core_policy_available ? magick_ai_core_get_media_derivative_settings() : $this->fallback_media_derivative_policy();
-		$ability_input = function_exists( 'magick_ai_core_build_media_derivative_ability_input' )
-			? magick_ai_core_build_media_derivative_ability_input( $overrides )
-			: $this->fallback_media_derivative_ability_input( $overrides, $core_policy );
+		$toolbox_policy = $this->settings->media_optimization_policy_summary();
+		$ability_input  = $this->settings->build_media_derivative_ability_input( $overrides );
 
 		$warnings = array();
-		if ( ! $core_policy_available ) {
-			$warnings[] = __( 'Npcink Governance Core media policy helper is unavailable; fallback defaults were used for this one-run handoff.', 'npcink-toolbox' );
-		}
 		$watermark_mode = sanitize_key( (string) ( $input['watermark_mode'] ?? $input['watermark_type'] ?? 'core' ) );
-		if ( ! empty( $core_policy['watermark_enabled'] ) && empty( $core_policy['watermark_configured'] ) && ! in_array( $watermark_mode, array( 'off', 'text' ), true ) ) {
-			$warnings[] = __( 'Watermark is enabled in policy but no logo attachment is configured.', 'npcink-toolbox' );
+		if ( ! empty( $toolbox_policy['watermark_enabled'] ) && empty( $toolbox_policy['watermark_configured'] ) && ! in_array( $watermark_mode, array( 'off', 'text' ), true ) ) {
+			$warnings[] = __( 'Toolbox watermark policy is enabled but no logo attachment is configured.', 'npcink-toolbox' );
 		}
 
 		return array(
@@ -2307,8 +2301,8 @@ final class Provider_Client {
 			'direct_wordpress_write' => false,
 			'provider'               => 'toolbox',
 			'attachment_id'          => $attachment_id,
-			'core_policy_available'  => $core_policy_available,
-			'core_policy'            => $this->sanitize_payload( $core_policy ),
+			'toolbox_policy_available' => true,
+			'toolbox_policy'         => $this->sanitize_payload( $toolbox_policy ),
 			'ability_id'             => 'npcink-abilities-toolkit/build-media-derivative-cloud-request',
 			'ability_input'          => $this->sanitize_payload( $ability_input ),
 			'optimization_plan_ability_id' => 'npcink-abilities-toolkit/build-media-optimization-plan',
@@ -2330,38 +2324,6 @@ final class Provider_Client {
 				),
 			),
 		);
-	}
-
-	private function fallback_media_derivative_policy(): array {
-		return array(
-			'enabled'                  => false,
-			'target_format'            => 'webp',
-			'max_width'                => 1600,
-			'quality'                  => 82,
-			'watermark_enabled'        => false,
-			'watermark_configured'     => false,
-			'watermark_attachment_id'  => 0,
-			'watermark_position'       => 'bottom_right',
-			'watermark_opacity'        => 80,
-			'watermark_scale'          => 20,
-			'watermark_margin'         => 24,
-			'use_cloud_when_available' => true,
-			'policy_owner'             => 'magick_ai_core',
-			'final_write_owner'        => 'local_wordpress_host',
-		);
-	}
-
-	private function fallback_media_derivative_ability_input( array $overrides, array $policy ): array {
-		$input = array(
-			'attachment_id'    => absint( $overrides['attachment_id'] ?? 0 ),
-			'preferred_format' => sanitize_key( (string) ( $overrides['target_format'] ?? $policy['target_format'] ?? 'webp' ) ),
-			'target_max_width' => max( 320, min( 7680, absint( $overrides['max_width'] ?? $policy['max_width'] ?? 1600 ) ) ),
-			'quality'          => max( 1, min( 100, absint( $overrides['quality'] ?? $policy['quality'] ?? 82 ) ) ),
-		);
-		if ( is_array( $overrides['watermark'] ?? null ) && ! empty( $overrides['watermark'] ) ) {
-			$input['watermark'] = $this->sanitize_payload( $overrides['watermark'] );
-		}
-		return $input;
 	}
 
 	private function media_derivative_watermark_overrides( array $input ): array {

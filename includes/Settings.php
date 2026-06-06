@@ -30,6 +30,18 @@ final class Settings {
 				'default'           => $this->content_context_defaults(),
 			)
 		);
+
+		register_setting(
+			'npcink_toolbox_media_optimization',
+			Plugin::MEDIA_OPTION_NAME,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( $this, 'sanitize_media_optimization' ),
+				'default'           => $this->media_optimization_defaults(),
+			)
+		);
+
+		$this->maybe_migrate_core_media_policy();
 	}
 
 	public function defaults(): array {
@@ -44,6 +56,101 @@ final class Settings {
 		$defaults = $this->defaults();
 		$value    = is_array( $value ) ? array_intersect_key( $value, $defaults ) : array();
 		return array_merge( $defaults, $value );
+	}
+
+	public function media_optimization_defaults(): array {
+		return array(
+			'enabled'                  => false,
+			'target_format'            => 'webp',
+			'max_width'                => 1600,
+			'quality'                  => 82,
+			'watermark_enabled'        => false,
+			'watermark_type'           => 'image',
+			'watermark_attachment_id'  => 0,
+			'watermark_position'       => 'bottom_right',
+			'watermark_opacity'        => 80,
+			'watermark_scale'          => 20,
+			'watermark_text'           => 'AI',
+			'watermark_font_size'      => 48,
+			'watermark_color'          => '#FFFFFF',
+			'watermark_background'     => 'rgba(0,0,0,0.35)',
+			'watermark_margin'         => 24,
+			'use_cloud_when_available' => true,
+		);
+	}
+
+	public function get_media_optimization_settings(): array {
+		$value    = get_option( Plugin::MEDIA_OPTION_NAME, array() );
+		$defaults = $this->media_optimization_defaults();
+		$value    = is_array( $value ) ? array_intersect_key( $value, $defaults ) : array();
+		return $this->sanitize_media_optimization( array_merge( $defaults, $value ) );
+	}
+
+	public function media_optimization_policy_summary(): array {
+		$settings = $this->get_media_optimization_settings();
+
+		return array_merge(
+			$settings,
+			array(
+				'watermark_configured' => $this->media_watermark_configured( $settings ),
+				'policy_owner'         => 'npcink_toolbox',
+				'final_write_owner'    => 'local_wordpress_host',
+			)
+		);
+	}
+
+	public function build_media_derivative_ability_input( array $overrides = array() ): array {
+		if ( isset( $overrides['preferred_format'] ) && ! isset( $overrides['target_format'] ) ) {
+			$overrides['target_format'] = $overrides['preferred_format'];
+		}
+		if ( isset( $overrides['target_max_width'] ) && ! isset( $overrides['max_width'] ) ) {
+			$overrides['max_width'] = $overrides['target_max_width'];
+		}
+
+		$settings = $this->sanitize_media_optimization( array_merge( $this->get_media_optimization_settings(), $overrides ) );
+		$input    = array(
+			'preferred_format' => $settings['target_format'],
+			'target_max_width' => $settings['max_width'],
+			'quality'          => $settings['quality'],
+		);
+
+		$attachment_id = absint( $overrides['attachment_id'] ?? 0 );
+		if ( $attachment_id > 0 ) {
+			$input['attachment_id'] = $attachment_id;
+		}
+
+		if ( ! empty( $settings['watermark_enabled'] ) ) {
+			if ( 'text' === (string) $settings['watermark_type'] ) {
+				$input['watermark'] = array(
+					'type'       => 'text',
+					'text'       => $settings['watermark_text'],
+					'position'   => $settings['watermark_position'],
+					'opacity'    => round( (int) $settings['watermark_opacity'] / 100, 3 ),
+					'font_size'  => $settings['watermark_font_size'],
+					'color'      => $settings['watermark_color'],
+					'background' => $settings['watermark_background'],
+					'margin_px'  => $settings['watermark_margin'],
+				);
+			} elseif ( absint( $settings['watermark_attachment_id'] ) > 0 ) {
+				$input['watermark'] = array(
+					'type'          => 'image',
+					'position'      => $settings['watermark_position'],
+					'opacity'       => round( (int) $settings['watermark_opacity'] / 100, 3 ),
+					'scale_percent' => $settings['watermark_scale'],
+					'margin_px'     => $settings['watermark_margin'],
+				);
+			}
+		}
+
+		if (
+			( ! array_key_exists( 'watermark_enabled', $overrides ) || ! empty( $overrides['watermark_enabled'] ) )
+			&& is_array( $overrides['watermark'] ?? null )
+			&& ! empty( $overrides['watermark'] )
+		) {
+			$input['watermark'] = $this->sanitize_media_derivative_watermark_plan( $overrides['watermark'], $settings );
+		}
+
+		return $input;
 	}
 
 	public function content_context_defaults(): array {
@@ -254,6 +361,156 @@ final class Settings {
 		);
 
 		return $sanitized;
+	}
+
+	public function sanitize_media_optimization( $input ): array {
+		$input = is_array( $input ) ? $input : array();
+
+		$format = sanitize_key( (string) ( $input['target_format'] ?? 'webp' ) );
+		if ( ! in_array( $format, $this->allowed_media_derivative_formats(), true ) ) {
+			$format = 'webp';
+		}
+
+		$watermark_type = sanitize_key( (string) ( $input['watermark_type'] ?? 'image' ) );
+		if ( ! in_array( $watermark_type, array( 'image', 'text' ), true ) ) {
+			$watermark_type = 'image';
+		}
+
+		$position = sanitize_key( (string) ( $input['watermark_position'] ?? 'bottom_right' ) );
+		if ( ! in_array( $position, $this->allowed_media_watermark_positions(), true ) ) {
+			$position = 'bottom_right';
+		}
+
+		$text = trim( sanitize_text_field( (string) ( $input['watermark_text'] ?? 'AI' ) ) );
+		if ( '' === $text ) {
+			$text = 'AI';
+		}
+		$text = function_exists( 'mb_substr' ) ? mb_substr( $text, 0, 64 ) : substr( $text, 0, 64 );
+
+		return array(
+			'enabled'                  => ! empty( $input['enabled'] ),
+			'target_format'            => $format,
+			'max_width'                => max( 320, min( 7680, absint( $input['max_width'] ?? 1600 ) ) ),
+			'quality'                  => max( 1, min( 100, absint( $input['quality'] ?? 82 ) ) ),
+			'watermark_enabled'        => ! empty( $input['watermark_enabled'] ),
+			'watermark_type'           => $watermark_type,
+			'watermark_attachment_id'  => absint( $input['watermark_attachment_id'] ?? 0 ),
+			'watermark_position'       => $position,
+			'watermark_opacity'        => max( 0, min( 100, absint( $input['watermark_opacity'] ?? 80 ) ) ),
+			'watermark_scale'          => max( 1, min( 100, absint( $input['watermark_scale'] ?? 20 ) ) ),
+			'watermark_text'           => $text,
+			'watermark_font_size'      => max( 8, min( 256, absint( $input['watermark_font_size'] ?? 48 ) ) ),
+			'watermark_color'          => $this->sanitize_media_derivative_watermark_color( $input['watermark_color'] ?? '#FFFFFF', '#FFFFFF' ),
+			'watermark_background'     => $this->sanitize_media_derivative_watermark_color( $input['watermark_background'] ?? 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.35)' ),
+			'watermark_margin'         => max( 0, min( 1000, absint( $input['watermark_margin'] ?? 24 ) ) ),
+			'use_cloud_when_available' => ! empty( $input['use_cloud_when_available'] ),
+		);
+	}
+
+	public function allowed_media_derivative_formats(): array {
+		return array( 'webp', 'avif', 'jpeg', 'png', 'original' );
+	}
+
+	public function allowed_media_watermark_positions(): array {
+		return array( 'top_left', 'top_right', 'center', 'bottom_left', 'bottom_right' );
+	}
+
+	private function maybe_migrate_core_media_policy(): void {
+		if ( null !== get_option( Plugin::MEDIA_OPTION_NAME, null ) ) {
+			return;
+		}
+
+		$core_value = get_option( 'npcink_governance_core_media_derivative_settings', null );
+		if ( ! is_array( $core_value ) ) {
+			return;
+		}
+
+		add_option( Plugin::MEDIA_OPTION_NAME, $this->sanitize_media_optimization( $core_value ) );
+	}
+
+	private function media_watermark_configured( array $settings ): bool {
+		if ( empty( $settings['watermark_enabled'] ) ) {
+			return false;
+		}
+
+		if ( 'text' === (string) ( $settings['watermark_type'] ?? '' ) ) {
+			return '' !== trim( (string) ( $settings['watermark_text'] ?? '' ) );
+		}
+
+		return absint( $settings['watermark_attachment_id'] ?? 0 ) > 0;
+	}
+
+	private function sanitize_media_derivative_watermark_plan( array $watermark, array $settings ): array {
+		$type = sanitize_key( (string) ( $watermark['type'] ?? 'image' ) );
+		if ( ! in_array( $type, array( 'image', 'text' ), true ) ) {
+			$type = 'image';
+		}
+
+		$position = sanitize_key( (string) ( $watermark['position'] ?? $settings['watermark_position'] ?? 'bottom_right' ) );
+		if ( ! in_array( $position, $this->allowed_media_watermark_positions(), true ) ) {
+			$position = 'bottom_right';
+		}
+
+		$opacity = is_numeric( $watermark['opacity'] ?? null )
+			? (float) $watermark['opacity']
+			: ( (int) ( $settings['watermark_opacity'] ?? 80 ) / 100 );
+		$opacity   = round( max( 0, min( 1, $opacity ) ), 3 );
+		$margin_px = max( 0, min( 1000, absint( $watermark['margin_px'] ?? $settings['watermark_margin'] ?? 24 ) ) );
+
+		if ( 'text' === $type ) {
+			$text = trim( sanitize_text_field( (string) ( $watermark['text'] ?? 'AI' ) ) );
+			if ( '' === $text ) {
+				$text = 'AI';
+			}
+			$text = function_exists( 'mb_substr' ) ? mb_substr( $text, 0, 64 ) : substr( $text, 0, 64 );
+
+			return array(
+				'type'       => 'text',
+				'text'       => $text,
+				'position'   => $position,
+				'opacity'    => $opacity,
+				'font_size'  => max( 8, min( 256, absint( $watermark['font_size'] ?? 48 ) ) ),
+				'color'      => $this->sanitize_media_derivative_watermark_color( $watermark['color'] ?? '#FFFFFF', '#FFFFFF' ),
+				'background' => $this->sanitize_media_derivative_watermark_color( $watermark['background'] ?? 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.35)' ),
+				'margin_px'  => $margin_px,
+			);
+		}
+
+		$artifact_id = sanitize_text_field( (string) ( $watermark['artifact_id'] ?? '' ) );
+		$sanitized   = array(
+			'type'          => 'image',
+			'position'      => $position,
+			'opacity'       => $opacity,
+			'scale_percent' => max( 1, min( 100, absint( $watermark['scale_percent'] ?? $settings['watermark_scale'] ?? 20 ) ) ),
+			'margin_px'     => $margin_px,
+		);
+		if ( '' !== $artifact_id ) {
+			$sanitized['artifact_id'] = $artifact_id;
+		}
+
+		return $sanitized;
+	}
+
+	private function sanitize_media_derivative_watermark_color( $value, string $default ): string {
+		$color = trim( sanitize_text_field( (string) $value ) );
+		if ( 'transparent' === strtolower( $color ) ) {
+			return 'transparent';
+		}
+		if ( 1 === preg_match( '/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $color ) ) {
+			return strtoupper( $color );
+		}
+		if ( 1 === preg_match( '/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0|1|0?\.\d+))?\s*\)$/', $color, $matches ) ) {
+			$r     = max( 0, min( 255, (int) $matches[1] ) );
+			$g     = max( 0, min( 255, (int) $matches[2] ) );
+			$b     = max( 0, min( 255, (int) $matches[3] ) );
+			$alpha = isset( $matches[4] ) && '' !== $matches[4] ? max( 0, min( 1, (float) $matches[4] ) ) : null;
+
+			return null === $alpha
+				? sprintf( 'rgb(%d,%d,%d)', $r, $g, $b )
+				: sprintf( 'rgba(%d,%d,%d,%s)', $r, $g, $b, rtrim( rtrim( sprintf( '%.3F', $alpha ), '0' ), '.' ) );
+		}
+
+		return $default;
 	}
 
 	private function has_cloud_request_filter(): bool {

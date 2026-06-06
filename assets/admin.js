@@ -232,7 +232,7 @@
 
 	function watermarkErrorAdvice(error) {
 		if (errorContainsCode(error, 'cloud_media_derivative_watermark_source_missing', new WeakSet())) {
-			return t('Image/logo watermarks need a configured Core logo source. Switch this run to Text watermark, or configure the Core media watermark logo before retrying.');
+			return t('Image/logo watermarks need a configured Toolbox logo source. Switch this run to Text watermark, or configure the Toolbox media watermark logo before retrying.');
 		}
 		if (errorContainsCode(error, 'cloud_media_derivative_text_watermark_source_unexpected', new WeakSet())) {
 			return t('Text watermarks should not include a logo artifact or upload. Retry with Text watermark fields only.');
@@ -1765,7 +1765,7 @@
 		appendMeta(meta, 'Max width', abilityInput.target_max_width ? abilityInput.target_max_width + 'px' : '');
 		appendMeta(meta, 'Quality', abilityInput.quality);
 		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(abilityInput));
-		appendMeta(meta, 'Core policy', payload.core_policy_available ? 'Available' : 'Fallback defaults');
+		appendMeta(meta, 'Toolbox policy', payload.toolbox_policy_available ? 'Available' : 'Defaults');
 		result.appendChild(meta);
 
 		if (Array.isArray(payload.warnings) && payload.warnings.length) {
@@ -1966,7 +1966,7 @@
 				watermark.margin_px !== undefined ? String(watermark.margin_px) + 'px margin' : '',
 			].filter(Boolean).join(' · ');
 		}
-		return 'Core default';
+		return 'Toolbox default';
 	}
 
 	function dimensionsFromText(value, fallbackWidth, fallbackHeight) {

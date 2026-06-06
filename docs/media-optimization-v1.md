@@ -18,8 +18,8 @@ The workflow is deterministic:
 
 1. The operator selects one existing media attachment or resolves one local
    uploads URL to an attachment candidate.
-2. Toolbox reads Core media optimization defaults when available and applies
-   one-run operator overrides.
+2. Toolbox reads its stored media optimization defaults and applies one-run
+   operator overrides.
 3. Adapter runs the bounded media derivative recipe through Cloud Addon and
    Cloud, returning a short-lived derivative preview artifact.
 4. Toolbox renders the same-origin signed preview proxy and collects reviewed
@@ -33,8 +33,8 @@ The workflow is deterministic:
 
 | Project | Owns |
 | --- | --- |
-| `npcink-toolbox` | Fixed operator UI, media selection, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
-| `npcink-governance-core` | Media policy defaults, plan intake, proposal records, approval, preflight, and audit truth. |
+| `npcink-toolbox` | Fixed operator UI, media selection, media optimization defaults, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
+| `npcink-governance-core` | Plan intake, proposal records, approval, preflight, and audit truth. |
 | `npcink-openclaw-adapter` | Bounded media derivative recipe dispatch, same-origin preview proxy, from-plan relay, and approved allowlisted execution. |
 | `npcink-cloud-addon` | Verified local-to-Cloud signing and transport. |
 | `npcink-cloud` | Hosted derivative processing, run/result state, entitlement, quota, provider routing, and runtime diagnostics. |

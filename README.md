@@ -266,11 +266,11 @@ workflow.
 
 `media_optimization_v1` names the existing **Optimize Existing Image** surface
 as a fixed governed workflow, not a new workflow runtime or persistent run
-store. The media derivative preview flow reads Core media optimization defaults
-when available, accepts one-run operator overrides, and lets an operator select
-one image attachment from the media library. Operators can keep the Core
-default watermark, disable it for the run, use a text watermark, or use the
-configured Core image/logo watermark source with one-run placement settings.
+store. Toolbox stores media optimization defaults for the preview and handoff
+flow, accepts one-run operator overrides, and lets an operator select one image
+attachment from the media library. Operators can keep the Toolbox default
+watermark, disable it for the run, use a text watermark, or use the configured
+Toolbox image/logo watermark source with one-run placement settings.
 Text watermark overrides pass text, font, color, background, margin, position,
 and opacity directly to the same Cloud request shape used by OpenClaw handoffs.
 If an operator starts from a hard-coded
