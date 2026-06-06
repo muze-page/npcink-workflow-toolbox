@@ -89,7 +89,7 @@ final class Rest_Controller {
 				'ai_image_generation'      => array(
 					'registered'              => true,
 					'available'               => $cloud_ready,
-					'hosted_profile'          => 'image.grok-imagine-quality',
+					'hosted_profile'          => 'grok-imagine-image-quality',
 					'entry_surface'           => 'image_source_ai_generation_handoff',
 					'posture'                 => 'candidate_only_core_approval_required',
 					'direct_wordpress_write'  => false,

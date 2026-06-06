@@ -212,7 +212,7 @@ editor modal lets the operator select one candidate and adopt it as the
 featured image in one visible action.
 When Cloud includes an `ai_generation_handoff`, the Toolbox result can show a
 reviewed-prompt AI image generation action. The action calls the Cloud Addon
-runtime seam with `image.grok-imagine-quality`, returns AI-generated
+runtime seam with `grok-imagine-image-quality`, returns AI-generated
 `image_candidate.v1` candidates, and still requires the local adoption/Core
 review path before any media import or featured-image write.
 Toolbox builds the adoption plan with proposed media title, alt text,

@@ -95,7 +95,7 @@ final class Provider_Client {
 			'contract_version'    => 'image_generation_request.v1',
 			'execution_pattern'   => 'inline',
 			'execution_kind'      => 'image_generation',
-			'profile_id'          => sanitize_text_field( (string) ( $template['profile_id'] ?? 'image.grok-imagine-quality' ) ),
+			'profile_id'          => sanitize_text_field( (string) ( $template['profile_id'] ?? 'grok-imagine-image-quality' ) ),
 			'input'               => array(
 				'prompt'          => $prompt,
 				'aspect_ratio'    => $aspect_ratio,
@@ -2806,7 +2806,7 @@ final class Provider_Client {
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/generate-image' ) ),
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
 				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'image_generation_request.v1' ) ),
-				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'image.grok-imagine-quality' ) ),
+				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'grok-imagine-image-quality' ) ),
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? ( array() === $images ? 'empty' : 'ready' ) ) ),
 				'message'                    => sanitize_text_field( (string) ( $result['message'] ?? $response['message'] ?? '' ) ),
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $response['data']['run_id'] ?? ( $result['run_id'] ?? '' ) ) ) ),
