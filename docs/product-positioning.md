@@ -54,7 +54,10 @@ WordPress write executor.
    metadata plans, and publish/readiness checks.
 7. Keep article text creation with human editors; expose Article Assistant only
    as a fallback workbench for reviewed local draft artifacts.
-8. Preserve Core and Abilities boundaries for final WordPress writes.
+8. Treat `media_optimization_v1` as the fixed governed Optimize Existing Image
+   workflow, improving the existing Toolbox surface rather than creating a
+   duplicate runner.
+9. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals
 
@@ -91,6 +94,12 @@ writes, it belongs outside Toolbox.
 Default buttons should solve around-the-body work before offering article draft
 handoffs. Draft handoffs are acceptable only after a reviewed human draft exists
 and the final write goes through Core proposal governance.
+
+Media optimization is the first fixed governed media workflow. Toolbox may
+present **Optimize Existing Image** as `media_optimization_v1`, with visible
+steps from media selection through Cloud preview and Core proposal handoff, but
+it must not add a workflow runtime, persistent run store, media registry,
+approval path, provider routing UI, or direct WordPress write executor.
 
 High-frequency article support belongs in the WordPress post editor as a
 Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor

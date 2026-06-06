@@ -58,6 +58,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
 - [Article Assistant Workbench](docs/article-assistant-workbench.md)
+- [Media Optimization V1](docs/media-optimization-v1.md)
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)
@@ -247,13 +248,16 @@ internal-link candidates, or image candidates. Media work, governed handoffs,
 and the combined Article Planning Bundle are visually separate groups; the
 bundle is a fallback package, not the primary support workflow.
 
-The media derivative preview flow reads Core media optimization defaults when
-available, accepts one-run operator overrides, and lets an operator select one
-image attachment from the media library. Operators can keep the Core default
-watermark, disable it for the run, use a text watermark, or use the configured
-Core image/logo watermark source with one-run placement settings. Text
-watermark overrides pass text, font, color, background, margin, position, and
-opacity directly to the same Cloud request shape used by OpenClaw handoffs. If
+`media_optimization_v1` names the existing **Optimize Existing Image** surface
+as a fixed governed workflow, not a new workflow runtime or persistent run
+store. The media derivative preview flow reads Core media optimization defaults
+when available, accepts one-run operator overrides, and lets an operator select
+one image attachment from the media library. Operators can keep the Core
+default watermark, disable it for the run, use a text watermark, or use the
+configured Core image/logo watermark source with one-run placement settings.
+Text watermark overrides pass text, font, color, background, margin, position,
+and opacity directly to the same Cloud request shape used by OpenClaw handoffs.
+If
 an operator starts from a hard-coded
 local uploads URL, the same surface can call the local read-only
 `npcink-abilities-toolkit/resolve-media-attachment-by-url` ability through Adapter
@@ -276,6 +280,8 @@ image dimensions, then submit exact `patch-setting-value` actions to Core.
 Toolbox does not store the site media policy, own Cloud credentials, create an
 artifact registry, approve proposals, execute proposals, replace files, write
 attachment metadata, patch post content, or update options/theme mods directly.
+See [Media Optimization V1](docs/media-optimization-v1.md) for the fixed
+workflow contract and expansion rule.
 
 ## Connector Configuration
 

@@ -38,10 +38,21 @@ foreach ( array( 'Relationship To OpenClaw', 'OpenClaw is the natural-language c
 foreach ( array( 'content-support abilities', 'human-written articles', 'taxonomy/tag candidates', 'internal-link candidates', 'Article Assistant only', 'fallback workbench' ) as $required_support_positioning_doc ) {
 	toolbox_assert( false !== strpos( $positioning_doc, $required_support_positioning_doc ), 'Product positioning keeps content-support-first article boundary: ' . $required_support_positioning_doc );
 }
+foreach ( array( 'media_optimization_v1', 'fixed governed Optimize Existing Image', 'duplicate runner', 'workflow runtime, persistent run store, media registry' ) as $required_media_positioning_doc ) {
+	toolbox_assert( false !== strpos( $positioning_doc, $required_media_positioning_doc ), 'Product positioning keeps media optimization as a fixed governed workflow: ' . $required_media_positioning_doc );
+}
 
 $boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
 foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same local ability and Core proposal contracts', 'OpenClaw natural-language request', 'Toolbox fixed button', 'reviewed plan or candidate artifact', 'must not own OpenClaw projection truth', 'approval truth, prompt/model', 'media registry truth, or final WordPress write execution' ) as $required_boundary_doc ) {
 	toolbox_assert( false !== strpos( $boundary_doc, $required_boundary_doc ), 'Boundary doc preserves Toolbox/OpenClaw split: ' . $required_boundary_doc );
+}
+foreach ( array( 'media_optimization_v1', 'Optimize Existing Image', 'one Core media optimization proposal', 'generic workflow runner, persistent run table', 'queue, scheduler, or direct media write' ) as $required_media_boundary_doc ) {
+	toolbox_assert( false !== strpos( $boundary_doc, $required_media_boundary_doc ), 'Boundary doc keeps media optimization fixed and governed: ' . $required_media_boundary_doc );
+}
+
+$media_optimization_doc = file_get_contents( $root . '/docs/media-optimization-v1.md' );
+foreach ( array( 'media_optimization_v1', 'fixed, governed Toolbox workflow', 'not a new workflow runtime', 'Select media', 'Generate Cloud preview', 'Review media metadata', 'Submit optimization review', 'persistent Toolbox run table', 'one Core proposal', 'Expansion Rule' ) as $required_media_optimization_doc ) {
+	toolbox_assert( false !== strpos( $media_optimization_doc, $required_media_optimization_doc ), 'Media Optimization V1 doc preserves the fixed workflow contract: ' . $required_media_optimization_doc );
 }
 
 $composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
@@ -60,6 +71,14 @@ foreach ( array( 'click-driven operator surface for the same local ability', 'Co
 $readme = file_get_contents( $root . '/README.md' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
 	toolbox_assert( false !== strpos( $readme, $required_readme_text ), 'README preserves fixed-button positioning: ' . $required_readme_text );
+}
+foreach ( array( 'Media Optimization V1', 'media_optimization_v1', 'fixed governed workflow', 'not a new workflow runtime or persistent run', 'Optimize Existing Image' ) as $required_media_readme_text ) {
+	toolbox_assert( false !== strpos( $readme, $required_media_readme_text ), 'README documents media optimization as an existing fixed governed workflow: ' . $required_media_readme_text );
+}
+
+$architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
+foreach ( array( 'media_optimization_v1', 'existing **Optimize Existing Image** surface', 'does not introduce a Toolbox custom table', '/workflow-runs route', 'artifact registry, or direct media writer' ) as $required_media_architecture_doc ) {
+	toolbox_assert( false !== strpos( $architecture_doc, $required_media_architecture_doc ), 'Architecture doc keeps media optimization out of runtime storage: ' . $required_media_architecture_doc );
 }
 
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );

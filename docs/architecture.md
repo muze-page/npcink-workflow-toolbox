@@ -333,6 +333,12 @@ SEO suggestions. This keeps image-source reuse fast for editor and settings
 surfaces without turning Toolbox into an image index, provider router, media
 registry, or write executor.
 
+`media_optimization_v1` is the architecture name for the existing **Optimize Existing Image** surface.
+It is implemented with current admin state, Adapter media derivative routes,
+Cloud Addon transport, Core proposal handoff, and Abilities media contracts. It
+does not introduce a Toolbox custom table, a /workflow-runs route, queue,
+scheduler, retry lease, artifact registry, or direct media writer.
+
 Cloud Checks use compact tabs for Cloud-managed search, image-source,
 preview-only media derivative, and Site Knowledge checks. Each panel opens
 directly into the relevant Toolbox ability reachability check instead of

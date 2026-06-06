@@ -156,6 +156,13 @@ stay the final WordPress write executor. Toolbox must treat any automatic
 completion as an Adapter/Core/Abilities result, not as a Toolbox-owned direct
 write.
 
+`media_optimization_v1` is the fixed governed name for the existing
+**Optimize Existing Image** surface. It may guide one operator intent through
+media selection, Core policy defaults, Adapter/Cloud derivative preview,
+reviewed metadata, and one Core media optimization proposal. It must not add a
+generic workflow runner, persistent run table, Toolbox media registry,
+automatic approval, retry worker, queue, scheduler, or direct media write.
+
 `/media-derivative-handoff` prepares one-run ability input for
 `npcink-abilities-toolkit/build-media-derivative-cloud-request` from Core media policy defaults
 and operator overrides. Watermark overrides must distinguish text and
