@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Npcink Toolbox 0.1.0\n"
 "Report-Msgid-Bugs-To: https://npc.ink/\n"
 "POT-Creation-Date: 2026-06-06 00:00+0800\n"
-"PO-Revision-Date: 2026-06-06 00:00+0800\n"
+"PO-Revision-Date: 2026-06-07 01:20+0800\n"
 "Last-Translator: Npcink\n"
 "Language-Team: Npcink\n"
 "Language: zh_CN\n"
@@ -41,14 +41,893 @@ msgstr "工具箱分区"
 msgid "Content Context"
 msgstr "内容上下文"
 
+msgid "Fill a compact site brief, then tune SEO, AEO, and GEO guidance. Draft buttons only prefill this form; nothing is saved until you click Save content context. After saving, use Content Support to test briefs, site knowledge, and image candidates."
+msgstr "先填写一份精简站点简报，再调整 SEO、AEO 和 GEO 指引。草稿按钮只会预填此表单；点击保存内容上下文之前不会保存任何内容。保存后，可使用内容支持测试简报、站点知识和图片候选。"
+
+msgid "Content context draft actions"
+msgstr "内容上下文草稿操作"
+
+msgid "Use AI tech blog template"
+msgstr "使用 AI 技术博客模板"
+
+msgid "Draft from current site content"
+msgstr "根据当前站点内容生成草稿"
+
+msgid "Clear form"
+msgstr "清空表单"
+
+msgid "Drafts are editable suggestions and do not change posts, media, SEO meta, or provider settings."
+msgstr "草稿只是可编辑建议，不会更改文章、媒体、SEO 元数据或提供方设置。"
+
+msgid "Content context sections"
+msgstr "内容上下文分区"
+
+msgid "Brief"
+msgstr "简报"
+
+msgid "Start here"
+msgstr "从这里开始"
+
+msgid "SEO"
+msgstr "SEO"
+
+msgid "Search snippets"
+msgstr "搜索摘要"
+
+msgid "AEO"
+msgstr "AEO"
+
+msgid "Answer shape"
+msgstr "回答结构"
+
+msgid "GEO"
+msgstr "GEO"
+
+msgid "AI citation signals"
+msgstr "AI 引用信号"
+
+msgid "Boundaries"
+msgstr "边界"
+
+msgid "Claims and preview"
+msgstr "声明与预览"
+
+msgid "Define who the site is for and how suggestions should sound. This is the minimum useful setup."
+msgstr "定义站点面向谁，以及建议应采用什么表达方式。这是最低限度的有效设置。"
+
+msgid "Brief fields"
+msgstr "简报字段"
+
+msgid "Site profile"
+msgstr "站点画像"
+
+msgid "Positioning"
+msgstr "定位"
+
+msgid "Audience"
+msgstr "受众"
+
+msgid "Readers"
+msgstr "读者"
+
+msgid "Voice"
+msgstr "语气"
+
+msgid "Tone"
+msgstr "声调"
+
+msgid "Keywords"
+msgstr "关键词"
+
+msgid "Primary terms"
+msgstr "核心词"
+
+msgid "Tell AI what this site is, who it helps, and what kind of suggestion it should produce first."
+msgstr "告诉 AI 这个站点是什么、服务谁，以及应优先生成哪类建议。"
+
+msgid "Site positioning"
+msgstr "站点定位"
+
+msgid "List the reader groups AI should optimize explanations, examples, and terminology for."
+msgstr "列出 AI 在解释、示例和术语上应优先适配的读者群体。"
+
+msgid "Target audience"
+msgstr "目标受众"
+
+msgid "Set the writing posture, level of detail, and phrases AI should favor or avoid."
+msgstr "设置写作姿态、细节程度，以及 AI 应偏好或避免的表达。"
+
+msgid "Brand voice"
+msgstr "品牌语气"
+
+msgid "Use this short list as the main topic vocabulary before adding SEO-specific long-tail terms."
+msgstr "先把这份短列表作为主要主题词汇，再补充 SEO 专用长尾词。"
+
+msgid "Primary keywords"
+msgstr "主要关键词"
+
+msgid "Control search-oriented metadata, keyword coverage, and which SEO fields AI may suggest."
+msgstr "控制面向搜索的元数据、关键词覆盖范围，以及 AI 可以建议哪些 SEO 字段。"
+
+msgid "SEO fields"
+msgstr "SEO 字段"
+
+msgid "Long-tail terms"
+msgstr "长尾词"
+
+msgid "Rules"
+msgstr "规则"
+
+msgid "Search guidance"
+msgstr "搜索指引"
+
+msgid "Suggestion fields"
+msgstr "建议字段"
+
+msgid "Allowed output"
+msgstr "允许输出"
+
+msgid "SEO keywords"
+msgstr "SEO 关键词"
+
+msgid "Add supporting long-tail phrases here. Primary keywords stay in the Brief section so the first setup path remains obvious."
+msgstr "在这里添加辅助长尾短语。主要关键词保留在简报分区，让首次设置路径保持清晰。"
+
+msgid "Long-tail keywords"
+msgstr "长尾关键词"
+
+msgid "SEO rules"
+msgstr "SEO 规则"
+
+msgid "Describe title, description, slug, excerpt, and internal-link preferences for proposal-ready suggestions."
+msgstr "描述标题、描述、别名、摘要和内链偏好，用于生成可进入提案的建议。"
+
+msgid "SEO fields AI may suggest"
+msgstr "AI 可以建议的 SEO 字段"
+
+msgid "Shape answer-engine output: direct answers, FAQs, definitions, and step-style responses."
+msgstr "塑造回答引擎输出：直接回答、FAQ、定义和步骤式回答。"
+
+msgid "AEO fields"
+msgstr "AEO 字段"
+
+msgid "Answer guidance"
+msgstr "回答指引"
+
+msgid "Output toggles"
+msgstr "输出开关"
+
+msgid "FAQ and summary"
+msgstr "FAQ 与摘要"
+
+msgid "AEO rules"
+msgstr "AEO 规则"
+
+msgid "Start with a direct answer, then add conditions, steps, limits, and short followups."
+msgstr "先给出直接回答，再补充条件、步骤、限制和简短追问。"
+
+msgid "Allow FAQ suggestions"
+msgstr "允许 FAQ 建议"
+
+msgid "Allow AEO answer summary suggestions"
+msgstr "允许 AEO 回答摘要建议"
+
+msgid "AEO fields AI may suggest"
+msgstr "AI 可以建议的 AEO 字段"
+
+msgid "Guide AI-readable entity signals, standalone conclusions, and citation-friendly summaries."
+msgstr "指导 AI 可读的实体信号、独立结论和便于引用的摘要。"
+
+msgid "GEO fields"
+msgstr "GEO 字段"
+
+msgid "Entities"
+msgstr "实体"
+
+msgid "Signals"
+msgstr "信号"
+
+msgid "Summary guidance"
+msgstr "摘要指引"
+
+msgid "GEO and schema"
+msgstr "GEO 与 schema"
+
+msgid "List people, products, standards, projects, and concepts AI should recognize as important context."
+msgstr "列出 AI 应识别为重要上下文的人物、产品、标准、项目和概念。"
+
+msgid "Entity keywords"
+msgstr "实体关键词"
+
+msgid "GEO rules"
+msgstr "GEO 规则"
+
+msgid "Keep key conclusions standalone, define important entities, and separate implemented facts from plans."
+msgstr "让关键结论可以独立引用，定义重要实体，并区分已实现事实和计划。"
+
+msgid "Allow GEO summary suggestions"
+msgstr "允许 GEO 摘要建议"
+
+msgid "Allow structured data suggestions"
+msgstr "允许结构化数据建议"
+
+msgid "GEO fields AI may suggest"
+msgstr "AI 可以建议的 GEO 字段"
+
+msgid "Limit what AI can claim and inspect the read-only payload exposed to callers."
+msgstr "限制 AI 可以声称的内容，并检查暴露给调用方的只读载荷。"
+
+msgid "Boundary fields"
+msgstr "边界字段"
+
+msgid "Allowed claims"
+msgstr "允许声明"
+
+msgid "Can say"
+msgstr "可以说"
+
+msgid "Forbidden claims"
+msgstr "禁止声明"
+
+msgid "Must not say"
+msgstr "不能说"
+
+msgid "Exceptions"
+msgstr "例外"
+
+msgid "Special cases"
+msgstr "特殊情况"
+
+msgid "Ability preview"
+msgstr "能力预览"
+
+msgid "Read-only payload"
+msgstr "只读载荷"
+
+msgid "Disallowed topics"
+msgstr "禁止主题"
+
+msgid "Cautious topics"
+msgstr "谨慎主题"
+
+msgid "No structured output topics"
+msgstr "不生成结构化输出的主题"
+
+msgid "Human confirmation required"
+msgstr "需要人工确认"
+
+msgid "Final WordPress writes still require Core proposal approval; third-party AI receives this context as suggestion-only guidance."
+msgstr "最终 WordPress 写入仍需要 Core 提案审批；第三方 AI 只会把此上下文作为建议性指引接收。"
+
+msgid "Save content context"
+msgstr "保存内容上下文"
+
+msgid "SEO title"
+msgstr "SEO 标题"
+
+msgid "SEO description"
+msgstr "SEO 描述"
+
+msgid "Slug"
+msgstr "别名"
+
+msgid "Excerpt"
+msgstr "摘要"
+
+msgid "FAQ"
+msgstr "FAQ"
+
+msgid "Answer summary"
+msgstr "回答摘要"
+
+msgid "GEO summary"
+msgstr "GEO 摘要"
+
+msgid "Structured data hints"
+msgstr "结构化数据提示"
+
+msgid "Save and verify Cloud Addon credentials to enable hosted execution."
+msgstr "保存并验证 Cloud Addon 凭据以启用托管执行。"
+
+msgid "Check Cloud Addon transport before running hosted execution."
+msgstr "运行托管执行前请检查 Cloud Addon 传输。"
+
 msgid "Site Knowledge"
 msgstr "站点知识"
+
+msgid "Start or refresh Cloud-managed indexing for public site content. Toolbox sends the manifest; Cloud owns embeddings, vector storage, rerank, and run detail."
+msgstr "为公开站点内容启动或刷新 Cloud 托管索引。Toolbox 发送清单；Cloud 拥有嵌入、向量存储、重排和运行详情。"
+
+msgid "Index status"
+msgstr "索引状态"
+
+msgid "Read-only Cloud coverage summary for this WordPress site."
+msgstr "此 WordPress 站点的只读 Cloud 覆盖摘要。"
+
+msgid "Refresh status"
+msgstr "刷新状态"
+
+msgid "Connect Cloud Addon before reading Site Knowledge coverage."
+msgstr "读取站点知识覆盖范围前请先连接 Cloud Addon。"
+
+msgid "Status has not been loaded yet."
+msgstr "状态尚未加载。"
+
+msgid "Index actions"
+msgstr "索引操作"
+
+msgid "Create or refresh the Cloud index for current public site content. Advanced cleanup stays in Cloud operations."
+msgstr "为当前公开站点内容创建或刷新 Cloud 索引。高级清理仍由 Cloud 运维处理。"
+
+msgid "Toolbox sends the latest public posts and pages. Approved comments are included only when Cloud comments indexing is enabled."
+msgstr "Toolbox 会发送最新公开文章和页面。只有启用 Cloud 评论索引时，才会包含已批准评论。"
+
+msgid "Start indexing"
+msgstr "开始索引"
+
+msgid "Refresh index"
+msgstr "刷新索引"
+
+msgid "Indexing is disabled until Cloud Addon transport is available."
+msgstr "Cloud Addon 传输可用前，索引功能处于禁用状态。"
+
+msgid "Used by Content Support"
+msgstr "由内容支持使用"
+
+msgid "After the index is ready, these Toolbox actions can use Cloud Site Knowledge automatically."
+msgstr "索引就绪后，这些 Toolbox 操作可以自动使用 Cloud 站点知识。"
+
+msgid "Open Content Support"
+msgstr "打开内容支持"
+
+msgid "Internal Link Candidates"
+msgstr "内链候选"
+
+msgid "Find related public posts and pages for editor-reviewed links."
+msgstr "为编辑审阅的链接查找相关公开文章和页面。"
+
+msgid "Publish Preflight"
+msgstr "发布预检"
+
+msgid "Check duplicate risk, source coverage, and missing site references before publishing."
+msgstr "发布前检查重复风险、来源覆盖和缺失的站点引用。"
+
+msgid "Discoverability Brief"
+msgstr "可发现性简报"
+
+msgid "Ground SEO, AEO, and GEO suggestions in existing site context."
+msgstr "基于现有站点上下文生成 SEO、AEO 和 GEO 建议。"
+
+msgid "Article Planning Bundle and OpenClaw"
+msgstr "文章规划包与 OpenClaw"
+
+msgid "Use the same Cloud-managed knowledge ability for planning bundles and natural-language requests."
+msgstr "规划包和自然语言请求使用同一个 Cloud 托管知识能力。"
+
+msgid "Final WordPress edits still require the normal Core proposal and editor approval path."
+msgstr "最终 WordPress 编辑仍需要常规 Core 提案和编辑审批路径。"
+
+msgid "Advanced search check"
+msgstr "高级搜索检查"
+
+msgid "Search check"
+msgstr "搜索检查"
+
+msgid "Run a read-only query against Cloud-managed site knowledge."
+msgstr "对 Cloud 托管站点知识运行只读查询。"
+
+msgid "Connect Cloud Addon before running Site Knowledge checks."
+msgstr "运行站点知识检查前请先连接 Cloud Addon。"
+
+msgid "Query"
+msgstr "查询"
+
+msgid "Search public site knowledge"
+msgstr "搜索公开站点知识"
+
+msgid "Intent"
+msgstr "意图"
+
+msgid "Site search"
+msgstr "站点搜索"
+
+msgid "FAQ candidates"
+msgstr "FAQ 候选"
+
+msgid "Content gaps"
+msgstr "内容缺口"
+
+msgid "Internal links"
+msgstr "内链"
+
+msgid "Source types"
+msgstr "来源类型"
+
+msgid "Current post ID"
+msgstr "当前文章 ID"
+
+msgid "Max results"
+msgstr "最大结果数"
+
+msgid "Search index"
+msgstr "搜索索引"
+
+msgid "Run check"
+msgstr "运行检查"
 
 msgid "Content Support"
 msgstr "内容支持"
 
+msgid "AI Draft Support"
+msgstr "AI 草稿支持"
+
+msgid "Title and Summary Helper"
+msgstr "标题与摘要助手"
+
+msgid "Suggest reviewable titles, a short excerpt, and a direct answer summary from the supplied topic or draft."
+msgstr "根据提供的主题或草稿，建议可审阅标题、简短摘要和直接回答摘要。"
+
+msgid "Suggest titles and summary"
+msgstr "建议标题和摘要"
+
+msgid "Outline Helper"
+msgstr "大纲助手"
+
+msgid "Turn a topic, brief, or rough notes into a compact outline that an editor can expand manually."
+msgstr "把主题、简报或粗略笔记转换成编辑可手动扩展的精简大纲。"
+
+msgid "Build outline"
+msgstr "生成大纲"
+
+msgid "Polish Helper"
+msgstr "润色助手"
+
+msgid "Rewrite a short draft section for clarity and tone while keeping the original meaning reviewable."
+msgstr "在保持原意可审阅的前提下，重写一小段草稿以改善清晰度和语气。"
+
+msgid "Polish draft"
+msgstr "润色草稿"
+
+msgid "Everyday Support"
+msgstr "日常支持"
+
+msgid "Build SEO, AEO, GEO, taxonomy, and proposal-field suggestions with saved context and Site Knowledge when available."
+msgstr "使用已保存上下文，并在可用时结合站点知识，生成 SEO、AEO、GEO、分类和提案字段建议。"
+
+msgid "Build suggestions"
+msgstr "生成建议"
+
+msgid "Check source coverage, duplicate risk, missing terms, excerpt, and media readiness against current site context."
+msgstr "根据当前站点上下文检查来源覆盖、重复风险、缺失分类标签、摘要和媒体就绪情况。"
+
+msgid "Run preflight"
+msgstr "运行预检"
+
+msgid "Taxonomy/Tag Candidates"
+msgstr "分类/标签候选"
+
+msgid "Suggest matching existing categories and tags from the supplied draft context."
+msgstr "根据提供的草稿上下文建议匹配的已有分类和标签。"
+
+msgid "Find terms"
+msgstr "查找分类标签"
+
+msgid "Use Cloud-managed Site Knowledge to find related public content for operator-reviewed links."
+msgstr "使用 Cloud 托管站点知识查找相关公开内容，供运营者审阅链接。"
+
+msgid "Find links"
+msgstr "查找链接"
+
+msgid "Image Candidates"
+msgstr "图片候选"
+
+msgid "Find image-source candidates for featured or inline use. Import still requires a governed handoff."
+msgstr "查找用于特色图或正文图片的图片来源候选。导入仍需要治理交接。"
+
+msgid "Find images"
+msgstr "查找图片"
+
+msgid "Fallback Bundles"
+msgstr "降级包"
+
+msgid "Article Planning Bundle"
+msgstr "文章规划包"
+
+msgid "Build one combined research, image, knowledge, outline, and handoff bundle when an operator needs a compact fallback package."
+msgstr "当运营者需要精简降级包时，生成一个包含研究、图片、知识、大纲和交接内容的组合包。"
+
+msgid "Article topic"
+msgstr "文章主题"
+
+msgid "Build bundle"
+msgstr "生成包"
+
+msgid "Article Assistant Fallback"
+msgstr "文章助手降级"
+
+msgid "Assemble one local workbench artifact from support abilities and an optional reviewed draft; it does not write the article body."
+msgstr "由支持能力和可选已审阅草稿组装一个本地工作台制品；它不会写入文章正文。"
+
+msgid "Governed Handoffs"
+msgstr "治理交接"
+
+msgid "Reviewed Draft Handoff"
+msgstr "已审阅草稿交接"
+
+msgid "Prepare a Core-ready article_write_plan only after a human-reviewed draft exists. Toolbox does not submit or approve the proposal."
+msgstr "仅在已有人工审阅草稿后准备 Core 就绪的 article_write_plan。Toolbox 不提交或审批提案。"
+
+msgid "Adopt New Image"
+msgstr "采用新图片"
+
+msgid "Use a reviewed stock, generated, owned, or external image as a media import proposal."
+msgstr "将已审阅的图库、生成、自有或外部图片作为媒体导入提案。"
+
+msgid "Media"
+msgstr "媒体"
+
+msgid "Media Brief"
+msgstr "媒体简报"
+
+msgid "Use an existing post id to plan image prompts and media SEO actions."
+msgstr "使用已有文章 ID 规划图片提示词和媒体 SEO 操作。"
+
+msgid "Post ID"
+msgstr "文章 ID"
+
+msgid "Plan media"
+msgstr "规划媒体"
+
+msgid "Optimize Existing Image"
+msgstr "优化现有图片"
+
+msgid "Choose a media-library image, review metadata, generate a preview, then submit one Core optimization proposal."
+msgstr "选择一张媒体库图片，审阅元数据，生成预览，然后提交一个 Core 优化提案。"
+
+msgid "Tool actions"
+msgstr "工具操作"
+
+msgid "Hosted AI route"
+msgstr "托管 AI 路由"
+
+msgid "Toolbox sends one lightweight draft-support request through the Cloud hosted runtime when the site is connected. The result is a reviewable suggestion, not a finished article."
+msgstr "站点连接后，Toolbox 会通过 Cloud 托管运行时发送一个轻量草稿支持请求。结果是可审阅建议，不是成稿文章。"
+
+msgid "Connect Cloud Addon before running hosted AI support."
+msgstr "运行托管 AI 支持前请先连接 Cloud Addon。"
+
+msgid "Fixed support flow"
+msgstr "固定支持流程"
+
+msgid "This runs one bounded suggestion flow from the supplied draft context. It does not write posts, assign terms, insert links, import media, or publish."
+msgstr "这会根据提供的草稿上下文运行一个有边界的建议流程。它不会写文章、分配分类标签、插入链接、导入媒体或发布。"
+
+msgid "Post ID (optional)"
+msgstr "文章 ID（可选）"
+
+msgid "Use 0 for topic-only runs"
+msgstr "仅按主题运行时使用 0"
+
+msgid "Title or topic"
+msgstr "标题或主题"
+
+msgid "Working title or article topic"
+msgstr "工作标题或文章主题"
+
+msgid "Excerpt or short brief"
+msgstr "摘要或简短简报"
+
+msgid "Optional summary, angle, audience, or constraints"
+msgstr "可选摘要、角度、受众或约束"
+
+msgid "Draft text or notes"
+msgstr "草稿文本或笔记"
+
+msgid "Optional draft body, notes, or source outline"
+msgstr "可选草稿正文、笔记或来源大纲"
+
 msgid "Cloud Checks"
 msgstr "云端检查"
+
+msgid "Run Cloud-managed search, image-source, and site-knowledge checks from Toolbox."
+msgstr "从 Toolbox 运行 Cloud 托管搜索、图片来源和站点知识检查。"
+
+msgid "Cloud check groups"
+msgstr "Cloud 检查分组"
+
+msgid "Cloud managed"
+msgstr "Cloud 托管"
+
+msgid "Cloud connection needed"
+msgstr "需要 Cloud 连接"
+
+msgid "Image"
+msgstr "图片"
+
+msgid "Search checks"
+msgstr "搜索检查"
+
+msgid "Search test"
+msgstr "搜索测试"
+
+msgid "Read-only query"
+msgstr "只读查询"
+
+msgid "Diagnostic"
+msgstr "诊断"
+
+msgid "Workflow evidence"
+msgstr "工作流证据"
+
+msgid "Cloud search test"
+msgstr "Cloud 搜索测试"
+
+msgid "Connect Cloud Addon before running Cloud search checks."
+msgstr "运行 Cloud 搜索检查前请先连接 Cloud Addon。"
+
+msgid "News"
+msgstr "新闻"
+
+msgid "Fact check"
+msgstr "事实核查"
+
+msgid "Writing context"
+msgstr "写作上下文"
+
+msgid "Competitor research"
+msgstr "竞品研究"
+
+msgid "Source discovery"
+msgstr "来源发现"
+
+msgid "External links"
+msgstr "外部链接"
+
+msgid "Recency days"
+msgstr "近几天"
+
+msgid "Run search test"
+msgstr "运行搜索测试"
+
+msgid "Workflow diagnostic"
+msgstr "工作流诊断"
+
+msgid "Run a Toolbox content workflow and verify whether it attached Cloud web search evidence."
+msgstr "运行一个 Toolbox 内容工作流，并验证它是否附加了 Cloud 网页搜索证据。"
+
+msgid "Connect Cloud Addon before running Cloud workflow diagnostics."
+msgstr "运行 Cloud 工作流诊断前请先连接 Cloud Addon。"
+
+msgid "Scenario"
+msgstr "场景"
+
+msgid "Article Assistant"
+msgstr "文章助手"
+
+msgid "Working title"
+msgstr "工作标题"
+
+msgid "Optional title override"
+msgstr "可选标题覆盖"
+
+msgid "Run workflow diagnostic"
+msgstr "运行工作流诊断"
+
+msgid "Image checks"
+msgstr "图片检查"
+
+msgid "Smoke test"
+msgstr "冒烟测试"
+
+msgid "Candidates"
+msgstr "候选"
+
+msgid "Existing image preview"
+msgstr "现有图片预览"
+
+msgid "Derivative"
+msgstr "衍生"
+
+msgid "Handoff"
+msgstr "交接"
+
+msgid "Core review"
+msgstr "Core 审阅"
+
+msgid "Core handoff stays in Content Support"
+msgstr "Core 交接保留在内容支持中"
+
+msgid "Use the full Optimize Existing Image flow when a reviewed preview should become one Core proposal, or when batch and URL repair actions are needed."
+msgstr "当已审阅预览需要变成一个 Core 提案，或需要批量和 URL 修复操作时，请使用完整的优化现有图片流程。"
+
+msgid "Open Optimize Existing Image"
+msgstr "打开优化现有图片"
+
+msgid "Site Knowledge checks"
+msgstr "站点知识检查"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Coverage"
+msgstr "覆盖范围"
+
+msgid "Cloud coverage summary for this WordPress site."
+msgstr "此 WordPress 站点的 Cloud 覆盖摘要。"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Manage index"
+msgstr "管理索引"
+
+msgid "Connect Cloud Addon before loading Site Knowledge status."
+msgstr "加载站点知识状态前请先连接 Cloud Addon。"
+
+msgid "latest WordPress AI search trends"
+msgstr "最新 WordPress AI 搜索趋势"
+
+msgid "Image source smoke test"
+msgstr "图片来源冒烟测试"
+
+msgid "Test Cloud-managed Unsplash/Pixabay/Pexels image-source candidates and preserve attribution metadata."
+msgstr "测试 Cloud 托管的 Unsplash/Pixabay/Pexels 图片来源候选，并保留署名元数据。"
+
+msgid "Connect Cloud Addon before testing Cloud image-source candidates."
+msgstr "测试 Cloud 图片来源候选前请先连接 Cloud Addon。"
+
+msgid "Cloud smoke test"
+msgstr "Cloud 冒烟测试"
+
+msgid "A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, and license review status. This does not import media or write WordPress."
+msgstr "成功结果会显示 Cloud 运行时、提供方模式、候选数量、预览图片、建议文件名和许可证审阅状态。此操作不会导入媒体或写入 WordPress。"
+
+msgid "Image search query"
+msgstr "图片搜索查询"
+
+msgid "wordpress article hero image"
+msgstr "WordPress 文章首图"
+
+msgid "Provider"
+msgstr "提供方"
+
+msgid "Cloud auto"
+msgstr "Cloud 自动"
+
+msgid "Unsplash"
+msgstr "Unsplash"
+
+msgid "Pixabay"
+msgstr "Pixabay"
+
+msgid "Pexels"
+msgstr "Pexels"
+
+msgid "Orientation"
+msgstr "方向"
+
+msgid "Landscape"
+msgstr "横向"
+
+msgid "Portrait"
+msgstr "纵向"
+
+msgid "Squarish"
+msgstr "近方形"
+
+msgid "Any"
+msgstr "任意"
+
+msgid "Candidate count"
+msgstr "候选数量"
+
+msgid "Color filter"
+msgstr "颜色筛选"
+
+msgid "Optional Unsplash color filter"
+msgstr "可选 Unsplash 颜色筛选"
+
+msgid "Test Cloud image source"
+msgstr "测试 Cloud 图片来源"
+
+msgid "off or incomplete"
+msgstr "关闭或未完整配置"
+
+msgid "Core defaults"
+msgstr "Core 默认值"
+
+msgid "%1$s, %2$dpx, quality %3$d. Watermark: %4$s."
+msgstr "%1$s，%2$dpx，质量 %3$d。水印：%4$s。"
+
+msgid "No image selected"
+msgstr "未选择图片"
+
+msgid "Attachment ID"
+msgstr "附件 ID"
+
+msgid "Image URL"
+msgstr "图片 URL"
+
+msgid "Paste a local uploads URL"
+msgstr "粘贴本地上传 URL"
+
+msgid "Select from media library"
+msgstr "从媒体库选择"
+
+msgid "Resolve URL"
+msgstr "解析 URL"
+
+msgid "Choose one local image attachment."
+msgstr "选择一个本地图片附件。"
+
+msgid "Format override"
+msgstr "格式覆盖"
+
+msgid "Use Core default"
+msgstr "使用 Core 默认值"
+
+msgid "Max width override"
+msgstr "最大宽度覆盖"
+
+msgid "Quality override"
+msgstr "质量覆盖"
+
+msgid "Watermark override"
+msgstr "水印覆盖"
+
+msgid "Use Core watermark policy by default. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Core logo source for this run."
+msgstr "默认使用 Core 水印策略。文本水印覆盖不需要 logo 附件；图片/logo 水印覆盖会在本次运行中使用 Core 已配置的 logo 来源。"
+
+msgid "Watermark mode"
+msgstr "水印模式"
+
+msgid "No watermark"
+msgstr "无水印"
+
+msgid "Text watermark"
+msgstr "文本水印"
+
+msgid "Image/logo watermark"
+msgstr "图片/logo 水印"
+
+msgid "Position"
+msgstr "位置"
+
+msgid "Text"
+msgstr "文本"
+
+msgid "Font size"
+msgstr "字号"
+
+msgid "Text color"
+msgstr "文本颜色"
+
+msgid "Background"
+msgstr "背景"
+
+msgid "Opacity"
+msgstr "不透明度"
+
+msgid "Image scale"
+msgstr "图片缩放"
+
+msgid "Margin"
+msgstr "边距"
+
+msgid "Generate a short-lived Cloud derivative preview for one existing media-library image. This check does not submit a Core proposal or write media."
+msgstr "为一张现有媒体库图片生成短期 Cloud 衍生预览。此检查不会提交 Core 提案，也不会写入媒体。"
+
+msgid "Generate preview"
+msgstr "生成预览"
+
+msgid "Selected image URL"
+msgstr "已选图片 URL"
+
+msgid "Optional reviewed attachment description"
+msgstr "可选的已审阅附件描述"
+
+msgid "Apply watermark"
+msgstr "应用水印"
 
 msgid "Content context"
 msgstr "内容上下文"

@@ -205,6 +205,11 @@ Adapter's plan-to-proposal bridge, then calls Adapter's unified
 approval and preflight, then executes the allowlisted WordPress ability writes
 when policy permits. Toolbox does not import media, mutate SEO/meta fields,
 approve, execute, or set the featured image directly.
+The selected-block toolbar also exposes a compact image-icon paragraph image
+suggestion button. That entry uses the selected paragraph or block as the
+primary context and defaults to a media-import plan for later placement, while
+the sidebar image-source entry remains the article-level featured-image
+recommendation path.
 
 The admin **Content Support** tab mirrors that fixed-flow posture. Its default
 AI Draft Support group runs lightweight title/summary, outline, and

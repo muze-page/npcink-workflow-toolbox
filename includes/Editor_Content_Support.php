@@ -15,18 +15,21 @@ final class Editor_Content_Support {
 			return;
 		}
 
+		$style_version  = $this->asset_version( 'assets/editor-content-support.css' );
+		$script_version = $this->asset_version( 'assets/editor-content-support.js' );
+
 		wp_enqueue_style(
 			'npcink-toolbox-editor-content-support',
 			NPCINK_TOOLBOX_URL . 'assets/editor-content-support.css',
 			array(),
-			NPCINK_TOOLBOX_VERSION
+			$style_version
 		);
 
 		wp_enqueue_script(
 			'npcink-toolbox-editor-content-support',
 			NPCINK_TOOLBOX_URL . 'assets/editor-content-support.js',
-			array( 'wp-api-fetch', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-i18n', 'wp-plugins' ),
-			NPCINK_TOOLBOX_VERSION,
+			array( 'wp-api-fetch', 'wp-block-editor', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-hooks', 'wp-i18n', 'wp-plugins' ),
+			$script_version,
 			true
 		);
 		wp_set_script_translations(
@@ -47,5 +50,11 @@ final class Editor_Content_Support {
 				'coreAdminUrl'   => esc_url_raw( admin_url( 'admin.php?page=npcink-governance-core' ) ),
 			)
 		);
+	}
+
+	private function asset_version( string $relative_path ): string {
+		$path     = NPCINK_TOOLBOX_DIR . ltrim( $relative_path, '/' );
+		$modified = file_exists( $path ) ? filemtime( $path ) : false;
+		return NPCINK_TOOLBOX_VERSION . ( $modified ? '-' . (string) $modified : '' );
 	}
 }

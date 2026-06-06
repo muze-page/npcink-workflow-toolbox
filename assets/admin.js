@@ -156,7 +156,7 @@
 			return;
 		}
 		if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-			const text = String(value).trim();
+			const text = normalizeRuntimeErrorText(String(value).trim());
 			if (text && text !== 'Array') {
 				messages.push(text);
 			}
@@ -189,6 +189,15 @@
 				collectErrorText(value.data[key], messages, seen);
 			});
 		}
+	}
+
+	function normalizeRuntimeErrorText(text) {
+		const profileTextInputMatch = text.match(/^profile '([^']+)' expects 'text', received ''$/);
+		if (profileTextInputMatch) {
+			return t('Cloud runtime profile expects text input but received an empty value. Check the Cloud route/profile input mapping.') + ' (' + profileTextInputMatch[1] + ')';
+		}
+
+		return text;
 	}
 
 	function formatErrorMessage(error, fallback) {

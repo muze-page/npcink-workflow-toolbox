@@ -312,6 +312,10 @@ rerank models. The modal renders image candidates with previews, source links,
 attribution, provider metadata, license-review state, and preserved Unsplash
 download tracking when present. It does not upload media, set featured images,
 or create a write proposal directly.
+The selected-block toolbar exposes the same modal as an image-icon paragraph
+image suggestion shortcut. In that mode the selected paragraph or block is the
+primary image context and the default reviewed action is media import only; the
+sidebar image-source entry stays the article-level featured-image path.
 
 Cloud Checks use compact tabs for Cloud-managed search, image-source,
 preview-only media derivative, and Site Knowledge checks. Each panel opens
