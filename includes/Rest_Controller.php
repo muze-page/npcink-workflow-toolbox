@@ -65,6 +65,9 @@ final class Rest_Controller {
 	}
 
 	public function status(): WP_REST_Response {
+		$cloud_runtime = $this->settings->cloud_runtime_status();
+		$cloud_ready   = (bool) $cloud_runtime['available'];
+
 		return rest_ensure_response(
 			array(
 				'image_provider'           => 'cloud_image_sources',
@@ -74,14 +77,20 @@ final class Rest_Controller {
 				'cloud_image_sources_configured' => $this->settings->has_image_source_provider(),
 				'raw_responses_enabled'    => (bool) $this->settings->get( 'include_raw_responses' ),
 				'image_source_enabled'     => (bool) $this->settings->get( 'enable_image_source' ),
-				'vector_search_enabled'    => false,
-				'web_search_enabled'       => true,
+				'image_source_available'   => $cloud_ready && (bool) $this->settings->get( 'enable_image_source' ),
+				'vector_search_registered' => true,
+				'vector_search_enabled'    => $cloud_ready,
+				'web_search_registered'    => true,
+				'web_search_enabled'       => $cloud_ready,
 				'image_source_owner'       => 'cloud_runtime',
 				'vector_owner'             => 'cloud_runtime',
+				'cloud_runtime'            => $cloud_runtime,
 				'free_gpt55'               => array(
 					'entry_surface'  => 'toolbox_content_support',
 					'hosted_profile' => 'text.free-gpt55',
 					'model_id'       => 'gpt-5.5',
+					'registered'     => true,
+					'available'      => $cloud_ready,
 					'posture'        => 'suggestion_only_core_approval_required',
 				),
 				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',

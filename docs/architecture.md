@@ -194,6 +194,12 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 
+`/status` reports Cloud-backed surfaces as registered capabilities plus current
+availability. `web_search_registered`, `vector_search_registered`,
+`cloud_runtime.available`, and `free_gpt55.available` distinguish an installed
+Toolbox UI contract from a connected Cloud Addon or host runtime that can
+actually execute the request.
+
 `/knowledge-search` remains as a compatibility alias for the first local MVP.
 New clients should use `/vector-search`.
 

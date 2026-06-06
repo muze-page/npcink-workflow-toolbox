@@ -74,6 +74,13 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 
+The status route distinguishes registered Toolbox surfaces from currently
+available Cloud execution. Cloud-backed actions report `registered`,
+`cloud_required`, `available`, and `unavailable_reason` fields so standalone
+Toolbox installs do not imply that Cloud-managed search, image-source, Site
+Knowledge, or hosted GPT actions can run without a connected Cloud Addon or
+host-provided runtime filter.
+
 Toolbox admin result panels can render governed `operator_feedback` payloads
 from Adapter/Core handoff failures. The feedback is for operator revision only;
 Toolbox may submit one Core media optimization proposal from the Adapter media

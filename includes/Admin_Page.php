@@ -301,10 +301,16 @@ final class Admin_Page {
 
 		$settings        = $this->settings->get_all();
 		$content_context = $this->settings->get_content_context();
+		$cloud_ready     = $this->settings->cloud_runtime_available();
 		?>
 		<div class="wrap npcink-toolbox">
 			<h1><?php esc_html_e( 'Npcink Toolbox', 'npcink-toolbox' ); ?></h1>
 			<p class="npcink-toolbox__scope"><?php esc_html_e( 'Use free hosted GPT-5.5 for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval.', 'npcink-toolbox' ); ?></p>
+			<?php
+			if ( ! $cloud_ready ) {
+				$this->render_cloud_runtime_notice();
+			}
+			?>
 
 			<nav class="npcink-toolbox__tabs" data-toolbox-tabs aria-label="<?php esc_attr_e( 'Toolbox sections', 'npcink-toolbox' ); ?>">
 				<button type="button" class="npcink-toolbox__tab is-active" data-toolbox-tab-target="context" aria-selected="true"><?php esc_html_e( 'Content Context', 'npcink-toolbox' ); ?></button>
@@ -318,21 +324,47 @@ final class Admin_Page {
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="site-knowledge" aria-label="<?php esc_attr_e( 'Site knowledge', 'npcink-toolbox' ); ?>" hidden>
-				<?php $this->render_site_knowledge_panel(); ?>
+				<?php $this->render_site_knowledge_panel( $cloud_ready ); ?>
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="tools" aria-label="<?php esc_attr_e( 'Try Toolbox actions', 'npcink-toolbox' ); ?>" hidden>
-				<?php $this->render_tool_cards(); ?>
+				<?php $this->render_tool_cards( $cloud_ready ); ?>
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="cloud-checks" aria-label="<?php esc_attr_e( 'Cloud checks', 'npcink-toolbox' ); ?>" hidden>
-				<?php $this->render_cloud_checks_panel( $settings ); ?>
+				<?php $this->render_cloud_checks_panel( $settings, $cloud_ready ); ?>
 			</section>
 		</div>
 		<?php
 	}
 
-	private function render_site_knowledge_panel(): void {
+	private function render_cloud_runtime_notice(): void {
+		?>
+		<div class="npcink-toolbox__result-notice is-warning">
+			<strong><?php esc_html_e( 'Cloud runtime is not connected.', 'npcink-toolbox' ); ?></strong>
+			<span>
+				<?php esc_html_e( 'Cloud-managed search, image-source, Site Knowledge, and free GPT-5.5 actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available.', 'npcink-toolbox' ); ?>
+				<?php echo esc_html( $this->cloud_runtime_unavailable_reason_label() ); ?>
+			</span>
+		</div>
+		<?php
+	}
+
+	private function cloud_runtime_unavailable_reason_label(): string {
+		$reason = $this->settings->cloud_runtime_unavailable_reason();
+
+		if ( 'cloud_addon_not_installed' === $reason ) {
+			return __( 'Install and connect the Cloud Addon to enable hosted execution.', 'npcink-toolbox' );
+		}
+
+		if ( 'cloud_addon_not_connected' === $reason ) {
+			return __( 'Save and verify Cloud Addon credentials to enable hosted execution.', 'npcink-toolbox' );
+		}
+
+		return __( 'Check Cloud Addon transport before running hosted execution.', 'npcink-toolbox' );
+	}
+
+	private function render_site_knowledge_panel( bool $cloud_ready ): void {
 		?>
 		<div class="npcink-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Site Knowledge', 'npcink-toolbox' ); ?></h2>
@@ -340,18 +372,21 @@ final class Admin_Page {
 		</div>
 
 		<div class="npcink-toolbox__site-knowledge" data-toolbox-site-knowledge>
-			<section class="npcink-toolbox__card">
-				<div class="npcink-toolbox__section-heading">
-					<div>
-						<h3><?php esc_html_e( 'Index status', 'npcink-toolbox' ); ?></h3>
-						<p><?php esc_html_e( 'Read-only Cloud coverage summary for this WordPress site.', 'npcink-toolbox' ); ?></p>
+				<section class="npcink-toolbox__card">
+					<div class="npcink-toolbox__section-heading">
+						<div>
+							<h3><?php esc_html_e( 'Index status', 'npcink-toolbox' ); ?></h3>
+							<p><?php esc_html_e( 'Read-only Cloud coverage summary for this WordPress site.', 'npcink-toolbox' ); ?></p>
+						</div>
+						<button type="button" class="button" data-toolbox-site-knowledge-status <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Refresh status', 'npcink-toolbox' ); ?></button>
 					</div>
-					<button type="button" class="button" data-toolbox-site-knowledge-status><?php esc_html_e( 'Refresh status', 'npcink-toolbox' ); ?></button>
-				</div>
-				<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
-					<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
-				</div>
-			</section>
+					<?php if ( ! $cloud_ready ) : ?>
+						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before reading Site Knowledge coverage.', 'npcink-toolbox' ); ?></div>
+					<?php endif; ?>
+					<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
+						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
+					</div>
+				</section>
 
 			<section class="npcink-toolbox__card">
 				<h3><?php esc_html_e( 'Index actions', 'npcink-toolbox' ); ?></h3>
@@ -361,17 +396,21 @@ final class Admin_Page {
 					<input type="hidden" name="max_posts" value="20" />
 					<p class="description"><?php esc_html_e( 'Toolbox sends the latest public posts and pages. Approved comments are included only when Cloud comments indexing is enabled.', 'npcink-toolbox' ); ?></p>
 					<div class="npcink-toolbox__inline-actions">
-						<button
-							type="submit"
-							class="button button-primary"
-							data-toolbox-site-knowledge-sync-submit
-							data-start-label="<?php esc_attr_e( 'Start indexing', 'npcink-toolbox' ); ?>"
-							data-refresh-label="<?php esc_attr_e( 'Refresh index', 'npcink-toolbox' ); ?>"
-						><?php esc_html_e( 'Start indexing', 'npcink-toolbox' ); ?></button>
-					</div>
-					<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-				</form>
-			</section>
+							<button
+								type="submit"
+								class="button button-primary"
+								data-toolbox-site-knowledge-sync-submit
+								data-start-label="<?php esc_attr_e( 'Start indexing', 'npcink-toolbox' ); ?>"
+								data-refresh-label="<?php esc_attr_e( 'Refresh index', 'npcink-toolbox' ); ?>"
+								<?php echo disabled( ! $cloud_ready, true, false ); ?>
+							><?php esc_html_e( 'Start indexing', 'npcink-toolbox' ); ?></button>
+						</div>
+						<?php if ( ! $cloud_ready ) : ?>
+							<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Indexing is disabled until Cloud Addon transport is available.', 'npcink-toolbox' ); ?></div>
+						<?php endif; ?>
+						<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+					</form>
+				</section>
 
 			<section class="npcink-toolbox__card">
 				<div class="npcink-toolbox__section-heading">
@@ -405,11 +444,14 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_site_knowledge_search_check( bool $advanced = false ): void {
+	private function render_site_knowledge_search_check( bool $advanced = false, bool $cloud_ready = true ): void {
 		?>
 		<form class="npcink-toolbox__inline-form" data-toolbox-site-knowledge-search>
 			<h3><?php echo esc_html( $advanced ? __( 'Advanced search check', 'npcink-toolbox' ) : __( 'Search check', 'npcink-toolbox' ) ); ?></h3>
 			<p><?php esc_html_e( 'Run a read-only query against Cloud-managed site knowledge.', 'npcink-toolbox' ); ?></p>
+			<?php if ( ! $cloud_ready ) : ?>
+				<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running Site Knowledge checks.', 'npcink-toolbox' ); ?></div>
+			<?php endif; ?>
 			<label>
 				<span><?php esc_html_e( 'Query', 'npcink-toolbox' ); ?></span>
 				<input type="text" name="query" placeholder="<?php esc_attr_e( 'Search public site knowledge', 'npcink-toolbox' ); ?>" />
@@ -441,31 +483,36 @@ final class Admin_Page {
 						<input type="number" name="max_results" min="1" max="20" value="8" />
 					</label>
 				</div>
-			<?php else : ?>
-				<input type="hidden" name="intent" value="site_search" />
-				<input type="hidden" name="source_types" value="post,page" />
-				<input type="hidden" name="current_post_id" value="0" />
-				<input type="hidden" name="max_results" value="8" />
-			<?php endif; ?>
-			<button type="submit" class="button"><?php echo esc_html( $advanced ? __( 'Search index', 'npcink-toolbox' ) : __( 'Run check', 'npcink-toolbox' ) ); ?></button>
-			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-		</form>
-		<?php
+				<?php else : ?>
+					<input type="hidden" name="intent" value="site_search" />
+					<input type="hidden" name="source_types" value="post,page" />
+					<input type="hidden" name="current_post_id" value="0" />
+					<input type="hidden" name="max_results" value="8" />
+				<?php endif; ?>
+				<button type="submit" class="button" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php echo esc_html( $advanced ? __( 'Search index', 'npcink-toolbox' ) : __( 'Run check', 'npcink-toolbox' ) ); ?></button>
+				<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+			</form>
+			<?php
 	}
 
-	private function render_cloud_checks_panel( array $settings ): void {
+	private function render_cloud_checks_panel( array $settings, bool $cloud_ready ): void {
 		$image_ready = $this->settings->has_image_source_provider();
 		?>
 		<div class="npcink-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Cloud Checks', 'npcink-toolbox' ); ?></h2>
 			<p><?php esc_html_e( 'Run Cloud-managed search, image-source, and site-knowledge checks from Toolbox.', 'npcink-toolbox' ); ?></p>
 		</div>
+		<?php
+		if ( ! $cloud_ready ) {
+			$this->render_cloud_runtime_notice();
+		}
+		?>
 
 		<div class="npcink-toolbox__cloud-check-workspace" data-toolbox-cloud-checks>
 			<nav class="npcink-toolbox__cloud-check-tabs" aria-label="<?php esc_attr_e( 'Cloud check groups', 'npcink-toolbox' ); ?>">
 				<button type="button" class="npcink-toolbox__cloud-check-tab is-active" data-toolbox-cloud-check-target="search" aria-selected="true">
 					<span><?php esc_html_e( 'Search', 'npcink-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Cloud managed', 'npcink-toolbox' ); ?></small>
+					<small><?php echo esc_html( $cloud_ready ? __( 'Cloud managed', 'npcink-toolbox' ) : __( 'Cloud connection needed', 'npcink-toolbox' ) ); ?></small>
 				</button>
 				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="image" aria-selected="false">
 					<span><?php esc_html_e( 'Image', 'npcink-toolbox' ); ?></span>
@@ -473,108 +520,114 @@ final class Admin_Page {
 				</button>
 				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="site-knowledge" aria-selected="false">
 					<span><?php esc_html_e( 'Site Knowledge', 'npcink-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Cloud managed', 'npcink-toolbox' ); ?></small>
+					<small><?php echo esc_html( $cloud_ready ? __( 'Cloud managed', 'npcink-toolbox' ) : __( 'Cloud connection needed', 'npcink-toolbox' ) ); ?></small>
 				</button>
 			</nav>
 
 			<div class="npcink-toolbox__cloud-check-panels">
 				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="search">
 					<div class="npcink-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
-						<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Search checks', 'npcink-toolbox' ); ?>">
-							<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="search-test" aria-selected="true">
-								<span><?php esc_html_e( 'Search test', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Read-only query', 'npcink-toolbox' ); ?></small>
-							</button>
-							<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="search-diagnostic" aria-selected="false">
-								<span><?php esc_html_e( 'Diagnostic', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Workflow evidence', 'npcink-toolbox' ); ?></small>
-							</button>
-						</nav>
-						<div>
-							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-test">
-								<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
-									<h3><?php esc_html_e( 'Cloud search test', 'npcink-toolbox' ); ?></h3>
-									<label>
-										<span><?php esc_html_e( 'Query', 'npcink-toolbox' ); ?></span>
-										<input type="text" name="query" value="latest WordPress AI search trends" />
-									</label>
-									<div class="npcink-toolbox__split">
+							<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Search checks', 'npcink-toolbox' ); ?>">
+								<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="search-test" aria-selected="true">
+									<span><?php esc_html_e( 'Search test', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Read-only query', 'npcink-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="search-diagnostic" aria-selected="false">
+									<span><?php esc_html_e( 'Diagnostic', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Workflow evidence', 'npcink-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-test">
+									<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
+										<h3><?php esc_html_e( 'Cloud search test', 'npcink-toolbox' ); ?></h3>
+										<?php if ( ! $cloud_ready ) : ?>
+											<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running Cloud search checks.', 'npcink-toolbox' ); ?></div>
+										<?php endif; ?>
 										<label>
-											<span><?php esc_html_e( 'Intent', 'npcink-toolbox' ); ?></span>
-											<select name="intent">
-												<option value="news"><?php esc_html_e( 'News', 'npcink-toolbox' ); ?></option>
-												<option value="fact_check"><?php esc_html_e( 'Fact check', 'npcink-toolbox' ); ?></option>
-												<option value="writing_context"><?php esc_html_e( 'Writing context', 'npcink-toolbox' ); ?></option>
-												<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'npcink-toolbox' ); ?></option>
-												<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'npcink-toolbox' ); ?></option>
-												<option value="external_links"><?php esc_html_e( 'External links', 'npcink-toolbox' ); ?></option>
-											</select>
+											<span><?php esc_html_e( 'Query', 'npcink-toolbox' ); ?></span>
+											<input type="text" name="query" value="latest WordPress AI search trends" />
 										</label>
+										<div class="npcink-toolbox__split">
+											<label>
+												<span><?php esc_html_e( 'Intent', 'npcink-toolbox' ); ?></span>
+												<select name="intent">
+													<option value="news"><?php esc_html_e( 'News', 'npcink-toolbox' ); ?></option>
+													<option value="fact_check"><?php esc_html_e( 'Fact check', 'npcink-toolbox' ); ?></option>
+													<option value="writing_context"><?php esc_html_e( 'Writing context', 'npcink-toolbox' ); ?></option>
+													<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'npcink-toolbox' ); ?></option>
+													<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'npcink-toolbox' ); ?></option>
+													<option value="external_links"><?php esc_html_e( 'External links', 'npcink-toolbox' ); ?></option>
+												</select>
+											</label>
+											<label>
+												<span><?php esc_html_e( 'Max results', 'npcink-toolbox' ); ?></span>
+												<input type="number" name="max_results" min="1" max="5" value="3" />
+											</label>
+										</div>
+										<div class="npcink-toolbox__split">
+											<label>
+												<span><?php esc_html_e( 'Recency days', 'npcink-toolbox' ); ?></span>
+												<input type="number" name="recency_days" min="0" max="30" value="7" />
+											</label>
+										</div>
+										<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Run search test', 'npcink-toolbox' ); ?></button>
+										<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+									</form>
+								</div>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-diagnostic" hidden>
+									<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="web-search/diagnostics">
+										<h3><?php esc_html_e( 'Workflow diagnostic', 'npcink-toolbox' ); ?></h3>
+										<p><?php esc_html_e( 'Run a Toolbox content workflow and verify whether it attached Cloud web search evidence.', 'npcink-toolbox' ); ?></p>
+										<?php if ( ! $cloud_ready ) : ?>
+											<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running Cloud workflow diagnostics.', 'npcink-toolbox' ); ?></div>
+										<?php endif; ?>
+										<div class="npcink-toolbox__split">
+											<label>
+												<span><?php esc_html_e( 'Scenario', 'npcink-toolbox' ); ?></span>
+												<select name="scenario">
+													<option value="article_assistant"><?php esc_html_e( 'Article Assistant', 'npcink-toolbox' ); ?></option>
+													<option value="discoverability"><?php esc_html_e( 'Discoverability', 'npcink-toolbox' ); ?></option>
+													<option value="publish_preflight"><?php esc_html_e( 'Publish preflight', 'npcink-toolbox' ); ?></option>
+												</select>
+											</label>
+											<label>
+												<span><?php esc_html_e( 'Topic', 'npcink-toolbox' ); ?></span>
+												<input type="text" name="topic" value="latest WordPress AI search trends" />
+											</label>
+										</div>
 										<label>
-											<span><?php esc_html_e( 'Max results', 'npcink-toolbox' ); ?></span>
-											<input type="number" name="max_results" min="1" max="5" value="3" />
+											<span><?php esc_html_e( 'Working title', 'npcink-toolbox' ); ?></span>
+											<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'npcink-toolbox' ); ?>" />
 										</label>
-									</div>
-									<div class="npcink-toolbox__split">
-										<label>
-											<span><?php esc_html_e( 'Recency days', 'npcink-toolbox' ); ?></span>
-											<input type="number" name="recency_days" min="0" max="30" value="7" />
-										</label>
-									</div>
-									<button type="submit" class="button button-primary"><?php esc_html_e( 'Run search test', 'npcink-toolbox' ); ?></button>
-									<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-								</form>
-							</div>
-							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="search-diagnostic" hidden>
-								<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="web-search/diagnostics">
-									<h3><?php esc_html_e( 'Workflow diagnostic', 'npcink-toolbox' ); ?></h3>
-									<p><?php esc_html_e( 'Run a Toolbox content workflow and verify whether it attached Cloud web search evidence.', 'npcink-toolbox' ); ?></p>
-									<div class="npcink-toolbox__split">
-										<label>
-											<span><?php esc_html_e( 'Scenario', 'npcink-toolbox' ); ?></span>
-											<select name="scenario">
-												<option value="article_assistant"><?php esc_html_e( 'Article Assistant', 'npcink-toolbox' ); ?></option>
-												<option value="discoverability"><?php esc_html_e( 'Discoverability', 'npcink-toolbox' ); ?></option>
-												<option value="publish_preflight"><?php esc_html_e( 'Publish preflight', 'npcink-toolbox' ); ?></option>
-											</select>
-										</label>
-										<label>
-											<span><?php esc_html_e( 'Topic', 'npcink-toolbox' ); ?></span>
-											<input type="text" name="topic" value="latest WordPress AI search trends" />
-										</label>
-									</div>
-									<label>
-										<span><?php esc_html_e( 'Working title', 'npcink-toolbox' ); ?></span>
-										<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'npcink-toolbox' ); ?>" />
-									</label>
-									<button type="submit" class="button"><?php esc_html_e( 'Run workflow diagnostic', 'npcink-toolbox' ); ?></button>
-									<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-								</form>
+										<button type="submit" class="button" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Run workflow diagnostic', 'npcink-toolbox' ); ?></button>
+										<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+									</form>
+								</div>
 							</div>
 						</div>
-					</div>
 				</section>
 
 				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="image" hidden>
 					<div class="npcink-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
-						<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Image checks', 'npcink-toolbox' ); ?>">
-							<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="image-smoke" aria-selected="true">
-								<span><?php esc_html_e( 'Smoke test', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Candidates', 'npcink-toolbox' ); ?></small>
-							</button>
-							<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-derivative-preview" aria-selected="false">
-								<span><?php esc_html_e( 'Existing image preview', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Derivative', 'npcink-toolbox' ); ?></small>
-							</button>
-							<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-handoff" aria-selected="false">
-								<span><?php esc_html_e( 'Handoff', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Core review', 'npcink-toolbox' ); ?></small>
-							</button>
-						</nav>
-						<div>
-							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-smoke">
-								<?php $this->render_image_source_candidates_smoke_form(); ?>
-							</div>
+							<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Image checks', 'npcink-toolbox' ); ?>">
+								<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="image-smoke" aria-selected="true">
+									<span><?php esc_html_e( 'Smoke test', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Candidates', 'npcink-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-derivative-preview" aria-selected="false">
+									<span><?php esc_html_e( 'Existing image preview', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Derivative', 'npcink-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="image-handoff" aria-selected="false">
+									<span><?php esc_html_e( 'Handoff', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Core review', 'npcink-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-smoke">
+									<?php $this->render_image_source_candidates_smoke_form( $cloud_ready ); ?>
+								</div>
 							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-derivative-preview" hidden>
 								<?php $this->render_image_derivative_preview_check(); ?>
 							</div>
@@ -591,36 +644,39 @@ final class Admin_Page {
 
 				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="site-knowledge" hidden>
 					<div class="npcink-toolbox__cloud-check-group-workspace" data-toolbox-cloud-check-groups>
-						<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Site Knowledge checks', 'npcink-toolbox' ); ?>">
-							<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="site-knowledge-status" aria-selected="true">
-								<span><?php esc_html_e( 'Status', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Coverage', 'npcink-toolbox' ); ?></small>
-							</button>
-							<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="site-knowledge-search" aria-selected="false">
-								<span><?php esc_html_e( 'Search check', 'npcink-toolbox' ); ?></span>
-								<small><?php esc_html_e( 'Read-only query', 'npcink-toolbox' ); ?></small>
-							</button>
-						</nav>
-						<div data-toolbox-site-knowledge>
-							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-status">
-								<div class="npcink-toolbox__section-heading">
-									<div>
-										<h3><?php esc_html_e( 'Status', 'npcink-toolbox' ); ?></h3>
-										<p><?php esc_html_e( 'Cloud coverage summary for this WordPress site.', 'npcink-toolbox' ); ?></p>
+							<nav class="npcink-toolbox__cloud-check-group-list" aria-label="<?php esc_attr_e( 'Site Knowledge checks', 'npcink-toolbox' ); ?>">
+								<button type="button" class="npcink-toolbox__cloud-check-group-button is-active" data-toolbox-cloud-check-group-target="site-knowledge-status" aria-selected="true">
+									<span><?php esc_html_e( 'Status', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Coverage', 'npcink-toolbox' ); ?></small>
+								</button>
+								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="site-knowledge-search" aria-selected="false">
+									<span><?php esc_html_e( 'Search check', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Read-only query', 'npcink-toolbox' ); ?></small>
+								</button>
+							</nav>
+							<div data-toolbox-site-knowledge>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-status">
+									<div class="npcink-toolbox__section-heading">
+										<div>
+											<h3><?php esc_html_e( 'Status', 'npcink-toolbox' ); ?></h3>
+											<p><?php esc_html_e( 'Cloud coverage summary for this WordPress site.', 'npcink-toolbox' ); ?></p>
+										</div>
+										<div class="npcink-toolbox__inline-actions">
+											<button type="button" class="button" data-toolbox-site-knowledge-status <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Refresh', 'npcink-toolbox' ); ?></button>
+											<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=site-knowledge' ) ); ?>"><?php esc_html_e( 'Manage index', 'npcink-toolbox' ); ?></a>
+										</div>
 									</div>
-									<div class="npcink-toolbox__inline-actions">
-										<button type="button" class="button" data-toolbox-site-knowledge-status><?php esc_html_e( 'Refresh', 'npcink-toolbox' ); ?></button>
-										<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=site-knowledge' ) ); ?>"><?php esc_html_e( 'Manage index', 'npcink-toolbox' ); ?></a>
+									<?php if ( ! $cloud_ready ) : ?>
+										<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before loading Site Knowledge status.', 'npcink-toolbox' ); ?></div>
+									<?php endif; ?>
+									<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
+										<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
 									</div>
 								</div>
-								<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
-									<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-search" hidden>
+									<?php $this->render_site_knowledge_search_check( false, $cloud_ready ); ?>
 								</div>
 							</div>
-							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-search" hidden>
-								<?php $this->render_site_knowledge_search_check(); ?>
-							</div>
-						</div>
 					</div>
 				</section>
 			</div>
@@ -927,7 +983,7 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_tool_cards(): void {
+	private function render_tool_cards( bool $cloud_ready ): void {
 		$tools = array(
 			array(
 				'group'       => __( 'Free GPT-5.5', 'npcink-toolbox' ),
@@ -1107,7 +1163,8 @@ final class Admin_Page {
 							(string) $tool['intent'],
 							(string) $tool['button'],
 							'free_gpt55' === (string) ( $tool['powered_by'] ?? '' ),
-							0 === $index
+							0 === $index,
+							$cloud_ready
 						);
 						continue;
 					}
@@ -1169,23 +1226,26 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_content_support_flow_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $free_gpt55 = false, bool $active = false ): void {
+	private function render_content_support_flow_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $free_gpt55 = false, bool $active = false, bool $cloud_ready = true ): void {
 		?>
 		<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
-			<?php if ( $free_gpt55 ) : ?>
-				<div class="npcink-toolbox__example is-free-gpt55">
-					<strong><?php esc_html_e( 'Free GPT-5.5 hosted route', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Toolbox sends one suggestion request through the Cloud hosted runtime when the site is connected. The result stays review-only until Core approval.', 'npcink-toolbox' ); ?></span>
-				</div>
-				<?php if ( in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ) : ?>
-					<div class="npcink-toolbox__example">
-						<strong><?php esc_html_e( 'Automatic public snapshot', 'npcink-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'This tool can run without draft text. Toolbox sends a bounded sample of public site metadata or media-library metadata for reviewable suggestions only.', 'npcink-toolbox' ); ?></span>
+				<?php if ( $free_gpt55 ) : ?>
+					<div class="npcink-toolbox__example is-free-gpt55">
+						<strong><?php esc_html_e( 'Free GPT-5.5 hosted route', 'npcink-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Toolbox sends one suggestion request through the Cloud hosted runtime when the site is connected. The result stays review-only until Core approval.', 'npcink-toolbox' ); ?></span>
 					</div>
+					<?php if ( in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ) : ?>
+						<div class="npcink-toolbox__example">
+							<strong><?php esc_html_e( 'Automatic public snapshot', 'npcink-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'This tool can run without draft text. Toolbox sends a bounded sample of public site metadata or media-library metadata for reviewable suggestions only.', 'npcink-toolbox' ); ?></span>
+						</div>
+					<?php endif; ?>
+					<?php if ( ! $cloud_ready ) : ?>
+						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running free GPT-5.5 hosted support.', 'npcink-toolbox' ); ?></div>
+					<?php endif; ?>
 				<?php endif; ?>
-			<?php endif; ?>
 			<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
 			<input type="hidden" name="post_type" value="post" />
 			<input type="hidden" name="post_status" value="draft" />
@@ -1209,17 +1269,20 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Draft text or notes', 'npcink-toolbox' ); ?></span>
 				<textarea name="content" rows="5" placeholder="<?php esc_attr_e( 'Optional draft body, notes, or source outline', 'npcink-toolbox' ); ?>"></textarea>
 			</label>
-			<button type="submit" class="button button-primary"><?php echo esc_html( $button ); ?></button>
-			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-		</form>
+				<button type="submit" class="button button-primary" <?php echo disabled( $free_gpt55 && ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
+				<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+			</form>
 		<?php
 	}
 
-	private function render_image_source_candidates_smoke_form(): void {
+	private function render_image_source_candidates_smoke_form( bool $cloud_ready = true ): void {
 		?>
 		<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="image-candidates">
 			<h3><?php esc_html_e( 'Image source smoke test', 'npcink-toolbox' ); ?></h3>
 			<p><?php esc_html_e( 'Test Cloud-managed Unsplash/Pixabay/Pexels image-source candidates and preserve attribution metadata.', 'npcink-toolbox' ); ?></p>
+			<?php if ( ! $cloud_ready ) : ?>
+				<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before testing Cloud image-source candidates.', 'npcink-toolbox' ); ?></div>
+			<?php endif; ?>
 			<div class="npcink-toolbox__example">
 				<strong><?php esc_html_e( 'Cloud smoke test', 'npcink-toolbox' ); ?></strong>
 				<span><?php esc_html_e( 'A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, and license review status. This does not import media or write WordPress.', 'npcink-toolbox' ); ?></span>
@@ -1258,7 +1321,7 @@ final class Admin_Page {
 					<input type="text" name="color" placeholder="<?php esc_attr_e( 'Optional Unsplash color filter', 'npcink-toolbox' ); ?>" />
 				</label>
 			</div>
-			<button type="submit" class="button button-primary"><?php esc_html_e( 'Test Cloud image source', 'npcink-toolbox' ); ?></button>
+			<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Test Cloud image source', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

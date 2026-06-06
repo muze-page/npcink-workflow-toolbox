@@ -31,6 +31,10 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public function register_hooks(): void {
+		if ( ! self::cloud_runtime_available() ) {
+			return;
+		}
+
 		add_action( 'transition_post_status', array( $this, 'handle_post_status_transition' ), 10, 3 );
 		add_action( 'save_post', array( $this, 'handle_post_saved' ), 10, 3 );
 		add_action( 'trashed_post', array( $this, 'handle_post_removed' ) );
@@ -53,6 +57,26 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public static function health_snapshot(): array {
+		if ( ! self::cloud_runtime_available() ) {
+			return array(
+				'status'                  => 'disabled',
+				'queue_count'             => 0,
+				'attempts'                => 0,
+				'max_attempts'            => self::MAX_RETRY_ATTEMPTS,
+				'batch_size'              => self::BATCH_SIZE,
+				'debounce_seconds'        => self::DEBOUNCE_SECONDS,
+				'max_queue_post_ids'      => self::MAX_QUEUE_POST_IDS,
+				'wp_cron_disabled'        => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
+				'server_cron_recommended' => false,
+				'next_queue_run_at'       => '',
+				'next_reconcile_at'       => '',
+				'queued_updated_at'       => '',
+				'cron_command'            => '',
+				'wp_cli_command'          => '',
+				'message'                 => __( 'Site Knowledge auto-sync is disabled until Cloud Addon transport is available.', 'npcink-toolbox' ),
+			);
+		}
+
 		$value    = get_option( self::QUEUE_OPTION, array() );
 		$post_ids = is_array( $value ) ? ( $value['post_ids'] ?? $value ) : array();
 		$post_ids = array_values(
@@ -263,6 +287,10 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	private function enqueue_post_ids( array $post_ids ): void {
+		if ( ! self::cloud_runtime_available() ) {
+			return;
+		}
+
 		if ( ! apply_filters( 'npcink_toolbox_site_knowledge_auto_sync_enabled', true, $post_ids ) ) {
 			return;
 		}
@@ -385,5 +413,18 @@ final class Site_Knowledge_Auto_Sync {
 
 	private function is_public_comment_status( $status ): bool {
 		return in_array( (string) $status, array( '1', 'approve', 'approved' ), true );
+	}
+
+	private static function cloud_runtime_available(): bool {
+		if ( has_filter( 'npcink_toolbox_site_knowledge_cloud_request' ) ) {
+			return true;
+		}
+
+		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return false;
+		}
+
+		$client = magick_ai_cloud_addon_runtime_client();
+		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
 	}
 }

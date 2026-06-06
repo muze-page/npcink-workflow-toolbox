@@ -242,6 +242,11 @@ The verification surface may identify whether a Cloud-backed action is
 reachable from Toolbox, but it should keep provider ownership detail in Cloud
 or in documentation.
 
+When Cloud Addon transport is missing or unverified, Cloud Checks should show a
+blocked state and disable Cloud-only submits instead of waiting for a failed
+runtime request. Content Context and governed handoff planning may remain
+available because they are local suggestion/planning surfaces.
+
 Cloud web search checks must use the Cloud-managed auto route. Toolbox must not
 expose provider selection, Jina Reader toggles, provider routing diagnostics,
 quota, billing, request logs, entitlement, or key verification controls here.

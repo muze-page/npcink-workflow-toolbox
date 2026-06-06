@@ -182,13 +182,55 @@ final class Settings {
 	}
 
 	public function configured_image_source_providers(): array {
-		return function_exists( 'magick_ai_cloud_addon_is_configured' ) && magick_ai_cloud_addon_is_configured()
+		return $this->cloud_runtime_available()
 			? array( 'cloud_image_sources' )
 			: array();
 	}
 
 	public function has_image_source_provider(): bool {
 		return array() !== $this->configured_image_source_providers();
+	}
+
+	public function cloud_runtime_available(): bool {
+		if ( $this->has_cloud_request_filter() ) {
+			return true;
+		}
+
+		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return false;
+		}
+
+		$client = magick_ai_cloud_addon_runtime_client();
+		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
+	}
+
+	public function cloud_runtime_unavailable_reason(): string {
+		if ( $this->cloud_runtime_available() ) {
+			return '';
+		}
+
+		if ( ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+			return 'cloud_addon_not_installed';
+		}
+
+		if ( function_exists( 'magick_ai_cloud_addon_is_configured' ) && ! magick_ai_cloud_addon_is_configured() ) {
+			return 'cloud_addon_not_connected';
+		}
+
+		return 'cloud_runtime_unavailable';
+	}
+
+	public function cloud_runtime_status(): array {
+		$available = $this->cloud_runtime_available();
+
+		return array(
+			'registered'           => true,
+			'cloud_required'       => true,
+			'available'            => $available,
+			'unavailable_reason'   => $available ? '' : $this->cloud_runtime_unavailable_reason(),
+			'connection_owner'     => 'cloud_addon',
+			'provider_detail_owner' => 'cloud_service',
+		);
 	}
 
 	public function sanitize( $input ): array {
@@ -200,6 +242,21 @@ final class Settings {
 		);
 
 		return $sanitized;
+	}
+
+	private function has_cloud_request_filter(): bool {
+		foreach ( array(
+			'npcink_toolbox_web_search_cloud_request',
+			'npcink_toolbox_free_gpt55_cloud_request',
+			'npcink_toolbox_site_knowledge_cloud_request',
+			'npcink_toolbox_image_source_cloud_request',
+		) as $filter ) {
+			if ( has_filter( $filter ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function sanitize_content_context( $input ): array {
