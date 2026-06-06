@@ -118,11 +118,11 @@
 	line-height: 1.4;
 }
 
-.npcink-toolbox__example.is-free-gpt55 {
+.npcink-toolbox__example.is-ai {
 	border-left-color: #008a20;
 }
 
-.npcink-toolbox__example.is-free-gpt55 strong {
+.npcink-toolbox__example.is-ai strong {
 	color: #008a20;
 }
 

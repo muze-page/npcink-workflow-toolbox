@@ -200,7 +200,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/image-candidates`
 - `POST /wp-json/npcink-toolbox/v1/vector-search`
 - `POST /wp-json/npcink-toolbox/v1/knowledge-search`
-- `POST /wp-json/npcink-toolbox/v1/free-gpt55/content-support`
+- `POST /wp-json/npcink-toolbox/v1/ai/content-support`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
@@ -209,7 +209,7 @@ Current routes require `manage_options`:
 
 `/status` reports Cloud-backed surfaces as registered capabilities plus current
 availability. `web_search_registered`, `vector_search_registered`,
-`cloud_runtime.available`, and `free_gpt55.available` distinguish an installed
+`cloud_runtime.available`, and `hosted_ai.available` distinguish an installed
 Toolbox UI contract from a connected Cloud Addon or host runtime that can
 actually execute the request.
 

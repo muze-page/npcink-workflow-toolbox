@@ -310,7 +310,7 @@ final class Admin_Page {
 		?>
 		<div class="wrap npcink-toolbox">
 			<h1><?php esc_html_e( 'Npcink Toolbox', 'npcink-toolbox' ); ?></h1>
-			<p class="npcink-toolbox__scope"><?php esc_html_e( 'Use free hosted GPT-5.5 for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval.', 'npcink-toolbox' ); ?></p>
+			<p class="npcink-toolbox__scope"><?php esc_html_e( 'Use hosted AI for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval.', 'npcink-toolbox' ); ?></p>
 			<?php
 			if ( ! $cloud_ready ) {
 				$this->render_cloud_runtime_notice();
@@ -348,7 +348,7 @@ final class Admin_Page {
 		<div class="npcink-toolbox__result-notice is-warning">
 			<strong><?php esc_html_e( 'Cloud runtime is not connected.', 'npcink-toolbox' ); ?></strong>
 			<span>
-				<?php esc_html_e( 'Cloud-managed search, image-source, Site Knowledge, and free GPT-5.5 actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available.', 'npcink-toolbox' ); ?>
+				<?php esc_html_e( 'Cloud-managed search, image-source, Site Knowledge, and hosted AI actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available.', 'npcink-toolbox' ); ?>
 				<?php echo esc_html( $this->cloud_runtime_unavailable_reason_label() ); ?>
 			</span>
 		</div>
@@ -991,37 +991,37 @@ final class Admin_Page {
 	private function render_tool_cards( bool $cloud_ready ): void {
 		$tools = array(
 			array(
-				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-title-summary',
-				'endpoint'    => 'free-gpt55/content-support',
+				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
+				'id'          => 'ai-title-summary',
+				'endpoint'    => 'ai/content-support',
 				'title'       => __( 'Title and Summary Helper', 'npcink-toolbox' ),
 				'description' => __( 'Suggest reviewable titles, a short excerpt, and a direct answer summary from the supplied topic or draft.', 'npcink-toolbox' ),
 				'intent'      => 'title_summary',
 				'button'      => __( 'Suggest titles and summary', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
-				'powered_by'  => 'free_gpt55',
+				'powered_by'  => 'hosted_ai',
 			),
 			array(
-				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-outline',
-				'endpoint'    => 'free-gpt55/content-support',
+				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
+				'id'          => 'ai-outline',
+				'endpoint'    => 'ai/content-support',
 				'title'       => __( 'Outline Helper', 'npcink-toolbox' ),
 				'description' => __( 'Turn a topic, brief, or rough notes into a compact outline that an editor can expand manually.', 'npcink-toolbox' ),
 				'intent'      => 'article_outline',
 				'button'      => __( 'Build outline', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
-				'powered_by'  => 'free_gpt55',
+				'powered_by'  => 'hosted_ai',
 			),
 			array(
-				'group'       => __( 'Free GPT-5.5 Draft Support', 'npcink-toolbox' ),
-				'id'          => 'free-gpt55-polish',
-				'endpoint'    => 'free-gpt55/content-support',
+				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
+				'id'          => 'ai-polish',
+				'endpoint'    => 'ai/content-support',
 				'title'       => __( 'Polish Helper', 'npcink-toolbox' ),
 				'description' => __( 'Rewrite a short draft section for clarity and tone while keeping the original meaning reviewable.', 'npcink-toolbox' ),
 				'intent'      => 'polish_notes',
 				'button'      => __( 'Polish draft', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
-				'powered_by'  => 'free_gpt55',
+				'powered_by'  => 'hosted_ai',
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
@@ -1156,7 +1156,7 @@ final class Admin_Page {
 							(string) $tool['id'],
 							(string) $tool['intent'],
 							(string) $tool['button'],
-							'free_gpt55' === (string) ( $tool['powered_by'] ?? '' ),
+							'hosted_ai' === (string) ( $tool['powered_by'] ?? '' ),
 							0 === $index,
 							$cloud_ready
 						);
@@ -1220,18 +1220,18 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_content_support_flow_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $free_gpt55 = false, bool $active = false, bool $cloud_ready = true ): void {
+	private function render_content_support_flow_tool( string $endpoint, string $title, string $description, string $tool_id, string $intent, string $button, bool $hosted_ai = false, bool $active = false, bool $cloud_ready = true ): void {
 		?>
 		<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
-				<?php if ( $free_gpt55 ) : ?>
-					<div class="npcink-toolbox__example is-free-gpt55">
-						<strong><?php esc_html_e( 'Free GPT-5.5 hosted route', 'npcink-toolbox' ); ?></strong>
+				<?php if ( $hosted_ai ) : ?>
+					<div class="npcink-toolbox__example is-ai">
+						<strong><?php esc_html_e( 'Hosted AI route', 'npcink-toolbox' ); ?></strong>
 						<span><?php esc_html_e( 'Toolbox sends one lightweight draft-support request through the Cloud hosted runtime when the site is connected. The result is a reviewable suggestion, not a finished article.', 'npcink-toolbox' ); ?></span>
 					</div>
 					<?php if ( ! $cloud_ready ) : ?>
-						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running free GPT-5.5 hosted support.', 'npcink-toolbox' ); ?></div>
+						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running hosted AI support.', 'npcink-toolbox' ); ?></div>
 					<?php endif; ?>
 				<?php endif; ?>
 			<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
@@ -1257,7 +1257,7 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'Draft text or notes', 'npcink-toolbox' ); ?></span>
 				<textarea name="content" rows="5" placeholder="<?php esc_attr_e( 'Optional draft body, notes, or source outline', 'npcink-toolbox' ); ?>"></textarea>
 			</label>
-				<button type="submit" class="button button-primary" <?php echo disabled( $free_gpt55 && ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
+				<button type="submit" class="button button-primary" <?php echo disabled( $hosted_ai && ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
 				<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 			</form>
 		<?php

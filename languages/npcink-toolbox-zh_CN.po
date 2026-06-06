@@ -32,8 +32,8 @@ msgstr "正在运行..."
 msgid "Request failed."
 msgstr "请求失败。"
 
-msgid "Use free hosted GPT-5.5 for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval."
-msgstr "使用免费的托管 GPT-5.5 生成可审阅的内容支持建议，最终 WordPress 写入仍交由 Core 提案审批。"
+msgid "Use hosted AI for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval."
+msgstr "使用托管 AI 生成可审阅的内容支持建议，最终 WordPress 写入仍交由 Core 提案审批。"
 
 msgid "Toolbox sections"
 msgstr "工具箱分区"
@@ -65,8 +65,8 @@ msgstr "云端检查"
 msgid "Cloud runtime is not connected."
 msgstr "云端运行时尚未连接。"
 
-msgid "Cloud-managed search, image-source, Site Knowledge, and free GPT-5.5 actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available."
-msgstr "在安装并验证 Cloud Addon 之前，云端托管搜索、图片来源、站点知识和免费 GPT-5.5 操作不可用。内容上下文和治理交接规划仍可使用。"
+msgid "Cloud-managed search, image-source, Site Knowledge, and hosted AI actions stay unavailable until the Cloud Addon is installed and verified. Content Context and governed handoff planning remain available."
+msgstr "在安装并验证 Cloud Addon 之前，云端托管搜索、图片来源、站点知识和托管 AI 操作不可用。内容上下文和治理交接规划仍可使用。"
 
 msgid "Install and connect the Cloud Addon to enable hosted execution."
 msgstr "安装并连接 Cloud Addon 以启用托管执行。"

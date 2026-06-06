@@ -104,7 +104,7 @@ planning flows:
 - `/image-candidates`
 - `/vector-search`
 - `/knowledge-search`
-- `/free-gpt55/content-support`
+- `/ai/content-support`
 - `/flows/article-brief`
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
@@ -121,21 +121,17 @@ proposal handoffs, not executed by Toolbox.
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
 
-`/free-gpt55/content-support` sends one bounded suggestion request to Cloud
-Hosted Runtime with `profile_id=text.free-gpt55`. It returns review-only
-content-support suggestions and must not create proposals, approve proposals,
-publish content, or write WordPress data.
+`/ai/content-support` sends one bounded suggestion request to the Cloud hosted
+AI runtime. It returns review-only content-support suggestions and must not
+create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are title/summary suggestions, compact outline
 support, and short-draft polish. They must stay lightweight and must not be
 presented as one-click long-form article generation. Default draft-support
 results must include a small quality contract: expected output shape, operator
 review checklist, and reject-if rules for full-article output, unsupported
-claims, or write-like actions. Compatibility intents may still include article
-optimization, site checkup, media ALT suggestions, image/media ideation,
-publish preflight, discoverability, and next-action recommendations. Site-level
-intents may include bounded public site metadata or media-library metadata
-samples, but those samples are planning context only and do not authorize
-writes.
+claims, or write-like actions. Site-level and media-helper AI routes must be
+added as separate narrow surfaces; they must not be hidden compatibility modes
+inside the draft-support route.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may

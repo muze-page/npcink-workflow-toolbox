@@ -307,7 +307,7 @@ The first-version route matrix is exact:
 - `POST /image-candidates`
 - `POST /vector-search`
 - `POST /knowledge-search`
-- `POST /free-gpt55/content-support`
+- `POST /ai/content-support`
 - `POST /flows/article-brief`
 - `POST /flows/article-plan`
 - `POST /flows/image-candidate-adoption-plan`

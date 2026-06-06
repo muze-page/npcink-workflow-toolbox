@@ -17,7 +17,7 @@ The first version provides:
 
 - a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
-- a **Free GPT-5.5 Draft Support** entry group in Content Support for
+- an **AI Draft Support** entry group in Content Support for
   lightweight title/summary, outline, and polish suggestions rather than
   one-click long-form article generation;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
@@ -198,11 +198,11 @@ when policy permits. Toolbox does not import media, mutate SEO/meta fields,
 approve, execute, or set the featured image directly.
 
 The admin **Content Support** tab mirrors that fixed-flow posture. Its default
-Free GPT-5.5 Draft Support group runs lightweight title/summary, outline, and
-polish helpers through the Cloud hosted runtime profile `text.free-gpt55` when
-that route is available. These helpers are deliberately scoped to local draft
-support and must not be presented as one-click article generation. Each hosted
-result carries a small quality contract with an expected output shape, review
+AI Draft Support group runs lightweight title/summary, outline, and
+polish helpers through the Cloud hosted AI runtime when that route is
+available. These helpers are deliberately scoped to local draft support and
+must not be presented as one-click article generation. Each hosted result
+carries a small quality contract with an expected output shape, review
 checklist, and reject-if rules so operators can discard unsupported or
 full-article output quickly.
 Everyday Support remains available for the same bounded jobs:

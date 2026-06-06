@@ -1697,12 +1697,12 @@ final class Provider_Client {
 		);
 	}
 
-	public function run_free_gpt55_content_support( array $input ) {
+	public function run_hosted_ai_content_support( array $input ) {
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'discoverability' ) );
-		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'article_optimization', 'discoverability', 'site_checkup', 'publish_preflight', 'media_alt', 'image_candidates', 'smart_recommendations' ), true ) ) {
+		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes' ), true ) ) {
 			return new WP_Error(
-				'npcink_toolbox_invalid_free_gpt55_intent',
-				__( 'A supported free GPT-5.5 content-support intent is required.', 'npcink-toolbox' ),
+				'npcink_toolbox_invalid_hosted_ai_intent',
+				__( 'A supported hosted AI content-support intent is required.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1711,12 +1711,11 @@ final class Provider_Client {
 		$excerpt = sanitize_textarea_field( (string) ( $input['excerpt'] ?? '' ) );
 		$content = wp_trim_words( wp_strip_all_tags( (string) ( $input['content'] ?? '' ) ), 420, '' );
 		$post_id = absint( $input['post_id'] ?? 0 );
-		$quality_contract = $this->free_gpt55_quality_contract( $intent );
-		$site_level_intents = array( 'site_checkup', 'media_alt', 'smart_recommendations' );
-		if ( '' === trim( $title . $excerpt . $content ) && 0 === $post_id && ! in_array( $intent, $site_level_intents, true ) ) {
+		$quality_contract = $this->hosted_ai_quality_contract( $intent );
+		if ( '' === trim( $title . $excerpt . $content ) && 0 === $post_id ) {
 			return new WP_Error(
-				'npcink_toolbox_missing_free_gpt55_context',
-				__( 'A title, brief, draft text, or post ID is required for free GPT-5.5 content support.', 'npcink-toolbox' ),
+				'npcink_toolbox_missing_hosted_ai_context',
+				__( 'A title, brief, draft text, or post ID is required for hosted AI content support.', 'npcink-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1727,24 +1726,20 @@ final class Provider_Client {
 			'title'          => $title,
 			'excerpt'        => $excerpt,
 			'content'        => $content,
-			'post_context'   => $this->collect_free_gpt55_post_context( $post_id ),
-			'site_snapshot'  => in_array( $intent, array( 'site_checkup', 'smart_recommendations', 'article_optimization', 'discoverability', 'publish_preflight' ), true )
-				? $this->collect_free_gpt55_site_snapshot()
-				: array(),
-			'media_snapshot' => in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true )
-				? $this->collect_free_gpt55_media_alt_snapshot( 12 )
-				: array(),
+			'post_context'   => $this->collect_hosted_ai_post_context( $post_id ),
+			'site_snapshot'  => array(),
+			'media_snapshot' => array(),
 		);
-		$prompt  = $this->free_gpt55_content_support_prompt(
+		$prompt  = $this->hosted_ai_content_support_prompt(
 			$intent,
 			$source,
 			$context
 		);
 
 		$runtime_payload = array(
-			'ability_name'        => 'npcink-toolbox/free-gpt55-content-support',
-			'contract_version'    => 'free_gpt55_content_support.v1',
-			'profile_id'          => 'text.free-gpt55',
+			'ability_name'        => 'npcink-toolbox/ai-content-support',
+			'contract_version'    => 'hosted_ai_content_support.v1',
+			'profile_id'          => 'text.ai',
 			'execution_pattern'   => 'inline',
 			'input'               => array(
 				'messages' => array(
@@ -1759,9 +1754,7 @@ final class Provider_Client {
 				),
 				'params'   => array(
 					'temperature' => 0.2,
-					'max_tokens'  => in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes' ), true )
-						? 650
-						: ( in_array( $intent, array( 'site_checkup', 'media_alt', 'smart_recommendations' ), true ) ? 1200 : 900 ),
+					'max_tokens'  => 650,
 				),
 				'quality_contract' => $quality_contract,
 			),
@@ -1775,40 +1768,40 @@ final class Provider_Client {
 			),
 		);
 
-		$runtime_payload = apply_filters( 'npcink_toolbox_free_gpt55_runtime_payload', $runtime_payload, $input );
+		$runtime_payload = apply_filters( 'npcink_toolbox_hosted_ai_runtime_payload', $runtime_payload, $input );
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
-				'npcink_toolbox_invalid_free_gpt55_runtime_payload',
-				__( 'The free GPT-5.5 runtime payload was not valid.', 'npcink-toolbox' ),
+				'npcink_toolbox_invalid_hosted_ai_runtime_payload',
+				__( 'The hosted AI runtime payload was not valid.', 'npcink-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		$handled = apply_filters( 'npcink_toolbox_free_gpt55_cloud_request', null, $runtime_payload, $input );
+		$handled = apply_filters( 'npcink_toolbox_hosted_ai_cloud_request', null, $runtime_payload, $input );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
 		if ( is_array( $handled ) ) {
-			return $this->normalize_free_gpt55_content_support_response( $handled, $runtime_payload, $intent );
+			return $this->normalize_hosted_ai_content_support_response( $handled, $runtime_payload, $intent );
 		}
 
 		$client = $this->cloud_runtime_client();
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
-				'npcink_toolbox_free_gpt55_cloud_unavailable',
-				__( 'Connect Npcink Cloud before using free GPT-5.5 tools.', 'npcink-toolbox' ),
+				'npcink_toolbox_hosted_ai_cloud_unavailable',
+				__( 'Connect Npcink Cloud before using hosted AI tools.', 'npcink-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'free_gpt55' );
-		$idempotency_key = $this->trace_id( 'free_gpt55_content_support' );
+		$trace_id        = $this->trace_id( 'hosted_ai' );
+		$idempotency_key = $this->trace_id( 'hosted_ai_content_support' );
 		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
-		return $this->normalize_free_gpt55_content_support_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent );
+		return $this->normalize_hosted_ai_content_support_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent );
 	}
 
 	public function build_ai_article_writing_pack( array $input ) {
@@ -2400,7 +2393,7 @@ final class Provider_Client {
 		return array();
 	}
 
-	private function normalize_free_gpt55_content_support_response( array $response, array $runtime_payload, string $intent ): array {
+	private function normalize_hosted_ai_content_support_response( array $response, array $runtime_payload, string $intent ): array {
 		$result      = $this->extract_cloud_runtime_result( $response );
 		$output_text = sanitize_textarea_field(
 			(string) (
@@ -2410,16 +2403,16 @@ final class Provider_Client {
 				?? ( $result['message']['content'] ?? '' )
 			)
 		);
-		$quality_contract = $this->free_gpt55_quality_contract( $intent );
+		$quality_contract = $this->hosted_ai_quality_contract( $intent );
 
 		return $this->with_output_contract(
 			array(
 				'provider'                   => 'magick_ai_cloud',
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/free-gpt55-content-support' ) ),
-			'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'free_gpt55_content_support.v1' ) ),
-				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.free-gpt55' ) ),
-				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? 'gpt-5.5' ) ),
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-content-support' ) ),
+			'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_content_support.v1' ) ),
+				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.ai' ) ),
+				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? '' ) ),
 				'intent'                     => sanitize_key( $intent ),
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'ready' ) ) ),
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
@@ -2437,12 +2430,12 @@ final class Provider_Client {
 					'direct_wordpress_write' => false,
 				),
 			),
-			'free_gpt55_content_support',
-			'free_gpt55_content_support'
+			'hosted_ai_content_support',
+			'hosted_ai_content_support'
 		);
 	}
 
-	private function free_gpt55_quality_contract( string $intent ): array {
+	private function hosted_ai_quality_contract( string $intent ): array {
 		$contracts = array(
 			'title_summary'   => array(
 				'output_shape'     => array(
@@ -2516,7 +2509,7 @@ final class Provider_Client {
 		return $contract;
 	}
 
-	private function collect_free_gpt55_post_context( int $post_id ): array {
+	private function collect_hosted_ai_post_context( int $post_id ): array {
 		if ( 0 >= $post_id || ! function_exists( 'get_post' ) ) {
 			return array();
 		}
@@ -2558,7 +2551,7 @@ final class Provider_Client {
 		);
 	}
 
-	private function collect_free_gpt55_site_snapshot(): array {
+	private function collect_hosted_ai_site_snapshot(): array {
 		$recent_posts = function_exists( 'get_posts' ) ? get_posts(
 			array(
 				'post_type'      => array( 'post', 'page' ),
@@ -2634,7 +2627,7 @@ final class Provider_Client {
 		);
 	}
 
-	private function collect_free_gpt55_media_alt_snapshot( int $limit ): array {
+	private function collect_hosted_ai_media_alt_snapshot( int $limit ): array {
 		$attachments = function_exists( 'get_posts' ) ? get_posts(
 			array(
 				'post_type'      => 'attachment',
@@ -2687,20 +2680,13 @@ final class Provider_Client {
 		);
 	}
 
-	private function free_gpt55_content_support_prompt( string $intent, array $source, array $context ): string {
+	private function hosted_ai_content_support_prompt( string $intent, array $source, array $context ): string {
 		$task = array(
 			'title_summary'       => 'Generate only local draft-support suggestions: 5 title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary.',
 			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
 			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
-			'article_optimization' => 'Generate article enhancement suggestions: SEO title, meta description, excerpt, FAQ, AEO summary, GEO summary, taxonomy, internal-link ideas, and CTA notes.',
-			'discoverability'   => 'Generate SEO title, meta description, excerpt, FAQ, AEO summary, GEO summary, taxonomy, and internal-link suggestions.',
-			'site_checkup'      => 'Review the bounded public site snapshot and identify content, metadata, taxonomy, internal-link, and media-alt improvement opportunities.',
-			'publish_preflight' => 'Check publish readiness, missing metadata, source coverage, duplicate-risk signals, media readiness, and review blockers.',
-			'media_alt'         => 'Generate accessibility-focused ALT text suggestions, caption ideas, and review notes for sampled image attachments with missing or weak ALT text.',
-			'image_candidates'  => 'Suggest image search queries, ALT text options, caption ideas, and media review notes.',
-			'smart_recommendations' => 'Recommend the next best Toolbox actions based on the public site snapshot, media ALT sample, and available GPT-5.5 content-support tools.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
-		$quality_contract = $this->free_gpt55_quality_contract( $intent );
+		$quality_contract = $this->hosted_ai_quality_contract( $intent );
 
 		$payload = array(
 			'task'                  => $task,

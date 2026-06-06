@@ -259,7 +259,7 @@ final class Settings {
 	private function has_cloud_request_filter(): bool {
 		foreach ( array(
 			'npcink_toolbox_web_search_cloud_request',
-			'npcink_toolbox_free_gpt55_cloud_request',
+			'npcink_toolbox_hosted_ai_cloud_request',
 			'npcink_toolbox_site_knowledge_cloud_request',
 			'npcink_toolbox_image_source_cloud_request',
 		) as $filter ) {

@@ -1072,7 +1072,7 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
-	function renderFreeGpt55QualityGuardrails(container, payload) {
+	function renderHostedAiQualityGuardrails(container, payload) {
 		const checklist = Array.isArray(payload.review_checklist) ? payload.review_checklist : [];
 		const rejectIf = Array.isArray(payload.reject_if) ? payload.reject_if : [];
 		const outputShape = payload.output_shape && typeof payload.output_shape === 'object' ? payload.output_shape : {};
@@ -1081,7 +1081,7 @@
 		}
 
 		const section = createSection('Review checklist');
-		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Use this short checklist before copying any GPT-5.5 suggestion into a Core proposal or draft.'));
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Use this short checklist before copying any AI suggestion into a Core proposal or draft.'));
 
 		if (checklist.length) {
 			const list = el('ul', 'npcink-toolbox__step-list');
@@ -1108,33 +1108,22 @@
 		container.appendChild(section);
 	}
 
-	function renderFreeGpt55ContentSupport(form, payload) {
+	function renderHostedAiContentSupport(form, payload) {
 		const intent = String(payload.intent || '');
 		const titleByIntent = {
 			title_summary: 'Title and summary suggestions',
 			article_outline: 'Outline suggestions',
-			polish_notes: 'Polish suggestions',
-			article_optimization: 'Article optimization suggestions',
-			discoverability: 'Discoverability suggestions',
-			site_checkup: 'Site checkup suggestions',
-			publish_preflight: 'Publish preflight suggestions',
-			media_alt: 'Media alt suggestions',
-			image_candidates: 'Image and media suggestions',
-			smart_recommendations: 'Next action recommendation'
+			polish_notes: 'Polish suggestions'
 		};
 		const summaryByIntent = {
 			title_summary: 'Review concise title, excerpt, SEO, and answer-summary options before using them anywhere.',
 			article_outline: 'Use this as a working structure for a human-written article, not as generated body copy.',
-			polish_notes: 'Review the revised wording and keep the original meaning under editor control.',
-			article_optimization: 'Review article metadata, structure, FAQ, link, and CTA ideas before creating a Core proposal.',
-			site_checkup: 'Review the site-wide opportunities and choose the next local action. No WordPress content was changed.',
-			media_alt: 'Review accessibility-focused alt and caption ideas before applying anything to the media library.',
-			smart_recommendations: 'Use this as an operator queue suggestion, not an automatic workflow decision.'
+			polish_notes: 'Review the revised wording and keep the original meaning under editor control.'
 		};
 		const result = renderShell(
 			form,
 			payload,
-			titleByIntent[intent] || 'Free GPT-5.5 suggestions',
+			titleByIntent[intent] || 'AI suggestions',
 			summaryByIntent[intent] || 'Review the hosted suggestions before moving anything into a Core proposal.'
 		);
 		if (!result) {
@@ -1142,14 +1131,14 @@
 		}
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Profile', payload.hosted_profile || 'text.free-gpt55');
-		appendMeta(meta, 'Model', payload.model_id || 'gpt-5.5');
+		appendMeta(meta, 'Profile', payload.hosted_profile || 'text.ai');
+		appendMeta(meta, 'Model', payload.model_id || '');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Run', payload.run_id || '');
 		result.appendChild(meta);
 
-		renderFreeGpt55QualityGuardrails(result, payload);
+		renderHostedAiQualityGuardrails(result, payload);
 
 		if (payload.output_text) {
 			const pre = el('pre', 'npcink-toolbox__result-raw');
@@ -2151,8 +2140,8 @@
 			return;
 		}
 
-		if (payload.artifact_type === 'free_gpt55_content_support') {
-			renderFreeGpt55ContentSupport(form, payload);
+		if (payload.artifact_type === 'hosted_ai_content_support') {
+			renderHostedAiContentSupport(form, payload);
 			return;
 		}
 
