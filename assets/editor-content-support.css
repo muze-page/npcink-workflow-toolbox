@@ -165,21 +165,20 @@
 }
 
 .npcink-toolbox-editor-support__image-search {
-	display: grid;
-	grid-template-columns: auto auto auto;
+	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
-	justify-content: start;
 }
 
 .npcink-toolbox-editor-support__image-search input[type="search"] {
-	grid-column: 1 / -1;
+	flex: 1 0 100%;
 	width: 100%;
 	min-height: 36px;
 }
 
 .npcink-toolbox-editor-support__article-search-button {
-	justify-self: start;
+	margin-left: 0;
 }
 
 .npcink-toolbox-editor-support__image-options {
