@@ -874,6 +874,7 @@
 
 	async function submitSiteKnowledgeAgentFeedback(statusNode, handoff, button, outcome, labels) {
 		const originalText = button ? button.textContent : '';
+		const root = button ? button.closest('[data-toolbox-site-knowledge]') : null;
 		if (button) {
 			button.disabled = true;
 			button.textContent = 'Sending...';
@@ -887,6 +888,9 @@
 			statusNode.textContent = receipt && receipt.accepted_for_eval
 				? 'Feedback accepted for Cloud eval. WordPress approval and writes remain local.'
 				: 'Feedback sent. WordPress approval and writes remain local.';
+			if (root) {
+				refreshAgentFeedbackSummary(root).catch(() => {});
+			}
 		} catch (error) {
 			statusNode.className = 'npcink-toolbox__result-notice is-error';
 			statusNode.textContent = (error && error.message ? error.message : 'Could not send Agent feedback.') + ' WordPress approval and writes remain local.';
@@ -901,18 +905,22 @@
 	function appendSiteKnowledgeAgentFeedbackControls(section, handoff) {
 		const feedback = el('div', 'npcink-toolbox__result-feedback');
 		feedback.setAttribute('data-toolbox-site-knowledge-agent-feedback', 'true');
-		feedback.appendChild(el('h4', '', 'Agent feedback'));
+		feedback.setAttribute('data-toolbox-agent-feedback-quick', 'true');
+		feedback.appendChild(el('h4', '', 'Quick Agent feedback'));
 		const actions = el('div', 'npcink-toolbox__result-actions');
 		const status = el('div', 'npcink-toolbox__result-notice is-pending', 'Feedback updates Cloud eval only. Core approval, preflight, and final WordPress writes stay local.');
 		const options = [
 			{ label: 'Useful', outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
+			{ label: 'Edited and accepted', outcome: 'edited_before_accept', labels: ['evidence_useful', 'good_but_needs_human_draft'] },
 			{ label: 'Evidence weak', outcome: 'rejected', labels: ['evidence_weak', 'operator_confidence_low'] },
 			{ label: 'Wrong next step', outcome: 'rejected', labels: ['wrong_next_step'] },
+			{ label: 'Missing context', outcome: 'rejected', labels: ['missing_context', 'operator_confidence_low'] },
 			{ label: 'Not relevant', outcome: 'rejected', labels: ['not_relevant_to_site'] }
 		];
 		options.forEach((option) => {
 			const button = el('button', 'button', option.label);
 			button.type = 'button';
+			button.title = 'Send metadata-only Agent feedback to Cloud eval.';
 			button.setAttribute('data-toolbox-agent-feedback-outcome', option.outcome);
 			button.setAttribute('data-toolbox-agent-feedback-labels', option.labels.join(','));
 			button.addEventListener('click', () => submitSiteKnowledgeAgentFeedback(status, handoff, button, option.outcome, option.labels));

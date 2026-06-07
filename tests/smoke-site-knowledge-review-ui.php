@@ -65,6 +65,7 @@ npcink_toolbox_sk_review_smoke_assert(
 	&& false !== strpos( $admin_js, "contract_version: 'cloud_agent_feedback.v1'" )
 	&& false !== strpos( $admin_js, "local_surface: 'toolbox_site_knowledge'" )
 	&& false !== strpos( $admin_js, "data-toolbox-site-knowledge-agent-feedback" )
+	&& false !== strpos( $admin_js, "data-toolbox-agent-feedback-quick" )
 	&& false !== strpos( $admin_js, 'renderAgentFeedbackSummaryNode' )
 	&& false !== strpos( $admin_js, "postJson(config.restUrl, 'agent-feedback/summary'" )
 	&& false !== strpos( $admin_js, 'Low quality labels' )
@@ -75,9 +76,12 @@ npcink_toolbox_sk_review_smoke_assert(
 
 npcink_toolbox_sk_review_smoke_assert(
 	false !== strpos( $admin_js, 'Feedback accepted for Cloud eval. WordPress approval and writes remain local.' )
+	&& false !== strpos( $admin_js, 'refreshAgentFeedbackSummary(root)' )
 	&& false !== strpos( $admin_js, "labels: ['evidence_useful', 'operator_confidence_high']" )
+	&& false !== strpos( $admin_js, "labels: ['evidence_useful', 'good_but_needs_human_draft']" )
 	&& false !== strpos( $admin_js, "labels: ['evidence_weak', 'operator_confidence_low']" )
 	&& false !== strpos( $admin_js, "labels: ['wrong_next_step']" )
+	&& false !== strpos( $admin_js, "labels: ['missing_context', 'operator_confidence_low']" )
 	&& false !== strpos( $admin_js, "labels: ['not_relevant_to_site']" ),
 	'Admin UI keeps Agent feedback to fixed eval labels and local-write boundary copy.'
 );
