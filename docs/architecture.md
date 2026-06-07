@@ -267,7 +267,12 @@ judge precision without creating a Toolbox audit store. Operators can scope the
 input to the full article, selected text or block, or a topic-only brief. The
 same section may expose proposed new terms only as review-only vocabulary-gap
 candidates and may include a preview-only Core handoff packet for accepted
-summary and existing-term choices.
+summary and existing-term choices. The handoff packet includes proposal-ready
+actions for Generate and apply summary, Recommend and apply tags, Recommend
+categories, and Create new tags and assign. Toolbox marks summary application
+and existing tag assignment as Core auto-approval candidates, keeps categories
+recommendation-first by default, and treats new tag creation as Core
+policy-gated after duplicate-term review.
 
 ## Admin Surface
 
@@ -326,7 +331,9 @@ same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
 - summary/category/tag optimization with scoped inputs, existing-term evidence,
-  proposed new-term review notes, and preview-only Core handoff guidance;
+  proposed new-term review notes, and preview-only Core handoff guidance for
+  summary application, tag assignment, category recommendation, and new-tag
+  proposal actions;
 - taxonomy/tag candidates from existing WordPress terms;
 - internal-link candidates through Cloud-managed Site Knowledge;
 - image-source candidates through the configured Cloud image-source runtime.

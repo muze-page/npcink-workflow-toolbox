@@ -203,7 +203,13 @@ the full article, selected text or block, or a topic-only brief. The taxonomy
 candidate flow recommends existing WordPress terms only; the broader
 summary/terms optimization flow may show proposed new terms as review-only
 vocabulary gaps and includes a preview-only Core handoff packet for accepted
-summary and term choices. The panel returns suggestions only; it does not
+summary and term choices. That packet exposes four proposal-ready action
+labels: Generate and apply summary, Recommend and apply tags, Recommend
+categories, and Create new tags and assign. Summary application and existing
+tag assignment can request Core auto-approval when policy allows; category
+changes stay recommendation-first by default, and new tag creation remains
+Core policy-gated after duplicate-term review. The panel returns suggestions
+only; it does not
 insert links, assign terms, create terms, update excerpts or SEO fields, import
 media, publish content, or write WordPress data.
 The image-source button opens a Cloud image recommendation modal: it

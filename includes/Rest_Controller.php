@@ -894,7 +894,115 @@ final class Rest_Controller {
 		);
 	}
 
+	private function editor_summary_terms_auto_apply_actions( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
+		$summary_layer_ids = array_values(
+			array_filter(
+				array_map(
+					static fn( array $item ): string => sanitize_key( (string) ( $item['id'] ?? '' ) ),
+					is_array( $summary_layers['items'] ?? null ) ? $summary_layers['items'] : array()
+				)
+			)
+		);
+		$category_ids      = array_values(
+			array_filter(
+				array_map(
+					static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ),
+					array_slice( $categories, 0, 5 )
+				)
+			)
+		);
+		$tag_ids           = array_values(
+			array_filter(
+				array_map(
+					static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ),
+					array_slice( $tags, 0, 8 )
+				)
+			)
+		);
+		$new_term_count    = count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() );
+
+		return array(
+			array(
+				'id'                    => 'generate_apply_summary',
+				'name'                  => __( 'Generate and apply summary', 'npcink-toolbox' ),
+				'status'                => 'core_auto_approval_eligible',
+				'target_operation'      => 'update_post_excerpt',
+				'available_fields'      => $summary_layer_ids,
+				'auto_approval_request' => true,
+				'toolbox_direct_apply'  => false,
+				'proposal_policy'       => array(
+					'core_proposal_required' => true,
+					'eligible_if'            => array(
+						'selected_summary_layer_is_returned_by_toolbox',
+						'summary_adds_no_unsupported_facts',
+						'current_user_can_edit_target_post',
+					),
+				),
+				'reason'                => __( 'Core may auto-approve a selected summary when it is derived from the supplied draft context and the editor can edit the target post.', 'npcink-toolbox' ),
+			),
+			array(
+				'id'                    => 'recommend_apply_tags',
+				'name'                  => __( 'Recommend and apply tags', 'npcink-toolbox' ),
+				'status'                => empty( $tag_ids ) ? 'no_existing_tag_candidate' : 'core_auto_approval_eligible',
+				'target_operation'      => 'assign_existing_post_tags',
+				'available_fields'      => $tag_ids,
+				'auto_approval_request' => ! empty( $tag_ids ),
+				'toolbox_direct_apply'  => false,
+				'proposal_policy'       => array(
+					'core_proposal_required' => true,
+					'eligible_if'            => array(
+						'selected_terms_are_existing_post_tags',
+						'term_assignment_is_additive_or_operator_selected',
+						'current_user_can_edit_target_post',
+					),
+				),
+				'reason'                => __( 'Existing tag assignments can be proposed for Core auto-approval because Toolbox returns WordPress term ids and does not create taxonomy state.', 'npcink-toolbox' ),
+			),
+			array(
+				'id'                    => 'recommend_categories',
+				'name'                  => __( 'Recommend categories', 'npcink-toolbox' ),
+				'status'                => empty( $category_ids ) ? 'no_existing_category_candidate' : 'recommendation_only',
+				'target_operation'      => 'recommend_existing_categories',
+				'available_fields'      => $category_ids,
+				'auto_approval_request' => false,
+				'toolbox_direct_apply'  => false,
+				'proposal_policy'       => array(
+					'core_proposal_required' => true,
+					'default_mode'           => 'operator_review_required',
+					'eligible_if'            => array(
+						'selected_terms_are_existing_categories',
+						'category_change_policy_allows_auto_assignment',
+					),
+				),
+				'reason'                => __( 'Categories affect site structure, so Toolbox recommends existing categories by default and leaves any assignment policy to Core.', 'npcink-toolbox' ),
+			),
+			array(
+				'id'                    => 'create_new_tags_assign',
+				'name'                  => __( 'Create new tags and assign', 'npcink-toolbox' ),
+				'status'                => 0 < $new_term_count ? 'core_policy_gated' : 'no_new_tag_candidate',
+				'target_operation'      => 'create_post_tags_and_assign',
+				'available_fields'      => array(
+					'proposed_new_terms' => $new_term_count,
+				),
+				'auto_approval_request' => 0 < $new_term_count,
+				'toolbox_direct_apply'  => false,
+				'proposal_policy'       => array(
+					'core_proposal_required' => true,
+					'eligible_if'            => array(
+						'taxonomy_is_post_tag',
+						'normalized_term_has_no_close_existing_match',
+						'new_tag_count_is_within_core_policy_limit',
+						'current_user_can_edit_target_post',
+					),
+				),
+				'reason'                => __( 'New tag creation is allowed only as a Core-governed proposal after duplicate-term review; Toolbox never creates or assigns the tag directly.', 'npcink-toolbox' ),
+			),
+		);
+	}
+
 	private function editor_summary_terms_handoff_preview( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
+		$auto_apply_actions = $this->editor_summary_terms_auto_apply_actions( $summary_layers, $categories, $tags, $proposed_new_terms );
+
 		return array(
 			'artifact_type'          => 'summary_terms_handoff_preview.v1',
 			'status'                 => 'operator_selection_required',
@@ -902,10 +1010,25 @@ final class Rest_Controller {
 			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 			'preview_only'           => true,
+			'auto_apply_actions'     => $auto_apply_actions,
+			'core_auto_approval_policy' => array(
+				'request_supported'          => true,
+				'toolbox_direct_apply'       => false,
+				'approval_owner'             => 'npcink-governance-core',
+				'execution_owner'            => 'wordpress_abilities',
+				'default_safe_actions'       => array(
+					'generate_apply_summary',
+					'recommend_apply_tags',
+				),
+				'operator_review_by_default' => array(
+					'recommend_categories',
+					'create_new_tags_assign',
+				),
+			),
 			'available_fields'       => array(
-				'summary_layers'      => array_column( is_array( $summary_layers['items'] ?? null ) ? $summary_layers['items'] : array(), 'id' ),
-				'existing_categories' => array_values( array_map( static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ), array_slice( $categories, 0, 5 ) ) ),
-				'existing_tags'       => array_values( array_map( static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ), array_slice( $tags, 0, 8 ) ) ),
+				'summary_layers'      => $auto_apply_actions[0]['available_fields'],
+				'existing_categories' => $auto_apply_actions[2]['available_fields'],
+				'existing_tags'       => $auto_apply_actions[1]['available_fields'],
 				'proposed_new_terms'  => count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() ),
 			),
 			'blocked_actions'        => array(
@@ -915,9 +1038,10 @@ final class Rest_Controller {
 				'no_seo_meta_write_in_toolbox',
 			),
 			'next_steps'             => array(
-				__( 'Choose the summary layer and existing terms to carry forward.', 'npcink-toolbox' ),
-				__( 'Treat proposed new terms as review-only vocabulary gaps.', 'npcink-toolbox' ),
-				__( 'Submit accepted metadata through Core proposal approval outside Toolbox.', 'npcink-toolbox' ),
+				__( 'Use Generate and apply summary when Core policy can auto-approve the selected summary layer.', 'npcink-toolbox' ),
+				__( 'Use Recommend and apply tags for existing tag ids returned by Toolbox.', 'npcink-toolbox' ),
+				__( 'Use Recommend categories as review-first guidance unless Core explicitly allows category auto-assignment.', 'npcink-toolbox' ),
+				__( 'Use Create new tags and assign only through Core proposal review after duplicate-term checks.', 'npcink-toolbox' ),
 			),
 		);
 	}

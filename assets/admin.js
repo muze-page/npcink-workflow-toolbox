@@ -1369,7 +1369,7 @@
 			container.appendChild(meta);
 		}
 
-		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'missing_context', 'operator_confidence_high', 'operator_confidence_low'];
+		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'missing_context', 'visual_quality_low', 'source_or_license_risk', 'operator_confidence_high', 'operator_confidence_low'];
 		const labelItems = importantLabels
 			.filter((label) => Number(labels[label] || 0) > 0)
 			.map((label) => ({ name: formatLabel(label), value: labels[label] }));
@@ -1978,6 +1978,9 @@
 			renderSupportItems(container, 'Review metrics', supportItems(section.review_metrics), 'No review metrics returned.');
 		}
 		if (section.handoff_preview) {
+			if (Array.isArray(section.handoff_preview.auto_apply_actions)) {
+				renderSupportItems(container, 'Auto-apply candidates', section.handoff_preview.auto_apply_actions, 'No auto-apply candidates returned.');
+			}
 			renderSupportItems(container, 'Handoff preview', (section.handoff_preview.next_steps || []).map((step) => ({ name: step })), 'No handoff preview returned.');
 			container.appendChild(createRawDetails(section.handoff_preview, 'Handoff preview packet'));
 		}
@@ -3277,6 +3280,20 @@
 		return payload;
 	}
 
+	async function refreshAgentFeedbackQualityPanel(root) {
+		const summary = root.querySelector('[data-toolbox-agent-feedback-quality]');
+		if (!summary) {
+			return null;
+		}
+		clearNode(summary);
+		summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Loading Agent feedback quality...'));
+		const payload = await postJson(config.restUrl, 'agent-feedback/summary', { window_hours: 24 });
+		renderAgentFeedbackSummaryNode(summary, payload);
+		summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Quality feedback is aggregate Cloud eval data only. Approval, preflight, media import, and final WordPress writes remain local.'));
+		summary.appendChild(createRawDetails(payload, 'Agent feedback quality payload'));
+		return payload;
+	}
+
 	async function runSiteKnowledgeForm(form, endpoint) {
 		renderTextResult(form, config.labels && config.labels.running ? config.labels.running : 'Running...', 'pending');
 		const payload = await postJson(config.restUrl, endpoint, serialize(form));
@@ -3418,6 +3435,33 @@
 					summary.appendChild(createRawDetails(error, 'Status error'));
 				}
 			});
+		});
+	}
+
+	function initAgentFeedbackQuality() {
+		document.querySelectorAll('[data-toolbox-agent-feedback-quality]').forEach((summary) => {
+			const root = summary.closest('[data-toolbox-cloud-check-panel]') || document;
+			const button = root.querySelector('[data-toolbox-agent-feedback-quality-refresh]');
+			const renderError = (error) => {
+				clearNode(summary);
+				summary.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error.message || 'Agent feedback quality failed.'));
+				summary.appendChild(createRawDetails(error, 'Agent feedback quality error'));
+			};
+
+			if (button) {
+				button.addEventListener('click', async () => {
+					button.disabled = true;
+					try {
+						await refreshAgentFeedbackQualityPanel(root);
+					} catch (error) {
+						renderError(error);
+					} finally {
+						button.disabled = false;
+					}
+				});
+			}
+
+			refreshAgentFeedbackQualityPanel(root).catch(renderError);
 		});
 	}
 

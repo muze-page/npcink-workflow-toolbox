@@ -558,6 +558,10 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Site Knowledge', 'npcink-toolbox' ); ?></span>
 					<small><?php echo esc_html( $cloud_ready ? __( 'Cloud managed', 'npcink-toolbox' ) : __( 'Cloud connection needed', 'npcink-toolbox' ) ); ?></small>
 				</button>
+				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="agent-quality" aria-selected="false">
+					<span><?php esc_html_e( 'Agent Quality', 'npcink-toolbox' ); ?></span>
+					<small><?php esc_html_e( 'Feedback summary', 'npcink-toolbox' ); ?></small>
+				</button>
 			</nav>
 
 			<div class="npcink-toolbox__cloud-check-panels">
@@ -717,6 +721,22 @@ final class Admin_Page {
 									<?php $this->render_site_knowledge_search_check( false, $cloud_ready ); ?>
 								</div>
 							</div>
+					</div>
+				</section>
+
+				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="agent-quality" hidden>
+					<div class="npcink-toolbox__section-heading">
+						<div>
+							<h3><?php esc_html_e( 'Agent feedback quality', 'npcink-toolbox' ); ?></h3>
+							<p><?php esc_html_e( 'Read-only Cloud eval summary across Site Knowledge, image candidates, AI image generation, and editor image suggestions.', 'npcink-toolbox' ); ?></p>
+						</div>
+						<button type="button" class="button" data-toolbox-agent-feedback-quality-refresh <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Refresh quality', 'npcink-toolbox' ); ?></button>
+					</div>
+					<?php if ( ! $cloud_ready ) : ?>
+						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before loading Agent feedback quality.', 'npcink-toolbox' ); ?></div>
+					<?php endif; ?>
+					<div class="npcink-toolbox__knowledge-summary" data-toolbox-agent-feedback-quality>
+						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Agent feedback quality has not been loaded yet.', 'npcink-toolbox' ); ?></div>
 					</div>
 				</section>
 			</div>
@@ -1103,7 +1123,7 @@ final class Admin_Page {
 				'id'          => 'summary-terms-optimization',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Summary and Terms Optimization', 'npcink-toolbox' ),
-				'description' => __( 'Review layered summaries, existing terms, proposed new terms, evidence, and a Core handoff preview without writing WordPress data.', 'npcink-toolbox' ),
+				'description' => __( 'Review Generate and apply summary, Recommend and apply tags, Recommend categories, and Create new tags and assign candidates as Core handoff actions without writing WordPress data.', 'npcink-toolbox' ),
 				'intent'      => 'summary_terms_optimization',
 				'button'      => __( 'Optimize metadata', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',

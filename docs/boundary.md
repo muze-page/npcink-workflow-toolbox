@@ -150,8 +150,12 @@ own content indexing, store acceptance/audit truth, or be treated as full RAG.
 Its precision helpers may expose ranking signals, dedupe guidance, matched
 tokens, input scope, proposed new-term review notes, preview-only Core handoff
 packets, and suggested review metrics, but those remain operator-review aids.
-Proposed new terms are vocabulary-gap candidates only; Toolbox must not create
-terms or assign them to posts.
+The Core handoff packet may label proposal-ready actions for Generate and apply
+summary, Recommend and apply tags, Recommend categories, and Create new tags
+and assign. Auto-approval eligibility belongs to Core policy; Toolbox must not
+auto-approve, create terms, assign terms, or update excerpts itself. Proposed
+new terms are vocabulary-gap candidates only; Toolbox must not create terms or
+assign them to posts.
 Site-level and media-helper AI routes must be added as separate narrow
 surfaces; they must not be hidden compatibility modes inside the draft-support
 route.

@@ -216,7 +216,10 @@ Post editor content support:
   review metrics, input scope, proposed new-term review notes, preview-only
   Core handoff guidance, and review notes. Existing WordPress terms are
   preferred; proposed new tags remain operator-review vocabulary-gap candidates
-  only. It does not update excerpts, assign terms, create terms, mutate SEO
+  only. Its handoff packet labels proposal-ready actions for Generate and apply
+  summary, Recommend and apply tags, Recommend categories, and Create new tags
+  and assign; Core policy owns any auto-approval decision. It does not update
+  excerpts, assign terms, create terms, mutate SEO
   fields, index content, own taxonomy governance, store acceptance/audit truth,
   or own a RAG lifecycle.
 
