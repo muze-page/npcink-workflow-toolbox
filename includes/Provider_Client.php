@@ -3841,6 +3841,8 @@ final class Provider_Client {
 			'duplicate_suggestion',
 			'good_but_needs_human_draft',
 			'not_relevant_to_site',
+			'source_or_license_risk',
+			'visual_quality_low',
 			'operator_confidence_high',
 			'operator_confidence_low',
 		);

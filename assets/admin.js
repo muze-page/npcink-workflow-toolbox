@@ -645,6 +645,7 @@
 			section.appendChild(meta);
 		}
 		renderImageList(section, payload.images);
+		appendImageAgentFeedbackControls(section, payload, 'toolbox_ai_image_generation');
 		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Generated images are candidates only. Use Adopt New Image and Core review before importing or inserting media.'));
 		section.appendChild(createRawDetails(payload, 'AI generation payload'));
 		container.appendChild(section);
@@ -931,6 +932,120 @@
 		section.appendChild(feedback);
 	}
 
+	function imageAgentFeedbackEvidenceRefIds(payload) {
+		const images = Array.isArray(payload && payload.images) ? payload.images : [];
+		const ids = [];
+		images.slice(0, 12).forEach((image, index) => {
+			if (!image || typeof image !== 'object') {
+				return;
+			}
+			const provider = String(image.provider || payload.provider_mode || payload.resolved_provider || 'image').trim();
+			const sourceType = String(image.source_type || payload.provider_mode || 'candidate').trim();
+			const id = String(image.id || image.asset_id || image.suggested_filename || (index + 1)).trim();
+			const value = ['image', sourceType, provider, id].filter(Boolean).join(':').slice(0, 191);
+			if (value && ids.indexOf(value) === -1) {
+				ids.push(value);
+			}
+		});
+		if (!ids.length && payload && payload.run_id) {
+			ids.push(String('image_run:' + payload.run_id).slice(0, 191));
+		}
+		return ids.slice(0, 24);
+	}
+
+	function imageAgentFeedbackPayload(payload, localSurface, outcome, labels) {
+		const count = Array.isArray(payload && payload.images) ? payload.images.length : 0;
+		const surface = localSurface || 'toolbox_image_candidates';
+		const sourceRuntime = surface === 'toolbox_ai_image_generation' ? 'ai_image_generation' : 'image_candidates';
+		const runId = payload && payload.run_id ? String(payload.run_id) : '';
+		const handoffId = [
+			sourceRuntime,
+			payload && payload.provider_mode ? payload.provider_mode : '',
+			payload && payload.resolved_provider ? payload.resolved_provider : '',
+			runId || String(count)
+		].filter(Boolean).join(':') || sourceRuntime;
+
+		return {
+			contract_version: 'cloud_agent_feedback.v1',
+			agent_id: surface === 'toolbox_ai_image_generation' ? 'ai_image_generation_candidate_agent' : 'image_source_candidate_agent',
+			agent_version: payload && payload.candidate_contract_version ? String(payload.candidate_contract_version) : '',
+			source_runtime: sourceRuntime,
+			source_run_id: runId,
+			handoff_id: handoffId,
+			handoff_type: 'image_candidate_result',
+			local_surface: surface,
+			local_outcome: outcome,
+			feedback_labels: labels,
+			operator_note: '',
+			local_proposal_id: '',
+			evidence_ref_ids: imageAgentFeedbackEvidenceRefIds(payload || {}),
+			redaction_status: 'metadata_only',
+			retention_class: 'quality_eval',
+			created_at: new Date().toISOString()
+		};
+	}
+
+	function refreshVisibleAgentFeedbackSummaries() {
+		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
+			refreshAgentFeedbackSummary(root).catch(() => {});
+		});
+	}
+
+	async function submitImageAgentFeedback(statusNode, payload, localSurface, button, outcome, labels) {
+		const originalText = button ? button.textContent : '';
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Sending...';
+		}
+		statusNode.className = 'npcink-toolbox__result-notice is-pending';
+		statusNode.textContent = 'Sending image feedback to Cloud eval...';
+
+		try {
+			const receipt = await postJson(config.restUrl, 'agent-feedback', imageAgentFeedbackPayload(payload, localSurface, outcome, labels));
+			statusNode.className = 'npcink-toolbox__result-notice is-ok';
+			statusNode.textContent = receipt && receipt.accepted_for_eval
+				? 'Image feedback accepted for Cloud eval. WordPress media import and writes remain local.'
+				: 'Image feedback sent. WordPress media import and writes remain local.';
+			refreshVisibleAgentFeedbackSummaries();
+		} catch (error) {
+			statusNode.className = 'npcink-toolbox__result-notice is-error';
+			statusNode.textContent = (error && error.message ? error.message : 'Could not send image feedback.') + ' WordPress media import and writes remain local.';
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = originalText;
+			}
+		}
+	}
+
+	function appendImageAgentFeedbackControls(section, payload, localSurface) {
+		const feedback = el('div', 'npcink-toolbox__result-feedback');
+		feedback.setAttribute('data-toolbox-image-agent-feedback', 'true');
+		feedback.setAttribute('data-toolbox-agent-feedback-quick', 'true');
+		feedback.appendChild(el('h4', '', 'Quick image feedback'));
+		const actions = el('div', 'npcink-toolbox__result-actions');
+		const status = el('div', 'npcink-toolbox__result-notice is-pending', 'Feedback updates Cloud eval only. Core approval, media import, and final WordPress writes stay local.');
+		const options = [
+			{ label: 'Useful candidates', outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
+			{ label: 'Adoption planned', outcome: 'accepted', labels: ['evidence_useful', 'good_but_needs_human_draft'] },
+			{ label: 'Low visual quality', outcome: 'rejected', labels: ['visual_quality_low', 'operator_confidence_low'] },
+			{ label: 'Source risk', outcome: 'rejected', labels: ['source_or_license_risk', 'operator_confidence_low'] },
+			{ label: 'Not relevant', outcome: 'rejected', labels: ['not_relevant_to_site'] }
+		];
+		options.forEach((option) => {
+			const button = el('button', 'button', option.label);
+			button.type = 'button';
+			button.title = 'Send metadata-only image feedback to Cloud eval.';
+			button.setAttribute('data-toolbox-image-feedback-outcome', option.outcome);
+			button.setAttribute('data-toolbox-image-feedback-labels', option.labels.join(','));
+			button.addEventListener('click', () => submitImageAgentFeedback(status, payload, localSurface, button, option.outcome, option.labels));
+			actions.appendChild(button);
+		});
+		feedback.appendChild(actions);
+		feedback.appendChild(status);
+		section.appendChild(feedback);
+	}
+
 	async function submitSiteKnowledgeReviewProposal(container, handoff, button) {
 		const form = container.closest('form');
 		if (!form) {
@@ -1112,6 +1227,11 @@
 
 		result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Cloud returned image candidates only. Media import still requires an Adopt New Image plan and Core approval.'));
 		renderImageList(result, payload.images);
+		appendImageAgentFeedbackControls(
+			result,
+			payload,
+			payload.provider_mode === 'ai_generated' ? 'toolbox_ai_image_generation' : 'toolbox_image_candidates'
+		);
 		appendAiImageGenerationHandoff(form, result, payload);
 		if (payload.raw) {
 			result.appendChild(createRawDetails(payload.raw, 'Provider raw response'));
