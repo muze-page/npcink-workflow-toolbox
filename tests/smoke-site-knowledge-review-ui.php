@@ -64,7 +64,9 @@ npcink_toolbox_sk_review_smoke_assert(
 	&& false !== strpos( $admin_js, "postJson(config.restUrl, 'agent-feedback'" )
 	&& false !== strpos( $admin_js, "contract_version: 'cloud_agent_feedback.v1'" )
 	&& false !== strpos( $admin_js, "local_surface: 'toolbox_site_knowledge'" )
-	&& false !== strpos( $admin_js, "data-toolbox-site-knowledge-agent-feedback" ),
+	&& false !== strpos( $admin_js, "data-toolbox-site-knowledge-agent-feedback" )
+	&& false !== strpos( $admin_js, 'renderAgentFeedbackSummaryNode' )
+	&& false !== strpos( $admin_js, "postJson(config.restUrl, 'agent-feedback/summary'" ),
 	'Admin UI records narrow Site Knowledge Agent feedback through the local Toolbox route.'
 );
 
@@ -104,7 +106,9 @@ npcink_toolbox_sk_review_smoke_assert(
 npcink_toolbox_sk_review_smoke_assert(
 	false !== strpos( $rest, "\$this->post( '/flows/site-knowledge-review-plan', 'site_knowledge_review_plan' );" )
 	&& false !== strpos( $rest, "\$this->post( '/agent-feedback', 'agent_feedback' );" )
+	&& false !== strpos( $rest, "\$this->post( '/agent-feedback/summary', 'agent_feedback_summary' );" )
 	&& false !== strpos( $rest, 'public function agent_feedback' )
+	&& false !== strpos( $rest, 'public function agent_feedback_summary' )
 	&& false !== strpos( $rest, 'public function site_knowledge_review_plan' )
 	&& false !== strpos( $abilities, "'npcink-toolbox/build-site-knowledge-review-plan'" ),
 	'Toolbox exposes the narrow REST routes and ability used by the Site Knowledge review UI.'
@@ -114,6 +118,8 @@ npcink_toolbox_sk_review_smoke_assert(
 	false !== strpos( $client, 'submit_agent_feedback' )
 	&& false !== strpos( $client, 'cloud_agent_feedback.v1' )
 	&& false !== strpos( $client, 'send_agent_feedback_event' )
+	&& false !== strpos( $client, 'get_agent_feedback_summary' )
+	&& false !== strpos( $client, 'npcink_toolbox_agent_feedback_summary_cloud_request' )
 	&& false !== strpos( $client, "'production_mutation'      => false" )
 	&& false !== strpos( $client, "'approval_truth'           => 'wordpress_local'" ),
 	'Provider client submits Agent feedback as Cloud eval metadata without moving approval or write truth.'

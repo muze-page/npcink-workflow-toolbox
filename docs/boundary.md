@@ -148,7 +148,10 @@ and terms optimization may suggest excerpts, categories, and tags, but it must
 not update excerpts, assign terms, mutate SEO fields, own taxonomy governance,
 own content indexing, store acceptance/audit truth, or be treated as full RAG.
 Its precision helpers may expose ranking signals, dedupe guidance, matched
-tokens, and suggested review metrics, but those remain operator-review aids.
+tokens, input scope, proposed new-term review notes, preview-only Core handoff
+packets, and suggested review metrics, but those remain operator-review aids.
+Proposed new terms are vocabulary-gap candidates only; Toolbox must not create
+terms or assign them to posts.
 Site-level and media-helper AI routes must be added as separate narrow
 surfaces; they must not be hidden compatibility modes inside the draft-support
 route.

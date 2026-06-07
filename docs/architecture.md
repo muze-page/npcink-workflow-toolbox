@@ -258,7 +258,11 @@ SEO mutation, content indexing, or local RAG/index lifecycle route. The section
 keeps summary candidates split by use case, marks WordPress taxonomy candidates
 as existing terms with match tokens and normalization keys, and returns
 suggestion-only ranking, dedupe, and review-metric guidance so editors can
-judge precision without creating a Toolbox audit store.
+judge precision without creating a Toolbox audit store. Operators can scope the
+input to the full article, selected text or block, or a topic-only brief. The
+same section may expose proposed new terms only as review-only vocabulary-gap
+candidates and may include a preview-only Core handoff packet for accepted
+summary and existing-term choices.
 
 ## Admin Surface
 
@@ -316,6 +320,8 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
+- summary/category/tag optimization with scoped inputs, existing-term evidence,
+  proposed new-term review notes, and preview-only Core handoff guidance;
 - taxonomy/tag candidates from existing WordPress terms;
 - internal-link candidates through Cloud-managed Site Knowledge;
 - image-source candidates through the configured Cloud image-source runtime.

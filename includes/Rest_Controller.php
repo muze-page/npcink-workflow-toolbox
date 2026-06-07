@@ -31,6 +31,7 @@ final class Rest_Controller {
 		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/agent-feedback', 'agent_feedback' );
+		$this->post( '/agent-feedback/summary', 'agent_feedback_summary' );
 		$this->post( '/ai/content-support', 'hosted_ai_content_support' );
 		$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' );
 		$this->post( '/ai/image-generation', 'ai_image_generation' );
@@ -276,6 +277,15 @@ final class Rest_Controller {
 		return rest_ensure_response( $this->client->submit_agent_feedback( is_array( $params ) ? $params : array() ) );
 	}
 
+	public function agent_feedback_summary( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if ( ! is_array( $params ) ) {
+			$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		}
+
+		return rest_ensure_response( $this->client->get_agent_feedback_summary( is_array( $params ) ? $params : array() ) );
+	}
+
 	public function article_assistant( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_article_assistant( is_array( $params ) ? $params : array() ) );
@@ -489,10 +499,16 @@ final class Rest_Controller {
 		$content             = trim( wp_strip_all_tags( (string) $request->get_param( 'content' ) ) );
 		$selected_text       = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_text' ) ) );
 		$selected_block_text = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_block_text' ) ) );
+		$context_scope       = sanitize_key( (string) ( $request->get_param( 'context_scope' ) ?: 'auto' ) );
+		if ( ! in_array( $context_scope, array( 'auto', 'full_article', 'selected_text', 'topic_only' ), true ) ) {
+			$context_scope = 'auto';
+		}
+
 		return array(
 			'post_id'             => absint( $request->get_param( 'post_id' ) ),
 			'post_type'           => sanitize_key( (string) ( $request->get_param( 'post_type' ) ?: 'post' ) ),
 			'post_status'         => sanitize_key( (string) $request->get_param( 'post_status' ) ),
+			'context_scope'       => $context_scope,
 			'title'               => sanitize_text_field( (string) $request->get_param( 'title' ) ),
 			'excerpt'             => sanitize_textarea_field( (string) $request->get_param( 'excerpt' ) ),
 			'content_text'        => wp_trim_words( $content, 220, '' ),
@@ -582,11 +598,62 @@ final class Rest_Controller {
 	}
 
 	private function editor_support_query( array $context ): string {
+		$scope     = sanitize_key( (string) ( $context['context_scope'] ?? 'auto' ) );
+		$selection = trim(
+			implode(
+				' ',
+				array_filter(
+					array(
+						(string) ( $context['selected_text'] ?? '' ),
+						(string) ( $context['selected_block_text'] ?? '' ),
+					)
+				)
+			)
+		);
+		$selected_scope_text = '' !== $selection ? $selection : trim( (string) ( $context['content_text'] ?? '' ) );
+
+		if ( 'selected_text' === $scope && '' !== $selected_scope_text ) {
+			return wp_trim_words(
+				trim(
+					implode(
+						' ',
+						array_filter(
+							array(
+								$selected_scope_text,
+								(string) ( $context['title'] ?? '' ),
+							)
+						)
+					)
+				),
+				80,
+				''
+			);
+		}
+
+		if ( 'topic_only' === $scope ) {
+			return wp_trim_words(
+				trim(
+					implode(
+						' ',
+						array_filter(
+							array(
+								(string) ( $context['title'] ?? '' ),
+								(string) ( $context['excerpt'] ?? '' ),
+							)
+						)
+					)
+				),
+				80,
+				''
+			);
+		}
+
 		$query = trim(
 			implode(
 				' ',
 				array_filter(
 					array(
+						'auto' === $scope ? $selection : '',
 						(string) ( $context['title'] ?? '' ),
 						(string) ( $context['excerpt'] ?? '' ),
 						(string) ( $context['content_text'] ?? '' ),
@@ -596,6 +663,35 @@ final class Rest_Controller {
 		);
 
 		return wp_trim_words( $query, 80, '' );
+	}
+
+	private function editor_input_scope( array $context ): array {
+		$scope     = sanitize_key( (string) ( $context['context_scope'] ?? 'auto' ) );
+		$selection = trim( (string) ( $context['selected_text'] ?? '' ) . ' ' . (string) ( $context['selected_block_text'] ?? '' ) );
+		if ( 'auto' === $scope ) {
+			$scope = '' !== $selection ? 'selected_text' : ( '' !== trim( (string) ( $context['content_text'] ?? '' ) ) ? 'full_article' : 'topic_only' );
+		}
+
+		$labels = array(
+			'selected_text' => __( 'Selected text or supplied snippet', 'npcink-toolbox' ),
+			'full_article'  => __( 'Full article context', 'npcink-toolbox' ),
+			'topic_only'    => __( 'Topic or short brief', 'npcink-toolbox' ),
+		);
+
+		$fields = array();
+		foreach ( array( 'title', 'excerpt', 'content_text', 'selected_text', 'selected_block_text', 'post_id' ) as $field ) {
+			if ( ! empty( $context[ $field ] ) ) {
+				$fields[] = $field;
+			}
+		}
+
+		return array(
+			'id'                     => $scope,
+			'label'                  => $labels[ $scope ] ?? __( 'Current context', 'npcink-toolbox' ),
+			'source_fields'          => $fields,
+			'operator_selected_mode' => sanitize_key( (string) ( $context['context_scope'] ?? 'auto' ) ),
+			'detail'                 => __( 'This scope controls ranking context only. Toolbox still returns suggestions and does not write WordPress data.', 'npcink-toolbox' ),
+		);
 	}
 
 	private function editor_image_support_query( array $context ): string {
@@ -737,6 +833,9 @@ final class Rest_Controller {
 				static fn( array $item ): bool => 'post_tag' === (string) ( $item['taxonomy'] ?? '' )
 			)
 		);
+		$summary_layers    = $this->editor_summary_layer_candidates( $context );
+		$proposed_new_terms = $this->editor_proposed_new_terms_review( $summary_ai );
+		$handoff_preview   = $this->editor_summary_terms_handoff_preview( $summary_layers, $categories, $tags, $proposed_new_terms );
 
 		return array(
 			'artifact_type'          => 'article_discoverability_optimization.v1',
@@ -745,15 +844,18 @@ final class Rest_Controller {
 			'write_posture'          => 'suggestion_only',
 			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
+			'input_scope'            => $this->editor_input_scope( $context ),
 			'summary_candidates'     => $summary_ai,
-			'summary_layers'         => $this->editor_summary_layer_candidates( $context ),
+			'summary_layers'         => $summary_layers,
 			'category_candidates'    => array_slice( $categories, 0, 5 ),
 			'tag_candidates'         => array_slice( $tags, 0, 8 ),
+			'proposed_new_terms'     => $proposed_new_terms,
 			'taxonomy_terms'         => $taxonomy_terms,
 			'related_content'        => $related_content,
 			'discoverability'        => $discoverability,
 			'optimization_strategy'  => $this->editor_summary_terms_strategy(),
 			'review_metrics'         => $this->editor_summary_terms_review_metrics(),
+			'handoff_preview'        => $handoff_preview,
 			'risk_notes'             => array(
 				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
 				__( 'Prefer existing categories and tags; treat proposed new tags as operator-review candidates only.', 'npcink-toolbox' ),
@@ -766,6 +868,56 @@ final class Rest_Controller {
 					__( 'Review the summary, category, and tag candidates in the editor.', 'npcink-toolbox' ),
 					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-toolbox' ),
 				),
+			),
+		);
+	}
+
+	private function editor_proposed_new_terms_review( array $summary_ai ): array {
+		$items = array();
+		if ( '' !== trim( (string) ( $summary_ai['output_text'] ?? '' ) ) ) {
+			$items[] = array(
+				'name'                         => __( 'AI-proposed new terms in hosted output', 'npcink-toolbox' ),
+				'status'                       => 'review_only',
+				'controlled_vocabulary_status' => 'not_existing_term',
+				'source'                       => 'hosted_ai_output',
+				'reason'                       => __( 'Review any new category or tag names mentioned by hosted AI only after checking that no existing WordPress term is close enough.', 'npcink-toolbox' ),
+			);
+		}
+
+		return array(
+			'candidate_type'         => 'proposed_new_terms_review',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'creation_policy'        => 'operator_review_required',
+			'items'                  => $items,
+			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
+		);
+	}
+
+	private function editor_summary_terms_handoff_preview( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
+		return array(
+			'artifact_type'          => 'summary_terms_handoff_preview.v1',
+			'status'                 => 'operator_selection_required',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'preview_only'           => true,
+			'available_fields'       => array(
+				'summary_layers'      => array_column( is_array( $summary_layers['items'] ?? null ) ? $summary_layers['items'] : array(), 'id' ),
+				'existing_categories' => array_values( array_map( static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ), array_slice( $categories, 0, 5 ) ) ),
+				'existing_tags'       => array_values( array_map( static fn( array $item ): int => (int) ( $item['term_id'] ?? 0 ), array_slice( $tags, 0, 8 ) ) ),
+				'proposed_new_terms'  => count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() ),
+			),
+			'blocked_actions'        => array(
+				'no_excerpt_update_in_toolbox',
+				'no_term_assignment_in_toolbox',
+				'no_new_term_creation_in_toolbox',
+				'no_seo_meta_write_in_toolbox',
+			),
+			'next_steps'             => array(
+				__( 'Choose the summary layer and existing terms to carry forward.', 'npcink-toolbox' ),
+				__( 'Treat proposed new terms as review-only vocabulary gaps.', 'npcink-toolbox' ),
+				__( 'Submit accepted metadata through Core proposal approval outside Toolbox.', 'npcink-toolbox' ),
 			),
 		);
 	}

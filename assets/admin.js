@@ -527,7 +527,7 @@
 			}
 
 			const body = el('div', 'npcink-toolbox__image-body');
-			body.appendChild(el('h4', '', image.description || image.alt_description || image.id || 'Image candidate'));
+			body.appendChild(el('h4', '', image.title || image.alt_description || image.description || image.id || 'Image candidate'));
 			if (image.attribution) {
 				body.appendChild(el('p', '', image.attribution));
 			}
@@ -714,6 +714,7 @@
 					resolution: handoff.input_defaults && handoff.input_defaults.resolution ? handoff.input_defaults.resolution : 'high',
 					response_format: 'url',
 					n: count.value,
+					prompt_reviewed_by_operator: true,
 					media_title: payload.query || payload.primary_query || '',
 					media_description: payload.message || '',
 					handoff
@@ -1210,6 +1211,45 @@
 		renderSiteKnowledgeAutoSync(container, payload && payload.auto_sync && typeof payload.auto_sync === 'object' ? payload.auto_sync : {});
 	}
 
+	function formatRate(value) {
+		const number = Number(value);
+		if (!Number.isFinite(number)) {
+			return '';
+		}
+		return Math.round(number * 1000) / 10 + '%';
+	}
+
+	function renderAgentFeedbackSummaryNode(container, payload) {
+		const outcomes = payload && payload.outcomes && typeof payload.outcomes === 'object' ? payload.outcomes : {};
+		const labels = payload && payload.labels && typeof payload.labels === 'object' ? payload.labels : {};
+		const rates = payload && payload.rates && typeof payload.rates === 'object' ? payload.rates : {};
+		const total = Number(payload && payload.events_total ? payload.events_total : 0);
+		clearNode(container);
+
+		container.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Agent feedback summary: ' + total + ' event' + (total === 1 ? '' : 's')));
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Window', payload && payload.window_hours ? String(payload.window_hours) + 'h' : '');
+		appendMeta(meta, 'Accepted', outcomes.accepted || outcomes.edited_before_accept ? String(Number(outcomes.accepted || 0) + Number(outcomes.edited_before_accept || 0)) : '');
+		appendMeta(meta, 'Rejected', outcomes.rejected);
+		appendMeta(meta, 'Ignored', outcomes.ignored);
+		appendMeta(meta, 'Accepted rate', formatRate(rates.accepted_rate));
+		appendMeta(meta, 'Evidence useful', formatRate(rates.evidence_useful_rate));
+		appendMeta(meta, 'Evidence weak', formatRate(rates.evidence_weak_rate));
+		appendMeta(meta, 'Wrong next step', formatRate(rates.wrong_next_step_rate));
+		appendMeta(meta, 'Write truth', payload && payload.final_write_truth ? formatLabel(payload.final_write_truth) : '');
+		if (meta.childNodes.length) {
+			container.appendChild(meta);
+		}
+
+		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'missing_context', 'operator_confidence_high', 'operator_confidence_low'];
+		const labelItems = importantLabels
+			.filter((label) => Number(labels[label] || 0) > 0)
+			.map((label) => ({ name: formatLabel(label), value: labels[label] }));
+		if (labelItems.length) {
+			renderSupportItems(container, 'Feedback labels', labelItems, 'No feedback labels returned.');
+		}
+	}
+
 	function renderSiteKnowledgeAutoSync(container, health) {
 		const status = String(health.status || 'idle');
 		const noticeKind = status === 'delayed' ? 'warning' : 'pending';
@@ -1669,7 +1709,11 @@
 			const row = el('article', 'npcink-toolbox__result-item');
 			const titleText = item.name || item.title || item.label || item.source_title || item.url || item.id || 'Candidate ' + (index + 1);
 			row.appendChild(el('h4', '', titleText));
-			const detail = item.reason || item.detail || item.excerpt || item.snippet || item.source_url || item.status || '';
+			const detail = [
+				item.value || '',
+				item.reason || item.detail || item.excerpt || item.snippet || item.source_url || item.status || '',
+				Array.isArray(item.matched_tokens) && item.matched_tokens.length ? 'Matched: ' + item.matched_tokens.slice(0, 6).join(', ') : '',
+			].filter(Boolean).join(' · ');
 			if (detail) {
 				row.appendChild(el('p', '', truncate(detail, 260)));
 			}
@@ -1679,6 +1723,8 @@
 			const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Score', item.score);
 			appendMeta(meta, 'Taxonomy', item.taxonomy ? formatLabel(item.taxonomy) : '');
+			appendMeta(meta, 'Vocabulary', item.controlled_vocabulary_status ? formatLabel(item.controlled_vocabulary_status) : '');
+			appendMeta(meta, 'Normalize', item.normalization_key);
 			appendMeta(meta, 'Post', item.post_id);
 			appendMeta(meta, 'Status', item.status ? formatLabel(item.status) : '');
 			appendMeta(meta, 'Provider', item.provider ? formatLabel(item.provider) : '');
@@ -1710,6 +1756,10 @@
 		appendMeta(meta, 'Artifact', section.artifact_type ? formatLabel(section.artifact_type) : '');
 		appendMeta(meta, 'Write posture', section.write_posture || 'suggestion_only');
 		appendMeta(meta, 'Final path', section.final_write_path || 'core_proposal_required');
+		if (section.input_scope) {
+			appendMeta(meta, 'Input scope', section.input_scope.label || (section.input_scope.id ? formatLabel(section.input_scope.id) : ''));
+			appendMeta(meta, 'Scope mode', section.input_scope.operator_selected_mode ? formatLabel(section.input_scope.operator_selected_mode) : '');
+		}
 		if (meta.childNodes.length) {
 			shell.appendChild(meta);
 		}
@@ -1727,6 +1777,9 @@
 		}
 		renderSupportItems(container, 'Category candidates', section.category_candidates || [], 'No matching existing categories found.');
 		renderSupportItems(container, 'Tag candidates', section.tag_candidates || [], 'No matching existing tags found.');
+		if (section.proposed_new_terms) {
+			renderSupportItems(container, 'Proposed new terms', supportItems(section.proposed_new_terms), section.proposed_new_terms.empty_message || 'No proposed new terms returned.');
+		}
 		if (section.optimization_strategy && Array.isArray(section.optimization_strategy.ranking_signals)) {
 			renderSupportItems(container, 'Ranking and dedupe strategy', section.optimization_strategy.ranking_signals, 'No ranking strategy returned.');
 		}
@@ -1741,6 +1794,10 @@
 		}
 		if (section.review_metrics) {
 			renderSupportItems(container, 'Review metrics', supportItems(section.review_metrics), 'No review metrics returned.');
+		}
+		if (section.handoff_preview) {
+			renderSupportItems(container, 'Handoff preview', (section.handoff_preview.next_steps || []).map((step) => ({ name: step })), 'No handoff preview returned.');
+			container.appendChild(createRawDetails(section.handoff_preview, 'Handoff preview packet'));
 		}
 	}
 
@@ -3013,7 +3070,28 @@
 			renderSiteKnowledgeStatusNode(summary, payload);
 			summary.appendChild(createRawDetails(payload, 'Status payload'));
 		}
+		refreshAgentFeedbackSummary(root).catch((error) => {
+			const feedbackSummary = root.querySelector('[data-toolbox-agent-feedback-summary]');
+			if (feedbackSummary) {
+				clearNode(feedbackSummary);
+				feedbackSummary.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', error.message || 'Agent feedback summary is unavailable.'));
+				feedbackSummary.appendChild(createRawDetails(error, 'Agent feedback summary error'));
+			}
+		});
 		updateSiteKnowledgeActionState(root, payload);
+		return payload;
+	}
+
+	async function refreshAgentFeedbackSummary(root) {
+		const summary = root.querySelector('[data-toolbox-agent-feedback-summary]');
+		if (!summary) {
+			return null;
+		}
+		clearNode(summary);
+		summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Loading Agent feedback summary...'));
+		const payload = await postJson(config.restUrl, 'agent-feedback/summary', { window_hours: 24 });
+		renderAgentFeedbackSummaryNode(summary, payload);
+		summary.appendChild(createRawDetails(payload, 'Agent feedback summary payload'));
 		return payload;
 	}
 

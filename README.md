@@ -198,9 +198,14 @@ related-content evidence, Cloud-managed web-search evidence, and saved content
 context. It now separates short summary, standard summary, and SEO meta
 description candidates; annotates term candidates with existing-term status,
 matched tokens, reasons, and normalization keys; and returns ranking, dedupe,
-and review-metric guidance for human evaluation. The panel returns suggestions
-only; it does not insert links, assign terms, update excerpts or SEO fields,
-import media, publish content, or write WordPress data.
+and review-metric guidance for human evaluation. Operators can scope the run to
+the full article, selected text or block, or a topic-only brief. The taxonomy
+candidate flow recommends existing WordPress terms only; the broader
+summary/terms optimization flow may show proposed new terms as review-only
+vocabulary gaps and includes a preview-only Core handoff packet for accepted
+summary and term choices. The panel returns suggestions only; it does not
+insert links, assign terms, create terms, update excerpts or SEO fields, import
+media, publish content, or write WordPress data.
 The image-source button opens a Cloud image recommendation modal: it
 automatically searches from the selected paragraph or selected block when
 available, combines that with the current draft context, and also lets the

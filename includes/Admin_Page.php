@@ -400,6 +400,9 @@ final class Admin_Page {
 					<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
 						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
 					</div>
+					<div class="npcink-toolbox__knowledge-summary" data-toolbox-agent-feedback-summary>
+						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Agent feedback summary has not been loaded yet.', 'npcink-toolbox' ); ?></div>
+					</div>
 				</section>
 
 			<section class="npcink-toolbox__card">
@@ -705,6 +708,9 @@ final class Admin_Page {
 									<?php endif; ?>
 									<div class="npcink-toolbox__knowledge-summary" data-toolbox-site-knowledge-summary>
 										<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Status has not been loaded yet.', 'npcink-toolbox' ); ?></div>
+									</div>
+									<div class="npcink-toolbox__knowledge-summary" data-toolbox-agent-feedback-summary>
+										<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Agent feedback summary has not been loaded yet.', 'npcink-toolbox' ); ?></div>
 									</div>
 								</div>
 								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="site-knowledge-search" hidden>
@@ -1097,7 +1103,7 @@ final class Admin_Page {
 				'id'          => 'summary-terms-optimization',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Summary and Terms Optimization', 'npcink-toolbox' ),
-				'description' => __( 'Use hosted AI, existing WordPress terms, Cloud-managed Site Knowledge, web-search evidence, and saved content context to suggest layered summaries, category/tag candidates, ranking reasons, dedupe guidance, and review metrics.', 'npcink-toolbox' ),
+				'description' => __( 'Review layered summaries, existing terms, proposed new terms, evidence, and a Core handoff preview without writing WordPress data.', 'npcink-toolbox' ),
 				'intent'      => 'summary_terms_optimization',
 				'button'      => __( 'Optimize metadata', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
@@ -1106,10 +1112,10 @@ final class Admin_Page {
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
 				'id'          => 'taxonomy-tags',
 				'endpoint'    => 'editor/content-support',
-				'title'       => __( 'Taxonomy/Tag Candidates', 'npcink-toolbox' ),
-				'description' => __( 'Suggest matching existing categories and tags from the supplied draft context.', 'npcink-toolbox' ),
+				'title'       => __( 'Existing Taxonomy/Tag Candidates', 'npcink-toolbox' ),
+				'description' => __( 'Suggest matching existing categories and tags from the supplied article, selected text, or topic context.', 'npcink-toolbox' ),
 				'intent'      => 'taxonomy_tags',
-				'button'      => __( 'Find terms', 'npcink-toolbox' ),
+				'button'      => __( 'Find existing terms', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
 			),
 			array(
@@ -1329,29 +1335,38 @@ final class Admin_Page {
 						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running hosted AI support.', 'npcink-toolbox' ); ?></div>
 					<?php endif; ?>
 				<?php endif; ?>
-			<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
-			<input type="hidden" name="post_type" value="post" />
-			<input type="hidden" name="post_status" value="draft" />
-			<div class="npcink-toolbox__example">
-				<strong><?php esc_html_e( 'Fixed support flow', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'This runs one bounded suggestion flow from the supplied draft context. It does not write posts, assign terms, insert links, import media, or publish.', 'npcink-toolbox' ); ?></span>
-			</div>
-			<label>
-				<span><?php esc_html_e( 'Post ID (optional)', 'npcink-toolbox' ); ?></span>
-				<input type="number" min="0" step="1" name="post_id" placeholder="<?php esc_attr_e( 'Use 0 for topic-only runs', 'npcink-toolbox' ); ?>" />
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Title or topic', 'npcink-toolbox' ); ?></span>
-				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Working title or article topic', 'npcink-toolbox' ); ?>" />
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Excerpt or short brief', 'npcink-toolbox' ); ?></span>
-				<textarea name="excerpt" rows="3" placeholder="<?php esc_attr_e( 'Optional summary, angle, audience, or constraints', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Draft text or notes', 'npcink-toolbox' ); ?></span>
-				<textarea name="content" rows="5" placeholder="<?php esc_attr_e( 'Optional draft body, notes, or source outline', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
+				<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
+				<input type="hidden" name="post_type" value="post" />
+				<input type="hidden" name="post_status" value="draft" />
+				<div class="npcink-toolbox__example">
+					<strong><?php esc_html_e( 'Fixed support flow', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'This runs one bounded suggestion flow from the supplied article, selected text, topic, or brief. It does not write posts, assign terms, insert links, import media, or publish.', 'npcink-toolbox' ); ?></span>
+				</div>
+				<label>
+					<span><?php esc_html_e( 'Input scope', 'npcink-toolbox' ); ?></span>
+					<select name="context_scope">
+						<option value="auto"><?php esc_html_e( 'Auto: selected text when present, otherwise full article', 'npcink-toolbox' ); ?></option>
+						<option value="full_article"><?php esc_html_e( 'Full article context', 'npcink-toolbox' ); ?></option>
+						<option value="selected_text"><?php esc_html_e( 'Selected text or supplied snippet', 'npcink-toolbox' ); ?></option>
+						<option value="topic_only"><?php esc_html_e( 'Topic or short brief only', 'npcink-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Post ID (optional)', 'npcink-toolbox' ); ?></span>
+					<input type="number" min="0" step="1" name="post_id" placeholder="<?php esc_attr_e( 'Use 0 for topic-only runs', 'npcink-toolbox' ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Title or topic', 'npcink-toolbox' ); ?></span>
+					<input type="text" name="title" placeholder="<?php esc_attr_e( 'Working title or article topic', 'npcink-toolbox' ); ?>" />
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Excerpt or short brief', 'npcink-toolbox' ); ?></span>
+					<textarea name="excerpt" rows="3" placeholder="<?php esc_attr_e( 'Optional summary, angle, audience, or constraints', 'npcink-toolbox' ); ?>"></textarea>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Draft text or notes', 'npcink-toolbox' ); ?></span>
+					<textarea name="content" rows="5" placeholder="<?php esc_attr_e( 'Optional draft body, notes, or source outline', 'npcink-toolbox' ); ?>"></textarea>
+				</label>
 				<button type="submit" class="button button-primary" <?php echo disabled( $hosted_ai && ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
 				<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 			</form>
@@ -1441,6 +1456,7 @@ final class Admin_Page {
 			<input type="hidden" name="resolution" value="high" />
 			<input type="hidden" name="response_format" value="url" />
 			<input type="hidden" name="purpose" value="cloud_check_ai_image_generation" />
+			<input type="hidden" name="prompt_reviewed_by_operator" value="1" />
 			<input type="hidden" name="media_title" value="<?php esc_attr_e( 'AI image generation governance', 'npcink-toolbox' ); ?>" />
 			<input type="hidden" name="media_alt" value="<?php esc_attr_e( 'Original editorial image for AI image generation governance.', 'npcink-toolbox' ); ?>" />
 			<input type="hidden" name="media_description" value="<?php esc_attr_e( 'AI-generated image candidate for the hosted image generation smoke test. Review it before importing or setting it as featured media.', 'npcink-toolbox' ); ?>" />

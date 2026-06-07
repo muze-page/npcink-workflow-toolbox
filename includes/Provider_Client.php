@@ -22,7 +22,7 @@ final class Provider_Client {
 
 	private function cloud_runtime_client() {
 		if ( function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
-		return npcink_cloud_addon_runtime_client();
+			return npcink_cloud_addon_runtime_client();
 		}
 
 		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
@@ -82,7 +82,16 @@ final class Provider_Client {
 		if ( ! in_array( $response_format, array( 'url', 'b64_json' ), true ) ) {
 			$response_format = 'url';
 		}
+		if ( 'b64_json' === $response_format ) {
+			return new WP_Error(
+				'npcink_toolbox_ai_image_response_format_unsupported',
+				__( 'Toolbox currently requires URL-based AI image candidates so Core can review and import the selected image.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
 		$media_context = $this->ai_image_media_context_from_input( $input, $prompt );
+		$review_input = is_array( $input['review'] ?? null ) ? $input['review'] : array();
+		$prompt_reviewed_by_operator = ! empty( $input['prompt_reviewed_by_operator'] ) || ! empty( $review_input['prompt_reviewed_by_operator'] );
 
 		$handoff = is_array( $input['handoff'] ?? null ) ? $input['handoff'] : array();
 		$template = is_array( $handoff['runtime_request_template'] ?? null ) ? $handoff['runtime_request_template'] : array();
@@ -106,7 +115,7 @@ final class Provider_Client {
 				'purpose'         => sanitize_key( (string) ( $input['purpose'] ?? 'image_source_candidate_generation' ) ),
 				'media_context'   => $media_context,
 				'review'          => array(
-					'prompt_reviewed_by_operator' => true,
+					'prompt_reviewed_by_operator' => $prompt_reviewed_by_operator,
 					'write_posture'               => 'candidate_only',
 					'direct_wordpress_write'      => false,
 				),
@@ -197,6 +206,34 @@ final class Provider_Client {
 		return $this->normalize_agent_feedback_response( is_array( $response ) ? $response : array(), $payload );
 	}
 
+	public function get_agent_feedback_summary( array $input ) {
+		$window_hours = min( 168, max( 1, absint( $input['window_hours'] ?? 24 ) ) );
+
+		$handled = apply_filters( 'npcink_toolbox_agent_feedback_summary_cloud_request', null, $window_hours, $input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_agent_feedback_summary_response( $handled, $window_hours );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'get_agent_feedback_summary' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_agent_feedback_summary_cloud_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before reading Agent feedback summary.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$response = $client->get_agent_feedback_summary( $window_hours, $this->trace_id( 'agent_feedback_summary' ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_agent_feedback_summary_response( is_array( $response ) ? $response : array(), $window_hours );
+	}
+
 	private function should_include_ai_generated_images( array $options ): bool {
 		if ( ! empty( $options['include_ai_generated'] ) ) {
 			return true;
@@ -213,6 +250,7 @@ final class Provider_Client {
 
 	private function search_ai_generated_images( string $query, array $options ) {
 		$prompt = trim( sanitize_textarea_field( (string) ( $options['generation_prompt'] ?? $options['prompt'] ?? $query ) ) );
+		$media_context = $this->ai_image_media_context_from_input( $options, $prompt );
 		$url    = $this->first_non_empty_url(
 			array(
 				$options['generated_image_url'] ?? '',
@@ -235,7 +273,8 @@ final class Provider_Client {
 							)
 						),
 						$query,
-						$prompt
+						$prompt,
+						$media_context
 					),
 				),
 				'raw'      => array(),
@@ -243,12 +282,18 @@ final class Provider_Client {
 		}
 
 		$request = array(
-			'query'       => $query,
-			'prompt'      => $prompt,
-			'orientation' => sanitize_key( (string) ( $options['orientation'] ?? '' ) ),
-			'color'       => sanitize_key( (string) ( $options['color'] ?? '' ) ),
-			'per_page'    => max( 1, min( 4, (int) ( $options['per_page'] ?? 1 ) ) ),
-			'purpose'     => sanitize_key( (string) ( $options['purpose'] ?? 'article_image_candidate' ) ),
+				'query'            => $query,
+				'prompt'           => $prompt,
+				'orientation'      => sanitize_key( (string) ( $options['orientation'] ?? '' ) ),
+				'color'            => sanitize_key( (string) ( $options['color'] ?? '' ) ),
+				'per_page'         => max( 1, min( 4, (int) ( $options['per_page'] ?? 1 ) ) ),
+				'purpose'          => sanitize_key( (string) ( $options['purpose'] ?? 'article_image_candidate' ) ),
+				'contract_version' => 'legacy_filter_ai_image_generation_request.v1',
+				'review'           => array(
+					'prompt_reviewed_by_operator' => ! empty( $options['prompt_reviewed_by_operator'] ),
+					'write_posture'               => 'candidate_only',
+					'direct_wordpress_write'      => false,
+			),
 		);
 
 		$result = apply_filters( 'npcink_toolbox_ai_image_generation_request', null, $request, $options );
@@ -275,7 +320,15 @@ final class Provider_Client {
 
 		$images = array();
 		foreach ( $candidates as $candidate ) {
-			$normalized = $this->normalize_ai_generated_image_candidate( $candidate, $query, $prompt );
+			if ( ! is_array( $candidate ) ) {
+				continue;
+			}
+
+			$candidate['warnings'] = array_merge(
+				$this->sanitize_string_list( $candidate['warnings'] ?? array() ),
+				array( __( 'Generated through the legacy filter seam; verify provider metadata before adoption.', 'npcink-toolbox' ) )
+			);
+			$normalized = $this->normalize_ai_generated_image_candidate( $candidate, $query, $prompt, $media_context );
 			if ( '' !== (string) ( $normalized['regular_url'] ?? '' ) ) {
 				$images[] = $normalized;
 			}
@@ -375,6 +428,9 @@ final class Provider_Client {
 		$seo_suggestions = is_array( $candidate['seo_suggestions'] ?? null )
 			? $this->sanitize_payload( $candidate['seo_suggestions'] )
 			: ( is_array( $candidate['media_seo'] ?? null ) ? $this->sanitize_payload( $candidate['media_seo'] ) : array() );
+		$asset_persistence = is_array( $candidate['asset_persistence'] ?? null )
+			? $this->sanitize_payload( $candidate['asset_persistence'] )
+			: array();
 		$file_name = sanitize_file_name( (string) ( $candidate['file_name'] ?? '' ) );
 		$suggested_filename = sanitize_file_name( (string) ( $candidate['suggested_filename'] ?? $file_name ) );
 		if ( '' === $file_name && '' !== $suggested_filename ) {
@@ -413,6 +469,9 @@ final class Provider_Client {
 		$candidate['quality_tags']                  = array_slice( $quality_tags, 0, 6 );
 		$candidate['risk_flags']                    = array_slice( $risk_flags, 0, 6 );
 		$candidate['seo_suggestions']               = $seo_suggestions;
+		if ( array() !== $asset_persistence ) {
+			$candidate['asset_persistence'] = $asset_persistence;
+		}
 		$candidate['file_name']                     = $file_name;
 		$candidate['suggested_filename']            = '' !== $suggested_filename ? $suggested_filename : $file_name;
 		$candidate['filename_basis']                = $filename_basis;
@@ -513,6 +572,7 @@ final class Provider_Client {
 		$provider = sanitize_key( (string) ( $candidate['generation_provider'] ?? $candidate['provider_name'] ?? 'ai_generated' ) );
 		$model    = sanitize_text_field( (string) ( $candidate['model'] ?? $candidate['generation_model'] ?? '' ) );
 		$prompt   = trim( sanitize_textarea_field( (string) ( $candidate['prompt'] ?? $candidate['generation_prompt'] ?? $fallback_prompt ) ) );
+		$asset_persistence = $this->ai_generated_asset_persistence_policy( $url, $candidate );
 		$title    = trim( sanitize_text_field( (string) ( $candidate['title'] ?? $media_context['title'] ?? $query ) ) );
 		if ( '' === $title || $this->is_ai_generation_instruction_text( $title ) ) {
 			$title = $this->ai_image_media_title_from_subject( $this->ai_image_subject_from_prompt( $prompt ) );
@@ -541,6 +601,14 @@ final class Provider_Client {
 				'description' => $description,
 			)
 		);
+		$warnings = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
+		if ( 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' ) ) {
+			$warnings[] = __( 'This AI-generated image URL appears temporary. Adopt it promptly or regenerate before Core approval.', 'npcink-toolbox' );
+		}
+		$risk_flags = $this->sanitize_string_list( $candidate['risk_flags'] ?? array() );
+		if ( 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' ) ) {
+			$risk_flags[] = 'temporary_provider_url';
+		}
 
 		return array(
 			'id'                            => sanitize_text_field( (string) ( $candidate['id'] ?? ( '' !== $url ? md5( $url ) : '' ) ) ),
@@ -568,6 +636,9 @@ final class Provider_Client {
 			'license_review_status'         => $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? 'required' ), 'ai_generated' ),
 			'requires_human_license_review' => true,
 			'seo_suggestions'               => $seo_suggestions,
+			'asset_persistence'             => $asset_persistence,
+			'warnings'                      => array_values( array_unique( $warnings ) ),
+			'risk_flags'                    => array_values( array_unique( $risk_flags ) ),
 		);
 	}
 
@@ -704,6 +775,36 @@ final class Provider_Client {
 			return mb_strlen( $text ) > $max_chars ? mb_substr( $text, 0, $max_chars ) : $text;
 		}
 		return strlen( $text ) > $max_chars ? substr( $text, 0, $max_chars ) : $text;
+	}
+
+	private function ai_generated_asset_persistence_policy( string $url, array $candidate ): array {
+		$expires_at = sanitize_text_field( (string) ( $candidate['expires_at'] ?? $candidate['url_expires_at'] ?? '' ) );
+		$is_temporary = $this->is_temporary_generated_image_url( $url );
+		$status = $is_temporary ? 'temporary_provider_url' : 'remote_url';
+		if ( '' !== $expires_at ) {
+			$status = 'temporary_provider_url';
+		}
+
+		return array(
+			'status'             => $status,
+			'expires_at'         => $expires_at,
+			'requires_local_copy' => true,
+			'adoption_timing'    => 'temporary_provider_url' === $status ? 'adopt_promptly_or_regenerate' : 'core_import_on_approval',
+			'owner'              => 'core_upload_ability_final',
+		);
+	}
+
+	private function is_temporary_generated_image_url( string $url ): bool {
+		$url = strtolower( trim( $url ) );
+		if ( '' === $url ) {
+			return false;
+		}
+		foreach ( array( 'xai-tmp', '/tmp-', 'tmp-imgen', 'temporary', 'expires=' ) as $needle ) {
+			if ( false !== strpos( $url, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function sanitize_provider_error_data( $data ): array {
@@ -1785,6 +1886,15 @@ final class Provider_Client {
 		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
 		$photographer = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['photographer_name'] ?? '' ) );
 		$file_name = sanitize_file_name( (string) ( $input['file_name'] ?? $candidate['file_name'] ?? $candidate['suggested_filename'] ?? '' ) );
+		$asset_persistence = is_array( $candidate['asset_persistence'] ?? null )
+			? $this->sanitize_payload( $candidate['asset_persistence'] )
+			: $this->ai_generated_asset_persistence_policy( $image_url, $candidate );
+		$is_temporary_generated_url = 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' );
+		$adoption_risk = $is_temporary_generated_url ? 'high' : 'medium';
+		$adoption_notes = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
+		if ( $is_temporary_generated_url ) {
+			$adoption_notes[] = __( 'The selected generated image URL may expire before delayed approval. Approve promptly or regenerate before import.', 'npcink-toolbox' );
+		}
 		$filename_policy = array(
 			'owner'                          => 'wordpress_write_ability_final',
 			'proposed_filename'              => $file_name,
@@ -1818,22 +1928,24 @@ final class Provider_Client {
 
 		$write_actions = array(
 			array(
-				'action_id'         => $upload_id,
-				'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url',
-				'recipe_step'       => 'host_governed_upload_image_candidate',
-			'input'             => $upload_input,
-				'risk'              => 'medium',
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Import the reviewed image candidate into the media library after Core approval.', 'npcink-toolbox' ),
+				'action_id'           => $upload_id,
+				'target_ability_id'   => 'npcink-abilities-toolkit/upload-media-from-url',
+				'recipe_step'         => 'host_governed_upload_image_candidate',
+				'input'               => $upload_input,
+				'source_asset_policy' => $asset_persistence,
+				'adoption_notes'      => array_values( array_unique( $adoption_notes ) ),
+					'risk'                => $adoption_risk,
+					'requires_approval'   => true,
+					'commit_execution'    => false,
+					'proposal_ready'      => true,
+					'reason'              => __( 'Import the reviewed image candidate into the media library after Core approval.', 'npcink-toolbox' ),
 			),
 			array(
-				'action_id'         => $metadata_id,
-				'target_ability_id' => 'npcink-abilities-toolkit/update-media-details',
-				'recipe_step'       => 'host_governed_update_image_candidate_metadata',
-				'depends_on'        => array( $upload_id ),
-			'input'             => array(
+				'action_id'           => $metadata_id,
+				'target_ability_id'   => 'npcink-abilities-toolkit/update-media-details',
+				'recipe_step'         => 'host_governed_update_image_candidate_metadata',
+				'depends_on'          => array( $upload_id ),
+				'input'               => array(
 					'attachment_id'     => '$outputs.' . $upload_id . '.attachment_id',
 					'title'             => $title,
 					'alt'               => $alt,
@@ -1848,11 +1960,13 @@ final class Provider_Client {
 					'commit'            => false,
 					'idempotency_key'   => 'image-candidate-details-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
 				),
-				'risk'              => 'medium',
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Apply reviewed image candidate metadata after media import.', 'npcink-toolbox' ),
+				'source_asset_policy' => $asset_persistence,
+				'adoption_notes'      => array_values( array_unique( $adoption_notes ) ),
+					'risk'                => $adoption_risk,
+					'requires_approval'   => true,
+					'commit_execution'    => false,
+					'proposal_ready'      => true,
+					'reason'              => __( 'Apply reviewed image candidate metadata after media import.', 'npcink-toolbox' ),
 			),
 		);
 
@@ -1862,11 +1976,11 @@ final class Provider_Client {
 				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
 				'recipe_step'       => 'host_governed_set_image_candidate_featured_image',
 				'depends_on'        => array( $upload_id ),
-			'input'             => array(
-					'post_id'        => $post_id,
-					'attachment_id'  => '$outputs.' . $upload_id . '.attachment_id',
-					'dry_run'        => true,
-					'commit'         => false,
+				'input'             => array(
+					'post_id'         => $post_id,
+					'attachment_id'   => '$outputs.' . $upload_id . '.attachment_id',
+					'dry_run'         => true,
+					'commit'          => false,
 					'idempotency_key' => 'image-candidate-featured-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
 				),
 				'risk'              => 'medium',
@@ -1890,6 +2004,8 @@ final class Provider_Client {
 			'direct_wordpress_write'      => false,
 			'proposed_filename'           => $file_name,
 			'filename_policy'             => $filename_policy,
+			'source_asset_policy'         => $asset_persistence,
+			'adoption_notes'              => array_values( array_unique( $adoption_notes ) ),
 			'batch_id'                    => 'image_candidate_adoption_' . substr( md5( $image_url . '|' . $post_id . '|' . wp_json_encode( $write_actions ) ), 0, 12 ),
 			'requires_approval'           => true,
 			'dry_run'                     => true,
@@ -1911,6 +2027,7 @@ final class Provider_Client {
 					'post_id'           => $post_id,
 					'set_featured_image' => $set_featured_image,
 					'attribution'      => $attribution,
+					'source_asset_policy' => $asset_persistence,
 				),
 			),
 			'write_actions'               => $write_actions,
@@ -2940,6 +3057,9 @@ final class Provider_Client {
 		$input  = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
 		$prompt = trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) );
 		$model  = sanitize_text_field( (string) ( $result['model_id'] ?? $result['model'] ?? 'grok-imagine-image-quality' ) );
+		$media_context = is_array( $input['media_context'] ?? null ) ? $this->sanitize_payload( $input['media_context'] ) : array();
+		$review = is_array( $input['review'] ?? null ) ? $this->sanitize_payload( $input['review'] ) : array();
+		$prompt_reviewed = ! empty( $review['prompt_reviewed_by_operator'] );
 
 		$candidates = $this->extract_ai_generated_image_candidates( $result );
 		$images     = array();
@@ -2951,7 +3071,7 @@ final class Provider_Client {
 			$candidate['generation_provider'] = sanitize_key( (string) ( $candidate['generation_provider'] ?? 'magick_ai_cloud' ) );
 			$candidate['generation_model']    = sanitize_text_field( (string) ( $candidate['generation_model'] ?? $model ) );
 			$candidate['generation_prompt']   = sanitize_textarea_field( (string) ( $candidate['generation_prompt'] ?? $prompt ) );
-			$normalized                       = $this->normalize_ai_generated_image_candidate( $candidate, $prompt, $prompt );
+			$normalized                       = $this->normalize_ai_generated_image_candidate( $candidate, $prompt, $prompt, $media_context );
 			if ( '' !== (string) ( $normalized['regular_url'] ?? '' ) ) {
 				$images[] = $this->normalize_image_candidate_contract( $normalized );
 			}
@@ -2996,7 +3116,7 @@ final class Provider_Client {
 					'direct_wordpress_write' => false,
 				),
 				'ai_generation'              => array(
-					'prompt_reviewed_by_operator' => true,
+					'prompt_reviewed_by_operator' => $prompt_reviewed,
 					'response_format'              => sanitize_key( (string) ( $input['response_format'] ?? 'url' ) ),
 					'aspect_ratio'                 => sanitize_text_field( (string) ( $input['aspect_ratio'] ?? '' ) ),
 					'resolution'                   => sanitize_key( (string) ( $input['resolution'] ?? '' ) ),
@@ -3784,6 +3904,26 @@ final class Provider_Client {
 			'feedback_event_id'        => sanitize_text_field( (string) ( $data['feedback_event_id'] ?? '' ) ),
 			'local_outcome'            => sanitize_key( (string) ( $payload['local_outcome'] ?? '' ) ),
 			'feedback_labels'          => $this->sanitize_agent_feedback_labels( $payload['feedback_labels'] ?? array() ),
+		);
+	}
+
+	private function normalize_agent_feedback_summary_response( array $response, int $window_hours ): array {
+		$data = is_array( $response['data'] ?? null ) ? $response['data'] : $response;
+
+		return array(
+			'artifact_type'        => 'site_knowledge_agent_feedback_summary',
+			'contract_version'    => 'cloud_agent_feedback.v1',
+			'window_hours'        => $window_hours,
+			'events_total'        => absint( $data['events_total'] ?? 0 ),
+			'outcomes'            => is_array( $data['outcomes'] ?? null ) ? $this->sanitize_payload( $data['outcomes'] ) : array(),
+			'labels'              => is_array( $data['labels'] ?? null ) ? $this->sanitize_payload( $data['labels'] ) : array(),
+			'rates'               => is_array( $data['rates'] ?? null ) ? $this->sanitize_payload( $data['rates'] ) : array(),
+			'source_runtimes'     => is_array( $data['source_runtimes'] ?? null ) ? $this->sanitize_payload( $data['source_runtimes'] ) : array(),
+			'local_surfaces'      => is_array( $data['local_surfaces'] ?? null ) ? $this->sanitize_payload( $data['local_surfaces'] ) : array(),
+			'production_mutation' => false,
+			'approval_truth'      => 'wordpress_local',
+			'preflight_truth'     => 'wordpress_local',
+			'final_write_truth'   => 'wordpress_local',
 		);
 	}
 
