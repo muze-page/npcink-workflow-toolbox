@@ -2156,6 +2156,15 @@ msgstr "搜索"
 msgid "Use draft"
 msgstr "使用草稿"
 
+msgid "Search from article"
+msgstr "用文章内容搜索"
+
+msgid "Generate AI image"
+msgstr "AI 生成配图"
+
+msgid "Quality"
+msgstr "质量"
+
 msgid "Loading cloud image candidates..."
 msgstr "正在加载云端图片候选..."
 
