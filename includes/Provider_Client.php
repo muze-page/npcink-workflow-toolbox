@@ -660,16 +660,7 @@ final class Provider_Client {
 			$subject = $this->ai_image_subject_from_prompt( $prompt );
 		}
 		$title = $this->ai_image_media_title_from_subject( $subject );
-		$description = trim(
-			sanitize_textarea_field(
-				(string) (
-					$input['media_description']
-					?? $raw_context['description']
-					?? $post_context['excerpt']
-					?? ''
-				)
-			)
-		);
+		$description = trim( sanitize_textarea_field( (string) ( $input['media_description'] ?? '' ) ) );
 		if ( '' === $description || $this->is_ai_generation_instruction_text( $description ) ) {
 			$description = $this->ai_image_media_description_from_subject( $title );
 		}

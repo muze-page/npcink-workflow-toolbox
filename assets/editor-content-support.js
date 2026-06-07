@@ -1575,7 +1575,7 @@
 					media_context: {
 						title: truncateText(postContext.title || context.title || imageQuery || '', 120),
 						alt: '',
-						description: truncateText(postContext.excerpt || context.selected_text || context.selected_block_text || '', 220),
+						description: '',
 					},
 					handoff: {
 						trigger: 'manual_user_action',
