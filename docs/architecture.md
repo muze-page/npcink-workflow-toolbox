@@ -254,7 +254,11 @@ an `article_discoverability_optimization.v1` section that combines hosted AI
 summary suggestions, existing category/tag candidates, Cloud-managed Site
 Knowledge related-content evidence, Cloud-managed web-search evidence, and
 saved content-context guidance. It is not a term assignment, excerpt update,
-SEO mutation, content indexing, or local RAG/index lifecycle route.
+SEO mutation, content indexing, or local RAG/index lifecycle route. The section
+keeps summary candidates split by use case, marks WordPress taxonomy candidates
+as existing terms with match tokens and normalization keys, and returns
+suggestion-only ranking, dedupe, and review-metric guidance so editors can
+judge precision without creating a Toolbox audit store.
 
 ## Admin Surface
 

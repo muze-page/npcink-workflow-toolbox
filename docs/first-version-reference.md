@@ -212,9 +212,11 @@ Post editor content support:
 - `summary_terms_optimization` returns an
   `article_discoverability_optimization.v1` section with hosted AI summary
   candidates, existing category/tag candidates, related Site Knowledge, web
-  search evidence from the discoverability brief, and review notes. It does not
-  update excerpts, assign terms, mutate SEO fields, index content, or own a RAG
-  lifecycle.
+  search evidence from the discoverability brief, ranking and dedupe guidance,
+  review metrics, and review notes. Existing WordPress terms are preferred;
+  proposed new tags remain operator-review candidates only. It does not update
+  excerpts, assign terms, mutate SEO fields, index content, own taxonomy
+  governance, store acceptance/audit truth, or own a RAG lifecycle.
 
 For content-support AI callers, the canonical composition sequence is:
 

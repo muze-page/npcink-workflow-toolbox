@@ -30,6 +30,7 @@ final class Rest_Controller {
 		$this->post( '/web-search/diagnostics', 'web_search_diagnostics' );
 		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
+		$this->post( '/agent-feedback', 'agent_feedback' );
 		$this->post( '/ai/content-support', 'hosted_ai_content_support' );
 		$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' );
 		$this->post( '/ai/image-generation', 'ai_image_generation' );
@@ -264,6 +265,15 @@ final class Rest_Controller {
 	public function ai_image_generation( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->run_ai_image_generation( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function agent_feedback( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if ( ! is_array( $params ) ) {
+			$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		}
+
+		return rest_ensure_response( $this->client->submit_agent_feedback( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function article_assistant( WP_REST_Request $request ) {
@@ -736,11 +746,14 @@ final class Rest_Controller {
 			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 			'summary_candidates'     => $summary_ai,
+			'summary_layers'         => $this->editor_summary_layer_candidates( $context ),
 			'category_candidates'    => array_slice( $categories, 0, 5 ),
 			'tag_candidates'         => array_slice( $tags, 0, 8 ),
 			'taxonomy_terms'         => $taxonomy_terms,
 			'related_content'        => $related_content,
 			'discoverability'        => $discoverability,
+			'optimization_strategy'  => $this->editor_summary_terms_strategy(),
+			'review_metrics'         => $this->editor_summary_terms_review_metrics(),
 			'risk_notes'             => array(
 				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
 				__( 'Prefer existing categories and tags; treat proposed new tags as operator-review candidates only.', 'npcink-toolbox' ),
@@ -752,6 +765,113 @@ final class Rest_Controller {
 				'next_steps'             => array(
 					__( 'Review the summary, category, and tag candidates in the editor.', 'npcink-toolbox' ),
 					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-toolbox' ),
+				),
+			),
+		);
+	}
+
+	private function editor_summary_layer_candidates( array $context ): array {
+		$title   = trim( sanitize_text_field( (string) ( $context['title'] ?? '' ) ) );
+		$excerpt = trim( sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ) );
+		$content = trim( wp_strip_all_tags( (string) ( $context['content_text'] ?? '' ) ) );
+		$base    = '' !== $excerpt ? $excerpt : ( '' !== $content ? $content : $title );
+
+		return array(
+			'candidate_type'         => 'summary_layer_candidates',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'items'                  => array(
+				array(
+					'id'     => 'short_summary',
+					'label'  => __( 'Short summary', 'npcink-toolbox' ),
+					'limit'  => '160_chars',
+					'value'  => sanitize_text_field( wp_html_excerpt( $base, 160, '' ) ),
+					'reason' => __( 'Use as an excerpt-style candidate after confirming it adds no unsupported facts.', 'npcink-toolbox' ),
+				),
+				array(
+					'id'     => 'standard_summary',
+					'label'  => __( 'Standard summary', 'npcink-toolbox' ),
+					'limit'  => '2_3_sentences',
+					'value'  => sanitize_text_field( wp_trim_words( $base, 45, '' ) ),
+					'reason' => __( 'Use for editor review where a slightly fuller article summary is useful.', 'npcink-toolbox' ),
+				),
+				array(
+					'id'     => 'seo_meta_description',
+					'label'  => __( 'SEO meta description', 'npcink-toolbox' ),
+					'limit'  => '155_chars',
+					'value'  => sanitize_text_field( wp_html_excerpt( $base, 155, '' ) ),
+					'reason' => __( 'Use only as a Core-governed SEO/meta proposal candidate.', 'npcink-toolbox' ),
+				),
+			),
+		);
+	}
+
+	private function editor_summary_terms_strategy(): array {
+		return array(
+			'candidate_type'         => 'summary_terms_precision_strategy',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'existing_terms_first'   => true,
+			'proposed_new_terms'     => 'operator_review_only',
+			'ranking_signals'        => array(
+				array(
+					'name'   => __( 'Draft query overlap', 'npcink-toolbox' ),
+					'weight' => 'high',
+					'detail' => __( 'Match against title, excerpt, selected text, and draft body tokens.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => __( 'Existing taxonomy vocabulary', 'npcink-toolbox' ),
+					'weight' => 'high',
+					'detail' => __( 'Prefer existing WordPress categories and tags before suggesting new terms.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => __( 'Site Knowledge similarity', 'npcink-toolbox' ),
+					'weight' => 'medium',
+					'detail' => __( 'Use related public content to avoid duplicate coverage and borrow proven term patterns.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => __( 'Discoverability context', 'npcink-toolbox' ),
+					'weight' => 'medium',
+					'detail' => __( 'Check saved SEO/AEO/GEO guidance and Cloud web-search evidence before recommending metadata.', 'npcink-toolbox' ),
+				),
+			),
+			'dedupe_policy'          => array(
+				__( 'Normalize candidate labels by case, punctuation, and whitespace before review.', 'npcink-toolbox' ),
+				__( 'Treat near-synonyms, plural/singular variants, and translated duplicates as taxonomy-drift risks.', 'npcink-toolbox' ),
+				__( 'Keep broad categories stable and use tags for narrower topic facets.', 'npcink-toolbox' ),
+			),
+			'evidence_requirements'  => array(
+				__( 'Each accepted category or tag should have a reason tied to draft text, existing taxonomy, Site Knowledge, or search evidence.', 'npcink-toolbox' ),
+				__( 'Fresh external search is useful for factual or current topics, but it should not override the supplied article draft.', 'npcink-toolbox' ),
+			),
+		);
+	}
+
+	private function editor_summary_terms_review_metrics(): array {
+		return array(
+			'candidate_type'         => 'summary_terms_review_metrics',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'items'                  => array(
+				array(
+					'name'   => 'accepted_suggestion_rate',
+					'detail' => __( 'Track how many summary, category, and tag suggestions an editor accepts after review.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => 'summary_edit_distance',
+					'detail' => __( 'Compare AI/fallback summaries with the final reviewed summary to detect overbroad or weak suggestions.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => 'new_term_rate',
+					'detail' => __( 'Keep proposed new terms visible as a taxonomy-sprawl signal instead of silently adding them.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => 'duplicate_topic_review',
+					'detail' => __( 'Use related Site Knowledge results to flag whether the article overlaps existing public content.', 'npcink-toolbox' ),
+				),
+				array(
+					'name'   => 'evidence_coverage',
+					'detail' => __( 'Check whether accepted suggestions cite draft, taxonomy, Site Knowledge, or search evidence.', 'npcink-toolbox' ),
 				),
 			),
 		);
@@ -784,14 +904,27 @@ final class Rest_Controller {
 				if ( $score <= 0 ) {
 					continue;
 				}
+				$matched_tokens = $this->term_match_tokens( $term->name . ' ' . $term->slug . ' ' . $term->description, $query );
 
 				$candidates[] = array(
-					'term_id'  => (int) $term->term_id,
-					'taxonomy' => sanitize_key( $taxonomy ),
-					'name'     => sanitize_text_field( $term->name ),
-					'slug'     => sanitize_title( $term->slug ),
-					'score'    => $score,
-					'reason'   => __( 'Matched against the current title, excerpt, or draft body.', 'npcink-toolbox' ),
+					'term_id'                      => (int) $term->term_id,
+					'taxonomy'                     => sanitize_key( $taxonomy ),
+					'name'                         => sanitize_text_field( $term->name ),
+					'slug'                         => sanitize_title( $term->slug ),
+					'score'                        => $score,
+					'status'                       => 'existing_term',
+					'controlled_vocabulary_status' => 'existing_wordpress_term',
+					'normalization_key'            => sanitize_title( $term->name ),
+					'matched_tokens'               => $matched_tokens,
+					'match_signals'                => array(
+						'draft_query_overlap',
+						'existing_taxonomy_vocabulary',
+					),
+					'reason'                       => sprintf(
+						/* translators: %s: comma-separated matched words. */
+						__( 'Existing term matched against the current title, excerpt, or draft body. Matched tokens: %s.', 'npcink-toolbox' ),
+						implode( ', ', array_slice( $matched_tokens, 0, 6 ) )
+					),
 				);
 			}
 		}
@@ -812,13 +945,17 @@ final class Rest_Controller {
 	}
 
 	private function term_match_score( string $term_text, string $query ): int {
+		return count( $this->term_match_tokens( $term_text, $query ) );
+	}
+
+	private function term_match_tokens( string $term_text, string $query ): array {
 		$term_tokens  = $this->support_tokens( $term_text );
 		$query_tokens = $this->support_tokens( $query );
 		if ( array() === $term_tokens || array() === $query_tokens ) {
-			return 0;
+			return array();
 		}
 
-		return count( array_intersect( $term_tokens, $query_tokens ) );
+		return array_values( array_intersect( $term_tokens, $query_tokens ) );
 	}
 
 	private function support_tokens( string $text ): array {

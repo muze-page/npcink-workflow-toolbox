@@ -39,7 +39,8 @@ Target features:
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
 - Post editor Content Support panel for writing preparation, publish
-  preflight, taxonomy/tag, internal-link, and image-candidate fixed flows.
+  preflight, summary/category/tag optimization, taxonomy/tag, internal-link,
+  and image-candidate fixed flows.
 - Clear empty/error/loading states.
 - Reusable image-source picker with short-lived local result caching,
   empty-state query rewrites, concise candidate cards, and selected-image

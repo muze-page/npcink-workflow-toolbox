@@ -145,10 +145,13 @@ generation. Default draft-support results must include a small quality
 contract: expected output shape, operator review checklist, and reject-if rules
 for full-article output, unsupported claims, or write-like actions. Summary
 and terms optimization may suggest excerpts, categories, and tags, but it must
-not update excerpts, assign terms, mutate SEO fields, own content indexing, or
-be treated as full RAG. Site-level and media-helper AI routes must be added as
-separate narrow surfaces; they must not be hidden compatibility modes inside
-the draft-support route.
+not update excerpts, assign terms, mutate SEO fields, own taxonomy governance,
+own content indexing, store acceptance/audit truth, or be treated as full RAG.
+Its precision helpers may expose ranking signals, dedupe guidance, matched
+tokens, and suggested review metrics, but those remain operator-review aids.
+Site-level and media-helper AI routes must be added as separate narrow
+surfaces; they must not be hidden compatibility modes inside the draft-support
+route.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and

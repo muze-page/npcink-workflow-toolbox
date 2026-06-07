@@ -82,6 +82,7 @@ final class Provider_Client {
 		if ( ! in_array( $response_format, array( 'url', 'b64_json' ), true ) ) {
 			$response_format = 'url';
 		}
+		$media_context = $this->ai_image_media_context_from_input( $input, $prompt );
 
 		$handoff = is_array( $input['handoff'] ?? null ) ? $input['handoff'] : array();
 		$template = is_array( $handoff['runtime_request_template'] ?? null ) ? $handoff['runtime_request_template'] : array();
@@ -103,6 +104,7 @@ final class Provider_Client {
 				'response_format' => $response_format,
 				'n'               => $n,
 				'purpose'         => sanitize_key( (string) ( $input['purpose'] ?? 'image_source_candidate_generation' ) ),
+				'media_context'   => $media_context,
 				'review'          => array(
 					'prompt_reviewed_by_operator' => true,
 					'write_posture'               => 'candidate_only',
@@ -160,6 +162,39 @@ final class Provider_Client {
 		}
 
 		return $this->normalize_ai_image_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
+	public function submit_agent_feedback( array $input ) {
+		$payload = $this->agent_feedback_payload( $input );
+		if ( is_wp_error( $payload ) ) {
+			return $payload;
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_agent_feedback_cloud_request', null, $payload, $input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_agent_feedback_response( $handled, $payload );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'send_agent_feedback_event' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_agent_feedback_cloud_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before sending Agent feedback.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'agent_feedback' );
+		$idempotency_key = 'agent-feedback-' . substr( md5( (string) wp_json_encode( $payload ) ), 0, 24 );
+		$response        = $client->send_agent_feedback_event( $payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_agent_feedback_response( is_array( $response ) ? $response : array(), $payload );
 	}
 
 	private function should_include_ai_generated_images( array $options ): bool {
@@ -449,7 +484,7 @@ final class Provider_Client {
 		return array( $result );
 	}
 
-	private function normalize_ai_generated_image_candidate( array $candidate, string $query, string $fallback_prompt ): array {
+	private function normalize_ai_generated_image_candidate( array $candidate, string $query, string $fallback_prompt, array $media_context = array() ): array {
 		$url = $this->first_non_empty_url(
 			array(
 				$candidate['regular_url'] ?? '',
@@ -478,7 +513,34 @@ final class Provider_Client {
 		$provider = sanitize_key( (string) ( $candidate['generation_provider'] ?? $candidate['provider_name'] ?? 'ai_generated' ) );
 		$model    = sanitize_text_field( (string) ( $candidate['model'] ?? $candidate['generation_model'] ?? '' ) );
 		$prompt   = trim( sanitize_textarea_field( (string) ( $candidate['prompt'] ?? $candidate['generation_prompt'] ?? $fallback_prompt ) ) );
-		$alt      = trim( sanitize_textarea_field( (string) ( $candidate['alt_description'] ?? $candidate['alt'] ?? $candidate['description'] ?? $query ) ) );
+		$title    = trim( sanitize_text_field( (string) ( $candidate['title'] ?? $media_context['title'] ?? $query ) ) );
+		if ( '' === $title || $this->is_ai_generation_instruction_text( $title ) ) {
+			$title = $this->ai_image_media_title_from_subject( $this->ai_image_subject_from_prompt( $prompt ) );
+		}
+		$description = trim( sanitize_textarea_field( (string) ( $candidate['description'] ?? $media_context['description'] ?? '' ) ) );
+		if ( '' === $description || $this->is_ai_generation_instruction_text( $description ) ) {
+			$description = trim( sanitize_textarea_field( (string) ( $media_context['description'] ?? '' ) ) );
+		}
+		if ( '' === $description ) {
+			$description = $this->ai_image_media_description_from_subject( $title );
+		}
+		$alt = trim( sanitize_textarea_field( (string) ( $candidate['alt_description'] ?? $candidate['alt'] ?? $media_context['alt'] ?? '' ) ) );
+		if ( '' === $alt || $this->is_ai_generation_instruction_text( $alt ) ) {
+			$alt = trim( sanitize_textarea_field( (string) ( $media_context['alt'] ?? '' ) ) );
+		}
+		if ( '' === $alt ) {
+			$alt = $this->ai_image_media_alt_from_subject( $title );
+		}
+		$seo_suggestions = is_array( $candidate['seo_suggestions'] ?? null ) ? $this->sanitize_payload( $candidate['seo_suggestions'] ) : array();
+		$seo_suggestions = array_merge(
+			is_array( $seo_suggestions ) ? $seo_suggestions : array(),
+			array(
+				'title'       => $title,
+				'alt'         => $alt,
+				'alt_text'    => $alt,
+				'description' => $description,
+			)
+		);
 
 		return array(
 			'id'                            => sanitize_text_field( (string) ( $candidate['id'] ?? ( '' !== $url ? md5( $url ) : '' ) ) ),
@@ -486,7 +548,8 @@ final class Provider_Client {
 			'provider_name'                 => $provider,
 			'provider_origin'               => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
 			'source_type'                   => 'ai_generated',
-			'description'                   => $alt,
+			'title'                         => $title,
+			'description'                   => $description,
 			'alt_description'               => $alt,
 			'thumb_url'                     => $thumb_url,
 			'small_url'                     => $small_url,
@@ -504,7 +567,143 @@ final class Provider_Client {
 			'generation_provider'           => $provider,
 			'license_review_status'         => $this->normalize_license_review_status( (string) ( $candidate['license_review_status'] ?? 'required' ), 'ai_generated' ),
 			'requires_human_license_review' => true,
+			'seo_suggestions'               => $seo_suggestions,
 		);
+	}
+
+	private function ai_image_media_context_from_input( array $input, string $prompt ): array {
+		$raw_context = is_array( $input['media_context'] ?? null ) ? $input['media_context'] : array();
+		$post_context = is_array( $input['post_context'] ?? null ) ? $input['post_context'] : array();
+		$subject = trim(
+			sanitize_text_field(
+				(string) (
+					$input['media_title']
+					?? $raw_context['title']
+					?? $post_context['title']
+					?? $input['title']
+					?? ''
+				)
+			)
+		);
+		if ( '' === $subject || $this->is_ai_generation_instruction_text( $subject ) ) {
+			$subject = $this->ai_image_subject_from_prompt( $prompt );
+		}
+		$title = $this->ai_image_media_title_from_subject( $subject );
+		$description = trim(
+			sanitize_textarea_field(
+				(string) (
+					$input['media_description']
+					?? $raw_context['description']
+					?? $post_context['excerpt']
+					?? ''
+				)
+			)
+		);
+		if ( '' === $description || $this->is_ai_generation_instruction_text( $description ) ) {
+			$description = $this->ai_image_media_description_from_subject( $title );
+		}
+		$alt = trim(
+			sanitize_textarea_field(
+				(string) (
+					$input['media_alt']
+					?? $input['alt']
+					?? $input['alt_text']
+					?? $raw_context['alt']
+					?? $raw_context['alt_text']
+					?? ''
+				)
+			)
+		);
+		if ( '' === $alt || $this->is_ai_generation_instruction_text( $alt ) ) {
+			$alt = $this->ai_image_media_alt_from_subject( $title );
+		}
+
+		return array(
+			'title'       => $title,
+			'alt'         => $alt,
+			'description' => $description,
+		);
+	}
+
+	private function ai_image_subject_from_prompt( string $prompt ): string {
+		$prompt = trim( sanitize_textarea_field( $prompt ) );
+		if ( '' === $prompt ) {
+			return '';
+		}
+		$first_line = trim( (string) strtok( $prompt, "\r\n" ) );
+		$subject = preg_replace( '/^\\s*create\\s+an?\\s+original\\s+[^:：]*[:：]\\s*/i', '', $first_line );
+		$subject = preg_replace( '/\\s*composition\\s*[:：].*$/i', '', (string) $subject );
+		$subject = trim( sanitize_text_field( (string) $subject ) );
+		if ( '' === $subject || $this->is_ai_generation_instruction_text( $subject ) ) {
+			return '';
+		}
+		return $this->trim_ai_image_media_text( $subject, 120 );
+	}
+
+	private function ai_image_media_title_from_subject( string $subject ): string {
+		$subject = trim( sanitize_text_field( $subject ) );
+		if ( '' === $subject ) {
+			return __( 'AI-generated editorial image candidate', 'npcink-toolbox' );
+		}
+		return $this->trim_ai_image_media_text( $subject, 120 );
+	}
+
+	private function ai_image_media_alt_from_subject( string $subject ): string {
+		$subject = trim( sanitize_text_field( $subject ) );
+		if ( '' === $subject ) {
+			return __( 'Original editorial image candidate for the article.', 'npcink-toolbox' );
+		}
+		if ( $this->contains_cjk( $subject ) ) {
+			return sprintf( '《%s》的原创编辑配图', $subject );
+		}
+		return sprintf(
+			/* translators: %s: article title or topic. */
+			__( 'Original editorial image for "%s".', 'npcink-toolbox' ),
+			$subject
+		);
+	}
+
+	private function ai_image_media_description_from_subject( string $subject ): string {
+		$subject = trim( sanitize_text_field( $subject ) );
+		if ( '' === $subject ) {
+			return __( 'AI-generated image candidate. Review it before importing or setting it as featured media.', 'npcink-toolbox' );
+		}
+		if ( $this->contains_cjk( $subject ) ) {
+			return sprintf( 'AI 生成的文章配图候选，用于《%s》。导入或设为特色图前需要人工审查。', $subject );
+		}
+		return sprintf(
+			/* translators: %s: article title or topic. */
+			__( 'AI-generated image candidate for "%s". Review it before importing or setting it as featured media.', 'npcink-toolbox' ),
+			$subject
+		);
+	}
+
+	private function is_ai_generation_instruction_text( string $text ): bool {
+		$text = strtolower( trim( $text ) );
+		if ( '' === $text ) {
+			return false;
+		}
+		foreach ( array( 'create an original', 'composition:', 'composition：', 'style:', 'style：', 'avoid visible text', 'watermarks', 'copyrighted characters' ) as $needle ) {
+			if ( false !== strpos( $text, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private function contains_cjk( string $text ): bool {
+		return 1 === preg_match( '/[\\x{3400}-\\x{9fff}\\x{f900}-\\x{faff}]/u', $text );
+	}
+
+	private function trim_ai_image_media_text( string $text, int $max_chars ): string {
+		$text = trim( preg_replace( '/\\s+/u', ' ', sanitize_text_field( $text ) ) ?? sanitize_text_field( $text ) );
+		if ( '' === $text || 0 >= $max_chars ) {
+			return '';
+		}
+		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+			return mb_strlen( $text ) > $max_chars ? mb_substr( $text, 0, $max_chars ) : $text;
+		}
+		return strlen( $text ) > $max_chars ? substr( $text, 0, $max_chars ) : $text;
 	}
 
 	private function sanitize_provider_error_data( $data ): array {
@@ -3051,13 +3250,17 @@ final class Provider_Client {
 					'short_summary'        => 'one compact excerpt candidate grounded in the supplied draft',
 					'standard_summary'     => 'one slightly fuller summary for editor review',
 					'seo_meta_description' => 'one meta description candidate, no more than 160 characters',
-					'category_candidates'  => 'existing-category-first candidates with rationale and confidence',
-					'tag_candidates'       => 'existing-tag-first candidates; mark any proposed new tag separately',
+					'category_candidates'  => 'existing-category-first candidates with rationale, evidence_source, and confidence',
+					'tag_candidates'       => 'existing-tag-first candidates with rationale and evidence_source; mark any proposed new tag separately',
+					'normalization_notes'  => 'case, synonym, translation, plural/singular, and duplicate-label risks',
+					'feedback_metrics'     => 'acceptance rate, summary edit distance, new-term rate, duplicate risk, and evidence coverage fields for later review',
 					'risk_notes'           => 'unsupported claims, duplicate-topic risk, or taxonomy-sprawl concerns',
 				),
 				'review_checklist' => array(
 					'Verify summary candidates do not add facts that are missing from the draft or evidence.',
 					'Prefer existing categories and tags before proposing new terms.',
+					'Require a short reason and evidence source for every category or tag candidate.',
+					'Normalize near-duplicate tags before suggesting a new term.',
 					'Route accepted excerpt, taxonomy, tag, or SEO changes through Core proposal approval.',
 				),
 			),
@@ -3332,7 +3535,7 @@ final class Provider_Client {
 			'title_summary'       => 'Generate only local draft-support suggestions: 5 title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary.',
 			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
 			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
-			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, and risk notes. Prefer existing terms when supplied and mark proposed new tags separately.',
+			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, normalization notes, feedback metric hints, and risk notes. Prefer existing terms when supplied, include a reason and evidence_source for every term candidate, and mark proposed new tags separately.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
 		$quality_contract = $this->hosted_ai_quality_contract( $intent );
 
@@ -3440,6 +3643,148 @@ final class Provider_Client {
 		}
 
 		return $payload;
+	}
+
+	private function agent_feedback_payload( array $input ) {
+		$handoff        = is_array( $input['handoff'] ?? null ) ? $input['handoff'] : array();
+		$proposal_input = is_array( $handoff['proposal_input'] ?? null ) ? $handoff['proposal_input'] : array();
+		$outcome        = sanitize_key( (string) ( $input['local_outcome'] ?? '' ) );
+		$allowed_outcomes = array(
+			'accepted',
+			'rejected',
+			'edited_before_accept',
+			'ignored',
+			'expired',
+			'blocked_by_policy',
+			'blocked_by_missing_input',
+		);
+
+		if ( ! in_array( $outcome, $allowed_outcomes, true ) ) {
+			return new WP_Error(
+				'npcink_toolbox_agent_feedback_outcome_invalid',
+				__( 'Choose a supported Agent feedback outcome.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$agent_id      = sanitize_key( (string) ( $input['agent_id'] ?? ( $handoff['agent_id'] ?? 'site_knowledge_suggestion_agent' ) ) );
+		$handoff_type  = sanitize_key( (string) ( $input['handoff_type'] ?? ( $handoff['handoff_type'] ?? 'proposal_input' ) ) );
+		$source_runtime = sanitize_key( (string) ( $input['source_runtime'] ?? 'site_knowledge' ) );
+		if ( '' === $agent_id ) {
+			$agent_id = 'site_knowledge_suggestion_agent';
+		}
+		if ( '' === $handoff_type ) {
+			$handoff_type = 'proposal_input';
+		}
+		if ( '' === $source_runtime ) {
+			$source_runtime = 'site_knowledge';
+		}
+
+		$handoff_id = sanitize_text_field( (string) ( $input['handoff_id'] ?? ( $handoff['handoff_id'] ?? '' ) ) );
+		if ( '' === $handoff_id ) {
+			$handoff_id = 'site_knowledge_handoff_' . substr( md5( $agent_id . '|' . wp_json_encode( $proposal_input ) ), 0, 16 );
+		}
+		$created_at = sanitize_text_field( (string) ( $input['created_at'] ?? '' ) );
+		if ( '' === $created_at ) {
+			$created_at = gmdate( 'c' );
+		}
+
+		return array(
+			'contract_version' => 'cloud_agent_feedback.v1',
+			'agent_id'         => $agent_id,
+			'agent_version'    => sanitize_text_field( (string) ( $input['agent_version'] ?? ( $handoff['agent_version'] ?? '' ) ) ),
+			'source_runtime'   => $source_runtime,
+			'source_run_id'    => sanitize_text_field( (string) ( $input['source_run_id'] ?? ( $handoff['source_run_id'] ?? '' ) ) ),
+			'handoff_id'       => $handoff_id,
+			'handoff_type'     => $handoff_type,
+			'local_surface'    => sanitize_key( (string) ( $input['local_surface'] ?? 'toolbox_site_knowledge' ) ),
+			'local_outcome'    => $outcome,
+			'feedback_labels'  => $this->sanitize_agent_feedback_labels( $input['feedback_labels'] ?? array() ),
+			'operator_note'    => substr( sanitize_textarea_field( (string) ( $input['operator_note'] ?? '' ) ), 0, 500 ),
+			'local_proposal_id' => sanitize_text_field( (string) ( $input['local_proposal_id'] ?? '' ) ),
+			'evidence_ref_ids' => $this->agent_feedback_evidence_ref_ids( $input, $proposal_input ),
+			'redaction_status' => 'metadata_only',
+			'retention_class'  => 'quality_eval',
+			'created_at'       => $created_at,
+		);
+	}
+
+	private function sanitize_agent_feedback_labels( $labels ): array {
+		$allowed = array(
+			'evidence_useful',
+			'evidence_weak',
+			'wrong_intent',
+			'wrong_next_step',
+			'missing_context',
+			'unsafe_or_overreaching',
+			'too_generic',
+			'duplicate_suggestion',
+			'good_but_needs_human_draft',
+			'not_relevant_to_site',
+			'operator_confidence_high',
+			'operator_confidence_low',
+		);
+		$items = is_array( $labels ) ? $labels : array();
+		$normalized = array();
+		foreach ( $items as $label ) {
+			$value = sanitize_key( (string) $label );
+			if ( in_array( $value, $allowed, true ) && ! in_array( $value, $normalized, true ) ) {
+				$normalized[] = $value;
+			}
+		}
+
+		return array_slice( $normalized, 0, 12 );
+	}
+
+	private function agent_feedback_evidence_ref_ids( array $input, array $proposal_input ): array {
+		$ids = array();
+		if ( is_array( $input['evidence_ref_ids'] ?? null ) ) {
+			foreach ( $input['evidence_ref_ids'] as $ref_id ) {
+				$value = substr( sanitize_text_field( (string) $ref_id ), 0, 191 );
+				if ( '' !== $value && ! in_array( $value, $ids, true ) ) {
+					$ids[] = $value;
+				}
+			}
+		}
+
+		$refs = is_array( $proposal_input['evidence_refs'] ?? null ) ? $proposal_input['evidence_refs'] : array();
+		foreach ( $refs as $index => $ref ) {
+			if ( ! is_array( $ref ) ) {
+				continue;
+			}
+			$value = sanitize_text_field( (string) ( $ref['id'] ?? ( $ref['ref_id'] ?? '' ) ) );
+			if ( '' === $value ) {
+				$source = sanitize_key( (string) ( $ref['source_type'] ?? 'evidence' ) );
+				$source_id = sanitize_text_field( (string) ( $ref['source_id'] ?? ( $ref['post_id'] ?? ( $ref['url'] ?? ( $index + 1 ) ) ) ) );
+				$value = $source . ':' . $source_id;
+			}
+			$value = substr( $value, 0, 191 );
+			if ( '' !== $value && ! in_array( $value, $ids, true ) ) {
+				$ids[] = $value;
+			}
+		}
+
+		return array_slice( $ids, 0, 24 );
+	}
+
+	private function normalize_agent_feedback_response( array $response, array $payload ): array {
+		$data = is_array( $response['data'] ?? null ) ? $response['data'] : $response;
+
+		return array(
+			'artifact_type'             => 'site_knowledge_agent_feedback_receipt',
+			'contract_version'         => 'cloud_agent_feedback.v1',
+			'status'                   => sanitize_key( (string) ( $response['status'] ?? 'ok' ) ),
+			'cloud_submission'         => 'submitted_for_eval',
+			'accepted_for_eval'        => ! array_key_exists( 'accepted_for_eval', $data ) || ! empty( $data['accepted_for_eval'] ),
+			'quality_rollup_candidate' => ! empty( $data['quality_rollup_candidate'] ),
+			'production_mutation'      => false,
+			'approval_truth'           => 'wordpress_local',
+			'preflight_truth'          => 'wordpress_local',
+			'final_write_truth'        => 'wordpress_local',
+			'feedback_event_id'        => sanitize_text_field( (string) ( $data['feedback_event_id'] ?? '' ) ),
+			'local_outcome'            => sanitize_key( (string) ( $payload['local_outcome'] ?? '' ) ),
+			'feedback_labels'          => $this->sanitize_agent_feedback_labels( $payload['feedback_labels'] ?? array() ),
+		);
 	}
 
 	private function site_knowledge_handoff_for_display( array $agent_handoff = array() ): array {

@@ -195,9 +195,12 @@ context. The summary/category/tag optimization flow returns an
 `article_discoverability_optimization.v1` artifact that combines hosted AI
 summary suggestions, existing-term candidates, Cloud-managed Site Knowledge
 related-content evidence, Cloud-managed web-search evidence, and saved content
-context. The panel returns suggestions only; it does not insert links, assign
-terms, update excerpts or SEO fields, import media, publish content, or write
-WordPress data.
+context. It now separates short summary, standard summary, and SEO meta
+description candidates; annotates term candidates with existing-term status,
+matched tokens, reasons, and normalization keys; and returns ranking, dedupe,
+and review-metric guidance for human evaluation. The panel returns suggestions
+only; it does not insert links, assign terms, update excerpts or SEO fields,
+import media, publish content, or write WordPress data.
 The image-source button opens a Cloud image recommendation modal: it
 automatically searches from the selected paragraph or selected block when
 available, combines that with the current draft context, and also lets the

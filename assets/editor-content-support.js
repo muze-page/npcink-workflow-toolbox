@@ -541,6 +541,9 @@
 	function formatImageErrorMessage(error, fallback) {
 		const code = error && error.code ? String(error.code) : '';
 		const message = error && error.message ? String(error.message) : '';
+		if (message.toLowerCase().indexOf('runtime quota') >= 0 && message.toLowerCase().indexOf('exhausted') >= 0) {
+			return __('Cloud runtime quota is exhausted for this request. Check Cloud quota or billing limits, then retry.', 'npcink-toolbox');
+		}
 		if (code === 'cloud_routing_profile_not_found' || message.indexOf('image-source.managed') >= 0) {
 			return __('Npcink Cloud image-source profile is not configured. Configure image-source.managed in Cloud, then search again.', 'npcink-toolbox');
 		}
@@ -551,6 +554,21 @@
 			return __('Npcink Cloud Addon is not connected or not configured for managed image-source search.', 'npcink-toolbox');
 		}
 		return message || fallback;
+	}
+
+	function defaultAiImageGenerationPrompt(postContext, picker, manualPrompt) {
+		const activePicker = normalizeImagePickerOptions(picker || {});
+		const context = imageRequestContext(postContext || {}, activePicker.context);
+		const subject = String(manualPrompt || context.selected_text || context.selected_block_text || context.title || context.excerpt || '').trim();
+		if (!subject) {
+			return '';
+		}
+		return [
+			'Create an original editorial image for: ' + truncateText(subject, 220),
+			'Composition: 16:9 image suitable for a WordPress article.',
+			'Style: clean editorial photo illustration, natural light, high quality.',
+			'Avoid visible text, brand logos, watermarks, distorted hands or faces, and copyrighted characters.'
+		].join('\n');
 	}
 
 	function imageCandidateTagValues(image) {
@@ -1096,10 +1114,20 @@
 			blocks.push(createElement('p', { key: 'summary-ai-output' }, truncateText(summaryText, 700)));
 		}
 
+		if (section.summary_layers) {
+			blocks.push(createElement('h4', { key: 'summary-layers-title' }, __('Summary layers', 'npcink-toolbox')));
+			blocks.push(renderItems(section.summary_layers.items || [], __('No summary layer candidates returned.', 'npcink-toolbox')));
+		}
+
 		blocks.push(createElement('h4', { key: 'summary-category-title' }, __('Category candidates', 'npcink-toolbox')));
 		blocks.push(renderItems(section.category_candidates || [], __('No matching existing categories found.', 'npcink-toolbox')));
 		blocks.push(createElement('h4', { key: 'summary-tag-title' }, __('Tag candidates', 'npcink-toolbox')));
 		blocks.push(renderItems(section.tag_candidates || [], __('No matching existing tags found.', 'npcink-toolbox')));
+
+		if (section.optimization_strategy && Array.isArray(section.optimization_strategy.ranking_signals)) {
+			blocks.push(createElement('h4', { key: 'summary-strategy-title' }, __('Ranking and dedupe strategy', 'npcink-toolbox')));
+			blocks.push(renderItems(section.optimization_strategy.ranking_signals, __('No ranking strategy returned.', 'npcink-toolbox')));
+		}
 
 		if (section.discoverability) {
 			blocks.push(createElement('h4', { key: 'summary-discoverability-title' }, __('Discoverability suggestions', 'npcink-toolbox')));
@@ -1114,6 +1142,11 @@
 		if (Array.isArray(section.risk_notes) && section.risk_notes.length) {
 			blocks.push(createElement('h4', { key: 'summary-risk-title' }, __('Review notes', 'npcink-toolbox')));
 			blocks.push(renderItems(section.risk_notes.map((note) => ({ name: note })), __('No review notes returned.', 'npcink-toolbox')));
+		}
+
+		if (section.review_metrics) {
+			blocks.push(createElement('h4', { key: 'summary-metrics-title' }, __('Review metrics', 'npcink-toolbox')));
+			blocks.push(renderItems(section.review_metrics.items || [], __('No review metrics returned.', 'npcink-toolbox')));
 		}
 
 		return createElement('div', { className: 'npcink-toolbox-editor-support__optimization' }, blocks);
@@ -1342,6 +1375,55 @@
 			}
 		}
 
+		async function runAiImageGeneration(event) {
+			if (event && event.preventDefault) {
+				event.preventDefault();
+			}
+			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
+			const context = imageRequestContext(postContext || {}, activePicker.context);
+			const prompt = defaultAiImageGenerationPrompt(postContext, activePicker, imageQuery);
+			if (!prompt) {
+				setImageError(__('Enter an AI image prompt, article title, or selected paragraph before generating.', 'npcink-toolbox'));
+				return;
+			}
+			setImageRunning('generate');
+			setImageError('');
+			setImageGuidance('');
+			setImageResult(null);
+			setSelectedImage(null);
+			setSelectedImageSeo(null);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+			try {
+				const result = await postJson('ai/image-generation', {
+					prompt,
+					aspect_ratio: '16:9',
+					resolution: 'high',
+					response_format: 'url',
+					n: 1,
+					purpose: 'editor_image_source_modal_generation',
+					media_context: {
+						title: truncateText(postContext.title || context.title || imageQuery || '', 120),
+						alt: '',
+						description: truncateText(postContext.excerpt || context.selected_text || context.selected_block_text || '', 220),
+					},
+					handoff: {
+						trigger: 'manual_user_action',
+						action_id: 'ai_generate_image',
+						runtime_request_template: {
+							ability_name: 'magick-ai-cloud/generate-image',
+						},
+					},
+				});
+				setImageResult(result);
+				setImageGuidance(__('Showing AI-generated image candidates. Review and adopt through Core before importing or setting featured media.', 'npcink-toolbox'));
+			} catch (requestError) {
+				setImageError(formatImageErrorMessage(requestError, __('AI image generation failed.', 'npcink-toolbox')));
+			} finally {
+				setImageRunning('');
+			}
+		}
+
 		function useSuggestedImageQuery(query) {
 			runImageSearch(null, query);
 		}
@@ -1484,7 +1566,7 @@
 						createElement('input', {
 							type: 'search',
 							value: imageQuery,
-							placeholder: __('Search image sources', 'npcink-toolbox'),
+							placeholder: __('Search image sources or enter an AI image prompt', 'npcink-toolbox'),
 							onChange: (event) => setImageQuery(event.target.value),
 						}),
 						createElement(
@@ -1496,6 +1578,17 @@
 								disabled: Boolean(imageRunning),
 							},
 							imageRunning === 'search' ? __('Searching', 'npcink-toolbox') : __('Search', 'npcink-toolbox')
+						),
+						createElement(
+							Button,
+							{
+								type: 'button',
+								variant: 'primary',
+								isBusy: imageRunning === 'generate',
+								disabled: Boolean(imageRunning),
+								onClick: runAiImageGeneration,
+							},
+							imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : __('Generate image', 'npcink-toolbox')
 						),
 						createElement(
 							Button,
@@ -1526,7 +1619,7 @@
 							queryLabel ? createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Query: ', 'npcink-toolbox') + queryLabel) : null,
 							renderImageVisualBrief(imageResult),
 							renderImageDiagnostics(imageResult),
-								imageRunning ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, __('Loading cloud image candidates...', 'npcink-toolbox'))) : null,
+								imageRunning ? createElement('div', { className: 'npcink-toolbox-editor-support__running' }, createElement(Spinner, null), createElement('span', null, imageRunning === 'generate' ? __('Generating AI image candidate...', 'npcink-toolbox') : __('Loading cloud image candidates...', 'npcink-toolbox'))) : null,
 								imageResult && !imageRunning ? renderImageCandidateCards(images, imageResult, selectedImage, selectImageCandidate, useSuggestedImageQuery, activePicker) : null
 						),
 						createElement(

@@ -60,18 +60,21 @@ final class Admin_Page {
 			return;
 		}
 
+		$style_version  = $this->asset_version( 'assets/admin.css' );
+		$script_version = $this->asset_version( 'assets/admin.js' );
+
 		wp_enqueue_style(
 			'npcink-toolbox-admin',
 			NPCINK_TOOLBOX_URL . 'assets/admin.css',
 			array(),
-			NPCINK_TOOLBOX_VERSION
+			$style_version
 		);
 
 		wp_enqueue_script(
 			'npcink-toolbox-admin',
 			NPCINK_TOOLBOX_URL . 'assets/admin.js',
 			array(),
-			NPCINK_TOOLBOX_VERSION,
+			$script_version,
 			true
 		);
 		wp_set_script_translations(
@@ -101,6 +104,12 @@ final class Admin_Page {
 				)
 			)
 		);
+	}
+
+	private function asset_version( string $relative_path ): string {
+		$path     = NPCINK_TOOLBOX_DIR . ltrim( $relative_path, '/' );
+		$modified = file_exists( $path ) ? filemtime( $path ) : false;
+		return NPCINK_TOOLBOX_VERSION . ( $modified ? '-' . (string) $modified : '' );
 	}
 
 	private function datetime_display_config(): array {
@@ -651,6 +660,7 @@ final class Admin_Page {
 							<div>
 								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-smoke">
 									<?php $this->render_image_source_candidates_smoke_form( $cloud_ready ); ?>
+									<?php $this->render_ai_image_generation_smoke_form( $cloud_ready ); ?>
 								</div>
 							<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="image-derivative-preview" hidden>
 								<?php $this->render_image_derivative_preview_check(); ?>
@@ -1087,7 +1097,7 @@ final class Admin_Page {
 				'id'          => 'summary-terms-optimization',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Summary and Terms Optimization', 'npcink-toolbox' ),
-				'description' => __( 'Use hosted AI, Cloud-managed Site Knowledge, web-search evidence, and saved content context to suggest article summary, category, and tag candidates.', 'npcink-toolbox' ),
+				'description' => __( 'Use hosted AI, existing WordPress terms, Cloud-managed Site Knowledge, web-search evidence, and saved content context to suggest layered summaries, category/tag candidates, ranking reasons, dedupe guidance, and review metrics.', 'npcink-toolbox' ),
 				'intent'      => 'summary_terms_optimization',
 				'button'      => __( 'Optimize metadata', 'npcink-toolbox' ),
 				'custom'      => 'content_support_flow',
@@ -1395,6 +1405,46 @@ final class Admin_Page {
 				</label>
 			</div>
 			<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Test Cloud image source', 'npcink-toolbox' ); ?></button>
+			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+		</form>
+		<?php
+	}
+
+	private function render_ai_image_generation_smoke_form( bool $cloud_ready = true ): void {
+		?>
+		<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="ai/image-generation">
+			<h3><?php esc_html_e( 'AI image generation smoke test', 'npcink-toolbox' ); ?></h3>
+			<p><?php esc_html_e( 'Generate one reviewed-prompt AI image candidate through hosted Cloud runtime. The result stays candidate-only and does not import media or write WordPress.', 'npcink-toolbox' ); ?></p>
+			<?php if ( ! $cloud_ready ) : ?>
+				<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before testing hosted AI image generation.', 'npcink-toolbox' ); ?></div>
+			<?php endif; ?>
+			<label>
+				<span><?php esc_html_e( 'Reviewed prompt', 'npcink-toolbox' ); ?></span>
+				<textarea name="prompt" rows="4"><?php echo esc_textarea( __( 'Create an original editorial header image for a WordPress article about AI image generation governance. Composition: 16:9 image suitable for a WordPress article. Style: clean editorial photo illustration, natural light, high quality. Avoid visible text, brand logos, watermarks, distorted hands or faces, and copyrighted characters.', 'npcink-toolbox' ) ); ?></textarea>
+			</label>
+			<div class="npcink-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Aspect ratio', 'npcink-toolbox' ); ?></span>
+					<select name="aspect_ratio">
+						<option value="16:9"><?php esc_html_e( '16:9', 'npcink-toolbox' ); ?></option>
+						<option value="1:1"><?php esc_html_e( '1:1', 'npcink-toolbox' ); ?></option>
+						<option value="4:3"><?php esc_html_e( '4:3', 'npcink-toolbox' ); ?></option>
+						<option value="3:4"><?php esc_html_e( '3:4', 'npcink-toolbox' ); ?></option>
+						<option value="9:16"><?php esc_html_e( '9:16', 'npcink-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Candidate count', 'npcink-toolbox' ); ?></span>
+					<input type="number" min="1" max="4" step="1" name="n" value="1" />
+				</label>
+			</div>
+			<input type="hidden" name="resolution" value="high" />
+			<input type="hidden" name="response_format" value="url" />
+			<input type="hidden" name="purpose" value="cloud_check_ai_image_generation" />
+			<input type="hidden" name="media_title" value="<?php esc_attr_e( 'AI image generation governance', 'npcink-toolbox' ); ?>" />
+			<input type="hidden" name="media_alt" value="<?php esc_attr_e( 'Original editorial image for AI image generation governance.', 'npcink-toolbox' ); ?>" />
+			<input type="hidden" name="media_description" value="<?php esc_attr_e( 'AI-generated image candidate for the hosted image generation smoke test. Review it before importing or setting it as featured media.', 'npcink-toolbox' ); ?>" />
+			<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Test AI image generation', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

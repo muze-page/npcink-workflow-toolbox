@@ -192,6 +192,9 @@
 	}
 
 	function normalizeRuntimeErrorText(text) {
+		if (text.toLowerCase().indexOf('runtime quota') >= 0 && text.toLowerCase().indexOf('exhausted') >= 0) {
+			return t('Cloud runtime quota is exhausted for this request. Check Cloud quota or billing limits, then retry.');
+		}
 		const profileTextInputMatch = text.match(/^profile '([^']+)' expects 'text', received ''$/);
 		if (profileTextInputMatch) {
 			return t('Cloud runtime profile expects text input but received an empty value. Check the Cloud route/profile input mapping.') + ' (' + profileTextInputMatch[1] + ')';
@@ -711,6 +714,8 @@
 					resolution: handoff.input_defaults && handoff.input_defaults.resolution ? handoff.input_defaults.resolution : 'high',
 					response_format: 'url',
 					n: count.value,
+					media_title: payload.query || payload.primary_query || '',
+					media_description: payload.message || '',
 					handoff
 				});
 				appendAiGenerationResult(container, response);
@@ -812,6 +817,111 @@
 		container.appendChild(section);
 	}
 
+	function siteKnowledgeEvidenceRefIds(handoff) {
+		const proposalInput = handoff && handoff.proposal_input && typeof handoff.proposal_input === 'object' ? handoff.proposal_input : {};
+		const refs = Array.isArray(proposalInput.evidence_refs) ? proposalInput.evidence_refs : [];
+		const ids = [];
+		refs.forEach((ref, index) => {
+			if (!ref || typeof ref !== 'object') {
+				return;
+			}
+			let value = ref.id || ref.ref_id || '';
+			if (!value) {
+				const source = ref.source_type || 'evidence';
+				const sourceId = ref.source_id || ref.post_id || ref.url || (index + 1);
+				value = String(source) + ':' + String(sourceId);
+			}
+			if (value && ids.indexOf(value) === -1) {
+				ids.push(String(value).slice(0, 191));
+			}
+		});
+		return ids.slice(0, 24);
+	}
+
+	function siteKnowledgeAgentFeedbackPayload(handoff, outcome, labels) {
+		const proposalInput = handoff && handoff.proposal_input && typeof handoff.proposal_input === 'object' ? handoff.proposal_input : {};
+		const agentId = handoff.agent_id || proposalInput.agent_id || 'site_knowledge_suggestion_agent';
+		const handoffType = handoff.handoff_type || 'proposal_input';
+		const handoffId = handoff.handoff_id || [
+			'site_knowledge',
+			agentId,
+			handoff.workflow || proposalInput.workflow || '',
+			handoff.local_next_action || proposalInput.local_next_action || '',
+			handoff.evidence_count || siteKnowledgeEvidenceRefIds(handoff).length
+		].join(':');
+
+		return {
+			contract_version: 'cloud_agent_feedback.v1',
+			agent_id: agentId,
+			agent_version: handoff.agent_version || proposalInput.agent_version || '',
+			source_runtime: 'site_knowledge',
+			source_run_id: handoff.source_run_id || handoff.run_id || '',
+			handoff_id: handoffId,
+			handoff_type: handoffType,
+			local_surface: 'toolbox_site_knowledge',
+			local_outcome: outcome,
+			feedback_labels: labels,
+			operator_note: '',
+			local_proposal_id: '',
+			evidence_ref_ids: siteKnowledgeEvidenceRefIds(handoff),
+			redaction_status: 'metadata_only',
+			retention_class: 'quality_eval',
+			created_at: new Date().toISOString(),
+			handoff: handoff || {}
+		};
+	}
+
+	async function submitSiteKnowledgeAgentFeedback(statusNode, handoff, button, outcome, labels) {
+		const originalText = button ? button.textContent : '';
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Sending...';
+		}
+		statusNode.className = 'npcink-toolbox__result-notice is-pending';
+		statusNode.textContent = 'Sending feedback to Cloud eval...';
+
+		try {
+			const receipt = await postJson(config.restUrl, 'agent-feedback', siteKnowledgeAgentFeedbackPayload(handoff, outcome, labels));
+			statusNode.className = 'npcink-toolbox__result-notice is-ok';
+			statusNode.textContent = receipt && receipt.accepted_for_eval
+				? 'Feedback accepted for Cloud eval. WordPress approval and writes remain local.'
+				: 'Feedback sent. WordPress approval and writes remain local.';
+		} catch (error) {
+			statusNode.className = 'npcink-toolbox__result-notice is-error';
+			statusNode.textContent = (error && error.message ? error.message : 'Could not send Agent feedback.') + ' WordPress approval and writes remain local.';
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = originalText;
+			}
+		}
+	}
+
+	function appendSiteKnowledgeAgentFeedbackControls(section, handoff) {
+		const feedback = el('div', 'npcink-toolbox__result-feedback');
+		feedback.setAttribute('data-toolbox-site-knowledge-agent-feedback', 'true');
+		feedback.appendChild(el('h4', '', 'Agent feedback'));
+		const actions = el('div', 'npcink-toolbox__result-actions');
+		const status = el('div', 'npcink-toolbox__result-notice is-pending', 'Feedback updates Cloud eval only. Core approval, preflight, and final WordPress writes stay local.');
+		const options = [
+			{ label: 'Useful', outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
+			{ label: 'Evidence weak', outcome: 'rejected', labels: ['evidence_weak', 'operator_confidence_low'] },
+			{ label: 'Wrong next step', outcome: 'rejected', labels: ['wrong_next_step'] },
+			{ label: 'Not relevant', outcome: 'rejected', labels: ['not_relevant_to_site'] }
+		];
+		options.forEach((option) => {
+			const button = el('button', 'button', option.label);
+			button.type = 'button';
+			button.setAttribute('data-toolbox-agent-feedback-outcome', option.outcome);
+			button.setAttribute('data-toolbox-agent-feedback-labels', option.labels.join(','));
+			button.addEventListener('click', () => submitSiteKnowledgeAgentFeedback(status, handoff, button, option.outcome, option.labels));
+			actions.appendChild(button);
+		});
+		feedback.appendChild(actions);
+		feedback.appendChild(status);
+		section.appendChild(feedback);
+	}
+
 	async function submitSiteKnowledgeReviewProposal(container, handoff, button) {
 		const form = container.closest('form');
 		if (!form) {
@@ -904,6 +1014,7 @@
 				actions.appendChild(createLink(config.coreAdminUrl, 'Open Core review'));
 			}
 			section.appendChild(actions);
+			appendSiteKnowledgeAgentFeedbackControls(section, handoff);
 		}
 		if (handoff.proposal_input && typeof handoff.proposal_input === 'object' && Object.keys(handoff.proposal_input).length) {
 			const proposalInput = handoff.proposal_input;
@@ -1026,6 +1137,7 @@
 
 	function renderSiteKnowledgeStatusNode(container, payload) {
 		const coverage = payload && payload.coverage && typeof payload.coverage === 'object' ? payload.coverage : {};
+		const quota = coverage.quota && typeof coverage.quota === 'object' ? coverage.quota : {};
 		const progress = payload && payload.progress && typeof payload.progress === 'object' ? payload.progress : {};
 		const activeRun = payload && payload.active_run && typeof payload.active_run === 'object' ? payload.active_run : {};
 		clearNode(container);
@@ -1051,9 +1163,33 @@
 		appendMeta(meta, 'Indexed chunks', coverage.indexed_chunks);
 		appendMeta(meta, 'Truncated documents', coverage.truncated_documents);
 		appendMeta(meta, 'Failures', progress.failed_documents);
+		appendMeta(meta, 'Skipped', progress.skipped_documents);
+		appendMeta(meta, 'Quota skipped', progress.skipped_due_to_quota || quota.skipped_due_to_quota);
 		appendMeta(meta, 'Last sync', formatDateTime(coverage.last_sync_at));
 		appendMeta(meta, 'Active run', activeRun.run_id);
 		appendMeta(meta, 'Comments', coverage.comments_enabled === true ? 'Enabled in Cloud' : 'Disabled in Cloud');
+		appendMeta(meta, 'Cloud quota', quota.status ? formatLabel(quota.status) : '');
+		appendMeta(
+			meta,
+			'Indexed documents quota',
+			quota.max_indexed_documents_per_site
+				? String(quota.indexed_documents || coverage.indexed_posts || 0) + ' / ' + String(quota.max_indexed_documents_per_site)
+				: ''
+		);
+		appendMeta(
+			meta,
+			'Indexed chunks quota',
+			quota.max_indexed_chunks_per_site
+				? String(quota.indexed_chunks || coverage.indexed_chunks || 0) + ' / ' + String(quota.max_indexed_chunks_per_site)
+				: ''
+		);
+		appendMeta(
+			meta,
+			'Run batch cap',
+			quota.max_sync_documents_per_run
+				? String(quota.max_sync_documents_per_run) + ' documents / ' + String(quota.max_sync_chunks_per_run || 0) + ' chunks'
+				: ''
+		);
 		if (meta.childNodes.length) {
 			container.appendChild(meta);
 		}
@@ -1586,8 +1722,14 @@
 		}
 		container.appendChild(shell);
 
+		if (section.summary_layers) {
+			renderSupportItems(container, 'Summary layers', supportItems(section.summary_layers), 'No summary layer candidates returned.');
+		}
 		renderSupportItems(container, 'Category candidates', section.category_candidates || [], 'No matching existing categories found.');
 		renderSupportItems(container, 'Tag candidates', section.tag_candidates || [], 'No matching existing tags found.');
+		if (section.optimization_strategy && Array.isArray(section.optimization_strategy.ranking_signals)) {
+			renderSupportItems(container, 'Ranking and dedupe strategy', section.optimization_strategy.ranking_signals, 'No ranking strategy returned.');
+		}
 		if (section.discoverability) {
 			renderSupportItems(container, 'Discoverability suggestions', discoverabilitySuggestionItems(section.discoverability), 'No discoverability suggestions returned.');
 		}
@@ -1596,6 +1738,9 @@
 		}
 		if (Array.isArray(section.risk_notes)) {
 			renderSupportItems(container, 'Review notes', section.risk_notes.map((note) => ({ name: note })), 'No review notes returned.');
+		}
+		if (section.review_metrics) {
+			renderSupportItems(container, 'Review metrics', supportItems(section.review_metrics), 'No review metrics returned.');
 		}
 	}
 
@@ -2502,7 +2647,11 @@
 		}
 
 		if (payload.artifact_type === 'image_source_candidates') {
-			renderImageSourceCandidates(form, payload);
+			renderImageSourceCandidates(
+				form,
+				payload,
+				payload.provider_mode === 'ai_generated' ? 'AI-generated image candidates' : ''
+			);
 			return;
 		}
 

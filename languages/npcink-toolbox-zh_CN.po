@@ -830,6 +830,27 @@ msgstr "可选 Unsplash 颜色筛选"
 msgid "Test Cloud image source"
 msgstr "测试 Cloud 图片来源"
 
+msgid "AI image generation smoke test"
+msgstr "AI 生图冒烟测试"
+
+msgid "Generate one reviewed-prompt AI image candidate through hosted Cloud runtime. The result stays candidate-only and does not import media or write WordPress."
+msgstr "通过托管 Cloud 运行时生成一张已审阅提示词的 AI 图片候选。结果仅保留为候选，不导入媒体，也不写入 WordPress。"
+
+msgid "Connect Cloud Addon before testing hosted AI image generation."
+msgstr "测试托管 AI 生图前，请先连接 Cloud Addon。"
+
+msgid "Reviewed prompt"
+msgstr "已审阅提示词"
+
+msgid "Create an original editorial header image for a WordPress article about AI image generation governance. Composition: 16:9 image suitable for a WordPress article. Style: clean editorial photo illustration, natural light, high quality. Avoid visible text, brand logos, watermarks, distorted hands or faces, and copyrighted characters."
+msgstr "为一篇关于 AI 生图治理的 WordPress 文章创建原创编辑类头图。构图：适合 WordPress 文章的 16:9 图片。风格：干净的编辑类照片插画，自然光，高质量。避免可见文字、品牌 logo、水印、扭曲的手或脸，以及受版权保护的角色。"
+
+msgid "Aspect ratio"
+msgstr "宽高比"
+
+msgid "Test AI image generation"
+msgstr "测试 AI 生图"
+
 msgid "off or incomplete"
 msgstr "关闭或未完整配置"
 
