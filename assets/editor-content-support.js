@@ -387,6 +387,61 @@
 		return String(image.id || image.download_url || image.regular_url || imagePreviewUrl(image) || imageTitle(image) || index);
 	}
 
+	function imageAgentFeedbackEvidenceRefIds(payload, selectedImage) {
+		const images = selectedImage ? [selectedImage] : extractImageCandidates(payload).slice(0, 8);
+		const ids = [];
+		images.forEach((image, index) => {
+			if (!image || typeof image !== 'object') {
+				return;
+			}
+			const provider = String(image.provider || (payload && (payload.provider_mode || payload.resolved_provider)) || 'image').trim();
+			const sourceType = String(image.source_type || (payload && payload.provider_mode) || 'candidate').trim();
+			const id = String(image.id || image.asset_id || image.suggested_filename || imageStableKey(image, index)).trim();
+			const value = ['image', sourceType, provider, id].filter(Boolean).join(':').slice(0, 191);
+			if (value && ids.indexOf(value) === -1) {
+				ids.push(value);
+			}
+		});
+		if (!ids.length && payload && payload.run_id) {
+			ids.push(String('image_run:' + payload.run_id).slice(0, 191));
+		}
+		return ids.slice(0, 24);
+	}
+
+	function editorImageAgentFeedbackPayload(payload, selectedImage, picker, outcome, labels) {
+		const activePicker = normalizeImagePickerOptions(picker || {});
+		const sourceType = String((selectedImage && selectedImage.source_type) || (payload && payload.provider_mode) || '').toLowerCase();
+		const aiGenerated = sourceType === 'ai_generated';
+		const sourceRuntime = aiGenerated ? 'ai_image_generation' : 'image_candidates';
+		const surface = aiGenerated ? 'editor_ai_image_generation_modal' : 'editor_image_candidate_modal';
+		const runId = payload && payload.run_id ? String(payload.run_id) : '';
+		const handoffId = [
+			sourceRuntime,
+			activePicker.imageUse || activePicker.mode,
+			selectedImage ? imageStableKey(selectedImage, 0) : '',
+			runId
+		].filter(Boolean).join(':') || sourceRuntime;
+
+		return {
+			contract_version: 'cloud_agent_feedback.v1',
+			agent_id: aiGenerated ? 'ai_image_generation_candidate_agent' : 'image_source_candidate_agent',
+			agent_version: payload && payload.candidate_contract_version ? String(payload.candidate_contract_version) : '',
+			source_runtime: sourceRuntime,
+			source_run_id: runId,
+			handoff_id: handoffId.slice(0, 191),
+			handoff_type: 'editor_image_candidate_result',
+			local_surface: surface,
+			local_outcome: outcome,
+			feedback_labels: labels,
+			operator_note: '',
+			local_proposal_id: '',
+			evidence_ref_ids: imageAgentFeedbackEvidenceRefIds(payload || {}, selectedImage),
+			redaction_status: 'metadata_only',
+			retention_class: 'quality_eval',
+			created_at: new Date().toISOString()
+		};
+	}
+
 	function imageSearchCacheKey(type, picker, query, context) {
 		const cachePicker = normalizeImagePickerOptions(picker || {});
 		const cacheContext = imageRequestContext(context || {}, cachePicker.context);
@@ -884,7 +939,43 @@
 		);
 	}
 
-	function renderSelectedImagePanel(selectedImage, seoFields, adoptionRunning, adoptionResult, adoptionError, picker, onSeoFieldChange, onAdoptFeatured, onImportOnly, onSelectOnly) {
+	function renderEditorImageFeedbackControls(selectedImage, feedbackRunning, feedbackStatus, onSubmitFeedback) {
+		if (!selectedImage || typeof onSubmitFeedback !== 'function') {
+			return null;
+		}
+		const options = [
+			{ label: __('Useful', 'npcink-toolbox'), outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
+			{ label: __('Adoption planned', 'npcink-toolbox'), outcome: 'accepted', labels: ['evidence_useful', 'good_but_needs_human_draft'] },
+			{ label: __('Low quality', 'npcink-toolbox'), outcome: 'rejected', labels: ['visual_quality_low', 'operator_confidence_low'] },
+			{ label: __('Source risk', 'npcink-toolbox'), outcome: 'rejected', labels: ['source_or_license_risk', 'operator_confidence_low'] },
+			{ label: __('Not relevant', 'npcink-toolbox'), outcome: 'rejected', labels: ['not_relevant_to_site'] },
+		];
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__image-feedback', 'data-toolbox-editor-image-agent-feedback': 'true' },
+			createElement('h3', null, __('Quick feedback', 'npcink-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__image-feedback-actions' },
+				options.map((option) => createElement(
+					Button,
+					{
+						key: option.label,
+						type: 'button',
+						variant: 'secondary',
+						isBusy: feedbackRunning === option.label,
+						disabled: Boolean(feedbackRunning),
+						onClick: () => onSubmitFeedback(option),
+					},
+					option.label
+				))
+			),
+			createElement('small', null, __('Feedback updates Cloud eval only. Media import and WordPress writes stay local.', 'npcink-toolbox')),
+			feedbackStatus ? createElement(Notice, { status: feedbackStatus.status, isDismissible: false }, feedbackStatus.message) : null
+		);
+	}
+
+	function renderSelectedImagePanel(selectedImage, seoFields, adoptionRunning, adoptionResult, adoptionError, picker, onSeoFieldChange, onAdoptFeatured, onImportOnly, onSelectOnly, feedbackRunning, feedbackStatus, onSubmitFeedback) {
 		const activePicker = normalizeImagePickerOptions(picker || {});
 		const paragraphMode = activePicker.mode === 'paragraph';
 		const selectOnlyMode = activePicker.adoptionMode === 'select_only';
@@ -1005,6 +1096,7 @@
 				)
 			),
 			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, selectOnlyMode ? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox') : paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox')),
+			renderEditorImageFeedbackControls(selectedImage, feedbackRunning, feedbackStatus, onSubmitFeedback),
 			adoptionError ? createElement(Notice, { status: 'error', isDismissible: false }, adoptionError) : null,
 			renderAdoptionResult(adoptionResult)
 		);
@@ -1248,6 +1340,8 @@
 		const [imageAdoptionRunning, setImageAdoptionRunning] = useState(false);
 		const [imageAdoptionResult, setImageAdoptionResult] = useState(null);
 		const [imageAdoptionError, setImageAdoptionError] = useState('');
+		const [imageFeedbackRunning, setImageFeedbackRunning] = useState('');
+		const [imageFeedbackStatus, setImageFeedbackStatus] = useState(null);
 
 		useEffect(() => {
 			function handleParagraphImageRequest(event) {
@@ -1295,6 +1389,11 @@
 			}
 		}
 
+		function resetImageFeedbackState() {
+			setImageFeedbackRunning('');
+			setImageFeedbackStatus(null);
+		}
+
 		async function runAutoImageRecommendations(modeOverride, contextOverride, pickerOverride) {
 			const activePicker = normalizeImagePickerOptions(pickerOverride || imagePicker || { mode: imageMode });
 			const activeImageMode = modeOverride || activePicker.mode;
@@ -1317,6 +1416,7 @@
 				setSelectedImageSeo(null);
 				setImageAdoptionResult(null);
 				setImageAdoptionError('');
+				resetImageFeedbackState();
 				return;
 			}
 			setImageRunning('auto');
@@ -1327,6 +1427,7 @@
 			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
+			resetImageFeedbackState();
 			try {
 				const payload = Object.assign({}, imageContext, {
 					intent: 'image_candidates',
@@ -1368,6 +1469,7 @@
 				setSelectedImageSeo(null);
 				setImageAdoptionResult(null);
 				setImageAdoptionError('');
+				resetImageFeedbackState();
 				return;
 			}
 			setImageRunning('search');
@@ -1378,6 +1480,7 @@
 			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
+			resetImageFeedbackState();
 			try {
 				const result = await postJson('image-candidates', {
 					query,
@@ -1414,6 +1517,7 @@
 			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
+			resetImageFeedbackState();
 			try {
 				const candidateCount = Math.max(1, Math.min(4, parseInt(aiImageCandidateCount || '1', 10) || 1));
 				const result = await postJson('ai/image-generation', {
@@ -1479,6 +1583,7 @@
 			setSelectedImageSeo(null);
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
+			resetImageFeedbackState();
 			if (activePicker.autoSearch) {
 				runAutoImageRecommendations(activePicker.mode, activePicker.context, activePicker);
 			} else {
@@ -1499,6 +1604,7 @@
 			setSelectedImageSeo(buildImageSeoFields(image, seoContext));
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
+			resetImageFeedbackState();
 		}
 
 		function updateSelectedImageSeo(field, value) {
@@ -1575,6 +1681,34 @@
 				setImageAdoptionError(requestError && requestError.message ? requestError.message : __('Could not adopt the selected image.', 'npcink-toolbox'));
 			} finally {
 				setImageAdoptionRunning(false);
+			}
+		}
+
+		async function submitSelectedImageFeedback(option) {
+			if (!selectedImage) {
+				setImageFeedbackStatus({ status: 'error', message: __('Select an image candidate first.', 'npcink-toolbox') });
+				return;
+			}
+			setImageFeedbackRunning(option.label);
+			setImageFeedbackStatus(null);
+			try {
+				const receipt = await postJson(
+					'agent-feedback',
+					editorImageAgentFeedbackPayload(imageResult || {}, selectedImage, imagePicker || { mode: imageMode }, option.outcome, option.labels)
+				);
+				setImageFeedbackStatus({
+					status: 'success',
+					message: receipt && receipt.accepted_for_eval
+						? __('Feedback accepted for Cloud eval. Media import and WordPress writes remain local.', 'npcink-toolbox')
+						: __('Feedback sent. Media import and WordPress writes remain local.', 'npcink-toolbox'),
+				});
+			} catch (requestError) {
+				setImageFeedbackStatus({
+					status: 'error',
+					message: (requestError && requestError.message ? requestError.message : __('Could not send image feedback.', 'npcink-toolbox')) + ' ' + __('Media import and WordPress writes remain local.', 'npcink-toolbox'),
+				});
+			} finally {
+				setImageFeedbackRunning('');
 			}
 		}
 
