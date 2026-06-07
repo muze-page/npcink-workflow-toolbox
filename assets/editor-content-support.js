@@ -1239,6 +1239,9 @@
 		const [imageGuidance, setImageGuidance] = useState('');
 		const [imageQuery, setImageQuery] = useState('');
 		const [imageMode, setImageMode] = useState('featured');
+		const [aiImageAspectRatio, setAiImageAspectRatio] = useState('16:9');
+		const [aiImageResolution, setAiImageResolution] = useState('high');
+		const [aiImageCandidateCount, setAiImageCandidateCount] = useState('1');
 		const [imagePicker, setImagePicker] = useState(() => normalizeImagePickerOptions({ mode: 'featured' }));
 		const [selectedImage, setSelectedImage] = useState(null);
 		const [selectedImageSeo, setSelectedImageSeo] = useState(null);
@@ -1412,12 +1415,13 @@
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 			try {
+				const candidateCount = Math.max(1, Math.min(4, parseInt(aiImageCandidateCount || '1', 10) || 1));
 				const result = await postJson('ai/image-generation', {
 					prompt,
-					aspect_ratio: '16:9',
-					resolution: 'high',
+					aspect_ratio: aiImageAspectRatio,
+					resolution: aiImageResolution,
 					response_format: 'url',
-					n: 1,
+					n: candidateCount,
 					purpose: 'editor_image_source_modal_generation',
 					prompt_reviewed_by_operator: true,
 					media_context: {
@@ -1428,6 +1432,7 @@
 					handoff: {
 						trigger: 'manual_user_action',
 						action_id: 'ai_generate_image',
+						image_use: activePicker.imageUse,
 						runtime_request_template: {
 							ability_name: 'magick-ai-cloud/generate-image',
 						},
@@ -1444,6 +1449,23 @@
 
 		function useSuggestedImageQuery(query) {
 			runImageSearch(null, query);
+		}
+
+		function renderAiImageOption(label, value, onChange, options) {
+			return createElement(
+				'label',
+				{ className: 'npcink-toolbox-editor-support__image-option' },
+				createElement('span', null, label),
+				createElement(
+					'select',
+					{
+						value,
+						disabled: Boolean(imageRunning),
+						onChange: (event) => onChange(event.target.value),
+					},
+					options.map((option) => createElement('option', { key: option.value, value: option.value }, option.label))
+				)
+			);
 		}
 
 		function openImageSourcePicker(options) {
@@ -1606,7 +1628,7 @@
 								disabled: Boolean(imageRunning),
 								onClick: runAiImageGeneration,
 							},
-							imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : __('Generate image', 'npcink-toolbox')
+							imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : __('Generate AI image', 'npcink-toolbox')
 						),
 						createElement(
 							Button,
@@ -1617,7 +1639,44 @@
 								disabled: Boolean(imageRunning),
 								onClick: runAutoImageRecommendations,
 							},
-							__('Use draft', 'npcink-toolbox')
+							__('Search from article', 'npcink-toolbox')
+						),
+					),
+					createElement(
+						'div',
+						{ className: 'npcink-toolbox-editor-support__image-options' },
+						renderAiImageOption(
+							__('Aspect ratio', 'npcink-toolbox'),
+							aiImageAspectRatio,
+							setAiImageAspectRatio,
+							[
+								{ value: '16:9', label: '16:9' },
+								{ value: '1:1', label: '1:1' },
+								{ value: '4:3', label: '4:3' },
+								{ value: '3:4', label: '3:4' },
+								{ value: '9:16', label: '9:16' },
+							]
+						),
+						renderAiImageOption(
+							__('Quality', 'npcink-toolbox'),
+							aiImageResolution,
+							setAiImageResolution,
+							[
+								{ value: 'high', label: __('High', 'npcink-toolbox') },
+								{ value: 'medium', label: __('Medium', 'npcink-toolbox') },
+								{ value: 'low', label: __('Low', 'npcink-toolbox') },
+							]
+						),
+						renderAiImageOption(
+							__('Candidates', 'npcink-toolbox'),
+							aiImageCandidateCount,
+							setAiImageCandidateCount,
+							[
+								{ value: '1', label: '1' },
+								{ value: '2', label: '2' },
+								{ value: '3', label: '3' },
+								{ value: '4', label: '4' },
+							]
 						)
 					),
 					imageGuidance ? createElement(Notice, { status: 'info', isDismissible: false }, imageGuidance) : null,
