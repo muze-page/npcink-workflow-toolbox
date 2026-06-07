@@ -93,6 +93,7 @@
 			mode: 'featured',
 			imageUse: 'featured_image',
 			adoptionMode: 'featured_image',
+			initialSearchMode: 'source',
 			autoSearch: true,
 			title: __('Image source suggestions', 'npcink-toolbox'),
 			intro: __('Search uses the selected paragraph when available, plus article context, or a short visual query. Select one image to import it with media details and set it as the featured image through Adapter/Core.', 'npcink-toolbox'),
@@ -102,6 +103,7 @@
 			mode: 'paragraph',
 			imageUse: 'paragraph_image',
 			adoptionMode: 'media_import',
+			initialSearchMode: 'generate',
 			autoSearch: true,
 			title: __('Paragraph image suggestions', 'npcink-toolbox'),
 			intro: __('Search uses the selected paragraph plus article context. Select one image to import it with media details through Adapter/Core.', 'npcink-toolbox'),
@@ -111,6 +113,7 @@
 			mode: 'inline',
 			imageUse: 'inline_image',
 			adoptionMode: 'media_import',
+			initialSearchMode: 'source',
 			autoSearch: true,
 			title: __('Inline image suggestions', 'npcink-toolbox'),
 			intro: __('Search uses the selected text plus article context. Select one image to import it with media details through Adapter/Core.', 'npcink-toolbox'),
@@ -120,6 +123,7 @@
 			mode: 'setting',
 			imageUse: 'setting_image',
 			adoptionMode: 'select_only',
+			initialSearchMode: 'source',
 			autoSearch: false,
 			title: __('Setting image suggestions', 'npcink-toolbox'),
 			intro: __('Search uses a short visual query or supplied setting context. Select one image source to return it to the calling field; Toolbox does not write settings directly.', 'npcink-toolbox'),
@@ -539,10 +543,12 @@
 		const context = source.context && typeof source.context === 'object' ? source.context : {};
 		const imageUse = source.image_use || source.imageUse || preset.imageUse;
 		const adoptionMode = source.adoption_mode || source.adoptionMode || preset.adoptionMode;
+		const initialSearchMode = source.initial_search_mode || source.initialSearchMode || preset.initialSearchMode || 'source';
 		return Object.assign({}, preset, {
 			mode: preset.mode,
 			imageUse,
 			adoptionMode,
+			initialSearchMode: initialSearchMode === 'generate' ? 'generate' : 'source',
 			title: source.title || preset.title,
 			intro: source.intro || preset.intro,
 			emptyTitle: source.empty_title || source.emptyTitle || preset.emptyTitle,
@@ -615,18 +621,46 @@
 		return message || fallback;
 	}
 
-	function defaultAiImageGenerationPrompt(postContext, picker, manualPrompt) {
+	function aiImagePromptSubject(postContext, picker, manualPrompt) {
 		const activePicker = normalizeImagePickerOptions(picker || {});
 		const context = imageRequestContext(postContext || {}, activePicker.context);
-		const subject = String(manualPrompt || context.selected_text || context.selected_block_text || context.title || context.excerpt || '').trim();
-		if (!subject) {
+		const selectedContext = String(context.selected_text || context.selected_block_text || '').trim();
+		const operatorPrompt = String(manualPrompt || '').trim();
+		const articleContext = String(context.title || context.excerpt || '').trim();
+		const subject = selectedContext || operatorPrompt || articleContext;
+		if (!String(subject || '').trim()) {
+			return null;
+		}
+		return {
+			subject: String(subject || '').trim(),
+			operatorPrompt: selectedContext && operatorPrompt ? operatorPrompt : '',
+			source: selectedContext ? 'selected_paragraph' : (operatorPrompt ? 'operator_prompt' : 'article_context'),
+		};
+	}
+
+	function defaultAiImageGenerationPrompt(postContext, picker, manualPrompt, aspectRatio) {
+		const promptSubject = aiImagePromptSubject(postContext, picker, manualPrompt);
+		if (!promptSubject) {
 			return '';
 		}
+		const contextLabel = promptSubject.source === 'selected_paragraph'
+			? 'Context source: selected paragraph. Use it as semantic context, not as visible copy.'
+			: (promptSubject.source === 'operator_prompt' ? 'Context source: operator prompt.' : 'Context source: article context.');
+		const lines = [
+			'Create an original editorial image for a WordPress article.',
+			contextLabel,
+			'Source context: ' + truncateText(promptSubject.subject, 260),
+		];
+		if (promptSubject.operatorPrompt) {
+			lines.push('Operator visual direction: ' + truncateText(promptSubject.operatorPrompt, 220));
+		}
 		return [
-			'Create an original editorial image for: ' + truncateText(subject, 220),
-			'Composition: 16:9 image suitable for a WordPress article.',
+			...lines,
+			'Visual task: translate the context into a concrete editorial scene or metaphor; do not make a screenshot, poster, document, slide, interface, or text panel.',
+			'Composition: ' + (aspectRatio || '16:9') + ' image suitable for a WordPress article.',
 			'Style: clean editorial photo illustration, natural light, high quality.',
-			'Avoid visible text, brand logos, watermarks, distorted hands or faces, and copyrighted characters.'
+			'Text rule: no visible text, letters, numbers, labels, logos, watermarks, UI copy, or reproduced article wording.',
+			'Avoid distorted hands or faces and copyrighted characters.'
 		].join('\n');
 	}
 
@@ -1548,7 +1582,7 @@
 			}
 			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 			const context = imageRequestContext(postContext || {}, activePicker.context);
-			const prompt = defaultAiImageGenerationPrompt(postContext, activePicker, imageQuery);
+			const prompt = defaultAiImageGenerationPrompt(postContext, activePicker, imageQuery, aiImageAspectRatio);
 			if (!prompt) {
 				setImageError(__('Enter an AI image prompt, article title, or selected paragraph before generating.', 'npcink-toolbox'));
 				return;
@@ -1618,9 +1652,10 @@
 
 		function openImageSourcePicker(options) {
 			const activePicker = normalizeImagePickerOptions(options || { mode: 'featured' });
+			const initialSearchMode = activePicker.initialSearchMode || 'source';
 			setImagePicker(activePicker);
 			setImageMode(activePicker.mode);
-			setImageSearchMode('source');
+			setImageSearchMode(initialSearchMode);
 			setImageModalOpen(true);
 			setImageQuery(activePicker.initialQuery || '');
 			setImageGuidance('');
@@ -1629,7 +1664,7 @@
 			setImageAdoptionResult(null);
 			setImageAdoptionError('');
 			resetImageFeedbackState();
-			if (activePicker.autoSearch) {
+			if (activePicker.autoSearch && initialSearchMode !== 'generate') {
 				runAutoImageRecommendations(activePicker.mode, activePicker.context, activePicker);
 			} else {
 				setImageRunning('');
@@ -1764,8 +1799,11 @@
 
 			const images = extractImageCandidates(imageResult);
 			const queryLabel = imageResult && (imageResult.query || (imageResult.sections && imageResult.sections.image_candidates && imageResult.sections.image_candidates.query)) ? (imageResult.query || imageResult.sections.image_candidates.query) : '';
-			const selectedContext = imageResult && imageResult.post_context ? (imageResult.post_context.selected_text || imageResult.post_context.selected_block_text || '') : '';
 			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
+			const activeInputContext = imageRequestContext(postContext, activePicker.context);
+			const selectedContext = imageResult && imageResult.post_context
+				? (imageResult.post_context.selected_text || imageResult.post_context.selected_block_text || activeInputContext.selected_text || activeInputContext.selected_block_text || '')
+				: (activeInputContext.selected_text || activeInputContext.selected_block_text || '');
 			const inspectorSeoContext = imageRequestContext(postContext, activePicker.context);
 			const inspectorSeo = selectedImage ? Object.assign({}, buildImageSeoFields(selectedImage, inspectorSeoContext), selectedImageSeo || {}) : null;
 			return createElement(
