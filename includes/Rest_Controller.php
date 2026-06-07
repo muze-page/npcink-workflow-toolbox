@@ -31,6 +31,7 @@ final class Rest_Controller {
 		$this->post( '/site-knowledge/search', 'site_knowledge_search' );
 		$this->post( '/site-knowledge/sync', 'site_knowledge_sync' );
 		$this->post( '/agent-feedback', 'agent_feedback' );
+		$this->post( '/agent-feedback/summary', 'agent_feedback_summary' );
 		$this->post( '/ai/content-support', 'hosted_ai_content_support' );
 		$this->post( '/ai/site-helpers', 'hosted_ai_site_helper' );
 		$this->post( '/ai/image-generation', 'ai_image_generation' );
@@ -274,6 +275,15 @@ final class Rest_Controller {
 		}
 
 		return rest_ensure_response( $this->client->submit_agent_feedback( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function agent_feedback_summary( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if ( ! is_array( $params ) ) {
+			$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		}
+
+		return rest_ensure_response( $this->client->get_agent_feedback_summary( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function article_assistant( WP_REST_Request $request ) {

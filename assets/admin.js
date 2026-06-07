@@ -1210,6 +1210,45 @@
 		renderSiteKnowledgeAutoSync(container, payload && payload.auto_sync && typeof payload.auto_sync === 'object' ? payload.auto_sync : {});
 	}
 
+	function formatRate(value) {
+		const number = Number(value);
+		if (!Number.isFinite(number)) {
+			return '';
+		}
+		return Math.round(number * 1000) / 10 + '%';
+	}
+
+	function renderAgentFeedbackSummaryNode(container, payload) {
+		const outcomes = payload && payload.outcomes && typeof payload.outcomes === 'object' ? payload.outcomes : {};
+		const labels = payload && payload.labels && typeof payload.labels === 'object' ? payload.labels : {};
+		const rates = payload && payload.rates && typeof payload.rates === 'object' ? payload.rates : {};
+		const total = Number(payload && payload.events_total ? payload.events_total : 0);
+		clearNode(container);
+
+		container.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Agent feedback summary: ' + total + ' event' + (total === 1 ? '' : 's')));
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Window', payload && payload.window_hours ? String(payload.window_hours) + 'h' : '');
+		appendMeta(meta, 'Accepted', outcomes.accepted || outcomes.edited_before_accept ? String(Number(outcomes.accepted || 0) + Number(outcomes.edited_before_accept || 0)) : '');
+		appendMeta(meta, 'Rejected', outcomes.rejected);
+		appendMeta(meta, 'Ignored', outcomes.ignored);
+		appendMeta(meta, 'Accepted rate', formatRate(rates.accepted_rate));
+		appendMeta(meta, 'Evidence useful', formatRate(rates.evidence_useful_rate));
+		appendMeta(meta, 'Evidence weak', formatRate(rates.evidence_weak_rate));
+		appendMeta(meta, 'Wrong next step', formatRate(rates.wrong_next_step_rate));
+		appendMeta(meta, 'Write truth', payload && payload.final_write_truth ? formatLabel(payload.final_write_truth) : '');
+		if (meta.childNodes.length) {
+			container.appendChild(meta);
+		}
+
+		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'missing_context', 'operator_confidence_high', 'operator_confidence_low'];
+		const labelItems = importantLabels
+			.filter((label) => Number(labels[label] || 0) > 0)
+			.map((label) => ({ name: formatLabel(label), value: labels[label] }));
+		if (labelItems.length) {
+			renderSupportItems(container, 'Feedback labels', labelItems, 'No feedback labels returned.');
+		}
+	}
+
 	function renderSiteKnowledgeAutoSync(container, health) {
 		const status = String(health.status || 'idle');
 		const noticeKind = status === 'delayed' ? 'warning' : 'pending';
@@ -3013,7 +3052,28 @@
 			renderSiteKnowledgeStatusNode(summary, payload);
 			summary.appendChild(createRawDetails(payload, 'Status payload'));
 		}
+		refreshAgentFeedbackSummary(root).catch((error) => {
+			const feedbackSummary = root.querySelector('[data-toolbox-agent-feedback-summary]');
+			if (feedbackSummary) {
+				clearNode(feedbackSummary);
+				feedbackSummary.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', error.message || 'Agent feedback summary is unavailable.'));
+				feedbackSummary.appendChild(createRawDetails(error, 'Agent feedback summary error'));
+			}
+		});
 		updateSiteKnowledgeActionState(root, payload);
+		return payload;
+	}
+
+	async function refreshAgentFeedbackSummary(root) {
+		const summary = root.querySelector('[data-toolbox-agent-feedback-summary]');
+		if (!summary) {
+			return null;
+		}
+		clearNode(summary);
+		summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Loading Agent feedback summary...'));
+		const payload = await postJson(config.restUrl, 'agent-feedback/summary', { window_hours: 24 });
+		renderAgentFeedbackSummaryNode(summary, payload);
+		summary.appendChild(createRawDetails(payload, 'Agent feedback summary payload'));
 		return payload;
 	}
 

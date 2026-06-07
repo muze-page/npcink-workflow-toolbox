@@ -350,6 +350,13 @@ The first-version route matrix is exact:
 - `POST /image-candidates`
 - `POST /vector-search`
 - `POST /knowledge-search`
+- `POST /web-search/test`
+- `POST /web-search/diagnostics`
+- `POST /site-knowledge/search`
+- `POST /site-knowledge/sync`
+- `GET /site-knowledge/status`
+- `POST /agent-feedback`
+- `POST /agent-feedback/summary`
 - `POST /ai/content-support`
 - `POST /ai/site-helpers`
 - `POST /ai/image-generation`

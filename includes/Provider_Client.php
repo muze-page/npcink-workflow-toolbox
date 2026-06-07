@@ -197,6 +197,34 @@ final class Provider_Client {
 		return $this->normalize_agent_feedback_response( is_array( $response ) ? $response : array(), $payload );
 	}
 
+	public function get_agent_feedback_summary( array $input ) {
+		$window_hours = min( 168, max( 1, absint( $input['window_hours'] ?? 24 ) ) );
+
+		$handled = apply_filters( 'npcink_toolbox_agent_feedback_summary_cloud_request', null, $window_hours, $input );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_agent_feedback_summary_response( $handled, $window_hours );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'get_agent_feedback_summary' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_agent_feedback_summary_cloud_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before reading Agent feedback summary.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$response = $client->get_agent_feedback_summary( $window_hours, $this->trace_id( 'agent_feedback_summary' ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_agent_feedback_summary_response( is_array( $response ) ? $response : array(), $window_hours );
+	}
+
 	private function should_include_ai_generated_images( array $options ): bool {
 		if ( ! empty( $options['include_ai_generated'] ) ) {
 			return true;
@@ -3784,6 +3812,26 @@ final class Provider_Client {
 			'feedback_event_id'        => sanitize_text_field( (string) ( $data['feedback_event_id'] ?? '' ) ),
 			'local_outcome'            => sanitize_key( (string) ( $payload['local_outcome'] ?? '' ) ),
 			'feedback_labels'          => $this->sanitize_agent_feedback_labels( $payload['feedback_labels'] ?? array() ),
+		);
+	}
+
+	private function normalize_agent_feedback_summary_response( array $response, int $window_hours ): array {
+		$data = is_array( $response['data'] ?? null ) ? $response['data'] : $response;
+
+		return array(
+			'artifact_type'        => 'site_knowledge_agent_feedback_summary',
+			'contract_version'    => 'cloud_agent_feedback.v1',
+			'window_hours'        => $window_hours,
+			'events_total'        => absint( $data['events_total'] ?? 0 ),
+			'outcomes'            => is_array( $data['outcomes'] ?? null ) ? $this->sanitize_payload( $data['outcomes'] ) : array(),
+			'labels'              => is_array( $data['labels'] ?? null ) ? $this->sanitize_payload( $data['labels'] ) : array(),
+			'rates'               => is_array( $data['rates'] ?? null ) ? $this->sanitize_payload( $data['rates'] ) : array(),
+			'source_runtimes'     => is_array( $data['source_runtimes'] ?? null ) ? $this->sanitize_payload( $data['source_runtimes'] ) : array(),
+			'local_surfaces'      => is_array( $data['local_surfaces'] ?? null ) ? $this->sanitize_payload( $data['local_surfaces'] ) : array(),
+			'production_mutation' => false,
+			'approval_truth'      => 'wordpress_local',
+			'preflight_truth'     => 'wordpress_local',
+			'final_write_truth'   => 'wordpress_local',
 		);
 	}
 

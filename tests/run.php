@@ -266,6 +266,7 @@ toolbox_assert( false !== strpos( $admin_js, 'payload.evidence_gate' ) && false 
 toolbox_assert( false !== strpos( $admin_js, 'payload.handoff || payload.agent_handoff' ) && false !== strpos( $admin_js, 'Agent proposal input' ) && false !== strpos( $admin_js, 'Proposal candidate only' ), 'Admin JavaScript renders Cloud Site Knowledge agent handoff as a local Core proposal candidate.' );
 toolbox_assert( false !== strpos( $admin_js, 'Prepare local proposal candidate' ) && false !== strpos( $admin_js, 'site_knowledge_core_proposal_candidate' ) && false !== strpos( $admin_js, "core_submission: 'not_submitted'" ), 'Admin JavaScript prepares a local Site Knowledge proposal candidate packet without Core submission.' );
 toolbox_assert( false !== strpos( $admin_js, 'Submit Core review proposal' ) && false !== strpos( $admin_js, "'flows/site-knowledge-review-plan'" ) && false !== strpos( $admin_js, "'npcink-toolbox/build-site-knowledge-review-plan'" ) && false !== strpos( $admin_js, "'proposals/from-plan'" ), 'Admin JavaScript submits Site Knowledge review plans through Adapter/Core from-plan intake.' );
+toolbox_assert( false !== strpos( $admin_js, 'renderAgentFeedbackSummaryNode' ) && false !== strpos( $admin_js, "'agent-feedback/summary'" ) && false !== strpos( $admin_js, 'Wrong next step' ), 'Admin JavaScript renders read-only Agent feedback quality summary for Site Knowledge.' );
 toolbox_assert( false !== strpos( $admin_js, 'renderSiteKnowledgeAutoSync' ) && false !== strpos( $admin_js, 'Server cron suggestion' ) && false !== strpos( $admin_js, 'WP-Cron disabled' ), 'Admin JavaScript renders Site Knowledge auto-sync queue health and cron guidance.' );
 
 $development_workflow = file_get_contents( $root . '/docs/development-workflow.md' );
@@ -393,6 +394,7 @@ $allowed_rest_routes = array(
 	'/site-knowledge/sync',
 	'/site-knowledge/status',
 	'/agent-feedback',
+	'/agent-feedback/summary',
 	'/ai/content-support',
 	'/ai/site-helpers',
 	'/ai/image-generation',
@@ -522,6 +524,7 @@ toolbox_assert( false !== strpos( $client, 'filter_current_public_site_knowledge
 toolbox_assert( false !== strpos( $client, "'progress'" ) && false !== strpos( $client, "'active_run'" ), 'Provider client preserves Cloud Site Knowledge progress and active run status.' );
 toolbox_assert( false !== strpos( $client, "'agent_handoff'" ) && false !== strpos( $client, 'site_knowledge_handoff_for_display' ) && false !== strpos( $client, "'proposal_input'" ), 'Provider client preserves Cloud Site Knowledge agent handoff as a local proposal candidate only.' );
 toolbox_assert( false !== strpos( $client, 'submit_agent_feedback' ) && false !== strpos( $client, 'cloud_agent_feedback.v1' ) && false !== strpos( $client, 'send_agent_feedback_event' ), 'Provider client can send Site Knowledge Agent feedback through the Cloud Addon feedback seam.' );
+toolbox_assert( false !== strpos( $client, 'get_agent_feedback_summary' ) && false !== strpos( $client, 'npcink_toolbox_agent_feedback_summary_cloud_request' ) && false !== strpos( $client, "'site_knowledge_agent_feedback_summary'" ), 'Provider client can read Site Knowledge Agent feedback quality summary without moving approval truth.' );
 toolbox_assert( false !== strpos( $client, "'production_mutation'      => false" ) && false !== strpos( $client, "'approval_truth'           => 'wordpress_local'" ) && false !== strpos( $client, "'final_write_truth'        => 'wordpress_local'" ), 'Agent feedback receipts keep Cloud eval separate from local approval and WordPress write truth.' );
 toolbox_assert( false === strpos( $client, 'provider_body' ), 'Provider error responses do not expose raw provider bodies.' );
 toolbox_assert( false !== strpos( $client, "'write_posture' => 'suggestion_only'" ), 'Article brief handoff stays suggestion-only.' );
@@ -633,6 +636,7 @@ toolbox_assert( false !== strpos( $rest, "\$this->post( '/ai/site-helpers', 'hos
 toolbox_assert( false !== strpos( $rest, "\$this->post( '/ai/image-generation', 'ai_image_generation' )" ) && false !== strpos( $rest, "'ai_image_generation'" ) && false !== strpos( $rest, "'direct_wordpress_write'  => false" ), 'REST exposes a narrow AI image generation route without WordPress write authority.' );
 toolbox_assert( false !== strpos( $rest, 'query or vector field' ), 'Vector REST route accepts query or vector input.' );
 toolbox_assert( false !== strpos( $rest, 'site_knowledge_sync' ) && false !== strpos( $rest, 'site_knowledge_status' ) && false !== strpos( $rest, 'site_knowledge_search' ), 'REST routes expose Cloud-managed site knowledge operations.' );
+toolbox_assert( false !== strpos( $rest, "\$this->post( '/agent-feedback/summary', 'agent_feedback_summary' );" ) && false !== strpos( $rest, 'public function agent_feedback_summary' ), 'REST routes expose read-only Agent feedback summary for Site Knowledge.' );
 toolbox_assert( false !== strpos( $rest, "Site_Knowledge_Auto_Sync::health_snapshot()" ) && false !== strpos( $rest, "\$status['auto_sync']" ), 'Site Knowledge status REST response includes local auto-sync health.' );
 toolbox_assert( false === strpos( $rest, 'enhance_with_reader' ) && false === strpos( $rest, 'web_research' ) && false === strpos( $rest, 'jina_reader' ), 'REST exposes Cloud web search testing without local web research or reader enhancement inputs.' );
 toolbox_assert( false !== strpos( $rest, "'provider'    => sanitize_key" ), 'Image candidate REST route accepts provider selection.' );
