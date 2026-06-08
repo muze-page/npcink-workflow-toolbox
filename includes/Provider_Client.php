@@ -2796,7 +2796,7 @@ final class Provider_Client {
 			'data_classification' => 'public_reference_media',
 			'storage_mode'        => 'result_only',
 			'retention_ttl'       => 3600,
-			'timeout_seconds'     => 20,
+			'timeout_seconds'     => 60,
 			'retry_max'           => 0,
 			'policy'              => array(
 				'allow_fallback' => true,
