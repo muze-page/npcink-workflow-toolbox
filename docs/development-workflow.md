@@ -100,9 +100,11 @@ context before the candidate reaches Core adoption.
 - Keep content context separate from connector settings so Abilities exposure
   never returns provider keys or private credentials.
 - Keep provider output as suggestions unless a governed handoff is implemented.
-- Treat `local_admin_consent` as classification-only until an ADR defines the
-  concrete write owner, audit owner, preview evidence, and rollback evidence for
-  that operation.
+- Treat `local_admin_consent` as executable only for the existing attachment ->
+  current post featured-image proof. It must record Core audit before and after
+  the write and roll back if completion audit fails. All other write-like
+  operations still require a governed handoff unless a separate ADR defines
+  their write owner, audit owner, preview evidence, and rollback evidence.
 - Keep Cloud-managed web search output as source candidates, not verified truth.
   Toolbox does not own web search provider configuration, local key storage, or
   local search execution.

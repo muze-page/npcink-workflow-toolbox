@@ -73,7 +73,7 @@ foreach ( array( 'click-driven operator surface for the same local ability', 'Co
 	toolbox_assert( false !== strpos( $adr_product_surface, $required_adr_text ), 'ADR preserves Toolbox as OpenClaw fixed-flow surface: ' . $required_adr_text );
 }
 $adr_local_admin_consent = file_get_contents( $root . '/docs/decisions/ADR-003-local-admin-consent-boundary.md' );
-foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'Toolbox-owned direct-write permission', 'write owner', 'audit-log owner', 'featured-image adoption', 'Adapter/Core/Abilities' ) as $required_local_consent_adr_text ) {
+foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'existing WordPress image attachment', 'Core audit', 'rollback on completion-audit failure', 'no proposal creation', 'media import' ) as $required_local_consent_adr_text ) {
 	toolbox_assert( false !== strpos( $adr_local_admin_consent, $required_local_consent_adr_text ), 'ADR preserves Local Admin Consent boundary: ' . $required_local_consent_adr_text );
 }
 
@@ -89,6 +89,7 @@ $composer = file_get_contents( $root . '/composer.json' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'tests/smoke-article-draft-core-proof.php' ), 'Composer article smoke runs the Toolbox/Core handoff proof.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:metadata-delta' ) && false !== strpos( $composer, 'tests/smoke-content-metadata-delta.php' ), 'Composer exposes the Content Metadata Delta smoke script.' );
+toolbox_assert( false !== strpos( $composer, 'smoke:local-featured-image' ) && false !== strpos( $composer, 'tests/smoke-local-featured-image-consent.php' ), 'Composer exposes the Local Admin Consent featured image smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:ai-image-media-seo' ) && false !== strpos( $composer, 'tests/smoke-ai-image-media-seo.php' ), 'Composer exposes the AI image media SEO smoke script.' );
 
 $rest_controller = file_get_contents( $root . '/includes/Rest_Controller.php' );
@@ -402,6 +403,8 @@ toolbox_assert( false !== strpos( $editor_js, 'selectedImageSeo' ) && false !== 
 toolbox_assert( false !== strpos( $editor_js, "postJson('flows/image-candidate-adoption-plan'" ) && false !== strpos( $editor_js, 'Adopt as featured image' ), 'Editor image recommendation modal presents selected image adoption as one user action.' );
 toolbox_assert( false !== strpos( $editor_js, 'Import media only' ) && false !== strpos( $editor_js, 'set_featured_image: Boolean(setFeaturedImage)' ), 'Editor image inspector supports importing media without setting it as the featured image.' );
 toolbox_assert( false !== strpos( $editor_js, 'postAdapterAdoption' ) && false !== strpos( $editor_js, 'proposals/from-plan' ) && false !== strpos( $editor_js, 'approve-and-execute' ), 'Editor image adoption uses Adapter plan intake and unified approve-and-execute.' );
+toolbox_assert( false !== strpos( $editor_js, "postJson('local-admin-consent/featured-image'" ) && false !== strpos( $editor_js, 'local_consent' ) && false !== strpos( $editor_js, 'findAttachmentId(selectedImage, 0) > 0' ), 'Editor image adoption uses local admin consent only for existing media attachments.' );
+toolbox_assert( false !== strpos( $editor_js, 'Existing media can be set as the featured image through local admin consent with Core audit' ), 'Editor image inspector explains the local consent boundary for existing media.' );
 toolbox_assert( false === strpos( $editor_js, 'auto_approve_if_allowed' ) && false === strpos( $editor_js, 'execute_if_allowed' ), 'Editor image adoption does not send unsupported auto-execution flags to Core from-plan.' );
 toolbox_assert( false !== strpos( $editor_js, 'Media SEO' ) && false !== strpos( $editor_js, 'buildImageSeoFields' ) && false !== strpos( $editor_js, 'set_featured_image: Boolean(setFeaturedImage)' ), 'Editor image adoption plan edits media SEO fields before Core handoff.' );
 toolbox_assert( false !== strpos( $editor_js, 'editorImageAgentFeedbackPayload' ) && false !== strpos( $editor_js, "'agent-feedback'" ) && false !== strpos( $editor_js, 'data-toolbox-editor-image-agent-feedback' ), 'Editor image recommendation modal sends selected-image Agent feedback through the local Toolbox route.' );
@@ -491,6 +494,7 @@ $allowed_rest_routes = array(
 	'/flows/article-assistant',
 	'/flows/article-plan',
 	'/flows/image-candidate-adoption-plan',
+	'/local-admin-consent/featured-image',
 	'/flows/site-knowledge-review-plan',
 	'/flows/content-metadata-apply-plan',
 	'/flows/media-brief',
@@ -512,6 +516,9 @@ sort( $registered_rest_routes );
 toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route matrix exactly matches the first-version allowed routes.' );
 toolbox_assert( false !== strpos( $rest, "'methods'             => 'GET'" ) && false !== strpos( $rest, "private function post( string \$route, string \$method ): void" ) && false !== strpos( $rest, "'methods'             => 'POST'" ), 'REST route matrix keeps status as GET and tool actions as POST.' );
 toolbox_assert( false !== strpos( $rest, 'editor_content_support' ) && false !== strpos( $rest, "'artifact_type'          => 'editor_content_support_flow'" ) && false !== strpos( $rest, 'editor_support_section' ), 'REST controller exposes a safe suggestion-only editor content support flow.' );
+toolbox_assert( false !== strpos( $rest, 'local_admin_consent_featured_image' ) && false !== strpos( $rest, 'npcink_governance_core_record_local_admin_consent' ) && false !== strpos( $rest, 'set_post_thumbnail' ), 'REST controller exposes a narrow local-admin-consent featured image path with Core audit.' );
+toolbox_assert( false !== strpos( $rest, 'wp_attachment_is_image' ) && false !== strpos( $rest, 'Operation_Classifier::KIND_SET_FEATURED_IMAGE' ) && false !== strpos( $rest, 'Operation_Classifier::LOCAL_ADMIN_CONSENT' ), 'REST local featured image path requires an image attachment and classifier approval.' );
+toolbox_assert( false !== strpos( $rest, 'delete_post_thumbnail' ) && false !== strpos( $rest, 'completion_audit_failed' ), 'REST local featured image path rolls back when completion audit fails.' );
 toolbox_assert( false !== strpos( $rest, 'editor_image_support_query' ) && false !== strpos( $rest, 'digital marketing workspace analytics' ), 'REST editor image candidates use a short visual image-source query instead of the full support query.' );
 toolbox_assert( false !== strpos( $rest, "'seo'       => 'search engine optimization'" ) && false !== strpos( $rest, "'ai'        => 'artificial intelligence'" ), 'REST editor image query maps abstract SEO/AEO/GEO/AI topics to image-source search terms.' );
 toolbox_assert( false !== strpos( $rest, 'selected_text' ) && false !== strpos( $rest, 'selected_block_text' ) && false !== strpos( $rest, '$selection' ), 'REST editor image query prefers selected paragraph text while retaining article context.' );
@@ -548,6 +555,9 @@ toolbox_assert( false !== strpos( $rest, 'related_content_terms_used_for_ranking
 foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue', 'scheduler', 'approval', 'approve', 'confirm', 'write', 'featured-image', 'media-upload', 'media-import', 'seo' ) as $forbidden_fragment ) {
 	$has_forbidden_route = false;
 	foreach ( $registered_rest_routes as $route ) {
+		if ( 'featured-image' === $forbidden_fragment && '/local-admin-consent/featured-image' === $route ) {
+			continue;
+		}
 		$has_forbidden_route = $has_forbidden_route || str_contains( $route, $forbidden_fragment );
 	}
 	toolbox_assert( ! $has_forbidden_route, "REST route matrix excludes forbidden route fragment {$forbidden_fragment}." );
@@ -880,7 +890,7 @@ toolbox_assert( false !== strpos( $content_context_doc, 'does not call a model a
 toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smoke-content-discoverability.php' ), 'Content context documentation records the local readiness smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadata-delta' ) && false !== strpos( $development_workflow, 'content_metadata_delta' ), 'Development workflow documents the Content Metadata Delta smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:ai-image-media-seo' ) && false !== strpos( $development_workflow, 'prompt-like' ), 'Development workflow documents the AI image media SEO smoke command.' );
-toolbox_assert( false !== strpos( $development_workflow, 'ADR-003-local-admin-consent-boundary.md' ) && false !== strpos( $development_workflow, 'classification-only' ), 'Development workflow keeps Local Admin Consent classification-only before a write boundary decision.' );
+toolbox_assert( false !== strpos( $development_workflow, 'existing attachment ->' ) && false !== strpos( $development_workflow, 'All other write-like' ), 'Development workflow limits executable Local Admin Consent to the featured image proof.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Gateway exposure is a host-side admission task' ), 'Content context documentation keeps Agent Gateway admission outside Toolbox.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );
 
@@ -903,6 +913,10 @@ toolbox_assert( false !== $metadata_delta_smoke && false !== strpos( $metadata_d
 toolbox_assert( false !== strpos( $metadata_delta_smoke, '/npcink-toolbox/v1/flows/content-metadata-apply-plan' ) && false !== strpos( $metadata_delta_smoke, "'content_metadata_apply_plan'" ), 'Content Metadata Delta smoke calls the governed content metadata apply-plan route.' );
 toolbox_assert( false !== strpos( $metadata_delta_smoke, "'content_metadata_delta'" ) && false !== strpos( $metadata_delta_smoke, "'operation-classification-v1'" ) && false !== strpos( $metadata_delta_smoke, "'suggestion_only'" ), 'Content Metadata Delta smoke verifies the classifier-backed suggestion-only artifact.' );
 toolbox_assert( false !== strpos( $metadata_delta_smoke, 'toolbox_metadata_delta_smoke_post_snapshot' ) && false === strpos( $metadata_delta_smoke, 'wp_insert_post' ) && false === strpos( $metadata_delta_smoke, 'wp_update_post' ), 'Content Metadata Delta smoke proves the sampled post is not mutated.' );
+$local_featured_smoke = file_get_contents( $root . '/tests/smoke-local-featured-image-consent.php' );
+toolbox_assert( false !== $local_featured_smoke && false !== strpos( $local_featured_smoke, '/npcink-toolbox/v1/local-admin-consent/featured-image' ) && false !== strpos( $local_featured_smoke, 'local_admin_consent_featured_image_result' ), 'Local featured image smoke calls the Local Admin Consent route.' );
+toolbox_assert( false !== strpos( $local_featured_smoke, 'local_admin_consent' ) && false !== strpos( $local_featured_smoke, 'proposal_created' ) && false !== strpos( $local_featured_smoke, 'audit_owner' ), 'Local featured image smoke verifies classification, no proposal, and Core audit ownership.' );
+toolbox_assert( false !== strpos( $local_featured_smoke, 'Smoke restores the previous featured image state' ), 'Local featured image smoke restores the sampled post featured image.' );
 $ai_image_media_seo_smoke = file_get_contents( $root . '/tests/smoke-ai-image-media-seo.php' );
 toolbox_assert( false !== $ai_image_media_seo_smoke && false !== strpos( $ai_image_media_seo_smoke, '/npcink-toolbox/v1/ai/image-generation' ) && false !== strpos( $ai_image_media_seo_smoke, 'npcink_toolbox_ai_image_generation_cloud_request' ), 'AI image media SEO smoke mocks Cloud image generation through the REST route.' );
 toolbox_assert( false !== strpos( $ai_image_media_seo_smoke, 'Create a publication-safe editorial illustration' ) && false !== strpos( $ai_image_media_seo_smoke, 'reviewed_article_context' ), 'AI image media SEO smoke verifies prompt-like candidate fields are normalized to reviewed context.' );

@@ -135,17 +135,25 @@ proposals, or execute writes.
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or
 execute writes.
+For selected candidates that are already WordPress image attachments, the
+editor may use `/local-admin-consent/featured-image` to set one attachment as
+the current post's featured image. That route is the first Local Admin Consent
+proof: it requires a present administrator, exact visible selection, one post,
+one existing image attachment, Core audit before and after the write, and
+rollback if completion audit fails. It does not import media, update metadata,
+create a Core proposal, approve, preflight, or execute abilities.
 The editor image-source modal may call this route for the selected candidate
-and show proposed media title, alt text, description, attribution, filename,
-and featured-image action preview. It submits the returned plan through Adapter
-`/proposals/from-plan`, then asks Adapter `/proposals/{proposal_id}/approve-and-execute`
-to run the unified user action. Adapter calls Core approval and commit
-preflight before executing the allowlisted media abilities, so ordinary
-editor-owned image adoption can complete without a second manual review step
-when policy permits. Core policy remains the proposal, approval, preflight, and
-audit owner; Abilities remain the WordPress write executor; Toolbox is still a
-plan builder and handoff surface, not a WordPress media or SEO mutation
-surface.
+when the selected candidate already has an attachment id, and it returns a
+local consent result rather than an Adapter plan. For external URLs, generated
+images, media import, media metadata, or combined adoption, the modal shows the
+proposed media title, alt text, description, attribution, filename, and
+featured-image action preview, then submits the returned plan through Adapter
+`/proposals/from-plan`. Adapter calls Core approval and commit preflight before
+executing the allowlisted media abilities, so ordinary editor-owned image
+adoption can complete without a second manual review step when policy permits.
+Core policy remains the proposal, approval, preflight, and audit owner;
+Abilities remain the WordPress write executor; Toolbox is still a plan builder
+and handoff surface outside the one local-consent featured-image proof.
 `npcink-toolbox/build-content-discoverability-brief` assembles a
 suggestion-only SEO, AEO, and GEO instruction pack and proposal template for a
 post or topic. It does not mutate SEO meta, slugs, excerpts, schema, or post
@@ -212,7 +220,9 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image`
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
@@ -370,6 +380,11 @@ rerank models. The modal renders image candidates with previews, source links,
 attribution, provider metadata, license-review state, and preserved Unsplash
 download tracking when present. It does not upload media, set featured images,
 or create a write proposal directly.
+The exception is an already-imported image attachment selected in the editor:
+that can be set as the current post featured image through the
+Local Admin Consent route with Core audit. External URLs, generated URLs,
+media import, metadata writes, and multi-image operations still use governed
+handoff paths.
 The selected-block toolbar exposes the same modal as an image-icon paragraph
 image suggestion shortcut. In that mode the selected paragraph or block is the
 primary image context and the default reviewed action is media import only; the

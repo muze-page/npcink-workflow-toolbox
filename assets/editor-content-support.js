@@ -346,6 +346,10 @@
 		});
 	}
 
+	async function postLocalFeaturedImageConsent(input) {
+		return postJson('local-admin-consent/featured-image', input);
+	}
+
 	async function postAdapterAdoption(plan, planInput) {
 		const bridge = await postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
 			plan_ability_id: 'npcink-toolbox/build-image-candidate-adoption-plan',
@@ -1120,6 +1124,7 @@
 			createElement('pre', null, JSON.stringify({
 				plan: result.plan || null,
 				core: result.core || null,
+				local_consent: result.local_consent || null,
 				core_error: result.core_error || null,
 			}, null, 2))
 		);
@@ -1133,12 +1138,15 @@
 		const status = adoptionStatus(result);
 		const core = adoptionCorePayload(result);
 		const proposalId = extractProposalId(core, 0);
+		const localConsent = Boolean(result.local_consent);
 		const mediaImportOnly = result.adoption_target === 'media_import';
 		const title = status === 'adopted'
 			? (mediaImportOnly ? __('Media imported', 'npcink-toolbox') : __('Featured image adopted', 'npcink-toolbox'))
 			: (status === 'submitted' ? __('Adoption request sent', 'npcink-toolbox') : __('Automatic adoption not completed', 'npcink-toolbox'));
 		const summary = status === 'adopted'
-			? (mediaImportOnly ? __('Adapter approved the Core proposal and executed the media import with SEO fields. Insert or place it from the media library after review.', 'npcink-toolbox') : __('Adapter approved the Core proposal and executed the media import, SEO fields, and featured image action. Refresh the editor if the image does not update immediately.', 'npcink-toolbox'))
+			? (localConsent
+				? __('Local admin consent set the existing media item as the featured image and recorded Core audit evidence.', 'npcink-toolbox')
+				: (mediaImportOnly ? __('Adapter approved the Core proposal and executed the media import with SEO fields. Insert or place it from the media library after review.', 'npcink-toolbox') : __('Adapter approved the Core proposal and executed the media import, SEO fields, and featured image action. Refresh the editor if the image does not update immediately.', 'npcink-toolbox')))
 			: (status === 'submitted'
 				? __('Core created the adoption proposal. Automatic execution did not return a completed result; check Core for status.', 'npcink-toolbox')
 				: __('Automatic execution was unavailable or blocked by Adapter/Core policy. The Core proposal remains available for review.', 'npcink-toolbox'));
@@ -1269,6 +1277,7 @@
 		const seo = seoFields || {};
 		const previewUrl = imagePreviewUrl(selectedImage);
 		const sourceUrl = imageSourceUrl(selectedImage);
+		const existingAttachmentId = findAttachmentId(selectedImage, 0);
 		const providerDetails = imageCandidateProviderDetails(selectedImage);
 		const rows = [
 			renderInfoRow(__('Source', 'npcink-toolbox'), imageCandidateSourceLabel(selectedImage), 'source'),
@@ -1326,7 +1335,7 @@
 						disabled: adoptionRunning,
 						onClick: onAdoptFeatured,
 					},
-					adoptionRunning ? __('Adopting image', 'npcink-toolbox') : __('Adopt as featured image', 'npcink-toolbox')
+					adoptionRunning ? __('Adopting image', 'npcink-toolbox') : (existingAttachmentId > 0 ? __('Set as featured image', 'npcink-toolbox') : __('Adopt as featured image', 'npcink-toolbox'))
 				),
 				paragraphMode ? null : createElement(
 					Button,
@@ -1339,7 +1348,7 @@
 					__('Import media only', 'npcink-toolbox')
 				)
 			),
-			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, selectOnlyMode ? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox') : paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox')),
+			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, selectOnlyMode ? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox') : paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : (existingAttachmentId > 0 ? __('Existing media can be set as the featured image through local admin consent with Core audit. External candidates still use Adapter/Core import.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox'))),
 			renderAiImageRegenerationControls(selectedImage, regenerationRunning, onRegenerate),
 			createElement(
 				'div',
@@ -2312,6 +2321,19 @@
 			});
 		}
 
+		function localFeaturedImageConsentInput() {
+			const attachmentId = findAttachmentId(selectedImage, 0);
+			return {
+				post_id: postContext.post_id || 0,
+				attachment_id: attachmentId,
+				candidate: {
+					title: imageTitle(selectedImage),
+					source: imageCandidateSourceLabel(selectedImage),
+					url: imagePreviewUrl(selectedImage) || imageSourceUrl(selectedImage),
+				},
+			};
+		}
+
 		async function adoptSelectedImage(setFeaturedImage) {
 			if (!selectedImage) {
 				setImageAdoptionError(__('Select an image candidate first.', 'npcink-toolbox'));
@@ -2322,6 +2344,13 @@
 			setImageAdoptionError('');
 			setImageAdoptionResult(null);
 			try {
+				if (setFeaturedImage && findAttachmentId(selectedImage, 0) > 0) {
+					const local = await postLocalFeaturedImageConsent(localFeaturedImageConsentInput());
+					syncFeaturedMediaFromCore(local);
+					setImageAdoptionResult({ core: local, local_consent: true, adoption_target: 'featured_image' });
+					return;
+				}
+
 				const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 				const seoContext = imageRequestContext(postContext, activePicker.context);
 				const seo = Object.assign({}, buildImageSeoFields(selectedImage, seoContext), selectedImageSeo || {});

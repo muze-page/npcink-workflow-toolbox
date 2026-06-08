@@ -111,6 +111,7 @@ planning flows:
 - `/flows/article-assistant`
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
+- `/local-admin-consent/featured-image`
 - `/flows/site-knowledge-review-plan`
 - `/flows/media-brief`
 - `/editor/content-support`
@@ -123,14 +124,16 @@ upload/import, SEO mutation, content indexing, or re-indexing without a new
 boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
 
-`local_admin_consent` is a classification and future execution contract, not a
-current Toolbox direct-write permission. Toolbox may display local consent
-eligibility when the operation classifier says a present administrator, exact or
-sufficient preview, one object, and low recovery cost are all present, but it
-must not add a direct executor until a separate boundary decision defines the
-write owner, audit owner, required evidence, and rollback expectations for that
-specific operation. Until then, accepted write-like changes keep using Core
-proposal handoff or Adapter/Core/Abilities user actions.
+`local_admin_consent` is now implemented only for one narrow proof:
+`/local-admin-consent/featured-image` may set one existing WordPress image
+attachment as the current post's featured image after a present administrator
+clicks a visible selection. The route must classify the operation as
+`local_admin_consent`, record Core-owned audit before and after the write, and
+roll back if completion audit fails. It must not import media, update media
+metadata, create a proposal, approve a proposal, execute an ability, or process
+multiple posts or multiple images. All other accepted write-like changes keep
+using Core proposal handoff or Adapter/Core/Abilities user actions until a
+separate boundary decision defines the specific local write and audit contract.
 
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
@@ -203,6 +206,13 @@ data.
 describe media upload, metadata, and optional featured-image write actions for
 Core proposal intake, but it must not import media, update attachment metadata,
 set featured images, approve proposals, or execute writes.
+When a selected candidate is already an existing WordPress image attachment,
+`/local-admin-consent/featured-image` may set it as the current post's featured
+image without creating a Core proposal. This is not media adoption: it is a
+single-object local write with Core audit. External URLs, generated image URLs,
+media import, metadata updates, and combined import-plus-featured-image actions
+must keep using `/flows/image-candidate-adoption-plan` and the
+Adapter/Core/Abilities path.
 Editor-side adoption may submit that plan through Adapter `/proposals/from-plan`
 and then call Adapter `/proposals/{proposal_id}/approve-and-execute` for the
 created Core proposal. Adapter must remain only the unified user-action proxy:

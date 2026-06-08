@@ -79,7 +79,9 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image`
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
@@ -229,9 +231,13 @@ source candidates, and return media SEO suggestions; these are runtime details,
 not local vector/index or provider ownership. Returned images remain
 `image_candidate.v1` suggestions with provider, attribution, source,
 license-review, and Unsplash download tracking metadata preserved; media import
-and featured-image changes still flow through a governed adoption plan. The
-editor modal lets the operator select one candidate and adopt it as the
-featured image in one visible action.
+still flows through a governed adoption plan. When the selected candidate is an
+existing WordPress image attachment, the editor may set that one attachment as
+the current post's featured image through Local Admin Consent: the logged-in
+administrator sees the selected image, clicks one button, Toolbox records
+Core-owned audit evidence before and after the write, and no Core proposal is
+created. External image URLs, media import, media metadata writes, and
+multi-action adoption still use the Adapter/Core/Abilities path.
 When Cloud includes an `ai_generation_handoff`, the Toolbox result can show a
 reviewed-prompt AI image generation action. The action calls the Cloud Addon
 runtime seam with `grok-imagine-image-quality`, returns AI-generated
@@ -244,6 +250,10 @@ Adapter's plan-to-proposal bridge, then calls Adapter's unified
 approval and preflight, then executes the allowlisted WordPress ability writes
 when policy permits. Toolbox does not import media, mutate SEO/meta fields,
 approve, execute, or set the featured image directly.
+The only direct featured-image write exception is
+`/local-admin-consent/featured-image`, and it accepts existing image
+attachments only. If Core audit is unavailable or completion audit fails,
+Toolbox fails closed and rolls back the featured-image change.
 The selected-block toolbar also exposes a compact image-icon paragraph image
 suggestion button. That entry uses the selected paragraph or block as the
 primary context and defaults to a media-import plan for later placement, while
@@ -363,6 +373,12 @@ WordPress directly. The editor one-click adoption flow uses Adapter
 `/proposals/from-plan` followed by `/proposals/{proposal_id}/approve-and-execute`
 so the visible action can complete only through Core approval, preflight, audit,
 and allowlisted Abilities execution.
+For a selected image that is already a WordPress attachment, the editor may use
+`POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image` instead of
+building an import proposal. That route is limited to one current post and one
+existing image attachment, uses the shared operation classifier as
+`local_admin_consent`, records Core audit events, and does not create a Core
+proposal.
 
 Cloud-managed web search is provided by Npcink Cloud. Toolbox no longer
 stores local web search provider keys, registers a local web search ability,

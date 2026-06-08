@@ -47,33 +47,39 @@ not add a direct local write executor until a separate boundary decision defines
 - which operation kinds are allowed to bypass Core proposal review;
 - which operation kinds remain Core-only.
 
-Until that contract exists, write-like Toolbox actions must continue to use
-Core proposal handoff, Adapter unified user actions, and reusable WordPress
-abilities.
+That contract now exists for one proof only: setting one existing WordPress
+image attachment as the current post's featured image from the editor image
+modal. All other write-like Toolbox actions must continue to use Core proposal
+handoff, Adapter unified user actions, and reusable WordPress abilities until
+their own boundary decision exists.
 
 ## Current Mapping
 
 | Operation class | Current Toolbox behavior |
 | --- | --- |
 | `suggestion_only` | Return candidates or planning artifacts. No proposal required. No WordPress write. |
-| `local_admin_consent` | Classification only. No direct Toolbox executor yet. |
+| `local_admin_consent` | Implemented only for one existing image attachment -> current post featured image, with Core audit and rollback on completion-audit failure. |
 | `strong_local_confirmation` | Classification only. Requires a future confirmation and audit contract or Core proposal. |
 | `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. |
 
-## First Candidate For A Future Proof
+## First Proof
 
-The first Local Admin Consent proof should be a narrow single-object write with
-an exact preview, low recovery cost, and no public-state change. It should not
-start with featured-image adoption, because current image adoption may include
-media import, media metadata writes, and featured-image assignment, and already
-uses Adapter/Core/Abilities as the governed execution path.
+The first Local Admin Consent proof is intentionally narrower than full
+featured-image adoption. It accepts only an existing WordPress image attachment
+and sets it as the current post's featured image. It does not import media,
+write media metadata, adopt an external URL, or combine multiple actions.
 
-Safer first candidates include:
+Required evidence and constraints:
 
-- a single admin-only note or local review marker;
-- one non-public draft metadata field that is fully previewed;
-- one low-risk existing-object field where the before and after values are
-  shown and audit evidence is written.
+- logged-in WordPress administrator in the editor;
+- one current post and one existing image attachment;
+- exact visible selected image before the click;
+- operation classifier result `local_admin_consent`;
+- Core-owned `local_admin_consent.requested` and
+  `local_admin_consent.completed` audit records;
+- rollback if completion audit fails;
+- no proposal creation, approval, preflight, media import, metadata write, or
+  batch action.
 
 ## Consequences
 
