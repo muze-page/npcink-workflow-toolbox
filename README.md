@@ -62,6 +62,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)
+- [ADR-003: Local Admin Consent Requires A Separate Write Boundary](docs/decisions/ADR-003-local-admin-consent-boundary.md)
 
 ## REST Routes
 

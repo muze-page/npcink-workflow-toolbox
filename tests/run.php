@@ -72,6 +72,10 @@ $adr_product_surface = file_get_contents( $root . '/docs/decisions/ADR-001-toolb
 foreach ( array( 'click-driven operator surface for the same local ability', 'Core proposal contracts', 'parallel recipe', 'workflow runtime, media registry, prompt/model control', 'WordPress write executor' ) as $required_adr_text ) {
 	toolbox_assert( false !== strpos( $adr_product_surface, $required_adr_text ), 'ADR preserves Toolbox as OpenClaw fixed-flow surface: ' . $required_adr_text );
 }
+$adr_local_admin_consent = file_get_contents( $root . '/docs/decisions/ADR-003-local-admin-consent-boundary.md' );
+foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'Toolbox-owned direct-write permission', 'write owner', 'audit-log owner', 'featured-image adoption', 'Adapter/Core/Abilities' ) as $required_local_consent_adr_text ) {
+	toolbox_assert( false !== strpos( $adr_local_admin_consent, $required_local_consent_adr_text ), 'ADR preserves Local Admin Consent boundary: ' . $required_local_consent_adr_text );
+}
 
 $readme = file_get_contents( $root . '/README.md' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
@@ -863,6 +867,7 @@ toolbox_assert( false !== strpos( $content_context_doc, 'does not call a model a
 toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smoke-content-discoverability.php' ), 'Content context documentation records the local readiness smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadata-delta' ) && false !== strpos( $development_workflow, 'content_metadata_delta' ), 'Development workflow documents the Content Metadata Delta smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:ai-image-media-seo' ) && false !== strpos( $development_workflow, 'prompt-like' ), 'Development workflow documents the AI image media SEO smoke command.' );
+toolbox_assert( false !== strpos( $development_workflow, 'ADR-003-local-admin-consent-boundary.md' ) && false !== strpos( $development_workflow, 'classification-only' ), 'Development workflow keeps Local Admin Consent classification-only before a write boundary decision.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Gateway exposure is a host-side admission task' ), 'Content context documentation keeps Agent Gateway admission outside Toolbox.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );
 

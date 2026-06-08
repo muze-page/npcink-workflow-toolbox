@@ -18,6 +18,7 @@ Read:
 - `docs/architecture.md`
 - `docs/roadmap.md`
 - `docs/decisions/ADR-001-toolbox-as-product-surface.md`
+- `docs/decisions/ADR-003-local-admin-consent-boundary.md`
 
 Then state the focused module and boundary before editing.
 
@@ -97,6 +98,9 @@ context before the candidate reaches Core adoption.
 - Keep content context separate from connector settings so Abilities exposure
   never returns provider keys or private credentials.
 - Keep provider output as suggestions unless a governed handoff is implemented.
+- Treat `local_admin_consent` as classification-only until an ADR defines the
+  concrete write owner, audit owner, preview evidence, and rollback evidence for
+  that operation.
 - Keep Cloud-managed web search output as source candidates, not verified truth.
   Toolbox does not own web search provider configuration, local key storage, or
   local search execution.

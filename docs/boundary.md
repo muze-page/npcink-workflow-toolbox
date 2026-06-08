@@ -123,6 +123,15 @@ upload/import, SEO mutation, content indexing, or re-indexing without a new
 boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
 
+`local_admin_consent` is a classification and future execution contract, not a
+current Toolbox direct-write permission. Toolbox may display local consent
+eligibility when the operation classifier says a present administrator, exact or
+sufficient preview, one object, and low recovery cost are all present, but it
+must not add a direct executor until a separate boundary decision defines the
+write owner, audit owner, required evidence, and rollback expectations for that
+specific operation. Until then, accepted write-like changes keep using Core
+proposal handoff or Adapter/Core/Abilities user actions.
+
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
