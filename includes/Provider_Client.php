@@ -2303,14 +2303,16 @@ final class Provider_Client {
 		}
 
 		$context = $this->settings->get_content_context_for_ability();
+		$related_context = is_array( $input['related_content_context'] ?? null ) ? $this->sanitize_payload( $input['related_content_context'] ) : array();
 		$source  = array(
-			'post_id'        => $post_id,
-			'title'          => $title,
-			'excerpt'        => $excerpt,
-			'content'        => $content,
-			'post_context'   => $this->collect_hosted_ai_post_context( $post_id ),
-			'site_snapshot'  => array(),
-			'media_snapshot' => array(),
+			'post_id'                 => $post_id,
+			'title'                   => $title,
+			'excerpt'                 => $excerpt,
+			'content'                 => $content,
+			'post_context'            => $this->collect_hosted_ai_post_context( $post_id ),
+			'related_content_context' => $related_context,
+			'site_snapshot'           => array(),
+			'media_snapshot'          => array(),
 		);
 		$prompt  = $this->hosted_ai_content_support_prompt(
 			$intent,

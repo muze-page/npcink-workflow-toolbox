@@ -260,10 +260,14 @@ summary suggestions, existing category/tag candidates, Cloud-managed Site
 Knowledge related-content evidence, Cloud-managed web-search evidence, and
 saved content-context guidance. It is not a term assignment, excerpt update,
 SEO mutation, content indexing, or local RAG/index lifecycle route. The section
-keeps summary candidates split by use case, marks WordPress taxonomy candidates
-as existing terms with match tokens and normalization keys, and returns
-suggestion-only ranking, dedupe, and review-metric guidance so editors can
-judge precision without creating a Toolbox audit store. It also includes a
+keeps summary candidates split by use case, annotates them with related-content
+context for duplicate/topic-fit review, marks WordPress taxonomy candidates as
+existing terms with match tokens and normalization keys, and boosts existing
+categories or tags that already appear on related Site Knowledge posts. That
+related-term evidence is ranking context only: it must not create terms, assign
+terms, persist feedback, or become an index lifecycle signal. The section also
+returns suggestion-only ranking, dedupe, and review-metric guidance so editors
+can judge precision without creating a Toolbox audit store. It also includes a
 `content_metadata_delta` P0 artifact for one current post: issue record,
 metadata diagnosis, recommended excerpt, existing category/tag deltas, proposed
 new-term review candidates, authorization classification, outcome checks, and

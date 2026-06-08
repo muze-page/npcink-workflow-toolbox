@@ -159,7 +159,11 @@ own content indexing, store acceptance/audit truth, or be treated as full RAG.
 Its precision helpers may expose ranking signals, dedupe guidance, matched
 tokens, input scope, proposed new-term review notes, preview-only Core handoff
 packets, a `content_metadata_delta` issue/diagnosis/delta artifact, and
-suggested review metrics, but those remain operator-review aids.
+suggested review metrics, but those remain operator-review aids. Related Site
+Knowledge results may contribute existing category/tag evidence from their
+current local WordPress posts to improve candidate ranking, but that evidence is
+ranking-only context: Toolbox must not create terms, assign terms, persist
+feedback, update the index, or treat related-content terms as automatic truth.
 `content_metadata_delta` is the P0 feedback-loop contract for one current post:
 it may preserve observed signals, context refs, existing-term recommendations,
 authorization classification, outcome checks, and future learning candidates,

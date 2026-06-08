@@ -216,7 +216,10 @@ Post editor content support:
   review metrics, input scope, proposed new-term review notes, preview-only
   Core handoff guidance, a `content_metadata_delta` P0 artifact, and review
   notes. Existing WordPress terms are preferred; proposed new tags remain
-  operator-review vocabulary-gap candidates only. The delta artifact records an
+  operator-review vocabulary-gap candidates only. Related Site Knowledge terms
+  from current local WordPress posts can boost existing category/tag candidates
+  as ranking evidence only; they do not create taxonomy terms, assign terms,
+  write excerpts, persist feedback, or own index lifecycle state. The delta artifact records an
   issue record, diagnosis, excerpt/category/tag delta, authorization
   classification, outcome checks, and learning candidates without persisting
   learning or audit truth. Its handoff packet labels proposal-ready actions for
