@@ -85,6 +85,7 @@ toolbox_assert( false !== $rest_controller && false !== strpos( $rest_controller
 
 $provider_client = file_get_contents( $root . '/includes/Provider_Client.php' );
 toolbox_assert( false !== $provider_client && false !== strpos( $provider_client, 'AI_IMAGE_PROMPT_CHARS = 4000' ) && false !== strpos( $provider_client, 'self::AI_IMAGE_PROMPT_CHARS' ), 'Provider client bounds AI image prompts before Cloud calls.' );
+toolbox_assert( false !== $provider_client && false !== strpos( $provider_client, 'private function trim_chars' ) && false !== strpos( $provider_client, 'mb_substr( $value, 0, $max_chars )' ), 'Provider client has a shared character trimmer for bounded AI prompt inputs.' );
 
 $architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
 foreach ( array( 'media_optimization_v1', 'existing **Optimize Existing Image** surface', 'does not introduce a Toolbox custom table', '/workflow-runs route', 'artifact registry, or direct media writer' ) as $required_media_architecture_doc ) {
@@ -330,6 +331,7 @@ toolbox_assert( false !== strpos( $editor_js, 'Recommend existing terms' ) && fa
 toolbox_assert( false !== strpos( $editor_js, 'Image source suggestions' ) && false !== strpos( $editor_js, 'openImageRecommendations' ), 'Editor Content Support opens image candidates in a source suggestion modal.' );
 toolbox_assert( false !== strpos( $editor_js, "postJson('image-candidates'" ) && false !== strpos( $editor_js, 'Recommend images' ), 'Editor image recommendation modal supports manual cloud image-source recommendation.' );
 toolbox_assert( false !== strpos( $editor_js, "postJson('ai/image-generation'" ) && false !== strpos( $editor_js, 'Generate AI image' ) && false !== strpos( $editor_js, 'editor_image_source_modal_generation' ), 'Editor image recommendation modal exposes direct AI image generation from a reviewed prompt.' );
+toolbox_assert( false !== strpos( $editor_js, 'result.data && result.data.cloud_error_code' ) && false !== strpos( $editor_js, "formatImageErrorMessage(requestError, __('AI image generation failed." ), 'Editor AI image generation surfaces Cloud business errors instead of rendering them as empty candidates.' );
 toolbox_assert( false !== strpos( $editor_js, 'prompt_candidates' ) && false !== strpos( $editor_js, 'useAiPromptCandidate' ) && false !== strpos( $editor_js, 'Review the suggested prompt' ), 'Editor image recommendation modal lets operators review Cloud prompt candidates before AI image generation.' );
 toolbox_assert( false !== strpos( $editor_js, 'Search from article' ) && false === strpos( $editor_js, 'Use draft' ), 'Editor image recommendation modal labels article-context search without implying AI image generation.' );
 toolbox_assert( false !== strpos( $editor_js, 'aiImageAspectRatio' ) && false !== strpos( $editor_js, 'setAiImageResolution' ) && false !== strpos( $editor_js, 'aiImageCandidateCount' ), 'Editor AI image generation exposes aspect ratio, quality, and candidate count options instead of hardcoding all generation settings.' );

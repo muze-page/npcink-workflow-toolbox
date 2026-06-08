@@ -4249,6 +4249,19 @@ final class Provider_Client {
 		return $prefix . '_' . $uuid;
 	}
 
+	private function trim_chars( string $value, int $max_chars ): string {
+		$value = trim( $value );
+		if ( '' === $value || 0 >= $max_chars ) {
+			return '';
+		}
+
+		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+			return mb_strlen( $value ) > $max_chars ? mb_substr( $value, 0, $max_chars ) : $value;
+		}
+
+		return strlen( $value ) > $max_chars ? substr( $value, 0, $max_chars ) : $value;
+	}
+
 	private function json_request( string $url, string $method, array $headers = array(), ?array $body = null ) {
 		$args = array(
 			'method'  => $method,

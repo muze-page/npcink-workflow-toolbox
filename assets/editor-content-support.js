@@ -1647,6 +1647,9 @@
 						},
 					},
 				});
+				if (result && (result.code || (result.data && result.data.cloud_error_code))) {
+					throw result;
+				}
 				setImageResult(result);
 				setImageGuidance(__('Showing AI-generated image candidates. Review and adopt through Core before importing or setting featured media.', 'npcink-toolbox'));
 			} catch (requestError) {
