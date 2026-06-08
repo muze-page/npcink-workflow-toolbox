@@ -254,6 +254,11 @@ The only direct featured-image write exception is
 `/local-admin-consent/featured-image`, and it accepts existing image
 attachments only. If Core audit is unavailable or completion audit fails,
 Toolbox fails closed and rolls back the featured-image change.
+The high-risk contrast remains governed: reviewed article/media batch plans
+that include draft creation, media upload, media metadata, and featured-image
+actions are submitted to Core as one `plan_to_proposal_batch` through
+`npcink-toolbox/build-article-media-batch-write-plan`; they do not use Local
+Admin Consent and do not write posts or media during proposal intake.
 The selected-block toolbar also exposes a compact image-icon paragraph image
 suggestion button. That entry uses the selected paragraph or block as the
 primary context and defaults to a media-import plan for later placement, while

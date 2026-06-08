@@ -130,7 +130,9 @@ without creating a WordPress post.
 `npcink-toolbox/build-article-media-batch-write-plan` assembles a
 Core-ready `article_media_batch_write_plan` from reviewed drafts and reviewed
 image-source candidates. It does not upload media, set featured images, approve
-proposals, or execute writes.
+proposals, or execute writes. It is the high-risk contrast for Local Admin
+Consent: multiple draft, media import, media metadata, and featured-image
+actions must become one Core `plan_to_proposal_batch`, not local consent.
 `npcink-toolbox/build-image-candidate-adoption-plan` assembles a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or

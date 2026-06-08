@@ -73,7 +73,7 @@ foreach ( array( 'click-driven operator surface for the same local ability', 'Co
 	toolbox_assert( false !== strpos( $adr_product_surface, $required_adr_text ), 'ADR preserves Toolbox as OpenClaw fixed-flow surface: ' . $required_adr_text );
 }
 $adr_local_admin_consent = file_get_contents( $root . '/docs/decisions/ADR-003-local-admin-consent-boundary.md' );
-foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'existing WordPress image attachment', 'Core audit', 'rollback on completion-audit failure', 'no proposal creation', 'media import' ) as $required_local_consent_adr_text ) {
+foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'existing WordPress image attachment', 'Core audit', 'rollback on completion-audit failure', 'no proposal creation', 'media import', 'High-Risk Contrast Proof', 'plan_to_proposal_batch' ) as $required_local_consent_adr_text ) {
 	toolbox_assert( false !== strpos( $adr_local_admin_consent, $required_local_consent_adr_text ), 'ADR preserves Local Admin Consent boundary: ' . $required_local_consent_adr_text );
 }
 
@@ -88,6 +88,7 @@ foreach ( array( 'Media Optimization V1', 'media_optimization_v1', 'fixed govern
 $composer = file_get_contents( $root . '/composer.json' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'tests/smoke-article-draft-core-proof.php' ), 'Composer article smoke runs the Toolbox/Core handoff proof.' );
+toolbox_assert( false !== strpos( $composer, 'smoke:article-media-batch-core' ) && false !== strpos( $composer, 'tests/smoke-article-media-batch-core-proof.php' ), 'Composer exposes the high-risk article/media batch Core proposal smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:metadata-delta' ) && false !== strpos( $composer, 'tests/smoke-content-metadata-delta.php' ), 'Composer exposes the Content Metadata Delta smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:local-featured-image' ) && false !== strpos( $composer, 'tests/smoke-local-featured-image-consent.php' ), 'Composer exposes the Local Admin Consent featured image smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:ai-image-media-seo' ) && false !== strpos( $composer, 'tests/smoke-ai-image-media-seo.php' ), 'Composer exposes the AI image media SEO smoke script.' );
@@ -672,6 +673,7 @@ toolbox_assert( false !== strpos( $client, 'build_article_media_batch_write_plan
 toolbox_assert( false !== strpos( $client, "'artifact_type'             => 'article_media_batch_write_plan'" ), 'Article plus media batch write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'          => 'core_article_media_batch_write_plan'" ), 'Article plus media batch write plan declares its composition role.' );
 toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/upload-media-from-url'" ) && false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image'" ), 'Article plus media batch write plan routes media upload and featured image writes through Core-governed abilities.' );
+toolbox_assert( false !== strpos( $client, "'write_posture'             => 'core_proposal_handoff'" ) && false !== strpos( $client, "'proposal_mode'             => 'batch'" ) && false !== strpos( $client, "'batch_approval'            => true" ), 'Article plus media batch write plan remains a Core batch proposal handoff.' );
 toolbox_assert( false !== strpos( $client, "'file_name'         => \$file_name" ), 'Article plus media batch write plan preserves approved media file names.' );
 toolbox_assert( false !== strpos( $client, "'attach_to_post_id' => '\$outputs.' . \$create_id . '.post_id'" ) && false !== strpos( $client, "'attachment_id'  => '\$outputs.' . \$upload_id . '.attachment_id'" ), 'Article plus media batch write plan uses output references for dependent media writes.' );
 toolbox_assert( false !== strpos( $client, 'build_image_candidate_adoption_plan' ), 'Provider client can build image candidate adoption plans.' );
@@ -891,6 +893,7 @@ toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smok
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadata-delta' ) && false !== strpos( $development_workflow, 'content_metadata_delta' ), 'Development workflow documents the Content Metadata Delta smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:ai-image-media-seo' ) && false !== strpos( $development_workflow, 'prompt-like' ), 'Development workflow documents the AI image media SEO smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'existing attachment ->' ) && false !== strpos( $development_workflow, 'All other write-like' ), 'Development workflow limits executable Local Admin Consent to the featured image proof.' );
+toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:article-media-batch-core' ) && false !== strpos( $development_workflow, 'core_proposal_required' ), 'Development workflow documents the high-risk article/media batch Core proposal smoke command.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Gateway exposure is a host-side admission task' ), 'Content context documentation keeps Agent Gateway admission outside Toolbox.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );
 
@@ -917,6 +920,10 @@ $local_featured_smoke = file_get_contents( $root . '/tests/smoke-local-featured-
 toolbox_assert( false !== $local_featured_smoke && false !== strpos( $local_featured_smoke, '/npcink-toolbox/v1/local-admin-consent/featured-image' ) && false !== strpos( $local_featured_smoke, 'local_admin_consent_featured_image_result' ), 'Local featured image smoke calls the Local Admin Consent route.' );
 toolbox_assert( false !== strpos( $local_featured_smoke, 'local_admin_consent' ) && false !== strpos( $local_featured_smoke, 'proposal_created' ) && false !== strpos( $local_featured_smoke, 'audit_owner' ), 'Local featured image smoke verifies classification, no proposal, and Core audit ownership.' );
 toolbox_assert( false !== strpos( $local_featured_smoke, 'Smoke restores the previous featured image state' ), 'Local featured image smoke restores the sampled post featured image.' );
+$article_media_batch_smoke = file_get_contents( $root . '/tests/smoke-article-media-batch-core-proof.php' );
+toolbox_assert( false !== $article_media_batch_smoke && false !== strpos( $article_media_batch_smoke, 'article_media_batch_write_plan' ) && false !== strpos( $article_media_batch_smoke, '/npcink-governance-core/v1/proposals/from-plan' ), 'Article/media batch smoke submits the high-risk batch plan to Core from-plan intake.' );
+toolbox_assert( false !== strpos( $article_media_batch_smoke, 'core_proposal_required' ) && false !== strpos( $article_media_batch_smoke, 'plan_to_proposal_batch' ) && false !== strpos( $article_media_batch_smoke, 'proposal_count' ), 'Article/media batch smoke verifies Core batch proposal review.' );
+toolbox_assert( false !== strpos( $article_media_batch_smoke, 'High-risk batch proof does not use Local Admin Consent audit events' ) && false !== strpos( $article_media_batch_smoke, 'High-risk batch proof does not upload media attachments' ), 'Article/media batch smoke proves high-risk batch does not use local consent or direct media writes.' );
 $ai_image_media_seo_smoke = file_get_contents( $root . '/tests/smoke-ai-image-media-seo.php' );
 toolbox_assert( false !== $ai_image_media_seo_smoke && false !== strpos( $ai_image_media_seo_smoke, '/npcink-toolbox/v1/ai/image-generation' ) && false !== strpos( $ai_image_media_seo_smoke, 'npcink_toolbox_ai_image_generation_cloud_request' ), 'AI image media SEO smoke mocks Cloud image generation through the REST route.' );
 toolbox_assert( false !== strpos( $ai_image_media_seo_smoke, 'Create a publication-safe editorial illustration' ) && false !== strpos( $ai_image_media_seo_smoke, 'reviewed_article_context' ), 'AI image media SEO smoke verifies prompt-like candidate fields are normalized to reviewed context.' );

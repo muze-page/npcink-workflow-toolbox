@@ -60,7 +60,7 @@ their own boundary decision exists.
 | `suggestion_only` | Return candidates or planning artifacts. No proposal required. No WordPress write. |
 | `local_admin_consent` | Implemented only for one existing image attachment -> current post featured image, with Core audit and rollback on completion-audit failure. |
 | `strong_local_confirmation` | Classification only. Requires a future confirmation and audit contract or Core proposal. |
-| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. |
+| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. The article/media batch proof is the high-risk contrast: draft, media upload, metadata, and featured-image actions are grouped into one Core batch proposal, not local consent. |
 
 ## First Proof
 
@@ -80,6 +80,18 @@ Required evidence and constraints:
 - rollback if completion audit fails;
 - no proposal creation, approval, preflight, media import, metadata write, or
   batch action.
+
+## High-Risk Contrast Proof
+
+The first contrast proof is
+`npcink-toolbox/build-article-media-batch-write-plan`. It includes multiple
+reviewed article/image pairs and combines draft creation, media upload, media
+metadata, and featured-image actions. This operation is classified as
+`core_proposal_required` because it touches multiple actions and includes media
+import plus generated output references. The proof submits the plan through
+Core `/proposals/from-plan`, expects one `plan_to_proposal_batch`, and verifies
+that proposal intake does not create posts, import attachments, set featured
+images, or emit `local_admin_consent.*` audit events.
 
 ## Consequences
 

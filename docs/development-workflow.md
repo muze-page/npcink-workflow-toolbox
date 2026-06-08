@@ -105,6 +105,10 @@ context before the candidate reaches Core adoption.
   the write and roll back if completion audit fails. All other write-like
   operations still require a governed handoff unless a separate ADR defines
   their write owner, audit owner, preview evidence, and rollback evidence.
+- Treat article/media batch plans as the high-risk contrast: draft creation,
+  media upload, metadata, and featured-image actions must stay in
+  `core_proposal_required` and be verified with
+  `composer smoke:article-media-batch-core`.
 - Keep Cloud-managed web search output as source candidates, not verified truth.
   Toolbox does not own web search provider configuration, local key storage, or
   local search execution.

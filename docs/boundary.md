@@ -139,6 +139,14 @@ separate boundary decision defines the specific local write and audit contract.
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
 
+The high-risk contrast for Local Admin Consent is the article/media batch
+handoff. `npcink-toolbox/build-article-media-batch-write-plan` may group
+reviewed draft creation, media upload, media metadata, and featured-image
+actions into one Core `plan_to_proposal_batch`, but it must not use
+`/local-admin-consent/featured-image`, record `local_admin_consent.*` audit
+events, create posts, import media, or set featured images during proposal
+intake.
+
 `/flows/site-knowledge-review-plan` prepares a Core-ready but blocked
 `site_knowledge_review_plan` from a Cloud Site Knowledge agent handoff. It may
 preserve evidence refs and describe one non-ready draft-review action for Core
