@@ -619,6 +619,7 @@ final class Provider_Client {
 			'provider'                      => 'ai_generated',
 			'provider_name'                 => $provider,
 			'provider_origin'               => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
+			'hosted_profile'                => sanitize_text_field( (string) ( $candidate['hosted_profile'] ?? '' ) ),
 			'source_type'                   => 'ai_generated',
 			'title'                         => $title,
 			'description'                   => $description,
@@ -3053,7 +3054,12 @@ final class Provider_Client {
 		$result = $this->extract_cloud_runtime_result( $response );
 		$input  = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
 		$prompt = trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) );
-		$model  = sanitize_text_field( (string) ( $result['model_id'] ?? $result['model'] ?? 'grok-imagine-image-quality' ) );
+		$model = sanitize_text_field(
+			(string) ( $result['model_id'] ?? $response['model_id'] ?? $response['data']['model_id'] ?? $result['model'] ?? 'grok-imagine-image-quality' )
+		);
+		$hosted_profile = sanitize_text_field(
+			(string) ( $result['profile_id'] ?? $response['profile_id'] ?? $response['data']['profile_id'] ?? $runtime_payload['profile_id'] ?? 'grok-imagine-image-quality' )
+		);
 		$media_context = is_array( $input['media_context'] ?? null ) ? $this->sanitize_payload( $input['media_context'] ) : array();
 		$review = is_array( $input['review'] ?? null ) ? $this->sanitize_payload( $input['review'] ) : array();
 		$prompt_reviewed = ! empty( $review['prompt_reviewed_by_operator'] );
@@ -3065,7 +3071,8 @@ final class Provider_Client {
 				continue;
 			}
 			$candidate['provider_origin']     = 'cloud';
-			$candidate['generation_provider'] = sanitize_key( (string) ( $candidate['generation_provider'] ?? 'magick_ai_cloud' ) );
+			$candidate['hosted_profile']      = $hosted_profile;
+			$candidate['generation_provider'] = sanitize_key( (string) ( $candidate['generation_provider'] ?? $hosted_profile ) );
 			$candidate['generation_model']    = sanitize_text_field( (string) ( $candidate['generation_model'] ?? $model ) );
 			$candidate['generation_prompt']   = sanitize_textarea_field( (string) ( $candidate['generation_prompt'] ?? $prompt ) );
 			$normalized = $this->normalize_ai_generated_image_candidate( $candidate, $prompt, $prompt, $media_context );
@@ -3079,12 +3086,12 @@ final class Provider_Client {
 				'provider'                   => 'magick_ai_cloud',
 				'provider_mode'              => 'ai_generated',
 				'requested_provider_mode'    => 'ai_generated',
-				'resolved_provider'          => 'grok_imagine',
+				'resolved_provider'          => $hosted_profile,
 				'candidate_contract_version' => 'image_candidate.v1',
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/generate-image' ) ),
 				'cloud_runtime'              => 'magick_ai_cloud_addon',
 				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'image_generation_request.v1' ) ),
-				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'grok-imagine-image-quality' ) ),
+				'hosted_profile'             => $hosted_profile,
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? ( array() === $images ? 'empty' : 'ready' ) ) ),
 				'message'                    => sanitize_text_field( (string) ( $result['message'] ?? $response['message'] ?? '' ) ),
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $response['data']['run_id'] ?? ( $result['run_id'] ?? '' ) ) ) ),

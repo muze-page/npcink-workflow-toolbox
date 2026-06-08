@@ -594,6 +594,56 @@
 		return String(value || '').replace(/[_-]+/g, ' ');
 	}
 
+	function compactLabelParts(parts) {
+		const seen = {};
+		return (Array.isArray(parts) ? parts : [])
+			.map((item) => String(item || '').trim())
+			.filter((item) => {
+				const key = item.toLowerCase();
+				if (!item || item === 'ai_generated' || item === 'magick_ai_cloud' || item === 'grok_imagine' || seen[key]) {
+					return false;
+				}
+				seen[key] = true;
+				return true;
+			});
+	}
+
+	function imageResultSourceLabel(payload) {
+		const source = imageResultSource(payload || {});
+		if (!source || typeof source !== 'object') {
+			return '';
+		}
+		if (String(source.provider_mode || '').toLowerCase() === 'ai_generated') {
+			const parts = compactLabelParts([
+				source.hosted_profile,
+				source.model_id,
+				source.resolved_provider,
+			]);
+			return parts.length ? parts.join(' / ') : __('AI generated', 'npcink-toolbox');
+		}
+		return source.resolved_provider ? formatMetaLabel(source.resolved_provider) : '';
+	}
+
+	function imageCandidateSourceLabel(image, payload) {
+		if (!image || typeof image !== 'object') {
+			return '';
+		}
+		const sourceType = String(image.source_type || '').toLowerCase();
+		const provider = String(image.provider || '').toLowerCase();
+		if (sourceType === 'ai_generated' || provider === 'ai_generated') {
+			const source = imageResultSource(payload || {});
+			const parts = compactLabelParts([
+				image.hosted_profile,
+				source && source.hosted_profile,
+				image.generation_model || image.model,
+				source && source.model_id,
+				image.generation_provider || image.provider_name,
+			]);
+			return parts.length ? parts.join(' / ') : __('AI generated', 'npcink-toolbox');
+		}
+		return image.provider ? formatMetaLabel(image.provider) : '';
+	}
+
 	function formatIntentLabel(value) {
 		if (value === 'writing_support') {
 			return __('Writing preparation', 'npcink-toolbox');
@@ -752,9 +802,10 @@
 		}
 		const source = imageResultSource(payload);
 		const imageCount = Array.isArray(images) ? images.length : 0;
+		const sourceLabel = imageResultSourceLabel(payload);
 		const items = [
 			queryLabel ? __('Query: ', 'npcink-toolbox') + queryLabel : '',
-			source.resolved_provider ? __('Source: ', 'npcink-toolbox') + formatMetaLabel(source.resolved_provider) : '',
+			sourceLabel ? __('Source: ', 'npcink-toolbox') + sourceLabel : '',
 			imageCount ? __('Candidates: ', 'npcink-toolbox') + String(imageCount) : '',
 			source.candidate_source_count !== undefined ? __('Received: ', 'npcink-toolbox') + String(source.candidate_source_count) : '',
 			source.status ? __('Status: ', 'npcink-toolbox') + formatMetaLabel(source.status) : '',
@@ -812,7 +863,7 @@
 				const candidateKey = imageStableKey(image, index);
 				const selected = selectedImage && imageStableKey(selectedImage, index) === candidateKey;
 				const cardTags = [
-					image.provider ? formatMetaLabel(image.provider) : '',
+					imageCandidateSourceLabel(image, payload),
 					imageDimensionLabel(image),
 				].concat(imageCandidateTagValues(image)).filter(Boolean).slice(0, 4);
 
@@ -1057,7 +1108,7 @@
 		const previewUrl = imagePreviewUrl(selectedImage);
 		const sourceUrl = imageSourceUrl(selectedImage);
 		const rows = [
-			renderInfoRow(__('Source', 'npcink-toolbox'), selectedImage.provider ? formatMetaLabel(selectedImage.provider) : '', 'source'),
+			renderInfoRow(__('Source', 'npcink-toolbox'), imageCandidateSourceLabel(selectedImage), 'source'),
 			renderInfoRow(__('Review', 'npcink-toolbox'), selectedImage.license_review_status ? formatMetaLabel(selectedImage.license_review_status) : '', 'review'),
 			renderInfoRow(__('Size', 'npcink-toolbox'), imageDimensionLabel(selectedImage), 'size'),
 			renderInfoRow(__('Use', 'npcink-toolbox'), selectedImage.recommended_use ? formatMetaLabel(selectedImage.recommended_use) : '', 'use'),
@@ -1182,13 +1233,14 @@
 		}
 
 		const source = payload.sections && payload.sections.image_candidates ? payload.sections.image_candidates : payload;
+		const sourceLabel = imageResultSourceLabel(payload);
 		const cloudMessage = source.message ? String(source.message) : '';
 		const displayMessage = cloudMessage.toLowerCase().indexOf('connect npcink cloud') >= 0
 			? __('Npcink Cloud Addon is not connected or not configured for managed image-source search.', 'npcink-toolbox')
 			: cloudMessage;
 		const diagnostics = [
 			source.status ? __('Cloud status: ', 'npcink-toolbox') + formatMetaLabel(source.status) : '',
-			source.resolved_provider ? __('Source: ', 'npcink-toolbox') + formatMetaLabel(source.resolved_provider) : '',
+			sourceLabel ? __('Source: ', 'npcink-toolbox') + sourceLabel : '',
 			source.result_count !== undefined ? __('Shown: ', 'npcink-toolbox') + String(source.result_count) : '',
 			source.candidate_source_count !== undefined ? __('Received: ', 'npcink-toolbox') + String(source.candidate_source_count) : '',
 			displayMessage ? __('Cloud note: ', 'npcink-toolbox') + displayMessage : '',
@@ -1555,12 +1607,12 @@
 			if (event && event.preventDefault) {
 				event.preventDefault();
 			}
+			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 			const query = String(suggestedQuery || imageQuery || '').trim();
 			if (!query) {
-				setImageError(__('Enter a search query for cloud image candidates.', 'npcink-toolbox'));
+				runAutoImageRecommendations(activePicker.mode, activePicker.context, activePicker);
 				return;
 			}
-			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 			const imageContext = imageRequestContext(postContext, activePicker.context);
 			const cacheKey = imageSearchCacheKey('manual', activePicker, query, imageContext);
 			const cachedResult = readCachedImageResult(cacheKey);
