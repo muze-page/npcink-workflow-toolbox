@@ -14,6 +14,8 @@ use WP_REST_Response;
 defined( 'ABSPATH' ) || exit;
 
 final class Rest_Controller {
+	private const REQUIRED_TEXT_MAX_CHARS = 500;
+
 	private Settings $settings;
 	private Provider_Client $client;
 
@@ -478,7 +480,7 @@ final class Rest_Controller {
 		);
 	}
 
-	private function required_text( WP_REST_Request $request, string $key ) {
+	private function required_text( WP_REST_Request $request, string $key, int $max_chars = self::REQUIRED_TEXT_MAX_CHARS ) {
 		$value = trim( sanitize_textarea_field( (string) $request->get_param( $key ) ) );
 		if ( '' === $value ) {
 			return new WP_Error(
@@ -490,6 +492,18 @@ final class Rest_Controller {
 				),
 				array( 'status' => 400 )
 			);
+		}
+
+		$max_chars = max( 1, $max_chars );
+		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+			if ( mb_strlen( $value ) > $max_chars ) {
+				return mb_substr( $value, 0, $max_chars );
+			}
+			return $value;
+		}
+
+		if ( strlen( $value ) > $max_chars ) {
+			return substr( $value, 0, $max_chars );
 		}
 
 		return $value;
@@ -984,7 +998,7 @@ final class Rest_Controller {
 				'available_fields'      => array(
 					'proposed_new_terms' => $new_term_count,
 				),
-				'auto_approval_request' => 0 < $new_term_count,
+				'auto_approval_request' => false,
 				'toolbox_direct_apply'  => false,
 				'proposal_policy'       => array(
 					'core_proposal_required' => true,

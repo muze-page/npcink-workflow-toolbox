@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class Provider_Client {
 	private const SITE_KNOWLEDGE_CONTENT_CHARS = 30000;
+	private const AI_IMAGE_PROMPT_CHARS = 4000;
 
 	private Settings $settings;
 
@@ -60,7 +61,10 @@ final class Provider_Client {
 	}
 
 	public function run_ai_image_generation( array $input ) {
-		$prompt = trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) );
+		$prompt = $this->trim_chars(
+			trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) ),
+			self::AI_IMAGE_PROMPT_CHARS
+		);
 		if ( '' === $prompt ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_ai_image_prompt',

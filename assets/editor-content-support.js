@@ -1328,8 +1328,8 @@
 
 		if (section.handoff_preview) {
 			if (Array.isArray(section.handoff_preview.auto_apply_actions)) {
-				blocks.push(createElement('h4', { key: 'summary-auto-apply-title' }, __('Auto-apply candidates', 'npcink-toolbox')));
-				blocks.push(renderItems(section.handoff_preview.auto_apply_actions, __('No auto-apply candidates returned.', 'npcink-toolbox')));
+				blocks.push(createElement('h4', { key: 'summary-auto-apply-title' }, __('Core handoff candidates', 'npcink-toolbox')));
+				blocks.push(renderItems(section.handoff_preview.auto_apply_actions, __('No Core handoff candidates returned.', 'npcink-toolbox')));
 			}
 			blocks.push(createElement('h4', { key: 'summary-handoff-preview-title' }, __('Handoff preview', 'npcink-toolbox')));
 			blocks.push(renderItems((section.handoff_preview.next_steps || []).map((step) => ({ name: step })), __('No handoff preview returned.', 'npcink-toolbox')));

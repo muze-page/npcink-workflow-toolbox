@@ -1979,7 +1979,7 @@
 		}
 		if (section.handoff_preview) {
 			if (Array.isArray(section.handoff_preview.auto_apply_actions)) {
-				renderSupportItems(container, 'Auto-apply candidates', section.handoff_preview.auto_apply_actions, 'No auto-apply candidates returned.');
+				renderSupportItems(container, 'Core handoff candidates', section.handoff_preview.auto_apply_actions, 'No Core handoff candidates returned.');
 			}
 			renderSupportItems(container, 'Handoff preview', (section.handoff_preview.next_steps || []).map((step) => ({ name: step })), 'No handoff preview returned.');
 			container.appendChild(createRawDetails(section.handoff_preview, 'Handoff preview packet'));
