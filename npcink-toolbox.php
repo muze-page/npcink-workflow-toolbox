@@ -21,6 +21,7 @@ define( 'NPCINK_TOOLBOX_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NPCINK_TOOLBOX_URL', plugin_dir_url( __FILE__ ) );
 
 require_once NPCINK_TOOLBOX_DIR . 'includes/Settings.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Operation_Classifier.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Provider_Client.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Knowledge_Auto_Sync.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Rest_Controller.php';

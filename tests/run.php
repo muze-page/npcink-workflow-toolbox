@@ -7,6 +7,10 @@
 
 $root = dirname( __DIR__ );
 
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', $root . '/tests/wp-stub/' );
+}
+
 function toolbox_assert( bool $condition, string $message ): void {
 	if ( ! $condition ) {
 		fwrite( STDERR, "FAIL: {$message}\n" );
@@ -21,6 +25,7 @@ toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Too
 toolbox_assert( false !== strpos( $main, 'Text Domain: npcink-toolbox' ) && false !== strpos( $main, 'Domain Path: /languages' ), 'Plugin header declares the Toolbox text domain and languages path.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Site_Knowledge_Auto_Sync.php' ), 'Plugin bootstrap loads the Site Knowledge auto-sync bridge.' );
+toolbox_assert( false !== strpos( $main, 'includes/Operation_Classifier.php' ), 'Plugin bootstrap loads the operation classification helper.' );
 toolbox_assert( false !== strpos( $main, 'register_deactivation_hook' ) && false !== strpos( $main, 'Site_Knowledge_Auto_Sync::class' ), 'Plugin deactivation clears Site Knowledge auto-sync cron hooks.' );
 
 $plugin = file_get_contents( $root . '/includes/Plugin.php' );
@@ -82,6 +87,43 @@ toolbox_assert( false !== strpos( $composer, 'tests/smoke-article-draft-core-pro
 
 $rest_controller = file_get_contents( $root . '/includes/Rest_Controller.php' );
 toolbox_assert( false !== $rest_controller && false !== strpos( $rest_controller, 'REQUIRED_TEXT_MAX_CHARS = 500' ) && false !== strpos( $rest_controller, 'mb_substr( $value, 0, $max_chars )' ), 'REST controller bounds common text inputs before Cloud calls.' );
+
+$operation_classifier = file_get_contents( $root . '/includes/Operation_Classifier.php' );
+foreach ( array( 'suggestion_only', 'local_admin_consent', 'strong_local_confirmation', 'core_proposal_required', 'operation-classification-v1', 'set_featured_image', 'batch_plan' ) as $required_classifier_text ) {
+	toolbox_assert( false !== strpos( $operation_classifier, $required_classifier_text ), 'Operation classifier preserves contract text: ' . $required_classifier_text );
+}
+
+require_once $root . '/includes/Operation_Classifier.php';
+$classifier = new \Npcink_Toolbox\Operation_Classifier();
+$suggestion_classification = $classifier->classify(
+	array(
+		'operation_kind'          => 'suggest',
+		'writes_wordpress_state' => false,
+	)
+);
+toolbox_assert( 'suggestion_only' === (string) ( $suggestion_classification['classification'] ?? '' ), 'Operation classifier returns suggestion_only for candidate-only output.' );
+$local_classification = $classifier->classify(
+	array(
+		'request_source'       => 'wp_admin_ui',
+		'actor_presence'      => 'present_click',
+		'preview_completeness' => 'exact_final',
+		'scope'                => 'one_object',
+		'reversibility'        => 'easy_undo',
+		'operation_kind'       => 'set_featured_image',
+	)
+);
+toolbox_assert( 'local_admin_consent' === (string) ( $local_classification['classification'] ?? '' ), 'Operation classifier recognizes a low-risk single visible admin action.' );
+$batch_classification = $classifier->classify(
+	array(
+		'request_source'       => 'external_adapter',
+		'actor_presence'      => 'delegated',
+		'preview_completeness' => 'partial',
+		'scope'                => 'multiple_objects',
+		'reversibility'        => 'hard_restore',
+		'operation_kind'       => 'batch_plan',
+	)
+);
+toolbox_assert( 'core_proposal_required' === (string) ( $batch_classification['classification'] ?? '' ), 'Operation classifier sends external batch writes to Core proposal review.' );
 
 $provider_client = file_get_contents( $root . '/includes/Provider_Client.php' );
 toolbox_assert( false !== $provider_client && false !== strpos( $provider_client, 'AI_IMAGE_PROMPT_CHARS = 4000' ) && false !== strpos( $provider_client, 'self::AI_IMAGE_PROMPT_CHARS' ), 'Provider client bounds AI image prompts before Cloud calls.' );
