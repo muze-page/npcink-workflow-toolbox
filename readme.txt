@@ -48,8 +48,10 @@ through host-governed WordPress abilities and Npcink Governance Core approval.
   the hosted runtime.
 * Added a summary/category/tag optimization fixed flow that returns
   layered summary candidates, existing-term-first category/tag candidates,
-  ranking reasons, dedupe guidance, and review metrics without updating
-  excerpts, assigning terms, mutating SEO fields, or owning indexing.
+  ranking reasons, dedupe guidance, review metrics, and a
+  content_metadata_delta issue/diagnosis/delta artifact without updating
+  excerpts, assigning terms, mutating SEO fields, storing audit truth, or
+  owning indexing.
 * Added reviewed-prompt AI image candidate generation from image-source
   handoffs without media import or featured-image writes.
 * Added a Site Knowledge review handoff plan that keeps Core submission,

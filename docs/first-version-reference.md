@@ -214,14 +214,17 @@ Post editor content support:
   candidates, existing category/tag candidates, related Site Knowledge, web
   search evidence from the discoverability brief, ranking and dedupe guidance,
   review metrics, input scope, proposed new-term review notes, preview-only
-  Core handoff guidance, and review notes. Existing WordPress terms are
-  preferred; proposed new tags remain operator-review vocabulary-gap candidates
-  only. Its handoff packet labels proposal-ready actions for Generate and apply
-  summary, Recommend and apply tags, Recommend categories, and Create new tags
-  and assign; Core policy owns any auto-approval decision. It does not update
-  excerpts, assign terms, create terms, mutate SEO
-  fields, index content, own taxonomy governance, store acceptance/audit truth,
-  or own a RAG lifecycle.
+  Core handoff guidance, a `content_metadata_delta` P0 artifact, and review
+  notes. Existing WordPress terms are preferred; proposed new tags remain
+  operator-review vocabulary-gap candidates only. The delta artifact records an
+  issue record, diagnosis, excerpt/category/tag delta, authorization
+  classification, outcome checks, and learning candidates without persisting
+  learning or audit truth. Its handoff packet labels proposal-ready actions for
+  Generate and apply summary, Recommend and apply tags, Recommend categories,
+  and Create new tags and assign; Core policy owns any auto-approval decision.
+  It does not update excerpts, assign terms, create terms, mutate SEO fields,
+  index content, own taxonomy governance, store acceptance/audit truth, or own a
+  RAG lifecycle.
 
 For content-support AI callers, the canonical composition sequence is:
 

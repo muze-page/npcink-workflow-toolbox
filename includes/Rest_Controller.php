@@ -851,6 +851,7 @@ final class Rest_Controller {
 		$summary_layers     = $this->editor_summary_layer_candidates( $context );
 		$proposed_new_terms = $this->editor_proposed_new_terms_review( $summary_ai );
 		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, $categories, $tags, $proposed_new_terms );
+		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, $categories, $tags, $proposed_new_terms, $related_content, $discoverability, $handoff_preview );
 
 		return array(
 			'artifact_type'          => 'article_discoverability_optimization.v1',
@@ -871,6 +872,7 @@ final class Rest_Controller {
 			'optimization_strategy'  => $this->editor_summary_terms_strategy(),
 			'review_metrics'         => $this->editor_summary_terms_review_metrics(),
 			'handoff_preview'        => $handoff_preview,
+			'content_metadata_delta' => $metadata_delta,
 			'risk_notes'             => array(
 				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
 				__( 'Prefer existing categories and tags; treat proposed new tags as operator-review candidates only.', 'npcink-toolbox' ),
@@ -884,6 +886,246 @@ final class Rest_Controller {
 					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-toolbox' ),
 				),
 			),
+		);
+	}
+
+	private function editor_content_metadata_delta( array $context, string $query, array $summary_layers, array $categories, array $tags, array $proposed_new_terms, array $related_content, array $discoverability, array $handoff_preview ): array {
+		$evidence_refs = $this->editor_content_metadata_evidence_refs( $context, $related_content, $discoverability );
+		$summary_items = is_array( $summary_layers['items'] ?? null ) ? $summary_layers['items'] : array();
+		$excerpt_item  = $summary_items[0] ?? array();
+		$authorization = ( new Operation_Classifier() )->classify(
+			array(
+				'request_source'          => Operation_Classifier::SOURCE_WP_ADMIN_UI,
+				'actor_presence'         => Operation_Classifier::ACTOR_PRESENT_CLICK,
+				'preview_completeness'    => Operation_Classifier::PREVIEW_SUFFICIENT,
+				'scope'                   => Operation_Classifier::SCOPE_ONE_OBJECT,
+				'reversibility'           => Operation_Classifier::REVERSIBILITY_EASY_UNDO,
+				'operation_kind'          => Operation_Classifier::KIND_SUGGEST,
+				'writes_wordpress_state'  => false,
+			)
+		);
+
+		return array(
+			'artifact_type'          => 'content_metadata_delta',
+			'version'                => 1,
+			'target_post_id'         => absint( $context['post_id'] ?? 0 ),
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'issue_record'           => array(
+				'user_expression'    => '' !== trim( $query ) ? $query : __( 'Improve summary, category, and tag discoverability for the current draft.', 'npcink-toolbox' ),
+				'target_post'        => array(
+					'id'             => absint( $context['post_id'] ?? 0 ),
+					'type'           => sanitize_key( (string) ( $context['post_type'] ?? 'post' ) ),
+					'status'         => sanitize_key( (string) ( $context['post_status'] ?? '' ) ),
+					'title'          => sanitize_text_field( (string) ( $context['title'] ?? '' ) ),
+					'category_ids'   => array_values( array_map( 'absint', is_array( $context['category_ids'] ?? null ) ? $context['category_ids'] : array() ) ),
+					'tag_ids'        => array_values( array_map( 'absint', is_array( $context['tag_ids'] ?? null ) ? $context['tag_ids'] : array() ) ),
+				),
+				'observed_signals'  => $this->editor_content_metadata_observed_signals( $context, $categories, $tags, $proposed_new_terms ),
+				'context_refs'      => $evidence_refs,
+			),
+			'diagnosis'              => array(
+				'summary_quality'   => $this->editor_summary_quality( $context ),
+				'taxonomy_quality'  => $this->editor_taxonomy_quality( $context, $categories, $tags, $proposed_new_terms ),
+				'hypotheses'        => array(
+					__( 'A clearer excerpt can improve archive, social, and answer-summary presentation without rewriting the article body.', 'npcink-toolbox' ),
+					__( 'Existing WordPress terms should be reused before proposing new vocabulary.', 'npcink-toolbox' ),
+					__( 'Related Site Knowledge evidence can reveal duplicate coverage and proven term patterns.', 'npcink-toolbox' ),
+				),
+				'warnings'          => array(
+					__( 'Do not accept summaries that add unsupported claims.', 'npcink-toolbox' ),
+					__( 'Treat proposed new terms as taxonomy-sprawl risks until a human confirms a real vocabulary gap.', 'npcink-toolbox' ),
+					__( 'Do not treat related-content evidence as indexing or RAG lifecycle ownership inside Toolbox.', 'npcink-toolbox' ),
+				),
+				'evidence_strength' => empty( $evidence_refs ) ? 'draft_only' : 'draft_plus_tool_context',
+			),
+			'delta'                  => array(
+				'excerpt'             => array(
+					'recommended'   => sanitize_text_field( (string) ( $excerpt_item['value'] ?? '' ) ),
+					'reason'        => sanitize_text_field( (string) ( $excerpt_item['reason'] ?? __( 'Use the short summary candidate only after operator review.', 'npcink-toolbox' ) ) ),
+					'evidence_refs' => $this->editor_content_metadata_evidence_ids( $evidence_refs ),
+				),
+				'categories'          => $this->editor_content_metadata_term_delta_items( array_slice( $categories, 0, 5 ), $evidence_refs ),
+				'tags'                => $this->editor_content_metadata_term_delta_items( array_slice( $tags, 0, 8 ), $evidence_refs ),
+				'new_term_candidates' => $this->editor_content_metadata_new_term_delta_items( $proposed_new_terms ),
+			),
+			'authorization'          => array(
+				'classification'          => sanitize_key( (string) ( $authorization['classification'] ?? Operation_Classifier::SUGGESTION_ONLY ) ),
+				'reason'                  => __( 'This Content Metadata Delta only recommends excerpt and existing-term changes. Accepted writes must use the Core handoff preview and reusable WordPress abilities.', 'npcink-toolbox' ),
+				'reasons'                 => array_values( array_map( 'sanitize_key', (array) ( $authorization['reasons'] ?? array() ) ) ),
+				'required_evidence'       => array_values(
+					array_unique(
+						array_merge(
+							array_map( 'sanitize_key', (array) ( $authorization['required_evidence'] ?? array() ) ),
+							array(
+								'operator_selected_final_excerpt_or_existing_terms',
+								'exact_or_sufficient_preview_before_any_apply_action',
+								'core_proposal_required_for_external_batch_new_term_or_incomplete_preview',
+							)
+						)
+					)
+				),
+				'policy_version'          => sanitize_text_field( (string) ( $authorization['policy_version'] ?? 'operation-classification-v1' ) ),
+				'local_admin_consent_note' => __( 'A later local-admin-consent path requires a present administrator, one post, exact preview, and activity evidence before any direct local apply can be considered.', 'npcink-toolbox' ),
+				'handoff_preview_ref'      => sanitize_text_field( (string) ( $handoff_preview['artifact_type'] ?? 'summary_terms_handoff_preview.v1' ) ),
+			),
+			'outcome_contract'       => array(
+				'checks' => array(
+					'excerpt_reviewed_with_no_unsupported_claims',
+					'existing_categories_or_tags_reused_when_possible',
+					'new_term_candidates_keep_review_required_true',
+					'no_toolbox_direct_wordpress_write',
+					'accepted_write_like_changes_route_through_core_or_future_classified_local_consent',
+				),
+			),
+			'learning_candidates'    => array(
+				'accepted_excerpt_style',
+				'accepted_existing_category_or_tag_patterns',
+				'rejected_or_merged_new_term_candidates',
+				'duplicate_topic_or_taxonomy_noise_feedback',
+			),
+		);
+	}
+
+	private function editor_content_metadata_observed_signals( array $context, array $categories, array $tags, array $proposed_new_terms ): array {
+		$signals = array();
+		if ( '' === trim( (string) ( $context['excerpt'] ?? '' ) ) ) {
+			$signals[] = 'missing_excerpt';
+		}
+		if ( empty( $context['category_ids'] ) ) {
+			$signals[] = 'no_current_categories_supplied';
+		}
+		if ( empty( $context['tag_ids'] ) ) {
+			$signals[] = 'no_current_tags_supplied';
+		}
+		if ( ! empty( $categories ) ) {
+			$signals[] = 'existing_category_candidates_available';
+		}
+		if ( ! empty( $tags ) ) {
+			$signals[] = 'existing_tag_candidates_available';
+		}
+		if ( ! empty( $proposed_new_terms['items'] ) ) {
+			$signals[] = 'proposed_new_terms_require_review';
+		}
+
+		return array_values( array_unique( $signals ) );
+	}
+
+	private function editor_summary_quality( array $context ): string {
+		$excerpt = trim( sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ) );
+		if ( '' === $excerpt ) {
+			return 'missing';
+		}
+
+		return strlen( $excerpt ) < 80 ? 'weak' : 'acceptable';
+	}
+
+	private function editor_taxonomy_quality( array $context, array $categories, array $tags, array $proposed_new_terms ): string {
+		$current_categories = is_array( $context['category_ids'] ?? null ) ? array_filter( array_map( 'absint', $context['category_ids'] ) ) : array();
+		$current_tags       = is_array( $context['tag_ids'] ?? null ) ? array_filter( array_map( 'absint', $context['tag_ids'] ) ) : array();
+		if ( empty( $current_categories ) && empty( $current_tags ) ) {
+			return 'missing';
+		}
+		if ( ! empty( $proposed_new_terms['items'] ) || 12 < count( $current_tags ) ) {
+			return 'noisy';
+		}
+		if ( empty( $categories ) && empty( $tags ) ) {
+			return 'acceptable';
+		}
+
+		return 'weak';
+	}
+
+	private function editor_content_metadata_evidence_refs( array $context, array $related_content, array $discoverability ): array {
+		$refs    = array();
+		$post_id = absint( $context['post_id'] ?? 0 );
+		if ( 0 < $post_id ) {
+			$refs[] = array(
+				'id'    => 'target_post:' . $post_id,
+				'type'  => 'target_post',
+				'label' => sanitize_text_field( (string) ( $context['title'] ?? '' ) ),
+			);
+		}
+
+		$related = is_array( $related_content['results'] ?? null ) ? $related_content['results'] : ( is_array( $related_content['items'] ?? null ) ? $related_content['items'] : array() );
+		foreach ( array_slice( $related, 0, 6 ) as $index => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$ref_id = (string) ( $item['post_id'] ?? ( $item['id'] ?? $index ) );
+			$refs[] = array(
+				'id'    => 'site_knowledge:' . sanitize_key( $ref_id ),
+				'type'  => 'related_content',
+				'label' => sanitize_text_field( (string) ( $item['title'] ?? $item['name'] ?? $item['url'] ?? '' ) ),
+				'score' => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
+			);
+		}
+
+		$sources = is_array( $discoverability['external_search'] ?? null ) && is_array( $discoverability['external_search']['sources'] ?? null )
+			? $discoverability['external_search']['sources']
+			: ( is_array( $discoverability['sources'] ?? null ) ? $discoverability['sources'] : array() );
+		foreach ( array_slice( $sources, 0, 5 ) as $index => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$refs[] = array(
+				'id'    => 'source:' . ( $index + 1 ),
+				'type'  => 'external_source_candidate',
+				'label' => sanitize_text_field( (string) ( $item['title'] ?? $item['url'] ?? $item['source_url'] ?? '' ) ),
+			);
+		}
+
+		return array_values( array_filter( $refs, static fn( array $ref ): bool => '' !== (string) ( $ref['label'] ?? '' ) || 'target_post' === (string) ( $ref['type'] ?? '' ) ) );
+	}
+
+	private function editor_content_metadata_evidence_ids( array $evidence_refs ): array {
+		return array_values(
+			array_filter(
+				array_map(
+					static fn( array $ref ): string => sanitize_text_field( (string) ( $ref['id'] ?? '' ) ),
+					$evidence_refs
+				)
+			)
+		);
+	}
+
+	private function editor_content_metadata_term_delta_items( array $items, array $evidence_refs ): array {
+		$evidence_ids = $this->editor_content_metadata_evidence_ids( $evidence_refs );
+		return array_values(
+			array_map(
+				static function ( array $item ) use ( $evidence_ids ): array {
+					$score = is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : 0.0;
+					return array(
+						'term_id'       => absint( $item['term_id'] ?? 0 ),
+						'name'          => sanitize_text_field( (string) ( $item['name'] ?? '' ) ),
+						'taxonomy'      => sanitize_key( (string) ( $item['taxonomy'] ?? '' ) ),
+						'confidence'    => max( 0.0, min( 1.0, $score / 5 ) ),
+						'reason'        => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
+						'evidence_refs' => $evidence_ids,
+						'status'        => 'existing_wordpress_term',
+					);
+				},
+				$items
+			)
+		);
+	}
+
+	private function editor_content_metadata_new_term_delta_items( array $proposed_new_terms ): array {
+		$items = is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array();
+		return array_values(
+			array_map(
+				static function ( array $item ): array {
+					return array(
+						'taxonomy'        => sanitize_key( (string) ( $item['taxonomy'] ?? 'post_tag' ) ),
+						'name'            => sanitize_text_field( (string) ( $item['name'] ?? '' ) ),
+						'reason'          => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
+						'review_required' => true,
+						'status'          => 'review_only_vocabulary_gap',
+					);
+				},
+				$items
+			)
 		);
 	}
 

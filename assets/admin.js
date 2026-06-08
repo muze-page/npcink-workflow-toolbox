@@ -1927,6 +1927,80 @@
 		}));
 	}
 
+	function metadataDeltaSummaryItems(delta) {
+		if (!delta || typeof delta !== 'object') {
+			return [];
+		}
+		const issue = delta.issue_record && typeof delta.issue_record === 'object' ? delta.issue_record : {};
+		const diagnosis = delta.diagnosis && typeof delta.diagnosis === 'object' ? delta.diagnosis : {};
+		const authorization = delta.authorization && typeof delta.authorization === 'object' ? delta.authorization : {};
+		return [
+			{
+				name: 'Issue',
+				detail: issue.user_expression || 'Current post metadata can be reviewed for discoverability.',
+			},
+			{
+				name: 'Diagnosis',
+				detail: [
+					diagnosis.summary_quality ? 'Summary: ' + formatLabel(diagnosis.summary_quality) : '',
+					diagnosis.taxonomy_quality ? 'Taxonomy: ' + formatLabel(diagnosis.taxonomy_quality) : '',
+					diagnosis.evidence_strength ? 'Evidence: ' + formatLabel(diagnosis.evidence_strength) : '',
+				].filter(Boolean).join(' · '),
+			},
+			{
+				name: 'Authorization',
+				detail: [
+					authorization.classification ? formatLabel(authorization.classification) : 'Suggestion only',
+					authorization.handoff_preview_ref || '',
+					authorization.reason || '',
+				].filter(Boolean).join(' · '),
+			},
+		];
+	}
+
+	function metadataDeltaExcerptItems(delta) {
+		const excerpt = delta && delta.delta && delta.delta.excerpt && typeof delta.delta.excerpt === 'object' ? delta.delta.excerpt : null;
+		if (!excerpt || !excerpt.recommended) {
+			return [];
+		}
+		return [{
+			name: 'Recommended excerpt',
+			value: excerpt.recommended,
+			reason: excerpt.reason || '',
+		}];
+	}
+
+	function metadataDeltaCheckItems(delta) {
+		const checks = delta && delta.outcome_contract && Array.isArray(delta.outcome_contract.checks) ? delta.outcome_contract.checks : [];
+		return checks.map((check) => ({
+			name: formatLabel(check),
+		}));
+	}
+
+	function renderContentMetadataDelta(container, delta) {
+		if (!delta || typeof delta !== 'object') {
+			return;
+		}
+
+		const shell = createSection('Content Metadata Delta');
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Artifact', delta.artifact_type ? formatLabel(delta.artifact_type) : '');
+		appendMeta(meta, 'Post', delta.target_post_id || '');
+		appendMeta(meta, 'Write posture', delta.write_posture || 'suggestion_only');
+		appendMeta(meta, 'Final path', delta.final_write_path || 'core_proposal_required');
+		appendMeta(meta, 'Direct write', delta.direct_wordpress_write === false ? 'disabled' : '');
+		if (meta.childNodes.length) {
+			shell.appendChild(meta);
+		}
+		container.appendChild(shell);
+
+		renderSupportItems(container, 'Delta diagnosis', metadataDeltaSummaryItems(delta), 'No metadata diagnosis returned.');
+		renderSupportItems(container, 'Delta excerpt', metadataDeltaExcerptItems(delta), 'No excerpt delta returned.');
+		renderSupportItems(container, 'Delta categories', delta.delta && Array.isArray(delta.delta.categories) ? delta.delta.categories : [], 'No category delta returned.');
+		renderSupportItems(container, 'Delta tags', delta.delta && Array.isArray(delta.delta.tags) ? delta.delta.tags : [], 'No tag delta returned.');
+		renderSupportItems(container, 'Outcome checks', metadataDeltaCheckItems(delta), 'No outcome checks returned.');
+	}
+
 	function renderSummaryTermsOptimization(container, section) {
 		if (!section || typeof section !== 'object') {
 			return;
@@ -1956,6 +2030,9 @@
 
 		if (section.summary_layers) {
 			renderSupportItems(container, 'Summary layers', supportItems(section.summary_layers), 'No summary layer candidates returned.');
+		}
+		if (section.content_metadata_delta) {
+			renderContentMetadataDelta(container, section.content_metadata_delta);
 		}
 		renderSupportItems(container, 'Category candidates', section.category_candidates || [], 'No matching existing categories found.');
 		renderSupportItems(container, 'Tag candidates', section.tag_candidates || [], 'No matching existing tags found.');

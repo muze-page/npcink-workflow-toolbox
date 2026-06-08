@@ -1434,6 +1434,76 @@
 		}));
 	}
 
+	function metadataDeltaItems(delta) {
+		if (!delta || typeof delta !== 'object') {
+			return [];
+		}
+		const diagnosis = delta.diagnosis && typeof delta.diagnosis === 'object' ? delta.diagnosis : {};
+		const authorization = delta.authorization && typeof delta.authorization === 'object' ? delta.authorization : {};
+		const issue = delta.issue_record && typeof delta.issue_record === 'object' ? delta.issue_record : {};
+		return [
+			{
+				name: __('Issue', 'npcink-toolbox'),
+				detail: issue.user_expression || __('Current post metadata can be reviewed for discoverability.', 'npcink-toolbox'),
+			},
+			{
+				name: __('Diagnosis', 'npcink-toolbox'),
+				detail: [
+					diagnosis.summary_quality ? __('Summary: ', 'npcink-toolbox') + formatMetaLabel(diagnosis.summary_quality) : '',
+					diagnosis.taxonomy_quality ? __('Taxonomy: ', 'npcink-toolbox') + formatMetaLabel(diagnosis.taxonomy_quality) : '',
+					diagnosis.evidence_strength ? __('Evidence: ', 'npcink-toolbox') + formatMetaLabel(diagnosis.evidence_strength) : '',
+				].filter(Boolean).join(' · '),
+			},
+			{
+				name: __('Authorization', 'npcink-toolbox'),
+				detail: [
+					authorization.classification ? formatMetaLabel(authorization.classification) : __('Suggestion only', 'npcink-toolbox'),
+					authorization.handoff_preview_ref ? authorization.handoff_preview_ref : '',
+					authorization.reason || '',
+				].filter(Boolean).join(' · '),
+			},
+		];
+	}
+
+	function metadataDeltaExcerptItems(delta) {
+		const excerpt = delta && delta.delta && delta.delta.excerpt && typeof delta.delta.excerpt === 'object' ? delta.delta.excerpt : null;
+		if (!excerpt || !excerpt.recommended) {
+			return [];
+		}
+		return [{
+			name: __('Recommended excerpt', 'npcink-toolbox'),
+			value: excerpt.recommended,
+			reason: excerpt.reason || '',
+		}];
+	}
+
+	function metadataDeltaCheckItems(delta) {
+		const checks = delta && delta.outcome_contract && Array.isArray(delta.outcome_contract.checks) ? delta.outcome_contract.checks : [];
+		return checks.map((check) => ({
+			name: formatMetaLabel(check),
+		}));
+	}
+
+	function renderContentMetadataDelta(delta) {
+		if (!delta || typeof delta !== 'object') {
+			return null;
+		}
+
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__metadata-delta' },
+			createElement('h4', null, __('Content Metadata Delta', 'npcink-toolbox')),
+			renderItems(metadataDeltaItems(delta), __('No metadata diagnosis returned.', 'npcink-toolbox')),
+			renderItems(metadataDeltaExcerptItems(delta), __('No excerpt delta returned.', 'npcink-toolbox')),
+			createElement('h4', null, __('Delta categories', 'npcink-toolbox')),
+			renderItems(delta.delta && Array.isArray(delta.delta.categories) ? delta.delta.categories : [], __('No category delta returned.', 'npcink-toolbox')),
+			createElement('h4', null, __('Delta tags', 'npcink-toolbox')),
+			renderItems(delta.delta && Array.isArray(delta.delta.tags) ? delta.delta.tags : [], __('No tag delta returned.', 'npcink-toolbox')),
+			createElement('h4', null, __('Outcome checks', 'npcink-toolbox')),
+			renderItems(metadataDeltaCheckItems(delta), __('No outcome checks returned.', 'npcink-toolbox'))
+		);
+	}
+
 	function renderSummaryOptimization(section) {
 		if (!section || typeof section !== 'object') {
 			return null;
@@ -1456,6 +1526,10 @@
 		if (section.summary_layers) {
 			blocks.push(createElement('h4', { key: 'summary-layers-title' }, __('Summary layers', 'npcink-toolbox')));
 			blocks.push(renderItems(section.summary_layers.items || [], __('No summary layer candidates returned.', 'npcink-toolbox')));
+		}
+
+		if (section.content_metadata_delta) {
+			blocks.push(renderContentMetadataDelta(section.content_metadata_delta));
 		}
 
 		blocks.push(createElement('h4', { key: 'summary-category-title' }, __('Category candidates', 'npcink-toolbox')));

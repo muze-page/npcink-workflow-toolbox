@@ -263,16 +263,22 @@ SEO mutation, content indexing, or local RAG/index lifecycle route. The section
 keeps summary candidates split by use case, marks WordPress taxonomy candidates
 as existing terms with match tokens and normalization keys, and returns
 suggestion-only ranking, dedupe, and review-metric guidance so editors can
-judge precision without creating a Toolbox audit store. Operators can scope the
-input to the full article, selected text or block, or a topic-only brief. The
-same section may expose proposed new terms only as review-only vocabulary-gap
-candidates and may include a preview-only Core handoff packet for accepted
-summary and existing-term choices. The handoff packet includes proposal-ready
+judge precision without creating a Toolbox audit store. It also includes a
+`content_metadata_delta` P0 artifact for one current post: issue record,
+metadata diagnosis, recommended excerpt, existing category/tag deltas, proposed
+new-term review candidates, authorization classification, outcome checks, and
+learning candidates. Operators can scope the input to the full article,
+selected text or block, or a topic-only brief. The same section may expose
+proposed new terms only as review-only vocabulary-gap candidates and may
+include a preview-only Core handoff packet for accepted summary and
+existing-term choices. The handoff packet includes proposal-ready
 actions for Generate and apply summary, Recommend and apply tags, Recommend
 categories, and Create new tags and assign. Toolbox marks summary application
 and existing tag assignment as Core auto-approval candidates, keeps categories
 recommendation-first by default, and treats new tag creation as Core
-policy-gated after duplicate-term review.
+policy-gated after duplicate-term review. The delta artifact is suggestion-only
+and does not create a route, persist learning/audit state, or write WordPress
+metadata.
 
 ## Admin Surface
 

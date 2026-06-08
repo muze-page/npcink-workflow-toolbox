@@ -149,7 +149,13 @@ not update excerpts, assign terms, mutate SEO fields, own taxonomy governance,
 own content indexing, store acceptance/audit truth, or be treated as full RAG.
 Its precision helpers may expose ranking signals, dedupe guidance, matched
 tokens, input scope, proposed new-term review notes, preview-only Core handoff
-packets, and suggested review metrics, but those remain operator-review aids.
+packets, a `content_metadata_delta` issue/diagnosis/delta artifact, and
+suggested review metrics, but those remain operator-review aids.
+`content_metadata_delta` is the P0 feedback-loop contract for one current post:
+it may preserve observed signals, context refs, existing-term recommendations,
+authorization classification, outcome checks, and future learning candidates,
+but it must not persist a learning store, write audit truth, update excerpts,
+assign terms, or create terms.
 The Core handoff packet may label proposal-ready actions for Generate and apply
 summary, Recommend and apply tags, Recommend categories, and Create new tags
 and assign. Auto-approval eligibility belongs to Core policy; Toolbox must not
