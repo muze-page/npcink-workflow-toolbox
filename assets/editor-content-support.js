@@ -1385,19 +1385,41 @@
 				'div',
 				{ className: 'npcink-toolbox-editor-support__prompt-candidates' },
 				createElement('small', null, __('AI image directions', 'npcink-toolbox')),
-				promptCandidates.map((candidate, index) => createElement(
-					'button',
-					{
-						key: String(candidate.id || index),
-						type: 'button',
-						className: 'npcink-toolbox-editor-support__prompt-card',
-						title: truncateText(candidate.prompt, 220),
-						onClick: () => onUsePrompt && onUsePrompt(String(candidate.prompt || '')),
-					},
-					createElement('strong', null, truncateText(candidate.label || candidate.prompt, 72)),
-					candidate.visual_strategy || candidate.direction_type ? createElement('span', null, truncateText(candidate.visual_strategy || formatMetaLabel(candidate.direction_type), 120)) : null,
-					candidate.reason ? createElement('small', null, truncateText(candidate.reason, 180)) : null
-				))
+				promptCandidates.map((candidate, index) => {
+					const prompt = String(candidate.prompt || '');
+					const usePrompt = (event) => {
+						if (event && event.preventDefault) {
+							event.preventDefault();
+						}
+						if (event && event.stopPropagation) {
+							event.stopPropagation();
+						}
+						if (onUsePrompt) {
+							onUsePrompt(prompt);
+						}
+					};
+					return createElement(
+						'div',
+						{
+							key: String(candidate.id || index),
+							className: 'npcink-toolbox-editor-support__prompt-card',
+							'data-toolbox-ai-prompt-direction': 'true',
+							title: truncateText(prompt, 220),
+						},
+						createElement('strong', null, truncateText(candidate.label || prompt, 72)),
+						candidate.visual_strategy || candidate.direction_type ? createElement('span', null, truncateText(candidate.visual_strategy || formatMetaLabel(candidate.direction_type), 120)) : null,
+						candidate.reason ? createElement('small', null, truncateText(candidate.reason, 180)) : null,
+						createElement(
+							'button',
+							{
+								type: 'button',
+								className: 'npcink-toolbox-editor-support__prompt-card-action',
+								onClick: usePrompt,
+							},
+							__('Use direction', 'npcink-toolbox')
+						)
+					);
+				})
 			) : null,
 			status.length ? createElement('small', null, status.join(' | ')) : null
 		);
@@ -1913,6 +1935,11 @@
 			}
 			setImageSearchMode('generate');
 			setImageQuery(reviewedPrompt);
+			setSelectedImage(null);
+			setSelectedImageSeo(null);
+			setImageAdoptionResult(null);
+			setImageAdoptionError('');
+			resetImageFeedbackState();
 			setImageGuidance(__('Review the suggested prompt, then generate an AI image candidate.', 'npcink-toolbox'));
 		}
 

@@ -370,20 +370,17 @@
 }
 
 .npcink-toolbox-editor-support__prompt-card {
-	width: 100%;
 	padding: 6px 8px;
 	text-align: left;
 	color: #1d2327;
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
-	cursor: pointer;
 	font-size: 12px;
 	line-height: 1.35;
 }
 
-.npcink-toolbox-editor-support__prompt-card:hover,
-.npcink-toolbox-editor-support__prompt-card:focus {
+.npcink-toolbox-editor-support__prompt-card:focus-within {
 	border-color: #3858e9;
 }
 
@@ -401,6 +398,28 @@
 .npcink-toolbox-editor-support__prompt-card small {
 	margin-top: 2px;
 	color: #646970;
+}
+
+.npcink-toolbox-editor-support__prompt-card-action {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	margin-top: 6px;
+	padding: 3px 8px;
+	color: #3858e9;
+	background: #fff;
+	border: 1px solid #3858e9;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__prompt-card-action:hover,
+.npcink-toolbox-editor-support__prompt-card-action:focus {
+	color: #fff;
+	background: #3858e9;
 }
 
 .npcink-toolbox-editor-support__image-inspector {
