@@ -88,6 +88,9 @@ foreach ( array( 'Media Optimization V1', 'media_optimization_v1', 'fixed govern
 }
 toolbox_assert( false !== strpos( $readme, 'Do not expand Local Admin Consent to this metadata flow' ) && false !== strpos( $readme, '`strong_local_confirmation` UX and audit contract' ) && false !== strpos( $readme, 'accepted metadata choices' ) && false !== strpos( $readme, 'Core proposal handoffs' ), 'README keeps metadata direct apply out of Local Admin Consent until a strong confirmation contract exists.' );
 
+$metadata_handoff_summary = file_get_contents( $root . '/docs/content-metadata-governed-handoff-summary.md' );
+toolbox_assert( false !== $metadata_handoff_summary && false !== strpos( $metadata_handoff_summary, 'Stage Closeout Decision' ) && false !== strpos( $metadata_handoff_summary, 'Stop feature expansion for this stage' ) && false !== strpos( $metadata_handoff_summary, 'usage validation period' ) && false !== strpos( $metadata_handoff_summary, 'single-post excerpt plus existing category/tag direct apply' ), 'Content metadata handoff summary records the stage closeout and validation-first recommendation.' );
+
 $composer = file_get_contents( $root . '/composer.json' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'tests/smoke-article-draft-core-proof.php' ), 'Composer article smoke runs the Toolbox/Core handoff proof.' );

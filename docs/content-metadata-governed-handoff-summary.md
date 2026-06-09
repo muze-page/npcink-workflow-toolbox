@@ -199,6 +199,45 @@ Do not treat that local-admin-consent proof as part of Content Metadata Delta.
 Metadata excerpt/category/tag writes still use the governed apply-plan handoff
 and Core proposal path.
 
+## Stage Closeout Decision
+
+Stop feature expansion for this stage. The current state is intentionally a
+contract and validation milestone, not a prompt to add more direct-write paths.
+
+What is complete:
+
+- pure suggestions are `suggestion_only`: image candidates, title/summary
+  suggestions, SEO/AEO/GEO suggestions, content optimization notes, and
+  category/tag candidates need normal permission checks, not Core proposals,
+  as long as they do not write WordPress state;
+- one narrow Local Admin Consent proof exists: a present WordPress
+  administrator can set one existing image attachment as the current post's
+  featured image with Core-owned audit, no Core proposal, and rollback on audit
+  failure;
+- high-risk batch proof exists: article/media batch plans remain
+  `core_proposal_required`, become one Core `plan_to_proposal_batch`, and do
+  not use Local Admin Consent;
+- `strong_local_confirmation` is reserved as a future path for single-object
+  high-impact admin actions, but no UX, audit route, or direct write executor
+  is implemented.
+
+What is deliberately not complete:
+
+- Local Admin Consent is not expanded to excerpt/category/tag direct apply,
+  media metadata updates, SEO meta writes, draft creation, publishing, slug
+  changes, deletion, or generated/external image adoption;
+- `strong_local_confirmation` is not implemented for post metadata or any
+  other write path;
+- persistent learning, automatic measurement, self-learning, and feedback-store
+  behavior are deferred until real operator usage exists.
+
+The next phase should be a usage validation period, not another implementation
+push. Use the editor panel in real article work, collect where operators feel
+Core review is too heavy, and only then decide whether one very narrow
+`strong_local_confirmation` proof is justified. The likely candidate, if usage
+supports it, is single-post excerpt plus existing category/tag direct apply
+from the current editor, after a separate UX and audit contract is written.
+
 ## Recommended Next Step
 
 Treat Content Metadata Delta P0 as complete for the current phase. The next
