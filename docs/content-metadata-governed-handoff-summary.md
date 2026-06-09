@@ -120,22 +120,25 @@ The feedback loop should wait for real usage data. Until then, adding a learning
 store would produce artificial signal and extra state without proving that the
 recommendations are useful.
 
-## Current Caution
+## Current Status Note
 
-There are local uncommitted changes in the Toolbox working tree related to
-`local-admin-consent/featured-image`. That path touches direct WordPress write
-authority and must be reviewed separately against the local-admin-consent ADR
-and Core audit contract. It was not mixed into the metadata handoff cleanup
-commit.
+The earlier local uncommitted `local-admin-consent/featured-image` branch has
+since been landed as a separate proof. It is limited to setting one existing
+WordPress image attachment as the current post featured image with present
+administrator consent, classifier approval, Core audit, and rollback on
+completion-audit failure.
 
-Do not treat that local-admin-consent work as part of Content Metadata Delta.
+Do not treat that local-admin-consent proof as part of Content Metadata Delta.
+Metadata excerpt/category/tag writes still use the governed apply-plan handoff
+and Core proposal path.
 
 ## Recommended Next Step
 
 Treat Content Metadata Delta P0 as complete for the current phase. The next
-useful step is not another metadata implementation layer; it is a focused review
-of the local-admin-consent direct-write branch, because it changes the authority
-boundary more than the metadata handoff work did.
+useful step is not another metadata implementation layer; it is contract
+alignment and real editor end-to-end QA so future agents do not confuse
+suggestion-only metadata deltas, Core proposal handoffs, and the single
+local-admin-consent featured-image proof.
 
 ## Prompt For Another AI
 
@@ -155,10 +158,12 @@ new term creation. Accepted metadata choices must go through
 /flows/content-metadata-apply-plan and then Adapter/Core from-plan intake.
 
 If you work on local-admin-consent/featured-image, treat it as a separate
-boundary-sensitive task. First read docs/decisions/ADR-003-local-admin-consent-
-boundary.md, docs/boundary.md, and the Core operation classification contract.
-Verify whether Core audit, rollback, permissions, exact preview, and one-object
-scope are actually satisfied before committing any direct-write path.
+boundary-sensitive proof that already exists. First read docs/decisions/
+ADR-003-local-admin-consent-boundary.md, docs/boundary.md, and the Core
+operation classification contract. Preserve Core audit, rollback, permissions,
+exact preview, and one-object scope, and do not generalize that proof to
+metadata, SEO, media import, generated images, or batch writes without a new
+boundary decision.
 
 Run composer test:all and the narrow smoke relevant to the changed behavior.
 Stage only files changed for the current task.
