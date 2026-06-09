@@ -238,6 +238,71 @@ Core review is too heavy, and only then decide whether one very narrow
 supports it, is single-post excerpt plus existing category/tag direct apply
 from the current editor, after a separate UX and audit contract is written.
 
+## Hosted AI Routing Closeout
+
+Summary/Terms optimization now has a verified hosted AI path through the same
+governed content-support boundary:
+
+```text
+Toolbox /ai/content-support
+-> Cloud Addon runtime client
+-> Cloud /v1/runtime/execute
+-> hosted text routing profile text.ai
+-> review-only hosted AI output
+-> Toolbox editor content_metadata_delta
+-> dry-run content_metadata_apply_plan
+-> Core /proposals/from-plan
+```
+
+The important routing decision is that `text.ai` is a stable hosted text entry
+profile, not a fixed model id. Cloud may currently resolve it to `gpt-5.5`
+because that is the current hosted-free catalog candidate, but Toolbox must not
+treat `gpt-5.5` as the durable contract. The durable contract is:
+
+- `profile_id=text.ai`;
+- `execution_kind=text`;
+- non-empty `model_id` returned by Cloud for honest UI/debug display;
+- `direct_wordpress_write=false`;
+- `final_write_path=core_proposal_required`.
+
+Cloud keeps the model-specific compatibility profile separate as
+`text.free-gpt55`. That profile may remain useful for current/free-package
+compatibility, but product callers should use `text.ai` when they need the
+stable hosted text entry point.
+
+The Toolbox fix was intentionally small: hosted AI content support and hosted
+AI site helper now include `execution_kind => text` in their runtime payloads.
+No workflow runtime, Agent surface, approval store, prompt registry, or direct
+WordPress write path was added to Toolbox.
+
+Verification performed during closeout:
+
+```bash
+composer test:all
+composer smoke:metadata-delta
+git diff --check
+```
+
+A real local WordPress REST dispatch also verified:
+
+```text
+POST /wp-json/npcink-toolbox/v1/ai/content-support
+intent=summary_terms_optimization
+status=200
+hosted_profile=text.ai
+direct_wordpress_write=false
+final_write_path=core_proposal_required
+```
+
+The local smoke environment required reseeding the Cloud site key to match the
+WordPress Cloud Addon setting after catalog refresh. That was an environment
+alignment step, not a code or product contract change.
+
+Do not continue feature expansion from this point. The only useful follow-up is
+test infrastructure: add a dedicated hosted AI content-support smoke that
+captures the real REST assertion above so future changes catch Cloud/Toolbox
+contract drift early.
+
 ## Recommended Next Step
 
 Treat Content Metadata Delta P0 as complete for the current phase. The next
