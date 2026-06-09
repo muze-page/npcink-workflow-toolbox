@@ -338,6 +338,10 @@
 	}
 
 	function providerLabel(payload) {
+		if (payload && payload.provider_label) {
+			return formatLabel(payload.provider_label);
+		}
+
 		if (!payload || !payload.provider) {
 			return 'Toolbox';
 		}
@@ -1592,9 +1596,10 @@
 
 	function renderWebSearchResults(form, payload) {
 		const results = Array.isArray(payload.results) ? payload.results : [];
+		const shellPayload = Object.assign({}, payload, { provider_label: 'cloud_web_search' });
 		const result = renderShell(
 			form,
-			payload,
+			shellPayload,
 			'Cloud web search',
 			results.length
 				? results.length + ' external search results returned from Cloud.'
@@ -1607,6 +1612,8 @@
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Status', payload.status ? formatLabel(payload.status) : '');
 		appendMeta(meta, 'Intent', payload.intent ? formatLabel(payload.intent) : '');
+		appendMeta(meta, 'Cloud provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : 'Cloud Managed');
+		appendMeta(meta, 'Actual channel', payload.provider ? formatLabel(payload.provider) : '');
 		appendMeta(meta, 'Provider calls', payload.provider_call_count);
 		appendMeta(meta, 'Run', payload.run_id);
 		if (payload.usage_summary && typeof payload.usage_summary === 'object') {

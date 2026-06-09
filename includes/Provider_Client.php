@@ -3188,7 +3188,7 @@ final class Provider_Client {
 		$payload = $this->with_output_contract(
 			array(
 				'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
-				'provider_mode'        => 'cloud_auto',
+				'provider_mode'        => sanitize_key( (string) ( $result['provider_mode'] ?? 'cloud_managed' ) ),
 				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
 				'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/web-search' ) ),
@@ -3204,7 +3204,7 @@ final class Provider_Client {
 				'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 				'usage_summary'        => array(
 					'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
-					'provider_mode'        => 'cloud_auto',
+					'provider_mode'        => sanitize_key( (string) ( $result['provider_mode'] ?? 'cloud_managed' ) ),
 					'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 					'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 					'result_count'         => count( $results ),
