@@ -222,6 +222,12 @@ Core policy-gated after duplicate-term review. The panel returns suggestions
 only; it does not
 insert links, assign terms, create terms, update excerpts or SEO fields, import
 media, publish content, store acceptance/audit truth, or write WordPress data.
+Do not expand Local Admin Consent to this metadata flow. A future single-post
+metadata direct-apply proof would first need a separate
+`strong_local_confirmation` UX and audit contract covering exact final values,
+old/new metadata, actor and source evidence, confirmation copy, recovery
+evidence, and fail-closed audit behavior. Until then, accepted metadata choices
+remain Core proposal handoffs.
 The image-source button opens a Cloud image recommendation modal: it
 automatically searches from the selected paragraph or selected block when
 available, combines that with the current draft context, and also lets the

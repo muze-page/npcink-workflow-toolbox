@@ -191,6 +191,12 @@ assign them to posts. The only apply-oriented local surface is
 which is still read-only planning output: it packages reviewed excerpt,
 existing category, and existing tag choices into dry-run Core handoff actions
 and rejects missing term creation by keeping `create_missing=false`.
+A future direct apply path for one current post's excerpt plus existing
+category/tag ids must not be treated as Local Admin Consent expansion. It
+would first require a `strong_local_confirmation` UX and audit contract with
+exact final metadata values, old/new evidence, actor/source evidence,
+confirmation text, recovery evidence, and fail-closed audit behavior. Until
+that contract exists, accepted metadata choices stay on the Core proposal path.
 Site-level and media-helper AI routes must be added as separate narrow
 surfaces; they must not be hidden compatibility modes inside the draft-support
 route.

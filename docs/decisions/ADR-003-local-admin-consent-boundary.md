@@ -62,6 +62,33 @@ their own boundary decision exists.
 | `strong_local_confirmation` | Classification only. Requires a future confirmation and audit contract or Core proposal. |
 | `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. The article/media batch proof is the high-risk contrast: draft, media upload, metadata, and featured-image actions are grouped into one Core batch proposal, not local consent. |
 
+## Future Strong Local Confirmation Candidate
+
+The post-editor summary/category/tag flow is a plausible future
+`strong_local_confirmation` proof, but only after it has its own UX and audit
+contract. The current recommendation step remains `suggestion_only`: AI may
+show summary, existing category, and existing tag candidates without proposal
+review because it does not write WordPress state.
+
+If a future proof lets a present administrator apply accepted metadata directly
+from the current post editor, it must stay narrower than the existing Core
+handoff:
+
+- one current post only;
+- excerpt plus existing `category` and `post_tag` ids only;
+- no new term creation, SEO meta writes, slug changes, publishing, body
+  replacement, deletion, or batch actions;
+- exact final metadata values shown before confirmation;
+- explicit strong confirmation copy, not a generic apply button;
+- audit evidence for actor, source flow, target post, old values, new values,
+  AI suggestion summary, confirmation text, result, and correlation id;
+- recovery evidence showing that the changed metadata can be restored or
+  corrected at low cost;
+- fail-closed behavior when audit cannot be recorded.
+
+Until that UX and audit contract exists, accepted metadata choices continue to
+use `/flows/content-metadata-apply-plan` and Core proposal review.
+
 ## First Proof
 
 The first Local Admin Consent proof is intentionally narrower than full

@@ -138,6 +138,11 @@ These prove the operation classifier is not just a label:
 - high-risk article/media batch plans remain Core proposal review;
 - metadata excerpt/category/tag changes remain Core apply-plan handoffs, not
   Local Admin Consent expansion targets.
+- a future single-post direct apply proof for accepted excerpt/category/tag
+  values would be `strong_local_confirmation`, not Local Admin Consent, and
+  must first define exact-value preview, old/new audit evidence,
+  actor/source/correlation evidence, explicit confirmation copy, recovery
+  evidence, and fail-closed audit behavior.
 
 ## Verification Already Run
 
@@ -175,6 +180,7 @@ These are intentionally not implemented in the current slice:
 - automatic measurement of accepted metadata results;
 - automatic creation of new taxonomy terms;
 - direct excerpt/category/tag writes from Toolbox;
+- `strong_local_confirmation` direct apply for single-post metadata;
 - Toolbox-owned approval, audit, or final WordPress write execution.
 
 The feedback loop should wait for real usage data. Until then, adding a learning
@@ -223,6 +229,11 @@ changing anything. Content Metadata Delta P0 is already implemented:
 Do not reintroduce direct Toolbox writes for excerpts, categories, tags, SEO, or
 new term creation. Accepted metadata choices must go through
 /flows/content-metadata-apply-plan and then Adapter/Core from-plan intake.
+If asked to explore direct apply for one current post's accepted excerpt,
+category, or tag choices, treat it as a future `strong_local_confirmation`
+proof. Do not implement it before writing a separate UX and audit contract for
+exact-value preview, old/new evidence, actor/source/correlation evidence,
+explicit confirmation copy, recovery evidence, and fail-closed audit behavior.
 
 This is a P0 governed handoff loop, not a full self-learning loop. Do not add a
 persistent learning store, automatic measurement system, or self-training path

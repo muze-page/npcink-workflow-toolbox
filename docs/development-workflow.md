@@ -107,6 +107,12 @@ context before the candidate reaches Core adoption.
   the write and roll back if completion audit fails. All other write-like
   operations still require a governed handoff unless a separate ADR defines
   their write owner, audit owner, preview evidence, and rollback evidence.
+- Treat post-editor excerpt/category/tag direct apply as a future
+  `strong_local_confirmation` candidate only. Do not implement it until a
+  separate UX and audit contract defines exact final metadata preview, old/new
+  evidence, actor/source/correlation evidence, confirmation copy, recovery
+  evidence, and fail-closed audit behavior. Current accepted metadata choices
+  remain Core proposal handoffs.
 - Treat article/media batch plans as the high-risk contrast: draft creation,
   media upload, metadata, and featured-image actions must stay in
   `core_proposal_required` and be verified with

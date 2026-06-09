@@ -54,6 +54,7 @@ foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same 
 foreach ( array( 'media_optimization_v1', 'Optimize Existing Image', 'one Core media optimization proposal', 'generic workflow runner, persistent run table', 'queue, scheduler, or direct media write' ) as $required_media_boundary_doc ) {
 	toolbox_assert( false !== strpos( $boundary_doc, $required_media_boundary_doc ), 'Boundary doc keeps media optimization fixed and governed: ' . $required_media_boundary_doc );
 }
+toolbox_assert( false !== strpos( $boundary_doc, 'must not be treated as Local Admin Consent expansion' ) && false !== strpos( $boundary_doc, '`strong_local_confirmation` UX and audit contract' ) && false !== strpos( $boundary_doc, 'accepted metadata choices stay on the Core proposal path' ), 'Boundary doc keeps metadata direct apply behind a future strong-local-confirmation contract.' );
 
 $media_optimization_doc = file_get_contents( $root . '/docs/media-optimization-v1.md' );
 foreach ( array( 'media_optimization_v1', 'fixed, governed Toolbox workflow', 'not a new workflow runtime', 'Select media', 'Generate Cloud preview', 'Review media metadata', 'Submit optimization review', 'persistent Toolbox run table', 'one Core proposal', 'Expansion Rule' ) as $required_media_optimization_doc ) {
@@ -76,6 +77,7 @@ $adr_local_admin_consent = file_get_contents( $root . '/docs/decisions/ADR-003-l
 foreach ( array( 'Local Admin Consent is a classification and future execution contract', 'existing WordPress image attachment', 'Core audit', 'rollback on completion-audit failure', 'no proposal creation', 'media import', 'High-Risk Contrast Proof', 'plan_to_proposal_batch' ) as $required_local_consent_adr_text ) {
 	toolbox_assert( false !== strpos( $adr_local_admin_consent, $required_local_consent_adr_text ), 'ADR preserves Local Admin Consent boundary: ' . $required_local_consent_adr_text );
 }
+toolbox_assert( false !== strpos( $adr_local_admin_consent, 'Future Strong Local Confirmation Candidate' ) && false !== strpos( $adr_local_admin_consent, 'excerpt plus existing `category` and `post_tag` ids only' ) && false !== strpos( $adr_local_admin_consent, 'Until that UX and audit contract exists' ), 'ADR keeps post metadata direct apply as a future strong-local-confirmation proof.' );
 
 $readme = file_get_contents( $root . '/README.md' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
@@ -84,6 +86,7 @@ foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repea
 foreach ( array( 'Media Optimization V1', 'media_optimization_v1', 'fixed governed workflow', 'not a new workflow runtime or persistent run', 'Optimize Existing Image' ) as $required_media_readme_text ) {
 	toolbox_assert( false !== strpos( $readme, $required_media_readme_text ), 'README documents media optimization as an existing fixed governed workflow: ' . $required_media_readme_text );
 }
+toolbox_assert( false !== strpos( $readme, 'Do not expand Local Admin Consent to this metadata flow' ) && false !== strpos( $readme, '`strong_local_confirmation` UX and audit contract' ) && false !== strpos( $readme, 'accepted metadata choices' ) && false !== strpos( $readme, 'Core proposal handoffs' ), 'README keeps metadata direct apply out of Local Admin Consent until a strong confirmation contract exists.' );
 
 $composer = file_get_contents( $root . '/composer.json' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
@@ -893,6 +896,7 @@ toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smok
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadata-delta' ) && false !== strpos( $development_workflow, 'content_metadata_delta' ), 'Development workflow documents the Content Metadata Delta smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:ai-image-media-seo' ) && false !== strpos( $development_workflow, 'prompt-like' ), 'Development workflow documents the AI image media SEO smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'existing attachment ->' ) && false !== strpos( $development_workflow, 'All other write-like' ), 'Development workflow limits executable Local Admin Consent to the featured image proof.' );
+toolbox_assert( false !== strpos( $development_workflow, 'post-editor excerpt/category/tag direct apply' ) && false !== strpos( $development_workflow, 'strong_local_confirmation' ) && false !== strpos( $development_workflow, 'Current accepted metadata choices' ), 'Development workflow keeps metadata direct apply as a future strong-local-confirmation design, not current local consent.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:article-media-batch-core' ) && false !== strpos( $development_workflow, 'core_proposal_required' ), 'Development workflow documents the high-risk article/media batch Core proposal smoke command.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Missing `wp_*` Agent Gateway exposure is a host-side admission task' ), 'Content context documentation keeps Agent Gateway admission outside Toolbox.' );
 toolbox_assert( false !== strpos( $content_context_doc, 'Do not add an update-context ability' ), 'Content context documentation blocks third-party updates in the first version.' );

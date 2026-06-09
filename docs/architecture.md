@@ -302,6 +302,14 @@ treats new tag creation as Core policy-gated after duplicate-term review. The
 delta artifact is suggestion-only and does not persist learning/audit state or
 write WordPress metadata.
 
+A future local direct-apply path for the same editor metadata values is a
+`strong_local_confirmation` candidate, not a Local Admin Consent extension. It
+must be designed before implementation with one-current-post scope, exact
+final metadata preview, existing terms only, explicit confirmation copy,
+old/new audit evidence, actor/source/correlation metadata, recovery evidence,
+and fail-closed audit behavior. Until that contract exists, accepted metadata
+choices remain Core proposal handoffs.
+
 ## Admin Surface
 
 When another Npcink plugin has registered the shared `npcink` parent menu,
