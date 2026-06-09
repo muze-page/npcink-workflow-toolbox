@@ -2553,6 +2553,7 @@ final class Provider_Client {
 			'ability_name'        => 'npcink-toolbox/ai-content-support',
 			'contract_version'    => 'hosted_ai_content_support.v1',
 			'profile_id'          => 'text.ai',
+			'execution_kind'      => 'text',
 			'execution_pattern'   => 'inline',
 			'input'               => array(
 				'messages' => array(
@@ -2642,6 +2643,7 @@ final class Provider_Client {
 			'ability_name'        => 'npcink-toolbox/ai-site-helper',
 			'contract_version'    => 'hosted_ai_site_helper.v1',
 			'profile_id'          => 'text.ai',
+			'execution_kind'      => 'text',
 			'execution_pattern'   => 'inline',
 			'input'               => array(
 				'messages'         => array(
