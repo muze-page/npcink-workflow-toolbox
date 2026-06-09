@@ -303,6 +303,57 @@ test infrastructure: add a dedicated hosted AI content-support smoke that
 captures the real REST assertion above so future changes catch Cloud/Toolbox
 contract drift early.
 
+## 2026-06-09 Editor Content Support Acceptance Closeout
+
+The editor Content Support slice is accepted for the current phase. The product
+surface is intentionally limited to five visible editor actions:
+
+- writing preparation;
+- publish preflight;
+- optimize summary and terms;
+- internal-link candidates;
+- image candidates.
+
+`taxonomy_tags` remains a supported lower-level REST intent for internal and
+admin flows, but it is not a separate default editor button. The editor sidebar
+is now the focused writing-support entrypoint: it helps the operator prepare,
+check, enrich, and hand off article metadata while the article body remains a
+human editing responsibility.
+
+Acceptance found one UI issue: the third editor button still rendered in
+English in a zh_CN WordPress admin session. The closeout fix localized the
+button label and description to `优化摘要与分类标签` and added a regression
+assertion for the editor script translation JSON. This was a localization
+completion, not a behavior or routing change.
+
+Verification performed during acceptance:
+
+```bash
+composer test:all
+composer smoke:metadata-delta
+composer smoke:ai-image-media-seo
+git diff --check
+```
+
+Browser acceptance against the local WordPress editor verified that
+`Npcink 内容支持` opens from the editor toolbar and shows exactly the five
+visible entries above. The same manual pass verified that the old English
+`Optimize summary and terms` copy no longer appears in the zh_CN sidebar.
+
+The runtime and governance acceptance remains unchanged:
+
+- `summary_terms_optimization` returns suggestion-only metadata artifacts;
+- accepted metadata choices go through
+  `/flows/content-metadata-apply-plan`;
+- Core receives one pending review proposal through Adapter/Core from-plan
+  intake;
+- Toolbox does not mutate the sampled post, assign terms, write excerpts,
+  import media, insert links, publish content, or own final write approval.
+
+The current phase should stop here. Additional work should be driven by real
+article-writing usage feedback, not by adding more default editor buttons or
+local execution paths.
+
 ## Recommended Next Step
 
 Treat Content Metadata Delta P0 as complete for the current phase. The next

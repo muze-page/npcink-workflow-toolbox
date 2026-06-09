@@ -90,6 +90,7 @@ toolbox_assert( false !== strpos( $readme, 'Do not expand Local Admin Consent to
 
 $metadata_handoff_summary = file_get_contents( $root . '/docs/content-metadata-governed-handoff-summary.md' );
 toolbox_assert( false !== $metadata_handoff_summary && false !== strpos( $metadata_handoff_summary, 'Stage Closeout Decision' ) && false !== strpos( $metadata_handoff_summary, 'Stop feature expansion for this stage' ) && false !== strpos( $metadata_handoff_summary, 'usage validation period' ) && false !== strpos( $metadata_handoff_summary, 'single-post excerpt plus existing category/tag direct apply' ), 'Content metadata handoff summary records the stage closeout and validation-first recommendation.' );
+toolbox_assert( false !== strpos( $metadata_handoff_summary, '2026-06-09 Editor Content Support Acceptance Closeout' ) && false !== strpos( $metadata_handoff_summary, 'five visible editor actions' ) && false !== strpos( $metadata_handoff_summary, 'not a separate default editor button' ) && false !== strpos( $metadata_handoff_summary, 'stop here' ), 'Content metadata handoff summary records the editor Content Support acceptance closeout.' );
 
 $composer = file_get_contents( $root . '/composer.json' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
