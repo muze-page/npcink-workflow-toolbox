@@ -2961,6 +2961,57 @@
 		result.appendChild(createRawDetails(proposal, options.rawTitle || 'Core proposal'));
 	}
 
+	function unwrapStructuredPayload(payload) {
+		if (!payload || typeof payload !== 'object') {
+			return payload;
+		}
+
+		const candidates = [
+			payload.result,
+			payload.output,
+			payload.result_json,
+			payload.data && payload.data.result,
+			payload.data && payload.data.output,
+			payload.data && payload.data.result_json,
+			payload.data && payload.data.run && payload.data.run.result,
+			payload.data && payload.data.run && payload.data.run.result_json,
+			payload.data,
+		];
+
+		for (let i = 0; i < candidates.length; i += 1) {
+			const candidate = candidates[i];
+			if (!candidate || typeof candidate !== 'object' || candidate === payload) {
+				continue;
+			}
+			if (
+				candidate.artifact_type ||
+				candidate.output_contract ||
+				candidate.evidence_pack ||
+				Array.isArray(candidate.results) ||
+				Array.isArray(candidate.candidates) ||
+				Array.isArray(candidate.images) ||
+				candidate.coverage ||
+				candidate.sync
+			) {
+				return candidate;
+			}
+		}
+
+		return payload;
+	}
+
+	function isWebSearchPayload(payload) {
+		if (!payload || typeof payload !== 'object') {
+			return false;
+		}
+
+		const evidencePack = payload.evidence_pack && typeof payload.evidence_pack === 'object' ? payload.evidence_pack : {};
+		return payload.artifact_type === 'web_search_results'
+			|| payload.output_contract === 'search_evidence_pack.v1'
+			|| evidencePack.contract_version === 'search_evidence_pack.v1'
+			|| (payload.cloud_ability === 'npcink-cloud/web-search' && Array.isArray(payload.results));
+	}
+
 	function renderStructuredResult(form, payload) {
 		if (typeof payload === 'string') {
 			renderTextResult(form, payload, 'pending');
@@ -2971,6 +3022,8 @@
 			renderTextResult(form, '', 'pending');
 			return;
 		}
+
+		payload = unwrapStructuredPayload(payload);
 
 		if (renderOperatorFeedback(form, payload)) {
 			return;
@@ -3010,7 +3063,7 @@
 			return;
 		}
 
-		if (payload.artifact_type === 'web_search_results') {
+		if (isWebSearchPayload(payload)) {
 			renderWebSearchResults(form, payload);
 			return;
 		}
