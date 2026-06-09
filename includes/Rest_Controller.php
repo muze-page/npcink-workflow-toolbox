@@ -488,7 +488,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'writing_support', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'writing_support', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
@@ -541,6 +541,18 @@ final class Rest_Controller {
 
 		if ( 'taxonomy_tags' === $intent ) {
 			$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
+		}
+
+		if ( 'summary_suggestions' === $intent ) {
+			$result['sections']['summary_terms_optimization'] = $this->editor_fast_summary_suggestions( $context, $query );
+		}
+
+		if ( 'category_suggestions' === $intent ) {
+			$result['sections']['summary_terms_optimization'] = $this->editor_fast_category_suggestions( $context, $query );
+		}
+
+		if ( 'tag_suggestions' === $intent ) {
+			$result['sections']['summary_terms_optimization'] = $this->editor_fast_tag_suggestions( $context, $query );
 		}
 
 		if ( 'summary_terms_optimization' === $intent ) {
@@ -1306,6 +1318,109 @@ final class Rest_Controller {
 		);
 	}
 
+	private function editor_fast_summary_suggestions( array $context, string $query ): array {
+		$summary_layers     = $this->editor_summary_layer_candidates( $context );
+		$proposed_new_terms = $this->empty_proposed_new_terms_review();
+		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, array(), array(), $proposed_new_terms );
+		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, array(), array(), $proposed_new_terms, array(), array(), $handoff_preview );
+
+		return $this->editor_metadata_suggestion_section(
+			'summary_suggestions',
+			$context,
+			$summary_layers,
+			array(),
+			array(),
+			$proposed_new_terms,
+			array(),
+			array(),
+			$handoff_preview,
+			$metadata_delta
+		);
+	}
+
+	private function editor_fast_category_suggestions( array $context, string $query ): array {
+		$taxonomy_terms     = $this->editor_taxonomy_term_candidates( $context, $query );
+		$items              = is_array( $taxonomy_terms['items'] ?? null ) ? $taxonomy_terms['items'] : array();
+		$categories         = array_values(
+			array_filter(
+				$items,
+				static fn( array $item ): bool => 'category' === (string) ( $item['taxonomy'] ?? '' )
+			)
+		);
+		$summary_layers     = $this->empty_summary_layer_candidates();
+		$proposed_new_terms = $this->empty_proposed_new_terms_review();
+		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, $categories, array(), $proposed_new_terms );
+		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, $categories, array(), $proposed_new_terms, array(), array(), $handoff_preview );
+
+		return $this->editor_metadata_suggestion_section(
+			'category_suggestions',
+			$context,
+			$summary_layers,
+			$categories,
+			array(),
+			$proposed_new_terms,
+			$taxonomy_terms,
+			array(),
+			$handoff_preview,
+			$metadata_delta
+		);
+	}
+
+	private function editor_fast_tag_suggestions( array $context, string $query ): array {
+		$taxonomy_terms = $this->editor_taxonomy_term_candidates( $context, $query );
+		$items          = is_array( $taxonomy_terms['items'] ?? null ) ? $taxonomy_terms['items'] : array();
+		$tags           = array_values(
+			array_filter(
+				$items,
+				static fn( array $item ): bool => 'post_tag' === (string) ( $item['taxonomy'] ?? '' )
+			)
+		);
+		$summary_layers     = $this->empty_summary_layer_candidates();
+		$proposed_new_terms = $this->editor_proposed_new_terms_from_query( $context, $query, $tags );
+		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, array(), $tags, $proposed_new_terms );
+		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, array(), $tags, $proposed_new_terms, array(), array(), $handoff_preview );
+
+		return $this->editor_metadata_suggestion_section(
+			'tag_suggestions',
+			$context,
+			$summary_layers,
+			array(),
+			$tags,
+			$proposed_new_terms,
+			$taxonomy_terms,
+			array(),
+			$handoff_preview,
+			$metadata_delta
+		);
+	}
+
+	private function editor_metadata_suggestion_section( string $candidate_type, array $context, array $summary_layers, array $categories, array $tags, array $proposed_new_terms, array $taxonomy_terms, array $related_content, array $handoff_preview, array $metadata_delta ): array {
+		return array(
+			'artifact_type'          => 'article_discoverability_optimization.v1',
+			'composition_role'       => 'summary_taxonomy_tag_candidates',
+			'candidate_type'         => sanitize_key( $candidate_type ),
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'input_scope'            => $this->editor_input_scope( $context ),
+			'summary_layers'         => $summary_layers,
+			'category_candidates'    => array_slice( $categories, 0, 5 ),
+			'tag_candidates'         => array_slice( $tags, 0, 8 ),
+			'proposed_new_terms'     => $proposed_new_terms,
+			'taxonomy_terms'         => $taxonomy_terms,
+			'related_content'        => $related_content,
+			'optimization_strategy'  => $this->editor_summary_terms_strategy(),
+			'review_metrics'         => $this->editor_summary_terms_review_metrics(),
+			'handoff_preview'        => $handoff_preview,
+			'content_metadata_delta' => $metadata_delta,
+			'handoff'                => array(
+				'final_writes'           => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'core_route'             => '/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan',
+			),
+		);
+	}
+
 	private function editor_related_post_terms_for_context( int $post_id ): array {
 		if ( 0 >= $post_id || ! function_exists( 'get_the_terms' ) ) {
 			return array();
@@ -1501,6 +1616,60 @@ final class Rest_Controller {
 			'creation_policy'        => 'operator_review_required',
 			'items'                  => $items,
 			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
+		);
+	}
+
+	private function empty_proposed_new_terms_review(): array {
+		return array(
+			'candidate_type'         => 'proposed_new_terms_review',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'creation_policy'        => 'operator_review_required',
+			'items'                  => array(),
+			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
+		);
+	}
+
+	private function editor_proposed_new_terms_from_query( array $context, string $query, array $existing_tag_candidates ): array {
+		$existing_keys = array();
+		foreach ( $existing_tag_candidates as $item ) {
+			$name = sanitize_text_field( (string) ( $item['name'] ?? '' ) );
+			if ( '' !== $name ) {
+				$existing_keys[ sanitize_title( $name ) ] = true;
+			}
+		}
+
+		$items = array();
+		foreach ( $this->support_tokens( $query ) as $token ) {
+			$label = trim( sanitize_text_field( $token ) );
+			if ( '' === $label || strlen( $label ) < 2 ) {
+				continue;
+			}
+			$key = sanitize_title( $label );
+			if ( '' === $key || isset( $existing_keys[ $key ] ) ) {
+				continue;
+			}
+			$items[] = array(
+				'taxonomy'                     => 'post_tag',
+				'name'                         => $label,
+				'status'                       => 'review_only_vocabulary_gap',
+				'controlled_vocabulary_status' => 'not_existing_term',
+				'source'                       => 'draft_token_gap',
+				'reason'                       => __( 'Review as a possible new tag only if no existing WordPress tag is close enough.', 'npcink-toolbox' ),
+			);
+			$existing_keys[ $key ] = true;
+			if ( 5 <= count( $items ) ) {
+				break;
+			}
+		}
+
+		return array(
+			'candidate_type'         => 'proposed_new_terms_review',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'creation_policy'        => 'operator_review_required',
+			'items'                  => $items,
+			'empty_message'          => __( 'No new tag gap is obvious from the draft tokens. Prefer existing tags unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
 		);
 	}
 
@@ -1861,6 +2030,16 @@ final class Rest_Controller {
 		$max_similarity = is_numeric( $related_evidence['max_similarity'] ?? null ) ? (float) $related_evidence['max_similarity'] : 0.0;
 
 		return max( 1, min( 5, $source_count + (int) ceil( max( 0.0, $max_similarity ) * 2 ) ) );
+	}
+
+	private function empty_summary_layer_candidates(): array {
+		return array(
+			'candidate_type'          => 'summary_layer_candidates',
+			'write_posture'           => 'suggestion_only',
+			'direct_wordpress_write'  => false,
+			'related_context_summary' => array(),
+			'items'                   => array(),
+		);
 	}
 
 	private function editor_taxonomy_candidate_reason( array $matched_tokens, array $related_evidence ): string {

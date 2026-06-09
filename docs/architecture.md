@@ -263,19 +263,23 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`writing_support`, `publish_preflight`, `summary_terms_optimization`,
+`writing_support`, `publish_preflight`, `summary_suggestions`,
+`category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
 `taxonomy_tags`, `internal_links`, `image_candidates`, or `discoverability`.
-The editor UI exposes five primary buttons: writing preparation, publish
-preflight, summary/category/tag optimization, internal links, and image
-candidates. `taxonomy_tags` remains a lower-level support intent, not a
-separate default button. The route returns an `editor_content_support_flow`
+The editor UI exposes primary buttons for writing preparation, publish
+preflight, summary suggestions, category suggestions, tag suggestions, internal
+links, and image candidates. `summary_terms_optimization` and `taxonomy_tags`
+remain lower-level/full support intents, not separate default buttons. The
+route returns an `editor_content_support_flow`
 artifact with suggestion-only sections and no direct WordPress write posture.
-The summary/terms optimization intent returns an
-`article_discoverability_optimization.v1` section that combines hosted AI
-summary suggestions, existing category/tag candidates, Cloud-managed Site
-Knowledge related-content evidence, Cloud-managed web-search evidence, and
-saved content-context guidance. It is not a term assignment, excerpt update,
-SEO mutation, content indexing, or local RAG/index lifecycle route. The section
+The split metadata intents return the same
+`article_discoverability_optimization.v1` section shape through lighter
+draft/taxonomy fast paths, while the full `summary_terms_optimization` intent
+still combines hosted AI summary suggestions, existing category/tag candidates,
+Cloud-managed Site Knowledge related-content evidence, Cloud-managed web-search
+evidence, and saved content-context guidance. It is not a term assignment,
+excerpt update, SEO mutation, content indexing, or local RAG/index lifecycle
+route. The section
 keeps summary candidates split by use case, annotates them with related-content
 context for duplicate/topic-fit review, marks WordPress taxonomy candidates as
 existing terms with match tokens and normalization keys, and boosts existing
@@ -348,7 +352,8 @@ not submit the plan to Core or approve execution.
 The admin **Content Support** tab groups fixed buttons by operator job. The
 default **Everyday Support** group uses the same fixed
 `/editor/content-support` intents as the post editor panel: discoverability,
-writing preparation, publish preflight, summary/category/tag optimization,
+writing preparation, publish preflight, summary suggestions, category
+suggestions, tag suggestions,
 internal-link candidates, and image candidates. Media work and governed
 handoffs are separate groups. The combined `Article Planning Bundle` is kept as
 a fallback bundle, not the default support flow.
@@ -370,10 +375,10 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
-- summary/category/tag optimization with scoped inputs, existing-term evidence,
-  proposed new-term review notes, and preview-only Core handoff guidance for
-  summary application, tag assignment, category recommendation, and new-tag
-  proposal actions;
+- split summary suggestions, category suggestions, and tag suggestions with
+  scoped inputs, existing-term evidence, proposed new-term review notes, and
+  preview-only Core handoff guidance for summary application, tag assignment,
+  category recommendation, and new-tag proposal actions;
 - taxonomy/tag candidates from existing WordPress terms;
 - internal-link candidates through Cloud-managed Site Knowledge;
 - image-source candidates through the configured Cloud image-source runtime.

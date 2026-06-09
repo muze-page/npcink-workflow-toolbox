@@ -86,12 +86,13 @@ not belong in Toolbox.
 
 The admin Content Support tab should default to fixed, single-job support
 buttons before fallback bundles. Everyday buttons use the existing
-`/editor/content-support` intents for five visible jobs: writing preparation,
-publish preflight, summary/category/tag optimization, internal links, and image
-candidates. Media tools, governed handoffs, and the combined Article Planning Bundle
-are visually separate groups so the bundle does not look like the primary
-workflow. The lower-level `taxonomy_tags` intent remains available to the route
-but is folded into the summary/category/tag button in the editor UI.
+`/editor/content-support` intents for visible jobs: writing preparation,
+publish preflight, summary suggestions, category suggestions, tag suggestions,
+internal links, and image candidates. Media tools, governed handoffs, and the
+combined Article Planning Bundle are visually separate groups so the bundle
+does not look like the primary workflow. The lower-level `taxonomy_tags` intent
+remains available to the route but is not a separate default button in the
+editor UI.
 
 ## Content Discoverability Context
 
@@ -205,21 +206,26 @@ Post editor content support:
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support` runs one bounded
   fixed flow from the current draft context.
 - Supported intents are `writing_support`, `publish_preflight`,
+  `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
   `image_candidates`, and
   `discoverability`.
-- The editor UI shows five primary buttons: `writing_support`,
-  `publish_preflight`, `summary_terms_optimization`, `internal_links`, and
-  `image_candidates`; `taxonomy_tags` is not a separate default button.
+- The editor UI shows primary buttons for `writing_support`,
+  `publish_preflight`, `summary_suggestions`, `category_suggestions`,
+  `tag_suggestions`, `internal_links`, and `image_candidates`;
+  `summary_terms_optimization` and `taxonomy_tags` are not separate default
+  buttons.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
-- `summary_terms_optimization` returns an
-  `article_discoverability_optimization.v1` section with hosted AI summary
-  candidates, existing category/tag candidates, related Site Knowledge, web
-  search evidence from the discoverability brief, ranking and dedupe guidance,
-  review metrics, input scope, proposed new-term review notes, preview-only
-  Core handoff guidance, a `content_metadata_delta` P0 artifact, and review
-  notes. Existing WordPress terms are preferred; proposed new tags remain
+- The split metadata intents return the same
+  `article_discoverability_optimization.v1` section shape through faster
+  draft/taxonomy paths. The full `summary_terms_optimization` intent still
+  returns hosted AI summary candidates, existing category/tag candidates,
+  related Site Knowledge, web search evidence from the discoverability brief,
+  ranking and dedupe guidance, review metrics, input scope, proposed new-term
+  review notes, preview-only Core handoff guidance, a `content_metadata_delta`
+  P0 artifact, and review notes. Existing WordPress terms are preferred;
+  proposed new tags remain
   operator-review vocabulary-gap candidates only. Related Site Knowledge terms
   from current local WordPress posts can boost existing category/tag candidates
   as ranking evidence only; they do not create taxonomy terms, assign terms,

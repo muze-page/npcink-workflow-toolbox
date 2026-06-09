@@ -306,11 +306,14 @@ contract drift early.
 ## 2026-06-09 Editor Content Support Acceptance Closeout
 
 The editor Content Support slice is accepted for the current phase. The product
-surface is intentionally limited to five visible editor actions:
+surface is intentionally limited to fixed visible editor actions, with split
+metadata editor actions for the high-frequency narrow panel:
 
 - writing preparation;
 - publish preflight;
-- optimize summary and terms;
+- summary suggestions;
+- category suggestions;
+- tag suggestions;
 - internal-link candidates;
 - image candidates.
 

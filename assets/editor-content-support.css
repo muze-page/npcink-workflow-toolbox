@@ -132,13 +132,79 @@
 	color: #646970;
 }
 
-.npcink-toolbox-editor-support__metadata-handoff {
+.npcink-toolbox-editor-support__metadata-compact-section {
 	display: grid;
-	gap: 8px;
+	gap: 6px;
+}
+
+.npcink-toolbox-editor-support__metadata-compact-list {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.npcink-toolbox-editor-support__metadata-compact-list li {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+	margin: 0;
+	padding: 6px 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.npcink-toolbox-editor-support__metadata-compact-list strong,
+.npcink-toolbox-editor-support__metadata-compact-list span {
+	display: block;
+	overflow-wrap: anywhere;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__metadata-compact-list span {
+	color: #646970;
+}
+
+.npcink-toolbox-editor-support__metadata-evidence {
+	margin-top: 4px;
+}
+
+.npcink-toolbox-editor-support__metadata-evidence summary {
+	cursor: pointer;
+	color: #3858e9;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__metadata-evidence-body {
+	display: grid;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.npcink-toolbox-editor-support__metadata-handoff {
+	display: block;
 	padding: 10px;
 	background: #f6f7f7;
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
+}
+
+.npcink-toolbox-editor-support__metadata-handoff summary {
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__metadata-handoff-body {
+	display: grid;
+	gap: 8px;
+	margin-top: 8px;
 }
 
 .npcink-toolbox-editor-support__metadata-choice-group {

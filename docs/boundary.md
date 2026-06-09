@@ -160,7 +160,7 @@ considered.
 AI runtime. It returns review-only content-support suggestions and must not
 create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are title/summary suggestions, compact outline
-support, short-draft polish, and summary/category/tag optimization. They must
+support, short-draft polish, and summary/category/tag review support. They must
 stay lightweight and must not be presented as one-click long-form article
 generation. Default draft-support results must include a small quality
 contract: expected output shape, operator review checklist, and reject-if rules
