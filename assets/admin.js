@@ -1274,6 +1274,9 @@
 		const status = String(payload && payload.status ? payload.status : 'unknown');
 		const noticeKind = status === 'ready' ? 'ok' : (status === 'failed' ? 'error' : 'pending');
 		container.appendChild(el('div', 'npcink-toolbox__result-notice is-' + noticeKind, t('Status: ') + formatLabel(status)));
+		if (siteKnowledgeStatusStillActive(payload)) {
+			container.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', siteKnowledgeActiveStatusMessage(payload)));
+		}
 		if (progress.message) {
 			container.appendChild(el('div', 'npcink-toolbox__result-notice is-' + noticeKind, progress.message));
 		}
@@ -1492,7 +1495,7 @@
 			payload,
 			'Site knowledge sync',
 			payload.status === 'queued'
-				? 'Cloud accepted the sync request. Refresh status to watch coverage and completion.'
+				? 'Cloud accepted the index refresh. Toolbox is watching status; search results may remain stale until the index is ready.'
 				: 'Cloud returned a site knowledge sync response.'
 		);
 		if (!result) {
@@ -1613,8 +1616,16 @@
 			appendMeta(meta, 'Evidence', payload.evidence_gate.status ? formatLabel(payload.evidence_gate.status) : '');
 			appendMeta(meta, 'Sources', payload.evidence_gate.source_count);
 		}
+		if (payload.evidence_pack && typeof payload.evidence_pack === 'object') {
+			appendMeta(meta, 'Pack', payload.evidence_pack.pack_type ? formatLabel(payload.evidence_pack.pack_type) : '');
+			appendMeta(meta, 'Pack contract', payload.evidence_pack.contract_version || payload.output_contract || 'search_evidence_pack.v1');
+		}
 		if (meta.childNodes.length) {
 			result.appendChild(meta);
+		}
+
+		if (payload.evidence_pack && typeof payload.evidence_pack === 'object' && payload.evidence_pack.guidance) {
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', String(payload.evidence_pack.guidance)));
 		}
 
 		if (results.length) {
@@ -3325,7 +3336,7 @@
 		const summary = root.querySelector('[data-toolbox-site-knowledge-summary]');
 		if (summary) {
 			clearNode(summary);
-			summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Loading Cloud status...'));
+			summary.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Checking Cloud index status...'));
 		}
 		const payload = await getJson(config.restUrl, 'site-knowledge/status');
 		if (summary) {
@@ -3395,7 +3406,7 @@
 		}
 		submitButton.disabled = busy;
 		submitButton.setAttribute('aria-busy', busy ? 'true' : 'false');
-		submitButton.textContent = busy ? 'Sync queued...' : submitButton.__magickOriginalText;
+		submitButton.textContent = busy ? 'Sending index request...' : submitButton.__magickOriginalText;
 	}
 
 	function updateSiteKnowledgeActionState(root, payload) {
@@ -3417,12 +3428,25 @@
 		}
 		button.disabled = active;
 		button.setAttribute('aria-busy', active ? 'true' : 'false');
-		button.textContent = active ? 'Indexing...' : button.__magickOriginalText;
+		button.textContent = active ? siteKnowledgeActiveButtonLabel(payload) : button.__magickOriginalText;
 	}
 
 	function siteKnowledgeStatusStillActive(payload) {
 		const status = String(payload && payload.status ? payload.status : '').toLowerCase();
 		return status === 'queued' || status === 'running' || status === 'syncing';
+	}
+
+	function siteKnowledgeActiveButtonLabel(payload) {
+		const status = String(payload && payload.status ? payload.status : '').toLowerCase();
+		return status === 'queued' ? 'Index refresh queued...' : 'Indexing in Cloud...';
+	}
+
+	function siteKnowledgeActiveStatusMessage(payload) {
+		const status = String(payload && payload.status ? payload.status : '').toLowerCase();
+		if (status === 'queued') {
+			return 'Index refresh is queued in Cloud. Search results may not include the latest changes yet.';
+		}
+		return 'Cloud is still indexing. Search results may not include the latest changes until status is ready.';
 	}
 
 	async function pollSiteKnowledgeStatus(root, attempts) {

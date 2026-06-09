@@ -592,10 +592,13 @@ final class Admin_Page {
 											<label>
 												<span><?php esc_html_e( 'Intent', 'npcink-toolbox' ); ?></span>
 												<select name="intent">
-													<option value="news"><?php esc_html_e( 'News', 'npcink-toolbox' ); ?></option>
+													<option value="article_background"><?php esc_html_e( 'Article background', 'npcink-toolbox' ); ?></option>
 													<option value="fact_check"><?php esc_html_e( 'Fact check', 'npcink-toolbox' ); ?></option>
-													<option value="writing_context"><?php esc_html_e( 'Writing context', 'npcink-toolbox' ); ?></option>
 													<option value="competitor_research"><?php esc_html_e( 'Competitor research', 'npcink-toolbox' ); ?></option>
+													<option value="pricing_snapshot"><?php esc_html_e( 'Pricing snapshot', 'npcink-toolbox' ); ?></option>
+													<option value="product_comparison"><?php esc_html_e( 'Product comparison', 'npcink-toolbox' ); ?></option>
+													<option value="writing_context"><?php esc_html_e( 'Writing context', 'npcink-toolbox' ); ?></option>
+													<option value="news"><?php esc_html_e( 'News', 'npcink-toolbox' ); ?></option>
 													<option value="source_discovery"><?php esc_html_e( 'Source discovery', 'npcink-toolbox' ); ?></option>
 													<option value="external_links"><?php esc_html_e( 'External links', 'npcink-toolbox' ); ?></option>
 												</select>

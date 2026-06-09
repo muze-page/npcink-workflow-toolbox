@@ -997,7 +997,7 @@ final class Provider_Client {
 		}
 
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'news' ) );
-		if ( ! in_array( $intent, array( 'general_research', 'fact_check', 'news', 'writing_context', 'competitor_research', 'source_discovery', 'external_links' ), true ) ) {
+		if ( ! in_array( $intent, array( 'general_research', 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links' ), true ) ) {
 			$intent = 'news';
 		}
 
@@ -2419,7 +2419,7 @@ final class Provider_Client {
 		$candidates        = array();
 		$include_external_search = ! array_key_exists( 'include_external_search', $input ) || ! empty( $input['include_external_search'] );
 		$external_search_intent  = sanitize_key( (string) ( $input['external_search_intent'] ?? 'writing_context' ) );
-		if ( ! in_array( $external_search_intent, array( 'fact_check', 'news', 'writing_context', 'competitor_research', 'source_discovery', 'external_links' ), true ) ) {
+		if ( ! in_array( $external_search_intent, array( 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links' ), true ) ) {
 			$external_search_intent = 'writing_context';
 		}
 		$external_research = $include_external_search
@@ -3189,7 +3189,8 @@ final class Provider_Client {
 			array(
 				'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
 				'provider_mode'        => 'cloud_auto',
-			'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
+				'contract_version'     => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'web_search.v1' ) ),
+				'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/web-search' ) ),
 				'cloud_runtime'        => 'magick_ai_cloud_addon',
 				'status'               => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
@@ -3199,10 +3200,12 @@ final class Provider_Client {
 				'max_results'          => max( 1, min( 10, (int) ( $input['max_results'] ?? 3 ) ) ),
 				'result_count'         => count( $results ),
 				'evidence_gate'        => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
+				'evidence_pack'        => is_array( $result['evidence_pack'] ?? null ) ? $this->sanitize_payload( $result['evidence_pack'] ) : array(),
 				'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 				'usage_summary'        => array(
 					'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
 					'provider_mode'        => 'cloud_auto',
+					'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 					'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 					'result_count'         => count( $results ),
 					'evidence_status'      => sanitize_key( (string) ( $result['evidence_gate']['status'] ?? '' ) ),

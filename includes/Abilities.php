@@ -159,7 +159,7 @@ final class Abilities {
 					),
 					'intent'       => array(
 						'type'        => 'string',
-						'description' => __( 'Search intent hint such as general_research, article_evidence, seo_research, or fact_check.', 'npcink-toolbox' ),
+						'description' => __( 'Search intent hint such as article_background, fact_check, competitor_research, pricing_snapshot, product_comparison, or general_research.', 'npcink-toolbox' ),
 					),
 					'max_results'  => array(
 						'type'        => 'integer',
@@ -314,7 +314,50 @@ final class Abilities {
 					'local_recipe_id'     => 'content_metadata_delta_v1',
 					'ability_recipe_ref'  => 'workflow/content_metadata_delta',
 					'provider_execution'  => 'none',
-					'write_posture'       => 'core_proposal_handoff',
+					'write_posture'            => 'core_proposal_handoff',
+					'accepted_input_contract'  => 'reviewed_excerpt_existing_terms_only_no_create_missing',
+				),
+				array(
+					'post_id'                => array(
+						'type'        => 'integer',
+						'description' => __( 'Current WordPress post ID receiving reviewed metadata suggestions.', 'npcink-toolbox' ),
+					),
+					'excerpt'                => array(
+						'type'        => 'string',
+						'description' => __( 'Reviewed excerpt text to package into a dry-run Core proposal action.', 'npcink-toolbox' ),
+					),
+					'category_ids'           => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'Reviewed existing category term IDs. Missing terms are never created by this plan.', 'npcink-toolbox' ),
+					),
+					'tag_ids'                => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'Reviewed existing tag term IDs. Missing terms are never created by this plan.', 'npcink-toolbox' ),
+					),
+					'category_mode'          => array(
+						'type'        => 'string',
+						'enum'        => array( 'append', 'replace' ),
+						'description' => __( 'Whether Core should append or replace reviewed existing categories during later approved execution.', 'npcink-toolbox' ),
+					),
+					'tag_mode'               => array(
+						'type'        => 'string',
+						'enum'        => array( 'append', 'replace' ),
+						'description' => __( 'Whether Core should append or replace reviewed existing tags during later approved execution.', 'npcink-toolbox' ),
+					),
+					'content_metadata_delta' => array(
+						'type'        => 'object',
+						'description' => __( 'Source content_metadata_delta artifact used as review evidence for the Core proposal.', 'npcink-toolbox' ),
+					),
+					'evidence_refs'          => array(
+						'type'        => 'array',
+						'description' => __( 'Evidence references preserved from the metadata delta review.', 'npcink-toolbox' ),
+					),
+					'new_term_candidates'    => array(
+						'type'        => 'array',
+						'description' => __( 'Review-only vocabulary-gap notes. This plan keeps create_missing disabled.', 'npcink-toolbox' ),
+					),
 				)
 			),
 			'npcink-toolbox/build-media-brief'                  => $this->definition(
