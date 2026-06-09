@@ -13,12 +13,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit( 1 );
 }
 
+$toolbox_metadata_delta_smoke_proposal_ids = array();
+
 function toolbox_metadata_delta_smoke_pass( string $message ): void {
 	echo "PASS: {$message}\n";
 }
 
+function toolbox_metadata_delta_smoke_info( string $message ): void {
+	echo "INFO: {$message}\n";
+}
+
 function toolbox_metadata_delta_smoke_fail( string $message ): void {
 	fwrite( STDERR, "FAIL: {$message}\n" );
+	toolbox_metadata_delta_smoke_purge_governance_records();
 	exit( 1 );
 }
 
@@ -42,6 +49,58 @@ function toolbox_metadata_delta_smoke_admin_user_id(): int {
 	);
 
 	return absint( $users[0] ?? 0 );
+}
+
+function toolbox_metadata_delta_smoke_track_rest_fixture( string $route, $data ): void {
+	global $toolbox_metadata_delta_smoke_proposal_ids;
+
+	if ( '/npcink-governance-core/v1/proposals/from-plan' !== $route || ! is_array( $data ) ) {
+		return;
+	}
+
+	foreach ( (array) ( $data['proposals'] ?? array() ) as $proposal ) {
+		if ( ! is_array( $proposal ) ) {
+			continue;
+		}
+
+		$proposal_id = trim( (string) ( $proposal['proposal_id'] ?? '' ) );
+		if ( '' !== $proposal_id ) {
+			$toolbox_metadata_delta_smoke_proposal_ids[ $proposal_id ] = true;
+		}
+	}
+}
+
+function toolbox_metadata_delta_smoke_should_purge_governance_records(): bool {
+	$value = getenv( 'NPCINK_TOOLBOX_METADATA_DELTA_SMOKE_PURGE' );
+	if ( ! is_string( $value ) || '' === trim( $value ) ) {
+		return true;
+	}
+
+	return in_array( strtolower( trim( $value ) ), array( '1', 'true', 'yes' ), true );
+}
+
+function toolbox_metadata_delta_smoke_purge_governance_records(): void {
+	global $wpdb, $toolbox_metadata_delta_smoke_proposal_ids;
+
+	if ( ! toolbox_metadata_delta_smoke_should_purge_governance_records() ) {
+		return;
+	}
+
+	$proposal_ids = array_keys( is_array( $toolbox_metadata_delta_smoke_proposal_ids ) ? $toolbox_metadata_delta_smoke_proposal_ids : array() );
+	if ( empty( $proposal_ids ) ) {
+		return;
+	}
+
+	$audit_table    = $wpdb->prefix . 'npcink_governance_core_audit_log';
+	$proposal_table = $wpdb->prefix . 'npcink_governance_core_proposals';
+
+	foreach ( $proposal_ids as $proposal_id ) {
+		$proposal_id = sanitize_text_field( $proposal_id );
+		$wpdb->delete( $audit_table, array( 'proposal_id' => $proposal_id ), array( '%s' ) );
+		$wpdb->delete( $proposal_table, array( 'proposal_id' => $proposal_id ), array( '%s' ) );
+	}
+
+	toolbox_metadata_delta_smoke_info( 'Purged Core proposal fixtures: ' . count( $proposal_ids ) );
 }
 
 function toolbox_metadata_delta_smoke_find_sample_post_id( array $script_args ): int {
@@ -104,6 +163,7 @@ function toolbox_metadata_delta_smoke_rest( string $route, array $params ): arra
 	}
 
 	$data = $response->get_data();
+	toolbox_metadata_delta_smoke_track_rest_fixture( $route, $data );
 	toolbox_metadata_delta_smoke_assert( $response->get_status() >= 200 && $response->get_status() < 300, 'REST dispatch succeeds for ' . $route . '.' );
 
 	return is_array( $data ) ? $data : array();
@@ -170,11 +230,12 @@ toolbox_metadata_delta_smoke_assert( in_array( 'no_toolbox_direct_wordpress_writ
 toolbox_metadata_delta_smoke_assert( in_array( 'related_content_terms_used_for_ranking_only', $checks, true ), 'Outcome contract keeps related terms as ranking evidence only.' );
 toolbox_metadata_delta_smoke_assert( in_array( 'accepted_write_like_changes_route_through_core_or_future_classified_local_consent', $checks, true ), 'Outcome contract keeps accepted write-like changes on governed paths.' );
 
+$reviewed_excerpt = wp_trim_words( wp_strip_all_tags( get_the_title( $sample_post_id ) . ' metadata smoke reviewed excerpt' ), 28, '' );
 $apply_plan = toolbox_metadata_delta_smoke_rest(
 	'/npcink-toolbox/v1/flows/content-metadata-apply-plan',
 	array(
 		'post_id'                => $sample_post_id,
-		'excerpt'                => wp_trim_words( wp_strip_all_tags( get_the_title( $sample_post_id ) . ' metadata smoke reviewed excerpt' ), 28, '' ),
+		'excerpt'                => $reviewed_excerpt,
 		'category_ids'           => is_array( $category_ids ) ? $category_ids : array(),
 		'tag_ids'                => is_array( $tag_ids ) ? $tag_ids : array(),
 		'content_metadata_delta' => $delta,
@@ -218,8 +279,43 @@ foreach ( $apply_actions as $action ) {
 }
 toolbox_metadata_delta_smoke_assert( $has_excerpt_action, 'Content metadata apply plan can route a reviewed excerpt through update-post.' );
 
+$created = toolbox_metadata_delta_smoke_rest(
+	'/npcink-governance-core/v1/proposals/from-plan',
+	array(
+		'plan_ability_id' => 'npcink-toolbox/build-content-metadata-apply-plan',
+		'plan'            => $apply_plan,
+		'plan_input'      => array(
+			'post_id'      => $sample_post_id,
+			'excerpt'      => $reviewed_excerpt,
+			'category_ids' => is_array( $category_ids ) ? $category_ids : array(),
+			'tag_ids'      => is_array( $tag_ids ) ? $tag_ids : array(),
+		),
+		'caller'          => array(
+			'source' => 'tests/smoke-content-metadata-delta.php',
+		),
+	)
+);
+
+toolbox_metadata_delta_smoke_assert( 'npcink-toolbox/build-content-metadata-apply-plan' === (string) ( $created['plan_ability_id'] ?? '' ), 'Core response records the metadata planning ability.' );
+toolbox_metadata_delta_smoke_assert( 1 === (int) ( $created['proposal_count'] ?? 0 ), 'Core creates one batch proposal from the metadata apply plan.' );
+toolbox_metadata_delta_smoke_assert( count( $apply_actions ) === (int) ( $created['action_count'] ?? 0 ), 'Core response preserves the metadata action count.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $created['commit_execution'] ?? true ), 'Core metadata from-plan intake remains non-commit.' );
+
+$proposals      = is_array( $created['proposals'] ?? null ) ? $created['proposals'] : array();
+$proposal       = is_array( $proposals[0] ?? null ) ? $proposals[0] : array();
+$proposal_input = is_array( $proposal['input'] ?? null ) ? $proposal['input'] : array();
+$proposal_preview = is_array( $proposal['preview'] ?? null ) ? $proposal['preview'] : array();
+
+toolbox_metadata_delta_smoke_assert( 'pending' === (string) ( $proposal['status'] ?? '' ), 'Core metadata proposal starts pending approval.' );
+toolbox_metadata_delta_smoke_assert( 'plan_to_proposal_batch' === (string) ( $proposal_preview['source']['type'] ?? '' ), 'Core metadata proposal stores a batch source preview.' );
+toolbox_metadata_delta_smoke_assert( isset( $proposal_preview['content_metadata_apply'] ), 'Core metadata proposal preserves content_metadata_apply review evidence.' );
+toolbox_metadata_delta_smoke_assert( count( $apply_actions ) === count( (array) ( $proposal_input['write_actions'] ?? array() ) ), 'Core metadata proposal input stores all reviewed write actions.' );
+toolbox_metadata_delta_smoke_assert( true === (bool) ( $proposal_input['dry_run'] ?? false ) && false === (bool) ( $proposal_input['commit'] ?? true ), 'Core metadata proposal input remains dry-run and non-commit.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $proposal_preview['commit_execution'] ?? true ), 'Core metadata proposal preview disables Core execution.' );
+
 $after = toolbox_metadata_delta_smoke_post_snapshot( $sample_post_id );
 toolbox_metadata_delta_smoke_assert( $post_count === toolbox_metadata_delta_smoke_post_count(), 'Metadata delta smoke does not create or delete posts.' );
 toolbox_metadata_delta_smoke_assert( $before === $after, 'Metadata delta smoke does not mutate the sampled post.' );
 
+toolbox_metadata_delta_smoke_purge_governance_records();
 echo "Content Metadata Delta smoke passed.\n";

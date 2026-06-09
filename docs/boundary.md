@@ -113,6 +113,7 @@ planning flows:
 - `/flows/image-candidate-adoption-plan`
 - `/local-admin-consent/featured-image`
 - `/flows/site-knowledge-review-plan`
+- `/flows/content-metadata-apply-plan`
 - `/flows/media-brief`
 - `/editor/content-support`
 - `/media-derivative-handoff`

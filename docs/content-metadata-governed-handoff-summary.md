@@ -101,9 +101,10 @@ git diff --check
 ```
 
 The metadata smoke verifies that the editor content-support REST flow remains
-suggestion-only, that the apply-plan route produces a dry-run Core handoff, that
-term creation is not included, and that the sampled WordPress post is not
-mutated.
+suggestion-only, that the apply-plan route produces a dry-run handoff, that Core
+`/proposals/from-plan` creates one pending `plan_to_proposal_batch` review
+proposal with `preview.content_metadata_apply`, that term creation is not
+included, and that the sampled WordPress post is not mutated.
 
 ## Deferred Work
 
