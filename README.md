@@ -191,8 +191,8 @@ fallback panel that renders the plan artifacts, risk report, final
 `npcink-abilities-toolkit/create-draft` action, and Core handoff route for operator review.
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
-opened from the editor top toolbar. Its buttons run fixed flows for publish
-preflight, summary/category/tag optimization, taxonomy/tag candidates,
+opened from the editor top toolbar. Its five visible buttons run fixed flows for
+writing preparation, publish preflight, summary/category/tag optimization,
 internal-link candidates, and image-source candidates from the current draft
 context. The summary/category/tag optimization flow returns an
 `article_discoverability_optimization.v1` artifact that combines hosted AI
@@ -205,11 +205,11 @@ and review-metric guidance for human evaluation. The same result includes a
 `content_metadata_delta` P0 artifact with an issue record, diagnosis, excerpt
 and existing-term delta, authorization classification, outcome checks, and
 learning candidates for later review. Operators can scope the run to the full
-article, selected text or block, or a topic-only brief. The taxonomy candidate
-flow recommends existing WordPress terms only; the broader summary/terms
-optimization flow may show proposed new terms as review-only vocabulary gaps
-and includes a preview-only Core handoff packet for accepted summary and term
-choices. Accepted excerpt, existing category, and existing tag choices can be
+article, selected text or block, or a topic-only brief. Existing WordPress term
+recommendations are folded into the broader summary/terms optimization flow.
+It may also show proposed new terms as review-only vocabulary gaps and includes
+a preview-only Core handoff packet for accepted summary and term choices.
+Accepted excerpt, existing category, and existing tag choices can be
 converted into a dry-run `content_metadata_apply_plan` through
 `/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan` or
 `npcink-toolbox/build-content-metadata-apply-plan`; Core still owns proposal
@@ -301,11 +301,11 @@ small amount of public-site or media metadata, Cloud produces reviewable
 suggestions, and no media library, post, SEO, proposal, crawler, or queue state
 is changed locally.
 Everyday Support remains available for the same bounded jobs:
-discoverability brief, publish preflight, summary/category/tag optimization,
-taxonomy/tag candidates, internal-link candidates, or image candidates. Media
-work, governed handoffs, and the combined Article Planning Bundle are visually
-separate groups; the bundle is a fallback package, not the primary support
-workflow.
+discoverability brief, writing preparation, publish preflight,
+summary/category/tag optimization, internal-link candidates, or image
+candidates. Media work, governed handoffs, and the combined Article Planning
+Bundle are visually separate groups; the bundle is a fallback package, not the
+primary support workflow.
 
 `media_optimization_v1` names the existing **Optimize Existing Image** surface
 as a fixed governed workflow, not a new workflow runtime or persistent run

@@ -148,11 +148,6 @@
 			description: __('Review layered summaries, existing terms, proposed new terms, evidence, and handoff preview.', 'npcink-toolbox'),
 		},
 		{
-			intent: 'taxonomy_tags',
-			label: __('Recommend existing terms', 'npcink-toolbox'),
-			description: __('Suggest only existing categories and tags from the current article or selected text.', 'npcink-toolbox'),
-		},
-		{
 			intent: 'internal_links',
 			label: __('Find internal links', 'npcink-toolbox'),
 			description: __('Use Site Knowledge to find related public content for links.', 'npcink-toolbox'),

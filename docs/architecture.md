@@ -263,11 +263,15 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`publish_preflight`, `summary_terms_optimization`, `taxonomy_tags`,
-`internal_links`, `image_candidates`, or `discoverability`. It returns an
-`editor_content_support_flow` artifact with suggestion-only sections and no
-direct WordPress write posture. The summary/terms optimization intent returns
-an `article_discoverability_optimization.v1` section that combines hosted AI
+`writing_support`, `publish_preflight`, `summary_terms_optimization`,
+`taxonomy_tags`, `internal_links`, `image_candidates`, or `discoverability`.
+The editor UI exposes five primary buttons: writing preparation, publish
+preflight, summary/category/tag optimization, internal links, and image
+candidates. `taxonomy_tags` remains a lower-level support intent, not a
+separate default button. The route returns an `editor_content_support_flow`
+artifact with suggestion-only sections and no direct WordPress write posture.
+The summary/terms optimization intent returns an
+`article_discoverability_optimization.v1` section that combines hosted AI
 summary suggestions, existing category/tag candidates, Cloud-managed Site
 Knowledge related-content evidence, Cloud-managed web-search evidence, and
 saved content-context guidance. It is not a term assignment, excerpt update,
@@ -345,9 +349,9 @@ The admin **Content Support** tab groups fixed buttons by operator job. The
 default **Everyday Support** group uses the same fixed
 `/editor/content-support` intents as the post editor panel: discoverability,
 writing preparation, publish preflight, summary/category/tag optimization,
-taxonomy/tag candidates, internal-link candidates, and image candidates. Media
-work and governed handoffs are separate groups. The combined `Article Planning Bundle`
-is kept as a fallback bundle, not the default support flow.
+internal-link candidates, and image candidates. Media work and governed
+handoffs are separate groups. The combined `Article Planning Bundle` is kept as
+a fallback bundle, not the default support flow.
 
 Toolbox also renders additive `operator_feedback` payloads from governed
 handoff failures, including reasons, revision fields, next steps, retry state,

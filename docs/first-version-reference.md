@@ -86,11 +86,12 @@ not belong in Toolbox.
 
 The admin Content Support tab should default to fixed, single-job support
 buttons before fallback bundles. Everyday buttons use the existing
-`/editor/content-support` intents for discoverability, publish preflight,
-writing preparation, taxonomy/tag candidates, internal links, and image
+`/editor/content-support` intents for five visible jobs: writing preparation,
+publish preflight, summary/category/tag optimization, internal links, and image
 candidates. Media tools, governed handoffs, and the combined Article Planning Bundle
 are visually separate groups so the bundle does not look like the primary
-workflow.
+workflow. The lower-level `taxonomy_tags` intent remains available to the route
+but is folded into the summary/category/tag button in the editor UI.
 
 ## Content Discoverability Context
 
@@ -207,6 +208,9 @@ Post editor content support:
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
   `image_candidates`, and
   `discoverability`.
+- The editor UI shows five primary buttons: `writing_support`,
+  `publish_preflight`, `summary_terms_optimization`, `internal_links`, and
+  `image_candidates`; `taxonomy_tags` is not a separate default button.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
 - `summary_terms_optimization` returns an
