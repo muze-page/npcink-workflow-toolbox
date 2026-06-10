@@ -2152,6 +2152,7 @@ final class Admin_Page {
 				<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>
 			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Toolbox owns media optimization defaults and reviewed handoff fields; Core creates one proposal for the metadata update and derivative adoption together.', 'npcink-toolbox' ); ?></p>
+			<p class="description"><?php esc_html_e( 'If old image URLs are stored in theme settings or other plugin options, run the settings URL repair action after preview; the derivative adoption proposal does not scan settings automatically.', 'npcink-toolbox' ); ?></p>
 			<div class="npcink-toolbox__inline-actions">
 				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="button" data-toolbox-submit-media-proposal disabled><?php esc_html_e( 'Submit optimization review', 'npcink-toolbox' ); ?></button>

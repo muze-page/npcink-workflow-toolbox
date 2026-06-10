@@ -2803,16 +2803,19 @@
 			const preflight = planDataFromEnvelope(state.preflightEnvelope);
 			if (preflight && preflight.artifact_type === 'media_adoption_preflight_summary') {
 				const ready = preflight.readiness && preflight.readiness.can_submit_core_proposal;
-				result.appendChild(el('div', ready ? 'npcink-toolbox__result-notice is-ok' : 'npcink-toolbox__result-notice is-warning', ready ? 'Adoption preflight passed. Review the summary before submitting Core proposal.' : 'Adoption preflight needs attention before Core proposal submission.'));
+				result.appendChild(el('div', ready ? 'npcink-toolbox__result-notice is-ok' : 'npcink-toolbox__result-notice is-warning', ready ? '采用预检通过。提交 Core 提案前请确认摘要。' : '采用预检需要处理后再提交 Core 提案。'));
 				const preflightMeta = el('div', 'npcink-toolbox__result-meta');
-				appendMeta(preflightMeta, 'Proposal ready', ready ? 'Yes' : 'No');
-				appendMeta(preflightMeta, 'Content posts', preflight.content_reference_summary ? preflight.content_reference_summary.post_count : '');
-				appendMeta(preflightMeta, 'Replacements', preflight.content_reference_summary ? preflight.content_reference_summary.replacement_count : '');
-				appendMeta(preflightMeta, 'Settings scan', preflight.settings_reference_summary && preflight.settings_reference_summary.scan_available ? 'Available separately' : 'Not available');
+				appendMeta(preflightMeta, '提案就绪', ready ? '是' : '否');
+				appendMeta(preflightMeta, '内容引用文章', preflight.content_reference_summary ? preflight.content_reference_summary.post_count : '');
+				appendMeta(preflightMeta, 'URL 替换数', preflight.content_reference_summary ? preflight.content_reference_summary.replacement_count : '');
+				appendMeta(preflightMeta, '设置引用扫描', preflight.settings_reference_summary && preflight.settings_reference_summary.scan_available ? '可单独扫描' : '不可用');
 				result.appendChild(preflightMeta);
-				renderArtifactSummary(result, 'Adoption preflight', preflight);
+				if (preflight.settings_reference_summary && preflight.settings_reference_summary.scan_available) {
+					result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', '后台设置、主题或其他插件里的旧图片 URL 不会自动随媒体采用一起替换；需要时请使用“提交设置 URL 修复”。'));
+				}
+				renderArtifactSummary(result, '采用预检', preflight);
 			} else if (state.preflightEnvelope.error) {
-				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Adoption preflight is unavailable: ' + state.preflightEnvelope.error));
+				result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', '采用预检不可用：' + state.preflightEnvelope.error));
 			}
 		}
 		result.appendChild(createRawDetails(payload, 'Cloud result payload'));
