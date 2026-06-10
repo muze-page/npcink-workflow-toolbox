@@ -380,6 +380,22 @@ toolbox_editor_review_smoke_assert( '' !== $seo_proposal_id, 'Adapter creates on
 toolbox_editor_review_smoke_assert( 'pending' === (string) ( $seo_proposal['status'] ?? '' ), 'SEO metadata proposal starts pending approval.' );
 toolbox_editor_review_smoke_assert( 'npcink-abilities-toolkit/set-post-seo-meta' === (string) ( $seo_proposal['ability_id'] ?? '' ), 'SEO metadata proposal stores the governed ability id.' );
 
+$core_proposal         = toolbox_editor_review_smoke_rest_route( 'GET', '/npcink-governance-core/v1/proposals/' . rawurlencode( $seo_proposal_id ), array() );
+$core_proposal_preview = is_array( $core_proposal['preview'] ?? null ) ? $core_proposal['preview'] : array();
+$core_field_patch      = is_array( $core_proposal_preview['field_patch'] ?? null ) ? $core_proposal_preview['field_patch'] : array();
+$core_patch_fields     = array_values(
+	array_filter(
+		array_map(
+			static fn( $patch ): string => is_array( $patch ) ? (string) ( $patch['field'] ?? '' ) : '',
+			$core_field_patch
+		)
+	)
+);
+toolbox_editor_review_smoke_assert( 'pending' === (string) ( $core_proposal['status'] ?? '' ), 'Core proposal detail keeps the SEO handoff pending for human review.' );
+toolbox_editor_review_smoke_assert( 'npcink-abilities-toolkit/set-post-seo-meta' === (string) ( $core_proposal['ability_id'] ?? '' ), 'Core proposal detail returns the governed SEO ability id.' );
+toolbox_editor_review_smoke_assert( in_array( 'seo_title', $core_patch_fields, true ) && in_array( 'seo_description', $core_patch_fields, true ), 'Core proposal detail preserves reviewable SEO field patches.' );
+toolbox_editor_review_smoke_assert( ! empty( $core_proposal['audit_timeline'] ) && is_array( $core_proposal['audit_timeline'] ), 'Core proposal detail returns an audit timeline for the SEO handoff.' );
+
 $after = toolbox_editor_review_smoke_post_snapshot( $sample_post_id );
 toolbox_editor_review_smoke_assert( $before === $after, 'Editor review artifact smoke does not mutate the sampled post.' );
 toolbox_editor_review_smoke_assert( $post_count === toolbox_editor_review_smoke_post_count(), 'Editor review artifact smoke leaves the post count unchanged after cleanup accounting.' );
