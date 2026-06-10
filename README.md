@@ -106,6 +106,9 @@ preflight, then submit one Core optimization review. Attachment adoption,
 content URL repair, and settings URL repair remain separate governed actions so
 hard-coded post URLs and URLs stored in theme or plugin options are not silently
 rewritten by preview generation.
+Batch media optimization uses bounded review sets: build a review plan,
+generate previews for selected candidates, and submit only selected Core
+reviews. It is intentionally not presented as one-click whole-site replacement.
 The Site Knowledge review plan route builds a blocked Core handoff plan from
 Cloud evidence only; it does not approve, preflight, or execute that plan.
 

@@ -2079,7 +2079,7 @@ final class Admin_Page {
 			</div>
 			<div class="npcink-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Batch conversion plan', 'npcink-toolbox' ); ?></h3>
-				<p><?php esc_html_e( 'Fixed batch flow: choose a scope and goal, build a bounded plan, generate selected previews, then submit only reviewed Core proposals.', 'npcink-toolbox' ); ?></p>
+				<p><?php esc_html_e( 'Fixed batch flow: choose a bounded review set and goal, build a plan, generate selected previews, then submit only selected Core reviews. This is not a one-click whole-site replacement.', 'npcink-toolbox' ); ?></p>
 				<ol class="npcink-toolbox__flow-steps" aria-label="<?php esc_attr_e( 'Batch optimization steps', 'npcink-toolbox' ); ?>">
 					<li><?php esc_html_e( 'Scope', 'npcink-toolbox' ); ?></li>
 					<li><?php esc_html_e( 'Plan', 'npcink-toolbox' ); ?></li>
@@ -2093,7 +2093,7 @@ final class Admin_Page {
 							<option value="current_month"><?php esc_html_e( 'This month', 'npcink-toolbox' ); ?></option>
 							<option value="previous_month"><?php esc_html_e( 'Previous month', 'npcink-toolbox' ); ?></option>
 							<option value="custom"><?php esc_html_e( 'Custom range', 'npcink-toolbox' ); ?></option>
-							<option value="all"><?php esc_html_e( 'All eligible media', 'npcink-toolbox' ); ?></option>
+							<option value="all"><?php esc_html_e( 'Eligible media sample', 'npcink-toolbox' ); ?></option>
 						</select>
 					</label>
 					<label>
@@ -2116,13 +2116,13 @@ final class Admin_Page {
 						</select>
 					</label>
 					<label>
-						<span><?php esc_html_e( 'Max candidates', 'npcink-toolbox' ); ?></span>
-						<input type="number" min="1" max="50" step="1" name="batch_max_items" value="20" />
+						<span><?php esc_html_e( 'Review set size', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="1" max="25" step="1" name="batch_max_items" value="10" />
 					</label>
 				</div>
 				<details class="npcink-toolbox__result-details npcink-toolbox__advanced-filters">
 					<summary><?php esc_html_e( 'Advanced filters', 'npcink-toolbox' ); ?></summary>
-					<p class="description"><?php esc_html_e( 'Use these only when the fixed scope needs a tighter date, format, or dimension filter.', 'npcink-toolbox' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Use these only when the fixed review set needs a tighter date, format, or dimension filter. The plan remains bounded by review set size.', 'npcink-toolbox' ); ?></p>
 					<div class="npcink-toolbox__split">
 						<label>
 							<span><?php esc_html_e( 'Date from', 'npcink-toolbox' ); ?></span>
@@ -2145,9 +2145,9 @@ final class Admin_Page {
 					</div>
 				</details>
 				<div class="npcink-toolbox__inline-actions">
-					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build batch plan', 'npcink-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build review plan', 'npcink-toolbox' ); ?></button>
 					<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'npcink-toolbox' ); ?></button>
-					<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected proposals', 'npcink-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected Core reviews', 'npcink-toolbox' ); ?></button>
 				</div>
 				<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>

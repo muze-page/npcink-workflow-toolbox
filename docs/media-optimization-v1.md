@@ -107,6 +107,22 @@ The first-version boundary is:
 This keeps the fixed button understandable without letting Toolbox become a
 second WordPress write owner or a site-wide search-replace tool.
 
+## Batch Guardrails
+
+Batch optimization is a review-set workflow, not a one-click whole-site
+replacement. The default surface should:
+
+1. build a bounded review plan;
+2. let the operator generate previews only for selected candidates;
+3. submit only selected Core reviews;
+4. leave Core/Adapter to approve, execute, audit, and roll back each governed
+   proposal.
+
+Avoid labels such as "replace all" or "whole site optimization" in the current
+stage. Broad scopes may exist as bounded candidate searches, but the visible
+language should keep the operator focused on sampled review sets and selected
+proposal submission.
+
 ## Proposal Shape
 
 The single-image optimization path must keep one user intent as one Core proposal.
