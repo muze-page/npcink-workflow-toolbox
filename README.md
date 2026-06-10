@@ -100,6 +100,12 @@ Toolbox may submit one Core media optimization proposal from the Adapter media
 derivative recipe after reviewed metadata and derivative artifact evidence are
 present, but it does not approve proposals, execute proposals, or perform
 WordPress writes.
+The fixed media optimization flow is: select or resolve an existing attachment,
+generate a short-lived Cloud preview, review the derivative and adoption
+preflight, then submit one Core optimization review. Attachment adoption,
+content URL repair, and settings URL repair remain separate governed actions so
+hard-coded post URLs and URLs stored in theme or plugin options are not silently
+rewritten by preview generation.
 The Site Knowledge review plan route builds a blocked Core handoff plan from
 Cloud evidence only; it does not approve, preflight, or execute that plan.
 

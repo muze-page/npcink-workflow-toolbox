@@ -72,6 +72,41 @@ These steps may be displayed in local browser state or in existing result
 artifacts. They must not require a new REST route such as `/workflow-runs` or a
 new durable Toolbox run store in the current stage.
 
+## Operator Flow
+
+The user-facing flow is deliberately small:
+
+1. Select or resolve an existing media attachment.
+2. Generate a Cloud preview and inspect the short-lived derivative image.
+3. Review the adoption preflight summary, including content URL and settings
+   reference signals.
+4. Submit the Core optimization review only after the preview is acceptable.
+5. Approve, execute, audit, and roll back from Core/Adapter surfaces, not from
+   Toolbox.
+
+Toolbox copy should make clear that preview generation is not a WordPress write.
+The first visible success state is a derivative preview plus evidence. The
+write decision starts only after the operator submits the Core review.
+
+## Replacement Boundaries
+
+Media adoption replaces the approved attachment file through the governed Core
+proposal path. It does not automatically repair every old URL string that may
+exist elsewhere in WordPress.
+
+The first-version boundary is:
+
+- attachment adoption: governed by one Core media optimization proposal;
+- post content URLs: handled by the separate content URL repair action when the
+  preflight finds hard-coded references;
+- settings, theme, and plugin option URLs: handled by the separate settings URL
+  repair action with excluded-format and minimum-dimension filters;
+- external caches, CDN rules, custom database tables, and arbitrary third-party
+  storage: outside Toolbox automatic replacement.
+
+This keeps the fixed button understandable without letting Toolbox become a
+second WordPress write owner or a site-wide search-replace tool.
+
 ## Proposal Shape
 
 The single-image optimization path must keep one user intent as one Core proposal.

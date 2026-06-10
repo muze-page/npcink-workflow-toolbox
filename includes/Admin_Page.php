@@ -2152,6 +2152,14 @@ final class Admin_Page {
 				<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>
 			<p class="description"><?php esc_html_e( 'Cloud returns a short-lived derivative artifact. Toolbox owns media optimization defaults and reviewed handoff fields; Core creates one proposal for the metadata update and derivative adoption together.', 'npcink-toolbox' ); ?></p>
+			<div class="npcink-toolbox__example">
+				<strong><?php esc_html_e( 'Operator flow', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Generate preview first, review the derivative and adoption preflight, then submit the Core optimization review only when the result is acceptable.', 'npcink-toolbox' ); ?></span>
+			</div>
+			<div class="npcink-toolbox__example">
+				<strong><?php esc_html_e( 'Replacement boundary', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Adoption changes the media attachment through Core approval. Hard-coded post URLs and URLs stored in settings, themes, or other plugin options require the separate repair actions.', 'npcink-toolbox' ); ?></span>
+			</div>
 			<p class="description"><?php esc_html_e( 'If old image URLs are stored in theme settings or other plugin options, run the settings URL repair action after preview; the derivative adoption proposal does not scan settings automatically.', 'npcink-toolbox' ); ?></p>
 			<div class="npcink-toolbox__inline-actions">
 				<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
