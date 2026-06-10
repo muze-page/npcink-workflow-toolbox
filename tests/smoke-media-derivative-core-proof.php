@@ -269,6 +269,23 @@ $derivative = toolbox_media_derivative_smoke_derivative_from_result( $result );
 toolbox_media_derivative_smoke_assert( '' !== (string) ( $derivative['artifact_id'] ?? '' ), 'Cloud result includes a derivative artifact id.' );
 toolbox_media_derivative_smoke_assert( 'image/webp' === (string) ( $derivative['mime_type'] ?? '' ), 'Cloud derivative is WebP.' );
 
+$preflight = toolbox_media_derivative_smoke_rest(
+	'POST',
+	'/npcink-openclaw-adapter/v1/run-read-ability',
+	array(
+		'ability_id' => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
+		'input'      => array(
+			'attachment_id'       => $attachment_id,
+			'derivative_artifact' => $derivative,
+		),
+	)
+);
+$preflight_data = is_array( $preflight['result']['data'] ?? null ) ? (array) $preflight['result']['data'] : ( is_array( $preflight['data'] ?? null ) ? (array) $preflight['data'] : array() );
+toolbox_media_derivative_smoke_assert( 'media_adoption_preflight_summary' === (string) ( $preflight_data['artifact_type'] ?? '' ), 'Adapter can run the media adoption preflight summary ability.' );
+toolbox_media_derivative_smoke_assert( false === (bool) ( $preflight_data['direct_wordpress_write'] ?? true ), 'Media adoption preflight summary declares no direct WordPress write.' );
+toolbox_media_derivative_smoke_assert( false === (bool) ( $preflight_data['proposal_created'] ?? true ), 'Media adoption preflight summary does not create a Core proposal.' );
+toolbox_media_derivative_smoke_assert( true === (bool) ( $preflight_data['readiness']['can_submit_core_proposal'] ?? false ), 'Media adoption preflight summary marks the reviewed artifact as Core-proposal ready.' );
+
 $media_details_input = array(
 	'title'       => 'Toolbox optimized smoke image',
 	'alt'         => 'Toolbox optimized smoke image alt text.',
