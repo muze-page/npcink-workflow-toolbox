@@ -185,12 +185,22 @@ The Core handoff packet may label proposal-ready actions for Generate and apply
 summary, Recommend and apply tags, Recommend categories, and Create new tags
 and assign. Auto-approval eligibility belongs to Core policy; Toolbox must not
 auto-approve, create terms, assign terms, or update excerpts itself. Proposed
-new terms are vocabulary-gap candidates only; Toolbox must not create terms or
-assign them to posts. The only apply-oriented local surface is
+new terms are vocabulary-gap candidates only and must be marked as
+`core_policy_gated_strong_review`; Toolbox must not create terms or assign them
+to posts. The only apply-oriented local surface is
 `/flows/content-metadata-apply-plan` / `npcink-toolbox/build-content-metadata-apply-plan`,
 which is still read-only planning output: it packages reviewed excerpt,
 existing category, and existing tag choices into dry-run Core handoff actions
 and rejects missing term creation by keeping `create_missing=false`.
+Internal-link support returns `internal_link_candidates.v1` with review-only
+targets, anchor suggestions, and placement hints. It must not insert links,
+patch post content, or submit a post-content patch on the operator's behalf.
+Publish preflight may aggregate summary, taxonomy, image, internal-link,
+duplicate-risk, and SEO readiness into `pre_publish_review.v1`, but that
+artifact remains advisory. SEO metadata support is limited to a single current
+post `seo_meta_handoff_preview.v1` proposal template for Core review; Toolbox
+must not batch SEO changes, mutate SEO plugin fields, or write schema/GEO
+metadata directly.
 A future direct apply path for one current post's excerpt plus existing
 category/tag ids must not be treated as Local Admin Consent expansion. It
 would first require a `strong_local_confirmation` UX and audit contract with

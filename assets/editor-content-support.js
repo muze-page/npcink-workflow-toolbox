@@ -683,10 +683,19 @@
 			tag_suggestions: __('Tag suggestions', 'npcink-toolbox'),
 			metadata_suggestions: __('Metadata suggestions', 'npcink-toolbox'),
 			summary_terms_optimization: __('Metadata optimization', 'npcink-toolbox'),
+			internal_link_candidates: __('Internal link candidates', 'npcink-toolbox'),
+			pre_publish_review: __('Pre-publish review', 'npcink-toolbox'),
+			seo_meta_single_post_handoff: __('SEO handoff', 'npcink-toolbox'),
 			recommended_excerpt: __('Recommended excerpt', 'npcink-toolbox'),
+			review_only_candidate: __('Review only', 'npcink-toolbox'),
+			review_required: __('Review required', 'npcink-toolbox'),
+			operator_review_only_no_insert: __('Review only, no insert', 'npcink-toolbox'),
+			core_policy_gated_strong_review: __('Core strong review', 'npcink-toolbox'),
+			no_direct_term_creation_in_toolbox: __('No direct term creation', 'npcink-toolbox'),
 			hosted_summary: __('Hosted summary', 'npcink-toolbox'),
 			good: __('Good', 'npcink-toolbox'),
 			ok: __('OK', 'npcink-toolbox'),
+			review: __('Review', 'npcink-toolbox'),
 			warning: __('Warning', 'npcink-toolbox'),
 			error: __('Error', 'npcink-toolbox'),
 			missing: __('Missing', 'npcink-toolbox'),
@@ -1625,6 +1634,51 @@
 		}));
 	}
 
+	function internalLinkCandidateItems(section) {
+		const items = section && Array.isArray(section.items) ? section.items : [];
+		return items.map((item) => ({
+			name: item.title || item.target_url || __('Internal link candidate', 'npcink-toolbox'),
+			value: item.suggested_anchor_text ? __('Anchor: ', 'npcink-toolbox') + item.suggested_anchor_text : '',
+			detail: [
+				item.status ? formatMetaLabel(item.status) : '',
+				item.placement_hint || '',
+				item.target_url || '',
+			].filter(Boolean).join(' · '),
+			reason: item.reason || '',
+		}));
+	}
+
+	function prePublishReviewItems(section) {
+		const items = section && Array.isArray(section.items) ? section.items : [];
+		return items.map((item) => ({
+			name: formatMetaLabel(item.name || ''),
+			status: item.status ? formatMetaLabel(item.status) : '',
+			detail: [
+				item.detail || '',
+				item.next_action ? __('Next: ', 'npcink-toolbox') + formatMetaLabel(item.next_action) : '',
+			].filter(Boolean).join(' · '),
+		}));
+	}
+
+	function seoHandoffItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		const baseItems = Array.isArray(section.items) ? section.items : [];
+		const targetAbility = section.target_ability_id ? [{
+			name: __('Target ability', 'npcink-toolbox'),
+			detail: section.target_ability_id,
+		}] : [];
+		return targetAbility.concat(baseItems.map((item) => ({
+			name: item.name || item.id || __('SEO handoff item', 'npcink-toolbox'),
+			value: item.value || '',
+			detail: [
+				item.status ? formatMetaLabel(item.status) : '',
+				item.detail || '',
+			].filter(Boolean).join(' · '),
+		})));
+	}
+
 	function metadataDeltaItems(delta) {
 		if (!delta || typeof delta !== 'object') {
 			return [];
@@ -2059,6 +2113,11 @@
 			blocks.push(renderItems(extractWritingSupportItems(sections.writing_support), __('No writing preparation evidence returned.', 'npcink-toolbox')));
 		}
 
+		if (sections.pre_publish_review) {
+			blocks.push(createElement('h4', { key: 'pre-publish-review-title' }, __('Pre-publish review', 'npcink-toolbox')));
+			blocks.push(renderItems(prePublishReviewItems(sections.pre_publish_review), __('No pre-publish review returned.', 'npcink-toolbox')));
+		}
+
 		if (sections.checks) {
 			blocks.push(createElement('h4', { key: 'checks-title' }, __('Checks', 'npcink-toolbox')));
 			blocks.push(renderItems(sections.checks.items || [], __('No checks returned.', 'npcink-toolbox')));
@@ -2073,7 +2132,12 @@
 			blocks.push(renderItems(sections.taxonomy_terms.items || [], __('No matching existing terms found.', 'npcink-toolbox')));
 		}
 
-		if (sections.site_knowledge) {
+		if (sections.internal_links) {
+			blocks.push(createElement('h4', { key: 'internal-links-title' }, __('Internal link candidates', 'npcink-toolbox')));
+			blocks.push(renderItems(internalLinkCandidateItems(sections.internal_links), __('No internal link candidates returned.', 'npcink-toolbox')));
+		}
+
+		if (sections.site_knowledge && !sections.internal_links) {
 			blocks.push(createElement('h4', { key: 'links-title' }, __('Site Knowledge', 'npcink-toolbox')));
 			blocks.push(renderItems(extractKnowledgeItems(sections.site_knowledge), __('No related content returned.', 'npcink-toolbox')));
 		}
@@ -2091,6 +2155,11 @@
 		if (sections.discoverability && sections.discoverability.candidate_suggestions) {
 			blocks.push(createElement('h4', { key: 'discoverability-title' }, __('Discoverability', 'npcink-toolbox')));
 			blocks.push(renderItems(discoverabilitySuggestionItems(sections.discoverability), __('No discoverability candidates returned.', 'npcink-toolbox')));
+		}
+
+		if (sections.seo_handoff) {
+			blocks.push(createElement('h4', { key: 'seo-handoff-title' }, __('SEO handoff', 'npcink-toolbox')));
+			blocks.push(renderItems(seoHandoffItems(sections.seo_handoff), __('No SEO handoff preview returned.', 'npcink-toolbox')));
 		}
 
 		return createElement('div', { className: 'npcink-toolbox-editor-support__result' }, blocks);

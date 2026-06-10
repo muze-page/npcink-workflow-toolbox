@@ -207,6 +207,14 @@ Operators can scope the run to the full article, selected text or block, or a
 topic-only brief. Existing WordPress term recommendations remain suggestion
 only. Proposed new terms are shown as review-only vocabulary gaps and include a
 preview-only Core handoff packet for accepted summary and term choices.
+Internal-link results are returned as `internal_link_candidates.v1` candidates
+with suggested anchor text, placement hints, and source evidence, but link
+insertion stays a human editor action. Publish preflight now returns a unified
+`pre_publish_review.v1` panel that points the operator back to summary,
+category, tag, internal-link, image, duplicate-risk, and SEO handoff checks.
+SEO metadata is prepared only as a single-post
+`seo_meta_handoff_preview.v1` Core proposal template; Toolbox does not mutate
+SEO fields.
 Accepted excerpt, existing category, and existing tag choices can be
 converted into a dry-run `content_metadata_apply_plan` through
 `/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan` or
@@ -216,7 +224,7 @@ labels: Generate and apply summary, Recommend and apply tags, Recommend
 categories, and Create new tags and assign. Summary application and existing
 tag assignment can request Core auto-approval when policy allows; category
 changes stay recommendation-first by default, and new tag creation remains
-Core policy-gated after duplicate-term review. The panel returns suggestions
+Core policy-gated under strong review after duplicate-term review. The panel returns suggestions
 only; it does not
 insert links, assign terms, create terms, update excerpts or SEO fields, import
 media, publish content, store acceptance/audit truth, or write WordPress data.

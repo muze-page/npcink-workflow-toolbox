@@ -217,6 +217,13 @@ Post editor content support:
   buttons.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
+- `internal_links` returns `internal_link_candidates.v1`: related internal
+  targets, suggested anchor text, placement hints, and Site Knowledge evidence
+  for manual editor review only.
+- `publish_preflight` returns `pre_publish_review.v1` as the unified readiness
+  panel, plus duplicate-risk evidence and a `seo_meta_handoff_preview.v1`
+  single-post Core proposal template when a title and description candidate are
+  available. Toolbox does not submit or execute the SEO write itself.
 - The split metadata intents return the same
   `article_discoverability_optimization.v1` section shape through faster
   draft/taxonomy paths. The full `summary_terms_optimization` intent still
@@ -225,8 +232,8 @@ Post editor content support:
   ranking and dedupe guidance, review metrics, input scope, proposed new-term
   review notes, preview-only Core handoff guidance, a `content_metadata_delta`
   P0 artifact, and review notes. Existing WordPress terms are preferred;
-  proposed new tags remain
-  operator-review vocabulary-gap candidates only. Related Site Knowledge terms
+  proposed new tags remain Core policy-gated strong-review vocabulary-gap
+  candidates only. Related Site Knowledge terms
   from current local WordPress posts can boost existing category/tag candidates
   as ranking evidence only; they do not create taxonomy terms, assign terms,
   write excerpts, persist feedback, or own index lifecycle state. The delta artifact records an

@@ -560,16 +560,7 @@ final class Rest_Controller {
 		}
 
 		if ( 'internal_links' === $intent ) {
-			$result['sections']['site_knowledge'] = $this->editor_support_section(
-				$this->client->search_site_knowledge(
-					array(
-						'query'           => $query,
-						'intent'          => 'internal_links',
-						'current_post_id' => absint( $context['post_id'] ?? 0 ),
-						'max_results'     => 8,
-					)
-				)
-			);
+			$result['sections']['internal_links'] = $this->editor_internal_link_candidates( $context, $query );
 		}
 
 		if ( 'image_candidates' === $intent ) {
@@ -614,6 +605,8 @@ final class Rest_Controller {
 					)
 				)
 			);
+			$result['sections']['seo_handoff'] = $this->editor_seo_meta_handoff_preview( $context, $result['sections']['discoverability'] );
+			$result['sections']['pre_publish_review'] = $this->editor_pre_publish_review( $context, $result['sections'] );
 		}
 
 		return rest_ensure_response( $result );
@@ -1319,6 +1312,119 @@ final class Rest_Controller {
 		);
 	}
 
+	private function editor_internal_link_candidates( array $context, string $query ): array {
+		$knowledge = $this->editor_support_section(
+			$this->client->search_site_knowledge(
+				array(
+					'query'           => $query,
+					'intent'          => 'internal_links',
+					'current_post_id' => absint( $context['post_id'] ?? 0 ),
+					'max_results'     => 8,
+				)
+			)
+		);
+
+		return array(
+			'artifact_type'          => 'internal_link_candidates.v1',
+			'candidate_type'         => 'internal_link_candidates',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'operator_review_only_no_insert',
+			'direct_wordpress_write' => false,
+			'input_scope'            => $this->editor_input_scope( $context ),
+			'items'                  => $this->editor_internal_link_candidate_items( $context, $knowledge ),
+			'source_knowledge'       => $knowledge,
+			'review_policy'          => array(
+				'link_insertion_owner'      => 'human_editor',
+				'automatic_anchor_insert'   => false,
+				'post_content_patch_handoff' => false,
+				'current_post_excluded'     => true,
+			),
+			'handoff'                => array(
+				'final_writes'           => 'operator_review_only_no_insert',
+				'direct_wordpress_write' => false,
+				'blocked_actions'        => array(
+					'no_link_insertion_in_toolbox',
+					'no_patch_post_content_handoff_yet',
+					'no_automatic_anchor_insertion',
+				),
+				'next_steps'             => array(
+					__( 'Review whether the target article genuinely helps the reader before inserting a link manually.', 'npcink-toolbox' ),
+					__( 'Choose anchor text from the article wording; do not let Toolbox rewrite the paragraph.', 'npcink-toolbox' ),
+				),
+			),
+		);
+	}
+
+	private function editor_internal_link_candidate_items( array $context, array $knowledge ): array {
+		$current_post_id = absint( $context['post_id'] ?? 0 );
+		$items           = array();
+
+		foreach ( array_slice( $this->editor_related_content_items( $knowledge ), 0, 8 ) as $index => $item ) {
+			$target_post_id = absint( $item['post_id'] ?? ( $item['id'] ?? 0 ) );
+			if ( 0 < $target_post_id && $target_post_id === $current_post_id ) {
+				continue;
+			}
+
+			$title = sanitize_text_field( (string) ( $item['title'] ?? $item['name'] ?? '' ) );
+			$url   = $this->editor_internal_link_target_url( $item, $target_post_id );
+			if ( '' === $title && '' === $url ) {
+				continue;
+			}
+
+			$items[] = array(
+				'title'                 => '' !== $title ? $title : __( 'Related internal target', 'npcink-toolbox' ),
+				'target_post_id'        => $target_post_id,
+				'target_url'            => $url,
+				'suggested_anchor_text' => $this->editor_internal_link_anchor_text( $title ),
+				'placement_hint'        => __( 'Review near the paragraph where this topic is mentioned; Toolbox does not insert the link.', 'npcink-toolbox' ),
+				'reason'                => $this->editor_internal_link_reason( $item ),
+				'evidence_refs'         => array( 'site_knowledge:' . sanitize_key( (string) ( $target_post_id ?: $index ) ) ),
+				'score'                 => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
+				'status'                => 'review_only_candidate',
+			);
+		}
+
+		return $items;
+	}
+
+	private function editor_internal_link_target_url( array $item, int $target_post_id ): string {
+		foreach ( array( 'url', 'permalink', 'link', 'source_url' ) as $key ) {
+			$value = esc_url_raw( (string) ( $item[ $key ] ?? '' ) );
+			if ( '' !== $value ) {
+				return $value;
+			}
+		}
+
+		if ( 0 < $target_post_id ) {
+			$permalink = get_permalink( $target_post_id );
+			return is_string( $permalink ) ? esc_url_raw( $permalink ) : '';
+		}
+
+		return '';
+	}
+
+	private function editor_internal_link_anchor_text( string $title ): string {
+		$anchor = trim( sanitize_text_field( wp_trim_words( $title, 8, '' ) ) );
+		return '' !== $anchor ? $anchor : __( 'Related article', 'npcink-toolbox' );
+	}
+
+	private function editor_internal_link_reason( array $item ): string {
+		$reason = trim( sanitize_text_field( (string) ( $item['reason'] ?? $item['summary'] ?? '' ) ) );
+		if ( '' !== $reason ) {
+			return $reason;
+		}
+
+		if ( is_numeric( $item['score'] ?? null ) ) {
+			return sprintf(
+				/* translators: %s: similarity score. */
+				__( 'Site Knowledge returned this internal target with similarity score %s. Review relevance before inserting manually.', 'npcink-toolbox' ),
+				(string) $item['score']
+			);
+		}
+
+		return __( 'Site Knowledge returned this as related public content. Review relevance before inserting manually.', 'npcink-toolbox' );
+	}
+
 	private function editor_ai_summary_suggestions( array $context, string $query ): array {
 		$summary_ai = $this->editor_support_section(
 			$this->client->run_hosted_ai_content_support(
@@ -1605,11 +1711,13 @@ final class Rest_Controller {
 			array_map(
 				static function ( array $item ): array {
 					return array(
-						'taxonomy'        => sanitize_key( (string) ( $item['taxonomy'] ?? 'post_tag' ) ),
-						'name'            => sanitize_text_field( (string) ( $item['name'] ?? '' ) ),
-						'reason'          => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
-						'review_required' => true,
-						'status'          => 'review_only_vocabulary_gap',
+						'taxonomy'               => sanitize_key( (string) ( $item['taxonomy'] ?? 'post_tag' ) ),
+						'name'                   => sanitize_text_field( (string) ( $item['name'] ?? '' ) ),
+						'reason'                 => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
+						'review_required'        => true,
+						'strong_review_required' => true,
+						'authorization_path'     => 'core_policy_gated_strong_review',
+						'status'                 => 'review_only_vocabulary_gap',
 					);
 				},
 				$items
@@ -1626,6 +1734,8 @@ final class Rest_Controller {
 				'controlled_vocabulary_status' => 'not_existing_term',
 				'source'                       => 'hosted_ai_output',
 				'reason'                       => __( 'Review any new category or tag names mentioned by hosted AI only after checking that no existing WordPress term is close enough.', 'npcink-toolbox' ),
+				'strong_review_required'       => true,
+				'authorization_path'           => 'core_policy_gated_strong_review',
 			);
 		}
 
@@ -1633,7 +1743,14 @@ final class Rest_Controller {
 			'candidate_type'         => 'proposed_new_terms_review',
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
-			'creation_policy'        => 'operator_review_required',
+			'creation_policy'        => 'core_policy_gated_strong_review',
+			'strong_review_required' => true,
+			'duplicate_review_required' => true,
+			'blocked_actions'        => array(
+				'no_direct_term_creation_in_toolbox',
+				'no_auto_approval_request_for_new_terms',
+				'no_term_assignment_without_core_policy_review',
+			),
 			'items'                  => $items,
 			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
 		);
@@ -1644,7 +1761,14 @@ final class Rest_Controller {
 			'candidate_type'         => 'proposed_new_terms_review',
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
-			'creation_policy'        => 'operator_review_required',
+			'creation_policy'        => 'core_policy_gated_strong_review',
+			'strong_review_required' => true,
+			'duplicate_review_required' => true,
+			'blocked_actions'        => array(
+				'no_direct_term_creation_in_toolbox',
+				'no_auto_approval_request_for_new_terms',
+				'no_term_assignment_without_core_policy_review',
+			),
 			'items'                  => array(),
 			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
 		);
@@ -1676,6 +1800,8 @@ final class Rest_Controller {
 				'controlled_vocabulary_status' => 'not_existing_term',
 				'source'                       => 'draft_token_gap',
 				'reason'                       => __( 'Review as a possible new tag only if no existing WordPress tag is close enough.', 'npcink-toolbox' ),
+				'strong_review_required'       => true,
+				'authorization_path'           => 'core_policy_gated_strong_review',
 			);
 			$existing_keys[ $key ] = true;
 			if ( 5 <= count( $items ) ) {
@@ -1687,7 +1813,14 @@ final class Rest_Controller {
 			'candidate_type'         => 'proposed_new_terms_review',
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
-			'creation_policy'        => 'operator_review_required',
+			'creation_policy'        => 'core_policy_gated_strong_review',
+			'strong_review_required' => true,
+			'duplicate_review_required' => true,
+			'blocked_actions'        => array(
+				'no_direct_term_creation_in_toolbox',
+				'no_auto_approval_request_for_new_terms',
+				'no_term_assignment_without_core_policy_review',
+			),
 			'items'                  => $items,
 			'empty_message'          => __( 'No new tag gap is obvious from the draft tokens. Prefer existing tags unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
 		);
@@ -1785,8 +1918,12 @@ final class Rest_Controller {
 				),
 				'auto_approval_request' => false,
 				'toolbox_direct_apply'  => false,
+				'strong_review_required' => true,
+				'duplicate_review_required' => true,
+				'authorization_path'    => 'core_policy_gated_strong_review',
 				'proposal_policy'       => array(
 					'core_proposal_required' => true,
+					'default_mode'           => 'strong_review_required',
 					'eligible_if'            => array(
 						'taxonomy_is_post_tag',
 						'normalized_term_has_no_close_existing_match',
@@ -2178,6 +2315,150 @@ final class Rest_Controller {
 					}
 				)
 			)
+		);
+	}
+
+	private function editor_seo_meta_handoff_preview( array $context, array $discoverability ): array {
+		$suggestions     = is_array( $discoverability['candidate_suggestions'] ?? null ) ? $discoverability['candidate_suggestions'] : array();
+		$fallback_title  = sanitize_text_field( (string) ( $context['title'] ?? '' ) );
+		$fallback_desc   = trim( sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ) );
+		if ( '' === $fallback_desc ) {
+			$fallback_desc = sanitize_text_field( wp_trim_words( wp_strip_all_tags( (string) ( $context['content_text'] ?? '' ) ), 28, '' ) );
+		}
+		$seo_title       = sanitize_text_field( wp_html_excerpt( (string) ( $suggestions['seo_title'] ?? $suggestions['title'] ?? $fallback_title ), 65, '' ) );
+		$seo_description = sanitize_text_field( wp_html_excerpt( (string) ( $suggestions['seo_description'] ?? $suggestions['meta_description'] ?? $fallback_desc ), 155, '' ) );
+		$post_id         = absint( $context['post_id'] ?? 0 );
+
+		return array(
+			'artifact_type'          => 'seo_meta_handoff_preview.v1',
+			'candidate_type'         => 'seo_meta_single_post_handoff',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'proposal_ready'         => 0 < $post_id && '' !== $seo_title && '' !== $seo_description,
+			'target_ability_id'      => 'npcink-abilities-toolkit/set-post-seo-meta',
+			'core_route'             => '/wp-json/npcink-governance-core/v1/proposals',
+			'adapter_route'          => '/wp-json/npcink-openclaw-adapter/v1/proposals',
+			'proposal_payload_template' => array(
+				'ability_id' => 'npcink-abilities-toolkit/set-post-seo-meta',
+				'title'      => __( 'Review SEO meta for the current post', 'npcink-toolbox' ),
+				'summary'    => __( 'Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.', 'npcink-toolbox' ),
+				'input'      => array(
+					'post_id'         => $post_id,
+					'seo_title'       => $seo_title,
+					'seo_description' => $seo_description,
+					'dry_run'         => true,
+					'commit'          => false,
+				),
+			),
+			'items'                  => array(
+				array(
+					'name'   => __( 'SEO title candidate', 'npcink-toolbox' ),
+					'value'  => $seo_title,
+					'status' => '' !== $seo_title ? 'review_required' : 'missing',
+				),
+				array(
+					'name'   => __( 'SEO description candidate', 'npcink-toolbox' ),
+					'value'  => $seo_description,
+					'status' => '' !== $seo_description ? 'review_required' : 'missing',
+				),
+				array(
+					'name'   => __( 'Core handoff', 'npcink-toolbox' ),
+					'detail' => __( 'Submit only after the editor confirms the title and description do not add unsupported claims.', 'npcink-toolbox' ),
+					'status' => 'core_proposal_required',
+				),
+			),
+			'required_review'        => array(
+				'editor_confirms_single_post_scope',
+				'editor_confirms_no_unsupported_claims',
+				'editor_confirms_plugin_field_mapping_before_commit',
+			),
+			'blocked_actions'        => array(
+				'no_seo_meta_write_in_toolbox',
+				'no_batch_seo_apply',
+				'no_geo_schema_write_from_toolbox',
+			),
+		);
+	}
+
+	private function editor_pre_publish_review( array $context, array $sections ): array {
+		$duplicate_items = $this->editor_related_content_items( is_array( $sections['duplicate_check'] ?? null ) ? $sections['duplicate_check'] : array() );
+		$seo_handoff     = is_array( $sections['seo_handoff'] ?? null ) ? $sections['seo_handoff'] : array();
+		$items           = array(
+			$this->editor_pre_publish_review_item(
+				'summary',
+				'' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? 'ok' : 'warning',
+				'' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present for archives and sharing contexts.', 'npcink-toolbox' ) : __( 'Run summary suggestions before publishing if the excerpt is empty.', 'npcink-toolbox' ),
+				'summary_suggestions'
+			),
+			$this->editor_pre_publish_review_item(
+				'categories',
+				! empty( $context['category_ids'] ) ? 'ok' : 'warning',
+				! empty( $context['category_ids'] ) ? __( 'At least one category is selected.', 'npcink-toolbox' ) : __( 'Review category suggestions before publishing.', 'npcink-toolbox' ),
+				'category_suggestions'
+			),
+			$this->editor_pre_publish_review_item(
+				'tags',
+				! empty( $context['tag_ids'] ) ? 'ok' : 'warning',
+				! empty( $context['tag_ids'] ) ? __( 'At least one tag is selected.', 'npcink-toolbox' ) : __( 'Review existing tag suggestions before creating any new vocabulary.', 'npcink-toolbox' ),
+				'tag_suggestions'
+			),
+			$this->editor_pre_publish_review_item(
+				'featured_image',
+				! empty( $context['featured_media'] ) ? 'ok' : 'warning',
+				! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-toolbox' ) : __( 'Review image candidates or select an existing media attachment.', 'npcink-toolbox' ),
+				'image_candidates'
+			),
+			$this->editor_pre_publish_review_item(
+				'internal_links',
+				'review',
+				__( 'Run internal link candidates and insert only the links a human editor accepts.', 'npcink-toolbox' ),
+				'internal_links'
+			),
+			$this->editor_pre_publish_review_item(
+				'seo_meta',
+				! empty( $seo_handoff['proposal_ready'] ) ? 'review' : 'warning',
+				! empty( $seo_handoff['proposal_ready'] ) ? __( 'SEO title and description candidates are ready for Core-governed review.', 'npcink-toolbox' ) : __( 'SEO handoff needs a post id, title, and description candidate.', 'npcink-toolbox' ),
+				'seo_meta_single_post_handoff'
+			),
+			$this->editor_pre_publish_review_item(
+				'duplicate_risk',
+				empty( $duplicate_items ) ? 'ok' : 'review',
+				empty( $duplicate_items ) ? __( 'No duplicate-risk candidates were returned by Site Knowledge.', 'npcink-toolbox' ) : __( 'Related public content was found; compare overlap before publishing.', 'npcink-toolbox' ),
+				'duplicate_check'
+			),
+		);
+
+		return array(
+			'artifact_type'          => 'pre_publish_review.v1',
+			'candidate_type'         => 'pre_publish_review',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'items'                  => $items,
+			'next_actions'           => array(
+				'summary_suggestions',
+				'category_suggestions',
+				'tag_suggestions',
+				'internal_links',
+				'image_candidates',
+				'seo_meta_single_post_handoff',
+			),
+			'handoff'                => array(
+				'metadata'               => 'core_proposal_required',
+				'seo'                    => 'core_proposal_required',
+				'internal_links'         => 'operator_review_only_no_insert',
+				'direct_wordpress_write' => false,
+			),
+		);
+	}
+
+	private function editor_pre_publish_review_item( string $name, string $status, string $detail, string $next_action ): array {
+		return array(
+			'name'        => sanitize_key( $name ),
+			'status'      => sanitize_key( $status ),
+			'detail'      => sanitize_text_field( $detail ),
+			'next_action' => sanitize_key( $next_action ),
 		);
 	}
 
