@@ -222,8 +222,9 @@ Post editor content support:
   for manual editor review only.
 - `publish_preflight` returns `pre_publish_review.v1` as the unified readiness
   panel, plus duplicate-risk evidence and a `seo_meta_handoff_preview.v1`
-  single-post Core proposal template when a title and description candidate are
-  available. Toolbox does not submit or execute the SEO write itself.
+  single-post Core proposal payload when a title and description candidate are
+  available. The editor can submit it as one pending Core review proposal, but
+  Toolbox does not approve, execute, or write SEO fields itself.
 - The split metadata intents return the same
   `article_discoverability_optimization.v1` section shape through faster
   draft/taxonomy paths. The full `summary_terms_optimization` intent still

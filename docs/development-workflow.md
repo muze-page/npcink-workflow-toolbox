@@ -76,6 +76,20 @@ term creation, that Core `/wp-json/npcink-governance-core/v1/proposals/from-plan
 creates one pending `plan_to_proposal_batch` review proposal, and that the
 smoke does not mutate the sampled post.
 
+For the post-editor review artifact surface, run:
+
+```bash
+composer smoke:editor-review-artifacts
+```
+
+This dispatches `/wp-json/npcink-toolbox/v1/editor/content-support` with
+`internal_links` and `publish_preflight` intents against a local post. It mocks
+Cloud Site Knowledge, verifies `internal_link_candidates.v1`,
+`pre_publish_review.v1`, duplicate-check evidence, and
+`seo_meta_handoff_preview.v1`, creates one pending SEO Core review proposal
+through Adapter `/proposals`, purges that fixture, and proves the sampled post
+is not mutated.
+
 For the Site Knowledge review handoff UI, run:
 
 ```bash

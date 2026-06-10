@@ -212,9 +212,9 @@ with suggested anchor text, placement hints, and source evidence, but link
 insertion stays a human editor action. Publish preflight now returns a unified
 `pre_publish_review.v1` panel that points the operator back to summary,
 category, tag, internal-link, image, duplicate-risk, and SEO handoff checks.
-SEO metadata is prepared only as a single-post
-`seo_meta_handoff_preview.v1` Core proposal template; Toolbox does not mutate
-SEO fields.
+SEO metadata is prepared as a single-post `seo_meta_handoff_preview.v1`
+payload and can be submitted through Adapter as one pending Core review
+proposal; Toolbox does not approve, execute, or mutate SEO fields.
 Accepted excerpt, existing category, and existing tag choices can be
 converted into a dry-run `content_metadata_apply_plan` through
 `/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan` or

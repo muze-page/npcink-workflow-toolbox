@@ -2350,6 +2350,23 @@ final class Rest_Controller {
 					'dry_run'         => true,
 					'commit'          => false,
 				),
+				'preview'    => array(
+					'field_patch'      => array(
+						array(
+							'field'    => 'seo_title',
+							'current'  => null,
+							'proposed' => $seo_title,
+						),
+						array(
+							'field'    => 'seo_description',
+							'current'  => null,
+							'proposed' => $seo_description,
+						),
+					),
+					'post_id'          => $post_id,
+					'dry_run'          => true,
+					'commit_execution' => false,
+				),
 			),
 			'items'                  => array(
 				array(

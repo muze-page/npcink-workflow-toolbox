@@ -348,6 +348,39 @@
 		});
 	}
 
+	function seoMetaProposalPayload(section) {
+		const template = section && section.proposal_payload_template && typeof section.proposal_payload_template === 'object'
+			? section.proposal_payload_template
+			: {};
+		const input = template.input && typeof template.input === 'object' ? template.input : {};
+		const preview = template.preview && typeof template.preview === 'object' ? template.preview : {};
+		return {
+			ability_id: 'npcink-abilities-toolkit/set-post-seo-meta',
+			title: template.title || __('Review SEO meta for the current post', 'npcink-toolbox'),
+			summary: template.summary || __('Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.', 'npcink-toolbox'),
+			input: {
+				post_id: parseInt(input.post_id || 0, 10) || 0,
+				seo_title: String(input.seo_title || '').trim(),
+				seo_description: String(input.seo_description || '').trim(),
+				dry_run: true,
+				commit: false,
+			},
+			preview: Object.assign({}, preview, {
+				dry_run: true,
+				commit_execution: false,
+			}),
+			caller: {
+				surface: 'toolbox_editor_content_support',
+				external_thread_id: 'toolbox-editor-seo-meta-handoff',
+				source: 'seo_meta_handoff_preview',
+			},
+		};
+	}
+
+	async function postSeoMetaProposalToAdapter(section) {
+		return postJsonToUrl(adapterRestUrl('proposals'), seoMetaProposalPayload(section));
+	}
+
 	async function postLocalFeaturedImageConsent(input) {
 		return postJson('local-admin-consent/featured-image', input);
 	}
@@ -684,8 +717,11 @@
 			metadata_suggestions: __('Metadata suggestions', 'npcink-toolbox'),
 			summary_terms_optimization: __('Metadata optimization', 'npcink-toolbox'),
 			internal_link_candidates: __('Internal link candidates', 'npcink-toolbox'),
+			internal_links: __('Internal links', 'npcink-toolbox'),
 			pre_publish_review: __('Pre-publish review', 'npcink-toolbox'),
 			seo_meta_single_post_handoff: __('SEO handoff', 'npcink-toolbox'),
+			seo_meta: __('SEO meta', 'npcink-toolbox'),
+			duplicate_risk: __('Duplicate risk', 'npcink-toolbox'),
 			recommended_excerpt: __('Recommended excerpt', 'npcink-toolbox'),
 			review_only_candidate: __('Review only', 'npcink-toolbox'),
 			review_required: __('Review required', 'npcink-toolbox'),
@@ -1641,10 +1677,10 @@
 			value: item.suggested_anchor_text ? __('Anchor: ', 'npcink-toolbox') + item.suggested_anchor_text : '',
 			detail: [
 				item.status ? formatMetaLabel(item.status) : '',
+				item.reason || '',
 				item.placement_hint || '',
 				item.target_url || '',
 			].filter(Boolean).join(' · '),
-			reason: item.reason || '',
 		}));
 	}
 
@@ -1982,6 +2018,51 @@
 		);
 	}
 
+	function renderSeoHandoffControl(section, controls) {
+		if (!section || !controls) {
+			return null;
+		}
+		const payload = seoMetaProposalPayload(section);
+		const input = payload.input || {};
+		const disabled = Boolean(controls.running) || !section.proposal_ready || !input.post_id || !input.seo_title || !input.seo_description;
+
+		return createElement(
+			'details',
+			{ className: 'npcink-toolbox-editor-support__metadata-handoff' },
+			createElement('summary', null, __('SEO Core review submission', 'npcink-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__metadata-handoff-body' },
+				createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Create one pending Core proposal for the current post SEO title and description. Toolbox does not approve, execute, or write SEO fields.', 'npcink-toolbox')),
+				renderItems(
+					[
+						{ name: __('SEO title', 'npcink-toolbox'), value: input.seo_title, status: 'review_required' },
+						{ name: __('SEO description', 'npcink-toolbox'), value: input.seo_description, status: 'review_required' },
+						{ name: __('Target ability', 'npcink-toolbox'), value: payload.ability_id, status: 'core_proposal_required' },
+					],
+					__('No SEO proposal payload returned.', 'npcink-toolbox')
+				),
+				createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'primary',
+						isBusy: Boolean(controls.running),
+						disabled,
+						onClick: controls.submit,
+					},
+					controls.running ? __('Submitting', 'npcink-toolbox') : __('Create SEO Core review proposal', 'npcink-toolbox')
+				),
+				controls.error ? createElement(Notice, { status: 'error', isDismissible: false }, controls.error) : null,
+				controls.result ? createElement(
+					Notice,
+					{ status: 'success', isDismissible: false },
+					controls.result.message || __('SEO Core proposal created. Review it in Governance Core before execution.', 'npcink-toolbox')
+				) : null
+			)
+		);
+	}
+
 	function metadataSectionSources(section) {
 		const sources = section && Array.isArray(section.metadata_sources) ? section.metadata_sources : [];
 		const candidateType = section && section.candidate_type ? String(section.candidate_type) : '';
@@ -2160,6 +2241,7 @@
 		if (sections.seo_handoff) {
 			blocks.push(createElement('h4', { key: 'seo-handoff-title' }, __('SEO handoff', 'npcink-toolbox')));
 			blocks.push(renderItems(seoHandoffItems(sections.seo_handoff), __('No SEO handoff preview returned.', 'npcink-toolbox')));
+			blocks.push(renderSeoHandoffControl(sections.seo_handoff, metadataHandoffControls && metadataHandoffControls.seoHandoff));
 		}
 
 		return createElement('div', { className: 'npcink-toolbox-editor-support__result' }, blocks);
@@ -2276,6 +2358,9 @@
 		const [metadataHandoffRunning, setMetadataHandoffRunning] = useState(false);
 		const [metadataHandoffResult, setMetadataHandoffResult] = useState(null);
 		const [metadataHandoffError, setMetadataHandoffError] = useState('');
+		const [seoHandoffRunning, setSeoHandoffRunning] = useState(false);
+		const [seoHandoffResult, setSeoHandoffResult] = useState(null);
+		const [seoHandoffError, setSeoHandoffError] = useState('');
 		const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
 		const [evidenceModalBlocks, setEvidenceModalBlocks] = useState(null);
 
@@ -2318,6 +2403,8 @@
 			}
 			setMetadataHandoffResult(null);
 			setMetadataHandoffError('');
+			setSeoHandoffResult(null);
+			setSeoHandoffError('');
 			setExcerptApplyStatus(null);
 			try {
 				const payload = Object.assign({}, postContext, {
@@ -2762,6 +2849,35 @@
 			}
 		}
 
+		async function submitSeoHandoff() {
+			const section = result && result.sections && result.sections.seo_handoff ? result.sections.seo_handoff : null;
+			const payload = seoMetaProposalPayload(section);
+			const input = payload.input || {};
+			if (!section || !section.proposal_ready || !input.post_id || !input.seo_title || !input.seo_description) {
+				setSeoHandoffError(__('Run publish preflight and review complete SEO title and description candidates before creating a Core proposal.', 'npcink-toolbox'));
+				return;
+			}
+
+			setSeoHandoffRunning(true);
+			setSeoHandoffError('');
+			setSeoHandoffResult(null);
+			try {
+				const bridge = await postSeoMetaProposalToAdapter(section);
+				const proposalId = extractProposalId(bridge, 0);
+				setSeoHandoffResult({
+					bridge,
+					proposal_id: proposalId,
+					message: proposalId
+						? __('Created SEO Core review proposal: ', 'npcink-toolbox') + proposalId
+						: __('Created SEO Core review proposal. Review it in Governance Core before execution.', 'npcink-toolbox'),
+				});
+			} catch (requestError) {
+				setSeoHandoffError(requestError && requestError.message ? requestError.message : __('Could not create the SEO Core proposal.', 'npcink-toolbox'));
+			} finally {
+				setSeoHandoffRunning(false);
+			}
+		}
+
 		function imageAdoptionPlanInput(seo, setFeaturedImage) {
 			return Object.assign({}, seo, {
 				post_id: postContext.post_id || 0,
@@ -3035,6 +3151,12 @@
 			applyExcerpt: applyRecommendedExcerpt,
 			excerptApplyStatus,
 			openEvidence: setEvidenceModalBlocks,
+			seoHandoff: {
+				submit: submitSeoHandoff,
+				running: seoHandoffRunning,
+				result: seoHandoffResult,
+				error: seoHandoffError,
+			},
 		};
 		const showResultView = supportView === 'result';
 
