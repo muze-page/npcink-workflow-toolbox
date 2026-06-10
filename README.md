@@ -317,7 +317,8 @@ primary support workflow.
 as a fixed governed workflow, not a new workflow runtime or persistent run
 store. Toolbox stores media optimization defaults for the preview and handoff
 flow, accepts one-run operator overrides, and lets an operator select one image
-attachment from the media library. Operators can keep the Toolbox default
+attachment from the media library. Operators can request a bounded one-run
+aspect-ratio crop before resize/watermark processing. Operators can keep the Toolbox default
 watermark, disable it for the run, use a text watermark, or use the configured
 Toolbox image/logo watermark source with one-run placement settings.
 Text watermark overrides pass text, font, color, background, margin, position,

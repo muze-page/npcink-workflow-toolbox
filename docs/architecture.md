@@ -438,8 +438,9 @@ repeating provider ownership detail. Search checks use Cloud auto execution
 only; provider selection, Jina Reader toggles, routing diagnostics, Cloud API
 key verification, entitlement, quota, billing, and request logs belong in Cloud
 Addon or Cloud service-plane surfaces. Image derivative checks may generate
-short-lived Cloud previews only, including one-run text or image/logo watermark
-overrides that match the Adapter/OpenClaw media derivative request shape; Core
+short-lived Cloud previews only, including bounded aspect-ratio crop overrides
+and one-run text or image/logo watermark overrides that match the
+Adapter/OpenClaw media derivative request shape; Core
 proposal submission, batch proposal submission, and URL repair handoffs stay in
 Content Support. The surface is not a billing, quota, request-log, marketplace,
 provider-routing, key-rotation, vector-provider, or vector-lifecycle surface.

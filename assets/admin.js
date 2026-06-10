@@ -2247,6 +2247,7 @@
 		appendMeta(meta, 'Format', abilityInput.preferred_format ? String(abilityInput.preferred_format).toUpperCase() : '');
 		appendMeta(meta, 'Max width', abilityInput.target_max_width ? abilityInput.target_max_width + 'px' : '');
 		appendMeta(meta, 'Quality', abilityInput.quality);
+		appendMeta(meta, 'Crop', mediaDerivativeCropLabel(abilityInput));
 		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(abilityInput));
 		appendMeta(meta, 'Toolbox policy', payload.toolbox_policy_available ? 'Available' : 'Defaults');
 		result.appendChild(meta);
@@ -2348,6 +2349,7 @@
 				input[key] = raw[key];
 			}
 		});
+		Object.assign(input, mediaDerivativeCropInput(raw));
 		Object.assign(input, mediaDerivativeWatermarkInput(raw));
 		return input;
 	}
@@ -2417,6 +2419,25 @@
 		};
 	}
 
+	function mediaDerivativeCropInput(raw) {
+		raw = raw || {};
+		const aspectRatio = String(raw.crop_aspect_ratio || '').trim();
+		if (!aspectRatio) {
+			return {};
+		}
+		const allowedRatios = ['16:9', '4:3', '1:1', '3:4', '9:16'];
+		const ratio = allowedRatios.includes(aspectRatio) ? aspectRatio : '16:9';
+		const allowedPositions = ['top_left', 'top', 'top_right', 'left', 'center', 'right', 'bottom_left', 'bottom', 'bottom_right'];
+		const position = allowedPositions.includes(String(raw.crop_position || 'center')) ? String(raw.crop_position || 'center') : 'center';
+		return {
+			crop: {
+				type: 'aspect_ratio',
+				aspect_ratio: ratio,
+				position,
+			},
+		};
+	}
+
 	function clampInteger(value, fallback, min, max) {
 		const parsed = parseInt(value, 10);
 		const integer = Number.isNaN(parsed) ? fallback : parsed;
@@ -2450,6 +2471,17 @@
 			].filter(Boolean).join(' · ');
 		}
 		return 'Toolbox default';
+	}
+
+	function mediaDerivativeCropLabel(input) {
+		if (!input || typeof input !== 'object' || !input.crop || typeof input.crop !== 'object') {
+			return '';
+		}
+		const crop = input.crop;
+		return [
+			crop.aspect_ratio ? String(crop.aspect_ratio) : '',
+			crop.position ? formatLabel(crop.position) : '',
+		].filter(Boolean).join(' · ');
 	}
 
 	function dimensionsFromText(value, fallbackWidth, fallbackHeight) {
@@ -2578,6 +2610,10 @@
 		}
 		if (raw.quality) {
 			input.quality = raw.quality;
+		}
+		const cropInput = mediaDerivativeCropInput(raw);
+		if (cropInput.crop) {
+			input.crop = cropInput.crop;
 		}
 		const watermarkInput = mediaDerivativeWatermarkInput(raw);
 		if (watermarkInput.watermark) {
@@ -2716,6 +2752,7 @@
 		appendMeta(meta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 		appendMeta(meta, 'Bytes', derivative.filesize_bytes);
 		appendMeta(meta, 'Expires', formatDateTime(derivative.expires_at));
+		appendMeta(meta, 'Crop', mediaDerivativeCropLabel(state.abilityInput));
 		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 		result.appendChild(meta);
 
@@ -2919,6 +2956,7 @@
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Previewed', states.length);
 		appendMeta(meta, 'Proposal path', 'Core review');
+		appendMeta(meta, 'Crop', states.length ? mediaDerivativeCropLabel(states[0].abilityInput) : '');
 		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
 
@@ -2931,6 +2969,7 @@
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 			appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at));
+			appendMeta(itemMeta, 'Crop', mediaDerivativeCropLabel(state.abilityInput));
 			appendMeta(itemMeta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 			row.appendChild(itemMeta);
 			const previewUrl = withRestNonce(derivative.preview_url || '');
@@ -3350,11 +3389,13 @@
 		if (!candidates.length) {
 			throw { message: 'Select at least one batch candidate before generating previews.' };
 		}
-		const watermarkInput = mediaDerivativeWatermarkInput(serialize(form));
+		const raw = serialize(form);
+		const cropInput = mediaDerivativeCropInput(raw);
+		const watermarkInput = mediaDerivativeWatermarkInput(raw);
 		const states = [];
 		for (let index = 0; index < candidates.length; index += 1) {
 			const candidate = candidates[index] || {};
-			const input = Object.assign({}, candidate.cloud_request_input || {}, watermarkInput);
+			const input = Object.assign({}, candidate.cloud_request_input || {}, cropInput, watermarkInput);
 			if (!input.attachment_id && candidate.attachment_id) {
 				input.attachment_id = candidate.attachment_id;
 			}

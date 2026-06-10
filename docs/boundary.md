@@ -262,7 +262,8 @@ automatic approval, retry worker, queue, scheduler, or direct media write.
 
 `/media-derivative-handoff` prepares one-run ability input for
 `npcink-abilities-toolkit/build-media-derivative-cloud-request` from Toolbox media policy defaults
-and operator overrides. Watermark overrides must distinguish text and
+and operator overrides. Crop overrides are bounded to common aspect-ratio
+requests and remain preview/proposal input only. Watermark overrides must distinguish text and
 image/logo modes: text watermarks pass text/font/color/background/margin fields
 without requiring a logo artifact, while image/logo watermarks use the Toolbox
 configured logo source or another reviewed image source before Cloud dispatch.

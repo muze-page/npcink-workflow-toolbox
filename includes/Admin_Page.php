@@ -1792,6 +1792,36 @@ final class Admin_Page {
 		<?php
 	}
 
+	private function render_media_derivative_crop_controls(): void {
+		?>
+		<div class="npcink-toolbox__batch-panel">
+			<h3><?php esc_html_e( 'Crop override', 'npcink-toolbox' ); ?></h3>
+			<p><?php esc_html_e( 'Optional one-run crop for common publishing ratios. Cloud returns only a derivative preview; Core still governs adoption.', 'npcink-toolbox' ); ?></p>
+			<div class="npcink-toolbox__split">
+				<label>
+					<span><?php esc_html_e( 'Crop ratio', 'npcink-toolbox' ); ?></span>
+					<select name="crop_aspect_ratio">
+						<option value=""><?php esc_html_e( 'No crop', 'npcink-toolbox' ); ?></option>
+						<option value="16:9"><?php esc_html_e( '16:9 landscape', 'npcink-toolbox' ); ?></option>
+						<option value="4:3"><?php esc_html_e( '4:3 landscape', 'npcink-toolbox' ); ?></option>
+						<option value="1:1"><?php esc_html_e( '1:1 square', 'npcink-toolbox' ); ?></option>
+						<option value="3:4"><?php esc_html_e( '3:4 portrait', 'npcink-toolbox' ); ?></option>
+						<option value="9:16"><?php esc_html_e( '9:16 portrait', 'npcink-toolbox' ); ?></option>
+					</select>
+				</label>
+				<label>
+					<span><?php esc_html_e( 'Crop anchor', 'npcink-toolbox' ); ?></span>
+					<select name="crop_position">
+						<?php foreach ( array( 'center', 'top', 'bottom', 'left', 'right', 'top_left', 'top_right', 'bottom_left', 'bottom_right' ) as $position ) : ?>
+							<option value="<?php echo esc_attr( $position ); ?>"><?php echo esc_html( ucwords( str_replace( '_', ' ', $position ) ) ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</label>
+			</div>
+		</div>
+		<?php
+	}
+
 	private function render_image_derivative_preview_check(): void {
 		$toolbox_policy = $this->get_media_derivative_toolbox_policy();
 		?>
@@ -1801,6 +1831,7 @@ final class Admin_Page {
 			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_picker_controls(); ?>
 			<?php $this->render_media_derivative_format_controls( $toolbox_policy ); ?>
+			<?php $this->render_media_derivative_crop_controls(); ?>
 			<?php $this->render_media_derivative_watermark_controls( $toolbox_policy ); ?>
 			<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
@@ -2002,6 +2033,7 @@ final class Admin_Page {
 			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_picker_controls(); ?>
 			<?php $this->render_media_derivative_format_controls( $toolbox_policy ); ?>
+			<?php $this->render_media_derivative_crop_controls(); ?>
 			<div class="npcink-toolbox__batch-panel">
 				<h3><?php esc_html_e( 'Reviewed media details', 'npcink-toolbox' ); ?></h3>
 				<p><?php esc_html_e( 'These fields are submitted with the derivative artifact as one Core media optimization proposal.', 'npcink-toolbox' ); ?></p>

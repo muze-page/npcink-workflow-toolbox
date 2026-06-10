@@ -2835,6 +2835,7 @@ final class Provider_Client {
 		if ( '' !== trim( (string) ( $input['quality'] ?? '' ) ) ) {
 			$overrides['quality'] = absint( $input['quality'] );
 		}
+		$overrides = array_merge( $overrides, $this->media_derivative_crop_overrides( $input ) );
 		$overrides = array_merge( $overrides, $this->media_derivative_watermark_overrides( $input ) );
 
 		$toolbox_policy = $this->settings->media_optimization_policy_summary();
@@ -2930,6 +2931,29 @@ final class Provider_Client {
 				'opacity'       => round( max( 0, min( 100, $opacity ) ) / 100, 3 ),
 				'scale_percent' => max( 1, min( 100, absint( $input['watermark_scale'] ?? 20 ) ) ),
 				'margin_px'     => $margin,
+			),
+		);
+	}
+
+	private function media_derivative_crop_overrides( array $input ): array {
+		$aspect_ratio = trim( sanitize_text_field( (string) ( $input['crop_aspect_ratio'] ?? '' ) ) );
+		if ( '' === $aspect_ratio ) {
+			return array();
+		}
+		if ( 1 !== preg_match( '/^([1-9][0-9]{0,2}):([1-9][0-9]{0,2})$/', $aspect_ratio, $matches ) || (int) $matches[1] > 100 || (int) $matches[2] > 100 ) {
+			$aspect_ratio = '16:9';
+		}
+
+		$position = sanitize_key( (string) ( $input['crop_position'] ?? 'center' ) );
+		if ( ! in_array( $position, array( 'top_left', 'top', 'top_right', 'left', 'center', 'right', 'bottom_left', 'bottom', 'bottom_right' ), true ) ) {
+			$position = 'center';
+		}
+
+		return array(
+			'crop' => array(
+				'type'         => 'aspect_ratio',
+				'aspect_ratio' => $aspect_ratio,
+				'position'     => $position,
 			),
 		);
 	}

@@ -149,6 +149,9 @@ final class Settings {
 		) {
 			$input['watermark'] = $this->sanitize_media_derivative_watermark_plan( $overrides['watermark'], $settings );
 		}
+		if ( is_array( $overrides['crop'] ?? null ) && ! empty( $overrides['crop'] ) ) {
+			$input['crop'] = $this->sanitize_media_derivative_crop_plan( $overrides['crop'] );
+		}
 
 		return $input;
 	}
@@ -489,6 +492,24 @@ final class Settings {
 		}
 
 		return $sanitized;
+	}
+
+	private function sanitize_media_derivative_crop_plan( array $crop ): array {
+		$aspect_ratio = trim( sanitize_text_field( (string) ( $crop['aspect_ratio'] ?? '16:9' ) ) );
+		if ( 1 !== preg_match( '/^([1-9][0-9]{0,2}):([1-9][0-9]{0,2})$/', $aspect_ratio, $matches ) || (int) $matches[1] > 100 || (int) $matches[2] > 100 ) {
+			$aspect_ratio = '16:9';
+		}
+
+		$position = sanitize_key( (string) ( $crop['position'] ?? 'center' ) );
+		if ( ! in_array( $position, array( 'top_left', 'top', 'top_right', 'left', 'center', 'right', 'bottom_left', 'bottom', 'bottom_right' ), true ) ) {
+			$position = 'center';
+		}
+
+		return array(
+			'type'         => 'aspect_ratio',
+			'aspect_ratio' => $aspect_ratio,
+			'position'     => $position,
+		);
 	}
 
 	private function sanitize_media_derivative_watermark_color( $value, string $default ): string {
