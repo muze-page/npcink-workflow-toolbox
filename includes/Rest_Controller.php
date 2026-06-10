@@ -2030,20 +2030,21 @@ final class Rest_Controller {
 	private function editor_ai_summary_layer_candidates( array $summary_ai ): array {
 		$result      = is_array( $summary_ai['result'] ?? null ) ? $summary_ai['result'] : array();
 		$output_text = trim( sanitize_textarea_field( (string) ( $summary_ai['output_text'] ?? '' ) ) );
-		$recommended = trim( sanitize_textarea_field( (string) ( $result['recommended_excerpt'] ?? $result['short_summary'] ?? $result['excerpt'] ?? '' ) ) );
-		$alternate   = trim( sanitize_textarea_field( (string) ( $result['alternate_excerpt'] ?? $result['standard_summary'] ?? '' ) ) );
-		$reason      = trim( sanitize_textarea_field( (string) ( $result['why_this_works'] ?? $result['reason'] ?? '' ) ) );
+		$recommended = $this->editor_ai_summary_field( $result, array( 'recommended_excerpt', 'short_summary', 'excerpt', 'summary' ) );
+		$alternate   = $this->editor_ai_summary_field( $result, array( 'alternate_excerpt', 'standard_summary', 'alternate_summary' ) );
+		$reason      = $this->editor_ai_summary_field( $result, array( 'why_this_works', 'reason', 'rationale' ) );
 
 		if ( '' === $recommended && '' !== $output_text ) {
-			$decoded = json_decode( $output_text, true );
+			$decoded = $this->editor_decode_ai_summary_output( $output_text );
 			if ( is_array( $decoded ) ) {
-				$recommended = trim( sanitize_textarea_field( (string) ( $decoded['recommended_excerpt'] ?? $decoded['short_summary'] ?? $decoded['excerpt'] ?? '' ) ) );
-				$alternate   = trim( sanitize_textarea_field( (string) ( $decoded['alternate_excerpt'] ?? $decoded['standard_summary'] ?? '' ) ) );
-				$reason      = trim( sanitize_textarea_field( (string) ( $decoded['why_this_works'] ?? $decoded['reason'] ?? '' ) ) );
+				$recommended = $this->editor_ai_summary_field( $decoded, array( 'recommended_excerpt', 'short_summary', 'excerpt', 'summary' ) );
+				$alternate   = $this->editor_ai_summary_field( $decoded, array( 'alternate_excerpt', 'standard_summary', 'alternate_summary' ) );
+				$reason      = $this->editor_ai_summary_field( $decoded, array( 'why_this_works', 'reason', 'rationale' ) );
 			}
 		}
 		if ( '' === $recommended && '' !== $output_text ) {
-			$recommended = sanitize_text_field( wp_html_excerpt( preg_replace( '/^[#*\-\s:[:alnum:]_]+/u', '', $output_text ), 180, '' ) );
+			$fallback = preg_replace( '/^\s*(?:#+|\*+|-+)?\s*(?:recommended[_ ]excerpt|short[_ ]summary|summary|excerpt|推荐摘要|摘要)\s*[:：-]?\s*/iu', '', $output_text );
+			$recommended = sanitize_text_field( wp_html_excerpt( is_string( $fallback ) ? $fallback : $output_text, 180, '' ) );
 		}
 
 		$items = array();
@@ -2077,6 +2078,58 @@ final class Rest_Controller {
 			'related_context_summary' => array(),
 			'items'                  => $items,
 		);
+	}
+
+	private function editor_decode_ai_summary_output( string $output_text ): array {
+		$trimmed = trim( $output_text );
+		if ( '' === $trimmed ) {
+			return array();
+		}
+
+		$direct = json_decode( $trimmed, true );
+		if ( is_array( $direct ) ) {
+			return $direct;
+		}
+
+		if ( 1 === preg_match( '/```(?:json)?\s*(\{.*?\})\s*```/is', $trimmed, $matches ) ) {
+			$fenced = json_decode( $matches[1], true );
+			if ( is_array( $fenced ) ) {
+				return $fenced;
+			}
+		}
+
+		$first_brace = strpos( $trimmed, '{' );
+		$last_brace  = strrpos( $trimmed, '}' );
+		if ( false !== $first_brace && false !== $last_brace && $last_brace > $first_brace ) {
+			$embedded = json_decode( substr( $trimmed, $first_brace, $last_brace - $first_brace + 1 ), true );
+			if ( is_array( $embedded ) ) {
+				return $embedded;
+			}
+		}
+
+		return array();
+	}
+
+	private function editor_ai_summary_field( array $source, array $keys ): string {
+		foreach ( $keys as $key ) {
+			if ( isset( $source[ $key ] ) && ! is_array( $source[ $key ] ) ) {
+				$value = trim( sanitize_textarea_field( (string) $source[ $key ] ) );
+				if ( '' !== $value ) {
+					return $value;
+				}
+			}
+		}
+
+		foreach ( array( 'result', 'data', 'summary', 'summary_candidates', 'output' ) as $nested_key ) {
+			if ( is_array( $source[ $nested_key ] ?? null ) ) {
+				$value = $this->editor_ai_summary_field( $source[ $nested_key ], $keys );
+				if ( '' !== $value ) {
+					return $value;
+				}
+			}
+		}
+
+		return '';
 	}
 
 	private function editor_summary_terms_strategy(): array {

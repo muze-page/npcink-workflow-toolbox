@@ -3963,6 +3963,8 @@ final class Provider_Client {
 				'Keep the answer short enough for an editor to review quickly.',
 				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
 				'For summary_suggestions, return the recommended excerpt first and keep it ready to paste into the WordPress excerpt field.',
+				'For summary_suggestions, prefer one compact JSON object with recommended_excerpt, why_this_works, coverage_check, and alternate_excerpt; do not wrap it in markdown fences.',
+				'For summary_suggestions regeneration, treat generation_variant as a fresh-request marker: use a different natural wording while preserving the same draft-grounded facts.',
 				'Return reviewable suggestions only.',
 				'Do not generate a full article unless the operator explicitly supplied a reviewed draft section to polish.',
 				'Do not write or publish WordPress content.',
