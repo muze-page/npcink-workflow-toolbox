@@ -143,6 +143,27 @@ the target field values and understands the final WordPress write path.
 | Any missing evidence or context? |  |  |
 | Follow-up required before wider use? |  |  |
 
+## Trial Results - 2026-06-10
+
+Local WordPress trial was run after PR `!3` merged into `master` at
+`941a82e`. The local site had one published, human-written article with enough
+body content for the release trial, so the trial used one post instead of two.
+
+| Field | Trial 1 | Trial 2 |
+| --- | --- | --- |
+| Post ID / title | `4312` / `SEO、AEO、GEO 怎么喂给 AI：用内容上下文约束文章建议，而不是让模型自由发挥` | Not run; no second published human-written post was available locally. |
+| Writing preparation useful? | Endpoint passed. `writing_support` returned `ready`, stayed suggestion-only, and did not write WordPress data. Site Knowledge returned no related results in this local one-post corpus. |  |
+| Summary/category/tag useful? | Summary suggestions returned one `article_discoverability_optimization.v1` summary layer and `content_metadata_delta`. Category and tag candidate counts were `0` because the post only had the default category and no tags in the local corpus. |  |
+| Internal-link candidates useful? | Endpoint passed and returned `internal_link_candidates.v1` with `operator_review_only_no_insert`, but candidate count was `0` because the local site had no second published related post. |  |
+| Image candidate or media optimization used? | Image candidates returned 6 stock image-source candidates; the first candidate source was Unsplash. Optimize Existing Image was not used because the existing featured image did not require a reviewed derivative for this trial. |  |
+| Publish preflight found actionable issues? | Publish preflight returned `pre_publish_review.v1` with 7 review items and a proposal-ready SEO handoff. |  |
+| SEO Core proposal created? | Yes. Pending Core proposal `10fb7ac3-f105-4885-bac0-7c12c6615221` was created for `npcink-abilities-toolkit/set-post-seo-meta`. |  |
+| Core proposal reviewed, approved, or rejected? | Reviewed only. Core detail returned status `pending`, 2 field patches (`seo_title`, `seo_description`), and an audit timeline. It was not approved during trial. |  |
+| Article body remained human-owned? | Yes. Post title, excerpt, content hash, status, and published-post count were unchanged after the trial. |  |
+| Any confusing UI copy? | None found through the REST-level trial. Results consistently reported `direct_wordpress_write=false`. |  |
+| Any missing evidence or context? | Local Site Knowledge coverage was too small for writing preparation, category/tag, and internal-link relevance. A wider editorial trial needs at least two related published posts and richer taxonomy/tag data. |  |
+| Follow-up required before wider use? | Seed or select a second real related article before the next trial, then rerun internal links and taxonomy/tag checks. Keep the SEO proposal pending unless a human reviewer verifies and approves the final field values. |  |
+
 ## Triage Rules During Trial
 
 Fix only issues that affect the verified release slice:
