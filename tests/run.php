@@ -57,6 +57,20 @@ foreach ( array( 'Human editors own the article text', 'Suggestion-only', 'pendi
 	toolbox_assert( false !== strpos( $content_support_readiness_doc, $required_readiness_boundary ), 'Content support readiness matrix preserves write boundary: ' . $required_readiness_boundary );
 }
 
+$content_support_release_doc = file_get_contents( $root . '/docs/content-support-release-trial-closeout.md' );
+foreach ( array( 'Release Note', 'Explicit Non-Promises', 'Trial Protocol', 'Trial Log Template', 'Triage Rules During Trial', 'Exit Criteria' ) as $required_release_section ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_release_section ), 'Content support release closeout preserves section: ' . $required_release_section );
+}
+foreach ( array( 'writing_support_plan', 'pre_publish_review.v1', 'seo_meta_handoff_preview.v1', 'npcink-abilities-toolkit/set-post-seo-meta', 'field_patch', 'media_optimization_v1' ) as $required_release_artifact ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_release_artifact ), 'Content support release closeout records shipped artifact: ' . $required_release_artifact );
+}
+foreach ( array( 'composer test:all', 'composer smoke:editor-review-artifacts', 'composer smoke:media-derivative-core', 'Core `composer test:all`', 'Core `composer smoke:wp`' ) as $required_release_gate ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_release_gate ), 'Content support release closeout records verification gate: ' . $required_release_gate );
+}
+foreach ( array( 'autonomous article writer', 'one-click long-form article generation', 'no new editor buttons', 'no automatic metadata writes', 'no new media registry or workflow run store' ) as $required_release_boundary ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_release_boundary ), 'Content support release closeout preserves trial boundary: ' . $required_release_boundary );
+}
+
 $boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
 foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same local ability and Core proposal contracts', 'OpenClaw natural-language request', 'Toolbox fixed button', 'reviewed plan or candidate artifact', 'must not own OpenClaw projection truth', 'approval truth, prompt/model', 'media registry truth, or final WordPress write execution' ) as $required_boundary_doc ) {
 	toolbox_assert( false !== strpos( $boundary_doc, $required_boundary_doc ), 'Boundary doc preserves Toolbox/OpenClaw split: ' . $required_boundary_doc );
@@ -93,6 +107,7 @@ toolbox_assert( false !== strpos( $adr_local_admin_consent, 'Future Strong Local
 
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Product Readiness' ), 'README links the current content support readiness matrix.' );
+toolbox_assert( false !== strpos( $readme, 'Content Support Release And Trial Closeout' ), 'README links the content support release and trial closeout.' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
 	toolbox_assert( false !== strpos( $readme, $required_readme_text ), 'README preserves fixed-button positioning: ' . $required_readme_text );
 }
@@ -100,6 +115,7 @@ foreach ( array( 'Media Optimization V1', 'media_optimization_v1', 'fixed govern
 	toolbox_assert( false !== strpos( $readme, $required_media_readme_text ), 'README documents media optimization as an existing fixed governed workflow: ' . $required_media_readme_text );
 }
 toolbox_assert( false !== strpos( $readme, 'Media Optimization Release Checklist' ), 'README links the media optimization release checklist.' );
+toolbox_assert( false !== strpos( $readme, 'Media Optimization Stage Summary' ), 'README links the media optimization stage summary.' );
 toolbox_assert( false !== strpos( $readme, 'short-lived Cloud preview' ) && false !== strpos( $readme, 'Attachment adoption,' ) && false !== strpos( $readme, 'content URL repair, and settings URL repair remain separate governed actions' ), 'README documents the media optimization user flow and replacement boundaries.' );
 toolbox_assert( false !== strpos( $readme, 'Batch media optimization uses bounded review sets' ) && false !== strpos( $readme, 'submit only selected Core' ) && false !== strpos( $readme, 'not presented as one-click whole-site replacement' ), 'README documents batch media optimization as a bounded review-set flow.' );
 toolbox_assert( false !== strpos( $readme, 'Do not expand Local Admin Consent to this metadata flow' ) && false !== strpos( $readme, '`strong_local_confirmation` UX and audit contract' ) && false !== strpos( $readme, 'accepted metadata choices' ) && false !== strpos( $readme, 'Core proposal handoffs' ), 'README keeps metadata direct apply out of Local Admin Consent until a strong confirmation contract exists.' );
@@ -1019,6 +1035,8 @@ toolbox_assert( false !== $media_derivative_smoke && false !== strpos( $media_de
 toolbox_assert( false !== strpos( $media_derivative_smoke, '/npcink-openclaw-adapter/v1/proposals/from-plan' ) && false !== strpos( $media_derivative_smoke, 'approve-and-execute' ) && false !== strpos( $media_derivative_smoke, 'restore-media-backup' ), 'Media derivative smoke submits, executes, and restores Core-governed media proposals.' );
 $media_optimization_release_checklist = file_get_contents( $root . '/docs/media-optimization-release-checklist.md' );
 toolbox_assert( false !== $media_optimization_release_checklist && false !== strpos( $media_optimization_release_checklist, 'composer smoke:media-derivative-core' ) && false !== strpos( $media_optimization_release_checklist, 'Preview:' ) && false !== strpos( $media_optimization_release_checklist, 'Preflight:' ) && false !== strpos( $media_optimization_release_checklist, 'Proposal:' ) && false !== strpos( $media_optimization_release_checklist, 'Execution:' ) && false !== strpos( $media_optimization_release_checklist, 'Evidence:' ) && false !== strpos( $media_optimization_release_checklist, 'Rollback:' ), 'Media optimization release checklist records the required closed-loop smoke criteria.' );
+$media_optimization_stage_summary = file_get_contents( $root . '/docs/media-optimization-stage-summary.md' );
+toolbox_assert( false !== $media_optimization_stage_summary && false !== strpos( $media_optimization_stage_summary, 'current stage closed for validation' ) && false !== strpos( $media_optimization_stage_summary, 'Cloud returns derivative artifacts and processing evidence only' ) && false !== strpos( $media_optimization_stage_summary, 'Batch work must not be presented as one-click whole-site replacement' ) && false !== strpos( $media_optimization_stage_summary, 'Do not add video transcoding' ), 'Media optimization stage summary records the closed-loop boundary and next-stage constraint.' );
 $development_workflow = file_get_contents( $root . '/docs/development-workflow.md' );
 toolbox_assert( false !== strpos( $development_workflow, 'Media Optimization Release Checklist' ) && false !== strpos( $development_workflow, 'URL/MIME/ALT' ), 'Development workflow points media releases at the release checklist.' );
 $ai_image_media_seo_smoke = file_get_contents( $root . '/tests/smoke-ai-image-media-seo.php' );
