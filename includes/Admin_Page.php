@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 final class Admin_Page {
 	private const PARENT_MENU_SLUG = 'npcink-ai';
 	private const MENU_SLUG        = 'npcink-toolbox';
+	private const LEGACY_MENU_SLUG = 'magick-ai-toolbox';
 
 	private Settings $settings;
 	private string $hook_suffix = '';
@@ -31,6 +32,7 @@ final class Admin_Page {
 				array( $this, 'render' ),
 				45
 			);
+			$this->register_legacy_redirect_page();
 			return;
 		}
 
@@ -41,6 +43,42 @@ final class Admin_Page {
 			self::MENU_SLUG,
 			array( $this, 'render' )
 		);
+
+		$this->register_legacy_redirect_page();
+	}
+
+	private function register_legacy_redirect_page(): void {
+		$hook_suffix = add_menu_page(
+			__( 'Npcink Toolbox', 'npcink-toolbox' ),
+			__( 'Npcink Toolbox', 'npcink-toolbox' ),
+			'manage_options',
+			self::LEGACY_MENU_SLUG,
+			array( $this, 'redirect_legacy_menu_slug' )
+		);
+		remove_menu_page( self::LEGACY_MENU_SLUG );
+
+		if ( is_string( $hook_suffix ) && '' !== $hook_suffix ) {
+			global $_registered_pages, $_parent_pages;
+
+			$_registered_pages[ $hook_suffix ]       = true;
+			$_parent_pages[ self::LEGACY_MENU_SLUG ] = false;
+
+			add_action( 'load-' . $hook_suffix, array( $this, 'redirect_legacy_menu_slug' ) );
+		}
+	}
+
+	public function redirect_legacy_menu_slug(): void {
+		$page_param = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : '';
+		$page       = is_scalar( $page_param ) ? sanitize_key( (string) $page_param ) : '';
+		if ( self::LEGACY_MENU_SLUG !== $page ) {
+			return;
+		}
+
+		$query         = wp_unslash( $_GET );
+		$query['page'] = self::MENU_SLUG;
+
+		wp_safe_redirect( add_query_arg( $query, admin_url( 'admin.php' ) ) );
+		exit;
 	}
 
 	private function has_magick_parent_menu(): bool {

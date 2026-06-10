@@ -3923,9 +3923,17 @@
 		const params = new URL(window.location.href).searchParams;
 		const requestedTab = params.get('toolbox_tab') || '';
 		const requestedTool = params.get('toolbox_tool') || '';
-		const requestedCloudCheck = params.get('toolbox_cloud_check') || '';
+		const requestedConnector = params.get('toolbox_connector') || '';
+		let requestedCloudCheck = params.get('toolbox_cloud_check') || '';
 		const requestedCloudCheckGroup = params.get('toolbox_cloud_check_group') || '';
 		let tab = requestedTab;
+		let canonicalizeLegacyConnector = false;
+
+		if (tab === 'connectors' && requestedConnector && hasTarget(document, '[data-toolbox-cloud-check-target]', 'data-toolbox-cloud-check-target', requestedConnector)) {
+			tab = 'cloud-checks';
+			requestedCloudCheck = requestedConnector;
+			canonicalizeLegacyConnector = true;
+		}
 
 		if (!tab) {
 			if (requestedTool && hasTarget(document, '[data-toolbox-tool-target]', 'data-toolbox-tool-target', requestedTool)) {
@@ -3948,6 +3956,14 @@
 			const panel = document.querySelector('[data-toolbox-cloud-check-panel]:not([hidden])');
 			const workspace = panel ? panel.querySelector('[data-toolbox-cloud-check-groups]') : null;
 			activateCloudCheckGroup(workspace, requestedCloudCheckGroup, false);
+		}
+		if (canonicalizeLegacyConnector) {
+			updateToolboxUrl({
+				toolbox_tab: 'cloud-checks',
+				toolbox_connector: null,
+				toolbox_cloud_check: requestedCloudCheck,
+				toolbox_cloud_check_group: requestedCloudCheckGroup || activeCloudCheckGroup(),
+			});
 		}
 	}
 
