@@ -65,6 +65,46 @@ Before using this slice for editorial trial, these gates must pass on master:
 The 2026-06-10 closeout passed all five gates on local master before this
 document was written.
 
+## PR Closeout Record - 2026-06-10
+
+Pull request:
+https://gitee.com/gitgreat/magick-ai-toolbox/pulls/3
+
+Branch and commit state during closeout:
+
+- Toolbox branch: `codex/release-trial-closeout`
+- Toolbox PR commit: `08bf1e10cbe56547b0eb281eaea65bc0896a800a`
+- Target `master` commit at the time of check:
+  `e60aa02ef21d984505f5b279114c85d429766e6d`
+- Core verification branch: `master`
+
+Public PR review state during closeout:
+
+- No visible review comments or code-review blocker were present on the public
+  PR page.
+- The PR checks tab reported no available check details.
+- The PR was not mergeable yet because the Gitee review gates were still
+  pending: review `0/1` and test `0/1`.
+
+Verification run during closeout:
+
+| Repository | Gate | Result |
+| --- | --- | --- |
+| Toolbox | `composer test:all` | Passed |
+| Toolbox | `composer smoke:editor-review-artifacts` | Passed |
+| Toolbox | `composer smoke:media-derivative-core` | Passed |
+| Core | `composer test:all` | Passed |
+| Core | `composer smoke:wp` | Passed |
+
+Closeout decision:
+
+- No blocker fix was required because no review blocker or verification
+  regression was found.
+- No product scope was added during closeout.
+- The real-article trial remains blocked until the PR is merged.
+- After merge, run this document's Trial Protocol on 1-2 real human-written
+  posts and record accept/edit/reject results for each suggestion category.
+
 ## Trial Protocol
 
 Run the trial on 1-2 real human-written posts. Do not use generated filler as
