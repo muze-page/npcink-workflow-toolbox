@@ -180,6 +180,34 @@ them with local JavaScript assertions:
 This layer is for repeatable prompt/batch comparison. It does not call Cloud,
 write WordPress data, or replace human 1-5 review scores.
 
+## AI Judge Pre-Scoring
+
+After a prompt version passes hard gates, run an AI-judge pass to pre-score
+candidates before manual review:
+
+```bash
+export OPENAI_API_KEY=...
+SUMMARY_JUDGE_INPUT=tests/summary-eval/generated/muze-candidates-offset25-limit30-newprompt.json \
+SUMMARY_JUDGE_LIMIT=20 \
+composer eval:summary:judge
+```
+
+The command exports `tests/summary-eval/generated/promptfoo-judge-cases.csv` and
+then runs `tests/summary-eval/promptfoo-judge.yaml` with Promptfoo
+`llm-rubric`. It compares the candidate summary against the supplied title and
+article content, using a 1-5 equivalent rubric:
+
+- 1: unusable, generated error, factual error, or misleading.
+- 2: related but needs major rewriting.
+- 3: direction is usable but requires clear editing.
+- 4: good; minor edits only.
+- 5: can be used directly.
+
+By default the Composer script uses `openai:gpt-4.1-mini` as the grader. Override
+with `SUMMARY_JUDGE_GRADER` if needed. OpenAI graders require
+`OPENAI_API_KEY`. Keep this as pre-scoring only: calibrate it against
+human-filled review sheets before using it to reduce manual review.
+
 ## Next Layer
 
 After the hard gate is stable, add a model-judged layer for faithfulness,
