@@ -65,6 +65,20 @@
 	margin: 0 0 8px;
 }
 
+.npcink-toolbox-editor-support__flow-instruction {
+	display: grid;
+	gap: 4px;
+	margin: 2px 0 6px;
+}
+
+.npcink-toolbox-editor-support__flow-instruction textarea {
+	width: 100%;
+	min-height: 72px;
+	resize: vertical;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
 .npcink-toolbox-editor-support__toolbar-icon {
 	display: inline-grid;
 	place-items: center;
@@ -102,6 +116,20 @@
 	color: #646970;
 	font-size: 12px;
 	line-height: 1.45;
+}
+
+.npcink-toolbox-editor-support__flow-group {
+	display: grid;
+	gap: 0;
+}
+
+.npcink-toolbox-editor-support__flow-group h4 {
+	margin: 12px 0 2px;
+	color: #1d2327;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.35;
+	text-transform: uppercase;
 }
 
 .npcink-toolbox-editor-support__flow {

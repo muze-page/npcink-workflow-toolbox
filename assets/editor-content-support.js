@@ -130,64 +130,91 @@
 
 	const flows = [
 		{
-			intent: 'writing_support',
-			label: __('Writing preparation', 'npcink-toolbox'),
-			description: __('Build a source-backed preparation checklist before drafting the article body.', 'npcink-toolbox'),
-		},
-		{
 			intent: 'title_suggestions',
 			label: __('Title suggestions', 'npcink-toolbox'),
 			description: __('Generate reviewable title options from the current draft context.', 'npcink-toolbox'),
-		},
-		{
-			intent: 'article_outline',
-			label: __('Outline suggestions', 'npcink-toolbox'),
-			description: __('Build a compact outline that an editor can expand manually.', 'npcink-toolbox'),
-		},
-		{
-			intent: 'polish_notes',
-			label: __('Polish selected text', 'npcink-toolbox'),
-			description: __('Improve clarity and tone for selected text or the current draft without adding facts.', 'npcink-toolbox'),
-		},
-		{
-			intent: 'publish_preflight',
-			label: __('Publish preflight', 'npcink-toolbox'),
-			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'npcink-toolbox'),
-		},
-		{
-			intent: 'discoverability',
-			label: __('Discoverability suggestions', 'npcink-toolbox'),
-			description: __('Review SEO, AEO, GEO, and proposal-field suggestions for the current draft.', 'npcink-toolbox'),
+			group: 'common_recommendations',
 		},
 		{
 			intent: 'summary_suggestions',
 			label: __('AI generate summary', 'npcink-toolbox'),
-			description: __('Generate a reviewed excerpt candidate from the current draft with hosted AI.', 'npcink-toolbox'),
-		},
-		{
-			intent: 'category_suggestions',
-			label: __('Category suggestions', 'npcink-toolbox'),
-			description: __('Find matching existing categories without running the full metadata workflow.', 'npcink-toolbox'),
+			description: __('Generate reviewed excerpt candidates from the current draft with hosted AI.', 'npcink-toolbox'),
+			group: 'common_recommendations',
 		},
 		{
 			intent: 'tag_suggestions',
 			label: __('Tag suggestions', 'npcink-toolbox'),
 			description: __('Find existing tag matches and review-only new tag gaps.', 'npcink-toolbox'),
+			group: 'common_recommendations',
 		},
 		{
-			intent: 'internal_links',
-			label: __('Find internal links', 'npcink-toolbox'),
-			description: __('Use Site Knowledge to find related public content for links.', 'npcink-toolbox'),
+			intent: 'category_suggestions',
+			label: __('Category suggestions', 'npcink-toolbox'),
+			description: __('Find matching existing categories without running the full metadata workflow.', 'npcink-toolbox'),
+			group: 'common_recommendations',
 		},
 		{
 			intent: 'image_candidates',
 			label: __('Find image candidates', 'npcink-toolbox'),
 			description: __('Search configured image-source providers for featured or inline candidates.', 'npcink-toolbox'),
+			group: 'common_recommendations',
+		},
+		{
+			intent: 'internal_links',
+			label: __('Find internal links', 'npcink-toolbox'),
+			description: __('Use Site Knowledge to find related public content for links.', 'npcink-toolbox'),
+			group: 'common_recommendations',
+		},
+		{
+			intent: 'writing_support',
+			label: __('Writing preparation', 'npcink-toolbox'),
+			description: __('Build a source-backed preparation checklist before drafting the article body.', 'npcink-toolbox'),
+			group: 'writing_assist',
+		},
+		{
+			intent: 'article_outline',
+			label: __('Outline suggestions', 'npcink-toolbox'),
+			description: __('Build a compact outline that an editor can expand manually.', 'npcink-toolbox'),
+			group: 'writing_assist',
+		},
+		{
+			intent: 'polish_notes',
+			label: __('Polish selected text', 'npcink-toolbox'),
+			description: __('Improve clarity and tone for selected text or the current draft without adding facts.', 'npcink-toolbox'),
+			group: 'writing_assist',
+		},
+		{
+			intent: 'publish_preflight',
+			label: __('Publish preflight', 'npcink-toolbox'),
+			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'npcink-toolbox'),
+			group: 'pre_publish',
+		},
+		{
+			intent: 'discoverability',
+			label: __('Discoverability suggestions', 'npcink-toolbox'),
+			description: __('Review SEO, AEO, GEO, and proposal-field suggestions for the current draft.', 'npcink-toolbox'),
+			group: 'pre_publish',
 		},
 		{
 			intent: 'image_alt_suggestions',
 			label: __('Image ALT suggestions', 'npcink-toolbox'),
 			description: __('Suggest ALT and caption notes for images already used by this draft.', 'npcink-toolbox'),
+			group: 'pre_publish',
+		},
+	];
+
+	const flowGroups = [
+		{
+			id: 'common_recommendations',
+			label: __('Common recommendations', 'npcink-toolbox'),
+		},
+		{
+			id: 'writing_assist',
+			label: __('Writing assist', 'npcink-toolbox'),
+		},
+		{
+			id: 'pre_publish',
+			label: __('Pre-publish package', 'npcink-toolbox'),
 		},
 	];
 
@@ -1797,6 +1824,103 @@
 		}] : [];
 	}
 
+	function flowAcceptsUserInstruction(intent) {
+		return [
+			'title_suggestions',
+			'summary_suggestions',
+			'tag_suggestions',
+			'category_suggestions',
+			'internal_links',
+			'writing_support',
+			'article_outline',
+			'polish_notes',
+			'publish_preflight',
+			'discoverability',
+			'image_alt_suggestions',
+		].indexOf(intent) >= 0;
+	}
+
+	function flowInstructionPlaceholder(intent) {
+		if (intent === 'title_suggestions') {
+			return __('Example: shorter, less marketing, include product name.', 'npcink-toolbox');
+		}
+		if (intent === 'summary_suggestions') {
+			return __('Example: emphasize workflow value, avoid audience-label openings.', 'npcink-toolbox');
+		}
+		if (intent === 'category_suggestions' || intent === 'tag_suggestions') {
+			return __('Example: prefer existing product taxonomy and avoid broad generic terms.', 'npcink-toolbox');
+		}
+		if (intent === 'internal_links') {
+			return __('Example: prefer tutorials over announcement posts.', 'npcink-toolbox');
+		}
+		if (intent === 'image_alt_suggestions') {
+			return __('Example: concise, factual ALT text; no keyword stuffing.', 'npcink-toolbox');
+		}
+		return __('Example: more practical, concise, and less promotional.', 'npcink-toolbox');
+	}
+
+	function titleSuggestionItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		const output = section.output_json && typeof section.output_json === 'object' ? section.output_json : {};
+		const source = Array.isArray(output.title_options) && output.title_options.length
+			? output.title_options
+			: (Array.isArray(output.titles) && output.titles.length ? output.titles : []);
+		if (source.length) {
+			return source.map((item, index) => {
+				const title = readableItemText(item && (item.title || item.name || item.label || item.value || item.text || item), '');
+				const reason = item && typeof item === 'object' ? readableItemText(item.reason || item.rationale || item.detail, '') : '';
+				return {
+					name: title || __('Title option', 'npcink-toolbox') + ' ' + String(index + 1),
+					detail: reason,
+					value: title,
+				};
+			}).filter((item) => item.value);
+		}
+		return hostedWritingSupportItems(section);
+	}
+
+	function renderTitleSuggestionSection(items, controls) {
+		const candidates = Array.isArray(items) ? items : [];
+		const status = controls && controls.titleApplyStatus ? controls.titleApplyStatus : null;
+		return createElement(
+			'section',
+			{ className: 'npcink-toolbox-editor-support__metadata-compact-section' },
+			createElement('h4', null, __('Title suggestions', 'npcink-toolbox')),
+			candidates.length
+				? createElement(
+					'ul',
+					{ className: 'npcink-toolbox-editor-support__metadata-compact-list' },
+					candidates.slice(0, 5).map((item, index) => {
+						const titleText = readableItemText(item && (item.value || item.name || item.title || item.label), __('Title option', 'npcink-toolbox'));
+						const detailText = truncateText(readableItemText(item && (item.detail || item.reason || item.excerpt), ''), 140);
+						return createElement(
+							'li',
+							{ key: String(index) + '-' + titleText },
+							createElement('strong', null, titleText),
+							detailText ? createElement('span', null, detailText) : null,
+							titleText && controls && controls.applyTitle ? createElement(
+								'div',
+								{ className: 'npcink-toolbox-editor-support__candidate-actions' },
+								createElement(
+									Button,
+									{
+										type: 'button',
+										variant: status && status.title === titleText ? 'secondary' : 'primary',
+										onClick: () => controls.applyTitle(titleText),
+									},
+									status && status.title === titleText ? __('Applied', 'npcink-toolbox') : __('Use this title', 'npcink-toolbox')
+								)
+							) : null
+						);
+					})
+				)
+				: createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('No title suggestions returned.', 'npcink-toolbox')),
+			status ? createElement(Notice, { status: status.status || 'success', isDismissible: false }, status.message) : null
+		);
+	}
+
 	function discoverabilitySuggestionItems(section) {
 		const suggestions = section && section.candidate_suggestions ? section.candidate_suggestions : {};
 		return Object.keys(suggestions).map((field) => ({
@@ -2330,8 +2454,7 @@
 		}
 
 		if (sections.title_suggestions) {
-			blocks.push(createElement('h4', { key: 'title-suggestions-title' }, __('Title suggestions', 'npcink-toolbox')));
-			blocks.push(renderItems(hostedWritingSupportItems(sections.title_suggestions), __('No title suggestions returned.', 'npcink-toolbox')));
+			blocks.push(renderTitleSuggestionSection(titleSuggestionItems(sections.title_suggestions), metadataHandoffControls));
 		}
 
 		if (sections.article_outline) {
@@ -2516,6 +2639,8 @@
 		const [seoHandoffRunning, setSeoHandoffRunning] = useState(false);
 		const [seoHandoffResult, setSeoHandoffResult] = useState(null);
 		const [seoHandoffError, setSeoHandoffError] = useState('');
+		const [flowInstructions, setFlowInstructions] = useState({});
+		const [titleApplyStatus, setTitleApplyStatus] = useState(null);
 		const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
 		const [evidenceModalBlocks, setEvidenceModalBlocks] = useState(null);
 
@@ -2560,14 +2685,17 @@
 			setMetadataHandoffError('');
 			setSeoHandoffResult(null);
 			setSeoHandoffError('');
+			setTitleApplyStatus(null);
 			setExcerptApplyStatus(null);
 			try {
+				const userInstruction = flowAcceptsUserInstruction(intent) ? String(flowInstructions[intent] || '').trim() : '';
 				const payload = Object.assign({}, postContext, {
 					intent,
 					category_ids: Array.isArray(postContext.category_ids) ? postContext.category_ids.join(',') : '',
 					tag_ids: Array.isArray(postContext.tag_ids) ? postContext.tag_ids.join(',') : '',
 					media_items: Array.isArray(postContext.media_items) ? postContext.media_items : [],
 					generation_variant: ['title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions'].indexOf(intent) >= 0 ? String(Date.now()) : '',
+					user_instruction: userInstruction,
 				});
 				const flowResult = await postJson('editor/content-support', payload);
 				setResult((current) => mergeContentSupportResult(current, flowResult, intent));
@@ -2946,6 +3074,43 @@
 			});
 			setMetadataHandoffResult(null);
 			setMetadataHandoffError('');
+		}
+
+		function updateFlowInstruction(intent, value) {
+			const key = String(intent || '');
+			if (!key) {
+				return;
+			}
+			setFlowInstructions((current) => Object.assign({}, current || {}, {
+				[key]: String(value || '').slice(0, 320),
+			}));
+		}
+
+		function applyRecommendedTitle(title) {
+			const value = String(title || '').trim();
+			if (!value) {
+				setTitleApplyStatus({
+					status: 'error',
+					title: '',
+					message: __('No title text is available to apply.', 'npcink-toolbox'),
+				});
+				return;
+			}
+			const editorDispatch = data.dispatch ? data.dispatch('core/editor') : null;
+			if (!editorDispatch || !editorDispatch.editPost) {
+				setTitleApplyStatus({
+					status: 'error',
+					title: value,
+					message: __('Could not update the current title in this editor.', 'npcink-toolbox'),
+				});
+				return;
+			}
+			editorDispatch.editPost({ title: value });
+			setTitleApplyStatus({
+				status: 'success',
+				title: value,
+				message: __('Applied to the current title. Save the draft to persist it.', 'npcink-toolbox'),
+			});
 		}
 
 		function applyRecommendedExcerpt(excerpt) {
@@ -3347,6 +3512,8 @@
 			running: metadataHandoffRunning,
 			result: metadataHandoffResult,
 			error: metadataHandoffError,
+			applyTitle: applyRecommendedTitle,
+			titleApplyStatus,
 			applyExcerpt: applyRecommendedExcerpt,
 			excerptApplyStatus,
 			openEvidence: setEvidenceModalBlocks,
@@ -3358,6 +3525,7 @@
 			},
 		};
 		const showResultView = supportView === 'result';
+		const rerunInstruction = rerunIntent ? String(flowInstructions[rerunIntent] || '') : '';
 
 		return createElement(
 			Fragment,
@@ -3398,6 +3566,18 @@
 							createElement('strong', null, resultTitle),
 							createElement('span', null, running ? __('Running content support flow...', 'npcink-toolbox') : resultScopeLabel(rerunIntent))
 						),
+						rerunIntent && flowAcceptsUserInstruction(rerunIntent) ? createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__flow-instruction' },
+							createElement(TextareaControl, {
+								label: __('My request for this suggestion', 'npcink-toolbox'),
+								value: rerunInstruction,
+								placeholder: flowInstructionPlaceholder(rerunIntent),
+								disabled: Boolean(running),
+								rows: 3,
+								onChange: (value) => updateFlowInstruction(rerunIntent, value),
+							})
+						) : null,
 						rerunIntent ? createElement(
 							'div',
 							{ className: 'npcink-toolbox-editor-support__view-actions' },
@@ -3425,7 +3605,11 @@
 						'div',
 						{ className: 'npcink-toolbox-editor-support__menu-view' },
 						createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
-						flows.map((flow) =>
+						flowGroups.map((group) => createElement(
+							'section',
+							{ className: 'npcink-toolbox-editor-support__flow-group', key: group.id },
+							createElement('h4', null, group.label),
+							flows.filter((flow) => flow.group === group.id).map((flow) =>
 							createElement(
 								'div',
 								{ className: 'npcink-toolbox-editor-support__flow', key: flow.intent },
@@ -3442,6 +3626,7 @@
 								)
 							)
 						)
+						))
 					)
 				)
 			),

@@ -272,15 +272,24 @@ support flows. It accepts current draft context plus one intent:
 `category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
 `taxonomy_tags`, `internal_links`, `image_candidates`, or
 `image_alt_suggestions`.
-The editor UI exposes primary buttons for writing preparation, publish
-preflight, discoverability, summary suggestions, category suggestions, tag
-suggestions, internal links, image candidates, and current-article image ALT
-suggestions. `summary_terms_optimization` and `taxonomy_tags` remain
-lower-level/full support intents, not separate default buttons. The image
-candidate modal also exposes the saved-post `/flows/media-brief` result as a
-secondary image-plan action; it is not a new primary sidebar button and it does
-not write media, metadata, or post content. The route returns an `editor_content_support_flow`
-artifact with suggestion-only sections and no direct WordPress write posture.
+The editor UI groups the default buttons around the author workflow. Common
+recommendations appear first: title suggestions, summary suggestions, tag
+suggestions, category suggestions, image candidates, and internal links. Writing
+preparation, outline, and polish actions sit in a writing-assist group, while
+publish preflight, discoverability, and current-article image ALT suggestions
+sit in the pre-publish package group. The focused result view accepts a bounded
+operator instruction for regeneration; that instruction is treated as tone,
+angle, audience, or ranking preference only, not as factual source material or
+write authorization. Reviewed title and summary candidates may be applied to
+the current editor state by explicit operator click, then the normal WordPress
+draft save persists the change. Taxonomy, SEO, media, and new-term outcomes stay
+on Core-governed handoff paths. `summary_terms_optimization` and
+`taxonomy_tags` remain lower-level/full support intents, not separate default
+buttons. The image candidate modal also exposes the saved-post
+`/flows/media-brief` result as a secondary image-plan action; it is not a new
+primary sidebar button and it does not write media, metadata, or post content.
+The route returns an `editor_content_support_flow` artifact with
+suggestion-only sections and no direct WordPress write posture.
 The split metadata intents return the same
 `article_discoverability_optimization.v1` section shape through lighter
 draft/taxonomy fast paths, while the full `summary_terms_optimization` intent

@@ -744,6 +744,7 @@ final class Rest_Controller {
 		$content             = trim( wp_strip_all_tags( (string) $request->get_param( 'content' ) ) );
 		$selected_text       = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_text' ) ) );
 		$selected_block_text = trim( wp_strip_all_tags( (string) $request->get_param( 'selected_block_text' ) ) );
+		$user_instruction    = trim( wp_strip_all_tags( (string) $request->get_param( 'user_instruction' ) ) );
 		$context_scope       = sanitize_key( (string) ( $request->get_param( 'context_scope' ) ?: 'auto' ) );
 		if ( ! in_array( $context_scope, array( 'auto', 'full_article', 'selected_text', 'topic_only' ), true ) ) {
 			$context_scope = 'auto';
@@ -760,6 +761,7 @@ final class Rest_Controller {
 			'selected_text'       => wp_trim_words( sanitize_textarea_field( $selected_text ), 110, '' ),
 			'selected_block_text' => wp_trim_words( sanitize_textarea_field( $selected_block_text ), 110, '' ),
 			'selected_block_name' => sanitize_text_field( (string) $request->get_param( 'selected_block_name' ) ),
+			'user_instruction'    => wp_trim_words( sanitize_textarea_field( $user_instruction ), 60, '' ),
 			'generation_variant'  => sanitize_text_field( (string) $request->get_param( 'generation_variant' ) ),
 			'image_mode'          => sanitize_key( (string) $request->get_param( 'image_mode' ) ),
 			'category_ids'        => $this->csv_absint_list( (string) $request->get_param( 'category_ids' ) ),
@@ -983,6 +985,7 @@ final class Rest_Controller {
 
 	private function editor_support_query( array $context ): string {
 		$scope     = sanitize_key( (string) ( $context['context_scope'] ?? 'auto' ) );
+		$instruction = trim( (string) ( $context['user_instruction'] ?? '' ) );
 		$selection = trim(
 			implode(
 				' ',
@@ -1005,6 +1008,7 @@ final class Rest_Controller {
 							array(
 								$selected_scope_text,
 								(string) ( $context['title'] ?? '' ),
+								$instruction,
 							)
 						)
 					)
@@ -1023,6 +1027,7 @@ final class Rest_Controller {
 							array(
 								(string) ( $context['title'] ?? '' ),
 								(string) ( $context['excerpt'] ?? '' ),
+								$instruction,
 							)
 						)
 					)
@@ -1041,6 +1046,7 @@ final class Rest_Controller {
 						(string) ( $context['title'] ?? '' ),
 						(string) ( $context['excerpt'] ?? '' ),
 						(string) ( $context['content_text'] ?? '' ),
+						$instruction,
 					)
 				)
 			)
@@ -1587,6 +1593,7 @@ final class Rest_Controller {
 					'title'              => (string) ( $context['title'] ?? '' ),
 					'excerpt'            => (string) ( $context['excerpt'] ?? '' ),
 					'content'            => (string) ( $context['content_text'] ?? '' ),
+					'user_instruction'   => (string) ( $context['user_instruction'] ?? '' ),
 					'generation_variant' => (string) ( $context['generation_variant'] ?? '' ),
 				)
 			)
@@ -1644,6 +1651,7 @@ final class Rest_Controller {
 					'title'              => (string) ( $context['title'] ?? '' ),
 					'excerpt'            => (string) ( $context['excerpt'] ?? '' ),
 					'content'            => $content,
+					'user_instruction'   => (string) ( $context['user_instruction'] ?? '' ),
 					'generation_variant' => (string) ( $context['generation_variant'] ?? '' ),
 				)
 			)
@@ -2223,14 +2231,32 @@ final class Rest_Controller {
 		$output_text = trim( sanitize_textarea_field( (string) ( $summary_ai['output_text'] ?? '' ) ) );
 		$recommended = $this->editor_ai_summary_field( $result, array( 'recommended_excerpt', 'short_summary', 'excerpt', 'summary' ) );
 		$alternate   = $this->editor_ai_summary_field( $result, array( 'alternate_excerpt', 'standard_summary', 'alternate_summary' ) );
+		$third       = $this->editor_ai_summary_field( $result, array( 'third_excerpt', 'second_alternate_excerpt', 'alternate_excerpt_2', 'variant_excerpt' ) );
 		$reason      = $this->editor_ai_summary_field( $result, array( 'why_this_works', 'reason', 'rationale' ) );
+		$listed      = $this->editor_ai_summary_list_fields( $result );
 
 		if ( '' === $recommended && '' !== $output_text ) {
 			$decoded = $this->editor_decode_ai_summary_output( $output_text );
 			if ( is_array( $decoded ) ) {
 				$recommended = $this->editor_ai_summary_field( $decoded, array( 'recommended_excerpt', 'short_summary', 'excerpt', 'summary' ) );
 				$alternate   = $this->editor_ai_summary_field( $decoded, array( 'alternate_excerpt', 'standard_summary', 'alternate_summary' ) );
+				$third       = $this->editor_ai_summary_field( $decoded, array( 'third_excerpt', 'second_alternate_excerpt', 'alternate_excerpt_2', 'variant_excerpt' ) );
 				$reason      = $this->editor_ai_summary_field( $decoded, array( 'why_this_works', 'reason', 'rationale' ) );
+				$listed      = array_merge( $listed, $this->editor_ai_summary_list_fields( $decoded ) );
+			}
+		}
+		foreach ( $listed as $listed_excerpt ) {
+			if ( '' === $recommended ) {
+				$recommended = $listed_excerpt;
+				continue;
+			}
+			if ( '' === $alternate && $listed_excerpt !== $recommended ) {
+				$alternate = $listed_excerpt;
+				continue;
+			}
+			if ( '' === $third && $listed_excerpt !== $recommended && $listed_excerpt !== $alternate ) {
+				$third = $listed_excerpt;
+				break;
 			}
 		}
 		if ( '' === $recommended && '' !== $output_text ) {
@@ -2239,11 +2265,15 @@ final class Rest_Controller {
 		}
 		$recommended = $this->editor_clean_ai_summary_excerpt( $recommended );
 		$alternate   = $this->editor_clean_ai_summary_excerpt( $alternate );
+		$third       = $this->editor_clean_ai_summary_excerpt( $third );
 		if ( ! $this->editor_ai_summary_excerpt_is_reviewable( $recommended ) ) {
 			$recommended = $this->editor_ai_summary_excerpt_is_reviewable( $alternate ) ? $alternate : '';
 			$alternate   = '';
 		} elseif ( ! $this->editor_ai_summary_excerpt_is_reviewable( $alternate ) ) {
 			$alternate = '';
+		}
+		if ( ! $this->editor_ai_summary_excerpt_is_reviewable( $third ) || $third === $recommended || $third === $alternate ) {
+			$third = '';
 		}
 
 		$items = array();
@@ -2265,6 +2295,17 @@ final class Rest_Controller {
 				'limit'         => '50_160_zh_chars',
 				'value'         => sanitize_text_field( $alternate ),
 				'reason'        => __( 'Alternate AI wording with the same factual scope for editor comparison.', 'npcink-toolbox' ),
+				'context_use'   => 'draft_grounded_ai_summary',
+				'evidence_refs' => array(),
+			);
+		}
+		if ( '' !== $third ) {
+			$items[] = array(
+				'id'            => 'ai_third_excerpt',
+				'label'         => __( 'AI alternate excerpt', 'npcink-toolbox' ),
+				'limit'         => '50_160_zh_chars',
+				'value'         => sanitize_text_field( $third ),
+				'reason'        => __( 'Additional AI wording with the same factual scope for editor comparison.', 'npcink-toolbox' ),
 				'context_use'   => 'draft_grounded_ai_summary',
 				'evidence_refs' => array(),
 			);
@@ -2307,6 +2348,37 @@ final class Rest_Controller {
 		}
 
 		return array();
+	}
+
+	private function editor_ai_summary_list_fields( array $source ): array {
+		$values = array();
+		foreach ( array( 'excerpt_candidates', 'summary_candidates', 'candidates', 'alternates' ) as $key ) {
+			if ( ! is_array( $source[ $key ] ?? null ) ) {
+				continue;
+			}
+			foreach ( $source[ $key ] as $item ) {
+				if ( is_array( $item ) ) {
+					$value = $this->editor_ai_summary_field( $item, array( 'recommended_excerpt', 'alternate_excerpt', 'third_excerpt', 'excerpt', 'summary', 'value', 'text' ) );
+				} else {
+					$value = trim( sanitize_textarea_field( (string) $item ) );
+				}
+				if ( '' !== $value && ! in_array( $value, $values, true ) ) {
+					$values[] = $value;
+				}
+			}
+		}
+
+		foreach ( array( 'result', 'data', 'summary', 'output' ) as $nested_key ) {
+			if ( is_array( $source[ $nested_key ] ?? null ) ) {
+				foreach ( $this->editor_ai_summary_list_fields( $source[ $nested_key ] ) as $value ) {
+					if ( '' !== $value && ! in_array( $value, $values, true ) ) {
+						$values[] = $value;
+					}
+				}
+			}
+		}
+
+		return $values;
 	}
 
 	private function editor_ai_summary_field( array $source, array $keys ): string {
