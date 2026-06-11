@@ -3643,7 +3643,7 @@ final class Provider_Client {
 			),
 			'summary_suggestions' => array(
 				'output_shape'     => array(
-					'recommended_excerpt' => 'one best WordPress excerpt candidate, 80 to 160 Chinese characters when the article is Chinese, grounded only in the supplied title, excerpt, and draft body',
+					'recommended_excerpt' => 'one best reader-facing WordPress excerpt candidate, 80 to 160 Chinese characters when the article is Chinese, grounded only in the supplied title, excerpt, and draft body; it must read like archive, search, and social preview copy after publication',
 					'why_this_works'      => 'one short editor-facing reason that explains focus, audience value, and factual grounding',
 					'coverage_check'      => 'short checklist covering main topic, reader benefit, no unsupported claims, and no title repetition',
 					'alternate_excerpt'   => 'one alternate wording with the same facts and a different opening angle',
@@ -3652,8 +3652,13 @@ final class Provider_Client {
 					'Read the full supplied draft context before summarizing.',
 					'Prefer a natural editor-ready excerpt over truncating the first paragraph.',
 					'State the core reader value, not just the topic label.',
+					'Write the excerpt as public preview copy for readers after publication; do not mention draft, article, post, or the act of summarizing.',
 					'Do not add facts, product claims, comparisons, numbers, or outcomes missing from the draft.',
 					'Keep the recommended excerpt useful in WordPress archives, search snippets, and social previews.',
+				),
+				'reject_if'        => array(
+					'The recommended_excerpt or alternate_excerpt contains meta framing such as draft, article, post, this draft, this article, 草稿, 本文, 这篇文章, 该文章, 本文说明, 本文介绍, or 这篇草稿主张.',
+					'The excerpt sounds like an editor diagnosis instead of public reader-facing preview copy.',
 				),
 			),
 			'summary_terms_optimization' => array(
@@ -3697,10 +3702,14 @@ final class Provider_Client {
 			'Separate assumptions from suggestions.',
 			'Keep each item short enough for quick editor review.',
 		);
-		$contract['reject_if']    = array(
+		$reject_if                = is_array( $contract['reject_if'] ?? null ) ? $contract['reject_if'] : array();
+		$contract['reject_if']    = array_merge(
+			$reject_if,
+			array(
 			'The result reads like a complete article body.',
 			'The result invents facts, sources, testimonials, rankings, or performance claims.',
 			'The result asks Toolbox to write, publish, approve, import, or mutate WordPress data.',
+			)
 		);
 
 		return $contract;
@@ -3946,7 +3955,7 @@ final class Provider_Client {
 			'title_summary'       => 'Generate only local draft-support suggestions: 5 title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary.',
 			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
 			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
-			'summary_suggestions' => 'Generate one high-quality AI WordPress excerpt for the current draft. Read the supplied title, existing excerpt, and draft body; identify the main claim, reader problem, audience value, and scope; then produce an editor-ready recommended excerpt plus one alternate wording. Do not truncate text, do not repeat the title, and do not add unsupported facts.',
+			'summary_suggestions' => 'Generate one high-quality reader-facing WordPress excerpt for the article after publication. Use the supplied title, existing excerpt, and draft body only as source material; identify the reader problem, audience value, and factual scope; then produce an editor-ready recommended excerpt plus one alternate wording. Do not truncate text, do not repeat the title, do not add unsupported facts, and do not mention draft, article, post, 本文, 这篇文章, or the act of summarizing.',
 			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, normalization notes, feedback metric hints, and risk notes. Prefer existing terms when supplied, include a reason and evidence_source for every term candidate, and mark proposed new tags separately.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
 		$quality_contract = $this->hosted_ai_quality_contract( $intent );
@@ -3963,6 +3972,7 @@ final class Provider_Client {
 				'Keep the answer short enough for an editor to review quickly.',
 				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
 				'For summary_suggestions, return the recommended excerpt first and keep it ready to paste into the WordPress excerpt field.',
+				'For summary_suggestions, the excerpt itself must be public-facing preview copy, not editor analysis; avoid meta lead-ins such as 本文说明, 本文介绍, 这篇文章, 该文章, 这篇草稿主张, this article, or this draft.',
 				'For summary_suggestions, prefer one compact JSON object with recommended_excerpt, why_this_works, coverage_check, and alternate_excerpt; do not wrap it in markdown fences.',
 				'For summary_suggestions regeneration, treat generation_variant as a fresh-request marker: use a different natural wording while preserving the same draft-grounded facts.',
 				'Return reviewable suggestions only.',

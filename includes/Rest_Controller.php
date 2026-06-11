@@ -2046,6 +2046,8 @@ final class Rest_Controller {
 			$fallback = preg_replace( '/^\s*(?:#+|\*+|-+)?\s*(?:recommended[_ ]excerpt|short[_ ]summary|summary|excerpt|推荐摘要|摘要)\s*[:：-]?\s*/iu', '', $output_text );
 			$recommended = sanitize_text_field( wp_html_excerpt( is_string( $fallback ) ? $fallback : $output_text, 180, '' ) );
 		}
+		$recommended = $this->editor_clean_ai_summary_excerpt( $recommended );
+		$alternate   = $this->editor_clean_ai_summary_excerpt( $alternate );
 
 		$items = array();
 		if ( '' !== $recommended ) {
@@ -2130,6 +2132,23 @@ final class Rest_Controller {
 		}
 
 		return '';
+	}
+
+	private function editor_clean_ai_summary_excerpt( string $excerpt ): string {
+		$value = trim( sanitize_textarea_field( $excerpt ) );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$cleaned = preg_replace(
+			'/^\s*(?:(?:这篇|该|当前)?草稿|(?:这篇|该)?文章|本文|post|article|draft|this\s+(?:post|article|draft))\s*(?:主张|说明|介绍|讲述|阐述|探讨|分析|指出|强调|聚焦(?:于)?|围绕|旨在|认为|argues|explains|introduces|describes|covers|focuses\s+on)?\s*[:：,，。-]?\s*/iu',
+			'',
+			$value
+		);
+		$value   = is_string( $cleaned ) ? trim( $cleaned ) : $value;
+		$value   = trim( $value, " \t\n\r\0\x0B\"'“”‘’" );
+
+		return sanitize_text_field( $value );
 	}
 
 	private function editor_summary_terms_strategy(): array {

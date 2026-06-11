@@ -9,6 +9,8 @@
   "scripts": {
     "lint:php": "php tests/lint.php",
     "test": "php tests/run.php",
+    "eval:summary": "php tests/summary-eval/run.php",
+    "eval:summary:export": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; SUMMARY_EVAL_AUTHOR=\"${SUMMARY_EVAL_AUTHOR:-Muze}\"; SUMMARY_EVAL_LIMIT=\"${SUMMARY_EVAL_LIMIT:-50}\"; SUMMARY_EVAL_OUTPUT=\"${SUMMARY_EVAL_OUTPUT:-tests/summary-eval/generated/muze-source-samples.json}\"; mkdir -p \"$(dirname \"$SUMMARY_EVAL_OUTPUT\")\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/summary-eval/export-wp-samples.php -- \"author=$SUMMARY_EVAL_AUTHOR\" \"limit=$SUMMARY_EVAL_LIMIT\" \"output=$SUMMARY_EVAL_OUTPUT\"",
     "check:wporg": "@php scripts/check-wordpress-org-review-rules.php",
     "package:release": "rm -rf build/npcink-toolbox build/npcink-toolbox.zip && mkdir -p build && rsync -a --delete --exclude-from=.distignore ./ build/npcink-toolbox/ && cd build && zip -qr npcink-toolbox.zip npcink-toolbox",
     "plugin-check:release": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color plugin check npcink-toolbox --format=table --exclude-directories=tests,.git,vendor,node_modules,build,docs,scripts --exclude-files=.gitignore,.distignore,AGENTS.md,README.md,composer.json,composer.lock,phpcs.xml,phpcs.xml.dist,phpstan.neon,phpstan.neon.dist",
@@ -27,6 +29,7 @@
     ],
     "test:all": [
       "@lint:php",
+      "@eval:summary",
       "@test"
     ]
   }
