@@ -121,7 +121,7 @@ foreach ( $query->posts as $post ) {
 		'categories'          => wp_get_post_terms( $post_id, 'category', array( 'fields' => 'names' ) ),
 		'tags'                => wp_get_post_terms( $post_id, 'post_tag', array( 'fields' => 'names' ) ),
 		'length'              => array(
-			'min' => 80,
+			'min' => 60,
 			'max' => 160,
 		),
 		'must_not_contain'    => array(
