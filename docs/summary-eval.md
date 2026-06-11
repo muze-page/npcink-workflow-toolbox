@@ -113,6 +113,7 @@ command writes ignored local files with Chinese review columns:
 - `tests/summary-eval/generated/summary-human-review.md`
 - `tests/summary-eval/generated/summary-human-review.json`
 - `tests/summary-eval/generated/summary-human-review.csv`
+- `tests/summary-eval/generated/summary-human-review.xlsx`
 
 Override the input and output paths when reviewing a specific batch:
 
@@ -121,12 +122,23 @@ SUMMARY_REVIEW_INPUT=tests/summary-eval/generated/muze-candidates-offset25-limit
 SUMMARY_REVIEW_MD=tests/summary-eval/generated/muze-candidates-offset25-review.md \
 SUMMARY_REVIEW_JSON=tests/summary-eval/generated/muze-candidates-offset25-review.json \
 SUMMARY_REVIEW_CSV=tests/summary-eval/generated/muze-candidates-offset25-review.csv \
+SUMMARY_REVIEW_XLSX=tests/summary-eval/generated/muze-candidates-offset25-review.xlsx \
 composer eval:summary:review
 ```
 
-Use `direct_use`, `minor_edit`, or `reject` for the `评价` field. Keep failure
-reasons coarse in `问题类型`: `generation_error`, `too_generic`,
-`missing_core_value`, `wrong_tone`, `instruction_like`,
+Use the XLSX file when you want dropdowns. It includes dropdowns for
+`评分(1-5)`, `评价`, and `问题类型`. Use `评分(1-5)` as the primary quality
+signal:
+
+- `1`: unusable; generation failed, factually wrong, generic, or unsuitable.
+- `2`: weak; related to the topic but needs major rewriting.
+- `3`: usable direction; the editor would rewrite it before publishing.
+- `4`: good; only minor edits are needed.
+- `5`: excellent; can be used as the current post excerpt.
+
+Use `direct_use`, `minor_edit`, or `reject` for the `评价` field as the adoption
+decision. Keep failure reasons coarse in `问题类型`: `generation_error`,
+`too_generic`, `missing_core_value`, `wrong_tone`, `instruction_like`,
 `insufficient_coverage`, `too_marketing`, `too_short`, `too_long`,
 `unsupported_claim`, or `other`.
 
@@ -143,6 +155,30 @@ composer eval:summary:openings
 The report counts opening prefixes, audience-label rate, and cases where both
 candidates for the same sample use the same opening bucket. It does not call
 Cloud or WordPress.
+
+## Promptfoo Offline Metrics
+
+Use Promptfoo when comparing batches or prompt variants without hand-counting
+basic failures:
+
+```bash
+npm install -g promptfoo
+SUMMARY_PROMPTFOO_INPUT=tests/summary-eval/generated/muze-candidates-offset25-limit20.json \
+composer eval:summary:promptfoo
+```
+
+The Composer command first exports `tests/summary-eval/generated/promptfoo-cases.csv`
+and then runs the local `promptfoo eval -c tests/summary-eval/promptfoo.yaml`.
+The Promptfoo config treats generated candidates as offline outputs and scores
+them with local JavaScript assertions:
+
+- generation success: no `ERROR:` placeholder.
+- excerpt length: 50-160 Chinese characters, with 70-140 preferred.
+- meta framing: no `本文说明`, `这篇文章`, `这篇草稿主张`, or similar wording.
+- opening quality: formulaic `面向` / `适合` / `需要` openings receive a lower score.
+
+This layer is for repeatable prompt/batch comparison. It does not call Cloud,
+write WordPress data, or replace human 1-5 review scores.
 
 ## Next Layer
 
