@@ -98,6 +98,52 @@ Evaluate the generated candidates:
 php tests/summary-eval/run.php tests/summary-eval/generated/muze-candidates.json
 ```
 
+## Human Review Worksheet
+
+After candidates pass the hard gate, export a lightweight worksheet for manual
+adoption review:
+
+```bash
+composer eval:summary:review
+```
+
+The default input is `tests/summary-eval/generated/muze-candidates.json`. The
+command writes ignored local files with Chinese review columns:
+
+- `tests/summary-eval/generated/summary-human-review.md`
+- `tests/summary-eval/generated/summary-human-review.json`
+- `tests/summary-eval/generated/summary-human-review.csv`
+
+Override the input and output paths when reviewing a specific batch:
+
+```bash
+SUMMARY_REVIEW_INPUT=tests/summary-eval/generated/muze-candidates-offset25-limit20.json \
+SUMMARY_REVIEW_MD=tests/summary-eval/generated/muze-candidates-offset25-review.md \
+SUMMARY_REVIEW_JSON=tests/summary-eval/generated/muze-candidates-offset25-review.json \
+SUMMARY_REVIEW_CSV=tests/summary-eval/generated/muze-candidates-offset25-review.csv \
+composer eval:summary:review
+```
+
+Use `direct_use`, `minor_edit`, or `reject` for the `评价` field. Keep failure
+reasons coarse in `问题类型`: `generation_error`, `too_generic`,
+`missing_core_value`, `wrong_tone`, `instruction_like`,
+`insufficient_coverage`, `too_marketing`, `too_short`, `too_long`,
+`unsupported_claim`, or `other`.
+
+## Opening Diversity
+
+If generated excerpts start too often with formulaic audience labels such as
+`面向` or `适合`, run the offline opening analysis:
+
+```bash
+SUMMARY_OPENINGS_INPUT=tests/summary-eval/generated/muze-candidates-offset25-limit20.json \
+composer eval:summary:openings
+```
+
+The report counts opening prefixes, audience-label rate, and cases where both
+candidates for the same sample use the same opening bucket. It does not call
+Cloud or WordPress.
+
 ## Next Layer
 
 After the hard gate is stable, add a model-judged layer for faithfulness,
