@@ -234,6 +234,16 @@ The cross-judge command writes:
 - `tests/summary-eval/generated/promptfoo-judge-cross.json`
 - `tests/summary-eval/generated/promptfoo-judge-cross.csv`
 
+Override model-specific outputs with `SUMMARY_JUDGE_GPT55_OUTPUT` and
+`SUMMARY_JUDGE_DEEPSEEK_OUTPUT`. Override comparison inputs with
+`SUMMARY_JUDGE_PRIMARY` and `SUMMARY_JUDGE_SECONDARY`. Do not use the generic
+`SUMMARY_JUDGE_OUTPUT` for cross-model runs, because each model needs its own
+result file before comparison.
+
+Promptfoo may return a non-zero status when a grader marks candidates as weak.
+The Composer scripts still continue if the model result JSON is written,
+because low scores are review data rather than execution failures.
+
 Treat cross-judge results as triage, not final truth. Prioritize manual review
 when either model scores `1-2`, either model flags misleading or confusing
 logic, or the two model scores differ by 2 or more.
