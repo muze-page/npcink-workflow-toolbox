@@ -38,7 +38,7 @@ candidate excerpts for:
 - risky unsupported claims such as "保证", "最佳", "完全自动", or "无需人工".
 
 Universal fixtures can use tighter per-sample limits. Exported site samples use
-a practical default of 60-160 Chinese characters so the hard gate catches obvious
+a practical default of 50-160 Chinese characters so the hard gate catches obvious
 failures without rejecting concise but usable preview copy.
 
 To evaluate generated candidates, create a JSON file with the same shape and

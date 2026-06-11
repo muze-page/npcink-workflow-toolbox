@@ -243,11 +243,11 @@ foreach ( $source_samples as $sample ) {
 	}
 
 	if ( 'site_export' === (string) ( $sample['content_type'] ?? '' ) ) {
-		$length_min = (int) ( $sample['length']['min'] ?? 60 );
+		$length_min = (int) ( $sample['length']['min'] ?? 50 );
 		if ( ! is_array( $sample['length'] ?? null ) ) {
-			$sample['length'] = array( 'min' => 60, 'max' => 160 );
-		} elseif ( $length_min > 60 ) {
-			$sample['length']['min'] = 60;
+			$sample['length'] = array( 'min' => 50, 'max' => 160 );
+		} elseif ( $length_min > 50 ) {
+			$sample['length']['min'] = 50;
 		}
 	}
 

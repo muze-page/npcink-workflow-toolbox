@@ -3646,7 +3646,7 @@ final class Provider_Client {
 			),
 			'summary_suggestions' => array(
 				'output_shape'     => array(
-					'recommended_excerpt' => 'one best reader-facing WordPress excerpt candidate, target 70 to 140 Chinese characters and never below 60 or above 160 when the article is Chinese, grounded only in the supplied title, excerpt, and draft body; it must read like archive, search, and social preview copy after publication',
+					'recommended_excerpt' => 'one best reader-facing WordPress excerpt candidate, target 70 to 140 Chinese characters and never below 50 or above 160 when the article is Chinese, grounded only in the supplied title, excerpt, and draft body; it must read like archive, search, and social preview copy after publication',
 					'why_this_works'      => 'one short editor-facing reason that explains focus, audience value, and factual grounding',
 					'coverage_check'      => 'short checklist covering main topic, reader benefit, no unsupported claims, and no title repetition',
 					'alternate_excerpt'   => 'one alternate wording with the same facts and a different opening angle',
@@ -3975,7 +3975,7 @@ final class Provider_Client {
 				'Keep the answer short enough for an editor to review quickly.',
 				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
 				'For summary_suggestions, return the recommended excerpt first and keep it ready to paste into the WordPress excerpt field.',
-				'For summary_suggestions in Chinese, target 70 to 140 Chinese characters and rewrite before returning if either excerpt is under 60 or over 160 characters.',
+				'For summary_suggestions in Chinese, target 70 to 140 Chinese characters and rewrite before returning if either excerpt is under 50 or over 160 characters.',
 				'For summary_suggestions, the excerpt itself must be public-facing preview copy, not editor analysis; avoid meta lead-ins such as 本文说明, 本文介绍, 这篇文章, 该文章, 这篇草稿主张, this article, or this draft.',
 				'For summary_suggestions, prefer one compact JSON object with recommended_excerpt, why_this_works, coverage_check, and alternate_excerpt; do not wrap it in markdown fences.',
 				'For summary_suggestions regeneration, treat generation_variant as a fresh-request marker: use a different natural wording while preserving the same draft-grounded facts.',
