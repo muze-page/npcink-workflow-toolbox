@@ -458,8 +458,35 @@ msgstr "运行检查"
 msgid "Content Support"
 msgstr "内容支持"
 
-msgid "AI Draft Support"
-msgstr "AI 草稿支持"
+msgid "Writing Support"
+msgstr "写作辅助"
+
+msgid "Titles, summaries, outlines, and polish for human-written articles."
+msgstr "为人工撰写的文章提供标题、摘要、大纲和润色建议。"
+
+msgid "Title suggestions"
+msgstr "标题建议"
+
+msgid "Generate reviewable title options from the current draft context."
+msgstr "根据当前草稿上下文生成可审阅的标题选项。"
+
+msgid "Outline suggestions"
+msgstr "大纲建议"
+
+msgid "Build a compact outline that an editor can expand manually."
+msgstr "生成一份编辑可手动扩展的精简大纲。"
+
+msgid "Polish selected text"
+msgstr "润色选中文本"
+
+msgid "Improve clarity and tone for selected text or the current draft without adding facts."
+msgstr "在不添加事实的前提下，改善选中文本或当前草稿的清晰度和语气。"
+
+msgid "Polish notes"
+msgstr "润色说明"
+
+msgid "Content Support groups"
+msgstr "内容支持分组"
 
 msgid "Title and Summary Helper"
 msgstr "标题与摘要助手"
@@ -469,6 +496,27 @@ msgstr "根据提供的主题或草稿，建议可审阅标题、简短摘要和
 
 msgid "Suggest titles and summary"
 msgstr "建议标题和摘要"
+
+msgid "Review title options before replacing the post title."
+msgstr "替换文章标题前先审阅标题选项。"
+
+msgid "Use the outline as planning notes; it does not write the article body."
+msgstr "把大纲作为规划笔记使用；它不会写入文章正文。"
+
+msgid "Review polished wording against the original before using it."
+msgstr "使用润色文本前先与原文对照审阅。"
+
+msgid "Hosted AI suggestion"
+msgstr "托管 AI 建议"
+
+msgid "No title suggestions returned."
+msgstr "没有返回标题建议。"
+
+msgid "No outline suggestions returned."
+msgstr "没有返回大纲建议。"
+
+msgid "No polish suggestions returned."
+msgstr "没有返回润色建议。"
 
 msgid "Outline Helper"
 msgstr "大纲助手"
@@ -490,6 +538,9 @@ msgstr "润色草稿"
 
 msgid "Everyday Support"
 msgstr "日常支持"
+
+msgid "SEO/AEO/GEO, metadata, links, image candidates, and publish readiness."
+msgstr "SEO/AEO/GEO、元数据、链接、图片候选和发布就绪检查。"
 
 msgid "Build SEO, AEO, GEO, taxonomy, and proposal-field suggestions with saved context and Site Knowledge when available."
 msgstr "使用已保存上下文，并在可用时结合站点知识，生成 SEO、AEO、GEO、分类和提案字段建议。"
@@ -530,6 +581,9 @@ msgstr "查找图片"
 msgid "Fallback Bundles"
 msgstr "降级包"
 
+msgid "Combined artifacts for reviewed local workbench cases."
+msgstr "为已审阅的本地工作台场景提供组合制品。"
+
 msgid "Article Planning Bundle"
 msgstr "文章规划包"
 
@@ -551,6 +605,9 @@ msgstr "由支持能力和可选已审阅草稿组装一个本地工作台制品
 msgid "Governed Handoffs"
 msgstr "治理交接"
 
+msgid "Core-ready plans after reviewed editor choices exist."
+msgstr "在编辑已审阅选择后生成 Core 就绪计划。"
+
 msgid "Reviewed Draft Handoff"
 msgstr "已审阅草稿交接"
 
@@ -565,6 +622,9 @@ msgstr "将已审阅的图库、生成、自有或外部图片作为媒体导入
 
 msgid "Media"
 msgstr "媒体"
+
+msgid "Media briefs, image adoption plans, and existing-image optimization."
+msgstr "媒体简报、图片采用计划和现有图片优化。"
 
 msgid "Media Brief"
 msgstr "媒体简报"
@@ -1955,6 +2015,12 @@ msgstr "云端检查"
 msgid "AI Site Helpers"
 msgstr "AI 站点助手"
 
+msgid "Site Helpers"
+msgstr "站点助手"
+
+msgid "Small hosted checks for media ALT and public content opportunities."
+msgstr "用于媒体 ALT 和公开内容机会的小型托管检查。"
+
 msgid "Media ALT Suggestions"
 msgstr "媒体 ALT 建议"
 
@@ -2176,15 +2242,6 @@ msgstr "缺失"
 
 msgid "Present"
 msgstr "已存在"
-
-msgid "High"
-msgstr "高"
-
-msgid "Medium"
-msgstr "中"
-
-msgid "Low"
-msgstr "低"
 
 msgid "Checks"
 msgstr "检查项"

@@ -1087,60 +1087,8 @@ final class Admin_Page {
 	private function render_tool_cards( bool $cloud_ready ): void {
 		$tools = array(
 			array(
-				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
-				'id'          => 'ai-title-summary',
-				'endpoint'    => 'ai/content-support',
-				'title'       => __( 'Title and Summary Helper', 'npcink-toolbox' ),
-				'description' => __( 'Suggest reviewable titles, a short excerpt, and a direct answer summary from the supplied topic or draft.', 'npcink-toolbox' ),
-				'intent'      => 'title_summary',
-				'button'      => __( 'Suggest titles and summary', 'npcink-toolbox' ),
-				'custom'      => 'content_support_flow',
-				'powered_by'  => 'hosted_ai',
-			),
-			array(
-				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
-				'id'          => 'ai-outline',
-				'endpoint'    => 'ai/content-support',
-				'title'       => __( 'Outline Helper', 'npcink-toolbox' ),
-				'description' => __( 'Turn a topic, brief, or rough notes into a compact outline that an editor can expand manually.', 'npcink-toolbox' ),
-				'intent'      => 'article_outline',
-				'button'      => __( 'Build outline', 'npcink-toolbox' ),
-				'custom'      => 'content_support_flow',
-				'powered_by'  => 'hosted_ai',
-			),
-			array(
-				'group'       => __( 'AI Draft Support', 'npcink-toolbox' ),
-				'id'          => 'ai-polish',
-				'endpoint'    => 'ai/content-support',
-				'title'       => __( 'Polish Helper', 'npcink-toolbox' ),
-				'description' => __( 'Rewrite a short draft section for clarity and tone while keeping the original meaning reviewable.', 'npcink-toolbox' ),
-				'intent'      => 'polish_notes',
-				'button'      => __( 'Polish draft', 'npcink-toolbox' ),
-				'custom'      => 'content_support_flow',
-				'powered_by'  => 'hosted_ai',
-			),
-			array(
-				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
-				'id'          => 'ai-media-alt-suggestions',
-				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Media ALT Suggestions', 'npcink-toolbox' ),
-				'description' => __( 'Sample recent image metadata with missing or weak ALT and return reviewable ALT/caption ideas.', 'npcink-toolbox' ),
-				'intent'      => 'media_alt_suggestions',
-				'button'      => __( 'Suggest media ALT', 'npcink-toolbox' ),
-				'custom'      => 'hosted_ai_site_helper',
-			),
-			array(
-				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
-				'id'          => 'ai-content-snapshot-suggestions',
-				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Content Snapshot Suggestions', 'npcink-toolbox' ),
-				'description' => __( 'Review a bounded public content snapshot and return a few content opportunities, not a full site audit.', 'npcink-toolbox' ),
-				'intent'      => 'content_snapshot_suggestions',
-				'button'      => __( 'Suggest content opportunities', 'npcink-toolbox' ),
-				'custom'      => 'hosted_ai_site_helper',
-			),
-			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'discoverability-brief',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Discoverability Brief', 'npcink-toolbox' ),
@@ -1151,6 +1099,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'publish-preflight',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Publish Preflight', 'npcink-toolbox' ),
@@ -1161,6 +1110,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'summary-terms-optimization',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Summary and Terms Optimization', 'npcink-toolbox' ),
@@ -1171,6 +1121,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'taxonomy-tags',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Existing Taxonomy/Tag Candidates', 'npcink-toolbox' ),
@@ -1181,6 +1132,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'internal-links',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Internal Link Candidates', 'npcink-toolbox' ),
@@ -1191,6 +1143,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'group_id'    => 'everyday-support',
 				'id'          => 'image-candidates',
 				'endpoint'    => 'editor/content-support',
 				'title'       => __( 'Image Candidates', 'npcink-toolbox' ),
@@ -1200,7 +1153,30 @@ final class Admin_Page {
 				'custom'      => 'content_support_flow',
 			),
 			array(
+				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
+				'group_id'    => 'site-helpers',
+				'id'          => 'ai-media-alt-suggestions',
+				'endpoint'    => 'ai/site-helpers',
+				'title'       => __( 'Media ALT Suggestions', 'npcink-toolbox' ),
+				'description' => __( 'Sample recent image metadata with missing or weak ALT and return reviewable ALT/caption ideas.', 'npcink-toolbox' ),
+				'intent'      => 'media_alt_suggestions',
+				'button'      => __( 'Suggest media ALT', 'npcink-toolbox' ),
+				'custom'      => 'hosted_ai_site_helper',
+			),
+			array(
+				'group'       => __( 'AI Site Helpers', 'npcink-toolbox' ),
+				'group_id'    => 'site-helpers',
+				'id'          => 'ai-content-snapshot-suggestions',
+				'endpoint'    => 'ai/site-helpers',
+				'title'       => __( 'Content Snapshot Suggestions', 'npcink-toolbox' ),
+				'description' => __( 'Review a bounded public content snapshot and return a few content opportunities, not a full site audit.', 'npcink-toolbox' ),
+				'intent'      => 'content_snapshot_suggestions',
+				'button'      => __( 'Suggest content opportunities', 'npcink-toolbox' ),
+				'custom'      => 'hosted_ai_site_helper',
+			),
+			array(
 				'group'       => __( 'Fallback Bundles', 'npcink-toolbox' ),
+				'group_id'    => 'fallback-bundles',
 				'id'          => 'article-brief',
 				'endpoint'    => 'flows/article-brief',
 				'title'       => __( 'Article Planning Bundle', 'npcink-toolbox' ),
@@ -1211,6 +1187,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Fallback Bundles', 'npcink-toolbox' ),
+				'group_id'    => 'fallback-bundles',
 				'id'          => 'article-assistant',
 				'endpoint'    => 'flows/article-assistant',
 				'title'       => __( 'Article Assistant Fallback', 'npcink-toolbox' ),
@@ -1219,6 +1196,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Governed Handoffs', 'npcink-toolbox' ),
+				'group_id'    => 'governed-handoffs',
 				'id'          => 'article-plan',
 				'endpoint'    => 'flows/article-plan',
 				'title'       => __( 'Reviewed Draft Handoff', 'npcink-toolbox' ),
@@ -1227,6 +1205,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Governed Handoffs', 'npcink-toolbox' ),
+				'group_id'    => 'governed-handoffs',
 				'id'          => 'image-candidate-adoption',
 				'endpoint'    => 'flows/image-candidate-adoption-plan',
 				'title'       => __( 'Adopt New Image', 'npcink-toolbox' ),
@@ -1235,6 +1214,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Media', 'npcink-toolbox' ),
+				'group_id'    => 'media',
 				'id'          => 'media-brief',
 				'endpoint'    => 'flows/media-brief',
 				'title'       => __( 'Media Brief', 'npcink-toolbox' ),
@@ -1245,6 +1225,7 @@ final class Admin_Page {
 			),
 			array(
 				'group'       => __( 'Media', 'npcink-toolbox' ),
+				'group_id'    => 'media',
 				'id'          => 'media-derivative',
 				'endpoint'    => 'media-derivative-handoff',
 				'title'       => __( 'Optimize Existing Image', 'npcink-toolbox' ),
@@ -1252,22 +1233,83 @@ final class Admin_Page {
 				'custom'      => 'media_derivative',
 			),
 		);
+		$tool_groups = array(
+			'everyday-support'  => array(
+				'title'       => __( 'Everyday Support', 'npcink-toolbox' ),
+				'description' => __( 'SEO/AEO/GEO, metadata, links, image candidates, and publish readiness.', 'npcink-toolbox' ),
+			),
+			'site-helpers'      => array(
+				'title'       => __( 'Site Helpers', 'npcink-toolbox' ),
+				'description' => __( 'Small hosted checks for media ALT and public content opportunities.', 'npcink-toolbox' ),
+			),
+			'fallback-bundles'  => array(
+				'title'       => __( 'Fallback Bundles', 'npcink-toolbox' ),
+				'description' => __( 'Combined artifacts for reviewed local workbench cases.', 'npcink-toolbox' ),
+			),
+			'governed-handoffs' => array(
+				'title'       => __( 'Governed Handoffs', 'npcink-toolbox' ),
+				'description' => __( 'Core-ready plans after reviewed editor choices exist.', 'npcink-toolbox' ),
+			),
+			'media'             => array(
+				'title'       => __( 'Media', 'npcink-toolbox' ),
+				'description' => __( 'Media briefs, image adoption plans, and existing-image optimization.', 'npcink-toolbox' ),
+			),
+		);
 		?>
 		<div class="npcink-toolbox__tool-workspace" data-toolbox-tools>
+			<div class="npcink-toolbox__tool-group-tabs" aria-label="<?php esc_attr_e( 'Content Support groups', 'npcink-toolbox' ); ?>">
+				<?php
+				$rendered_groups = array();
+				foreach ( $tools as $index => $tool ) :
+					$group_id = (string) ( $tool['group_id'] ?? '' );
+					if ( '' === $group_id || isset( $rendered_groups[ $group_id ] ) ) {
+						continue;
+					}
+					$rendered_groups[ $group_id ] = true;
+					$group_meta                   = $tool_groups[ $group_id ] ?? array(
+						'title'       => (string) ( $tool['group'] ?? '' ),
+						'description' => '',
+					);
+					?>
+					<button type="button" class="npcink-toolbox__tool-group-tab <?php echo 0 === $index ? 'is-active' : ''; ?>" data-toolbox-tool-group-target="<?php echo esc_attr( $group_id ); ?>" aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>">
+						<span><?php echo esc_html( (string) $group_meta['title'] ); ?></span>
+						<small><?php echo esc_html( (string) $group_meta['description'] ); ?></small>
+					</button>
+				<?php endforeach; ?>
+			</div>
+
 			<div class="npcink-toolbox__tool-list" aria-label="<?php esc_attr_e( 'Tool actions', 'npcink-toolbox' ); ?>">
 				<?php
-				$current_group = '';
+				$rendered_groups = array();
 				foreach ( $tools as $index => $tool ) :
-					$group = (string) ( $tool['group'] ?? '' );
-					if ( '' !== $group && $group !== $current_group ) :
-						$current_group = $group;
+					$group_id = (string) ( $tool['group_id'] ?? '' );
+					if ( '' === $group_id ) {
+						continue;
+					}
+					if ( ! isset( $rendered_groups[ $group_id ] ) ) :
+						$rendered_groups[ $group_id ] = true;
+						$group_meta                   = $tool_groups[ $group_id ] ?? array(
+							'title'       => (string) ( $tool['group'] ?? '' ),
+							'description' => '',
+						);
 						?>
-						<div class="npcink-toolbox__tool-group-label"><?php echo esc_html( $group ); ?></div>
+						<div class="npcink-toolbox__tool-group-panel" data-toolbox-tool-group-panel="<?php echo esc_attr( $group_id ); ?>" <?php echo 0 === $index ? '' : 'hidden'; ?>>
+							<div class="npcink-toolbox__tool-group-label">
+								<span><?php echo esc_html( (string) $group_meta['title'] ); ?></span>
+								<small><?php echo esc_html( (string) $group_meta['description'] ); ?></small>
+							</div>
 					<?php endif; ?>
-					<button type="button" class="npcink-toolbox__tool-button <?php echo 0 === $index ? 'is-active' : ''; ?>" data-toolbox-tool-target="<?php echo esc_attr( (string) $tool['id'] ); ?>" aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>">
-						<span><?php echo esc_html( (string) $tool['title'] ); ?></span>
-						<small><?php echo esc_html( (string) $tool['description'] ); ?></small>
-					</button>
+						<button type="button" class="npcink-toolbox__tool-button <?php echo 0 === $index ? 'is-active' : ''; ?>" data-toolbox-tool-target="<?php echo esc_attr( (string) $tool['id'] ); ?>" data-toolbox-tool-group="<?php echo esc_attr( $group_id ); ?>" aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>">
+							<span><?php echo esc_html( (string) $tool['title'] ); ?></span>
+							<small><?php echo esc_html( (string) $tool['description'] ); ?></small>
+						</button>
+					<?php
+					$next_tool     = $tools[ $index + 1 ] ?? null;
+					$next_group_id = is_array( $next_tool ) ? (string) ( $next_tool['group_id'] ?? '' ) : '';
+					if ( $next_group_id !== $group_id ) :
+						?>
+						</div>
+					<?php endif; ?>
 				<?php endforeach; ?>
 			</div>
 

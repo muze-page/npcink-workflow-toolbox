@@ -3900,6 +3900,42 @@
 		return activeTarget(panel, '[data-toolbox-cloud-check-group-target]', 'data-toolbox-cloud-check-group-target');
 	}
 
+	function toolGroupForTool(workspace, target) {
+		let group = '';
+		workspace.querySelectorAll('[data-toolbox-tool-target]').forEach((button) => {
+			if (!group && button.getAttribute('data-toolbox-tool-target') === target) {
+				group = button.getAttribute('data-toolbox-tool-group') || '';
+			}
+		});
+		return group;
+	}
+
+	function firstToolInGroup(workspace, group) {
+		let target = '';
+		workspace.querySelectorAll('[data-toolbox-tool-target]').forEach((button) => {
+			if (!target && button.getAttribute('data-toolbox-tool-group') === group) {
+				target = button.getAttribute('data-toolbox-tool-target') || '';
+			}
+		});
+		return target;
+	}
+
+	function activateToolGroupPanel(workspace, group) {
+		if (!workspace || !hasTarget(workspace, '[data-toolbox-tool-group-target]', 'data-toolbox-tool-group-target', group)) {
+			return false;
+		}
+
+		activateTarget(
+			workspace,
+			'[data-toolbox-tool-group-target]',
+			'[data-toolbox-tool-group-panel]',
+			'data-toolbox-tool-group-target',
+			'data-toolbox-tool-group-panel',
+			group
+		);
+		return true;
+	}
+
 	function updateUrlForTopTab(target) {
 		if (target === 'tools') {
 			updateToolboxUrl({
@@ -3959,6 +3995,11 @@
 			return false;
 		}
 
+		const group = toolGroupForTool(workspace, target);
+		if (group) {
+			activateToolGroupPanel(workspace, group);
+		}
+
 		activateTarget(
 			workspace,
 			'[data-toolbox-tool-target]',
@@ -3977,6 +4018,20 @@
 			});
 		}
 		return true;
+	}
+
+	function activateToolGroup(group, updateUrl) {
+		const workspace = document.querySelector('[data-toolbox-tools]');
+		if (!activateToolGroupPanel(workspace, group)) {
+			return false;
+		}
+
+		const target = firstToolInGroup(workspace, group);
+		if (!target) {
+			return false;
+		}
+
+		return activateToolPanel(target, updateUrl);
 	}
 
 	function activateCloudCheckPanel(target, updateUrl) {
@@ -4074,6 +4129,12 @@
 		document.querySelectorAll('[data-toolbox-tools]').forEach((workspace) => {
 			workspace.addEventListener('click', (event) => {
 				if (!(event.target instanceof Element)) {
+					return;
+				}
+
+				const groupButton = event.target.closest('[data-toolbox-tool-group-target]');
+				if (groupButton && workspace.contains(groupButton)) {
+					activateToolGroup(groupButton.getAttribute('data-toolbox-tool-group-target'), true);
 					return;
 				}
 

@@ -43,9 +43,10 @@ through host-governed WordPress abilities and Npcink Governance Core approval.
 * Added content context validation and content discoverability brief abilities.
 * Added a high-level AI article writing pack ability for OpenClaw-style natural
   language article requests.
-* Added an AI Draft Support entry group for lightweight title/summary,
-  outline, polish, and summary/category/tag optimization suggestions through
-  the hosted runtime.
+* Kept lightweight writing preparation, title suggestions, outline support,
+  polish notes, summary, taxonomy/tag, internal-link, image, and
+  publish-readiness support in the post editor Content Support sidebar where
+  current article context is available.
 * Added a summary/category/tag optimization fixed flow that returns
   layered summary candidates, existing-term-first category/tag candidates,
   ranking reasons, dedupe guidance, review metrics, and a

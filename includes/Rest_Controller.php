@@ -488,7 +488,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'writing_support', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'writing_support', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
@@ -541,6 +541,18 @@ final class Rest_Controller {
 
 		if ( 'taxonomy_tags' === $intent ) {
 			$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
+		}
+
+		if ( 'title_suggestions' === $intent ) {
+			$result['sections']['title_suggestions'] = $this->editor_hosted_draft_support( $context, 'title_summary' );
+		}
+
+		if ( 'article_outline' === $intent ) {
+			$result['sections']['article_outline'] = $this->editor_hosted_draft_support( $context, 'article_outline' );
+		}
+
+		if ( 'polish_notes' === $intent ) {
+			$result['sections']['polish_notes'] = $this->editor_hosted_draft_support( $context, 'polish_notes' );
 		}
 
 		if ( 'summary_suggestions' === $intent ) {
@@ -1460,6 +1472,44 @@ final class Rest_Controller {
 		$section['generation_variant']  = sanitize_text_field( (string) ( $context['generation_variant'] ?? '' ) );
 		$section['quality_contract']    = is_array( $summary_ai['quality_contract'] ?? null ) ? $summary_ai['quality_contract'] : array();
 		$section['review_checklist']    = is_array( $summary_ai['review_checklist'] ?? null ) ? $summary_ai['review_checklist'] : array();
+
+		return $section;
+	}
+
+	private function editor_hosted_draft_support( array $context, string $provider_intent ): array {
+		$content = (string) ( $context['content_text'] ?? '' );
+		if ( 'polish_notes' === $provider_intent ) {
+			$selected = trim(
+				implode(
+					"\n\n",
+					array_filter(
+						array(
+							(string) ( $context['selected_text'] ?? '' ),
+							(string) ( $context['selected_block_text'] ?? '' ),
+						)
+					)
+				)
+			);
+			if ( '' !== $selected ) {
+				$content = $selected;
+			}
+		}
+
+		$section = $this->editor_support_section(
+			$this->client->run_hosted_ai_content_support(
+				array(
+					'intent'             => $provider_intent,
+					'post_id'            => absint( $context['post_id'] ?? 0 ),
+					'title'              => (string) ( $context['title'] ?? '' ),
+					'excerpt'            => (string) ( $context['excerpt'] ?? '' ),
+					'content'            => $content,
+					'generation_variant' => (string) ( $context['generation_variant'] ?? '' ),
+				)
+			)
+		);
+		$section['provider_execution'] = 'hosted_ai';
+		$section['provider_intent']    = $provider_intent;
+		$section['write_posture']      = 'suggestion_only';
 
 		return $section;
 	}

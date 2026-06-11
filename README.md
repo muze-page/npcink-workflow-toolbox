@@ -17,9 +17,10 @@ The first version provides:
 
 - a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
-- an **AI Draft Support** entry group in Content Support for
-  lightweight title/summary, outline, and polish suggestions rather than
-  one-click long-form article generation;
+- a post editor **Npcink Content Support** sidebar for writing preparation,
+  title suggestions, outline support, polish notes, summary suggestions,
+  taxonomy/tag, internal-link, image, and publish readiness support around
+  human-written articles;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
@@ -306,14 +307,13 @@ minutes and show those Cloud signals, but it must not own provider routing,
 image indexing, media-library writes, settings writes, or long-term adoption
 history.
 
-The admin **Content Support** tab mirrors that fixed-flow posture. Its default
-AI Draft Support group runs lightweight title/summary, outline, and
-polish helpers through the Cloud hosted AI runtime when that route is
-available. These helpers are deliberately scoped to local draft support and
-must not be presented as one-click article generation. Each hosted result
-carries a small quality contract with an expected output shape, review
-checklist, and reject-if rules so operators can discard unsupported or
-full-article output quickly.
+The post editor **Npcink Content Support** sidebar owns high-frequency writing
+preparation, title suggestions, outline support, polish notes, summary,
+taxonomy/tag, internal-link, image, and publish-readiness support because those
+actions need the current article context. The admin
+**Content Support** tab stays focused on cross-article checks, fallback
+bundles, governed handoffs, and media planning rather than draft-side writing
+buttons.
 The separate AI Site Helpers group uses the same hosted AI posture for media
 ALT suggestions and bounded content snapshot opportunities. Toolbox samples a
 small amount of public-site or media metadata, Cloud produces reviewable

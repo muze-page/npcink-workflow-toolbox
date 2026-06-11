@@ -135,6 +135,21 @@
 			description: __('Build a source-backed preparation checklist before drafting the article body.', 'npcink-toolbox'),
 		},
 		{
+			intent: 'title_suggestions',
+			label: __('Title suggestions', 'npcink-toolbox'),
+			description: __('Generate reviewable title options from the current draft context.', 'npcink-toolbox'),
+		},
+		{
+			intent: 'article_outline',
+			label: __('Outline suggestions', 'npcink-toolbox'),
+			description: __('Build a compact outline that an editor can expand manually.', 'npcink-toolbox'),
+		},
+		{
+			intent: 'polish_notes',
+			label: __('Polish selected text', 'npcink-toolbox'),
+			description: __('Improve clarity and tone for selected text or the current draft without adding facts.', 'npcink-toolbox'),
+		},
+		{
 			intent: 'publish_preflight',
 			label: __('Publish preflight', 'npcink-toolbox'),
 			description: __('Check missing terms, excerpt, image, duplicate risk, and discoverability hints.', 'npcink-toolbox'),
@@ -716,6 +731,9 @@
 			tag_suggestions: __('Tag suggestions', 'npcink-toolbox'),
 			metadata_suggestions: __('Metadata suggestions', 'npcink-toolbox'),
 			summary_terms_optimization: __('Metadata optimization', 'npcink-toolbox'),
+			title_suggestions: __('Title suggestions', 'npcink-toolbox'),
+			article_outline: __('Outline suggestions', 'npcink-toolbox'),
+			polish_notes: __('Polish notes', 'npcink-toolbox'),
 			internal_link_candidates: __('Internal link candidates', 'npcink-toolbox'),
 			internal_links: __('Internal links', 'npcink-toolbox'),
 			pre_publish_review: __('Pre-publish review', 'npcink-toolbox'),
@@ -812,6 +830,15 @@
 		if (value === 'writing_support') {
 			return __('Writing preparation', 'npcink-toolbox');
 		}
+		if (value === 'title_suggestions') {
+			return __('Title suggestions', 'npcink-toolbox');
+		}
+		if (value === 'article_outline') {
+			return __('Outline suggestions', 'npcink-toolbox');
+		}
+		if (value === 'polish_notes') {
+			return __('Polish selected text', 'npcink-toolbox');
+		}
 		if (value === 'summary_terms_optimization') {
 			return __('Metadata optimization', 'npcink-toolbox');
 		}
@@ -828,6 +855,15 @@
 	}
 
 	function resultScopeLabel(value) {
+		if (value === 'title_suggestions') {
+			return __('Review title options before replacing the post title.', 'npcink-toolbox');
+		}
+		if (value === 'article_outline') {
+			return __('Use the outline as planning notes; it does not write the article body.', 'npcink-toolbox');
+		}
+		if (value === 'polish_notes') {
+			return __('Review polished wording against the original before using it.', 'npcink-toolbox');
+		}
 		if (value === 'summary_suggestions') {
 			return __('AI reads the current draft and returns an editor-ready excerpt candidate.', 'npcink-toolbox');
 		}
@@ -1662,6 +1698,28 @@
 		});
 	}
 
+	function hostedWritingSupportItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		if (Array.isArray(section.items) && section.items.length) {
+			return section.items;
+		}
+		const output = section.output_json && typeof section.output_json === 'object' ? section.output_json : {};
+		const outputKeys = Object.keys(output);
+		if (outputKeys.length) {
+			return outputKeys.map((key) => ({
+				name: formatMetaLabel(key),
+				detail: readableItemText(output[key], ''),
+			})).filter((item) => item.detail);
+		}
+		const outputText = section.output_text || section.text || '';
+		return outputText ? [{
+			name: __('Hosted AI suggestion', 'npcink-toolbox'),
+			detail: outputText,
+		}] : [];
+	}
+
 	function discoverabilitySuggestionItems(section) {
 		const suggestions = section && section.candidate_suggestions ? section.candidate_suggestions : {};
 		return Object.keys(suggestions).map((field) => ({
@@ -2194,6 +2252,21 @@
 			blocks.push(renderItems(extractWritingSupportItems(sections.writing_support), __('No writing preparation evidence returned.', 'npcink-toolbox')));
 		}
 
+		if (sections.title_suggestions) {
+			blocks.push(createElement('h4', { key: 'title-suggestions-title' }, __('Title suggestions', 'npcink-toolbox')));
+			blocks.push(renderItems(hostedWritingSupportItems(sections.title_suggestions), __('No title suggestions returned.', 'npcink-toolbox')));
+		}
+
+		if (sections.article_outline) {
+			blocks.push(createElement('h4', { key: 'article-outline-title' }, __('Outline suggestions', 'npcink-toolbox')));
+			blocks.push(renderItems(hostedWritingSupportItems(sections.article_outline), __('No outline suggestions returned.', 'npcink-toolbox')));
+		}
+
+		if (sections.polish_notes) {
+			blocks.push(createElement('h4', { key: 'polish-notes-title' }, __('Polish notes', 'npcink-toolbox')));
+			blocks.push(renderItems(hostedWritingSupportItems(sections.polish_notes), __('No polish suggestions returned.', 'npcink-toolbox')));
+		}
+
 		if (sections.pre_publish_review) {
 			blocks.push(createElement('h4', { key: 'pre-publish-review-title' }, __('Pre-publish review', 'npcink-toolbox')));
 			blocks.push(renderItems(prePublishReviewItems(sections.pre_publish_review), __('No pre-publish review returned.', 'npcink-toolbox')));
@@ -2411,7 +2484,7 @@
 					intent,
 					category_ids: Array.isArray(postContext.category_ids) ? postContext.category_ids.join(',') : '',
 					tag_ids: Array.isArray(postContext.tag_ids) ? postContext.tag_ids.join(',') : '',
-					generation_variant: intent === 'summary_suggestions' ? String(Date.now()) : '',
+					generation_variant: ['title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions'].indexOf(intent) >= 0 ? String(Date.now()) : '',
 				});
 				const flowResult = await postJson('editor/content-support', payload);
 				setResult((current) => mergeContentSupportResult(current, flowResult, intent));

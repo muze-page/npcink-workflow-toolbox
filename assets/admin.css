@@ -133,9 +133,62 @@
 	align-items: start;
 }
 
+.npcink-toolbox__tool-group-tabs {
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 10px;
+}
+
+.npcink-toolbox__tool-group-tab {
+	appearance: none;
+	display: block;
+	min-height: 82px;
+	padding: 14px 16px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	color: #1d2327;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+}
+
+.npcink-toolbox__tool-group-tab:hover,
+.npcink-toolbox__tool-group-tab:focus {
+	border-color: #2271b1;
+}
+
+.npcink-toolbox__tool-group-tab.is-active {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	box-shadow: inset 0 -3px 0 #2271b1;
+}
+
+.npcink-toolbox__tool-group-tab span {
+	display: block;
+	margin: 0 0 4px;
+	font-weight: 600;
+}
+
+.npcink-toolbox__tool-group-tab small {
+	display: block;
+	color: #646970;
+	line-height: 1.35;
+}
+
 .npcink-toolbox__tool-list {
 	display: grid;
 	gap: 8px;
+}
+
+.npcink-toolbox__tool-group-panel {
+	display: grid;
+	gap: 8px;
+}
+
+.npcink-toolbox__tool-group-panel[hidden] {
+	display: none;
 }
 
 .npcink-toolbox__tool-group-label {
@@ -146,6 +199,15 @@
 	letter-spacing: 0.02em;
 	line-height: 1.4;
 	text-transform: uppercase;
+}
+
+.npcink-toolbox__tool-group-label small {
+	display: block;
+	margin-top: 2px;
+	font-size: 12px;
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
 }
 
 .npcink-toolbox__tool-group-label:first-child {
