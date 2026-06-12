@@ -2617,7 +2617,7 @@ final class Rest_Controller {
 		);
 	}
 
-	private function editor_summary_terms_auto_apply_actions( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
+	private function editor_summary_terms_core_handoff_candidates( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
 		$summary_layer_ids = array_values(
 			array_filter(
 				array_map(
@@ -2728,7 +2728,7 @@ final class Rest_Controller {
 	}
 
 	private function editor_summary_terms_handoff_preview( array $summary_layers, array $categories, array $tags, array $proposed_new_terms ): array {
-		$auto_apply_actions = $this->editor_summary_terms_auto_apply_actions( $summary_layers, $categories, $tags, $proposed_new_terms );
+		$core_handoff_candidates = $this->editor_summary_terms_core_handoff_candidates( $summary_layers, $categories, $tags, $proposed_new_terms );
 
 		return array(
 			'artifact_type'             => 'summary_terms_handoff_preview.v1',
@@ -2737,7 +2737,7 @@ final class Rest_Controller {
 			'final_write_path'          => 'core_proposal_required',
 			'direct_wordpress_write'    => false,
 			'preview_only'              => true,
-			'auto_apply_actions'        => $auto_apply_actions,
+			'core_handoff_candidates'   => $core_handoff_candidates,
 			'core_auto_approval_policy' => array(
 				'request_supported'          => true,
 				'toolbox_direct_apply'       => false,
@@ -2753,9 +2753,9 @@ final class Rest_Controller {
 				),
 			),
 			'available_fields'          => array(
-				'summary_layers'      => $auto_apply_actions[0]['available_fields'],
-				'existing_categories' => $auto_apply_actions[2]['available_fields'],
-				'existing_tags'       => $auto_apply_actions[1]['available_fields'],
+				'summary_layers'      => $core_handoff_candidates[0]['available_fields'],
+				'existing_categories' => $core_handoff_candidates[2]['available_fields'],
+				'existing_tags'       => $core_handoff_candidates[1]['available_fields'],
 				'proposed_new_terms'  => count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() ),
 			),
 			'blocked_actions'        => array(

@@ -2800,13 +2800,13 @@
 			evidenceBlocks.push(renderItems(section.review_metrics.items || [], __('No review metrics returned.', 'npcink-toolbox')));
 		}
 
-		if (section.handoff_preview) {
-			if (Array.isArray(section.handoff_preview.auto_apply_actions)) {
-				evidenceBlocks.push(createElement('h4', { key: 'summary-auto-apply-title' }, __('Core handoff candidates', 'npcink-toolbox')));
-				evidenceBlocks.push(renderItems(section.handoff_preview.auto_apply_actions, __('No Core handoff candidates returned.', 'npcink-toolbox')));
-			}
-			evidenceBlocks.push(createElement('h4', { key: 'summary-handoff-preview-title' }, __('Handoff preview', 'npcink-toolbox')));
-			evidenceBlocks.push(renderItems((section.handoff_preview.next_steps || []).map((step) => ({ name: step })), __('No handoff preview returned.', 'npcink-toolbox')));
+			if (section.handoff_preview) {
+				if (Array.isArray(section.handoff_preview.core_handoff_candidates)) {
+					evidenceBlocks.push(createElement('h4', { key: 'summary-core-handoff-candidates-title' }, __('Core handoff candidates', 'npcink-toolbox')));
+					evidenceBlocks.push(renderItems(section.handoff_preview.core_handoff_candidates, __('No Core handoff candidates returned.', 'npcink-toolbox')));
+				}
+				evidenceBlocks.push(createElement('h4', { key: 'summary-handoff-preview-title' }, __('Handoff preview', 'npcink-toolbox')));
+				evidenceBlocks.push(renderItems((section.handoff_preview.next_steps || []).map((step) => ({ name: step })), __('No handoff preview returned.', 'npcink-toolbox')));
 		}
 
 		if (metadataHandoffControls && metadataHandoffControls.showHandoff && (metadataHandoffHasChoices(section) || mergedMetadataRun)) {

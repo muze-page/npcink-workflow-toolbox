@@ -2135,15 +2135,15 @@
 		if (Array.isArray(section.risk_notes)) {
 			renderSupportItems(container, 'Review notes', section.risk_notes.map((note) => ({ name: note })), 'No review notes returned.');
 		}
-		if (section.review_metrics) {
-			renderSupportItems(container, 'Review metrics', supportItems(section.review_metrics), 'No review metrics returned.');
-		}
-		if (section.handoff_preview) {
-			if (Array.isArray(section.handoff_preview.auto_apply_actions)) {
-				renderSupportItems(container, 'Core handoff candidates', section.handoff_preview.auto_apply_actions, 'No Core handoff candidates returned.');
+			if (section.review_metrics) {
+				renderSupportItems(container, 'Review metrics', supportItems(section.review_metrics), 'No review metrics returned.');
 			}
-			renderSupportItems(container, 'Handoff preview', (section.handoff_preview.next_steps || []).map((step) => ({ name: step })), 'No handoff preview returned.');
-			container.appendChild(createRawDetails(section.handoff_preview, 'Handoff preview packet'));
+			if (section.handoff_preview) {
+				if (Array.isArray(section.handoff_preview.core_handoff_candidates)) {
+					renderSupportItems(container, 'Core handoff candidates', section.handoff_preview.core_handoff_candidates, 'No Core handoff candidates returned.');
+				}
+				renderSupportItems(container, 'Handoff preview', (section.handoff_preview.next_steps || []).map((step) => ({ name: step })), 'No handoff preview returned.');
+				container.appendChild(createRawDetails(section.handoff_preview, 'Handoff preview packet'));
 		}
 	}
 

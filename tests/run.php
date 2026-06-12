@@ -80,6 +80,14 @@ foreach ( array( 'media_optimization_v1', 'Optimize Existing Image', 'one Core m
 }
 toolbox_assert( false !== strpos( $boundary_doc, 'must not be treated as Local Admin Consent expansion' ) && false !== strpos( $boundary_doc, '`strong_local_confirmation` UX and audit contract' ) && false !== strpos( $boundary_doc, 'accepted metadata choices stay on the Core proposal path' ), 'Boundary doc keeps metadata direct apply behind a future strong-local-confirmation contract.' );
 
+$cross_repo_boundary_doc = file_get_contents( $root . '/docs/cross-repo-boundary-matrix.md' );
+foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'magick-ai-adapter', 'magick-ai-toolbox', 'magick-ai-cloud-addon', 'magick-ai-cloud' ) as $boundary_repo_name ) {
+	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $boundary_repo_name ), 'Cross-repo boundary matrix includes repo: ' . $boundary_repo_name );
+}
+foreach ( array( 'Core preflight', 'host approval context', 'The only current Toolbox Local Admin Consent write path', 'metadata apply', 'SEO mutation', 'media import', 'settings mutation', 'batch operation', 'second ability registry, workflow registry, approval store' ) as $required_cross_repo_boundary_text ) {
+	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_cross_repo_boundary_text ), 'Cross-repo boundary matrix preserves boundary: ' . $required_cross_repo_boundary_text );
+}
+
 $media_optimization_doc = file_get_contents( $root . '/docs/media-optimization-v1.md' );
 foreach ( array( 'media_optimization_v1', 'fixed, governed Toolbox workflow', 'not a new workflow runtime', 'Select media', 'Generate Cloud preview', 'Review media metadata', 'Submit optimization review', 'persistent Toolbox run table', 'one Core proposal', 'Expansion Rule' ) as $required_media_optimization_doc ) {
 	toolbox_assert( false !== strpos( $media_optimization_doc, $required_media_optimization_doc ), 'Media Optimization V1 doc preserves the fixed workflow contract: ' . $required_media_optimization_doc );
@@ -108,6 +116,7 @@ toolbox_assert( false !== strpos( $adr_local_admin_consent, 'Future Strong Local
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Product Readiness' ), 'README links the current content support readiness matrix.' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Release And Trial Closeout' ), 'README links the content support release and trial closeout.' );
+toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ), 'README links the cross-repo boundary matrix.' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
 	toolbox_assert( false !== strpos( $readme, $required_readme_text ), 'README preserves fixed-button positioning: ' . $required_readme_text );
 }
@@ -701,6 +710,11 @@ toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route ma
 toolbox_assert( false !== strpos( $rest, "'methods'             => 'GET'" ) && false !== strpos( $rest, "private function post( string \$route, string \$method ): void" ) && false !== strpos( $rest, "'methods'             => 'POST'" ), 'REST route matrix keeps status as GET and tool actions as POST.' );
 toolbox_assert( false !== strpos( $rest, 'editor_content_support' ) && false !== strpos( $rest, "'artifact_type'          => 'editor_content_support_flow'" ) && false !== strpos( $rest, 'editor_support_section' ), 'REST controller exposes a safe suggestion-only editor content support flow.' );
 toolbox_assert( false !== strpos( $rest, 'local_admin_consent_featured_image' ) && false !== strpos( $rest, 'npcink_governance_core_record_local_admin_consent' ) && false !== strpos( $rest, 'set_post_thumbnail' ), 'REST controller exposes a narrow local-admin-consent featured image path with Core audit.' );
+toolbox_assert( 1 === substr_count( $rest, "'/local-admin-consent/" ), 'REST controller registers only one Local Admin Consent route.' );
+toolbox_assert( in_array( '/local-admin-consent/featured-image', $registered_rest_routes, true ), 'REST Local Admin Consent route is limited to featured-image.' );
+foreach ( array( '/local-admin-consent/metadata', '/local-admin-consent/seo', '/local-admin-consent/media', '/local-admin-consent/settings', '/local-admin-consent/batch' ) as $forbidden_local_consent_route ) {
+	toolbox_assert( ! in_array( $forbidden_local_consent_route, $registered_rest_routes, true ), 'REST Local Admin Consent excludes route: ' . $forbidden_local_consent_route );
+}
 toolbox_assert( false !== strpos( $rest, 'wp_attachment_is_image' ) && false !== strpos( $rest, 'Operation_Classifier::KIND_SET_FEATURED_IMAGE' ) && false !== strpos( $rest, 'Operation_Classifier::LOCAL_ADMIN_CONSENT' ), 'REST local featured image path requires an image attachment and classifier approval.' );
 toolbox_assert( false !== strpos( $rest, 'delete_post_thumbnail' ) && false !== strpos( $rest, 'completion_audit_failed' ), 'REST local featured image path rolls back when completion audit fails.' );
 toolbox_assert( false !== strpos( $rest, 'editor_image_support_query' ) && false !== strpos( $rest, 'digital marketing workspace analytics' ), 'REST editor image candidates use a short visual image-source query instead of the full support query.' );
@@ -751,7 +765,8 @@ toolbox_assert( false !== strpos( $rest, "'review_metrics'" ) && false !== strpo
 toolbox_assert( false !== strpos( $rest, 'context_scope' ) && false !== strpos( $rest, 'editor_input_scope' ) && false !== strpos( $rest, "'input_scope'" ) && false !== strpos( $rest, "'topic_only'" ), 'REST editor content support accepts scoped article, selected-text, and topic-only inputs.' );
 toolbox_assert( false !== strpos( $rest, 'editor_proposed_new_terms_review' ) && false !== strpos( $rest, "'proposed_new_terms'" ) && false !== strpos( $rest, "'creation_policy'        => 'core_policy_gated_strong_review'" ) && false !== strpos( $rest, "'strong_review_required' => true" ), 'REST editor summary/terms optimization marks proposed new terms as Core strong-review vocabulary gaps.' );
 toolbox_assert( false !== strpos( $rest, 'editor_summary_terms_handoff_preview' ) && false !== strpos( $rest, "'summary_terms_handoff_preview.v1'" ) && false !== strpos( $rest, 'no_new_term_creation_in_toolbox' ), 'REST editor summary/terms optimization returns a preview-only Core metadata handoff packet.' );
-toolbox_assert( false !== strpos( $rest, 'editor_summary_terms_auto_apply_actions' ) && false !== strpos( $rest, "'generate_apply_summary'" ) && false !== strpos( $rest, "'recommend_apply_tags'" ) && false !== strpos( $rest, "'recommend_categories'" ) && false !== strpos( $rest, "'create_new_tags_assign'" ), 'REST editor summary/terms optimization exposes the four metadata apply actions as Core proposal candidates.' );
+toolbox_assert( false !== strpos( $rest, 'editor_summary_terms_core_handoff_candidates' ) && false !== strpos( $rest, "'core_handoff_candidates'" ) && false !== strpos( $rest, "'generate_apply_summary'" ) && false !== strpos( $rest, "'recommend_apply_tags'" ) && false !== strpos( $rest, "'recommend_categories'" ) && false !== strpos( $rest, "'create_new_tags_assign'" ), 'REST editor summary/terms optimization exposes the four metadata apply actions as Core handoff candidates.' );
+toolbox_assert( false === strpos( $rest . $admin_js . $editor_js, 'auto_apply_actions' ), 'Toolbox no longer exposes misleading auto_apply_actions metadata.' );
 toolbox_assert( false !== strpos( $rest, "'core_auto_approval_policy'" ) && false !== strpos( $rest, "'request_supported'          => true" ) && false !== strpos( $rest, "'toolbox_direct_apply'       => false" ) && false !== strpos( $rest, "'core_auto_approval_eligible'" ) && false !== strpos( $rest, "'core_policy_gated'" ), 'REST metadata apply actions can request Core auto-approval without Toolbox direct writes.' );
 toolbox_assert( 1 === preg_match( "/'id'\\s*=>\\s*'create_new_tags_assign'.*?'auto_approval_request'\\s*=>\\s*false/s", $rest ), 'REST new tag creation remains Core policy-gated without requesting auto-approval.' );
 toolbox_assert( 1 === preg_match( "/'id'\\s*=>\\s*'create_new_tags_assign'.*?'authorization_path'\\s*=>\\s*'core_policy_gated_strong_review'/s", $rest ), 'REST new tag creation declares the Core strong-review authorization path.' );

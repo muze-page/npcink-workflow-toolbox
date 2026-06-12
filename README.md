@@ -50,6 +50,7 @@ Project goals, ownership, and future-session instructions are documented in:
 
 - [Product Positioning](docs/product-positioning.md)
 - [Boundary](docs/boundary.md)
+- [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)
 - [Admin Surface Consolidation Summary](docs/admin-surface-consolidation-summary.md)
