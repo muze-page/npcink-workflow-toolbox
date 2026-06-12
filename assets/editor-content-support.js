@@ -2685,7 +2685,7 @@
 			blocks.push(createElement('p', { key: 'summary-ai-error', className: 'npcink-toolbox-editor-support__muted' }, summary.message || __('AI summary candidates were unavailable.', 'npcink-toolbox')));
 		}
 
-		if (summaryItems.length || metadataSectionHasSource(section, 'summary_suggestions') || fullMetadataRun) {
+		if (!categoryOnlyRun && !tagOnlyRun && (summaryItems.length || metadataSectionHasSource(section, 'summary_suggestions') || fullMetadataRun)) {
 			blocks.push(renderSummarySuggestionSection(summaryItems, metadataHandoffControls));
 		}
 
