@@ -2015,6 +2015,81 @@ msgstr "已选择特色图。"
 msgid "Review image candidates or select a featured image."
 msgstr "请审阅图片候选或选择特色图。"
 
+msgid "Review whether the target article genuinely helps the reader before inserting a link manually."
+msgstr "手动插入链接前，请确认目标文章确实能帮助读者。"
+
+msgid "Choose anchor text from the article wording; do not let Toolbox rewrite the paragraph."
+msgstr "请从文章原有表述中选择锚文本；不要让 Toolbox 改写段落。"
+
+msgid "Related internal target"
+msgstr "相关内链目标"
+
+msgid "Review near the paragraph where this topic is mentioned; Toolbox does not insert the link."
+msgstr "请在提到该主题的段落附近审阅；Toolbox 不会插入链接。"
+
+msgid "Related article"
+msgstr "相关文章"
+
+msgid "Site Knowledge returned this internal target with similarity score %s. Review relevance before inserting manually."
+msgstr "Site Knowledge 返回了这个内链目标，相似度分数为 %s。手动插入前请审阅相关性。"
+
+msgid "Site Knowledge returned this as related public content. Review relevance before inserting manually."
+msgstr "Site Knowledge 将它作为相关公开内容返回。手动插入前请审阅相关性。"
+
+msgid "Review SEO meta for the current post"
+msgstr "审阅当前文章的 SEO 元数据"
+
+msgid "Single-post SEO title and description candidate prepared by Toolbox for Core-governed review."
+msgstr "Toolbox 已为当前单篇文章准备 SEO 标题和描述候选，需交由 Core 治理审核。"
+
+msgid "SEO title candidate"
+msgstr "SEO 标题候选"
+
+msgid "SEO description candidate"
+msgstr "SEO 描述候选"
+
+msgid "Core handoff"
+msgstr "Core 交接"
+
+msgid "Submit only after the editor confirms the title and description do not add unsupported claims."
+msgstr "仅在编辑确认标题和描述没有新增无依据表述后再提交。"
+
+msgid "Excerpt is present for archives and sharing contexts."
+msgstr "归档页和分享场景所需摘要已填写。"
+
+msgid "Run summary suggestions before publishing if the excerpt is empty."
+msgstr "如果摘要为空，请在发布前运行摘要建议。"
+
+msgid "At least one category is selected."
+msgstr "已选择至少一个分类。"
+
+msgid "Review category suggestions before publishing."
+msgstr "发布前请审阅分类建议。"
+
+msgid "At least one tag is selected."
+msgstr "已选择至少一个标签。"
+
+msgid "Review existing tag suggestions before creating any new vocabulary."
+msgstr "创建任何新词表项前，请先审阅已有标签建议。"
+
+msgid "Review image candidates or select an existing media attachment."
+msgstr "请审阅图片候选或选择已有媒体附件。"
+
+msgid "Run internal link candidates and insert only the links a human editor accepts."
+msgstr "请运行内链候选，并且只插入人工编辑认可的链接。"
+
+msgid "SEO title and description candidates are ready for Core-governed review."
+msgstr "SEO 标题和描述候选已可进入 Core 治理审核。"
+
+msgid "SEO handoff needs a post id, title, and description candidate."
+msgstr "SEO 交接需要文章 ID、标题候选和描述候选。"
+
+msgid "No duplicate-risk candidates were returned by Site Knowledge."
+msgstr "Site Knowledge 没有返回重复风险候选。"
+
+msgid "Related public content was found; compare overlap before publishing."
+msgstr "发现相关公开内容；发布前请对比内容重叠度。"
+
 msgid "Enable %s in Npcink Toolbox settings before running this tool."
 msgstr "运行此工具前，请先在 Npcink Toolbox 设置中启用 %s。"
 
@@ -2527,9 +2602,6 @@ msgstr "已选择："
 
 msgid "Status: "
 msgstr "状态："
-
-msgid "AI generated"
-msgstr "AI 生成"
 
 msgid "Use"
 msgstr "用途"

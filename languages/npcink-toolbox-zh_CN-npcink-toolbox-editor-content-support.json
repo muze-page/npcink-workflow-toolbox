@@ -22,6 +22,8 @@
       "Check missing terms, excerpt, image, duplicate risk, and discoverability hints.": ["检查缺失的分类/标签、摘要、图片、重复风险和可发现性提示。"],
       "Discoverability suggestions": ["可发现性建议"],
       "Review SEO, AEO, GEO, and proposal-field suggestions for the current draft.": ["审阅当前草稿的 SEO、AEO、GEO 和提案字段建议。"],
+      "Review SEO meta for the current post": ["审阅当前文章的 SEO 元数据"],
+      "Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.": ["Toolbox 已为当前单篇文章准备 SEO 标题和描述候选，需交由 Core 治理审核。"],
       "Metadata optimization": ["元数据优化"],
       "Review summary, category, and tag suggestions with evidence and Core handoff preview.": ["审阅摘要、分类和标签建议，并查看依据和 Core 交接预览。"],
       "AI generate summary": ["AI 生成摘要"],
