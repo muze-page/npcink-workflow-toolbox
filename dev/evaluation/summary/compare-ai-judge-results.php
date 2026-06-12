@@ -7,7 +7,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_summary_judge_compare_arg_map( array $script_args ): array {
@@ -133,10 +133,10 @@ function npcink_summary_judge_compare_risky_reason( string $reason ): bool {
 }
 
 $arg_map         = npcink_summary_judge_compare_arg_map( $script_args );
-$primary_path    = (string) ( $arg_map['primary'] ?? 'tests/summary-eval/generated/promptfoo-judge-gpt55.json' );
-$secondary_path  = (string) ( $arg_map['secondary'] ?? 'tests/summary-eval/generated/promptfoo-judge-deepseek.json' );
-$output_json     = npcink_summary_judge_compare_path( (string) ( $arg_map['output_json'] ?? 'tests/summary-eval/generated/promptfoo-judge-cross.json' ), $root );
-$output_csv      = npcink_summary_judge_compare_path( (string) ( $arg_map['output_csv'] ?? 'tests/summary-eval/generated/promptfoo-judge-cross.csv' ), $root );
+$primary_path    = (string) ( $arg_map['primary'] ?? 'dev/evaluation/summary/generated/promptfoo-judge-gpt55.json' );
+$secondary_path  = (string) ( $arg_map['secondary'] ?? 'dev/evaluation/summary/generated/promptfoo-judge-deepseek.json' );
+$output_json     = npcink_summary_judge_compare_path( (string) ( $arg_map['output_json'] ?? 'dev/evaluation/summary/generated/promptfoo-judge-cross.json' ), $root );
+$output_csv      = npcink_summary_judge_compare_path( (string) ( $arg_map['output_csv'] ?? 'dev/evaluation/summary/generated/promptfoo-judge-cross.csv' ), $root );
 $primary_label   = (string) ( $arg_map['primary_label'] ?? 'gpt55' );
 $secondary_label = (string) ( $arg_map['secondary_label'] ?? 'deepseek' );
 

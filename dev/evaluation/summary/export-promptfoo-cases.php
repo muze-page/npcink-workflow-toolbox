@@ -7,7 +7,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_summary_promptfoo_arg_map( array $script_args ): array {
@@ -38,8 +38,8 @@ function npcink_summary_promptfoo_path( string $path, string $root ): string {
 }
 
 $arg_map = npcink_summary_promptfoo_arg_map( $script_args );
-$input   = npcink_summary_promptfoo_path( (string) ( $arg_map['input'] ?? 'tests/summary-eval/generated/muze-candidates.json' ), $root );
-$output  = npcink_summary_promptfoo_path( (string) ( $arg_map['output'] ?? 'tests/summary-eval/generated/promptfoo-cases.csv' ), $root );
+$input   = npcink_summary_promptfoo_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/summary/generated/muze-candidates.json' ), $root );
+$output  = npcink_summary_promptfoo_path( (string) ( $arg_map['output'] ?? 'dev/evaluation/summary/generated/promptfoo-cases.csv' ), $root );
 $limit   = max( 0, min( 500, (int) ( $arg_map['limit'] ?? 50 ) ) );
 
 if ( ! is_file( $input ) ) {

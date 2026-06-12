@@ -8,7 +8,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_summary_review_arg_map( array $script_args ): array {
@@ -162,11 +162,11 @@ function npcink_summary_review_write_xlsx( string $output_xlsx, array $rows ): v
 }
 
 $arg_map     = npcink_summary_review_arg_map( $script_args );
-$input       = npcink_summary_review_path( (string) ( $arg_map['input'] ?? 'tests/summary-eval/generated/muze-candidates.json' ), $root );
-$output_md   = npcink_summary_review_path( (string) ( $arg_map['output_md'] ?? 'tests/summary-eval/generated/summary-human-review.md' ), $root );
-$output_json = npcink_summary_review_path( (string) ( $arg_map['output_json'] ?? 'tests/summary-eval/generated/summary-human-review.json' ), $root );
-$output_csv  = npcink_summary_review_path( (string) ( $arg_map['output_csv'] ?? 'tests/summary-eval/generated/summary-human-review.csv' ), $root );
-$output_xlsx = npcink_summary_review_path( (string) ( $arg_map['output_xlsx'] ?? 'tests/summary-eval/generated/summary-human-review.xlsx' ), $root );
+$input       = npcink_summary_review_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/summary/generated/muze-candidates.json' ), $root );
+$output_md   = npcink_summary_review_path( (string) ( $arg_map['output_md'] ?? 'dev/evaluation/summary/generated/summary-human-review.md' ), $root );
+$output_json = npcink_summary_review_path( (string) ( $arg_map['output_json'] ?? 'dev/evaluation/summary/generated/summary-human-review.json' ), $root );
+$output_csv  = npcink_summary_review_path( (string) ( $arg_map['output_csv'] ?? 'dev/evaluation/summary/generated/summary-human-review.csv' ), $root );
+$output_xlsx = npcink_summary_review_path( (string) ( $arg_map['output_xlsx'] ?? 'dev/evaluation/summary/generated/summary-human-review.xlsx' ), $root );
 $limit       = max( 0, min( 500, (int) ( $arg_map['limit'] ?? 50 ) ) );
 
 if ( ! is_file( $input ) ) {

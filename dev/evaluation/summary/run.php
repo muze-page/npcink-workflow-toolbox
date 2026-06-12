@@ -9,9 +9,9 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $samples_arg = $argv[1] ?? '';
-$samples_path = '' !== $samples_arg ? $samples_arg : $root . '/tests/summary-eval/samples.json';
+$samples_path = '' !== $samples_arg ? $samples_arg : $root . '/dev/evaluation/summary/samples.json';
 
 function npcink_summary_eval_fail( string $message ): void {
 	fwrite( STDERR, "FAIL: {$message}\n" );

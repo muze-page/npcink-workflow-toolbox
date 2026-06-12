@@ -9,7 +9,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_rec_diff_arg_map( array $script_args ): array {
@@ -205,13 +205,13 @@ $input_paths = array_map(
 	'trim',
 	explode(
 		',',
-		(string) ( $arg_map['inputs'] ?? 'tests/recommendation-eval/generated/ai-cycle-gpt55.json,tests/recommendation-eval/generated/ai-cycle-grok43.json,tests/recommendation-eval/generated/ai-cycle-deepseek.json' )
+		(string) ( $arg_map['inputs'] ?? 'dev/evaluation/recommendation/generated/ai-cycle-gpt55.json,dev/evaluation/recommendation/generated/ai-cycle-grok43.json,dev/evaluation/recommendation/generated/ai-cycle-deepseek.json' )
 	)
 );
 $labels      = array_map( 'trim', explode( ',', (string) ( $arg_map['labels'] ?? 'gpt55,grok43,deepseek' ) ) );
-$output_md   = npcink_rec_diff_path( (string) ( $arg_map['output_md'] ?? 'tests/recommendation-eval/generated/differences.md' ), $root );
-$output_json = npcink_rec_diff_path( (string) ( $arg_map['output_json'] ?? 'tests/recommendation-eval/generated/differences.json' ), $root );
-$output_csv  = npcink_rec_diff_path( (string) ( $arg_map['output_csv'] ?? 'tests/recommendation-eval/generated/differences.csv' ), $root );
+$output_md   = npcink_rec_diff_path( (string) ( $arg_map['output_md'] ?? 'dev/evaluation/recommendation/generated/differences.md' ), $root );
+$output_json = npcink_rec_diff_path( (string) ( $arg_map['output_json'] ?? 'dev/evaluation/recommendation/generated/differences.json' ), $root );
+$output_csv  = npcink_rec_diff_path( (string) ( $arg_map['output_csv'] ?? 'dev/evaluation/recommendation/generated/differences.csv' ), $root );
 $tools       = array( 'title', 'summary', 'category', 'tag', 'new_tag_gap' );
 
 if ( count( $input_paths ) !== count( $labels ) ) {

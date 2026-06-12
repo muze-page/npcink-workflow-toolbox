@@ -8,7 +8,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_summary_openings_arg_map( array $script_args ): array {
@@ -86,7 +86,7 @@ function npcink_summary_opening_bucket( string $prefix ): string {
 }
 
 $arg_map = npcink_summary_openings_arg_map( $script_args );
-$input   = npcink_summary_openings_path( (string) ( $arg_map['input'] ?? 'tests/summary-eval/generated/muze-candidates.json' ), $root );
+$input   = npcink_summary_openings_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/summary/generated/muze-candidates.json' ), $root );
 
 if ( ! is_file( $input ) ) {
 	npcink_summary_openings_fail( 'Generated summary candidate file not found: ' . $input );

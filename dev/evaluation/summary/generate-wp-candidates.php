@@ -6,7 +6,7 @@
  * candidates in a local eval JSON file only; it never writes post excerpts.
  *
  * Run through WP-CLI:
- * wp --path=/path/to/wp eval-file tests/summary-eval/generate-wp-candidates.php -- input=tests/summary-eval/generated/muze-source-samples.json output=tests/summary-eval/generated/muze-candidates.json limit=10
+ * wp --path=/path/to/wp eval-file dev/evaluation/summary/generate-wp-candidates.php -- input=dev/evaluation/summary/generated/muze-source-samples.json output=dev/evaluation/summary/generated/muze-candidates.json limit=10
  *
  * @package Npcink_Toolbox
  */
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $script_args = isset( $args ) && is_array( $args ) ? $args : array_slice( $argv ?? array(), 1 );
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 
 function npcink_summary_generate_arg_map( array $script_args ): array {
 	$parsed = array();
@@ -175,8 +175,8 @@ function npcink_summary_generate_retryable_error( array $result ): bool {
 }
 
 $arg_map = npcink_summary_generate_arg_map( $script_args );
-$input   = npcink_summary_generate_path( (string) ( $arg_map['input'] ?? 'tests/summary-eval/generated/muze-source-samples.json' ), $root );
-$output  = npcink_summary_generate_path( (string) ( $arg_map['output'] ?? 'tests/summary-eval/generated/muze-candidates.json' ), $root );
+$input   = npcink_summary_generate_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/summary/generated/muze-source-samples.json' ), $root );
+$output  = npcink_summary_generate_path( (string) ( $arg_map['output'] ?? 'dev/evaluation/summary/generated/muze-candidates.json' ), $root );
 $limit   = max( 1, min( 200, (int) ( $arg_map['limit'] ?? 10 ) ) );
 $offset  = max( 0, (int) ( $arg_map['offset'] ?? 0 ) );
 $retries = max( 0, min( 10, (int) ( $arg_map['retries'] ?? 3 ) ) );

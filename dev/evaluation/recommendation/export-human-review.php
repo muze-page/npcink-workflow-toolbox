@@ -7,7 +7,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_rec_review_arg_map( array $script_args ): array {
@@ -156,10 +156,10 @@ function npcink_rec_review_add_rows( array &$items, array $sample, string $tool,
 }
 
 $arg_map     = npcink_rec_review_arg_map( $script_args );
-$input       = npcink_rec_review_path( (string) ( $arg_map['input'] ?? 'tests/recommendation-eval/generated/ai-cycle.json' ), $root );
-$output_md   = npcink_rec_review_path( (string) ( $arg_map['output_md'] ?? 'tests/recommendation-eval/generated/human-review.md' ), $root );
-$output_json = npcink_rec_review_path( (string) ( $arg_map['output_json'] ?? 'tests/recommendation-eval/generated/human-review.json' ), $root );
-$output_csv  = npcink_rec_review_path( (string) ( $arg_map['output_csv'] ?? 'tests/recommendation-eval/generated/human-review.csv' ), $root );
+$input       = npcink_rec_review_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/recommendation/generated/ai-cycle.json' ), $root );
+$output_md   = npcink_rec_review_path( (string) ( $arg_map['output_md'] ?? 'dev/evaluation/recommendation/generated/human-review.md' ), $root );
+$output_json = npcink_rec_review_path( (string) ( $arg_map['output_json'] ?? 'dev/evaluation/recommendation/generated/human-review.json' ), $root );
+$output_csv  = npcink_rec_review_path( (string) ( $arg_map['output_csv'] ?? 'dev/evaluation/recommendation/generated/human-review.csv' ), $root );
 $limit       = max( 0, min( 1000, (int) ( $arg_map['limit'] ?? 200 ) ) );
 $decoded     = npcink_rec_review_read_json( $input );
 $samples     = is_array( $decoded['samples'] ?? null ) ? $decoded['samples'] : array();

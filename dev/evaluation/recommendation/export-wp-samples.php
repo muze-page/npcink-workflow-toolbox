@@ -3,7 +3,7 @@
  * Export stratified WordPress article samples for recommendation evaluation.
  *
  * Run through WP-CLI:
- * wp --path=/path/to/wp eval-file tests/recommendation-eval/export-wp-samples.php -- output=tests/recommendation-eval/generated/samples.json limit=50
+ * wp --path=/path/to/wp eval-file dev/evaluation/recommendation/export-wp-samples.php -- output=dev/evaluation/recommendation/generated/samples.json limit=50
  *
  * @package Npcink_Toolbox
  */
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $script_args = isset( $args ) && is_array( $args ) ? $args : array_slice( $argv ?? array(), 1 );
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 
 function npcink_rec_eval_export_arg_map( array $script_args ): array {
 	$parsed = array();
@@ -145,7 +145,7 @@ function npcink_rec_eval_export_all_terms( string $taxonomy, int $limit ): array
 }
 
 $arg_map       = npcink_rec_eval_export_arg_map( $script_args );
-$output        = npcink_rec_eval_export_path( (string) ( $arg_map['output'] ?? 'tests/recommendation-eval/generated/samples.json' ), $root );
+$output        = npcink_rec_eval_export_path( (string) ( $arg_map['output'] ?? 'dev/evaluation/recommendation/generated/samples.json' ), $root );
 $limit         = max( 5, min( 80, (int) ( $arg_map['limit'] ?? 50 ) ) );
 $per_bucket    = max( 1, min( 20, (int) ( $arg_map['per_bucket'] ?? (int) ceil( $limit / 5 ) ) ) );
 $content_chars = max( 1000, min( 30000, (int) ( $arg_map['content_chars'] ?? 8000 ) ) );

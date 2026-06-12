@@ -8,7 +8,7 @@
  * @package Npcink_Toolbox
  */
 
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 $script_args = array_slice( $argv ?? array(), 1 );
 
 function npcink_rec_eval_cycle_arg_map( array $script_args ): array {
@@ -435,8 +435,8 @@ function npcink_rec_eval_cycle_dry_review(): array {
 }
 
 $arg_map          = npcink_rec_eval_cycle_arg_map( $script_args );
-$input            = npcink_rec_eval_cycle_path( (string) ( $arg_map['input'] ?? 'tests/recommendation-eval/generated/samples.json' ), $root );
-$output           = npcink_rec_eval_cycle_path( (string) ( $arg_map['output'] ?? 'tests/recommendation-eval/generated/ai-cycle.json' ), $root );
+$input            = npcink_rec_eval_cycle_path( (string) ( $arg_map['input'] ?? 'dev/evaluation/recommendation/generated/samples.json' ), $root );
+$output           = npcink_rec_eval_cycle_path( (string) ( $arg_map['output'] ?? 'dev/evaluation/recommendation/generated/ai-cycle.json' ), $root );
 $limit            = max( 1, min( 80, (int) ( $arg_map['limit'] ?? 20 ) ) );
 $term_limit       = max( 10, min( 300, (int) ( $arg_map['term_limit'] ?? 120 ) ) );
 $sample_sleep     = max( 0, min( 30, (int) ( $arg_map['sample_sleep'] ?? 1 ) ) );

@@ -3,7 +3,7 @@
  * Export local WordPress posts into summary-eval source samples.
  *
  * Run through WP-CLI:
- * wp --path=/path/to/wp eval-file tests/summary-eval/export-wp-samples.php -- author=Muze limit=50 output=tests/summary-eval/generated/muze-source-samples.json
+ * wp --path=/path/to/wp eval-file dev/evaluation/summary/export-wp-samples.php -- author=Muze limit=50 output=dev/evaluation/summary/generated/muze-source-samples.json
  *
  * @package Npcink_Toolbox
  */
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $script_args = isset( $args ) && is_array( $args ) ? $args : array_slice( $argv ?? array(), 1 );
-$root        = dirname( __DIR__, 2 );
+$root        = dirname( __DIR__, 3 );
 
 function npcink_summary_export_arg_map( array $script_args ): array {
 	$parsed = array();
@@ -76,7 +76,7 @@ $author      = (string) ( $arg_map['author'] ?? 'Muze' );
 $limit       = max( 1, min( 200, (int) ( $arg_map['limit'] ?? 50 ) ) );
 $status      = sanitize_key( (string) ( $arg_map['status'] ?? 'publish' ) );
 $post_type   = sanitize_key( (string) ( $arg_map['post_type'] ?? 'post' ) );
-$output      = (string) ( $arg_map['output'] ?? $root . '/tests/summary-eval/generated/muze-source-samples.json' );
+$output      = (string) ( $arg_map['output'] ?? $root . '/dev/evaluation/summary/generated/muze-source-samples.json' );
 $content_max = max( 500, min( 20000, (int) ( $arg_map['content_chars'] ?? 6000 ) ) );
 $include_excerpt_candidate = in_array( strtolower( (string) ( $arg_map['include_excerpt_candidate'] ?? '0' ) ), array( '1', 'true', 'yes' ), true );
 
