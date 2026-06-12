@@ -3492,7 +3492,9 @@
 				const plan = await postJson('flows/image-candidate-adoption-plan', planInput);
 				try {
 					const core = await postAdapterAdoption(plan, planInput);
-					syncFeaturedMediaFromCore(core);
+					if (setFeaturedImage) {
+						syncFeaturedMediaFromCore(core);
+					}
 					setImageAdoptionResult({ plan, core, adoption_target: setFeaturedImage ? 'featured_image' : 'media_import' });
 				} catch (coreError) {
 					setImageAdoptionResult({ plan, core_error: coreError, adoption_target: setFeaturedImage ? 'featured_image' : 'media_import' });
