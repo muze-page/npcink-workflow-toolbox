@@ -1610,30 +1610,28 @@ final class Rest_Controller {
 				)
 			)
 		);
-		$summary_layers     = $this->editor_ai_summary_layer_candidates( $summary_ai, $context );
-		$proposed_new_terms = $this->empty_proposed_new_terms_review();
-		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, array(), array(), $proposed_new_terms );
-		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, array(), array(), $proposed_new_terms, array(), array(), $handoff_preview );
-		$section            = $this->editor_metadata_suggestion_section(
-			'summary_suggestions',
-			$context,
-			$summary_layers,
-			array(),
-			array(),
-			$proposed_new_terms,
-			array(),
-			array(),
-			$handoff_preview,
-			$metadata_delta
-		);
-		$section['summary_candidates']  = $summary_ai;
-		$section['provider_execution']  = 'hosted_ai';
-		$section['generation_mode']     = 'ai_summary';
-		$section['generation_variant']  = sanitize_text_field( (string) ( $context['generation_variant'] ?? '' ) );
-		$section['quality_contract']    = is_array( $summary_ai['quality_contract'] ?? null ) ? $summary_ai['quality_contract'] : array();
-		$section['review_checklist']    = is_array( $summary_ai['review_checklist'] ?? null ) ? $summary_ai['review_checklist'] : array();
+		return $this->editor_summary_only_suggestion_section( $summary_ai, $context );
+	}
 
-		return $section;
+	private function editor_summary_only_suggestion_section( array $summary_ai, array $context ): array {
+		$summary_layers = $this->editor_ai_summary_layer_candidates( $summary_ai, $context );
+
+		return array(
+			'artifact_type'          => 'article_summary_suggestions.v1',
+			'composition_role'       => 'summary_candidates_only',
+			'candidate_type'         => 'summary_suggestions',
+			'candidate_contract'     => 'recommendation_candidate.v1',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'editor_apply_preview_save_required',
+			'direct_wordpress_write' => false,
+			'summary_layers'         => $summary_layers,
+			'summary_candidates'     => $summary_ai,
+			'provider_execution'     => 'hosted_ai',
+			'generation_mode'        => 'ai_summary',
+			'generation_variant'     => sanitize_text_field( (string) ( $context['generation_variant'] ?? '' ) ),
+			'quality_contract'       => is_array( $summary_ai['quality_contract'] ?? null ) ? $summary_ai['quality_contract'] : array(),
+			'review_checklist'       => is_array( $summary_ai['review_checklist'] ?? null ) ? $summary_ai['review_checklist'] : array(),
+		);
 	}
 
 	private function editor_hosted_draft_support( array $context, string $provider_intent ): array {
@@ -1671,8 +1669,247 @@ final class Rest_Controller {
 		$section['provider_execution'] = 'hosted_ai';
 		$section['provider_intent']    = $provider_intent;
 		$section['write_posture']      = 'suggestion_only';
+		if ( 'title_summary' === $provider_intent ) {
+			$section = $this->editor_title_recommendation_section( $section, $context );
+		}
 
 		return $section;
+	}
+
+	private function editor_title_recommendation_section( array $section, array $context ): array {
+		$candidates = $this->editor_title_recommendation_candidates( $section, $context );
+
+		$section['candidate_contract']        = 'recommendation_candidate.v1';
+		$section['recommendation_candidates'] = $candidates;
+		$section['quality_gate']              = array(
+			'name'           => 'runtime_title_candidate_rerank',
+			'policy'         => 'length_meta_phrase_title_repetition_rerank_and_flag',
+			'minimum_score'  => 0,
+			'candidate_sort' => 'quality_score_desc_then_model_order',
+		);
+		$section['quality_notes']             = $this->editor_recommendation_quality_notes( $candidates );
+
+		return $section;
+	}
+
+	private function editor_title_recommendation_candidates( array $section, array $context ): array {
+		$result      = is_array( $section['result'] ?? null ) ? $section['result'] : array();
+		$output_json = is_array( $section['output_json'] ?? null ) ? $section['output_json'] : array();
+		$output_text = trim( sanitize_textarea_field( (string) ( $section['output_text'] ?? '' ) ) );
+		$decoded     = '' !== $output_text ? $this->editor_decode_ai_summary_output( $output_text ) : array();
+		$raw_items   = array();
+
+		foreach ( array( $result, $output_json, is_array( $decoded ) ? $decoded : array() ) as $source ) {
+			foreach ( $this->editor_title_candidate_values( $source ) as $item ) {
+				$raw_items[] = $item;
+			}
+		}
+
+		if ( empty( $raw_items ) && '' !== $output_text && empty( $decoded ) ) {
+			$raw_items[] = array(
+				'value'  => $output_text,
+				'reason' => '',
+				'order'  => 0,
+			);
+		}
+
+		$candidates = array();
+		$seen       = array();
+		foreach ( $raw_items as $raw_item ) {
+			$value = $this->editor_clean_title_candidate( (string) ( $raw_item['value'] ?? '' ) );
+			if ( '' === $value ) {
+				continue;
+			}
+			$key = strtolower( $value );
+			if ( isset( $seen[ $key ] ) ) {
+				continue;
+			}
+			$seen[ $key ] = true;
+			$quality      = $this->editor_title_candidate_quality( $value, $context );
+			$candidates[] = array(
+				'value'   => $value,
+				'reason'  => sanitize_text_field( (string) ( $raw_item['reason'] ?? '' ) ),
+				'order'   => absint( $raw_item['order'] ?? 0 ),
+				'quality' => $quality,
+			);
+		}
+
+		usort(
+			$candidates,
+			static function ( array $a, array $b ): int {
+				$score_delta = (int) ( $b['quality']['score'] ?? 0 ) <=> (int) ( $a['quality']['score'] ?? 0 );
+				return 0 !== $score_delta ? $score_delta : ( absint( $a['order'] ?? 0 ) <=> absint( $b['order'] ?? 0 ) );
+			}
+		);
+
+		$items = array();
+		foreach ( array_slice( $candidates, 0, 5 ) as $index => $candidate ) {
+			$items[] = $this->editor_recommendation_candidate(
+				array(
+					'id'             => 0 === $index ? 'ai_recommended_title' : 'ai_title_option_' . ( $index + 1 ),
+					'kind'           => 'title',
+					'label'          => 0 === $index ? __( 'AI recommended title', 'npcink-toolbox' ) : __( 'AI title option', 'npcink-toolbox' ),
+					'value'          => (string) ( $candidate['value'] ?? '' ),
+					'reason'         => '' !== (string) ( $candidate['reason'] ?? '' ) ? (string) $candidate['reason'] : __( 'Generated by hosted AI from the current title, excerpt, and draft context. Review before applying.', 'npcink-toolbox' ),
+					'target_field'   => 'post_title',
+					'action_policy'  => 'editor_apply_preview_save_required',
+					'quality_status' => (string) ( $candidate['quality']['status'] ?? 'review' ),
+					'quality_score'  => absint( $candidate['quality']['score'] ?? 0 ),
+					'quality_issues' => is_array( $candidate['quality']['issues'] ?? null ) ? $candidate['quality']['issues'] : array(),
+					'evidence_refs'  => array(),
+				)
+			);
+		}
+
+		return $items;
+	}
+
+	private function editor_title_candidate_values( array $source ): array {
+		$items = array();
+		foreach ( array( 'title_options', 'titles', 'suggestions', 'candidates' ) as $key ) {
+			if ( ! is_array( $source[ $key ] ?? null ) ) {
+				continue;
+			}
+			foreach ( $source[ $key ] as $item ) {
+				$value = is_array( $item )
+					? $this->editor_ai_summary_field( $item, array( 'title', 'value', 'text', 'name', 'label' ) )
+					: trim( sanitize_text_field( (string) $item ) );
+				if ( '' === $value ) {
+					continue;
+				}
+				$items[] = array(
+					'value'  => $value,
+					'reason' => is_array( $item ) ? $this->editor_ai_summary_field( $item, array( 'reason', 'rationale', 'detail' ) ) : '',
+					'order'  => count( $items ),
+				);
+			}
+		}
+
+		foreach ( array( 'title', 'recommended_title', 'seo_title', 'working_title' ) as $key ) {
+			if ( isset( $source[ $key ] ) && ! is_array( $source[ $key ] ) ) {
+				$value = trim( sanitize_text_field( (string) $source[ $key ] ) );
+				if ( '' !== $value ) {
+					$items[] = array(
+						'value'  => $value,
+						'reason' => '',
+						'order'  => count( $items ),
+					);
+				}
+			}
+		}
+
+		foreach ( array( 'result', 'data', 'output' ) as $nested_key ) {
+			if ( is_array( $source[ $nested_key ] ?? null ) ) {
+				foreach ( $this->editor_title_candidate_values( $source[ $nested_key ] ) as $item ) {
+					$items[] = array(
+						'value'  => (string) ( $item['value'] ?? '' ),
+						'reason' => (string) ( $item['reason'] ?? '' ),
+						'order'  => count( $items ),
+					);
+				}
+			}
+		}
+
+		return $items;
+	}
+
+	private function editor_clean_title_candidate( string $title ): string {
+		$value = trim( sanitize_text_field( $title ) );
+		$value = preg_replace( '/^\s*(?:#+|\*+|-+|\d+[\.、)]\s*)\s*/u', '', $value );
+		$value = is_string( $value ) ? trim( $value ) : trim( sanitize_text_field( $title ) );
+		$value = trim( $value, " \t\n\r\0\x0B\"'“”‘’" );
+
+		return sanitize_text_field( $value );
+	}
+
+	private function editor_title_candidate_quality( string $title, array $context ): array {
+		$score  = 100;
+		$issues = array();
+		$value  = trim( $title );
+		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $value, 'UTF-8' ) : strlen( $value );
+		$current_title = trim( sanitize_text_field( (string) ( $context['title'] ?? '' ) ) );
+
+		if ( $length < 6 ) {
+			$score   -= 18;
+			$issues[] = __( '标题过短，可能缺少具体对象。', 'npcink-toolbox' );
+		}
+		if ( $length > 80 ) {
+			$score   -= 28;
+			$issues[] = __( '标题超过 80 个字符，可能不适合编辑器标题字段。', 'npcink-toolbox' );
+		}
+		if ( '' !== $current_title && strtolower( $value ) === strtolower( $current_title ) ) {
+			$score   -= 14;
+			$issues[] = __( '标题与当前标题完全相同。', 'npcink-toolbox' );
+		}
+		if ( 1 === preg_match( '/(?:草稿|本文|这篇文章|该文章|this\s+(?:article|post|draft)|标题建议|title suggestion)/iu', $value ) ) {
+			$score   -= 35;
+			$issues[] = __( '包含文章自指或编辑提示词。', 'npcink-toolbox' );
+		}
+		if ( false !== strpos( $value, '```' ) || false !== strpos( $value, '{' ) || false !== strpos( $value, '}' ) ) {
+			$score   -= 40;
+			$issues[] = __( '包含格式或 JSON 泄漏。', 'npcink-toolbox' );
+		}
+		if ( 1 === preg_match( '/(?:必看|震惊|最强|最好|终极|保证|100%|排名第一)/u', $value ) ) {
+			$score   -= 18;
+			$issues[] = __( '标题可能过度营销或包含高风险承诺。', 'npcink-toolbox' );
+		}
+
+		$status = 'good';
+		if ( $score < 70 ) {
+			$status = 'review';
+		}
+		if ( $score < 55 ) {
+			$status = 'weak';
+		}
+
+		if ( empty( $issues ) ) {
+			$issues[] = __( '通过长度、自指套话和基础标题质量检查。', 'npcink-toolbox' );
+		}
+
+		return array(
+			'score'  => max( 0, min( 100, $score ) ),
+			'status' => $status,
+			'issues' => array_values( array_unique( $issues ) ),
+		);
+	}
+
+	private function editor_recommendation_candidate( array $args ): array {
+		return array(
+			'contract'               => 'recommendation_candidate.v1',
+			'id'                     => sanitize_key( (string) ( $args['id'] ?? 'candidate' ) ),
+			'kind'                   => sanitize_key( (string) ( $args['kind'] ?? 'generic' ) ),
+			'label'                  => sanitize_text_field( (string) ( $args['label'] ?? __( 'Recommendation candidate', 'npcink-toolbox' ) ) ),
+			'value'                  => sanitize_text_field( (string) ( $args['value'] ?? '' ) ),
+			'reason'                 => sanitize_text_field( (string) ( $args['reason'] ?? '' ) ),
+			'confidence'             => is_numeric( $args['confidence'] ?? null ) ? max( 0, min( 1, (float) $args['confidence'] ) ) : null,
+			'quality_status'         => sanitize_key( (string) ( $args['quality_status'] ?? 'review' ) ),
+			'quality_score'          => absint( $args['quality_score'] ?? 0 ),
+			'quality_issues'         => is_array( $args['quality_issues'] ?? null ) ? array_values( array_map( 'sanitize_text_field', $args['quality_issues'] ) ) : array(),
+			'action_policy'          => sanitize_key( (string) ( $args['action_policy'] ?? 'suggestion_only' ) ),
+			'target_field'           => sanitize_key( (string) ( $args['target_field'] ?? '' ) ),
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'evidence_refs'          => is_array( $args['evidence_refs'] ?? null ) ? array_values( array_map( 'sanitize_text_field', $args['evidence_refs'] ) ) : array(),
+		);
+	}
+
+	private function editor_recommendation_quality_notes( array $items ): array {
+		$notes = array();
+		foreach ( $items as $item ) {
+			$issues = is_array( $item['quality_issues'] ?? null ) ? $item['quality_issues'] : array();
+			$notes[] = array(
+				'name'   => (string) ( $item['label'] ?? __( 'Recommendation candidate', 'npcink-toolbox' ) ),
+				'status' => sanitize_key( (string) ( $item['quality_status'] ?? 'review' ) ),
+				'detail' => sprintf(
+					/* translators: 1: quality score, 2: quality notes. */
+					__( 'Quality score %1$d. %2$s', 'npcink-toolbox' ),
+					absint( $item['quality_score'] ?? 0 ),
+					implode( ' ', array_map( 'sanitize_text_field', $issues ) )
+				),
+			);
+		}
+
+		return $notes;
 	}
 
 	private function editor_fast_category_suggestions( array $context, string $query ): array {
@@ -2313,7 +2550,9 @@ final class Rest_Controller {
 		foreach ( array_slice( $candidates, 0, 3 ) as $index => $candidate ) {
 			$is_first = 0 === $index;
 			$items[]  = array(
+				'contract'       => 'recommendation_candidate.v1',
 				'id'             => $is_first ? 'ai_recommended_excerpt' : ( 1 === $index ? 'ai_alternate_excerpt' : 'ai_third_excerpt' ),
+				'kind'           => 'excerpt',
 				'label'          => $is_first ? __( 'AI recommended excerpt', 'npcink-toolbox' ) : __( 'AI alternate excerpt', 'npcink-toolbox' ),
 				'limit'         => '50_160_zh_chars',
 				'value'          => sanitize_text_field( (string) ( $candidate['value'] ?? '' ) ),
@@ -2322,11 +2561,14 @@ final class Rest_Controller {
 				'quality_status' => sanitize_key( (string) ( $candidate['quality']['status'] ?? 'review' ) ),
 				'quality_score'  => absint( $candidate['quality']['score'] ?? 0 ),
 				'quality_issues' => is_array( $candidate['quality']['issues'] ?? null ) ? array_values( array_map( 'sanitize_text_field', $candidate['quality']['issues'] ) ) : array(),
+				'action_policy'  => 'editor_apply_preview_save_required',
+				'target_field'   => 'post_excerpt',
 				'evidence_refs'  => array(),
 			);
 		}
 
 		return array(
+			'candidate_contract'     => 'recommendation_candidate.v1',
 			'candidate_type'          => 'ai_summary_layer_candidates',
 			'write_posture'           => 'suggestion_only',
 			'direct_wordpress_write'  => false,

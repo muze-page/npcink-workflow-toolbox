@@ -1919,6 +1919,22 @@
 		if (!section || typeof section !== 'object') {
 			return [];
 		}
+		if (Array.isArray(section.recommendation_candidates) && section.recommendation_candidates.length) {
+			return section.recommendation_candidates.map((item) => ({
+				name: readableItemText(item.label || item.name || item.id, __('Title option', 'npcink-toolbox')),
+				detail: [
+					readableItemText(item.reason || item.detail, ''),
+					item.quality_status ? formatMetaLabel(item.quality_status) : '',
+					item.quality_score ? __('Quality score: ', 'npcink-toolbox') + String(item.quality_score) : '',
+				].filter(Boolean).join(' · '),
+				value: readableItemText(item.value || item.title || item.text, ''),
+				quality_status: item.quality_status,
+				quality_score: item.quality_score,
+				quality_issues: item.quality_issues,
+				action_policy: item.action_policy,
+				target_field: item.target_field,
+			})).filter((item) => item.value);
+		}
 		const output = hostedOutputObject(section);
 		const source = Array.isArray(output.title_options) && output.title_options.length
 			? output.title_options
@@ -2482,11 +2498,12 @@
 		const summary = section.summary_candidates && typeof section.summary_candidates === 'object' ? section.summary_candidates : {};
 		const summaryText = summary.output_text || '';
 		const activeIntent = metadataHandoffControls && metadataHandoffControls.intent ? metadataHandoffControls.intent : '';
+		const summaryOnlyRun = activeIntent === 'summary_suggestions' || section.candidate_type === 'summary_suggestions';
 		const showFullMetadataSurface = activeIntent === 'summary_terms_optimization' || (!activeIntent && fullMetadataRun);
 		if (showFullMetadataSurface) {
 			blocks.push(createElement('h4', { key: 'summary-optimization-title' }, __('Metadata optimization', 'npcink-toolbox')));
 		}
-		if (section.input_scope) {
+		if (!summaryOnlyRun && section.input_scope) {
 			evidenceBlocks.push(createElement('h4', { key: 'summary-input-scope-title' }, __('Input scope', 'npcink-toolbox')));
 			evidenceBlocks.push(renderItems([section.input_scope], __('No input scope returned.', 'npcink-toolbox')));
 		}
@@ -2496,6 +2513,10 @@
 
 		if (summaryItems.length || metadataSectionHasSource(section, 'summary_suggestions') || fullMetadataRun) {
 			blocks.push(renderSummarySuggestionSection(summaryItems, metadataHandoffControls));
+		}
+
+		if (summaryOnlyRun) {
+			return createElement('div', { className: 'npcink-toolbox-editor-support__optimization' }, blocks);
 		}
 
 		const summaryQuality = summaryQualityItems(section);

@@ -1,0 +1,64 @@
+# Recommendation Candidate Contract
+
+Status: active internal contract for editor recommendations.
+
+`recommendation_candidate.v1` is the shared shape for editor-facing candidates
+that may later be exported to review worksheets, batch dry-runs, or Core
+handoff artifacts.
+
+It is additive. Existing response fields such as `summary_layers.items`,
+`title_options`, `category_candidates`, `tag_candidates`, `image_candidates`,
+and `internal_link_candidates` may remain during migration, but new
+recommendation surfaces should also expose `recommendation_candidates` or mark
+their items with `contract=recommendation_candidate.v1`.
+
+## Required Fields
+
+- `contract`: `recommendation_candidate.v1`.
+- `id`: stable candidate id within the section.
+- `kind`: candidate family, such as `title`, `excerpt`, `category`, `tag`,
+  `image`, or `internal_link`.
+- `label`: short editor-facing label.
+- `value`: the proposed visible value or primary candidate text.
+- `reason`: concise reason grounded in the current article or evidence.
+- `quality_status`: `good`, `review`, or `weak`.
+- `quality_score`: integer score from 0 to 100.
+- `quality_issues`: list of review notes or gate failures.
+- `action_policy`: what the UI may offer for this candidate.
+- `write_posture`: always `suggestion_only` in Toolbox responses.
+- `direct_wordpress_write`: always `false`.
+
+## Optional Fields
+
+- `confidence`: model or ranking confidence from 0 to 1.
+- `target_field`: destination field hint, such as `post_title`,
+  `post_excerpt`, `category`, or `post_tag`.
+- `evidence_refs`: ids for related Site Knowledge, media, taxonomy, or source
+  evidence used for review.
+
+## Action Policies
+
+- `editor_apply_preview_save_required`: the editor may copy the value into the
+  current unsaved editor state; the normal WordPress draft save persists it.
+- `core_proposal_required`: accepted changes must be packaged for Core review.
+- `operator_review_only_no_insert`: the candidate is informational and must be
+  applied manually by a human editor.
+- `suggestion_only`: no apply action is exposed.
+
+## Current Adoption
+
+- AI summary suggestions mark excerpt items with the contract while preserving
+  the existing `summary_layers.items` shape. The single-summary editor action
+  returns `article_summary_suggestions.v1` and does not include taxonomy,
+  metadata-delta, or Core handoff payloads.
+- AI title suggestions expose `recommendation_candidates` and keep legacy
+  `title_options` parsing as a fallback. Title recommendation is a first-class
+  single-intent action, separate from summary generation.
+
+## Boundary
+
+This contract is not a write API, approval record, or audit store. It is a
+reviewable candidate shape. Batch generation should first export these
+candidates as dry-run JSON or XLSX rows. Accepted WordPress writes still need
+the existing editor save, Core proposal, or explicitly classified future local
+confirmation path.
