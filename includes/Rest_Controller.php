@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
 final class Rest_Controller {
 	private const REQUIRED_TEXT_MAX_CHARS = 500;
 	private const EDITOR_SUMMARY_FULL_CONTENT_MAX_CHARS = 30000;
+	private const EDITOR_FLOW_CACHE_TTL = 300;
 
 	private Settings $settings;
 	private Provider_Client $client;
@@ -311,6 +312,14 @@ final class Rest_Controller {
 	}
 
 	public function local_admin_consent_featured_image( WP_REST_Request $request ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_local_featured_image_admin_required',
+				__( 'Local admin consent requires an administrator session.', 'npcink-toolbox' ),
+				array( 'status' => 403 )
+			);
+		}
+
 		$post_id       = absint( $request->get_param( 'post_id' ) );
 		$attachment_id = absint( $request->get_param( 'attachment_id' ) );
 		if ( $post_id <= 0 || $attachment_id <= 0 ) {
@@ -526,6 +535,12 @@ final class Rest_Controller {
 			'post_context'           => $context,
 			'query'                  => $query,
 			'sections'               => array(),
+			'remote_execution_policy' => array(
+				'cache_ttl_seconds'     => self::EDITOR_FLOW_CACHE_TTL,
+				'cache_scope'           => 'site_transient_by_intent_query_and_post_context',
+				'workflow_runtime'      => false,
+				'direct_async_queue'    => false,
+			),
 			'handoff'                => array(
 				'surface'                => 'post_editor_sidebar',
 				'final_writes'           => 'core_proposal_required',
@@ -535,7 +550,7 @@ final class Rest_Controller {
 
 		if ( 'writing_support' === $intent ) {
 			$result['sections']['writing_support'] = $this->editor_support_section(
-				$this->client->search_site_knowledge(
+				$this->editor_cached_site_knowledge(
 					array(
 						'query'           => $query,
 						'intent'          => 'writing_support_plan',
@@ -604,7 +619,7 @@ final class Rest_Controller {
 
 		if ( 'discoverability' === $intent || 'publish_preflight' === $intent ) {
 			$result['sections']['discoverability'] = $this->editor_support_section(
-				$this->client->build_content_discoverability_brief(
+				$this->editor_cached_content_discoverability(
 					array(
 						'post_id' => absint( $context['post_id'] ?? 0 ),
 						'title'   => (string) ( $context['title'] ?? '' ),
@@ -621,7 +636,7 @@ final class Rest_Controller {
 		if ( 'publish_preflight' === $intent ) {
 			$result['sections']['checks'] = $this->editor_publish_preflight_checks( $context );
 			$result['sections']['duplicate_check'] = $this->editor_support_section(
-				$this->client->search_site_knowledge(
+				$this->editor_cached_site_knowledge(
 					array(
 						'query'           => $query,
 						'intent'          => 'duplicate_check',
@@ -1195,6 +1210,62 @@ final class Rest_Controller {
 		return is_array( $value ) ? $value : array();
 	}
 
+	private function editor_cached_site_knowledge( array $input ) {
+		return $this->editor_cached_client_result(
+			'site_knowledge',
+			$input,
+			function () use ( $input ) {
+				return $this->client->search_site_knowledge( $input );
+			}
+		);
+	}
+
+	private function editor_cached_content_discoverability( array $input ) {
+		return $this->editor_cached_client_result(
+			'content_discoverability',
+			$input,
+			function () use ( $input ) {
+				return $this->client->build_content_discoverability_brief( $input );
+			}
+		);
+	}
+
+	private function editor_cached_hosted_ai_content_support( array $input ) {
+		return $this->editor_cached_client_result(
+			'hosted_ai_content_support',
+			$input,
+			function () use ( $input ) {
+				return $this->client->run_hosted_ai_content_support( $input );
+			}
+		);
+	}
+
+	private function editor_cached_client_result( string $namespace, array $input, callable $callback ) {
+		$cache_key = $this->editor_flow_cache_key( $namespace, $input );
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached && is_array( $cached ) ) {
+			$cached['cache_status'] = 'hit';
+			return $cached;
+		}
+
+		$result = $callback();
+		if ( ! is_wp_error( $result ) && is_array( $result ) ) {
+			$result['cache_status'] = 'miss';
+			set_transient( $cache_key, $result, self::EDITOR_FLOW_CACHE_TTL );
+		}
+
+		return $result;
+	}
+
+	private function editor_flow_cache_key( string $namespace, array $input ): string {
+		$json = wp_json_encode( $input );
+		if ( ! is_string( $json ) ) {
+			$json = serialize( $input );
+		}
+
+		return 'npcink_toolbox_editor_' . sanitize_key( $namespace ) . '_' . md5( $json );
+	}
+
 	private function editor_image_recommendation_section( array $section ): array {
 		$section['candidate_contract']        = 'recommendation_candidate.v1';
 		$section['recommendation_candidates'] = $this->editor_image_recommendation_candidates( $section );
@@ -1296,7 +1367,7 @@ final class Rest_Controller {
 
 	private function editor_summary_terms_optimization( array $context, string $query ): array {
 		$related_content = $this->editor_support_section(
-			$this->client->search_site_knowledge(
+			$this->editor_cached_site_knowledge(
 				array(
 					'query'           => $query,
 					'intent'          => 'related_content',
@@ -1307,7 +1378,7 @@ final class Rest_Controller {
 		);
 		$taxonomy_terms  = $this->editor_taxonomy_term_candidates( $context, $query, $related_content );
 		$summary_ai     = $this->editor_support_section(
-			$this->client->run_hosted_ai_content_support(
+			$this->editor_cached_hosted_ai_content_support(
 				array(
 					'intent'                  => 'summary_terms_optimization',
 					'post_id'                 => absint( $context['post_id'] ?? 0 ),
@@ -1319,7 +1390,7 @@ final class Rest_Controller {
 			)
 		);
 		$discoverability = $this->editor_support_section(
-			$this->client->build_content_discoverability_brief(
+			$this->editor_cached_content_discoverability(
 				array(
 					'post_id'                 => absint( $context['post_id'] ?? 0 ),
 					'title'                   => (string) ( $context['title'] ?? '' ),
@@ -1594,7 +1665,7 @@ final class Rest_Controller {
 
 	private function editor_internal_link_candidates( array $context, string $query ): array {
 		$knowledge = $this->editor_support_section(
-			$this->client->search_site_knowledge(
+			$this->editor_cached_site_knowledge(
 				array(
 					'query'           => $query,
 					'intent'          => 'internal_links',
@@ -1757,7 +1828,7 @@ final class Rest_Controller {
 
 	private function editor_ai_summary_suggestions( array $context, string $query ): array {
 		$summary_ai = $this->editor_support_section(
-			$this->client->run_hosted_ai_content_support(
+			$this->editor_cached_hosted_ai_content_support(
 				array(
 					'intent'             => 'summary_suggestions',
 					'post_id'            => absint( $context['post_id'] ?? 0 ),
@@ -1813,7 +1884,7 @@ final class Rest_Controller {
 		}
 
 		$section = $this->editor_support_section(
-			$this->client->run_hosted_ai_content_support(
+			$this->editor_cached_hosted_ai_content_support(
 				array(
 					'intent'             => $provider_intent,
 					'post_id'            => absint( $context['post_id'] ?? 0 ),

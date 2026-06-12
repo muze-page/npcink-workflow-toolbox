@@ -68,14 +68,22 @@ final class Admin_Page {
 	}
 
 	public function redirect_legacy_menu_slug(): void {
-		$page_param = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : '';
+		$page_param = filter_input( INPUT_GET, 'page', FILTER_UNSAFE_RAW );
 		$page       = is_scalar( $page_param ) ? sanitize_key( (string) $page_param ) : '';
 		if ( self::LEGACY_MENU_SLUG !== $page ) {
 			return;
 		}
 
-		$query         = wp_unslash( $_GET );
-		$query['page'] = self::MENU_SLUG;
+		$query = array(
+			'page' => self::MENU_SLUG,
+		);
+		foreach ( array( 'toolbox_tab', 'toolbox_tool', 'toolbox_cloud_check', 'toolbox_cloud_check_group' ) as $key ) {
+			$value = filter_input( INPUT_GET, $key, FILTER_UNSAFE_RAW );
+			$value = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
+			if ( '' !== $value ) {
+				$query[ $key ] = $value;
+			}
+		}
 
 		wp_safe_redirect( add_query_arg( $query, admin_url( 'admin.php' ) ) );
 		exit;

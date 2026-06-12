@@ -14,6 +14,14 @@ defined( 'ABSPATH' ) || exit;
 final class Provider_Client {
 	private const SITE_KNOWLEDGE_CONTENT_CHARS = 30000;
 	private const AI_IMAGE_PROMPT_CHARS = 4000;
+	private const ARTICLE_PLAN_CONTENT_CHARS = 60000;
+	private const ARTICLE_PLAN_NOTES_CHARS = 12000;
+	private const PAYLOAD_MAX_DEPTH = 8;
+	private const PAYLOAD_MAX_ITEMS = 80;
+	private const PAYLOAD_MAX_STRING_CHARS = 4000;
+	private const DEBUG_PAYLOAD_MAX_DEPTH = 6;
+	private const DEBUG_PAYLOAD_MAX_ITEMS = 40;
+	private const DEBUG_PAYLOAD_MAX_STRING_CHARS = 2000;
 
 	private Settings $settings;
 
@@ -349,7 +357,7 @@ final class Provider_Client {
 		return array(
 			'provider' => 'ai_generated',
 			'images'   => array_slice( $images, 0, max( 1, min( 4, (int) ( $options['per_page'] ?? 1 ) ) ) ),
-			'raw'      => is_array( $result ) ? $this->sanitize_payload( $result ) : array(),
+			'raw'      => is_array( $result ) ? $this->sanitize_debug_payload( $result ) : array(),
 		);
 	}
 
@@ -1182,9 +1190,9 @@ final class Provider_Client {
 			$title = $topic;
 		}
 
-		$reviewed_draft = trim( sanitize_textarea_field( (string) ( $input['reviewed_draft_markdown'] ?? ( $input['content_markdown'] ?? '' ) ) ) );
-		$draft_notes    = trim( sanitize_textarea_field( (string) ( $input['draft_notes'] ?? '' ) ) );
-		$goal           = trim( sanitize_textarea_field( (string) ( $input['article_goal'] ?? '' ) ) );
+		$reviewed_draft = trim( $this->bounded_text( (string) ( $input['reviewed_draft_markdown'] ?? ( $input['content_markdown'] ?? '' ) ), self::ARTICLE_PLAN_CONTENT_CHARS ) );
+		$draft_notes    = trim( $this->bounded_text( (string) ( $input['draft_notes'] ?? '' ), self::ARTICLE_PLAN_NOTES_CHARS ) );
+		$goal           = trim( $this->bounded_text( (string) ( $input['article_goal'] ?? '' ), self::PAYLOAD_MAX_STRING_CHARS ) );
 		$audience       = trim( sanitize_text_field( (string) ( $input['target_audience'] ?? '' ) ) );
 		$angle          = trim( sanitize_text_field( (string) ( $input['angle'] ?? '' ) ) );
 		$language       = trim( sanitize_text_field( (string) ( $input['language'] ?? 'zh-CN' ) ) );
@@ -1310,7 +1318,7 @@ final class Provider_Client {
 
 	public function build_article_write_plan( array $input ) {
 		$title   = trim( sanitize_text_field( (string) ( $input['title'] ?? '' ) ) );
-		$content = trim( sanitize_textarea_field( (string) ( $input['content_markdown'] ?? ( $input['content'] ?? '' ) ) ) );
+		$content = trim( $this->bounded_text( (string) ( $input['content_markdown'] ?? ( $input['content'] ?? '' ) ), self::ARTICLE_PLAN_CONTENT_CHARS ) );
 		if ( '' === $title || '' === $content ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_article_plan_input',
@@ -1443,7 +1451,7 @@ final class Provider_Client {
 		foreach ( $articles as $index => $article ) {
 			$article = is_array( $article ) ? $article : array();
 			$title   = trim( sanitize_text_field( (string) ( $article['title'] ?? '' ) ) );
-			$content = trim( sanitize_textarea_field( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ) ) );
+			$content = trim( $this->bounded_text( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ), self::ARTICLE_PLAN_CONTENT_CHARS ) );
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
 					'npcink_toolbox_article_batch_item_invalid',
@@ -1574,7 +1582,7 @@ final class Provider_Client {
 		foreach ( $articles as $index => $article ) {
 			$article = is_array( $article ) ? $article : array();
 			$title   = trim( sanitize_text_field( (string) ( $article['title'] ?? '' ) ) );
-			$content = trim( sanitize_textarea_field( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ) ) );
+			$content = trim( $this->bounded_text( (string) ( $article['content_markdown'] ?? ( $article['content'] ?? '' ) ), self::ARTICLE_PLAN_CONTENT_CHARS ) );
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
 					'npcink_toolbox_article_media_batch_item_invalid',
@@ -3412,7 +3420,7 @@ final class Provider_Client {
 		);
 
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
-			$payload['cloud_response'] = $this->sanitize_payload( $response );
+			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
 		return $payload;
@@ -4255,7 +4263,7 @@ final class Provider_Client {
 		);
 
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
-			$payload['cloud_response'] = $this->sanitize_payload( $response );
+			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
 		return $payload;
@@ -4852,7 +4860,7 @@ final class Provider_Client {
 
 	private function with_optional_raw( array $payload, array $raw ): array {
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
-			$payload['raw'] = $raw;
+			$payload['raw'] = $this->sanitize_debug_payload( $raw );
 		}
 
 		return $payload;
@@ -5269,11 +5277,20 @@ final class Provider_Client {
 		return $this->sanitize_payload( $candidate );
 	}
 
-	private function sanitize_payload( $value ) {
+	private function sanitize_payload( $value, int $depth = 0 ) {
+		if ( $depth >= self::PAYLOAD_MAX_DEPTH ) {
+			return is_array( $value ) ? array() : $this->bounded_text( (string) $value, self::PAYLOAD_MAX_STRING_CHARS );
+		}
+
 		if ( is_array( $value ) ) {
 			$sanitized = array();
+			$count     = 0;
 			foreach ( $value as $key => $child ) {
-				$sanitized[ is_string( $key ) ? sanitize_key( $key ) : $key ] = $this->sanitize_payload( $child );
+				if ( $count >= self::PAYLOAD_MAX_ITEMS ) {
+					break;
+				}
+				$sanitized[ is_string( $key ) ? sanitize_key( $key ) : $key ] = $this->sanitize_payload( $child, $depth + 1 );
+				++$count;
 			}
 
 			return $sanitized;
@@ -5283,14 +5300,90 @@ final class Provider_Client {
 			return $value;
 		}
 
-		return sanitize_textarea_field( (string) $value );
+		return $this->bounded_text( (string) $value, self::PAYLOAD_MAX_STRING_CHARS );
+	}
+
+	private function sanitize_debug_payload( $value, int $depth = 0, string $current_key = '' ) {
+		if ( '' !== $current_key && $this->is_sensitive_payload_key( $current_key ) ) {
+			return '[redacted]';
+		}
+
+		if ( $depth >= self::DEBUG_PAYLOAD_MAX_DEPTH ) {
+			return is_array( $value ) ? array( '_truncated' => true ) : $this->bounded_text( (string) $value, self::DEBUG_PAYLOAD_MAX_STRING_CHARS );
+		}
+
+		if ( is_array( $value ) ) {
+			$sanitized = array();
+			$count     = 0;
+			foreach ( $value as $key => $child ) {
+				if ( $count >= self::DEBUG_PAYLOAD_MAX_ITEMS ) {
+					$sanitized['_truncated'] = true;
+					break;
+				}
+
+				$payload_key               = is_string( $key ) ? sanitize_key( $key ) : $key;
+				$sanitized[ $payload_key ] = $this->sanitize_debug_payload( $child, $depth + 1, is_string( $key ) ? $key : '' );
+				++$count;
+			}
+
+			return $sanitized;
+		}
+
+		if ( is_bool( $value ) || is_int( $value ) || is_float( $value ) || null === $value ) {
+			return $value;
+		}
+
+		return $this->bounded_text( (string) $value, self::DEBUG_PAYLOAD_MAX_STRING_CHARS );
+	}
+
+	private function is_sensitive_payload_key( string $key ): bool {
+		$normalized = strtolower( preg_replace( '/[^a-z0-9]+/', '_', $key ) ?? $key );
+		$normalized = trim( $normalized, '_' );
+		if ( '' === $normalized ) {
+			return false;
+		}
+
+		$sensitive_keys = array(
+			'authorization',
+			'api_key',
+			'apikey',
+			'access_token',
+			'refresh_token',
+			'id_token',
+			'token',
+			'secret',
+			'password',
+			'credential',
+			'private_key',
+			'cookie',
+			'set_cookie',
+			'headers',
+			'request_headers',
+			'response_headers',
+			'raw_headers',
+			'billing',
+			'quota',
+			'request_log',
+			'response_log',
+		);
+		if ( in_array( $normalized, $sensitive_keys, true ) ) {
+			return true;
+		}
+
+		foreach ( array( '_api_key', '_token', '_secret', '_password', '_credential', '_private_key' ) as $suffix ) {
+			if ( strlen( $normalized ) >= strlen( $suffix ) && substr( $normalized, -strlen( $suffix ) ) === $suffix ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private function resolve_discoverability_source( array $input ) {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		$title   = trim( sanitize_text_field( (string) ( $input['title'] ?? '' ) ) );
 		$topic   = trim( sanitize_text_field( (string) ( $input['topic'] ?? '' ) ) );
-		$content = trim( sanitize_textarea_field( (string) ( $input['content'] ?? ( $input['content_markdown'] ?? '' ) ) ) );
+		$content = trim( $this->bounded_text( (string) ( $input['content'] ?? ( $input['content_markdown'] ?? '' ) ), self::ARTICLE_PLAN_CONTENT_CHARS ) );
 		$excerpt = trim( sanitize_textarea_field( (string) ( $input['excerpt'] ?? '' ) ) );
 
 		if ( 0 < $post_id ) {
