@@ -87,6 +87,38 @@ composer eval:recommendation:review
 To use the third model as generator or reviewer, switch the profile name to
 `grok43`.
 
+Run a three-model rotating review batch and export only differences:
+
+```bash
+REC_EVAL_TRIAD_LIMIT=10 composer eval:recommendation:triad
+```
+
+The expanded form is:
+
+```bash
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=tests/recommendation-eval/generated/ai-cycle-gpt55.json \
+REC_EVAL_GENERATOR_PROFILE=gpt55 REC_EVAL_REVIEWER_PROFILE=deepseek REC_EVAL_REPAIR_PROFILE=gpt55 \
+composer eval:recommendation:cycle
+
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=tests/recommendation-eval/generated/ai-cycle-grok43.json \
+REC_EVAL_GENERATOR_PROFILE=grok43 REC_EVAL_REVIEWER_PROFILE=gpt55 REC_EVAL_REPAIR_PROFILE=grok43 \
+composer eval:recommendation:cycle
+
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=tests/recommendation-eval/generated/ai-cycle-deepseek.json \
+REC_EVAL_GENERATOR_PROFILE=deepseek REC_EVAL_REVIEWER_PROFILE=grok43 REC_EVAL_REPAIR_PROFILE=deepseek \
+composer eval:recommendation:cycle
+
+composer eval:recommendation:diff
+```
+
+The difference report contains only rows where at least one model disagrees,
+scores a tool at 3 or below, reports issues, or fails the cycle. The default
+outputs are:
+
+- `tests/recommendation-eval/generated/differences.md`
+- `tests/recommendation-eval/generated/differences.json`
+- `tests/recommendation-eval/generated/differences.csv`
+
 ## Sampling Plan
 
 Start with 30-50 posts and keep the buckets mixed:
