@@ -2,6 +2,11 @@
 
 Status: first hard-gate scaffold.
 
+This development workflow now lives in the sibling
+`/Users/muze/gitee/magick-ai-eval-lab` repository. Toolbox keeps Composer
+proxy commands for convenience, but the scripts, fixtures, generated files, and
+provider-key environment handling are owned by the eval lab.
+
 The editor summary feature should be evaluated in layers instead of relying on
 manual spot checks. The first layer is an offline hard gate that catches
 obvious failures before a model response reaches an editor or a batch workflow.
@@ -28,7 +33,7 @@ Run:
 composer eval:summary
 ```
 
-The default fixture lives at `dev/evaluation/summary/samples.json`. The script checks
+The default fixture lives at `summary/samples.json`. The script checks
 candidate excerpts for:
 
 - length limits;
@@ -45,7 +50,7 @@ To evaluate generated candidates, create a JSON file with the same shape and
 pass it to the runner:
 
 ```bash
-php dev/evaluation/summary/run.php /path/to/generated-summary-candidates.json
+php summary/run.php /path/to/generated-summary-candidates.json
 ```
 
 ## Export Local WordPress Samples
@@ -58,7 +63,7 @@ composer eval:summary:export
 ```
 
 The default author is `Muze`, and the default output path is
-`dev/evaluation/summary/generated/muze-source-samples.json`. Override when needed:
+`summary/generated/muze-source-samples.json`. Override when needed:
 
 ```bash
 SUMMARY_EVAL_AUTHOR="Muze" SUMMARY_EVAL_LIMIT=100 composer eval:summary:export
@@ -67,7 +72,7 @@ SUMMARY_EVAL_AUTHOR="Muze" SUMMARY_EVAL_LIMIT=100 composer eval:summary:export
 The exported file is source material, not a pass/fail eval file yet. It includes
 post title, body text, existing excerpt, categories, tags, and forbidden summary
 phrases. Add generated candidates before running it through
-`dev/evaluation/summary/run.php`.
+`summary/run.php`.
 
 ## Generate Candidates
 
@@ -77,8 +82,8 @@ Generate AI summary candidates from the exported source samples:
 composer eval:summary:generate
 ```
 
-The default input is `dev/evaluation/summary/generated/muze-source-samples.json`,
-the default output is `dev/evaluation/summary/generated/muze-candidates.json`, and
+The default input is `summary/generated/muze-source-samples.json`,
+the default output is `summary/generated/muze-candidates.json`, and
 the default generation limit is 10 samples. The command also retries transient
 Cloud active-run errors and sleeps between samples because a local site may allow
 only one active hosted run at a time. Keep the default small while tuning
@@ -95,7 +100,7 @@ not update WordPress excerpts, terms, metadata, posts, or Core proposals.
 Evaluate the generated candidates:
 
 ```bash
-php dev/evaluation/summary/run.php dev/evaluation/summary/generated/muze-candidates.json
+php summary/run.php summary/generated/muze-candidates.json
 ```
 
 ## Coverage Quality
@@ -156,22 +161,22 @@ adoption review:
 composer eval:summary:review
 ```
 
-The default input is `dev/evaluation/summary/generated/muze-candidates.json`. The
+The default input is `summary/generated/muze-candidates.json`. The
 command writes ignored local files with Chinese review columns:
 
-- `dev/evaluation/summary/generated/summary-human-review.md`
-- `dev/evaluation/summary/generated/summary-human-review.json`
-- `dev/evaluation/summary/generated/summary-human-review.csv`
-- `dev/evaluation/summary/generated/summary-human-review.xlsx`
+- `summary/generated/summary-human-review.md`
+- `summary/generated/summary-human-review.json`
+- `summary/generated/summary-human-review.csv`
+- `summary/generated/summary-human-review.xlsx`
 
 Override the input and output paths when reviewing a specific batch:
 
 ```bash
-SUMMARY_REVIEW_INPUT=dev/evaluation/summary/generated/muze-candidates-offset25-limit20.json \
-SUMMARY_REVIEW_MD=dev/evaluation/summary/generated/muze-candidates-offset25-review.md \
-SUMMARY_REVIEW_JSON=dev/evaluation/summary/generated/muze-candidates-offset25-review.json \
-SUMMARY_REVIEW_CSV=dev/evaluation/summary/generated/muze-candidates-offset25-review.csv \
-SUMMARY_REVIEW_XLSX=dev/evaluation/summary/generated/muze-candidates-offset25-review.xlsx \
+SUMMARY_REVIEW_INPUT=summary/generated/muze-candidates-offset25-limit20.json \
+SUMMARY_REVIEW_MD=summary/generated/muze-candidates-offset25-review.md \
+SUMMARY_REVIEW_JSON=summary/generated/muze-candidates-offset25-review.json \
+SUMMARY_REVIEW_CSV=summary/generated/muze-candidates-offset25-review.csv \
+SUMMARY_REVIEW_XLSX=summary/generated/muze-candidates-offset25-review.xlsx \
 composer eval:summary:review
 ```
 
@@ -197,7 +202,7 @@ If generated excerpts start too often with formulaic audience labels such as
 `面向` or `适合`, run the offline opening analysis:
 
 ```bash
-SUMMARY_OPENINGS_INPUT=dev/evaluation/summary/generated/muze-candidates-offset25-limit20.json \
+SUMMARY_OPENINGS_INPUT=summary/generated/muze-candidates-offset25-limit20.json \
 composer eval:summary:openings
 ```
 
@@ -212,12 +217,12 @@ basic failures:
 
 ```bash
 npm install -g promptfoo
-SUMMARY_PROMPTFOO_INPUT=dev/evaluation/summary/generated/muze-candidates-offset25-limit20.json \
+SUMMARY_PROMPTFOO_INPUT=summary/generated/muze-candidates-offset25-limit20.json \
 composer eval:summary:promptfoo
 ```
 
-The Composer command first exports `dev/evaluation/summary/generated/promptfoo-cases.csv`
-and then runs the local `promptfoo eval -c dev/evaluation/summary/promptfoo.yaml`.
+The Composer command first exports `summary/generated/promptfoo-cases.csv`
+and then runs the local `promptfoo eval -c summary/promptfoo.yaml`.
 The Promptfoo config treats generated candidates as offline outputs and scores
 them with local JavaScript assertions:
 
@@ -236,13 +241,13 @@ candidates before manual review:
 
 ```bash
 export OPENAI_API_KEY=...
-SUMMARY_JUDGE_INPUT=dev/evaluation/summary/generated/muze-candidates-offset25-limit30-newprompt.json \
+SUMMARY_JUDGE_INPUT=summary/generated/muze-candidates-offset25-limit30-newprompt.json \
 SUMMARY_JUDGE_LIMIT=20 \
 composer eval:summary:judge
 ```
 
-The command exports `dev/evaluation/summary/generated/promptfoo-judge-cases.csv` and
-then runs `dev/evaluation/summary/promptfoo-judge.yaml` with Promptfoo
+The command exports `summary/generated/promptfoo-judge-cases.csv` and
+then runs `summary/promptfoo-judge.yaml` with Promptfoo
 `llm-rubric`. It compares the candidate summary against the supplied title and
 article content, using a 1-5 equivalent rubric:
 
@@ -265,7 +270,7 @@ their decisions:
 ```bash
 export GPT55_API_KEY=...
 export DEEPSEEK_API_KEY=...
-SUMMARY_JUDGE_INPUT=dev/evaluation/summary/generated/muze-candidates-offset25-limit30-newprompt.json \
+SUMMARY_JUDGE_INPUT=summary/generated/muze-candidates-offset25-limit30-newprompt.json \
 SUMMARY_JUDGE_LIMIT=20 \
 composer eval:summary:judge:cross
 ```
@@ -278,10 +283,10 @@ Defaults:
 
 The cross-judge command writes:
 
-- `dev/evaluation/summary/generated/promptfoo-judge-gpt55.json`
-- `dev/evaluation/summary/generated/promptfoo-judge-deepseek.json`
-- `dev/evaluation/summary/generated/promptfoo-judge-cross.json`
-- `dev/evaluation/summary/generated/promptfoo-judge-cross.csv`
+- `summary/generated/promptfoo-judge-gpt55.json`
+- `summary/generated/promptfoo-judge-deepseek.json`
+- `summary/generated/promptfoo-judge-cross.json`
+- `summary/generated/promptfoo-judge-cross.csv`
 
 Override model-specific outputs with `SUMMARY_JUDGE_GPT55_OUTPUT` and
 `SUMMARY_JUDGE_DEEPSEEK_OUTPUT`. Override comparison inputs with

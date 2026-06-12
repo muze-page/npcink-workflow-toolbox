@@ -2,6 +2,11 @@
 
 Status: local test workflow.
 
+This development workflow now lives in the sibling
+`/Users/muze/gitee/magick-ai-eval-lab` repository. Toolbox keeps Composer
+proxy commands for convenience, but the scripts, generated files, model
+profiles, and local provider-key handling are owned by the eval lab.
+
 This workflow evaluates the first-stage recommendation tools with real local
 WordPress articles:
 
@@ -96,15 +101,15 @@ REC_EVAL_TRIAD_LIMIT=10 composer eval:recommendation:triad
 The expanded form is:
 
 ```bash
-REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=dev/evaluation/recommendation/generated/ai-cycle-gpt55.json \
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=recommendation/generated/ai-cycle-gpt55.json \
 REC_EVAL_GENERATOR_PROFILE=gpt55 REC_EVAL_REVIEWER_PROFILE=deepseek REC_EVAL_REPAIR_PROFILE=gpt55 \
 composer eval:recommendation:cycle
 
-REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=dev/evaluation/recommendation/generated/ai-cycle-grok43.json \
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=recommendation/generated/ai-cycle-grok43.json \
 REC_EVAL_GENERATOR_PROFILE=grok43 REC_EVAL_REVIEWER_PROFILE=gpt55 REC_EVAL_REPAIR_PROFILE=grok43 \
 composer eval:recommendation:cycle
 
-REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=dev/evaluation/recommendation/generated/ai-cycle-deepseek.json \
+REC_EVAL_CYCLE_LIMIT=10 REC_EVAL_OUTPUT=recommendation/generated/ai-cycle-deepseek.json \
 REC_EVAL_GENERATOR_PROFILE=deepseek REC_EVAL_REVIEWER_PROFILE=grok43 REC_EVAL_REPAIR_PROFILE=deepseek \
 composer eval:recommendation:cycle
 
@@ -115,9 +120,9 @@ The difference report contains only rows where at least one model disagrees,
 scores a tool at 3 or below, reports issues, or fails the cycle. The default
 outputs are:
 
-- `dev/evaluation/recommendation/generated/differences.md`
-- `dev/evaluation/recommendation/generated/differences.json`
-- `dev/evaluation/recommendation/generated/differences.csv`
+- `recommendation/generated/differences.md`
+- `recommendation/generated/differences.json`
+- `recommendation/generated/differences.csv`
 
 ## Sampling Plan
 

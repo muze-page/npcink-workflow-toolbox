@@ -4,5 +4,3 @@
 .env.*
 !.env.example
 !.env.*.example
-dev/evaluation/summary/generated/
-dev/evaluation/recommendation/generated/
