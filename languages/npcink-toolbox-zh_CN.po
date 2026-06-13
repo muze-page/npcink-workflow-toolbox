@@ -2525,14 +2525,17 @@ msgstr "推荐已有分类"
 msgid "Recommended existing tags"
 msgstr "推荐已有标签"
 
-msgid "Use this section for tags that already exist in WordPress."
-msgstr "这里显示 WordPress 中已存在、可进入 Core 审核的标签。"
+msgid "Existing WordPress categories appear here and can be selected for a Core review proposal."
+msgstr "这里显示已有 WordPress 分类；有匹配项时可选择并创建 Core 审核提案。"
 
-msgid "Existing WordPress category. Final assignment requires Core review."
-msgstr "已有 WordPress 分类；最终分配需要 Core 审核。"
+msgid "Existing WordPress tags appear here and can be selected for a Core review proposal."
+msgstr "这里显示已有 WordPress 标签；有匹配项时可选择并创建 Core 审核提案。"
 
-msgid "Existing WordPress tag. Final assignment requires Core review."
-msgstr "已有 WordPress 标签；最终分配需要 Core 审核。"
+msgid "No Core review choices are available."
+msgstr "没有可提交到 Core 审核的选项。"
+
+msgid "No existing tag choices are available for Core review."
+msgstr "当前没有可提交到 Core 审核的已有标签。"
 
 msgid "New tag candidates"
 msgstr "拟新增标签"
@@ -2546,17 +2549,11 @@ msgstr "拟新增标签（仅审查）"
 msgid "No proposed new tag gaps found. Prefer existing tags."
 msgstr "未发现拟新增标签缺口。优先使用已有标签。"
 
-msgid "These are possible vocabulary gaps, not tags that Toolbox will create."
-msgstr "这些只是可能的词汇缺口，不是 Toolbox 会创建的标签。"
+msgid "Review-only vocabulary gaps. Toolbox will not create or assign these tags from this panel."
+msgstr "仅用于审查的词汇缺口；Toolbox 不会从此面板创建或分配这些标签。"
 
 msgid "Review-only"
 msgstr "仅审查"
-
-msgid "Only consider this as a new tag if no existing WordPress tag is close enough."
-msgstr "仅当没有足够接近的已有 WordPress 标签时，才考虑作为新标签。"
-
-msgid "Toolbox does not create or assign new tags from this panel."
-msgstr "Toolbox 不会从此面板创建或分配新标签。"
 
 msgid "Core review submission"
 msgstr "Core 审核提交"

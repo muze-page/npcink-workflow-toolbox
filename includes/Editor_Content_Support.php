@@ -48,8 +48,21 @@ final class Editor_Content_Support {
 				'nonce'          => wp_create_nonce( 'wp_rest' ),
 				'adminUrl'       => esc_url_raw( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=tools' ) ),
 				'coreAdminUrl'   => esc_url_raw( admin_url( 'admin.php?page=npcink-governance-core' ) ),
+				'capabilities'   => array(
+					'canAssignTags' => $this->current_user_can_taxonomy_capability( 'post_tag', 'assign_terms' ),
+					'canCreateTags' => $this->current_user_can_taxonomy_capability( 'post_tag', 'edit_terms' ),
+				),
 			)
 		);
+	}
+
+	private function current_user_can_taxonomy_capability( string $taxonomy_name, string $capability_key ): bool {
+		$taxonomy = get_taxonomy( $taxonomy_name );
+		if ( ! $taxonomy || ! isset( $taxonomy->cap->{$capability_key} ) ) {
+			return false;
+		}
+
+		return current_user_can( (string) $taxonomy->cap->{$capability_key} );
 	}
 
 	private function asset_version( string $relative_path ): string {
