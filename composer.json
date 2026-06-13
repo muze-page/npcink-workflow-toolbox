@@ -9,6 +9,10 @@
   "scripts": {
     "lint:php": "php tests/lint.php",
     "test": "php tests/run.php",
+    "test:quiet": "php tests/run.php --quiet",
+    "test:editor": "php tests/run.php --quiet --filter=Editor",
+    "test:translations": "php tests/run.php --quiet --filter=translation",
+    "test:eval-proxy": "php tests/run.php --quiet --filter='Eval lab proxy'",
     "eval:summary": "sh scripts/eval-lab.sh task=summary_hard_gate",
     "eval:recommendation:export": "sh scripts/eval-lab.sh task=recommendation_export",
     "eval:recommendation:cycle": "sh scripts/eval-lab.sh task=recommendation_cycle",

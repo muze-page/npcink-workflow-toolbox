@@ -11,13 +11,95 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', $root . '/tests/wp-stub/' );
 }
 
+$toolbox_test_options = array(
+	'filter' => '',
+	'quiet'  => false,
+);
+$toolbox_test_counts  = array(
+	'passed'  => 0,
+	'failed'  => 0,
+	'skipped' => 0,
+);
+
+foreach ( array_slice( $_SERVER['argv'] ?? array(), 1 ) as $index => $arg ) {
+	if ( '--quiet' === $arg || '-q' === $arg ) {
+		$toolbox_test_options['quiet'] = true;
+		continue;
+	}
+
+	if ( 0 === strpos( $arg, '--filter=' ) ) {
+		$toolbox_test_options['filter'] = trim( substr( $arg, strlen( '--filter=' ) ) );
+		continue;
+	}
+
+	if ( '--filter' === $arg ) {
+		$next = array_slice( $_SERVER['argv'] ?? array(), 1 )[ $index + 1 ] ?? '';
+		if ( '' === trim( $next ) ) {
+			fwrite( STDERR, "Usage: php tests/run.php [--quiet] [--filter=<text>]\n" );
+			exit( 2 );
+		}
+
+		$toolbox_test_options['filter'] = trim( $next );
+		continue;
+	}
+
+	if ( 0 === $index || '--filter' !== ( array_slice( $_SERVER['argv'] ?? array(), 1 )[ $index - 1 ] ?? '' ) ) {
+		fwrite( STDERR, "Unknown option: {$arg}\nUsage: php tests/run.php [--quiet] [--filter=<text>]\n" );
+		exit( 2 );
+	}
+}
+
+function toolbox_test_matches_filter( string $message ): bool {
+	global $toolbox_test_options;
+
+	if ( '' === $toolbox_test_options['filter'] ) {
+		return true;
+	}
+
+	return false !== stripos( $message, $toolbox_test_options['filter'] );
+}
+
+function toolbox_test_group( string $message ): string {
+	foreach ( array( 'Composer', 'Editor', 'Translation', 'REST', 'Provider', 'Admin', 'README', 'Development workflow', 'Site Knowledge', 'Media', 'OpenClaw', 'Content' ) as $group ) {
+		if ( false !== stripos( $message, $group ) ) {
+			return $group;
+		}
+	}
+
+	$colon = strpos( $message, ':' );
+	if ( false !== $colon ) {
+		return trim( substr( $message, 0, $colon ) );
+	}
+
+	return 'general';
+}
+
 function toolbox_assert( bool $condition, string $message ): void {
+	global $toolbox_test_counts, $toolbox_test_options;
+
+	if ( ! toolbox_test_matches_filter( $message ) ) {
+		++$toolbox_test_counts['skipped'];
+		return;
+	}
+
 	if ( ! $condition ) {
+		++$toolbox_test_counts['failed'];
+		$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1 );
+		$file  = $trace[0]['file'] ?? __FILE__;
+		$line  = $trace[0]['line'] ?? 0;
 		fwrite( STDERR, "FAIL: {$message}\n" );
+		fwrite( STDERR, 'Group: ' . toolbox_test_group( $message ) . PHP_EOL );
+		fwrite( STDERR, "Location: {$file}:{$line}\n" );
+		if ( '' !== $toolbox_test_options['filter'] ) {
+			fwrite( STDERR, 'Filter: ' . $toolbox_test_options['filter'] . PHP_EOL );
+		}
 		exit( 1 );
 	}
 
-	echo "PASS: {$message}\n";
+	++$toolbox_test_counts['passed'];
+	if ( ! $toolbox_test_options['quiet'] ) {
+		echo "PASS: {$message}\n";
+	}
 }
 
 $main = file_get_contents( $root . '/npcink-toolbox.php' );
@@ -134,6 +216,8 @@ toolbox_assert( false !== $metadata_handoff_summary && false !== strpos( $metada
 toolbox_assert( false !== strpos( $metadata_handoff_summary, '2026-06-09 Editor Content Support Acceptance Closeout' ) && false !== strpos( $metadata_handoff_summary, 'split' ) && false !== strpos( $metadata_handoff_summary, 'metadata editor actions' ) && false !== strpos( $metadata_handoff_summary, 'not a separate default editor button' ) && false !== strpos( $metadata_handoff_summary, 'human editing' ) && false !== strpos( $metadata_handoff_summary, 'responsibility' ), 'Content metadata handoff summary records the editor Content Support acceptance closeout.' );
 
 $composer = file_get_contents( $root . '/composer.json' );
+toolbox_assert( false !== $composer && false !== strpos( $composer, '"test:quiet": "php tests/run.php --quiet"' ) && false !== strpos( $composer, '"test:editor": "php tests/run.php --quiet --filter=Editor"' ) && false !== strpos( $composer, '"test:translations": "php tests/run.php --quiet --filter=translation"' ) && false !== strpos( $composer, '"test:eval-proxy": "php tests/run.php --quiet --filter=\'Eval lab proxy\'"' ), 'Composer exposes focused static contract test shortcuts.' );
+toolbox_assert( false !== strpos( file_get_contents( __FILE__ ), '--filter=' ) && false !== strpos( file_get_contents( __FILE__ ), '--quiet' ) && false !== strpos( file_get_contents( __FILE__ ), 'No static contract checks matched filter' ), 'Static contract runner supports quiet output, focused filters, and empty-filter failure.' );
 toolbox_assert( false !== $composer && false !== strpos( $composer, 'smoke:article-core' ), 'Composer exposes the article draft to Core smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'tests/smoke-article-draft-core-proof.php' ), 'Composer article smoke runs the Toolbox/Core handoff proof.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:article-media-batch-core' ) && false !== strpos( $composer, 'tests/smoke-article-media-batch-core-proof.php' ), 'Composer exposes the high-risk article/media batch Core proposal smoke script.' );
@@ -1217,4 +1301,18 @@ toolbox_assert( false === strpos( $client, 'confirm_token' ), 'Legacy confirm_to
 $uninstall = file_get_contents( $root . '/uninstall.php' );
 toolbox_assert( false !== strpos( $uninstall, 'npcink_toolbox_content_context' ), 'Uninstall removes content context option.' );
 
-echo "Static contract checks passed.\n";
+if ( '' !== $toolbox_test_options['filter'] && 0 === $toolbox_test_counts['passed'] ) {
+	fwrite( STDERR, 'No static contract checks matched filter: ' . $toolbox_test_options['filter'] . PHP_EOL );
+	exit( 1 );
+}
+
+$summary = sprintf(
+	'Static contract checks passed. %d passed',
+	$toolbox_test_counts['passed']
+);
+if ( $toolbox_test_counts['skipped'] > 0 ) {
+	$summary .= sprintf( ', %d skipped', $toolbox_test_counts['skipped'] );
+}
+$summary .= '.';
+
+echo $summary . PHP_EOL;
