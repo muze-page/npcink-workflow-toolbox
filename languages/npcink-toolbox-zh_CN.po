@@ -2234,8 +2234,8 @@ msgstr "使用托管 AI 根据当前草稿生成可审阅的摘要候选。"
 msgid "Find matching existing categories without running the full metadata workflow."
 msgstr "查找匹配的已有分类，不运行完整元数据流程。"
 
-msgid "Find existing tag matches and review-only new tag gaps."
-msgstr "查找已有标签匹配，并提示仅供审阅的新标签缺口。"
+msgid "Find matching existing tags without creating new vocabulary."
+msgstr "查找匹配的已有标签，不创建新词表。"
 
 msgid "Recommend terms"
 msgstr "推荐分类标签"
@@ -2536,24 +2536,6 @@ msgstr "没有可提交到 Core 审核的选项。"
 
 msgid "No existing tag choices are available for Core review."
 msgstr "当前没有可提交到 Core 审核的已有标签。"
-
-msgid "New tag candidates"
-msgstr "拟新增标签"
-
-msgid "No new tag candidates returned."
-msgstr "没有返回拟新增标签。"
-
-msgid "Proposed new tags for review only"
-msgstr "拟新增标签（仅审查）"
-
-msgid "No proposed new tag gaps found. Prefer existing tags."
-msgstr "未发现拟新增标签缺口。优先使用已有标签。"
-
-msgid "Review-only vocabulary gaps. Toolbox will not create or assign these tags from this panel."
-msgstr "仅用于审查的词汇缺口；Toolbox 不会从此面板创建或分配这些标签。"
-
-msgid "Review-only"
-msgstr "仅审查"
 
 msgid "Core review submission"
 msgstr "Core 审核提交"

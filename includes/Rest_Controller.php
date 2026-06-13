@@ -1417,7 +1417,7 @@ final class Rest_Controller {
 			)
 		);
 		$summary_layers     = $this->editor_summary_layer_candidates( $context, $related_content );
-		$proposed_new_terms = $this->editor_proposed_new_terms_review( $summary_ai );
+		$proposed_new_terms = $this->empty_proposed_new_terms_review();
 		$handoff_preview    = $this->editor_summary_terms_handoff_preview( $summary_layers, $categories, $tags, $proposed_new_terms );
 		$metadata_delta     = $this->editor_content_metadata_delta( $context, $query, $summary_layers, $categories, $tags, $proposed_new_terms, $related_content, $discoverability, $handoff_preview );
 
@@ -1443,7 +1443,7 @@ final class Rest_Controller {
 			'content_metadata_delta' => $metadata_delta,
 			'risk_notes'             => array(
 				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
-				__( 'Prefer existing categories and tags; treat proposed new tags as operator-review candidates only.', 'npcink-toolbox' ),
+				__( 'Prefer existing categories and tags; defer new vocabulary to a later taxonomy governance workflow.', 'npcink-toolbox' ),
 				__( 'Use related Site Knowledge results to avoid duplicate coverage and taxonomy drift.', 'npcink-toolbox' ),
 			),
 			'handoff'                => array(
@@ -1498,12 +1498,12 @@ final class Rest_Controller {
 				'taxonomy_quality'  => $this->editor_taxonomy_quality( $context, $categories, $tags, $proposed_new_terms ),
 				'hypotheses'        => array(
 					__( 'A clearer excerpt can improve archive, social, and answer-summary presentation without rewriting the article body.', 'npcink-toolbox' ),
-					__( 'Existing WordPress terms should be reused before proposing new vocabulary.', 'npcink-toolbox' ),
+					__( 'Existing WordPress terms should be reused; new vocabulary belongs in a later taxonomy governance workflow.', 'npcink-toolbox' ),
 					__( 'Related Site Knowledge evidence can reveal duplicate coverage and proven term patterns.', 'npcink-toolbox' ),
 				),
 				'warnings'          => array(
 					__( 'Do not accept summaries that add unsupported claims.', 'npcink-toolbox' ),
-					__( 'Treat proposed new terms as taxonomy-sprawl risks until a human confirms a real vocabulary gap.', 'npcink-toolbox' ),
+					__( 'Do not use the editor recommendation loop to create categories or tags.', 'npcink-toolbox' ),
 					__( 'Do not treat related-content evidence as indexing or RAG lifecycle ownership inside Toolbox.', 'npcink-toolbox' ),
 				),
 				'evidence_strength' => empty( $evidence_refs ) ? 'draft_only' : 'draft_plus_tool_context',
@@ -1529,7 +1529,7 @@ final class Rest_Controller {
 							array(
 								'operator_selected_final_excerpt_or_existing_terms',
 								'exact_or_sufficient_preview_before_any_apply_action',
-								'core_proposal_required_for_external_batch_new_term_or_incomplete_preview',
+								'core_proposal_required_for_incomplete_preview_or_future_taxonomy_governance',
 							)
 						)
 					)
@@ -1543,7 +1543,7 @@ final class Rest_Controller {
 					'excerpt_reviewed_with_no_unsupported_claims',
 					'existing_categories_or_tags_reused_when_possible',
 					'related_content_terms_used_for_ranking_only',
-					'new_term_candidates_keep_review_required_true',
+					'new_term_candidates_deferred_to_taxonomy_governance',
 					'no_toolbox_direct_wordpress_write',
 					'accepted_write_like_changes_route_through_core_or_future_classified_local_consent',
 				),
@@ -1551,7 +1551,7 @@ final class Rest_Controller {
 			'learning_candidates'    => array(
 				'accepted_excerpt_style',
 				'accepted_existing_category_or_tag_patterns',
-				'rejected_or_merged_new_term_candidates',
+				'future_taxonomy_gap_feedback',
 				'duplicate_topic_or_taxonomy_noise_feedback',
 			),
 		);
@@ -2177,7 +2177,7 @@ final class Rest_Controller {
 				static fn( array $item ): bool => 'post_tag' === (string) ( $item['taxonomy'] ?? '' )
 			)
 		);
-		$proposed_new_terms = $this->editor_proposed_new_terms_from_query( $context, $query, $tags );
+		$proposed_new_terms = $this->empty_proposed_new_terms_review();
 
 		return $this->editor_taxonomy_only_suggestion_section(
 			'tag_suggestions',
@@ -2211,7 +2211,7 @@ final class Rest_Controller {
 			),
 			'selection_policy'           => array(
 				'prefer_existing_terms'      => true,
-				'new_terms_are_review_only'  => true,
+				'new_terms_deferred'         => true,
 				'no_toolbox_term_creation'   => true,
 				'accepted_write_path'        => 'core_proposal_required',
 			),
@@ -2245,31 +2245,6 @@ final class Rest_Controller {
 					'evidence_refs'  => is_array( $item['evidence_refs'] ?? null ) ? $item['evidence_refs'] : array(),
 				)
 			);
-		}
-
-		if ( 'tag_suggestions' === $candidate_type ) {
-			$new_terms = is_array( $proposed_new_terms['items'] ?? null ) ? array_slice( $proposed_new_terms['items'], 0, 5 ) : array();
-			foreach ( $new_terms as $index => $item ) {
-				$name = sanitize_text_field( (string) ( $item['name'] ?? '' ) );
-				if ( '' === $name ) {
-					continue;
-				}
-				$result[] = $this->editor_recommendation_candidate(
-					array(
-						'id'             => 'new_tag_candidate_' . ( $index + 1 ),
-						'kind'           => 'new_tag',
-						'label'          => __( 'Review-only new tag', 'npcink-toolbox' ),
-						'value'          => $name,
-						'reason'         => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
-						'confidence'     => 0.2,
-						'target_field'   => 'post_tag',
-						'action_policy'  => 'operator_review_only_no_insert',
-						'quality_status' => 'review',
-						'quality_score'  => 40,
-						'quality_issues' => array( __( '新标签候选仅用于人工审查；Toolbox 不创建词条。', 'npcink-toolbox' ) ),
-					)
-				);
-			}
 		}
 
 		return $result;
@@ -2507,43 +2482,12 @@ final class Rest_Controller {
 						'reason'                 => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
 						'review_required'        => true,
 						'strong_review_required' => true,
-						'authorization_path'     => 'core_policy_gated_strong_review',
-						'status'                 => 'review_only_vocabulary_gap',
+						'authorization_path'     => 'deferred_taxonomy_governance',
+						'status'                 => 'deferred_taxonomy_gap',
 					);
 				},
 				$items
 			)
-		);
-	}
-
-	private function editor_proposed_new_terms_review( array $summary_ai ): array {
-		$items = array();
-		if ( '' !== trim( (string) ( $summary_ai['output_text'] ?? '' ) ) ) {
-			$items[] = array(
-				'name'                         => __( 'AI-proposed new terms in hosted output', 'npcink-toolbox' ),
-				'status'                       => 'review_only',
-				'controlled_vocabulary_status' => 'not_existing_term',
-				'source'                       => 'hosted_ai_output',
-				'reason'                       => __( 'Review any new category or tag names mentioned by hosted AI only after checking that no existing WordPress term is close enough.', 'npcink-toolbox' ),
-				'strong_review_required'       => true,
-				'authorization_path'           => 'core_policy_gated_strong_review',
-			);
-		}
-
-		return array(
-			'candidate_type'         => 'proposed_new_terms_review',
-			'write_posture'          => 'suggestion_only',
-			'direct_wordpress_write' => false,
-			'creation_policy'        => 'core_policy_gated_strong_review',
-			'strong_review_required' => true,
-			'duplicate_review_required' => true,
-			'blocked_actions'        => array(
-				'no_direct_term_creation_in_toolbox',
-				'no_auto_approval_request_for_new_terms',
-				'no_term_assignment_without_core_policy_review',
-			),
-			'items'                  => $items,
-			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
 		);
 	}
 
@@ -2552,7 +2496,7 @@ final class Rest_Controller {
 			'candidate_type'         => 'proposed_new_terms_review',
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
-			'creation_policy'        => 'core_policy_gated_strong_review',
+			'creation_policy'        => 'deferred_taxonomy_governance',
 			'strong_review_required' => true,
 			'duplicate_review_required' => true,
 			'blocked_actions'        => array(
@@ -2561,59 +2505,7 @@ final class Rest_Controller {
 				'no_term_assignment_without_core_policy_review',
 			),
 			'items'                  => array(),
-			'empty_message'          => __( 'No new term is recommended by default. Prefer existing terms unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
-		);
-	}
-
-	private function editor_proposed_new_terms_from_query( array $context, string $query, array $existing_tag_candidates ): array {
-		$existing_keys = array();
-		foreach ( $existing_tag_candidates as $item ) {
-			$name = sanitize_text_field( (string) ( $item['name'] ?? '' ) );
-			if ( '' !== $name ) {
-				$existing_keys[ sanitize_title( $name ) ] = true;
-			}
-		}
-
-		$items = array();
-		foreach ( $this->support_tokens( $query ) as $token ) {
-			$label = trim( sanitize_text_field( $token ) );
-			if ( '' === $label || strlen( $label ) < 2 ) {
-				continue;
-			}
-			$key = sanitize_title( $label );
-			if ( '' === $key || isset( $existing_keys[ $key ] ) ) {
-				continue;
-			}
-			$items[] = array(
-				'taxonomy'                     => 'post_tag',
-				'name'                         => $label,
-				'status'                       => 'review_only_vocabulary_gap',
-				'controlled_vocabulary_status' => 'not_existing_term',
-				'source'                       => 'draft_token_gap',
-				'reason'                       => __( 'Review as a possible new tag only if no existing WordPress tag is close enough.', 'npcink-toolbox' ),
-				'strong_review_required'       => true,
-				'authorization_path'           => 'core_policy_gated_strong_review',
-			);
-			$existing_keys[ $key ] = true;
-			if ( 5 <= count( $items ) ) {
-				break;
-			}
-		}
-
-		return array(
-			'candidate_type'         => 'proposed_new_terms_review',
-			'write_posture'          => 'suggestion_only',
-			'direct_wordpress_write' => false,
-			'creation_policy'        => 'core_policy_gated_strong_review',
-			'strong_review_required' => true,
-			'duplicate_review_required' => true,
-			'blocked_actions'        => array(
-				'no_direct_term_creation_in_toolbox',
-				'no_auto_approval_request_for_new_terms',
-				'no_term_assignment_without_core_policy_review',
-			),
-			'items'                  => $items,
-			'empty_message'          => __( 'No new tag gap is obvious from the draft tokens. Prefer existing tags unless an editor confirms a real vocabulary gap.', 'npcink-toolbox' ),
+			'empty_message'          => __( 'New taxonomy creation is deferred. Use existing categories and tags in this stage.', 'npcink-toolbox' ),
 		);
 	}
 
@@ -2642,8 +2534,6 @@ final class Rest_Controller {
 				)
 			)
 		);
-		$new_term_count    = count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() );
-
 		return array(
 			array(
 				'id'                    => 'generate_apply_summary',
@@ -2699,31 +2589,6 @@ final class Rest_Controller {
 				),
 				'reason'                => __( 'Categories affect site structure, so Toolbox recommends existing categories by default and leaves any assignment policy to Core.', 'npcink-toolbox' ),
 			),
-			array(
-				'id'                    => 'create_new_tags_assign',
-				'name'                  => __( 'Create new tags and assign', 'npcink-toolbox' ),
-				'status'                => 0 < $new_term_count ? 'core_policy_gated' : 'no_new_tag_candidate',
-				'target_operation'      => 'create_post_tags_and_assign',
-				'available_fields'      => array(
-					'proposed_new_terms' => $new_term_count,
-				),
-				'auto_approval_request' => false,
-				'toolbox_direct_apply'  => false,
-				'strong_review_required' => true,
-				'duplicate_review_required' => true,
-				'authorization_path'    => 'core_policy_gated_strong_review',
-				'proposal_policy'       => array(
-					'core_proposal_required' => true,
-					'default_mode'           => 'strong_review_required',
-					'eligible_if'            => array(
-						'taxonomy_is_post_tag',
-						'normalized_term_has_no_close_existing_match',
-						'new_tag_count_is_within_core_policy_limit',
-						'current_user_can_edit_target_post',
-					),
-				),
-				'reason'                => __( 'New tag creation is allowed only as a Core-governed proposal after duplicate-term review; Toolbox never creates or assigns the tag directly.', 'npcink-toolbox' ),
-			),
 		);
 	}
 
@@ -2749,14 +2614,12 @@ final class Rest_Controller {
 				),
 				'operator_review_by_default' => array(
 					'recommend_categories',
-					'create_new_tags_assign',
 				),
 			),
 			'available_fields'          => array(
 				'summary_layers'      => $core_handoff_candidates[0]['available_fields'],
 				'existing_categories' => $core_handoff_candidates[2]['available_fields'],
 				'existing_tags'       => $core_handoff_candidates[1]['available_fields'],
-				'proposed_new_terms'  => count( is_array( $proposed_new_terms['items'] ?? null ) ? $proposed_new_terms['items'] : array() ),
 			),
 			'blocked_actions'        => array(
 				'no_excerpt_update_in_toolbox',
@@ -2768,7 +2631,6 @@ final class Rest_Controller {
 				__( 'Use Generate and apply summary when Core policy can auto-approve the selected summary layer.', 'npcink-toolbox' ),
 				__( 'Use Recommend and apply tags for existing tag ids returned by Toolbox.', 'npcink-toolbox' ),
 				__( 'Use Recommend categories as review-first guidance unless Core explicitly allows category auto-assignment.', 'npcink-toolbox' ),
-				__( 'Use Create new tags and assign only through Core proposal review after duplicate-term checks.', 'npcink-toolbox' ),
 			),
 		);
 	}
@@ -3342,7 +3204,7 @@ final class Rest_Controller {
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
 			'existing_terms_first'   => true,
-			'proposed_new_terms'     => 'operator_review_only',
+			'proposed_new_terms'     => 'deferred_taxonomy_governance',
 			'ranking_signals'        => array(
 				array(
 					'name'   => __( 'Draft query overlap', 'npcink-toolbox' ),
@@ -3352,7 +3214,7 @@ final class Rest_Controller {
 				array(
 					'name'   => __( 'Existing taxonomy vocabulary', 'npcink-toolbox' ),
 					'weight' => 'high',
-					'detail' => __( 'Prefer existing WordPress categories and tags before suggesting new terms.', 'npcink-toolbox' ),
+					'detail' => __( 'Prefer existing WordPress categories and tags; defer new vocabulary creation to taxonomy governance.', 'npcink-toolbox' ),
 				),
 				array(
 					'name'   => __( 'Site Knowledge similarity', 'npcink-toolbox' ),
@@ -3392,8 +3254,8 @@ final class Rest_Controller {
 					'detail' => __( 'Compare AI/fallback summaries with the final reviewed summary to detect overbroad or weak suggestions.', 'npcink-toolbox' ),
 				),
 				array(
-					'name'   => 'new_term_rate',
-					'detail' => __( 'Keep proposed new terms visible as a taxonomy-sprawl signal instead of silently adding them.', 'npcink-toolbox' ),
+					'name'   => 'taxonomy_gap_deferral_rate',
+					'detail' => __( 'Track cases where no existing term fits so a later taxonomy governance workflow can review them.', 'npcink-toolbox' ),
 				),
 				array(
 					'name'   => 'duplicate_topic_review',

@@ -182,12 +182,11 @@ authorization classification, outcome checks, and future learning candidates,
 but it must not persist a learning store, write audit truth, update excerpts,
 assign terms, or create terms.
 The Core handoff packet may label proposal-ready actions for Generate and apply
-summary, Recommend and apply tags, Recommend categories, and Create new tags
-and assign. Auto-approval eligibility belongs to Core policy; Toolbox must not
-auto-approve, create terms, assign terms, or update excerpts itself. Proposed
-new terms are vocabulary-gap candidates only and must be marked as
-`core_policy_gated_strong_review`; Toolbox must not create terms or assign them
-to posts. The only apply-oriented local surface is
+summary, Recommend and apply tags, and Recommend categories. Auto-approval
+eligibility belongs to Core policy; Toolbox must not auto-approve, create
+terms, assign terms, or update excerpts itself. Proposed new terms are deferred
+to a later taxonomy governance workflow; they are not current editor shortcut
+candidates or apply-plan inputs. The only apply-oriented local surface is
 `/flows/content-metadata-apply-plan` / `npcink-toolbox/build-content-metadata-apply-plan`,
 which is still read-only planning output: it packages reviewed excerpt,
 existing category, and existing tag choices into dry-run Core handoff actions

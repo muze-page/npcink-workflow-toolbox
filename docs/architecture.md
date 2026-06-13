@@ -307,13 +307,13 @@ terms, persist feedback, or become an index lifecycle signal. The section also
 returns suggestion-only ranking, dedupe, and review-metric guidance so editors
 can judge precision without creating a Toolbox audit store. It also includes a
 `content_metadata_delta` P0 artifact for one current post: issue record,
-metadata diagnosis, recommended excerpt, existing category/tag deltas, proposed
-new-term review candidates, authorization classification, outcome checks, and
-learning candidates. Operators can scope the input to the full article,
+metadata diagnosis, recommended excerpt, existing category/tag deltas,
+authorization classification, outcome checks, and future learning candidates.
+Operators can scope the input to the full article,
 selected text or block, or a topic-only brief. The same section may expose
-proposed new terms only as review-only vocabulary-gap candidates and may
-include a preview-only Core handoff packet for accepted summary and
-existing-term choices. `/flows/content-metadata-apply-plan` and
+future taxonomy-gap signals only as deferred governance notes, not as current
+editor recommendations, and may include a preview-only Core handoff packet for
+accepted summary and existing-term choices. `/flows/content-metadata-apply-plan` and
 `npcink-toolbox/build-content-metadata-apply-plan` can turn accepted excerpt,
 existing category, and existing tag choices into a dry-run
 `content_metadata_apply_plan` for Core plan-to-proposal intake. The plan targets
@@ -321,12 +321,12 @@ only `npcink-abilities-toolkit/update-post` for excerpts and
 `npcink-abilities-toolkit/set-post-terms` for existing category or post-tag ids,
 always with `create_missing=false`, `dry_run=true`, and `commit=false`. The
 handoff packet includes proposal-ready actions for Generate and apply summary,
-Recommend and apply tags, Recommend categories, and Create new tags and assign.
+Recommend and apply tags, and Recommend categories.
 Toolbox marks summary application and existing tag assignment as Core
 auto-approval candidates, keeps categories recommendation-first by default, and
-treats new tag creation as Core policy-gated after duplicate-term review. The
-delta artifact is suggestion-only and does not persist learning/audit state or
-write WordPress metadata.
+defers new taxonomy creation to a later governance workflow. The delta artifact
+is suggestion-only and does not persist learning/audit state or write WordPress
+metadata.
 
 A future local direct-apply path for the same editor metadata values is a
 `strong_local_confirmation` candidate, not a Local Admin Consent extension. It

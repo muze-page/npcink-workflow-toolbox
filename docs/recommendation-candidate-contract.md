@@ -62,8 +62,8 @@ review queues, but the original candidate object remains the source of truth.
   `title_options` parsing as a fallback. Title recommendation is a first-class
   single-intent action, separate from summary generation.
 - Category and tag shortcuts return `article_taxonomy_suggestions.v1` focused
-  artifacts. They rank existing WordPress terms and may expose review-only new
-  tag gaps without creating terms or preparing a metadata handoff.
+  artifacts. They rank existing WordPress terms only; new category or tag
+  creation is deferred to a later taxonomy governance workflow.
 - Internal-link recommendations expose `recommendation_candidates` with
   `kind=internal_link`, but `internal_link_candidates.v1` remains authoritative
   for target post id, target URL, suggested anchor text, placement hints, Site

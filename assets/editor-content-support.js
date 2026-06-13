@@ -24,7 +24,6 @@
 	const IMAGE_SOURCE_PICKER_SELECTED_EVENT = 'npcink-toolbox:image-source-selected';
 	const IMAGE_RESULT_CACHE_TTL = 5 * 60 * 1000;
 	const IMAGE_RESULT_CACHE_MAX_ENTRIES = 20;
-	const capabilities = config && config.capabilities && typeof config.capabilities === 'object' ? config.capabilities : {};
 	const imageResultCache = {};
 	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
 	const BlockControlsComponent = blockEditor.BlockControls || editor.BlockControls || null;
@@ -145,7 +144,7 @@
 		{
 			intent: 'tag_suggestions',
 			label: __('Tag suggestions', 'npcink-toolbox'),
-			description: __('Find existing tag matches and review-only new tag gaps.', 'npcink-toolbox'),
+			description: __('Find matching existing tags without creating new vocabulary.', 'npcink-toolbox'),
 			group: 'common_recommendations',
 		},
 		{
@@ -2685,7 +2684,6 @@
 		const summaryItems = metadataSummaryItems(section, (section.summary_candidates && section.summary_candidates.output_text) || '');
 		const categoryItems = Array.isArray(section.category_candidates) && section.category_candidates.length ? section.category_candidates : metadataDeltaTermItems(section, 'categories');
 		const tagItems = Array.isArray(section.tag_candidates) && section.tag_candidates.length ? section.tag_candidates : metadataDeltaTermItems(section, 'tags');
-		const newTermItems = section.proposed_new_terms && Array.isArray(section.proposed_new_terms.items) ? section.proposed_new_terms.items : [];
 		const fullMetadataRun = metadataSectionHasSource(section, 'summary_terms_optimization');
 		const mergedMetadataRun = metadataSectionHasSource(section, 'metadata_suggestions');
 		const summary = section.summary_candidates && typeof section.summary_candidates === 'object' ? section.summary_candidates : {};
@@ -2695,7 +2693,6 @@
 		const categoryOnlyRun = activeIntent === 'category_suggestions' || section.candidate_type === 'category_suggestions';
 		const tagOnlyRun = activeIntent === 'tag_suggestions' || section.candidate_type === 'tag_suggestions';
 		const showFullMetadataSurface = activeIntent === 'summary_terms_optimization' || (!activeIntent && fullMetadataRun);
-		const canCreateTags = Boolean(metadataHandoffControls && metadataHandoffControls.canCreateTags);
 		if (showFullMetadataSurface) {
 			blocks.push(createElement('h4', { key: 'summary-optimization-title' }, __('Metadata optimization', 'npcink-toolbox')));
 		}
@@ -2742,18 +2739,6 @@
 			} else {
 				blocks.push(renderMetadataUnavailableNote(__('No existing tag choices are available for Core review.', 'npcink-toolbox')));
 			}
-			if (canCreateTags) {
-				blocks.push(renderCompactMetadataSection(
-					__('Proposed new tags for review only', 'npcink-toolbox'),
-					newTermItems,
-					__('No proposed new tag gaps found. Prefer existing tags.', 'npcink-toolbox'),
-					{
-						description: __('Review-only vocabulary gaps. Toolbox will not create or assign these tags from this panel.', 'npcink-toolbox'),
-						badgeLabel: __('Review-only', 'npcink-toolbox'),
-						hideDetails: true,
-					}
-				));
-			}
 			return createElement('div', { className: 'npcink-toolbox-editor-support__optimization' }, blocks);
 		}
 
@@ -2789,19 +2774,6 @@
 				}
 			));
 		}
-		if (canCreateTags && (newTermItems.length || metadataSectionHasSource(section, 'tag_suggestions') || fullMetadataRun)) {
-			blocks.push(renderCompactMetadataSection(
-				__('Proposed new tags for review only', 'npcink-toolbox'),
-				newTermItems,
-				__('No proposed new tag gaps found. Prefer existing tags.', 'npcink-toolbox'),
-				{
-					description: __('Review-only vocabulary gaps. Toolbox will not create or assign these tags from this panel.', 'npcink-toolbox'),
-					badgeLabel: __('Review-only', 'npcink-toolbox'),
-					hideDetails: true,
-				}
-			));
-		}
-
 		if (section.optimization_strategy && Array.isArray(section.optimization_strategy.ranking_signals)) {
 			evidenceBlocks.push(createElement('h4', { key: 'summary-strategy-title' }, __('Ranking and dedupe strategy', 'npcink-toolbox')));
 			evidenceBlocks.push(renderItems(section.optimization_strategy.ranking_signals, __('No ranking strategy returned.', 'npcink-toolbox')));
@@ -3945,8 +3917,6 @@
 			openEvidence: setEvidenceModalBlocks,
 			runIntent: runFlow,
 			runningIntent: running,
-			canAssignTags: Boolean(capabilities.canAssignTags),
-			canCreateTags: Boolean(capabilities.canCreateTags),
 			seoHandoff: {
 				submit: submitSeoHandoff,
 				running: seoHandoffRunning,
