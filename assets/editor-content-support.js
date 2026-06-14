@@ -808,6 +808,7 @@
 		const cachePicker = normalizeImagePickerOptions(picker || {});
 		const cacheContext = imageRequestContext(context || {}, cachePicker.context);
 		return [
+			'image_grid_9_auto_retry',
 			type || 'image',
 			cachePicker.imageUse,
 			String(query || '').trim().toLowerCase(),
@@ -1368,6 +1369,18 @@
 		];
 	}
 
+	function imageAutoFallbackQuery(payload, originalQuery) {
+		const original = String(originalQuery || '').trim().toLowerCase();
+		const suggestions = extractImageSearchSuggestions(payload);
+		for (let index = 0; index < suggestions.length; index += 1) {
+			const suggestion = String(suggestions[index] || '').trim();
+			if (suggestion && suggestion.toLowerCase() !== original) {
+				return suggestion;
+			}
+		}
+		return '';
+	}
+
 	function renderImageSuggestionButtons(suggestions, onUseSuggestion) {
 		if (!Array.isArray(suggestions) || !suggestions.length || typeof onUseSuggestion !== 'function') {
 			return null;
@@ -1457,7 +1470,7 @@
 		return createElement(
 			'div',
 			{ className: 'npcink-toolbox-editor-support__image-grid' },
-				images.slice(0, 8).map((image, index) => {
+				images.slice(0, 9).map((image, index) => {
 					const previewUrl = imagePreviewUrl(image);
 					const candidateKey = imageStableKey(image, index);
 					const selected = selectedImage && imageStableKey(selectedImage, index) === candidateKey;
@@ -1846,6 +1859,9 @@
 		const selectedPanelTitle = selectOnlyMode
 			? __('Selected image', 'npcink-toolbox')
 			: (paragraphMode ? __('Selected paragraph image', 'npcink-toolbox') : __('Selected featured image', 'npcink-toolbox'));
+		const selectedBoundaryNote = selectOnlyMode
+			? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox')
+			: (paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : (existingAttachmentId > 0 ? __('Existing media can be set as the featured image through local admin consent with Core audit. External candidates still use Adapter/Core import.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox')));
 		const sourceDetailRows = [
 			renderInfoRow(__('Source', 'npcink-toolbox'), imageCandidateSourceLabel(selectedImage), 'source'),
 			renderInfoRow(__('Review', 'npcink-toolbox'), selectedImage.license_review_status ? formatMetaLabel(selectedImage.license_review_status) : '', 'review'),
@@ -1858,8 +1874,7 @@
 			createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__selected-title' },
-				createElement('h3', null, selectedPanelTitle),
-				createElement('strong', null, truncateText(imageTitle(selectedImage), 90))
+				createElement('h3', null, selectedPanelTitle)
 			),
 			createElement(
 				'div',
@@ -1910,23 +1925,21 @@
 					__('Import media only', 'npcink-toolbox')
 				)
 			),
-			createElement('span', { className: 'npcink-toolbox-editor-support__selected-note' }, selectOnlyMode ? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox') : paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : (existingAttachmentId > 0 ? __('Existing media can be set as the featured image through local admin consent with Core audit. External candidates still use Adapter/Core import.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox'))),
 			renderAiImageRegenerationControls(selectedImage, regenerationRunning, onRegenerate),
 			createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__seo-fields' },
-				createElement('h3', null, __('Media SEO', 'npcink-toolbox')),
-				createElement(TextareaControl, {
-					label: __('Alt text', 'npcink-toolbox'),
-					value: seo.alt || '',
-					disabled: adoptionRunning,
-					__next40pxDefaultSize: true,
-					onChange: (value) => onSeoFieldChange('alt', value),
-				}),
 				createElement(
 					'details',
 					{ className: 'npcink-toolbox-editor-support__image-details' },
-					createElement('summary', null, __('Title and description', 'npcink-toolbox')),
+					createElement('summary', null, __('More SEO fields', 'npcink-toolbox')),
+					createElement(TextareaControl, {
+						label: __('Alt text', 'npcink-toolbox'),
+						value: seo.alt || '',
+						disabled: adoptionRunning,
+						__next40pxDefaultSize: true,
+						onChange: (value) => onSeoFieldChange('alt', value),
+					}),
 					createElement(TextControl, {
 						label: __('Title', 'npcink-toolbox'),
 						value: seo.title || '',
@@ -1952,6 +1965,7 @@
 					{ className: 'npcink-toolbox-editor-support__info-list' },
 					sourceDetailRows
 				) : null,
+				selectedBoundaryNote ? createElement('small', null, selectedBoundaryNote) : null,
 				sourceUrl ? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer' }, __('Open source', 'npcink-toolbox')) : null,
 				selectedImage.source_type ? createElement('small', null, __('Type: ', 'npcink-toolbox') + formatMetaLabel(selectedImage.source_type)) : null,
 				providerDetails.length ? createElement('small', null, __('Runtime: ', 'npcink-toolbox') + providerDetails.join(' / ')) : null,
@@ -3632,18 +3646,36 @@
 			resetImageFeedbackState();
 			try {
 				const query = imageFastSearchQuery(postContext, operatorInstruction, activePicker.context, activePicker);
-				const result = await postJson('image-candidates', {
+				let result = await postJson('image-candidates', {
 					query,
 					provider: 'auto',
-					per_page: 8,
+					per_page: 9,
 					latency_mode: 'fast_first',
 					image_mode: activePicker.imageUse,
 					user_instruction: operatorInstruction,
 					visual_context: buildImageVisualContext(postContext, activeImageMode, operatorInstruction, imagePickerContextOverride(activePicker), activePicker.imageUse),
 				});
+				const fallbackQuery = !extractImageCandidates(result).length ? imageAutoFallbackQuery(result, query) : '';
+				if (fallbackQuery) {
+					const fallbackResult = await postJson('image-candidates', {
+						query: fallbackQuery,
+						provider: 'auto',
+						per_page: 9,
+						latency_mode: 'fast_first',
+						image_mode: activePicker.imageUse,
+						user_instruction: operatorInstruction,
+						visual_context: buildImageVisualContext(postContext, activeImageMode, fallbackQuery, imagePickerContextOverride(activePicker), activePicker.imageUse),
+					});
+					if (extractImageCandidates(fallbackResult).length) {
+						result = fallbackResult;
+						setImageGuidance(__('Showing image-source candidates from a shorter visual query.', 'npcink-toolbox'));
+					}
+				}
 				writeCachedImageResult(cacheKey, result);
 				setImageResult(result);
-				setImageGuidance(__('Showing fast image-source candidates. SEO details may be refined after selecting an image.', 'npcink-toolbox'));
+				if (!fallbackQuery || !extractImageCandidates(result).length) {
+					setImageGuidance(__('Showing fast image-source candidates. SEO details may be refined after selecting an image.', 'npcink-toolbox'));
+				}
 			} catch (requestError) {
 				setImageError(formatImageErrorMessage(requestError, __('Cloud image recommendation failed.', 'npcink-toolbox')));
 			} finally {
@@ -3692,7 +3724,7 @@
 				const result = await postJson('image-candidates', {
 					query,
 					provider: 'auto',
-					per_page: 8,
+					per_page: 9,
 					latency_mode: 'fast_first',
 					image_mode: activePicker.imageUse,
 					visual_context: buildImageVisualContext(postContext, activePicker.mode, query, imagePickerContextOverride(activePicker), activePicker.imageUse),

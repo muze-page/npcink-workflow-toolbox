@@ -94,10 +94,12 @@ author loop:
   short cache entry is already available, and reports timing for the cached
   vector lookup and hosted AI call. Any vector context is used only for coverage
   and site-style hints while the current draft brief remains the factual source.
-  The result view also offers an advanced full-context rerun for quality
-  fallback. Toolbox strips meta wording, enforces length limits, reranks by
-  coverage, and lets the editor copy one candidate into the current unsaved
-  excerpt field.
+  The default hosted prompt uses `fast_summary_v2`: a short JSON-only request
+  for three excerpt fields, with length, meta-wording, coverage, and reranking
+  handled by local PHP post-processing. The result view also offers an advanced
+  full-context rerun that keeps the richer quality contract as a slower fallback.
+  Toolbox strips meta wording, enforces length limits, reranks by coverage, and
+  lets the editor copy one candidate into the current unsaved excerpt field.
 - `category_suggestions`: Toolbox ranks existing WordPress categories by
   current draft token matches and, when supplied by the richer flow, related
   Site Knowledge term evidence. The focused shortcut does not use selected text
