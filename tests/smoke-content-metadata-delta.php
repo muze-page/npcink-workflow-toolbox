@@ -225,7 +225,7 @@ toolbox_metadata_delta_smoke_assert( 'ranking_evidence_only_no_term_creation_or_
 toolbox_metadata_delta_smoke_assert( 'related_context_checks_duplicate_coverage_and_term_fit_without_adding_new_facts' === (string) ( $summary_context['policy'] ?? '' ), 'Summary layers keep related context as duplicate/term-fit evidence without adding facts.' );
 toolbox_metadata_delta_smoke_assert( 'suggestion_only' === (string) ( $auth['classification'] ?? '' ), 'Authorization classification is suggestion_only.' );
 toolbox_metadata_delta_smoke_assert( 'operation-classification-v1' === (string) ( $auth['policy_version'] ?? '' ), 'Authorization records the operation classification policy version.' );
-toolbox_metadata_delta_smoke_assert( in_array( 'core_proposal_required_for_external_batch_new_term_or_incomplete_preview', (array) ( $auth['required_evidence'] ?? array() ), true ), 'Authorization documents the stricter Core proposal path.' );
+toolbox_metadata_delta_smoke_assert( in_array( 'core_proposal_required_for_incomplete_preview_or_future_taxonomy_governance', (array) ( $auth['required_evidence'] ?? array() ), true ), 'Authorization documents the stricter Core proposal path.' );
 toolbox_metadata_delta_smoke_assert( in_array( 'no_toolbox_direct_wordpress_write', $checks, true ), 'Outcome contract forbids Toolbox direct writes.' );
 toolbox_metadata_delta_smoke_assert( in_array( 'related_content_terms_used_for_ranking_only', $checks, true ), 'Outcome contract keeps related terms as ranking evidence only.' );
 toolbox_metadata_delta_smoke_assert( in_array( 'accepted_write_like_changes_route_through_core_or_future_classified_local_consent', $checks, true ), 'Outcome contract keeps accepted write-like changes on governed paths.' );
@@ -255,11 +255,16 @@ $apply_plan = toolbox_metadata_delta_smoke_rest(
 	)
 );
 $apply_actions = is_array( $apply_plan['write_actions'] ?? null ) ? array_values( $apply_plan['write_actions'] ) : array();
+$apply_authorization = is_array( $apply_plan['authorization'] ?? null ) ? $apply_plan['authorization'] : array();
+$apply_decision_envelope = is_array( $apply_authorization['decision_envelope'] ?? null ) ? $apply_authorization['decision_envelope'] : array();
 toolbox_metadata_delta_smoke_assert( 'content_metadata_apply_plan' === (string) ( $apply_plan['artifact_type'] ?? '' ), 'Content metadata apply plan artifact is returned.' );
 toolbox_metadata_delta_smoke_assert( false === (bool) ( $apply_plan['direct_wordpress_write'] ?? true ), 'Content metadata apply plan disables direct WordPress writes.' );
 toolbox_metadata_delta_smoke_assert( true === (bool) ( $apply_plan['dry_run'] ?? false ) && false === (bool) ( $apply_plan['commit_execution'] ?? true ), 'Content metadata apply plan remains dry-run without commit execution.' );
 toolbox_metadata_delta_smoke_assert( 'batch' === (string) ( $apply_plan['proposal_mode'] ?? '' ) && true === (bool) ( $apply_plan['batch_approval'] ?? false ), 'Content metadata apply plan requests one Core batch approval.' );
 toolbox_metadata_delta_smoke_assert( ! empty( $apply_actions ), 'Content metadata apply plan contains reviewed write actions.' );
+toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $apply_authorization['classification'] ?? '' ), 'Content metadata apply plan declares Core proposal-required authorization.' );
+toolbox_metadata_delta_smoke_assert( 'operation-classification-v1' === (string) ( $apply_decision_envelope['decision_version'] ?? '' ), 'Content metadata apply plan carries the operation-classification decision envelope.' );
+toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $apply_decision_envelope['classification'] ?? '' ), 'Content metadata apply plan decision envelope requires Core proposal review.' );
 toolbox_metadata_delta_smoke_assert( 'npcink-toolbox/build-content-metadata-apply-plan' === (string) ( $apply_plan['handoff']['plan_ability_id'] ?? '' ), 'Content metadata apply plan points to its Core handoff ability.' );
 toolbox_metadata_delta_smoke_assert( ! empty( $apply_plan['manual_review'] ?? array() ), 'Content metadata apply plan keeps new terms as manual-review notes.' );
 
@@ -305,10 +310,13 @@ $proposals      = is_array( $created['proposals'] ?? null ) ? $created['proposal
 $proposal       = is_array( $proposals[0] ?? null ) ? $proposals[0] : array();
 $proposal_input = is_array( $proposal['input'] ?? null ) ? $proposal['input'] : array();
 $proposal_preview = is_array( $proposal['preview'] ?? null ) ? $proposal['preview'] : array();
+$proposal_metadata = is_array( $proposal_preview['content_metadata_apply'] ?? null ) ? $proposal_preview['content_metadata_apply'] : array();
+$proposal_classification = is_array( $proposal_metadata['classification_evidence']['decision_envelope'] ?? null ) ? $proposal_metadata['classification_evidence']['decision_envelope'] : array();
 
 toolbox_metadata_delta_smoke_assert( 'pending' === (string) ( $proposal['status'] ?? '' ), 'Core metadata proposal starts pending approval.' );
 toolbox_metadata_delta_smoke_assert( 'plan_to_proposal_batch' === (string) ( $proposal_preview['source']['type'] ?? '' ), 'Core metadata proposal stores a batch source preview.' );
 toolbox_metadata_delta_smoke_assert( isset( $proposal_preview['content_metadata_apply'] ), 'Core metadata proposal preserves content_metadata_apply review evidence.' );
+toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $proposal_classification['classification'] ?? '' ), 'Core metadata proposal preserves content metadata classification evidence.' );
 toolbox_metadata_delta_smoke_assert( count( $apply_actions ) === count( (array) ( $proposal_input['write_actions'] ?? array() ) ), 'Core metadata proposal input stores all reviewed write actions.' );
 toolbox_metadata_delta_smoke_assert( true === (bool) ( $proposal_input['dry_run'] ?? false ) && false === (bool) ( $proposal_input['commit'] ?? true ), 'Core metadata proposal input remains dry-run and non-commit.' );
 toolbox_metadata_delta_smoke_assert( false === (bool) ( $proposal_preview['commit_execution'] ?? true ), 'Core metadata proposal preview disables Core execution.' );

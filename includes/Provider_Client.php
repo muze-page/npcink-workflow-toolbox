@@ -2363,6 +2363,7 @@ final class Provider_Client {
 				),
 			),
 		);
+		$authorization = $this->content_metadata_apply_authorization( $post_id, $write_actions, $accepted_choices );
 
 		return array(
 			'artifact_type'          => 'content_metadata_apply_plan',
@@ -2387,6 +2388,7 @@ final class Provider_Client {
 				'title'       => sanitize_text_field( get_the_title( $post ) ),
 			),
 			'accepted_choices'       => $accepted_choices,
+			'authorization'          => $authorization,
 			'evidence_refs'          => $this->sanitize_payload( $evidence_refs ),
 			'source_delta'           => $this->sanitize_payload( $source_delta ),
 			'new_term_candidates'    => $this->sanitize_payload( $new_term_candidates ),
@@ -2410,6 +2412,42 @@ final class Provider_Client {
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 				'proposal_ready'         => true,
+			),
+		);
+	}
+
+	private function content_metadata_apply_authorization( int $post_id, array $write_actions, array $accepted_choices ): array {
+		$operation = array(
+			'request_source'          => Operation_Classifier::SOURCE_WP_ADMIN_UI,
+			'actor_presence'          => Operation_Classifier::ACTOR_PRESENT_CLICK,
+			'preview_completeness'    => Operation_Classifier::PREVIEW_SUFFICIENT,
+			'scope'                   => Operation_Classifier::SCOPE_ONE_OBJECT,
+			'reversibility'           => Operation_Classifier::REVERSIBILITY_EASY_UNDO,
+			'operation_kind'          => Operation_Classifier::KIND_BATCH_PLAN,
+			'writes_wordpress_state'  => true,
+			'target_post_id'          => $post_id,
+			'action_count'            => count( $write_actions ),
+			'accepted_choices'        => $accepted_choices,
+			'commit_execution'        => false,
+			'direct_wordpress_write'  => false,
+		);
+		$classifier = new Operation_Classifier();
+		$result     = $classifier->classify( $operation );
+
+		return array(
+			'classification'    => (string) ( $result['classification'] ?? Operation_Classifier::CORE_PROPOSAL_REQUIRED ),
+			'reason'            => __( 'Accepted content metadata changes are packaged as a Core proposal batch, not local admin consent.', 'npcink-toolbox' ),
+			'reasons'           => (array) ( $result['reasons'] ?? array( 'operation_kind_requires_core_proposal' ) ),
+			'required_evidence' => (array) ( $result['required_evidence'] ?? array() ),
+			'policy_version'    => (string) ( $result['policy_version'] ?? 'operation-classification-v1' ),
+			'decision_envelope' => array_merge(
+				array(
+					'decision_version' => (string) ( $result['policy_version'] ?? 'operation-classification-v1' ),
+					'classification'   => (string) ( $result['classification'] ?? Operation_Classifier::CORE_PROPOSAL_REQUIRED ),
+					'reasons'          => (array) ( $result['reasons'] ?? array( 'operation_kind_requires_core_proposal' ) ),
+					'required_evidence' => (array) ( $result['required_evidence'] ?? array() ),
+				),
+				$operation
 			),
 		);
 	}
