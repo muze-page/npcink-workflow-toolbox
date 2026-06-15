@@ -52,6 +52,11 @@ must still behave like a single-action tool.
 
 The first editor stage is six focused tools plus a publish preflight package:
 
+- the editor prefetches `progressive_recommendations` from local WordPress
+  context after the editor opens or the draft stabilizes. This is a Layer 0
+  helper: existing taxonomy, recent local media candidates, and local preflight
+  checks only. It does not call Cloud, generate images, run deep search, or
+  create a workflow run;
 - title and summary suggestions accept one operator instruction, regenerate
   candidates, and may fill the current unsaved editor title or excerpt field;
 - category and tag suggestions accept one operator instruction, regenerate
@@ -131,6 +136,34 @@ review, export, and batch dry-run projection:
   `action_policy` should point back to the source candidate rather than replace
   it.
 
+Editor responses also expose an additive `editor_recommendation_set.v1` wrapper
+with a content fingerprint, latency profile, artifact counts, required Core
+proposal targets, and retrieval-source hints. The wrapper lets the UI show
+high-confidence local candidates quickly and then route the operator into a
+focused tool. It is not a workflow run record, approval store, feedback store,
+or write API.
+
+## Progressive Timing
+
+The progressive path is intentionally split by latency:
+
+- Layer 0: `progressive_recommendations`, local-only, target 0-300 ms. It may
+  use current editor state, existing WordPress categories/tags, current article
+  media metadata, recent image attachments, and local preflight checks.
+  Ranking is weighted toward the title first, then excerpt and selected text,
+  then body text, so a short but specific draft can still produce useful local
+  candidates. The reviewable default list is capped at eight candidates.
+- Focused fast tools: title, summary, category, tag, image, and internal-link
+  buttons remain explicit operator actions. Summary defaults to `fast_brief`;
+  image-source lookup uses `fast_first`; neither path performs final writes.
+- Slow/enhanced work: full-context summary reruns, image generation, deep search,
+  duplicate checks, and proposal handoffs stay explicit second-stage actions.
+
+The editor applies a 2.5 second timeout to progressive prefetch. If that misses,
+the UI keeps the last local recommendation set or shows a local unavailable
+state instead of blocking the editor. This timeout is a UX fallback, not a queue
+or background runtime.
+
 ## Ranking Inputs
 
 Local-only ranking can use:
@@ -141,6 +174,16 @@ Local-only ranking can use:
 - existing WordPress categories and tags;
 - exact or token overlap between draft text and term name, slug, or
   description;
+- local preflight warnings projected as `recommendation_candidate.v1` review
+  items with `operator_review_only_no_write`, so the operator sees missing
+  title, excerpt, terms, or featured-image work without creating a write path;
+- English stopword-only overlaps are ignored. Existing taxonomy terms enter the
+  high-confidence recommendation list only when the current draft or related
+  evidence gives a meaningful signal; otherwise they remain local profile
+  context.
+- Recent media-library items without a text match are downgraded to
+  `operator_review_only_no_write` review references instead of immediate Core
+  proposal candidates.
 - runtime quality gates for length, meta wording, duplication, and unsupported
   claims.
 

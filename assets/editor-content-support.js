@@ -23,6 +23,8 @@
 	const PARAGRAPH_IMAGE_EVENT = 'npcink-toolbox:paragraph-image-suggestions';
 	const IMAGE_SOURCE_PICKER_EVENT = 'npcink-toolbox:image-source-picker';
 	const IMAGE_SOURCE_PICKER_SELECTED_EVENT = 'npcink-toolbox:image-source-selected';
+	const PROGRESSIVE_RECOMMENDATION_TIMEOUT_MS = 2500;
+	const PROGRESSIVE_RECOMMENDATION_DEBOUNCE_MS = 1600;
 	const IMAGE_RESULT_CACHE_TTL = 5 * 60 * 1000;
 	const IMAGE_RESULT_CACHE_MAX_ENTRIES = 20;
 	const imageResultCache = {};
@@ -364,6 +366,40 @@
 		return postJsonToUrl(joinRestUrl(config.restUrl, path), payload);
 	}
 
+	async function postJsonWithTimeout(path, payload, timeoutMs) {
+		if (!timeoutMs || typeof window === 'undefined' || typeof window.AbortController !== 'function') {
+			return postJson(path, payload);
+		}
+		const controller = new window.AbortController();
+		const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+		try {
+			const response = await fetch(joinRestUrl(config.restUrl, path), {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': config.nonce || '',
+				},
+				body: JSON.stringify(payload || {}),
+				signal: controller.signal,
+			});
+			const body = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				throw body;
+			}
+			return body;
+		} catch (error) {
+			if (error && error.name === 'AbortError') {
+				throw {
+					code: 'npcink_toolbox_progressive_timeout',
+					message: __('Fast recommendation timed out. Showing cached local suggestions if available.', 'npcink-toolbox'),
+				};
+			}
+			throw error;
+		} finally {
+			window.clearTimeout(timeout);
+		}
+	}
+
 	function submitImplicitAgentFeedback(payload) {
 		if (!payload || typeof payload !== 'object') {
 			return;
@@ -590,8 +626,118 @@
 				media_items: currentArticleMediaItems(blocks),
 				selected_block_name: selectedBlock && selectedBlock.name ? String(selectedBlock.name) : '',
 				selected_block_text: selectedBlockText(selectedBlock),
-			};
-		}, []);
+				};
+			}, []);
+		}
+
+	function wordCount(value) {
+		return String(value || '').trim().split(/\s+/).filter(Boolean).length;
+	}
+
+	function progressiveRecommendationKey(postContext) {
+		const context = postContext && typeof postContext === 'object' ? postContext : {};
+		return [
+			'progressive_recommendations_v1',
+			context.post_id || 0,
+			context.post_type || 'post',
+			truncateText(context.title, 120),
+			truncateText(context.excerpt, 180),
+			truncateText(context.content, 900),
+			Array.isArray(context.category_ids) ? context.category_ids.join(',') : '',
+			Array.isArray(context.tag_ids) ? context.tag_ids.join(',') : '',
+			context.featured_media || 0,
+		].join('|');
+	}
+
+	function progressiveRecommendationDelay(postContext) {
+		const words = wordCount(postContext && postContext.content);
+		if (words >= 300) {
+			return 2000;
+		}
+		if (String(postContext && postContext.title || '').trim()) {
+			return 1200;
+		}
+		return PROGRESSIVE_RECOMMENDATION_DEBOUNCE_MS;
+	}
+
+	function progressiveRecommendationPayload(postContext) {
+		const context = postContext && typeof postContext === 'object' ? postContext : {};
+		return Object.assign({}, context, {
+			intent: 'progressive_recommendations',
+			category_ids: Array.isArray(context.category_ids) ? context.category_ids.join(',') : '',
+			tag_ids: Array.isArray(context.tag_ids) ? context.tag_ids.join(',') : '',
+			media_items: Array.isArray(context.media_items) ? context.media_items : [],
+			latency_profile: 'local_300ms',
+		});
+	}
+
+	function progressiveSuggestionCount(result) {
+		const section = result && result.sections ? result.sections.progressive_recommendations : null;
+		if (!section || typeof section !== 'object') {
+			return 0;
+		}
+		return Array.isArray(section.recommendation_candidates) ? section.recommendation_candidates.length : 0;
+	}
+
+	function renderProgressiveRecommendationPanel(progressiveResult, progressiveStatus, onOpen, onRefresh) {
+		const section = progressiveResult && progressiveResult.sections ? progressiveResult.sections.progressive_recommendations : null;
+		const recommendationSet = progressiveResult && progressiveResult.recommendation_set ? progressiveResult.recommendation_set : {};
+		const count = progressiveSuggestionCount(progressiveResult);
+		const nextIntents = section && Array.isArray(section.next_fast_intents) ? section.next_fast_intents : [];
+		return createElement(
+			'section',
+			{ className: 'npcink-toolbox-editor-support__progressive' },
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__progressive-head' },
+				createElement('strong', null, __('Fast recommendations', 'npcink-toolbox')),
+				createElement('span', null, progressiveStatus && progressiveStatus.message ? progressiveStatus.message : __('Local context is ready for quick review.', 'npcink-toolbox'))
+			),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__progressive-meta' },
+				createElement('span', null, count ? sprintf(__('%d local candidates', 'npcink-toolbox'), count) : __('Waiting for local context', 'npcink-toolbox')),
+				recommendationSet.content_fingerprint ? createElement('span', null, __('Fingerprint ready', 'npcink-toolbox')) : null
+			),
+			nextIntents.length ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__progressive-actions' },
+				nextIntents.slice(0, 3).map((intent) => createElement(
+					Button,
+					{
+						key: intent,
+						type: 'button',
+						variant: 'tertiary',
+						onClick: () => onOpen(intent),
+					},
+					formatIntentLabel(intent)
+				))
+			) : null,
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__progressive-actions' },
+				section ? createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'secondary',
+						onClick: () => onOpen('progressive_recommendations'),
+					},
+					__('Review local suggestions', 'npcink-toolbox')
+				) : null,
+				createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'tertiary',
+						isBusy: progressiveStatus && progressiveStatus.status === 'loading',
+						disabled: progressiveStatus && progressiveStatus.status === 'loading',
+						onClick: onRefresh,
+					},
+					progressiveStatus && progressiveStatus.status === 'loading' ? __('Refreshing', 'npcink-toolbox') : __('Refresh', 'npcink-toolbox')
+				)
+			)
+		);
 	}
 
 	function renderItems(items, emptyLabel) {
@@ -2116,8 +2262,8 @@
 					tasks ? __('Next: ', 'npcink-toolbox') + tasks : '',
 					item.reason || '',
 				].filter(Boolean).join(' · '),
-			};
-		});
+				};
+			});
 	}
 
 	function hostedWritingSupportItems(section) {
@@ -3216,13 +3362,23 @@
 			return null;
 		}
 
-		const sections = payload.sections || {};
-		const blocks = [];
+			const sections = payload.sections || {};
+			const blocks = [];
 
-		if (sections.writing_support) {
-			blocks.push(createElement('h4', { key: 'writing-support-title' }, __('Writing preparation', 'npcink-toolbox')));
-			blocks.push(renderItems(extractWritingSupportItems(sections.writing_support), __('No writing preparation evidence returned.', 'npcink-toolbox')));
-		}
+			if (sections.progressive_recommendations) {
+				const section = sections.progressive_recommendations;
+				blocks.push(createElement('h4', { key: 'progressive-title' }, __('Fast local recommendations', 'npcink-toolbox')));
+				blocks.push(renderItems(section.recommendation_candidates || [], __('No local recommendation candidates returned.', 'npcink-toolbox')));
+				if (section.preflight_checks) {
+					blocks.push(createElement('h4', { key: 'progressive-checks-title' }, __('Local preflight snapshot', 'npcink-toolbox')));
+					blocks.push(renderItems(section.preflight_checks.items || [], __('No local preflight checks returned.', 'npcink-toolbox')));
+				}
+			}
+
+			if (sections.writing_support) {
+				blocks.push(createElement('h4', { key: 'writing-support-title' }, __('Writing preparation', 'npcink-toolbox')));
+				blocks.push(renderItems(extractWritingSupportItems(sections.writing_support), __('No writing preparation evidence returned.', 'npcink-toolbox')));
+			}
 
 		if (sections.title_suggestions) {
 			blocks.push(renderTitleSuggestionSection(titleSuggestionItems(sections.title_suggestions), metadataHandoffControls));
@@ -3427,81 +3583,137 @@
 		const [contentFeedbackStatus, setContentFeedbackStatus] = useState(null);
 		const [internalLinkRunning, setInternalLinkRunning] = useState('');
 		const [internalLinkStatus, setInternalLinkStatus] = useState(null);
-		const [flowInstructions, setFlowInstructions] = useState({});
-		const [titleApplyStatus, setTitleApplyStatus] = useState(null);
-		const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
-		const [evidenceModalBlocks, setEvidenceModalBlocks] = useState(null);
+			const [flowInstructions, setFlowInstructions] = useState({});
+			const [titleApplyStatus, setTitleApplyStatus] = useState(null);
+			const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
+			const [evidenceModalBlocks, setEvidenceModalBlocks] = useState(null);
+			const [progressiveResult, setProgressiveResult] = useState(null);
+			const [progressiveStatus, setProgressiveStatus] = useState(null);
+			const [progressiveLoadedKey, setProgressiveLoadedKey] = useState('');
+			const progressiveKey = progressiveRecommendationKey(postContext);
 
-		useEffect(() => {
-			const images = extractImageCandidates(imageResult);
-			if (!imageModalOpen || imageRunning || !images.length) {
-				return;
-			}
-			const currentKey = selectedImage ? imageStableKey(selectedImage, 0) : '';
-			const currentStillVisible = currentKey && images.some((image, index) => imageStableKey(image, index) === currentKey);
-			if (currentStillVisible) {
-				return;
-			}
-			const firstImage = images[0];
-			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
-			const seoContext = imagePickerRequestContext(postContext, activePicker);
-			setSelectedImage(firstImage);
-			setSelectedImageSeo(buildImageSeoFields(firstImage, seoContext));
-			setImageAdoptionResult(null);
-			setImageAdoptionError('');
-			resetImageFeedbackState();
-		}, [imageResult, imageModalOpen, imageRunning, selectedImage, imagePicker, imageMode, postContext]);
+			useEffect(() => {
+				if (!progressiveKey || progressiveLoadedKey === progressiveKey) {
+					return undefined;
+				}
+				const timer = window.setTimeout(() => {
+					runProgressivePrefetch(progressiveKey, false);
+				}, progressiveRecommendationDelay(postContext));
+				return () => window.clearTimeout(timer);
+			}, [progressiveKey, progressiveLoadedKey]);
 
-		useEffect(() => {
-			function handleParagraphImageRequest(event) {
-				const detail = event && event.detail && typeof event.detail === 'object' ? event.detail : {};
-				openImageSourcePicker({ mode: 'paragraph', context: detail });
+			useEffect(() => {
+				const images = extractImageCandidates(imageResult);
+				if (!imageModalOpen || imageRunning || !images.length) {
+					return;
+				}
+				const currentKey = selectedImage ? imageStableKey(selectedImage, 0) : '';
+				const currentStillVisible = currentKey && images.some((image, index) => imageStableKey(image, index) === currentKey);
+				if (currentStillVisible) {
+					return;
+				}
+				const firstImage = images[0];
+				const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
+				const seoContext = imagePickerRequestContext(postContext, activePicker);
+				setSelectedImage(firstImage);
+				setSelectedImageSeo(buildImageSeoFields(firstImage, seoContext));
+				setImageAdoptionResult(null);
+				setImageAdoptionError('');
+				resetImageFeedbackState();
+			}, [imageResult, imageModalOpen, imageRunning, selectedImage, imagePicker, imageMode, postContext]);
+
+			useEffect(() => {
+				function handleParagraphImageRequest(event) {
+					const detail = event && event.detail && typeof event.detail === 'object' ? event.detail : {};
+					openImageSourcePicker({ mode: 'paragraph', context: detail });
+				}
+
+				function handleImageSourcePickerRequest(event) {
+					const detail = event && event.detail && typeof event.detail === 'object' ? event.detail : {};
+					openImageSourcePicker(detail);
+				}
+
+				if (typeof window === 'undefined' || !window.addEventListener) {
+					return undefined;
+				}
+
+				window.addEventListener(PARAGRAPH_IMAGE_EVENT, handleParagraphImageRequest);
+				window.addEventListener(IMAGE_SOURCE_PICKER_EVENT, handleImageSourcePickerRequest);
+				return () => {
+					window.removeEventListener(PARAGRAPH_IMAGE_EVENT, handleParagraphImageRequest);
+					window.removeEventListener(IMAGE_SOURCE_PICKER_EVENT, handleImageSourcePickerRequest);
+				};
+			});
+
+			async function runProgressivePrefetch(keyOverride, force) {
+				const key = keyOverride || progressiveRecommendationKey(postContext);
+				if (!force && progressiveLoadedKey === key) {
+					return;
+				}
+				setProgressiveStatus({ status: 'loading', message: __('Preparing local suggestions...', 'npcink-toolbox') });
+				try {
+					const flowResult = await postJsonWithTimeout(
+						'editor/content-support',
+						progressiveRecommendationPayload(postContext),
+						PROGRESSIVE_RECOMMENDATION_TIMEOUT_MS
+					);
+					setProgressiveResult(flowResult);
+					setProgressiveLoadedKey(key);
+					setProgressiveStatus({
+						status: 'success',
+						message: __('Local suggestions are ready.', 'npcink-toolbox'),
+					});
+				} catch (requestError) {
+					setProgressiveLoadedKey(key);
+					setProgressiveStatus({
+						status: requestError && requestError.code === 'npcink_toolbox_progressive_timeout' ? 'warning' : 'error',
+						message: requestError && requestError.message ? requestError.message : __('Local suggestions are unavailable.', 'npcink-toolbox'),
+					});
+				}
 			}
 
-			function handleImageSourcePickerRequest(event) {
-				const detail = event && event.detail && typeof event.detail === 'object' ? event.detail : {};
-				openImageSourcePicker(detail);
+			function openProgressiveRecommendation(intent) {
+				if (intent === 'progressive_recommendations') {
+					if (progressiveResult) {
+						setResult(progressiveResult);
+						setActiveFlowIntent('progressive_recommendations');
+						setSupportView('result');
+						setError('');
+						return;
+					}
+					runFlow('progressive_recommendations', { timeoutMs: PROGRESSIVE_RECOMMENDATION_TIMEOUT_MS });
+					return;
+				}
+				runFlow(intent);
 			}
 
-			if (typeof window === 'undefined' || !window.addEventListener) {
-				return undefined;
-			}
+			async function runFlow(intent, options) {
+				const runOptions = options && typeof options === 'object' ? options : {};
+				if (intent === 'image_candidates') {
+					openImageSourcePicker({ mode: 'featured' });
+					return;
+				}
 
-			window.addEventListener(PARAGRAPH_IMAGE_EVENT, handleParagraphImageRequest);
-			window.addEventListener(IMAGE_SOURCE_PICKER_EVENT, handleImageSourcePickerRequest);
-			return () => {
-				window.removeEventListener(PARAGRAPH_IMAGE_EVENT, handleParagraphImageRequest);
-				window.removeEventListener(IMAGE_SOURCE_PICKER_EVENT, handleImageSourcePickerRequest);
-			};
-		});
-
-		async function runFlow(intent, options) {
-			const runOptions = options && typeof options === 'object' ? options : {};
-			if (intent === 'image_candidates') {
-				openImageSourcePicker({ mode: 'featured' });
-				return;
-			}
-
-			setSupportView('result');
-			setActiveFlowIntent(intent);
-			setRunning(intent);
-			setError('');
-			if (isMetadataIntent(intent)) {
-				setResult((current) => hasMergeableMetadataResult(current) ? current : null);
-			} else {
-				setResult(null);
-				setMetadataHandoffSelection({});
-			}
-			setMetadataHandoffResult(null);
-			setMetadataHandoffError('');
-			setSeoHandoffResult(null);
-			setSeoHandoffError('');
-			setContentFeedbackRunning('');
-			setContentFeedbackStatus(null);
-			setInternalLinkRunning('');
-			setInternalLinkStatus(null);
-			setTitleApplyStatus(null);
-			setExcerptApplyStatus(null);
+				setSupportView('result');
+				setActiveFlowIntent(intent);
+				setRunning(intent);
+				setError('');
+				if (isMetadataIntent(intent)) {
+					setResult((current) => hasMergeableMetadataResult(current) ? current : null);
+				} else {
+					setResult(null);
+					setMetadataHandoffSelection({});
+				}
+				setMetadataHandoffResult(null);
+				setMetadataHandoffError('');
+				setSeoHandoffResult(null);
+				setSeoHandoffError('');
+				setContentFeedbackRunning('');
+				setContentFeedbackStatus(null);
+				setInternalLinkRunning('');
+				setInternalLinkStatus(null);
+				setTitleApplyStatus(null);
+				setExcerptApplyStatus(null);
 				try {
 					const userInstruction = flowAcceptsUserInstruction(intent) ? String(flowInstructions[intent] || '').trim() : '';
 					const shouldForceRegenerate = Boolean(runOptions.forceRegenerate);
@@ -3520,20 +3732,27 @@
 					if (intent === 'title_suggestions') {
 						payload.context_scope = 'full_article';
 						payload.selected_text = '';
-					payload.selected_block_text = '';
-					payload.selected_block_name = '';
+						payload.selected_block_text = '';
+						payload.selected_block_name = '';
+					}
+					const flowResult = runOptions.timeoutMs
+						? await postJsonWithTimeout('editor/content-support', payload, runOptions.timeoutMs)
+						: await postJson('editor/content-support', payload);
+					setResult((current) => mergeContentSupportResult(current, flowResult, intent));
+					if (intent === 'progressive_recommendations') {
+						setProgressiveResult(flowResult);
+						setProgressiveLoadedKey(progressiveRecommendationKey(postContext));
+						setProgressiveStatus({ status: 'success', message: __('Local suggestions are ready.', 'npcink-toolbox') });
+					}
+				} catch (requestError) {
+					setError(requestError && requestError.message ? requestError.message : __('Request failed.', 'npcink-toolbox'));
+					setSupportView('result');
+				} finally {
+					setRunning('');
 				}
-				const flowResult = await postJson('editor/content-support', payload);
-				setResult((current) => mergeContentSupportResult(current, flowResult, intent));
-			} catch (requestError) {
-				setError(requestError && requestError.message ? requestError.message : __('Request failed.', 'npcink-toolbox'));
-				setSupportView('result');
-			} finally {
-				setRunning('');
 			}
-		}
 
-		async function submitContentSupportFeedback(option) {
+			async function submitContentSupportFeedback(option) {
 			if (!result) {
 				setContentFeedbackStatus({ status: 'error', message: __('Run a content support flow first.', 'npcink-toolbox') });
 				return;
@@ -4565,28 +4784,34 @@
 					) : createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__menu-view' },
+						renderProgressiveRecommendationPanel(
+							progressiveResult,
+							progressiveStatus,
+							openProgressiveRecommendation,
+							() => runProgressivePrefetch(progressiveRecommendationKey(postContext), true)
+						),
 						createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
 						flowGroups.map((group) => createElement(
 							'section',
 							{ className: 'npcink-toolbox-editor-support__flow-group', key: group.id },
 							createElement('h4', null, group.label),
 							flows.filter((flow) => flow.group === group.id).map((flow) =>
-							createElement(
-								'div',
-								{ className: 'npcink-toolbox-editor-support__flow', key: flow.intent },
-								createElement('div', null, createElement('strong', null, flow.label), createElement('span', null, flow.description)),
 								createElement(
-									Button,
-									{
-										variant: 'secondary',
-										isBusy: running === flow.intent,
-										disabled: Boolean(running),
-										onClick: () => runFlow(flow.intent),
-									},
-									flow.intent === 'image_candidates' ? __('Open', 'npcink-toolbox') : (running === flow.intent ? __('Running', 'npcink-toolbox') : __('Run', 'npcink-toolbox'))
+									'div',
+									{ className: 'npcink-toolbox-editor-support__flow', key: flow.intent },
+									createElement('div', null, createElement('strong', null, flow.label), createElement('span', null, flow.description)),
+									createElement(
+										Button,
+										{
+											variant: 'secondary',
+											isBusy: running === flow.intent,
+											disabled: Boolean(running),
+											onClick: () => runFlow(flow.intent),
+										},
+										flow.intent === 'image_candidates' ? __('Open', 'npcink-toolbox') : (running === flow.intent ? __('Running', 'npcink-toolbox') : __('Run', 'npcink-toolbox'))
+									)
 								)
 							)
-						)
 						))
 					)
 				)

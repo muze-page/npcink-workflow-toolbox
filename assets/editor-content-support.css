@@ -118,6 +118,41 @@
 	line-height: 1.45;
 }
 
+.npcink-toolbox-editor-support__progressive {
+	display: grid;
+	gap: 8px;
+	padding: 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.npcink-toolbox-editor-support__progressive-head {
+	display: grid;
+	gap: 2px;
+}
+
+.npcink-toolbox-editor-support__progressive-head strong {
+	color: #1d2327;
+	font-size: 13px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__progressive-head span,
+.npcink-toolbox-editor-support__progressive-meta {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.npcink-toolbox-editor-support__progressive-meta,
+.npcink-toolbox-editor-support__progressive-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+}
+
 .npcink-toolbox-editor-support__flow-group {
 	display: grid;
 	gap: 0;

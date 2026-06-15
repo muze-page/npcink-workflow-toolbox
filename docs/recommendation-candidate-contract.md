@@ -54,6 +54,12 @@ review queues, but the original candidate object remains the source of truth.
 
 ## Current Adoption
 
+- Editor Content Support returns an additive `editor_recommendation_set.v1`
+  wrapper on focused results and the local `progressive_recommendations` prefetch
+  result. It includes `recommendation_set_id`, `content_fingerprint`,
+  `latency_profile`, artifact counts, Core proposal targets, and retrieval
+  sources. It is metadata around candidate sections, not the source of write,
+  approval, audit, or learning truth.
 - AI summary suggestions mark excerpt items with the contract while preserving
   the existing `summary_layers.items` shape. The single-summary editor action
   returns `article_summary_suggestions.v1` and does not include taxonomy,

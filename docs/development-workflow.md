@@ -99,6 +99,18 @@ term creation, that Core `/wp-json/npcink-governance-core/v1/proposals/from-plan
 creates one pending `plan_to_proposal_batch` review proposal, and that the
 smoke does not mutate the sampled post.
 
+For the post-editor progressive recommendation surface, run:
+
+```bash
+composer smoke:editor-progressive-recommendations
+```
+
+This dispatches `/wp-json/npcink-toolbox/v1/editor/content-support` with the
+`progressive_recommendations` intent against a local post and verifies the
+local-only recommendation set, 2.5 second UX budget, content fingerprint,
+candidate cap, no empty matched-token copy, no stopword-only taxonomy evidence,
+no direct WordPress writes, and no sampled post mutation.
+
 For the post-editor review artifact surface, run:
 
 ```bash

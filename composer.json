@@ -9,6 +9,7 @@
   "scripts": {
     "lint:php": "php tests/lint.php",
     "test": "php tests/run.php",
+    "test:progressive-recommendations": "php tests/progressive-recommendations-behavior.php",
     "test:quiet": "php tests/run.php --quiet",
     "test:editor": "php tests/run.php --quiet --filter=Editor",
     "test:translations": "php tests/run.php --quiet --filter=translation",
@@ -41,6 +42,7 @@
     "smoke:article-media-batch-core": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; NPCINK_TOOLBOX_ARTICLE_MEDIA_BATCH_SMOKE_PURGE=\"${NPCINK_TOOLBOX_ARTICLE_MEDIA_BATCH_SMOKE_PURGE:-1}\"; export NPCINK_TOOLBOX_ARTICLE_MEDIA_BATCH_SMOKE_PURGE; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-article-media-batch-core-proof.php",
     "smoke:metadata-delta": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-content-metadata-delta.php",
     "smoke:editor-review-artifacts": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-editor-review-artifacts.php",
+    "smoke:editor-progressive-recommendations": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/opt/homebrew/bin/wp}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-editor-progressive-recommendations.php",
     "smoke:site-knowledge-review-ui": "php tests/smoke-site-knowledge-review-ui.php",
     "smoke:local-featured-image": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-local-featured-image-consent.php",
     "smoke:media-derivative-core": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; NPCINK_TOOLBOX_MEDIA_DERIVATIVE_SMOKE_PURGE=\"${NPCINK_TOOLBOX_MEDIA_DERIVATIVE_SMOKE_PURGE:-1}\"; export NPCINK_TOOLBOX_MEDIA_DERIVATIVE_SMOKE_PURGE; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-media-derivative-core-proof.php",
@@ -52,7 +54,8 @@
     ],
     "test:all": [
       "@lint:php",
-      "@test"
+      "@test",
+      "@test:progressive-recommendations"
     ]
   }
 }

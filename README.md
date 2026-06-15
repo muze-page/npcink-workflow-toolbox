@@ -215,7 +215,11 @@ writing preparation, title suggestions, outline support, polish notes, publish
 preflight, discoverability suggestions, summary suggestions, category
 suggestions, tag suggestions, internal-link candidates, image-source
 candidates, and current-article image ALT suggestions from the current draft
-context. The metadata buttons use
+context. The sidebar also prefetches a local-only progressive recommendation
+set after the editor opens or the draft stabilizes: existing taxonomy matches,
+recent media-library candidates, and local preflight checks are shown quickly,
+while Cloud title/summary generation, image-source search, image generation,
+deep search, and proposal handoffs remain explicit follow-up actions. The metadata buttons use
 lighter draft/taxonomy fast paths and merge their results into one
 `article_discoverability_optimization.v1` review surface. The full
 `summary_terms_optimization` intent remains available as a compatibility and
