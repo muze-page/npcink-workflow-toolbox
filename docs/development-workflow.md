@@ -137,6 +137,18 @@ keeps review proposals operator-triggered, routes the handoff through
 evidence refs, keeps Agent feedback as Cloud eval metadata, and does not call
 REST, Adapter, Core proposal intake, or WordPress write paths.
 
+For the bundled local automation runtime Phase 1 skeleton, run:
+
+```bash
+composer smoke:local-automation-runtime-replay
+```
+
+This validates the `modules/local-automation-runtime/` dry-run replay fixture
+against the `npcink_local_automation_runtime.v1` contract. It does not register
+hooks, create runtime tables, schedule workers, acquire leases, retry actions,
+process dead letters, approve Core proposals, call Adapter execution routes, or
+write WordPress data.
+
 For AI-generated image media SEO normalization, run:
 
 ```bash

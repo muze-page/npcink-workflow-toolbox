@@ -57,6 +57,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Content Support Product Readiness](docs/content-support-product-readiness.md)
 - [Content Support Release And Trial Closeout](docs/content-support-release-trial-closeout.md)
 - [AI Content Composition Abilities](docs/ai-content-composition-abilities.md)
+- [Local Automation Runtime Module](modules/local-automation-runtime/README.md)
 - [Connector Ability Exposure](docs/connector-ability-exposure.md)
 - [Content Discoverability Context](docs/content-discoverability-context.md)
 - [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
@@ -71,6 +72,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)
 - [ADR-003: Local Admin Consent Requires A Separate Write Boundary](docs/decisions/ADR-003-local-admin-consent-boundary.md)
+- [ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md)
 
 ## REST Routes
 
@@ -116,6 +118,10 @@ rewritten by preview generation.
 Batch media optimization uses bounded review sets: build a review plan,
 generate previews for selected candidates, and submit only selected Core
 reviews. It is intentionally not presented as one-click whole-site replacement.
+Toolbox also bundles a Phase 1 `modules/local-automation-runtime/` skeleton for
+the future `npcink-local-automation-runtime` owner. That module validates dry-run replay fixtures only; it does not register hooks, create runtime job
+tables, schedule workers, acquire leases, retry actions, dead-letter failures,
+approve proposals, execute Adapter actions, or write WordPress data.
 The Site Knowledge review plan route builds a blocked Core handoff plan from
 Cloud evidence only; it does not approve, preflight, or execute that plan.
 

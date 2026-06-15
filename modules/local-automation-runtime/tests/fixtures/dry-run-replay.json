@@ -1,0 +1,159 @@
+{
+  "contract_version": "npcink_local_automation_runtime.v1",
+  "fixture_id": "toolbox_bundled_local_automation_runtime_phase_1_v1",
+  "mode": "dry_run_replay",
+  "runtime_owner": "npcink-local-automation-runtime",
+  "core_runtime_execution": false,
+  "background_execution": false,
+  "job": {
+    "job_id": "toolbox-runtime-job-example-001",
+    "runtime_id": "toolbox-bundled-runtime-example",
+    "source": "operator_started",
+    "actor": {
+      "type": "wp_user",
+      "display": "Administrator"
+    },
+    "correlation_id": "corr-toolbox-runtime-example-001",
+    "idempotency_key": "toolbox-runtime-example-001",
+    "title": "Validate bundled runtime replay",
+    "summary": "Phase 1 fixture validation only. No background execution occurs.",
+    "status": "awaiting_core_approval",
+    "eligibility_summary": {
+      "scope": {
+        "attachment_ids": [
+          101
+        ]
+      },
+      "candidate_count": 2,
+      "eligible_count": 1,
+      "blocked_count": 1,
+      "needs_input_count": 0,
+      "allowed_ability_ids": [
+        "npcink-abilities-toolkit/update-media-details"
+      ],
+      "disallowed_ability_ids": [
+        "npcink-abilities-toolkit/delete-media-permanently"
+      ],
+      "risk_level": "medium",
+      "operator_next_action": "review_core_proposal",
+      "retryable": false
+    },
+    "blocked_items": [
+      {
+        "item_id": "delete-candidate-101",
+        "item_type": "attachment",
+        "target_ability_id": "npcink-abilities-toolkit/delete-media-permanently",
+        "reason_code": "destructive_action_not_allowed",
+        "reason_message": "Permanent media deletion is outside the Phase 1 replay allowlist.",
+        "operator_next_action": "remove_destructive_action",
+        "retryable": false
+      }
+    ],
+    "actions": [
+      {
+        "action_id": "update-media-details-101",
+        "target_ability_id": "npcink-abilities-toolkit/update-media-details",
+        "execution_profile": "phase_1_replay_only",
+        "input_hash": "sha256:toolbox-example-input-hash-001",
+        "preview_ref": "preview.actions.update-media-details-101",
+        "depends_on": [],
+        "status": "ready",
+        "attempt_count": 0,
+        "max_attempts": 1,
+        "retryable": false,
+        "blocked_reason": "",
+        "output_refs": [],
+        "idempotency_key": "toolbox-runtime-example-001:update-media-details-101"
+      },
+      {
+        "action_id": "blocked-delete-media-101",
+        "target_ability_id": "npcink-abilities-toolkit/delete-media-permanently",
+        "execution_profile": "forbidden_in_phase_1",
+        "input_hash": "sha256:toolbox-example-input-hash-002",
+        "preview_ref": "preview.actions.blocked-delete-media-101",
+        "depends_on": [],
+        "status": "blocked",
+        "attempt_count": 0,
+        "max_attempts": 0,
+        "retryable": false,
+        "blocked_reason": "destructive_action_not_allowed",
+        "output_refs": [],
+        "idempotency_key": "toolbox-runtime-example-001:blocked-delete-media-101"
+      }
+    ],
+    "limits": {
+      "max_actions": 2,
+      "max_concurrency": 1,
+      "max_attempts_per_action": 1,
+      "lease_timeout_seconds": 0,
+      "schedule_window": "none"
+    }
+  },
+  "core_handoff": {
+    "proposal_id": "proposal-example-001",
+    "proposal_status": "pending",
+    "preflight_status": "not_requested",
+    "correlation_id": "corr-toolbox-runtime-example-001",
+    "approved_input_hash": "",
+    "batch_review_summary": {
+      "summary_version": "core-batch-review-summary-v1",
+      "action_count": 2,
+      "blocked_count": 1,
+      "needs_input_count": 0,
+      "target_ability_ids": [
+        "npcink-abilities-toolkit/update-media-details"
+      ],
+      "operator_next_action": "review_and_approve_or_reject",
+      "retryable": false,
+      "final_execution_owner": "adapter_after_core_preflight",
+      "core_execution": false,
+      "commit_execution": false
+    },
+    "core_execution": false,
+    "commit_execution": false
+  },
+  "operator_controls": {
+    "pause": true,
+    "resume": true,
+    "cancel": true,
+    "retry": false,
+    "kill_switch": true
+  },
+  "runtime_events": [
+    {
+      "event": "runtime.job.created",
+      "job_id": "toolbox-runtime-job-example-001",
+      "correlation_id": "corr-toolbox-runtime-example-001",
+      "contract_version": "npcink_local_automation_runtime.v1",
+      "created_at": "2026-06-15T00:00:00Z",
+      "metadata": {
+        "source": "operator_started",
+        "core_runtime_execution": false
+      }
+    },
+    {
+      "event": "runtime.job.eligibility_evaluated",
+      "job_id": "toolbox-runtime-job-example-001",
+      "correlation_id": "corr-toolbox-runtime-example-001",
+      "contract_version": "npcink_local_automation_runtime.v1",
+      "created_at": "2026-06-15T00:00:01Z",
+      "metadata": {
+        "eligible_count": 1,
+        "blocked_count": 1
+      }
+    }
+  ],
+  "acceptance": {
+    "phase": "phase_1_contract_only",
+    "schema_only": true,
+    "dry_run_replay_only": true,
+    "requires_future_runtime_repo": true,
+    "core_tables_created": false,
+    "core_routes_created": false,
+    "worker_created": false,
+    "scheduler_created": false,
+    "lease_store_created": false,
+    "dead_letter_processor_created": false
+  }
+}
+

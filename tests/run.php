@@ -182,6 +182,53 @@ foreach ( array( 'rule and scope selection', 'eligibility_summary', 'blocked_ite
 	toolbox_assert( false !== strpos( $batch_governance_doc, $required_batch_governance_doc ), 'Batch automation governance plan rejects local runtime drift: ' . $required_batch_governance_doc );
 }
 
+$local_runtime_readme = file_get_contents( $root . '/modules/local-automation-runtime/README.md' );
+foreach ( array( 'Phase 1 bundled skeleton', 'npcink-local-automation-runtime', 'modules/local-automation-runtime/', 'no WordPress hooks', 'no REST routes', 'no scheduler', 'no worker', 'no job table', 'no lease store', 'no retry or dead-letter processor', 'no unattended approval', 'no final WordPress writes' ) as $required_local_runtime_readme ) {
+	toolbox_assert( false !== strpos( $local_runtime_readme, $required_local_runtime_readme ), 'Local automation runtime README keeps Phase 1 disabled: ' . $required_local_runtime_readme );
+}
+$local_runtime_boundary = file_get_contents( $root . '/modules/local-automation-runtime/docs/boundary.md' );
+foreach ( array( 'Phase 1 contract-only boundary', 'fixed-flow buttons', 'runtime state machine', 'registering a cron schedule', 'creating runtime custom tables', 'acquiring leases', 'retrying action execution', 'dead-letter processing', 'approving Core proposals', 'calling Adapter approve-and-execute', 'calling WordPress write abilities' ) as $required_local_runtime_boundary ) {
+	toolbox_assert( false !== strpos( $local_runtime_boundary, $required_local_runtime_boundary ), 'Local automation runtime boundary blocks execution drift: ' . $required_local_runtime_boundary );
+}
+$local_runtime_module = file_get_contents( $root . '/modules/local-automation-runtime/module.php' );
+foreach ( array( 'namespace Npcink\\LocalAutomationRuntime', "CONTRACT_VERSION = 'npcink_local_automation_runtime.v1'", "MODULE_STATUS    = 'phase_1_contract_only'", 'RUNTIME_ENABLED  = false' ) as $required_local_runtime_module ) {
+	toolbox_assert( false !== strpos( $local_runtime_module, $required_local_runtime_module ), 'Local automation runtime module marker preserves disabled identity: ' . $required_local_runtime_module );
+}
+$local_runtime_validator = file_get_contents( $root . '/modules/local-automation-runtime/src/Contract/Replay_Validator.php' );
+foreach ( array( 'namespace Npcink\\LocalAutomationRuntime\\Contract', 'final class Replay_Validator', 'core_runtime_execution', 'background_execution', 'worker_created', 'scheduler_created', 'lease_store_created', 'dead_letter_processor_created', 'job_status_not_phase_1', 'status_not_phase_1' ) as $required_local_runtime_validator ) {
+	toolbox_assert( false !== strpos( $local_runtime_validator, $required_local_runtime_validator ), 'Local automation runtime validator enforces replay-only contract: ' . $required_local_runtime_validator );
+}
+$local_runtime_fixture_text = file_get_contents( $root . '/modules/local-automation-runtime/tests/fixtures/dry-run-replay.json' );
+$local_runtime_fixture      = json_decode( (string) $local_runtime_fixture_text, true );
+toolbox_assert( is_array( $local_runtime_fixture ), 'Local automation runtime dry-run fixture is valid JSON.' );
+toolbox_assert( 'npcink_local_automation_runtime.v1' === ( $local_runtime_fixture['contract_version'] ?? '' ), 'Local automation runtime fixture declares the v1 contract.' );
+toolbox_assert( 'dry_run_replay' === ( $local_runtime_fixture['mode'] ?? '' ), 'Local automation runtime fixture is dry-run replay only.' );
+toolbox_assert( 'npcink-local-automation-runtime' === ( $local_runtime_fixture['runtime_owner'] ?? '' ), 'Local automation runtime fixture names the independent owner.' );
+toolbox_assert( false === ( $local_runtime_fixture['core_runtime_execution'] ?? true ), 'Local automation runtime fixture keeps Core runtime execution false.' );
+toolbox_assert( false === ( $local_runtime_fixture['background_execution'] ?? true ), 'Local automation runtime fixture keeps background execution false.' );
+toolbox_assert( false === ( $local_runtime_fixture['acceptance']['worker_created'] ?? true ), 'Local automation runtime fixture keeps worker creation false.' );
+toolbox_assert( false === ( $local_runtime_fixture['acceptance']['scheduler_created'] ?? true ), 'Local automation runtime fixture keeps scheduler creation false.' );
+toolbox_assert( false === ( $local_runtime_fixture['acceptance']['lease_store_created'] ?? true ), 'Local automation runtime fixture keeps lease store creation false.' );
+toolbox_assert( false === ( $local_runtime_fixture['acceptance']['dead_letter_processor_created'] ?? true ), 'Local automation runtime fixture keeps dead-letter processor creation false.' );
+$local_runtime_smoke = file_get_contents( $root . '/tests/smoke-local-automation-runtime-replay.php' );
+toolbox_assert( false !== strpos( $local_runtime_smoke, 'Replay_Validator' ) && false !== strpos( $local_runtime_smoke, 'dry-run-replay.json' ), 'Local automation runtime smoke validates the bundled dry-run replay fixture.' );
+$morning_brief_profile_doc = file_get_contents( $root . '/modules/local-automation-runtime/docs/nightly-site-inspection-morning-brief.md' );
+foreach ( array( 'Phase 1 contract-only task profile', 'Nightly Site Inspection', 'Morning Brief', 'WP-Cron', 'Action Scheduler', 'keep scheduling disabled', 'keep all WordPress writes disabled', 'Cloud must not return unattended article drafts', 'Core governance' ) as $required_morning_brief_profile_doc ) {
+	toolbox_assert( false !== strpos( $morning_brief_profile_doc, $required_morning_brief_profile_doc ), 'Morning Brief task profile keeps Phase 1 local runtime boundary: ' . $required_morning_brief_profile_doc );
+}
+$morning_brief_fixture_text = file_get_contents( $root . '/modules/local-automation-runtime/tests/fixtures/nightly-site-inspection-morning-brief-dry-run.json' );
+$morning_brief_fixture      = json_decode( (string) $morning_brief_fixture_text, true );
+toolbox_assert( is_array( $morning_brief_fixture ), 'Morning Brief dry-run fixture is valid JSON.' );
+toolbox_assert( 'npcink_local_automation_runtime.v1' === ( $morning_brief_fixture['contract_version'] ?? '' ), 'Morning Brief fixture declares the local automation runtime contract.' );
+toolbox_assert( 'nightly_site_inspection_morning_brief' === ( $morning_brief_fixture['task_profile'] ?? '' ), 'Morning Brief fixture declares the task profile.' );
+toolbox_assert( false === ( $morning_brief_fixture['core_runtime_execution'] ?? true ), 'Morning Brief fixture keeps Core runtime execution false.' );
+toolbox_assert( false === ( $morning_brief_fixture['background_execution'] ?? true ), 'Morning Brief fixture keeps background execution false.' );
+toolbox_assert( false === ( $morning_brief_fixture['preview']['morning_brief']['safety']['direct_wordpress_write'] ?? true ), 'Morning Brief fixture keeps direct WordPress writes false.' );
+toolbox_assert( true === ( $morning_brief_fixture['preview']['morning_brief']['safety']['requires_local_review'] ?? false ), 'Morning Brief fixture requires local review.' );
+toolbox_assert( false === ( $morning_brief_fixture['preview']['morning_brief']['safety']['cloud_scheduler_truth'] ?? true ), 'Morning Brief fixture rejects Cloud scheduler truth.' );
+$morning_brief_smoke = file_get_contents( $root . '/tests/smoke-nightly-site-inspection-morning-brief.php' );
+toolbox_assert( false !== strpos( $morning_brief_smoke, 'Replay_Validator' ) && false !== strpos( $morning_brief_smoke, 'nightly-site-inspection-morning-brief-dry-run.json' ), 'Morning Brief smoke validates the dedicated dry-run replay fixture.' );
+
 $composition_doc = file_get_contents( $root . '/docs/ai-content-composition-abilities.md' );
 foreach ( array( 'Fixed Button Mapping', 'OpenClaw natural-language recipes and Toolbox fixed buttons should compose the', 'same ability contracts', 'Article/media batch fallback', 'Adopt New Image', 'Optimize Existing Image', 'One Core media optimization proposal', 'separate workflow runtime, direct write path, or approval store' ) as $required_composition_doc ) {
 	toolbox_assert( false !== strpos( $composition_doc, $required_composition_doc ), 'Composition doc preserves fixed-button mapping: ' . $required_composition_doc );
@@ -199,12 +246,18 @@ foreach ( array( 'Local Admin Consent is a classification and future execution c
 	toolbox_assert( false !== strpos( $adr_local_admin_consent, $required_local_consent_adr_text ), 'ADR preserves Local Admin Consent boundary: ' . $required_local_consent_adr_text );
 }
 toolbox_assert( false !== strpos( $adr_local_admin_consent, 'Future Strong Local Confirmation Candidate' ) && false !== strpos( $adr_local_admin_consent, 'excerpt plus existing `category` and `post_tag` ids only' ) && false !== strpos( $adr_local_admin_consent, 'Until that UX and audit contract exists' ), 'ADR keeps post metadata direct apply as a future strong-local-confirmation proof.' );
+$adr_local_runtime = file_get_contents( $root . '/docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md' );
+foreach ( array( 'Bundle Local Automation Runtime As An Isolated Module', 'npcink-local-automation-runtime', 'modules/local-automation-runtime/', 'Phase 1 is contract-only', 'must not register hooks', 'custom runtime', 'tables', 'schedule workers', 'acquire leases', 'retry actions', 'process dead letters', 'approve Core proposals', 'call Adapter execution routes', 'write WordPress data', 'fixed-flow buttons', 'runtime state machine' ) as $required_local_runtime_adr_text ) {
+	toolbox_assert( false !== strpos( $adr_local_runtime, $required_local_runtime_adr_text ), 'ADR preserves local automation runtime module boundary: ' . $required_local_runtime_adr_text );
+}
 
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Product Readiness' ), 'README links the current content support readiness matrix.' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Release And Trial Closeout' ), 'README links the content support release and trial closeout.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Closeout' ), 'README links the editor progressive recommendations closeout.' );
 toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ), 'README links the cross-repo boundary matrix.' );
+toolbox_assert( false !== strpos( $readme, 'Local Automation Runtime Module' ) && false !== strpos( $readme, 'ADR-004: Bundle Local Automation Runtime As An Isolated Module' ), 'README links the bundled local automation runtime module and ADR.' );
+toolbox_assert( false !== strpos( $readme, 'modules/local-automation-runtime/' ) && false !== strpos( $readme, 'dry-run replay fixtures only' ) && false !== strpos( $readme, 'does not register hooks' ) && false !== strpos( $readme, 'write WordPress data' ), 'README documents the local automation runtime skeleton as replay-only.' );
 foreach ( array( 'Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw', 'flows. They should reuse the same ability ids', 'same ability ids, plan artifact shapes, Adapter', 'Core proposal handoff', 'separate approval store, media', 'workflow runtime, prompt/model control plane', 'WordPress write' ) as $required_readme_text ) {
 	toolbox_assert( false !== strpos( $readme, $required_readme_text ), 'README preserves fixed-button positioning: ' . $required_readme_text );
 }
@@ -232,6 +285,7 @@ toolbox_assert( false !== strpos( $composer, 'smoke:metadata-delta' ) && false !
 toolbox_assert( false !== strpos( $composer, 'smoke:editor-review-artifacts' ) && false !== strpos( $composer, 'tests/smoke-editor-review-artifacts.php' ), 'Composer exposes the editor review artifacts smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:editor-progressive-recommendations' ) && false !== strpos( $composer, 'tests/smoke-editor-progressive-recommendations.php' ), 'Composer exposes the editor progressive recommendations smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:site-knowledge-review-ui' ) && false !== strpos( $composer, 'tests/smoke-site-knowledge-review-ui.php' ), 'Composer exposes the Site Knowledge review UI no-write smoke script.' );
+toolbox_assert( false !== strpos( $composer, 'smoke:local-automation-runtime-replay' ) && false !== strpos( $composer, 'tests/smoke-local-automation-runtime-replay.php' ) && false !== strpos( $composer, '@smoke:local-automation-runtime-replay' ), 'Composer runs the local automation runtime replay smoke in the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:local-featured-image' ) && false !== strpos( $composer, 'tests/smoke-local-featured-image-consent.php' ), 'Composer exposes the Local Admin Consent featured image smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:media-derivative-batch-plan' ) && false !== strpos( $composer, 'tests/smoke-media-derivative-batch-plan.php' ), 'Composer exposes the Toolbox media derivative batch plan smoke script.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:media-derivative-batch-core' ) && false !== strpos( $composer, 'tests/smoke-media-derivative-batch-core-proposals.php' ), 'Composer exposes the Toolbox media derivative batch Core proposal smoke script.' );
@@ -305,6 +359,10 @@ $architecture_doc = file_get_contents( $root . '/docs/architecture.md' );
 foreach ( array( 'media_optimization_v1', 'existing **Optimize Existing Image** surface', 'does not introduce a Toolbox custom table', '/workflow-runs route', 'artifact registry, or direct media writer' ) as $required_media_architecture_doc ) {
 	toolbox_assert( false !== strpos( $architecture_doc, $required_media_architecture_doc ), 'Architecture doc keeps media optimization out of runtime storage: ' . $required_media_architecture_doc );
 }
+toolbox_assert( false !== strpos( $architecture_doc, '`modules/local-automation-runtime/`' ) && false !== strpos( $architecture_doc, 'validates dry-run replay fixtures only' ) && false !== strpos( $architecture_doc, 'no runtime job table, scheduler, worker, lease store, retry processor' ), 'Architecture doc records the local automation runtime module as Phase 1 replay-only.' );
+
+$roadmap_doc = file_get_contents( $root . '/docs/roadmap.md' );
+toolbox_assert( false !== strpos( $roadmap_doc, '`modules/local-automation-runtime/`' ) && false !== strpos( $roadmap_doc, 'dry-run replay' ) && false !== strpos( $roadmap_doc, 'must not add workers, schedulers, runtime job' ), 'Roadmap documents local automation runtime Phase 1 as contract and replay only.' );
 
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );
 toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'npcink-ai';" ), 'Admin page targets the shared Npcink AI parent menu.' );
@@ -1264,6 +1322,7 @@ toolbox_assert( false !== strpos( $content_context_doc, 'wp eval-file tests/smok
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadata-delta' ) && false !== strpos( $development_workflow, 'content_metadata_delta' ), 'Development workflow documents the Content Metadata Delta smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:editor-progressive-recommendations' ) && false !== strpos( $development_workflow, 'progressive_recommendations' ) && false !== strpos( $development_workflow, 'no stopword-only taxonomy evidence' ), 'Development workflow documents the editor progressive recommendations smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:editor-review-artifacts' ) && false !== strpos( $development_workflow, 'internal_link_candidates.v1' ) && false !== strpos( $development_workflow, 'pre_publish_review.v1' ), 'Development workflow documents the editor review artifacts smoke command.' );
+toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:local-automation-runtime-replay' ) && false !== strpos( $development_workflow, 'npcink_local_automation_runtime.v1' ) && false !== strpos( $development_workflow, 'does not register' ) && false !== strpos( $development_workflow, 'write WordPress data' ), 'Development workflow documents the local automation runtime replay smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:ai-image-media-seo' ) && false !== strpos( $development_workflow, 'prompt-like' ), 'Development workflow documents the AI image media SEO smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'existing attachment ->' ) && false !== strpos( $development_workflow, 'All other write-like' ), 'Development workflow limits executable Local Admin Consent to the featured image proof.' );
 toolbox_assert( false !== strpos( $development_workflow, 'post-editor excerpt/category/tag direct apply' ) && false !== strpos( $development_workflow, 'strong_local_confirmation' ) && false !== strpos( $development_workflow, 'Current accepted metadata choices' ), 'Development workflow keeps metadata direct apply as a future strong-local-confirmation design, not current local consent.' );

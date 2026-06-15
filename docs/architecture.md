@@ -14,6 +14,7 @@ Status: MVP architecture.
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
+| `modules/local-automation-runtime/` | Phase 1 bundled skeleton for the future `npcink-local-automation-runtime` owner; validates dry-run replay fixtures only and registers no WordPress hooks. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
 | `assets/editor-content-support.js` | Block editor sidebar panel for writing preparation, publish preflight, taxonomy/tag, internal-link, and image-candidate support flows. |
@@ -36,6 +37,10 @@ third-party AI callers. It must not contain provider keys, private credentials,
 request logs, quotas, billing details, or write authorization.
 
 No custom database tables are used in the first version.
+
+The bundled local automation runtime module does not change this. Phase 1 has
+no runtime job table, scheduler, worker, lease store, retry processor,
+dead-letter processor, or WordPress write path.
 
 ## Provider Path
 

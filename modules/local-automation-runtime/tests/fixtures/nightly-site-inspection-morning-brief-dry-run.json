@@ -1,0 +1,214 @@
+{
+  "contract_version": "npcink_local_automation_runtime.v1",
+  "fixture_id": "toolbox_nightly_site_inspection_morning_brief_phase_1_v1",
+  "mode": "dry_run_replay",
+  "runtime_owner": "npcink-local-automation-runtime",
+  "task_profile": "nightly_site_inspection_morning_brief",
+  "core_runtime_execution": false,
+  "background_execution": false,
+  "job": {
+    "job_id": "morning-brief-runtime-job-example-001",
+    "runtime_id": "morning-brief-runtime-example",
+    "source": "operator_started",
+    "actor": {
+      "type": "wp_user",
+      "display": "Administrator"
+    },
+    "correlation_id": "corr-morning-brief-example-001",
+    "idempotency_key": "morning-brief-example-001",
+    "title": "Prepare Nightly Site Inspection Morning Brief",
+    "summary": "Phase 1 dry-run profile only. No cron, scheduler, Cloud call, Core proposal, or WordPress write occurs.",
+    "status": "planned",
+    "eligibility_summary": {
+      "scope": {
+        "post_ids": [
+          101,
+          102
+        ],
+        "attachment_ids": [
+          201
+        ]
+      },
+      "candidate_count": 3,
+      "eligible_count": 2,
+      "blocked_count": 1,
+      "needs_input_count": 0,
+      "allowed_ability_ids": [
+        "npcink-toolbox/score-content-item",
+        "npcink-toolbox/prepare-writing-evidence"
+      ],
+      "disallowed_ability_ids": [
+        "npcink-toolbox/apply-approved-fix"
+      ],
+      "risk_level": "low",
+      "operator_next_action": "review_morning_brief_profile",
+      "retryable": false
+    },
+    "blocked_items": [
+      {
+        "item_id": "apply-fix-101",
+        "item_type": "post",
+        "target_ability_id": "npcink-toolbox/apply-approved-fix",
+        "reason_code": "wordpress_write_forbidden_in_phase_1",
+        "reason_message": "Phase 1 may plan analysis only and must not apply content, metadata, media, taxonomy, comment, or settings changes.",
+        "operator_next_action": "keep_as_review_only",
+        "retryable": false
+      }
+    ],
+    "actions": [
+      {
+        "action_id": "score-content-item-101",
+        "target_ability_id": "npcink-toolbox/score-content-item",
+        "execution_profile": "phase_1_replay_only",
+        "input_hash": "sha256:morning-brief-score-input-001",
+        "preview_ref": "preview.actions.score-content-item-101",
+        "depends_on": [],
+        "status": "ready",
+        "attempt_count": 0,
+        "max_attempts": 1,
+        "retryable": false,
+        "blocked_reason": "",
+        "output_refs": [
+          "preview.morning_brief.priorities[0]"
+        ],
+        "idempotency_key": "morning-brief-example-001:score-content-item-101"
+      },
+      {
+        "action_id": "prepare-writing-evidence-102",
+        "target_ability_id": "npcink-toolbox/prepare-writing-evidence",
+        "execution_profile": "phase_1_replay_only",
+        "input_hash": "sha256:morning-brief-evidence-input-001",
+        "preview_ref": "preview.actions.prepare-writing-evidence-102",
+        "depends_on": [],
+        "status": "ready",
+        "attempt_count": 0,
+        "max_attempts": 1,
+        "retryable": false,
+        "blocked_reason": "",
+        "output_refs": [
+          "preview.morning_brief.writing_preparation[0]"
+        ],
+        "idempotency_key": "morning-brief-example-001:prepare-writing-evidence-102"
+      },
+      {
+        "action_id": "blocked-apply-approved-fix-101",
+        "target_ability_id": "npcink-toolbox/apply-approved-fix",
+        "execution_profile": "forbidden_in_phase_1",
+        "input_hash": "sha256:morning-brief-apply-input-001",
+        "preview_ref": "preview.actions.blocked-apply-approved-fix-101",
+        "depends_on": [],
+        "status": "blocked",
+        "attempt_count": 0,
+        "max_attempts": 0,
+        "retryable": false,
+        "blocked_reason": "wordpress_write_forbidden_in_phase_1",
+        "output_refs": [],
+        "idempotency_key": "morning-brief-example-001:blocked-apply-approved-fix-101"
+      }
+    ],
+    "limits": {
+      "max_actions": 3,
+      "max_concurrency": 1,
+      "max_attempts_per_action": 1,
+      "lease_timeout_seconds": 0,
+      "schedule_window": "none"
+    }
+  },
+  "preview": {
+    "morning_brief": {
+      "contract_version": "nightly_site_inspection_result.v1",
+      "status": "preview_only",
+      "summary": {
+        "scanned_posts": 2,
+        "scanned_media": 1,
+        "actions_total": 2,
+        "risk_total": 0
+      },
+      "priorities": [
+        {
+          "object_type": "post",
+          "object_id": 101,
+          "score": 67,
+          "severity": "warning",
+          "reason_codes": [
+            "missing_meta_description",
+            "stale_content"
+          ],
+          "recommended_next_action": "review_update_brief"
+        }
+      ],
+      "writing_preparation": [
+        {
+          "source_object_ids": [
+            102
+          ],
+          "opportunity_kind": "refresh_existing_content",
+          "evidence_summary": "Source evidence only. No article title, body, FAQ copy, or SEO copy is generated.",
+          "forbidden_output_absent": true
+        }
+      ],
+      "safety": {
+        "direct_wordpress_write": false,
+        "requires_local_review": true,
+        "cloud_scheduler_truth": false
+      }
+    }
+  },
+  "core_handoff": {
+    "proposal_id": "",
+    "proposal_status": "not_created",
+    "preflight_status": "not_requested",
+    "correlation_id": "corr-morning-brief-example-001",
+    "approved_input_hash": "",
+    "batch_review_summary": {
+      "summary_version": "core-batch-review-summary-v1",
+      "action_count": 3,
+      "blocked_count": 1,
+      "needs_input_count": 0,
+      "target_ability_ids": [
+        "npcink-toolbox/score-content-item",
+        "npcink-toolbox/prepare-writing-evidence"
+      ],
+      "operator_next_action": "review_morning_brief_profile",
+      "retryable": false,
+      "final_execution_owner": "none_in_phase_1",
+      "core_execution": false,
+      "commit_execution": false
+    },
+    "core_execution": false,
+    "commit_execution": false
+  },
+  "operator_controls": {
+    "pause": true,
+    "resume": false,
+    "cancel": true,
+    "retry": false,
+    "kill_switch": true
+  },
+  "runtime_events": [
+    {
+      "event": "runtime.job.profile_validated",
+      "job_id": "morning-brief-runtime-job-example-001",
+      "correlation_id": "corr-morning-brief-example-001",
+      "contract_version": "npcink_local_automation_runtime.v1",
+      "created_at": "2026-06-15T00:00:00Z",
+      "metadata": {
+        "task_profile": "nightly_site_inspection_morning_brief",
+        "core_runtime_execution": false,
+        "background_execution": false
+      }
+    }
+  ],
+  "acceptance": {
+    "phase": "phase_1_contract_only",
+    "schema_only": true,
+    "dry_run_replay_only": true,
+    "requires_future_runtime_repo": true,
+    "core_tables_created": false,
+    "core_routes_created": false,
+    "worker_created": false,
+    "scheduler_created": false,
+    "lease_store_created": false,
+    "dead_letter_processor_created": false
+  }
+}
