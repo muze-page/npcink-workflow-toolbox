@@ -2804,6 +2804,119 @@
 		return payload;
 	}
 
+	function asArray(value) {
+		return Array.isArray(value) ? value : [];
+	}
+
+	function asObject(value) {
+		return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+	}
+
+	function firstFilled(values, fallback) {
+		for (let index = 0; index < values.length; index += 1) {
+			const value = values[index];
+			if (value !== undefined && value !== null && value !== '') {
+				return value;
+			}
+		}
+		return fallback;
+	}
+
+	function integerOr(value, fallback) {
+		const numeric = parseInt(value, 10);
+		return Number.isFinite(numeric) ? numeric : fallback;
+	}
+
+	function mediaBatchBlockedReason(item) {
+		return firstFilled([
+			item && item.blocked_reason,
+			item && item.reason,
+			item && item.message,
+			item && item.status,
+		], 'blocked');
+	}
+
+	function normalizeMediaDerivativeBatchPlan(rawPlan) {
+		const plan = Object.assign({}, asObject(rawPlan));
+		const sourceSummary = asObject(plan.summary);
+		const sourceEligibility = asObject(plan.eligibility_summary);
+		const candidates = asArray(firstFilled([plan.candidates, plan.eligible_items], []));
+		const skipped = asArray(plan.skipped);
+		const blockedItems = asArray(firstFilled([plan.blocked_items, plan.blocked, skipped], []));
+		const eligibleCount = integerOr(
+			firstFilled([
+				sourceEligibility.eligible_count,
+				sourceEligibility.candidate_count,
+				sourceSummary.eligible_count,
+				sourceSummary.candidate_count,
+			], candidates.length),
+			candidates.length
+		);
+		const blockedCount = integerOr(
+			firstFilled([
+				sourceEligibility.blocked_count,
+				sourceEligibility.skipped_count,
+				sourceSummary.blocked_count,
+				sourceSummary.skipped_count,
+			], blockedItems.length),
+			blockedItems.length
+		);
+		const totalCount = integerOr(
+			firstFilled([
+				sourceEligibility.total_count,
+				sourceEligibility.total_matched,
+				sourceSummary.total_count,
+				sourceSummary.total_matched,
+			], eligibleCount + blockedCount),
+			eligibleCount + blockedCount
+		);
+
+		plan.candidates = candidates;
+		plan.skipped = skipped;
+		plan.blocked_items = blockedItems;
+		plan.summary = sourceSummary;
+		plan.eligibility_summary = Object.assign({
+			total_count: totalCount,
+			eligible_count: eligibleCount,
+			blocked_count: blockedCount,
+			selected_count: eligibleCount,
+		}, sourceEligibility);
+		plan.retryable = Boolean(plan.retryable);
+		plan.retry_guidance = firstFilled([
+			plan.retry_guidance,
+			plan.retryGuidance,
+		], candidates.length ? 'Change the selected items or rebuild the plan after adjusting filters.' : 'Adjust scope, filters, or blocked media details, then rebuild the plan.');
+		plan.operator_next_action = firstFilled([
+			plan.operator_next_action,
+			plan.operatorNextAction,
+		], candidates.length ? 'Review eligible items, then generate selected previews.' : 'Review blocked reasons or adjust filters before rebuilding the plan.');
+		return plan;
+	}
+
+	function proposalIdFromResponse(payload) {
+		const proposal = asObject(payload);
+		const data = asObject(proposal.data);
+		return firstFilled([
+			proposal.proposal_id,
+			proposal.id,
+			data.proposal_id,
+			data.id,
+		], '');
+	}
+
+	function mediaBatchResultStatus(state) {
+		if (state && state.batchProposalError) {
+			return 'proposal_failed';
+		}
+		if (state && state.batchProposalResult) {
+			return 'submitted';
+		}
+		if (state && state.derivative) {
+			return state.batchStatus || 'preview_ready';
+		}
+		return state && state.batchStatus ? state.batchStatus : 'pending';
+	}
+
 	function renderMediaDerivativeRun(form, state, message) {
 		const payload = state.result || state.create || {};
 		const derivative = state.derivative || derivativeFromResult(payload);
@@ -2891,21 +3004,32 @@
 		if (!panel) {
 			return;
 		}
-		const candidates = Array.isArray(plan.candidates) ? plan.candidates : [];
-		const skipped = Array.isArray(plan.skipped) ? plan.skipped : [];
-		const summary = plan.summary || {};
+		const candidates = asArray(plan.candidates);
+		const skipped = asArray(plan.skipped);
+		const blockedItems = asArray(plan.blocked_items);
+		const summary = asObject(plan.summary);
+		const eligibility = asObject(plan.eligibility_summary);
 		panel.hidden = false;
 		panel.innerHTML = '';
 
 		const heading = el('div', 'npcink-toolbox__batch-heading');
 		heading.appendChild(el('h4', '', 'Batch plan'));
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Candidates', summary.candidate_count || candidates.length);
-		appendMeta(meta, 'Skipped', summary.skipped_count || skipped.length);
-		appendMeta(meta, 'Matched', summary.total_matched);
+		appendMeta(meta, 'Eligible', eligibility.eligible_count || summary.candidate_count || candidates.length);
+		appendMeta(meta, 'Blocked', eligibility.blocked_count || summary.skipped_count || blockedItems.length || skipped.length);
+		appendMeta(meta, 'Matched', eligibility.total_count || summary.total_matched);
+		appendMeta(meta, 'Selected', eligibility.selected_count || candidates.length);
+		appendMeta(meta, 'Retryable', plan.retryable ? 'Yes' : 'No');
 		appendMeta(meta, 'Mode', plan.plan_mode || 'dry_run');
 		heading.appendChild(meta);
 		panel.appendChild(heading);
+
+		if (plan.operator_next_action) {
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Next action: ' + String(plan.operator_next_action)));
+		}
+		if (plan.retry_guidance) {
+			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Retry guidance: ' + String(plan.retry_guidance)));
+		}
 
 		if (!candidates.length) {
 			panel.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No candidates are ready for derivative previews. Review skipped reasons or adjust filters.'));
@@ -2928,21 +3052,32 @@
 				candidate.filesize_bytes ? String(candidate.filesize_bytes) + ' bytes' : '',
 			].filter(Boolean).join(' · ');
 			body.appendChild(el('small', '', detail));
+			const status = [
+				candidate.status ? formatLabel(candidate.status) : 'Eligible',
+				candidate.reason || candidate.eligibility_reason || '',
+				candidate.result_ref || candidate.result_reference || '',
+			].filter(Boolean).join(' · ');
+			if (status) {
+				body.appendChild(el('small', 'npcink-toolbox__batch-status', status));
+			}
 			row.appendChild(body);
 			row.__magickMediaBatchCandidate = Object.assign({}, candidate, { batch_index: index });
 			list.appendChild(row);
 		});
 		panel.appendChild(list);
 
-		if (skipped.length) {
+		if (blockedItems.length || skipped.length) {
 			const details = el('details', 'npcink-toolbox__result-details');
-			details.appendChild(el('summary', '', 'Skipped media'));
+			details.appendChild(el('summary', '', 'Blocked or skipped media'));
 			const skippedList = el('div', 'npcink-toolbox__batch-list');
-			skipped.slice(0, 20).forEach((item) => {
+			(blockedItems.length ? blockedItems : skipped).slice(0, 20).forEach((item) => {
 				const row = el('div', 'npcink-toolbox__batch-row is-skipped');
 				const body = el('span', 'npcink-toolbox__batch-row-body');
 				body.appendChild(el('strong', '', '#' + String(item.attachment_id || '') + ' ' + String(item.title || 'Skipped media')));
-				body.appendChild(el('small', '', String(item.reason || 'skipped')));
+				body.appendChild(el('small', '', String(mediaBatchBlockedReason(item))));
+				if (item.operator_next_action) {
+					body.appendChild(el('small', 'npcink-toolbox__batch-status', 'Next action: ' + String(item.operator_next_action)));
+				}
 				row.appendChild(body);
 				skippedList.appendChild(row);
 			});
@@ -3034,7 +3169,17 @@
 			.filter(Boolean);
 	}
 
-	function renderMediaDerivativeBatchResults(form, states, title, summary) {
+	function renderMediaDerivativeBatchResults(form, states, title, summary, batchContext) {
+		batchContext = asObject(batchContext);
+		const selectedCount = integerOr(batchContext.selected_count || batchContext.selectedCount, states.length);
+		const submittedCount = integerOr(
+			batchContext.submitted_count || batchContext.submittedCount,
+			states.filter((state) => state && state.batchProposalResult).length
+		);
+		const failedCount = integerOr(
+			batchContext.failed_count || batchContext.failedCount,
+			states.filter((state) => state && state.batchProposalError).length
+		);
 		const result = renderShell(
 			form,
 			{ provider: 'core governance' },
@@ -3046,24 +3191,47 @@
 		}
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Selected', selectedCount);
 		appendMeta(meta, 'Previewed', states.length);
+		appendMeta(meta, 'Submitted', submittedCount);
+		appendMeta(meta, 'Failed', failedCount);
+		appendMeta(meta, 'Retryable', batchContext.retryable ? 'Yes' : 'No');
 		appendMeta(meta, 'Proposal path', 'Core review');
 		appendMeta(meta, 'Crop', states.length ? mediaDerivativeCropLabel(states[0].abilityInput) : '');
 		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
 
+		if (batchContext.operator_next_action) {
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Next action: ' + String(batchContext.operator_next_action)));
+		}
+		if (batchContext.retry_guidance) {
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Retry guidance: ' + String(batchContext.retry_guidance)));
+		}
+
 		const list = el('div', 'npcink-toolbox__result-list');
 		states.forEach((state) => {
 			const derivative = state.derivative || {};
+			const candidate = asObject(state.batchCandidate);
 			const row = el('article', 'npcink-toolbox__result-item');
-			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(derivative.format || '').toUpperCase()));
+			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(candidate.title || (derivative.format ? String(derivative.format).toUpperCase() : 'Derivative'))));
 			const itemMeta = el('div', 'npcink-toolbox__result-meta');
+			appendMeta(itemMeta, 'Status', formatLabel(mediaBatchResultStatus(state)));
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
+			appendMeta(itemMeta, 'Proposal', proposalIdFromResponse(state.batchProposalResult));
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
 			appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at));
 			appendMeta(itemMeta, 'Crop', mediaDerivativeCropLabel(state.abilityInput));
 			appendMeta(itemMeta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 			row.appendChild(itemMeta);
+			if (candidate.reason || candidate.eligibility_reason || candidate.result_ref || candidate.result_reference) {
+				row.appendChild(el('p', '', [
+					candidate.reason || candidate.eligibility_reason || '',
+					candidate.result_ref || candidate.result_reference || '',
+				].filter(Boolean).join(' · ')));
+			}
+			if (state.batchProposalError) {
+				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', formatErrorMessage(state.batchProposalError)));
+			}
 			const previewUrl = withRestNonce(derivative.preview_url || '');
 			if (previewUrl) {
 				const link = createLink(previewUrl, 'Open preview');
@@ -3475,15 +3643,15 @@
 			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
 			input,
 		});
-		const plan = planDataFromEnvelope(planEnvelope) || {};
+		const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
 		form.__magickMediaDerivativeBatchPlan = plan;
 		form.__magickMediaDerivativeBatchStates = [];
 		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
-		renderTextResult(form, 'Batch plan ready. Review candidates and generate selected previews.', 'ok');
+		renderTextResult(form, plan.operator_next_action || 'Batch plan ready. Review candidates and generate selected previews.', 'ok');
 		const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
 		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
 		if (runButton instanceof HTMLButtonElement) {
-			runButton.disabled = !(Array.isArray(plan.candidates) && plan.candidates.length > 0);
+			runButton.disabled = !(asArray(plan.candidates).length > 0);
 		}
 		if (submitButton instanceof HTMLButtonElement) {
 			submitButton.disabled = true;
@@ -3510,7 +3678,10 @@
 				input.attachment_id = candidate.attachment_id;
 			}
 			renderTextResult(form, 'Generating preview ' + String(index + 1) + ' of ' + String(candidates.length) + '...', 'pending');
-			states.push(await createMediaDerivativePreview(input));
+			const state = await createMediaDerivativePreview(input);
+			state.batchCandidate = candidate;
+			state.batchStatus = 'preview_ready';
+			states.push(state);
 		}
 
 		form.__magickMediaDerivativeBatchStates = states;
@@ -3518,7 +3689,14 @@
 		if (submitButton instanceof HTMLButtonElement) {
 			submitButton.disabled = states.length <= 0;
 		}
-		renderMediaDerivativeBatchResults(form, states);
+		renderMediaDerivativeBatchResults(form, states, '', '', {
+			selected_count: candidates.length,
+			submitted_count: 0,
+			failed_count: 0,
+			retryable: false,
+			operator_next_action: 'Review selected previews, then submit Core proposals for governed review.',
+			retry_guidance: 'Change selected media or rebuild the plan before generating previews again.',
+		});
 	}
 
 	async function submitMediaDerivativeBatchProposals(form) {
@@ -3532,21 +3710,45 @@
 		}
 
 		const proposals = [];
+		let failed = null;
 		for (let index = 0; index < states.length; index += 1) {
 			const state = states[index];
 			renderTextResult(form, t('Submitting Core proposal ') + String(index + 1) + t(' of ') + String(states.length) + '...', 'pending');
-			proposals.push(await postJson(config.adapterRestUrl, 'proposals', {
-				ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative',
-				title: 'Replace media file with Cloud derivative',
-				summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
-				input: proposalInputFromState(state),
-				preview: state.proposalPayload,
-			}));
+			try {
+				const proposal = await postJson(config.adapterRestUrl, 'proposals', {
+					ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative',
+					title: 'Replace media file with Cloud derivative',
+					summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Final writes require Core approval and preflight.',
+					input: proposalInputFromState(state),
+					preview: state.proposalPayload,
+				});
+				state.batchProposalResult = proposal;
+				state.batchStatus = 'submitted';
+				proposals.push(proposal);
+			} catch (error) {
+				state.batchProposalError = error;
+				state.batchStatus = 'proposal_failed';
+				failed = error;
+				break;
+			}
 		}
-		renderMediaDerivativeBatchResults(form, states, 'Batch proposals submitted', 'Selected derivative artifacts are now in Core review. WordPress writes still require Core approval and preflight.');
+		renderMediaDerivativeBatchResults(
+			form,
+			states,
+			failed ? 'Batch proposal submission stopped' : 'Batch proposals submitted',
+			failed ? 'One selected derivative failed before all proposals were submitted. Review the failed item and retry after revision.' : 'Selected derivative artifacts are now in Core review. WordPress writes still require Core approval and preflight.',
+			{
+				selected_count: states.length,
+				submitted_count: proposals.length,
+				failed_count: failed ? 1 : 0,
+				retryable: Boolean(failed),
+				operator_next_action: failed ? 'Resolve the failed item before submitting the remaining previews.' : 'Continue review, approval, and preflight in Core.',
+				retry_guidance: failed ? 'Retry after revising the failed preview, authorization, or Core proposal input.' : 'If more media are needed, rebuild the batch plan rather than reusing stale artifacts.',
+			}
+		);
 		const result = form.querySelector('.npcink-toolbox__result');
 		if (result) {
-			result.appendChild(createRawDetails({ proposals }, 'Core proposals'));
+			result.appendChild(createRawDetails({ proposals, failed: failed ? formatErrorMessage(failed) : null }, 'Core proposals'));
 		}
 	}
 

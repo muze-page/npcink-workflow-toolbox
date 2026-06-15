@@ -162,6 +162,31 @@ Before release, also follow
 preview, preflight, proposal creation, approve-and-execute, URL/MIME/ALT
 evidence, and rollback must all pass.
 
+For the batch media optimization review-set plan, run:
+
+```bash
+composer smoke:media-derivative-batch-plan
+```
+
+This creates two temporary image attachments, calls
+`npcink-abilities-toolkit/build-media-derivative-batch-plan`, verifies
+`eligibility_summary`, `blocked_items`, `operator_next_action`, `retryable`,
+and `retry_guidance`, and proves planning does not change the fixture media
+files. It does not call Cloud, create Core proposals, approve, preflight, or
+execute WordPress writes.
+
+When Adapter, Cloud Addon, and Core are available, run the selected-preview
+Core proposal smoke:
+
+```bash
+composer smoke:media-derivative-batch-core
+```
+
+This creates two temporary JPEG attachments, builds the batch plan through
+Adapter `run-read-ability`, generates selected Cloud previews, builds reviewed
+media optimization proposal payloads, and creates two Core review proposals. It
+does not approve, preflight, execute, or replace media files.
+
 ## Coding Rules
 
 - Keep admin UI server-rendered unless a real build need appears.
