@@ -137,11 +137,14 @@ review, export, and batch dry-run projection:
   it.
 
 Editor responses also expose an additive `editor_recommendation_set.v1` wrapper
-with a content fingerprint, latency profile, artifact counts, required Core
-proposal targets, and retrieval-source hints. The wrapper lets the UI show
-high-confidence local candidates quickly and then route the operator into a
-focused tool. It is not a workflow run record, approval store, feedback store,
-or write API.
+with a content fingerprint, source layer, latency profile, artifact counts,
+candidate refs, retrieval-source hints, `no_write=true`, and definition-only
+Core handoff envelopes. A handoff envelope points to a stable ability id and a
+bounded payload preview; it does not include raw REST routes, submitted proposal
+ids, execution status, approval status, run logs, retry queues, or workflow
+runtime state. The wrapper lets the UI show high-confidence local candidates
+quickly and then route the operator into a focused tool. It is not a workflow
+run record, approval store, feedback store, or write API.
 
 ## Progressive Timing
 

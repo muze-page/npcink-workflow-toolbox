@@ -15,6 +15,7 @@
 	const Fragment = element.Fragment || 'div';
 	const useState = element.useState;
 	const useEffect = element.useEffect;
+	const useRef = element.useRef;
 	const useSelect = data.useSelect;
 	const __ = i18n.__ || ((value) => value);
 	const sprintf = i18n.sprintf || ((value) => value);
@@ -32,7 +33,7 @@
 	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
 	const BlockControlsComponent = blockEditor.BlockControls || editor.BlockControls || null;
 
-	if (!createElement || !useState || !useEffect || !useSelect || !plugins.registerPlugin || !PluginSidebarComponent) {
+	if (!createElement || !useState || !useEffect || !useRef || !useSelect || !plugins.registerPlugin || !PluginSidebarComponent) {
 		return;
 	}
 
@@ -3631,6 +3632,18 @@
 			const [progressiveStatus, setProgressiveStatus] = useState(null);
 			const [progressiveLoadedKey, setProgressiveLoadedKey] = useState('');
 			const progressiveKey = progressiveRecommendationKey(postContext);
+			const progressiveMountedRef = useRef(false);
+			const progressiveRequestSeqRef = useRef(0);
+			const progressiveCurrentKeyRef = useRef(progressiveKey);
+			progressiveCurrentKeyRef.current = progressiveKey;
+
+			useEffect(() => {
+				progressiveMountedRef.current = true;
+				return () => {
+					progressiveMountedRef.current = false;
+					progressiveRequestSeqRef.current += 1;
+				};
+			}, []);
 
 			useEffect(() => {
 				if (!progressiveKey || progressiveLoadedKey === progressiveKey) {
@@ -3690,6 +3703,9 @@
 				if (!force && progressiveLoadedKey === key) {
 					return;
 				}
+				const requestSeq = progressiveRequestSeqRef.current + 1;
+				progressiveRequestSeqRef.current = requestSeq;
+				const shouldApplyProgressiveResult = () => progressiveMountedRef.current && progressiveRequestSeqRef.current === requestSeq && progressiveCurrentKeyRef.current === key;
 				setProgressiveStatus({ status: 'loading', message: __('Preparing local suggestions...', 'npcink-toolbox') });
 				try {
 					const flowResult = await postJsonWithTimeout(
@@ -3697,6 +3713,9 @@
 						progressiveRecommendationPayload(postContext),
 						PROGRESSIVE_RECOMMENDATION_TIMEOUT_MS
 					);
+					if (!shouldApplyProgressiveResult()) {
+						return;
+					}
 					setProgressiveResult(flowResult);
 					setProgressiveLoadedKey(key);
 					setProgressiveStatus({
@@ -3704,6 +3723,9 @@
 						message: __('Local suggestions are ready.', 'npcink-toolbox'),
 					});
 				} catch (requestError) {
+					if (!shouldApplyProgressiveResult()) {
+						return;
+					}
 					setProgressiveLoadedKey(key);
 					setProgressiveStatus({
 						status: requestError && requestError.code === 'npcink_toolbox_progressive_timeout' ? 'warning' : 'error',

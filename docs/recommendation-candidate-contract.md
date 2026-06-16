@@ -57,9 +57,17 @@ review queues, but the original candidate object remains the source of truth.
 - Editor Content Support returns an additive `editor_recommendation_set.v1`
   wrapper on focused results and the local `progressive_recommendations` prefetch
   result. It includes `recommendation_set_id`, `content_fingerprint`,
-  `latency_profile`, artifact counts, Core proposal targets, and retrieval
-  sources. It is metadata around candidate sections, not the source of write,
-  approval, audit, or learning truth.
+  `generated_at`, `source_layer`, `latency_profile`, `artifact_counts`,
+  `retrieval_sources`, `proposal_targets`, `candidates`, and `no_write=true`.
+  The legacy `artifacts`, `governance`, and debug retrieval-source fields remain
+  additive compatibility metadata. The wrapper is metadata around candidate
+  sections, not the source of write, approval, audit, or learning truth.
+- `proposal_targets` are definition-only Core handoff envelopes. Each target
+  points from `candidate_id` to a stable `required_ability_id` and bounded
+  `proposed_payload_preview`. Targets must not contain raw REST routes,
+  submitted proposal ids, execution status, approval status, run logs, retry
+  queues, or workflow-runtime state. The only valid status in the current stage
+  is `definition_only_user_trigger_required`.
 - AI summary suggestions mark excerpt items with the contract while preserving
   the existing `summary_layers.items` shape. The single-summary editor action
   returns `article_summary_suggestions.v1` and does not include taxonomy,

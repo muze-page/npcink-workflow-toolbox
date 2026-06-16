@@ -102,14 +102,41 @@ smoke does not mutate the sampled post.
 For the post-editor progressive recommendation surface, run:
 
 ```bash
+composer test:editor-progressive-js
 composer smoke:editor-progressive-recommendations
+composer smoke:editor-progressive-local-matrix
 ```
 
-This dispatches `/wp-json/npcink-toolbox/v1/editor/content-support` with the
-`progressive_recommendations` intent against a local post and verifies the
-local-only recommendation set, 2.5 second UX budget, content fingerprint,
+The source-only JavaScript contract verifies that automatic prefetch sends only
+`progressive_recommendations`, does not trigger Cloud-backed writing support or
+proposal handoff, keeps the 2.5 second fallback, uses the loaded-key cache, does
+not let late responses overwrite newer fingerprints, and invalidates in-flight
+requests on unmount.
+
+The REST smoke dispatches `/wp-json/npcink-toolbox/v1/editor/content-support`
+with the `progressive_recommendations` intent against a local post and verifies
+the local-only recommendation set, 2.5 second UX budget, content fingerprint,
 candidate cap, no empty matched-token copy, no stopword-only taxonomy evidence,
 no direct WordPress writes, and no sampled post mutation.
+
+The local matrix smoke adds a temporary draft fixture for the new-article path,
+checks an existing post without mutating it, verifies title/body/excerpt/selected
+block fingerprint changes, confirms the no-Cloud source layer, and checks that
+Core handoff targets remain definition-only even when Core routes are present.
+
+For a real editor lifecycle smoke with iframe editor and Block API behavior,
+run the optional browser gate:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:editor-progressive-browser
+```
+
+This opens the local editor, opens the Npcink Content Support sidebar, verifies
+the automatic Fast recommendations request, checks candidate source/action
+labels, clicks Refresh, and confirms no Cloud, Adapter, or Core proposal route
+is called. It is intentionally outside `composer test:all` because it depends on
+a running local WordPress site, WP-CLI login-cookie generation, Playwright, and
+a local browser.
 
 For the post-editor review artifact surface, run:
 

@@ -1436,14 +1436,23 @@ final class Rest_Controller {
 			'internal_links' => $this->editor_recommendation_count_by_kind( $sections, 'internal_link' ),
 			'preflight'      => $this->editor_recommendation_count_by_kind( $sections, 'preflight' ),
 		);
+		$retrieval_sources   = $this->editor_recommendation_set_sources( $sections );
+		$proposal_targets    = $this->editor_recommendation_set_proposal_targets( $sections );
 
 		return array(
 			'recommendation_set_id' => 'rec_' . substr( hash( 'sha256', $content_fingerprint . '|' . $intent . '|' . wp_json_encode( $artifact_counts ) ), 0, 20 ),
 			'contract_version'      => 'editor_recommendation_set.v1',
+			'generated_at'          => gmdate( 'c' ),
+			'source_layer'          => $this->editor_recommendation_set_source_layer( $sections ),
 			'latency_profile'       => 'progressive_recommendations' === $intent ? 'local_300ms' : 'focused_intent',
 			'content_fingerprint'   => $content_fingerprint,
 			'intent'                => sanitize_key( $intent ),
 			'artifacts'             => $artifact_counts,
+			'artifact_counts'       => $artifact_counts,
+			'candidates'            => $this->editor_recommendation_set_candidate_refs( $sections ),
+			'retrieval_sources'     => $retrieval_sources,
+			'proposal_targets'      => $proposal_targets,
+			'no_write'              => true,
 			'governance'            => array(
 				'dry_run_available'     => true,
 				'requires_proposal'     => $this->editor_recommendation_set_required_proposals( $sections ),
@@ -1451,7 +1460,7 @@ final class Rest_Controller {
 				'direct_wordpress_write' => false,
 			),
 			'debug'                 => array(
-				'retrieval_sources'     => $this->editor_recommendation_set_sources( $sections ),
+				'retrieval_sources'     => $retrieval_sources,
 				'cache_ttl_seconds'     => self::EDITOR_FLOW_CACHE_TTL,
 				'progressive_target_ms' => self::EDITOR_PROGRESSIVE_TARGET_MS,
 			),
@@ -1505,6 +1514,107 @@ final class Rest_Controller {
 			}
 		}
 		return $required;
+	}
+
+	private function editor_recommendation_set_candidate_refs( array $sections ): array {
+		$refs = array();
+		foreach ( $sections as $section ) {
+			if ( ! is_array( $section ) || ! is_array( $section['recommendation_candidates'] ?? null ) ) {
+				continue;
+			}
+			foreach ( $section['recommendation_candidates'] as $candidate ) {
+				if ( ! is_array( $candidate ) ) {
+					continue;
+				}
+				$id = sanitize_key( (string) ( $candidate['id'] ?? '' ) );
+				if ( '' === $id ) {
+					continue;
+				}
+				$refs[] = array(
+					'candidate_id'  => $id,
+					'kind'          => sanitize_key( (string) ( $candidate['kind'] ?? 'generic' ) ),
+					'target_field'  => sanitize_key( (string) ( $candidate['target_field'] ?? '' ) ),
+					'action_policy' => sanitize_key( (string) ( $candidate['action_policy'] ?? 'suggestion_only' ) ),
+				);
+			}
+		}
+		return $refs;
+	}
+
+	private function editor_recommendation_set_proposal_targets( array $sections ): array {
+		$targets = array();
+		$seen    = array();
+		foreach ( $sections as $section ) {
+			if ( ! is_array( $section ) || ! is_array( $section['recommendation_candidates'] ?? null ) ) {
+				continue;
+			}
+			foreach ( $section['recommendation_candidates'] as $candidate ) {
+				if ( ! is_array( $candidate ) || 'core_proposal_required' !== (string) ( $candidate['action_policy'] ?? '' ) ) {
+					continue;
+				}
+				$candidate_id = sanitize_key( (string) ( $candidate['id'] ?? '' ) );
+				if ( '' === $candidate_id ) {
+					continue;
+				}
+				$kind          = sanitize_key( (string) ( $candidate['kind'] ?? 'generic' ) );
+				$target_field  = sanitize_key( (string) ( $candidate['target_field'] ?? $kind ) );
+				$ability_id    = $this->editor_recommendation_target_ability_id( $target_field, $kind );
+				$dedupe_key    = $candidate_id . '|' . $target_field . '|' . $ability_id;
+				if ( isset( $seen[ $dedupe_key ] ) ) {
+					continue;
+				}
+				$seen[ $dedupe_key ] = true;
+				$targets[]           = array(
+					'candidate_id'             => $candidate_id,
+					'candidate_kind'           => $kind,
+					'target_field'             => $target_field,
+					'proposal_target'          => 'core_ability_handoff',
+					'required_ability_id'      => $ability_id,
+					'proposed_payload_preview' => $this->editor_recommendation_payload_preview( $candidate, $target_field, $ability_id ),
+					'handoff_status'           => 'definition_only_user_trigger_required',
+					'direct_wordpress_write'   => false,
+				);
+			}
+		}
+		return $targets;
+	}
+
+	private function editor_recommendation_set_source_layer( array $sections ): string {
+		foreach ( $sections as $section ) {
+			if ( is_array( $section ) && ! empty( $section['provider_execution'] ) ) {
+				return 'cloud';
+			}
+		}
+		return 'local';
+	}
+
+	private function editor_recommendation_target_ability_id( string $target_field, string $kind ): string {
+		$field = sanitize_key( $target_field );
+		$type  = sanitize_key( $kind );
+		if ( in_array( $field, array( 'category', 'post_tag', 'taxonomy_terms' ), true ) || in_array( $type, array( 'category', 'tag' ), true ) ) {
+			return 'npcink-abilities-toolkit/set-post-terms';
+		}
+		if ( in_array( $field, array( 'featured_media', 'featured_image' ), true ) || 'image' === $type ) {
+			return 'npcink-abilities-toolkit/set-post-featured-image';
+		}
+		if ( in_array( $field, array( 'seo_meta', 'seo_title', 'seo_description' ), true ) ) {
+			return 'npcink-abilities-toolkit/set-post-seo-meta';
+		}
+		return 'npcink-abilities-toolkit/update-post';
+	}
+
+	private function editor_recommendation_payload_preview( array $candidate, string $target_field, string $ability_id ): array {
+		$value = sanitize_text_field( (string) ( $candidate['value'] ?? '' ) );
+		return array(
+			'candidate_id'       => sanitize_key( (string) ( $candidate['id'] ?? '' ) ),
+			'target_field'       => sanitize_key( $target_field ),
+			'ability_id'         => sanitize_text_field( $ability_id ),
+			'value_preview'      => substr( $value, 0, 160 ),
+			'source_contract'    => 'editor_recommendation_set.v1',
+			'dry_run'            => true,
+			'commit'             => false,
+			'operator_triggered' => true,
+		);
 	}
 
 	private function editor_recommendation_set_sources( array $sections ): array {
