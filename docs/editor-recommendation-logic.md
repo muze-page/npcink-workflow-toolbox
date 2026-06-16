@@ -177,16 +177,24 @@ Local-only ranking can use:
 - existing WordPress categories and tags;
 - exact or token overlap between draft text and term name, slug, or
   description;
+- exact term-name matches in the title are stronger than body-only token
+  overlap. Slug or alias overlap is useful evidence only when enough tokens
+  match the current editor context. Description-only and single weak-token
+  matches are downgraded and do not enter the high-confidence recommendation
+  set;
 - local preflight warnings projected as `recommendation_candidate.v1` review
   items with `operator_review_only_no_write`, so the operator sees missing
   title, excerpt, terms, or featured-image work without creating a write path;
+  progressive preflight candidates keep a stable review order of title,
+  excerpt, terms, then featured image;
 - English stopword-only overlaps are ignored. Existing taxonomy terms enter the
   high-confidence recommendation list only when the current draft or related
   evidence gives a meaningful signal; otherwise they remain local profile
   context.
 - Recent media-library items without a text match are downgraded to
   `operator_review_only_no_write` review references instead of immediate Core
-  proposal candidates.
+  proposal candidates. When local media scores tie, newer attachments stay
+  ahead so the operator reviews likely-current assets first.
 - runtime quality gates for length, meta wording, duplication, and unsupported
   claims.
 

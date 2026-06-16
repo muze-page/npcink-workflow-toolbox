@@ -144,6 +144,7 @@ function get_terms( array $args ): array {
 			(object) array( 'term_id' => 13, 'name' => 'This', 'slug' => 'this', 'description' => 'this', 'count' => 9 ),
 			(object) array( 'term_id' => 14, 'name' => '渐进推荐', 'slug' => 'progressive-recommendation', 'description' => '渐进推荐 系统', 'count' => 6 ),
 			(object) array( 'term_id' => 15, 'name' => 'Post Formats', 'slug' => 'post-formats', 'description' => 'post format archive', 'count' => 12 ),
+			(object) array( 'term_id' => 16, 'name' => 'Editorial Ops', 'slug' => 'editorial-ops', 'description' => 'workflow only', 'count' => 10 ),
 		);
 	}
 	if ( 'post_tag' === $taxonomy ) {
@@ -220,6 +221,15 @@ function npcink_toolbox_progressive_candidates_by_kind( array $section, string $
 			static fn( array $candidate ): bool => $kind === (string) ( $candidate['kind'] ?? '' )
 		)
 	);
+}
+
+function npcink_toolbox_progressive_candidate_by_value( array $candidates, string $value ): array {
+	foreach ( $candidates as $candidate ) {
+		if ( $value === (string) ( $candidate['value'] ?? '' ) ) {
+			return $candidate;
+		}
+	}
+	return array();
 }
 
 $response = $controller->editor_content_support(
@@ -323,6 +333,64 @@ npcink_toolbox_progressive_assert(
 	'Progressive taxonomy ranking ignores generic WordPress taxonomy tokens such as post and format.'
 );
 
+$exact_title_section = npcink_toolbox_progressive_section(
+	npcink_toolbox_progressive_request(
+		$controller,
+		array(
+			'intent'    => 'progressive_recommendations',
+			'post_type' => 'post',
+			'title'     => 'AI Workflow for editors',
+			'excerpt'   => 'A local recommendations note.',
+			'content'   => 'Editors need a predictable recommendation cockpit.',
+		)
+	)
+);
+$exact_title_category = npcink_toolbox_progressive_candidate_by_value(
+	npcink_toolbox_progressive_candidates_by_kind( $exact_title_section, 'category' ),
+	'AI Workflow'
+);
+npcink_toolbox_progressive_assert(
+	! empty( $exact_title_category )
+	&& in_array( '词条名称在标题中完整出现，优先级更高。', $exact_title_category['quality_issues'] ?? array(), true ),
+	'Progressive taxonomy ranking boosts exact title term-name matches with explainable evidence.'
+);
+
+$single_token_section = npcink_toolbox_progressive_section(
+	npcink_toolbox_progressive_request(
+		$controller,
+		array(
+			'intent'    => 'progressive_recommendations',
+			'post_type' => 'post',
+			'title'     => 'AI hype',
+			'excerpt'   => 'Short editorial note.',
+			'content'   => 'Brief local note.',
+		)
+	)
+);
+$single_token_categories = npcink_toolbox_progressive_candidates_by_kind( $single_token_section, 'category' );
+npcink_toolbox_progressive_assert(
+	! npcink_toolbox_progressive_candidate_by_value( $single_token_categories, 'AI Workflow' ),
+	'Progressive taxonomy ranking keeps single-token weak matches out of high-confidence candidates.'
+);
+
+$description_only_section = npcink_toolbox_progressive_section(
+	npcink_toolbox_progressive_request(
+		$controller,
+		array(
+			'intent'    => 'progressive_recommendations',
+			'post_type' => 'post',
+			'title'     => 'Workflow checklist',
+			'excerpt'   => 'A local workflow note.',
+			'content'   => 'Workflow review only.',
+		)
+	)
+);
+$description_only_categories = npcink_toolbox_progressive_candidates_by_kind( $description_only_section, 'category' );
+npcink_toolbox_progressive_assert(
+	! npcink_toolbox_progressive_candidate_by_value( $description_only_categories, 'Editorial Ops' ),
+	'Progressive taxonomy ranking keeps description-only matches out of high-confidence candidates.'
+);
+
 $chinese_section = npcink_toolbox_progressive_section(
 	npcink_toolbox_progressive_request(
 		$controller,
@@ -345,6 +413,7 @@ npcink_toolbox_progressive_assert(
 );
 
 $preflight_candidates = npcink_toolbox_progressive_candidates_by_kind( $section, 'preflight' );
+$preflight_targets    = array_column( $preflight_candidates, 'target_field' );
 npcink_toolbox_progressive_assert(
 	! empty( $preflight_candidates )
 	&& ! array_filter(
@@ -352,4 +421,8 @@ npcink_toolbox_progressive_assert(
 		static fn( array $candidate ): bool => 'operator_review_only_no_write' !== (string) ( $candidate['action_policy'] ?? '' )
 	),
 	'Progressive preflight candidates are operator-review-only no-write items.'
+);
+npcink_toolbox_progressive_assert(
+	array( 'taxonomy_terms', 'featured_media' ) === array_values( array_slice( $preflight_targets, 0, 2 ) ),
+	'Progressive preflight candidates keep a stable local review order for the active draft context.'
 );

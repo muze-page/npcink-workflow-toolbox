@@ -1717,6 +1717,7 @@ final class Rest_Controller {
 			}
 			$score         = $this->editor_contextual_match_score( implode( ' ', array( $item['title'] ?? '', $item['alt'] ?? '', $item['caption'] ?? '', $item['description'] ?? '' ) ), $context, $query );
 			$item['score'] = $score;
+			$item['recency_rank'] = count( $items );
 			$item['reason'] = $score > 0
 				? __( 'Existing media matched weighted title, excerpt, selected text, or draft terms.', 'npcink-toolbox' )
 				: __( 'Recent existing media candidate from the local library. Review visual fit before adoption.', 'npcink-toolbox' );
@@ -1725,7 +1726,11 @@ final class Rest_Controller {
 		usort(
 			$items,
 			static function ( array $left, array $right ): int {
-				return (int) ( $right['score'] ?? 0 ) <=> (int) ( $left['score'] ?? 0 );
+				$score_compare = (int) ( $right['score'] ?? 0 ) <=> (int) ( $left['score'] ?? 0 );
+				if ( 0 !== $score_compare ) {
+					return $score_compare;
+				}
+				return (int) ( $left['recency_rank'] ?? 0 ) <=> (int) ( $right['recency_rank'] ?? 0 );
 			}
 		);
 		return array_slice( $items, 0, 8 );
@@ -1772,6 +1777,13 @@ final class Rest_Controller {
 				static function ( array $candidate ): bool {
 					$issues = is_array( $candidate['quality_issues'] ?? null ) ? implode( ' ', $candidate['quality_issues'] ) : '';
 					$reason = (string) ( $candidate['reason'] ?? '' );
+					if (
+						'weak' === (string) ( $candidate['quality_status'] ?? '' )
+						|| false !== strpos( $issues, '仅描述字段匹配' )
+						|| false !== strpos( $issues, '只有一个较弱 token 匹配' )
+					) {
+						return false;
+					}
 					return false !== strpos( $issues, '匹配当前草稿' )
 						|| false !== strpos( $issues, 'Matched tokens:' )
 						|| false !== strpos( $issues, '历史相关' )
@@ -1793,6 +1805,20 @@ final class Rest_Controller {
 			'excerpt'        => 'post_excerpt',
 			'terms'          => 'taxonomy_terms',
 			'featured_media' => 'featured_media',
+		);
+		$priority   = array(
+			'title'          => 10,
+			'excerpt'        => 20,
+			'terms'          => 30,
+			'featured_media' => 40,
+		);
+		usort(
+			$items,
+			static function ( array $left, array $right ) use ( $priority ): int {
+				$left_id  = sanitize_key( (string) ( $left['id'] ?? 'preflight' ) );
+				$right_id = sanitize_key( (string) ( $right['id'] ?? 'preflight' ) );
+				return (int) ( $priority[ $left_id ] ?? 99 ) <=> (int) ( $priority[ $right_id ] ?? 99 );
+			}
 		);
 
 		foreach ( $items as $item ) {
@@ -2962,8 +2988,22 @@ final class Rest_Controller {
 		if ( in_array( 'current_draft_match', $match_signals, true ) ) {
 			$quality_issues[] = __( '匹配当前草稿中的标题、摘要或正文词。', 'npcink-toolbox' );
 		}
+		if ( in_array( 'title_term_name_match', $match_signals, true ) ) {
+			$quality_issues[] = __( '词条名称在标题中完整出现，优先级更高。', 'npcink-toolbox' );
+		}
+		if ( in_array( 'slug_alias_match', $match_signals, true ) ) {
+			$quality_issues[] = __( '词条 slug 或别名与当前编辑上下文匹配。', 'npcink-toolbox' );
+		}
 		if ( in_array( 'related_site_knowledge_term', $match_signals, true ) ) {
 			$quality_issues[] = __( '历史相关文章使用过该词汇，可作为站内词库证据。', 'npcink-toolbox' );
+		}
+		if ( in_array( 'description_only_match', $match_signals, true ) ) {
+			$quality_score -= 20;
+			$quality_issues[] = __( '仅描述字段匹配，避免把弱说明文字当作强分类依据。', 'npcink-toolbox' );
+		}
+		if ( in_array( 'low_specificity_match', $match_signals, true ) ) {
+			$quality_score -= 15;
+			$quality_issues[] = __( '只有一个较弱 token 匹配，需人工确认是否为标题党或泛化词。', 'npcink-toolbox' );
 		}
 		if ( empty( $quality_issues ) ) {
 			$quality_issues[] = __( '仅作为现有 WordPress 词条候选，采用人工审查。', 'npcink-toolbox' );
@@ -4004,6 +4044,9 @@ final class Rest_Controller {
 				if ( $draft_score > 0 && array() === $matched_tokens ) {
 					$draft_score = 0;
 				}
+				$match_profile    = $this->editor_taxonomy_match_profile( $term, $context, $query, $draft_score, $matched_tokens );
+				$draft_score      = (int) $match_profile['score'];
+				$matched_tokens   = is_array( $match_profile['matched_tokens'] ?? null ) ? $match_profile['matched_tokens'] : $matched_tokens;
 				$related_score    = $this->editor_related_term_score( $related_evidence );
 				$score            = $draft_score + $related_score;
 				if ( $score <= 0 ) {
@@ -4017,6 +4060,7 @@ final class Rest_Controller {
 				if ( $related_score > 0 ) {
 					$match_signals[] = 'related_site_knowledge_term';
 				}
+				$match_signals = array_merge( $match_signals, is_array( $match_profile['signals'] ?? null ) ? $match_profile['signals'] : array() );
 
 				$candidates[] = array(
 					'term_id'                      => (int) $term->term_id,
@@ -4055,6 +4099,86 @@ final class Rest_Controller {
 			),
 			'items'                  => array_slice( $candidates, 0, 10 ),
 		);
+	}
+
+	private function editor_taxonomy_match_profile( object $term, array $context, string $query, int $draft_score, array $matched_tokens ): array {
+		$name        = sanitize_text_field( (string) ( $term->name ?? '' ) );
+		$slug        = sanitize_title( (string) ( $term->slug ?? '' ) );
+		$description = sanitize_text_field( (string) ( $term->description ?? '' ) );
+		$name_tokens = $this->support_tokens( $name );
+		$slug_tokens = $this->support_tokens( str_replace( '-', ' ', $slug ) );
+		$description_tokens = $this->support_tokens( $description );
+		$name_slug_tokens   = array_values( array_unique( array_merge( $name_tokens, $slug_tokens ) ) );
+		$signals            = array();
+		$score              = max( 0, $draft_score );
+
+		$title = trim( (string) ( $context['title'] ?? '' ) );
+		if ( array() !== $name_tokens && '' !== $title && $this->editor_text_contains_phrase( $title, $name ) ) {
+			$score    += 6;
+			$signals[] = 'title_term_name_match';
+		}
+
+		foreach ( array( 'excerpt', 'selected_text', 'selected_block_text' ) as $field ) {
+			$value = trim( (string) ( $context[ $field ] ?? '' ) );
+			if ( array() !== $name_tokens && '' !== $value && $this->editor_text_contains_phrase( $value, $name ) ) {
+				$score    += 4;
+				$signals[] = $field . '_term_name_match';
+				break;
+			}
+		}
+
+		$content = trim( (string) ( $context['content_text'] ?? '' ) );
+		if ( array() !== $name_tokens && '' !== $content && $this->editor_text_contains_phrase( $content, $name ) ) {
+			$score    += 2;
+			$signals[] = 'body_term_name_match';
+		}
+
+		$context_tokens = $this->support_tokens(
+			implode(
+				' ',
+				array(
+					(string) ( $context['title'] ?? '' ),
+					(string) ( $context['excerpt'] ?? '' ),
+					(string) ( $context['selected_text'] ?? '' ),
+					(string) ( $context['selected_block_text'] ?? '' ),
+					'' !== trim( $query ) ? $query : '',
+				)
+			)
+		);
+		$slug_overlap = array_intersect( $slug_tokens, $context_tokens );
+		$required_slug_overlap = count( $slug_tokens ) > 1 ? 2 : 1;
+		if ( count( $slug_overlap ) >= $required_slug_overlap ) {
+			$score    += 2;
+			$signals[] = 'slug_alias_match';
+		}
+
+		if ( $score > 0 && array() !== $matched_tokens && array() === array_intersect( $matched_tokens, $name_slug_tokens ) && array() !== array_intersect( $matched_tokens, $description_tokens ) ) {
+			$score    = min( $score, 2 );
+			$signals[] = 'description_only_match';
+		}
+
+		$has_exact_name_signal = (bool) array_filter(
+			$signals,
+			static fn( string $signal ): bool => false !== strpos( $signal, '_term_name_match' )
+		);
+		if ( $score > 0 && 1 === count( $matched_tokens ) && ! $has_exact_name_signal && ! in_array( 'slug_alias_match', $signals, true ) ) {
+			$score    = min( $score, 2 );
+			$signals[] = 'low_specificity_match';
+		}
+
+		return array(
+			'score'          => max( 0, min( 40, $score ) ),
+			'matched_tokens' => array_values( array_unique( $matched_tokens ) ),
+			'signals'        => array_values( array_unique( $signals ) ),
+		);
+	}
+
+	private function editor_text_contains_phrase( string $haystack, string $needle ): bool {
+		$needle = trim( $needle );
+		if ( '' === $needle ) {
+			return false;
+		}
+		return false !== strpos( strtolower( $haystack ), strtolower( $needle ) );
 	}
 
 	private function editor_related_term_score( array $related_evidence ): int {
