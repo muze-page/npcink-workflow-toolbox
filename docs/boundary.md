@@ -118,6 +118,10 @@ planning flows:
 - `/editor/content-support`
 - `/media-derivative-handoff`
 - `/media-derivative-handoff`
+- `/nightly-inspection/cloud-runtime-entitlement`
+- `/nightly-inspection/cloud-batch`
+- `/nightly-inspection/cloud-batch/{run_id}`
+- `/nightly-inspection/cloud-batch/{run_id}/result`
 
 Do not add Toolbox REST routes for publishing, delivery, workflow runs, queues,
 schedulers, approvals, write confirmation, featured image setting, media
@@ -395,6 +399,13 @@ It must not submit Core proposals, run batch proposal submission, repair URLs,
 replace media files, update attachment metadata, or treat preview artifacts as
 WordPress media writes. Those handoff actions stay in Content Support and Core
 governance.
+
+The Start panel may show read-only Pro Cloud Runtime quota detail for Nightly
+Site Inspection by reading Cloud `pro_cloud_runtime` entitlement through the
+Cloud Addon seam. That display may disable new Cloud Batch submissions when
+Cloud reports exhausted `nightly_site_inspection_runs`, but it must not become
+a local billing ledger, entitlement engine, retry queue, scheduler truth, or
+WordPress write owner.
 
 The connector surface must not become provider billing, quota, key-rotation,
 request-log, marketplace, provider-routing, vector-provider, or vector

@@ -1,6 +1,6 @@
 # Local Automation Runtime Module
 
-Status: Phase 1 bundled skeleton plus Phase 2 Basic WP-Cron dry-run preview.
+Status: Phase 1 bundled skeleton plus Phase 2 Basic WP-Cron local fallback preview.
 
 This module carries the future `npcink-local-automation-runtime` contract inside
 the Toolbox release package without making Toolbox a runtime owner.
@@ -49,9 +49,21 @@ Scheduled or supervised execution belongs to the future
 `npcink-local-automation-runtime` runtime implementation boundary, not Toolbox
 fixed buttons.
 
-Phase 2 Basic WP-Cron Dry-Run is the first scheduled step. It remains disabled
-by default, lets the operator configure enable/disable, local run time, and scan
-limits, and may only overwrite the single latest-preview option
+Phase 2 Basic WP-Cron Dry-Run is the first scheduled WordPress-side fallback
+preview step. It remains disabled by default, lets the operator configure
+enable/disable, local run time, and scan limits, and may only overwrite the
+single latest-preview option
 `npcink_local_automation_runtime_nightly_inspection_latest_preview`. It must not
 call Cloud, create Core proposals, use Action Scheduler, create custom tables,
 acquire leases, retry actions, process dead letters, or write WordPress content.
+
+Product positioning is Cloud-first, not cloud-only. Pro Cloud Batch Runtime is
+the commercial execution path for reliable scoring, entitlement, usage metering,
+queue-backed execution, retry, observability, and result retention. This module
+keeps the local WP-Cron path as fallback preview and onboarding support, not a
+parallel Pro scheduler.
+Toolbox may read Cloud `pro_cloud_runtime` entitlement as a display snapshot
+for the Pro controls and may disable new Cloud submissions when Cloud reports
+exhausted Nightly Site Inspection quota. That does not make this module a
+local entitlement ledger, billing owner, queue, retry processor, or scheduler
+truth.

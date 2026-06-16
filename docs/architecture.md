@@ -236,6 +236,10 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
+- `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
+- `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
+- `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}`
+- `GET|POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/result`
 
 `/status` reports Cloud-backed surfaces as registered capabilities plus current
 availability. `web_search_registered`, `vector_search_registered`,
@@ -257,6 +261,13 @@ the site-level media-library sample.
 reviewed prompt from an image-source handoff, calls Cloud Addon runtime, and
 returns `image_candidate.v1` evidence. It must not import media, set featured
 images, own model routing, or write WordPress data.
+
+`/nightly-inspection/cloud-runtime-entitlement` reads Cloud
+`pro_cloud_runtime` quota detail through the Cloud Addon runtime client. It is
+a local display snapshot for Toolbox Pro controls, not billing truth and not a
+local entitlement engine. The Cloud Batch routes submit bounded local snapshots,
+poll Cloud run status, and read review-only result patches; they do not create
+local queues, scheduler truth, Core proposals, approvals, or WordPress writes.
 
 `/flows/site-knowledge-review-plan` builds a blocked review plan from Cloud Site
 Knowledge evidence so an operator can hand it to Core when a specific local
