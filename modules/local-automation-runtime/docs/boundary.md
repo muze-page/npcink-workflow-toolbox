@@ -41,7 +41,13 @@ to Toolbox fixed buttons.
 
 ## Phase 2 Basic WP-Cron Dry-Run
 
-The Basic edition may register one WP-Cron hook:
+Product posture is Cloud-first, not cloud-only. Pro Cloud Batch Runtime is the
+primary commercial execution path for reliable scoring, entitlement, usage
+metering, queue-backed execution, retry, observability, and result retention.
+The Basic WP-Cron path is a WordPress-side Local Fallback Preview and onboarding
+aid, not a second Pro scheduler.
+
+The Basic/local fallback edition may register one WP-Cron hook:
 `npcink_local_automation_runtime_nightly_inspection_dry_run`.
 
 This is `npcink-local-automation-runtime` runtime implementation work while the
@@ -68,9 +74,9 @@ Phase 2 Basic remains blocked from:
 
 Current Pro planning should use Cloud Batch Runtime instead of plugin-side
 Action Scheduler. Cloud may own run/action state, queue-backed worker execution,
-retry, dead-letter, entitlement, usage, and concurrency detail. The WordPress
-plugin may only bridge batch intent, poll or receive bounded status/results, and
-hand reviewed outputs to Core proposal governance.
+retry, dead-letter, entitlement, usage, quota enforcement, result retention, and
+concurrency detail. The WordPress plugin may only bridge batch intent, poll or
+receive bounded status/results, and hand reviewed outputs to Core proposal governance.
 
 Action Scheduler is deferred as a future local fallback/substrate candidate. It
 should not be introduced unless a confirmed local-batch requirement exists, such

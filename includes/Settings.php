@@ -52,6 +52,9 @@ final class Settings {
 			'nightly_inspection_time'           => '03:00',
 			'nightly_inspection_post_limit'     => 12,
 			'nightly_inspection_media_limit'    => 8,
+			'nightly_inspection_pro_enabled'    => false,
+			'nightly_inspection_cloud_payload_mode' => 'metadata_only',
+			'nightly_inspection_cloud_retention_days' => 7,
 		);
 	}
 
@@ -296,7 +299,7 @@ final class Settings {
 	}
 
 	/**
-	 * Returns bounded Basic WP-Cron settings for Nightly Site Inspection.
+	 * Returns bounded local fallback preview settings for Nightly Site Inspection.
 	 *
 	 * @return array<string,bool|int|string>
 	 */
@@ -308,6 +311,10 @@ final class Settings {
 			'time'        => (string) $settings['nightly_inspection_time'],
 			'post_limit'  => (int) $settings['nightly_inspection_post_limit'],
 			'media_limit' => (int) $settings['nightly_inspection_media_limit'],
+			'pro_enabled' => ! empty( $settings['nightly_inspection_pro_enabled'] ),
+			'cloud_payload_mode' => (string) $settings['nightly_inspection_cloud_payload_mode'],
+			'cloud_retention_days' => (int) $settings['nightly_inspection_cloud_retention_days'],
+			'cloud_retention_ttl' => (int) $settings['nightly_inspection_cloud_retention_days'] * ( defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400 ),
 		);
 	}
 
@@ -385,9 +392,17 @@ final class Settings {
 			'nightly_inspection_time'           => $this->sanitize_nightly_inspection_time( $input['nightly_inspection_time'] ?? '03:00' ),
 			'nightly_inspection_post_limit'     => max( 1, min( 50, absint( $input['nightly_inspection_post_limit'] ?? 12 ) ) ),
 			'nightly_inspection_media_limit'    => max( 1, min( 50, absint( $input['nightly_inspection_media_limit'] ?? 8 ) ) ),
+			'nightly_inspection_pro_enabled'    => ! empty( $input['nightly_inspection_pro_enabled'] ),
+			'nightly_inspection_cloud_payload_mode' => $this->sanitize_nightly_inspection_cloud_payload_mode( $input['nightly_inspection_cloud_payload_mode'] ?? 'metadata_only' ),
+			'nightly_inspection_cloud_retention_days' => max( 1, min( 90, absint( $input['nightly_inspection_cloud_retention_days'] ?? 7 ) ) ),
 		);
 
 		return $sanitized;
+	}
+
+	private function sanitize_nightly_inspection_cloud_payload_mode( $value ): string {
+		$mode = sanitize_key( (string) $value );
+		return in_array( $mode, array( 'metadata_only', 'excerpt' ), true ) ? $mode : 'metadata_only';
 	}
 
 	private function sanitize_nightly_inspection_time( $value ): string {

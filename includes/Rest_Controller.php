@@ -53,6 +53,10 @@ final class Rest_Controller {
 		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
 		$this->post( '/nightly-inspection/cloud-batch', 'nightly_inspection_cloud_batch' );
+		$this->get( '/nightly-inspection/cloud-runtime-entitlement', 'nightly_inspection_cloud_runtime_entitlement' );
+		$this->get( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)', 'nightly_inspection_cloud_batch_status' );
+		$this->get( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result', 'nightly_inspection_cloud_batch_result' );
+		$this->post( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result', 'nightly_inspection_cloud_batch_result' );
 
 		register_rest_route(
 			Plugin::REST_NAMESPACE,
@@ -124,6 +128,8 @@ final class Rest_Controller {
 					'cloud_role'             => 'runtime_detail',
 					'posture'                => 'review_only_core_proposal_required',
 					'direct_wordpress_write' => false,
+					'polling_registered'     => true,
+					'entitlement_route'      => '/nightly-inspection/cloud-runtime-entitlement',
 				),
 				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',
 			)
@@ -304,6 +310,7 @@ final class Rest_Controller {
 		$post_limit      = max( 1, min( 50, (int) ( $request->get_param( 'post_limit' ) ?: 12 ) ) );
 		$media_limit     = max( 1, min( 50, (int) ( $request->get_param( 'media_limit' ) ?: 8 ) ) );
 		$idempotency_key = sanitize_text_field( (string) $request->get_param( 'idempotency_key' ) );
+		$config          = $this->settings->get_nightly_inspection_settings();
 		$snapshot        = ( new Snapshot_Collector() )->collect( $post_limit, $media_limit );
 
 		return rest_ensure_response(
@@ -311,8 +318,58 @@ final class Rest_Controller {
 				$snapshot,
 				array(
 					'idempotency_key' => $idempotency_key,
+					'payload_mode'    => (string) ( $request->get_param( 'payload_mode' ) ?: $config['cloud_payload_mode'] ),
+					'retention_ttl'   => (int) ( $request->get_param( 'retention_ttl' ) ?: $config['cloud_retention_ttl'] ),
 					'source'          => 'toolbox_rest',
 				)
+			)
+		);
+	}
+
+	public function nightly_inspection_cloud_batch_status( WP_REST_Request $request ) {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
+				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		return rest_ensure_response(
+			$this->client->get_nightly_inspection_cloud_batch_status(
+				sanitize_text_field( (string) $request->get_param( 'run_id' ) )
+			)
+		);
+	}
+
+	public function nightly_inspection_cloud_runtime_entitlement() {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_entitlement_unavailable',
+				__( 'Connect Npcink Cloud before reading Pro Cloud Runtime entitlement.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		return rest_ensure_response( $this->client->get_nightly_inspection_cloud_runtime_entitlement() );
+	}
+
+	public function nightly_inspection_cloud_batch_result( WP_REST_Request $request ) {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
+				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$params        = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		$morning_brief = is_array( $params ) && is_array( $params['morning_brief'] ?? null ) ? $params['morning_brief'] : array();
+
+		return rest_ensure_response(
+			$this->client->get_nightly_inspection_cloud_batch_result(
+				sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
+				$morning_brief
 			)
 		);
 	}
@@ -780,6 +837,18 @@ final class Rest_Controller {
 			$route,
 			array(
 				'methods'             => 'POST',
+				'callback'            => array( $this, $method ),
+				'permission_callback' => array( $this, 'permission' ),
+			)
+		);
+	}
+
+	private function get( string $route, string $method ): void {
+		register_rest_route(
+			Plugin::REST_NAMESPACE,
+			$route,
+			array(
+				'methods'             => 'GET',
 				'callback'            => array( $this, $method ),
 				'permission_callback' => array( $this, 'permission' ),
 			)

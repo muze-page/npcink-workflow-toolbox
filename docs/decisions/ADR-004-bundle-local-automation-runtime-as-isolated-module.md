@@ -80,6 +80,12 @@ status/result sync, and reviewed Core proposal handoff. Action Scheduler is
 reserved as a future local fallback/substrate candidate only if a confirmed
 local-batch requirement justifies the added plugin complexity.
 
+Product positioning is Cloud-first, not cloud-only. Pro Cloud Batch Runtime is
+the primary commercial path for reliable scoring, entitlement, usage metering,
+queue-backed execution, retry, observability, and result retention. The local
+WP-Cron path remains a WordPress-side Local Fallback Preview and onboarding aid,
+not a second Pro scheduler or a parallel entitlement engine.
+
 Toolbox may later host the operator console for this runtime, but Toolbox
 fixed-flow buttons must not become the runtime state machine, scheduler, lease
 manager, retry processor, dead-letter processor, approval path, or final write

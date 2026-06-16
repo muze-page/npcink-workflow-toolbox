@@ -2,15 +2,23 @@
 
 ## Status
 
-Phase 2 Basic WP-Cron Dry-Run is the first scheduled implementation step for
+Phase 2 Basic WP-Cron Dry-Run is the WordPress-side Local Fallback Preview for
 Nightly Site Inspection. It belongs to the `npcink-local-automation-runtime`
 owner while the code is bundled in Toolbox for release.
 
+## Product Positioning
+
+The commercial posture is Cloud-first, not cloud-only. Pro Cloud Batch Runtime
+is the primary path for reliable scoring, entitlement, usage metering,
+queue-backed execution, retry, observability, and result retention. This local
+WP-Cron path exists as a fail-closed fallback preview and onboarding aid when
+Cloud is unavailable, not as a second Pro scheduler.
+
 ## Scope
 
-The Basic edition uses WP-Cron only to generate a bounded Morning Brief preview
-for operator review. It is disabled by default. When enabled, the schedule can
-use only:
+The Basic/local fallback edition uses WP-Cron only to generate a bounded Morning
+Brief preview for operator review. It is disabled by default. When enabled, the
+schedule can use only:
 
 - enable/disable;
 - a daily local-site run time;
@@ -68,7 +76,7 @@ unattended execution beyond this dry-run preview must remain in the
 Current Pro planning should not introduce plugin-side Action Scheduler. If Pro
 needs batch processing, the preferred shape is Cloud Batch Runtime: Cloud owns
 run/action state, queue-backed worker execution, retry, dead-letter, entitlement,
-and concurrency detail. The WordPress plugin remains a bridge for batch intent,
-status display, bounded result sync, and Core proposal handoff. Action Scheduler
-is reserved as a future local fallback/substrate candidate only when a confirmed
-local-batch requirement justifies the added plugin complexity.
+usage metering, quota enforcement, and concurrency detail. The WordPress plugin
+remains a bridge for batch intent, status display, bounded result sync, and Core proposal handoff.
+Action Scheduler is reserved as a future local fallback/substrate candidate only
+when a confirmed local-batch requirement justifies the added plugin complexity.

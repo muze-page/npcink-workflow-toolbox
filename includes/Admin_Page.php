@@ -9,6 +9,7 @@ namespace Npcink_Toolbox;
 
 use Npcink\LocalAutomationRuntime\NightlyInspection\Manual_Dry_Run_Planner;
 use Npcink\LocalAutomationRuntime\NightlyInspection\Basic_WP_Cron_Dry_Run;
+use Npcink\LocalAutomationRuntime\NightlyInspection\Morning_Brief_Builder;
 use Npcink\LocalAutomationRuntime\NightlyInspection\Snapshot_Collector;
 
 defined( 'ABSPATH' ) || exit;
@@ -630,12 +631,27 @@ final class Admin_Page {
 		$latest_preview = Basic_WP_Cron_Dry_Run::latest_preview();
 		$brief          = isset( $latest_preview['preview']['morning_brief'] ) && is_array( $latest_preview['preview']['morning_brief'] ) ? $latest_preview['preview']['morning_brief'] : array();
 		$summary        = isset( $brief['summary'] ) && is_array( $brief['summary'] ) ? $brief['summary'] : array();
+		$cloud_ready    = $this->settings->cloud_runtime_available();
+		$pro_enabled    = ! empty( $settings['nightly_inspection_pro_enabled'] );
+		$cloud_disabled = ! $cloud_ready || ! $pro_enabled;
+		if ( array() === $brief && $cloud_ready && $pro_enabled ) {
+			try {
+				$snapshot = ( new Snapshot_Collector() )->collect(
+					(int) $settings['nightly_inspection_post_limit'],
+					(int) $settings['nightly_inspection_media_limit']
+				);
+				$brief    = ( new Morning_Brief_Builder() )->build( $snapshot );
+			} catch ( \Throwable $throwable ) {
+				$brief = array();
+			}
+		}
+		$brief_json = array() !== $brief ? wp_json_encode( $brief, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) : '';
 		?>
 		<section class="npcink-toolbox__card" data-toolbox-nightly-inspection-basic-settings>
 			<div class="npcink-toolbox__section-heading">
 				<div>
-					<h3><?php esc_html_e( 'Basic Nightly Inspection', 'npcink-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'WP-Cron can generate one latest dry-run Morning Brief preview for operator review. It stays disabled by default and does not call Cloud, create Core proposals, or write WordPress content.', 'npcink-toolbox' ); ?></p>
+					<h3><?php esc_html_e( 'Local Fallback Preview', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'WP-Cron is the WordPress-side fallback for one latest dry-run Morning Brief preview. The Pro Cloud Runtime remains the primary execution path for reliable scoring, entitlement, status, and result retention.', 'npcink-toolbox' ); ?></p>
 				</div>
 			</div>
 			<form class="npcink-toolbox__settings-form" method="post" action="options.php">
@@ -648,7 +664,7 @@ final class Admin_Page {
 				<?php endif; ?>
 				<label class="npcink-toolbox__check">
 					<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_enabled]" value="1" <?php checked( ! empty( $settings['nightly_inspection_enabled'] ) ); ?> />
-					<span><?php esc_html_e( 'Enable Basic WP-Cron dry-run preview', 'npcink-toolbox' ); ?></span>
+					<span><?php esc_html_e( 'Enable local WP-Cron fallback preview', 'npcink-toolbox' ); ?></span>
 				</label>
 				<div class="npcink-toolbox__split">
 					<label>
@@ -659,12 +675,31 @@ final class Admin_Page {
 						<span><?php esc_html_e( 'Post/page scan limit', 'npcink-toolbox' ); ?></span>
 						<input type="number" min="1" max="50" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_post_limit]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_post_limit'] ); ?>" />
 					</label>
+					<label>
+						<span><?php esc_html_e( 'Media scan limit', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="1" max="50" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_media_limit]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_media_limit'] ); ?>" />
+					</label>
 				</div>
-				<label>
-					<span><?php esc_html_e( 'Media scan limit', 'npcink-toolbox' ); ?></span>
-					<input type="number" min="1" max="50" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_media_limit]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_media_limit'] ); ?>" />
+				<hr />
+				<label class="npcink-toolbox__check">
+					<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_pro_enabled]" value="1" <?php checked( $pro_enabled ); ?> />
+					<span><?php esc_html_e( 'Enable Pro Cloud Runtime controls', 'npcink-toolbox' ); ?></span>
 				</label>
-				<?php submit_button( __( 'Save Basic schedule', 'npcink-toolbox' ) ); ?>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Cloud payload', 'npcink-toolbox' ); ?></span>
+						<select name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_cloud_payload_mode]">
+							<option value="metadata_only" <?php selected( (string) $settings['nightly_inspection_cloud_payload_mode'], 'metadata_only' ); ?>><?php esc_html_e( 'Metadata only', 'npcink-toolbox' ); ?></option>
+							<option value="excerpt" <?php selected( (string) $settings['nightly_inspection_cloud_payload_mode'], 'excerpt' ); ?>><?php esc_html_e( 'Include short excerpts', 'npcink-toolbox' ); ?></option>
+						</select>
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Cloud result retention days', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="1" max="90" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_cloud_retention_days]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_cloud_retention_days'] ); ?>" />
+					</label>
+				</div>
+				<p class="description"><?php esc_html_e( 'Pro Cloud Runtime is review-only: Cloud may score, meter entitlement, retain results, and return details, but WordPress writes and Core proposals stay local and operator reviewed.', 'npcink-toolbox' ); ?></p>
+				<?php submit_button( __( 'Save fallback preview', 'npcink-toolbox' ) ); ?>
 			</form>
 			<?php if ( array() !== $latest_preview ) : ?>
 				<div class="npcink-toolbox__result-notice is-success">
@@ -680,6 +715,41 @@ final class Admin_Page {
 			<?php else : ?>
 				<div class="npcink-toolbox__result-notice is-neutral"><?php esc_html_e( 'No cron dry-run preview has been generated yet.', 'npcink-toolbox' ); ?></div>
 			<?php endif; ?>
+			<form class="npcink-toolbox__inline-form npcink-toolbox__batch-panel" data-toolbox-nightly-cloud-batch data-toolbox-nightly-cloud-ready="<?php echo esc_attr( $cloud_ready ? '1' : '0' ); ?>" data-toolbox-nightly-cloud-enabled="<?php echo esc_attr( $cloud_disabled ? '0' : '1' ); ?>">
+				<div class="npcink-toolbox__section-heading">
+					<div>
+						<h3><?php esc_html_e( 'Pro Cloud Runtime', 'npcink-toolbox' ); ?></h3>
+						<p><?php esc_html_e( 'Run a Cloud-scored site inspection and merge review-only findings into the Morning Brief preview. Cloud owns entitlement, usage, queue, retry, and retention detail; no local job queue or write path is created.', 'npcink-toolbox' ); ?></p>
+					</div>
+				</div>
+				<?php if ( ! $cloud_ready ) : ?>
+					<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Cloud runtime is not configured, so Pro Cloud Runtime controls are disabled.', 'npcink-toolbox' ); ?></div>
+				<?php elseif ( ! $pro_enabled ) : ?>
+					<div class="npcink-toolbox__result-notice is-neutral"><?php esc_html_e( 'Enable Pro Cloud Runtime controls and save settings before submitting a Cloud run.', 'npcink-toolbox' ); ?></div>
+				<?php endif; ?>
+				<?php if ( '' !== $brief_json ) : ?>
+					<script type="application/json" data-toolbox-nightly-local-brief><?php echo $brief_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
+				<?php endif; ?>
+				<div class="npcink-toolbox__inline-actions">
+					<button type="submit" class="button button-primary" data-toolbox-nightly-cloud-submit <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Run Cloud inspection', 'npcink-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-nightly-cloud-entitlement <?php disabled( ! $cloud_ready ); ?>><?php esc_html_e( 'Refresh Cloud quota', 'npcink-toolbox' ); ?></button>
+				</div>
+				<div class="npcink-toolbox__readiness-strip" data-toolbox-nightly-cloud-recent-run hidden></div>
+				<div class="npcink-toolbox__readiness-strip" data-toolbox-nightly-cloud-run-summary hidden></div>
+				<div class="npcink-toolbox__result is-empty" data-toolbox-nightly-cloud-result aria-live="polite" hidden></div>
+				<details class="npcink-toolbox__result-details" data-toolbox-nightly-cloud-advanced>
+					<summary><?php esc_html_e( 'Advanced details', 'npcink-toolbox' ); ?></summary>
+					<label>
+						<span><?php esc_html_e( 'Cloud run ID', 'npcink-toolbox' ); ?></span>
+						<input type="text" data-toolbox-nightly-cloud-run-id placeholder="<?php esc_attr_e( 'Run ID from Cloud Batch', 'npcink-toolbox' ); ?>" autocomplete="off" />
+					</label>
+					<div class="npcink-toolbox__inline-actions">
+						<button type="button" class="button" data-toolbox-nightly-cloud-status <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Check status', 'npcink-toolbox' ); ?></button>
+						<button type="button" class="button" data-toolbox-nightly-cloud-result-read <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Read result', 'npcink-toolbox' ); ?></button>
+					</div>
+					<p class="description"><?php esc_html_e( 'Use these controls only when recovering or inspecting a known Cloud run ID. Cloud remains the run-state owner.', 'npcink-toolbox' ); ?></p>
+				</details>
+			</form>
 		</section>
 		<?php
 	}

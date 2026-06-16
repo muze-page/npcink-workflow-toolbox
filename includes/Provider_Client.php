@@ -7,6 +7,7 @@
 
 namespace Npcink_Toolbox;
 
+use Npcink\LocalAutomationRuntime\NightlyInspection\Cloud_Batch_Result_Merger;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -247,7 +248,9 @@ final class Provider_Client {
 	}
 
 	public function submit_nightly_inspection_cloud_batch( array $snapshot, array $options = array() ) {
-		$items = $this->nightly_inspection_cloud_batch_items( $snapshot );
+		$payload_mode  = $this->nightly_inspection_cloud_payload_mode( (string) ( $options['payload_mode'] ?? 'metadata_only' ) );
+		$retention_ttl = $this->nightly_inspection_cloud_retention_ttl( $options['retention_ttl'] ?? null );
+		$items         = $this->nightly_inspection_cloud_batch_items( $snapshot, $payload_mode );
 		if ( array() === $items ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_empty',
@@ -263,6 +266,12 @@ final class Provider_Client {
 			'snapshot_run_id'        => sanitize_text_field( (string) ( $snapshot['run_id'] ?? '' ) ),
 			'snapshot_generated_at'  => sanitize_text_field( (string) ( $snapshot['generated_at'] ?? '' ) ),
 			'items'                  => $items,
+			'privacy'                => array(
+				'payload_mode'               => $payload_mode,
+				'excerpt_included'           => 'excerpt' === $payload_mode,
+				'full_content_included'      => false,
+				'cloud_result_retention_ttl' => $retention_ttl,
+			),
 			'direct_wordpress_write' => false,
 		);
 
@@ -275,7 +284,7 @@ final class Provider_Client {
 			'input'               => $this->sanitize_payload( $runtime_input ),
 			'data_classification' => 'internal',
 			'storage_mode'        => 'result_only',
-			'retention_ttl'       => 86400,
+			'retention_ttl'       => $retention_ttl,
 			'timeout_seconds'     => 60,
 			'retry_max'           => 0,
 			'policy'              => array(
@@ -323,7 +332,103 @@ final class Provider_Client {
 		return $this->normalize_nightly_inspection_cloud_batch_response( is_array( $response ) ? $response : array(), $runtime_payload );
 	}
 
-	private function nightly_inspection_cloud_batch_items( array $snapshot ): array {
+	public function get_nightly_inspection_cloud_batch_status( string $run_id ) {
+		$run_id = sanitize_text_field( $run_id );
+		if ( '' === $run_id ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_run_id_required',
+				__( 'A Cloud run_id is required.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_nightly_inspection_cloud_batch_status_request', null, $run_id );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_nightly_inspection_cloud_batch_status_response( $handled, $run_id );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'get_run' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_status_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch status.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$response = $client->get_run( $run_id, $this->trace_id( 'nightly_inspection_cloud_batch_status' ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_nightly_inspection_cloud_batch_status_response( is_array( $response ) ? $response : array(), $run_id );
+	}
+
+	public function get_nightly_inspection_cloud_batch_result( string $run_id, array $morning_brief = array() ) {
+		$run_id = sanitize_text_field( $run_id );
+		if ( '' === $run_id ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_run_id_required',
+				__( 'A Cloud run_id is required.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_nightly_inspection_cloud_batch_result_request', null, $run_id, $morning_brief );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_nightly_inspection_cloud_batch_response( $handled, array(), $morning_brief );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'get_run_result' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_result_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch results.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$response = $client->get_run_result( $run_id, $this->trace_id( 'nightly_inspection_cloud_batch_result' ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_nightly_inspection_cloud_batch_response( is_array( $response ) ? $response : array(), array(), $morning_brief );
+	}
+
+	public function get_nightly_inspection_cloud_runtime_entitlement() {
+		$handled = apply_filters( 'npcink_toolbox_nightly_inspection_cloud_runtime_entitlement_request', null );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_nightly_inspection_cloud_runtime_entitlement_response( $handled );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'get_current_entitlement' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_entitlement_unavailable',
+				__( 'Connect an updated Npcink Cloud Addon before reading Pro Cloud Runtime entitlement.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$response = $client->get_current_entitlement( $this->trace_id( 'nightly_inspection_entitlement' ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_nightly_inspection_cloud_runtime_entitlement_response( is_array( $response ) ? $response : array() );
+	}
+
+	private function nightly_inspection_cloud_batch_items( array $snapshot, string $payload_mode ): array {
 		$items = array();
 		$posts = is_array( $snapshot['posts'] ?? null ) ? $snapshot['posts'] : array();
 		foreach ( $posts as $post ) {
@@ -336,7 +441,6 @@ final class Provider_Client {
 				'object_type'         => sanitize_key( (string) ( $post['object_type'] ?? 'post' ) ),
 				'object_id'           => absint( $post['object_id'] ?? 0 ),
 				'title'               => sanitize_text_field( (string) ( $post['title'] ?? '' ) ),
-				'excerpt'             => $this->trim_chars( $content, 800 ),
 				'meta_description'    => sanitize_textarea_field( (string) ( $post['meta_description'] ?? '' ) ),
 				'word_count'          => $this->nightly_inspection_word_count( $content ),
 				'internal_link_count' => max( 0, (int) ( $post['internal_link_count'] ?? 0 ) ),
@@ -344,6 +448,9 @@ final class Provider_Client {
 				'days_since_modified' => $this->days_since_gmt( $modified_at ),
 				'direct_wordpress_write' => false,
 			);
+			if ( 'excerpt' === $payload_mode ) {
+				$items[ count( $items ) - 1 ]['excerpt'] = $this->trim_chars( $content, 800 );
+			}
 			if ( count( $items ) >= 50 ) {
 				return $items;
 			}
@@ -358,7 +465,6 @@ final class Provider_Client {
 				'object_type'         => 'attachment',
 				'object_id'           => absint( $media_item['object_id'] ?? 0 ),
 				'title'               => sanitize_text_field( (string) ( $media_item['title'] ?? $media_item['filename'] ?? '' ) ),
-				'excerpt'             => sanitize_text_field( (string) ( $media_item['filename'] ?? '' ) ),
 				'meta_description'    => '',
 				'word_count'          => 0,
 				'internal_link_count' => 0,
@@ -366,12 +472,27 @@ final class Provider_Client {
 				'days_since_modified' => 0,
 				'direct_wordpress_write' => false,
 			);
+			if ( 'excerpt' === $payload_mode ) {
+				$items[ count( $items ) - 1 ]['excerpt'] = sanitize_text_field( (string) ( $media_item['filename'] ?? '' ) );
+			}
 			if ( count( $items ) >= 50 ) {
 				break;
 			}
 		}
 
 		return $items;
+	}
+
+	private function nightly_inspection_cloud_payload_mode( string $value ): string {
+		$mode = sanitize_key( $value );
+		return in_array( $mode, array( 'metadata_only', 'excerpt' ), true ) ? $mode : 'metadata_only';
+	}
+
+	private function nightly_inspection_cloud_retention_ttl( $value ): int {
+		$day_seconds = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
+		$ttl         = is_numeric( $value ) ? (int) $value : 7 * $day_seconds;
+
+		return max( $day_seconds, min( 90 * $day_seconds, $ttl ) );
 	}
 
 	private function nightly_inspection_word_count( string $content ): int {
@@ -406,10 +527,43 @@ final class Provider_Client {
 		return max( 0, (int) floor( ( time() - $parsed ) / $day_seconds ) );
 	}
 
-	private function normalize_nightly_inspection_cloud_batch_response( array $response, array $runtime_payload ): array {
+	private function normalize_nightly_inspection_cloud_batch_status_response( array $response, string $run_id ): array {
+		$data = is_array( $response['data'] ?? null ) ? $response['data'] : $response;
+
+		return $this->with_output_contract(
+			array(
+				'provider'              => 'magick_ai_cloud',
+				'provider_mode'         => 'cloud_managed',
+				'contract_version'      => 'cloud_batch_runtime_status.v1',
+				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'status'                => sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? 'unknown' ) ),
+				'cloud_run'             => array(
+					'run_id'        => sanitize_text_field( (string) ( $data['run_id'] ?? $run_id ) ),
+					'status'        => sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? '' ) ),
+					'trace_id'      => sanitize_text_field( (string) ( $data['trace_id'] ?? $response['trace_id'] ?? '' ) ),
+					'run_lifecycle' => is_array( $data['run_lifecycle'] ?? null ) ? $this->sanitize_payload( $data['run_lifecycle'] ) : array(),
+				),
+				'polling'               => array(
+					'result_route'           => '/nightly-inspection/cloud-batch/' . rawurlencode( $run_id ) . '/result',
+					'direct_wordpress_write' => false,
+				),
+				'safety'                => array(
+					'direct_wordpress_write' => false,
+					'cloud_scheduler_truth'  => false,
+					'requires_local_review'  => true,
+				),
+			),
+			'nightly_inspection_cloud_batch_status',
+			'morning_brief_cloud_runtime_status'
+		);
+	}
+
+	private function normalize_nightly_inspection_cloud_batch_response( array $response, array $runtime_payload = array(), array $morning_brief = array() ): array {
 		$data   = is_array( $response['data'] ?? null ) ? $response['data'] : array();
 		$result = $this->extract_cloud_runtime_result( $response );
 		$status = sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? 'submitted' ) );
+		$merger = new Cloud_Batch_Result_Merger();
+		$patch  = is_array( $result ) ? $merger->patch( $result ) : array();
 
 		$payload = $this->with_output_contract(
 			array(
@@ -430,6 +584,7 @@ final class Provider_Client {
 					'run_lifecycle'  => is_array( $data['run_lifecycle'] ?? null ) ? $this->sanitize_payload( $data['run_lifecycle'] ) : array(),
 				),
 				'result'                => is_array( $result ) ? $this->sanitize_payload( $result ) : array(),
+				'morning_brief_patch'   => $this->sanitize_payload( $patch ),
 				'safety'                => array(
 					'direct_wordpress_write'       => false,
 					'cloud_scheduler_truth'        => false,
@@ -440,6 +595,8 @@ final class Provider_Client {
 					'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'whole_run_offload' ) ),
 					'execution_kind'    => sanitize_key( (string) ( $runtime_payload['execution_kind'] ?? 'nightly_site_inspection' ) ),
 					'storage_mode'      => sanitize_key( (string) ( $runtime_payload['storage_mode'] ?? 'result_only' ) ),
+					'payload_mode'      => sanitize_key( (string) ( $runtime_payload['input']['privacy']['payload_mode'] ?? 'metadata_only' ) ),
+					'retention_ttl'     => (int) ( $runtime_payload['retention_ttl'] ?? 0 ),
 					'item_count'        => count( (array) ( $runtime_payload['input']['items'] ?? array() ) ),
 				),
 			),
@@ -447,11 +604,74 @@ final class Provider_Client {
 			'morning_brief_cloud_runtime_result'
 		);
 
+		if ( array() !== $morning_brief && is_array( $result ) ) {
+			$payload['merged_morning_brief'] = $this->sanitize_payload( $merger->merge( $morning_brief, $result ) );
+		}
+
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
 		return $payload;
+	}
+
+	private function normalize_nightly_inspection_cloud_runtime_entitlement_response( array $response ): array {
+		$data        = is_array( $response['data'] ?? null ) ? $response['data'] : $response;
+		$entitlement = is_array( $data['entitlement'] ?? null ) ? $data['entitlement'] : $data;
+		$runtime     = is_array( $entitlement['pro_cloud_runtime'] ?? null ) ? $entitlement['pro_cloud_runtime'] : array();
+		$period      = is_array( $data['period'] ?? null ) ? $data['period'] : array();
+		$local_truth = is_array( $runtime['local_truth'] ?? null ) ? $runtime['local_truth'] : array();
+
+		$max_runs = absint( $runtime['max_nightly_inspection_runs_per_period'] ?? 0 );
+		$used     = absint( $runtime['used_nightly_inspection_runs'] ?? 0 );
+		$remaining = array_key_exists( 'remaining_nightly_inspection_runs', $runtime )
+			? absint( $runtime['remaining_nightly_inspection_runs'] )
+			: ( $max_runs > 0 ? max( 0, $max_runs - $used ) : 0 );
+		$quota_exhausted = ! empty( $runtime['quota_exhausted'] ) || ( $max_runs > 0 && $used >= $max_runs );
+
+		$pro_cloud_runtime = array(
+			'contract_version' => sanitize_text_field( (string) ( $runtime['contract_version'] ?? 'pro-cloud-runtime-entitlement-v1' ) ),
+			'feature_id'       => sanitize_key( (string) ( $runtime['feature_id'] ?? 'nightly_site_inspection' ) ),
+			'execution_pattern' => sanitize_key( (string) ( $runtime['execution_pattern'] ?? 'whole_run_offload' ) ),
+			'meter_key'        => sanitize_key( (string) ( $runtime['meter_key'] ?? 'nightly_site_inspection_runs' ) ),
+			'limit_enforced'   => ! empty( $runtime['limit_enforced'] ),
+			'max_nightly_inspection_runs_per_period' => $max_runs,
+			'used_nightly_inspection_runs' => $used,
+			'remaining_nightly_inspection_runs' => $remaining,
+			'quota_exhausted'  => $quota_exhausted,
+			'max_batch_items'  => absint( $runtime['max_batch_items'] ?? 0 ),
+			'result_retention_days' => absint( $runtime['result_retention_days'] ?? 0 ),
+			'payload_modes'    => array_slice( $this->sanitize_string_list( $runtime['payload_modes'] ?? array( 'metadata_only', 'excerpt' ) ), 0, 8 ),
+			'cloud_role'       => sanitize_key( (string) ( $runtime['cloud_role'] ?? 'runtime_detail' ) ),
+			'local_truth'      => array(
+				'schedule_owner'         => sanitize_text_field( (string) ( $local_truth['schedule_owner'] ?? 'npcink-local-automation-runtime' ) ),
+				'runtime_owner'          => sanitize_text_field( (string) ( $local_truth['runtime_owner'] ?? 'npcink-local-automation-runtime' ) ),
+				'final_write_path'       => sanitize_key( (string) ( $local_truth['final_write_path'] ?? 'core_proposal_required' ) ),
+				'direct_wordpress_write' => false,
+			),
+		);
+
+		return $this->with_output_contract(
+			array(
+				'provider'              => 'magick_ai_cloud',
+				'provider_mode'         => 'cloud_managed',
+				'contract_version'      => 'pro_cloud_runtime_entitlement_status.v1',
+				'status'                => sanitize_key( (string) ( $data['status'] ?? $entitlement['status'] ?? '' ) ),
+				'package_label'         => sanitize_text_field( (string) ( $data['package'] ?? $data['package_label'] ?? '' ) ),
+				'package_tier'          => sanitize_key( (string) ( $data['package_tier'] ?? $entitlement['package_tier'] ?? '' ) ),
+				'period'                => array(
+					'start_at' => sanitize_text_field( (string) ( $period['start_at'] ?? '' ) ),
+					'end_at'   => sanitize_text_field( (string) ( $period['end_at'] ?? '' ) ),
+				),
+				'pro_cloud_runtime'     => $pro_cloud_runtime,
+				'submit_allowed'        => ! $quota_exhausted,
+				'direct_wordpress_write' => false,
+				'final_write_path'      => 'core_proposal_required',
+				'cloud_scheduler_truth' => false,
+			),
+			'pro_cloud_runtime_entitlement',
+			'nightly_inspection_cloud_runtime_entitlement'
+		);
 	}
 
 	private function should_include_ai_generated_images( array $options ): bool {

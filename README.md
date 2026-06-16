@@ -26,10 +26,11 @@ The first version provides:
 - a Start panel **Preview Morning Brief** entry that reads bounded local
   public-content evidence and renders a dry-run Nightly Site Inspection preview
   without cron, Cloud calls, Core proposals, persistence, or WordPress writes;
-- a disabled-by-default **Basic Nightly Inspection** WP-Cron setting that can
-  overwrite one latest dry-run Morning Brief preview for operator review without
-  Cloud calls, Core proposals, Action Scheduler, custom tables, leases, retries,
-  dead letters, or WordPress content writes;
+- a disabled-by-default **Local Fallback Preview** WP-Cron setting that can
+  overwrite one latest dry-run Morning Brief preview for operator review when
+  Cloud is unavailable or not yet connected, without Cloud calls, Core
+  proposals, Action Scheduler, custom tables, leases, retries, dead letters, or
+  WordPress content writes;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
@@ -102,6 +103,10 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
+- `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
+- `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
+- `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}`
+- `GET|POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/result`
 
 The status route distinguishes registered Toolbox surfaces from currently
 available Cloud execution. Cloud-backed actions report `registered`,
@@ -137,7 +142,16 @@ it must not call Cloud, create Core proposals, use Action Scheduler, create
 custom tables, acquire leases, retry actions, process dead letters, or write
 WordPress content. Current Pro planning does not introduce plugin-side Action
 Scheduler; Pro batch processing should use Cloud Batch Runtime, with the plugin
-limited to batch intent, status/result sync, and reviewed Core proposal handoff.
+limited to read-only entitlement detail, batch intent, status/result sync, and
+reviewed Core proposal handoff.
+The product posture is Cloud-first, not cloud-only: Pro Cloud Batch Runtime is
+the primary commercial path for reliable scoring, entitlement, usage metering,
+queue-backed execution, retry, observability, and result retention, while the
+local WP-Cron path remains a WordPress-side fallback preview and onboarding aid,
+not a second Pro scheduler.
+The Pro Cloud Runtime panel can refresh `pro_cloud_runtime` quota detail from
+Cloud and disable new submissions when Cloud reports exhausted
+`nightly_site_inspection_runs`; this local display is not billing truth.
 Action Scheduler is reserved as a future local fallback/substrate candidate only
 if a confirmed local-batch requirement justifies the added plugin complexity.
 The Site Knowledge review plan route builds a blocked Core handoff plan from

@@ -15,6 +15,8 @@ Use:
 - content quality scoring;
 - writing preparation;
 - reviewable recommendations.
+- Cloud-first entitlement-backed scoring for Pro users;
+- WordPress-side fallback preview when Cloud is unavailable or not connected.
 
 Do not use:
 
@@ -69,9 +71,10 @@ review. It may produce preview-only actions with the
 enqueue jobs, persist job state, call Cloud, create Core proposals, or execute
 WordPress writes.
 
-## Phase 2 Basic Edition Shape
+## Phase 2 Local Fallback Preview Shape
 
-The Basic edition now starts with a constrained WP-Cron dry-run preview:
+The Basic/local fallback edition starts with a constrained WP-Cron dry-run
+preview:
 
 - `WP-Cron` as the default trigger, disabled by default;
 - enable/disable, local run time, post/page scan limit, and media scan limit;
@@ -103,14 +106,18 @@ requirement justifies the added plugin complexity.
 The local runtime owner remains `npcink-local-automation-runtime`. Toolbox may
 host the UI, but Toolbox buttons must not become the queue or scheduler truth.
 
-## Future Pro Edition Shape
+## Pro Cloud Runtime Shape
 
-The Pro edition should offload batch analysis to Magick AI Cloud through the
-Cloud Addon and the existing hosted runtime contract. The preferred shape is
-Cloud Batch Runtime: Cloud owns run/action state, queue-backed worker execution,
-retry, dead-letter, entitlement, usage, and concurrency detail. The WordPress
-plugin only bridges batch intent, status/result sync, and reviewed Core proposal
-handoff.
+The Pro edition offloads batch analysis to Magick AI Cloud through the Cloud
+Addon and the existing hosted runtime contract. The preferred shape is Cloud
+Batch Runtime: Cloud owns run/action state, queue-backed worker execution,
+retry, dead-letter, entitlement, usage metering, quota enforcement, observability,
+result retention, and concurrency detail. The WordPress plugin only bridges
+batch intent, status/result sync, and reviewed Core proposal handoff.
+
+This is Cloud-first, not cloud-only. The local dry-run preview remains available
+as a fallback and onboarding aid, but it is not the commercial reliability,
+multi-site, quota, retry, or retention path.
 
 Cloud may return:
 

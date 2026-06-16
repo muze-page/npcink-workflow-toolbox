@@ -146,6 +146,8 @@ composer smoke:nightly-inspection-builder
 composer smoke:nightly-inspection-manual-planner
 composer smoke:nightly-inspection-snapshot-preview
 composer smoke:nightly-inspection-basic-cron
+composer smoke:nightly-inspection-cloud-batch-merge
+composer smoke:nightly-inspection-cloud-ui
 ```
 
 This validates the `modules/local-automation-runtime/` dry-run replay fixture
@@ -168,6 +170,40 @@ and still avoid REST routes, cron, Cloud calls, Core proposals, persistence, and
 WordPress writes.
 The Basic WP-Cron dry-run smoke verifies the disabled-by-default scheduler
 settings, bounded latest-preview option, no Cloud calls, no Core proposal, no Action Scheduler, no custom tables, and no WordPress content writes.
+The Cloud Batch merge smoke verifies that Cloud runtime detail and
+`pro_cloud_runtime` quota display remain review-only: Cloud may return scoring,
+status, result, and entitlement detail, while local scheduling, Core proposals,
+and WordPress writes stay outside Toolbox.
+The Cloud Runtime UI smoke is a source-only contract check. It verifies the
+Start panel's Pro Cloud Runtime quota hooks, short automatic submit/status/result
+follow-up, not-ready guidance, and no local execution or write ownership. It is
+safe for the default `composer test:all` gate because it does not open a browser
+or require Cloud credentials.
+
+The current phase acceptance summary is recorded in
+[`Nightly Inspection Pro Cloud Runtime Acceptance`](nightly-inspection-pro-cloud-runtime-acceptance.md).
+The review packaging and PR split are recorded in
+[`Nightly Inspection Pro Cloud Runtime Release Prep`](nightly-inspection-pro-cloud-runtime-release-prep.md).
+
+For the real local WordPress + Cloud integration proof, first make sure the
+Cloud API and runtime worker are running:
+
+```bash
+cd /Users/muze/gitee/magick-ai-cloud
+docker compose -f docker-compose.dev.yml --profile runtime up -d worker
+
+cd /Users/muze/gitee/magick-ai-toolbox
+composer smoke:nightly-inspection-cloud-e2e
+```
+
+This submits a metadata-only Pro Nightly Inspection Cloud Batch through the
+verified Cloud Addon, polls until the Cloud runtime worker reaches a terminal
+status, reads the result, and verifies Toolbox can merge the Cloud detail into
+the local Morning Brief. It is intentionally not part of `composer test:all`
+because it depends on a real WordPress site, verified Cloud credentials, the
+Cloud API, Redis/Postgres, and the Cloud runtime worker. It must still prove
+that Cloud does not become scheduler truth and does not grant direct WordPress
+writes.
 
 For AI-generated image media SEO normalization, run:
 
