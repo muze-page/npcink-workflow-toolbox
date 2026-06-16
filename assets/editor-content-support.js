@@ -102,11 +102,11 @@
 			title: __('AI recommended featured image', 'npcink-toolbox'),
 			intro: __('Uses the current article title, excerpt, and body context to recommend or generate a featured image. Paragraph selection is ignored for this entry.', 'npcink-toolbox'),
 			emptyTitle: __('Select a featured image candidate', 'npcink-toolbox'),
-			sourceModeLabel: __('Recommend featured image', 'npcink-toolbox'),
+			sourceModeLabel: __('Image source recommendations', 'npcink-toolbox'),
 			generateModeLabel: __('Generate featured image', 'npcink-toolbox'),
-			searchPlaceholder: __('Search or describe featured image needs', 'npcink-toolbox'),
+			searchPlaceholder: __('Enter a scene, or leave blank to use article context', 'npcink-toolbox'),
 			generatePlaceholder: __('Review or enter a featured image prompt', 'npcink-toolbox'),
-			searchButtonLabel: __('Recommend featured image', 'npcink-toolbox'),
+			searchButtonLabel: __('Refresh recommendations', 'npcink-toolbox'),
 			searchBusyLabel: __('Recommending', 'npcink-toolbox'),
 			autoButtonLabel: __('Use article context', 'npcink-toolbox'),
 			briefButtonLabel: __('Generate featured image plan', 'npcink-toolbox'),
@@ -124,8 +124,8 @@
 			intro: __('Uses the currently selected paragraph as the primary image context, with nearby article context only for disambiguation.', 'npcink-toolbox'),
 			emptyTitle: __('Select an image for this paragraph', 'npcink-toolbox'),
 			sourceModeLabel: __('Recommend paragraph image', 'npcink-toolbox'),
-			searchPlaceholder: __('Search or describe this paragraph image', 'npcink-toolbox'),
-			searchButtonLabel: __('Recommend paragraph image', 'npcink-toolbox'),
+			searchPlaceholder: __('Enter a scene, or leave blank to use the selected paragraph', 'npcink-toolbox'),
+			searchButtonLabel: __('Refresh recommendations', 'npcink-toolbox'),
 			searchBusyLabel: __('Recommending', 'npcink-toolbox'),
 			autoButtonLabel: __('Use selected paragraph', 'npcink-toolbox'),
 		},
@@ -4494,6 +4494,13 @@
 			const images = extractImageCandidates(imageResult);
 			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 			const activeSearchMode = activePicker.allowGeneration ? imageSearchMode : 'source';
+			const imageQueryText = String(imageQuery || '').trim();
+			const sourceSubmitLabel = imageRunning === 'search' || imageRunning === 'auto'
+				? activePicker.searchBusyLabel
+				: (imageQueryText ? __('Search image sources', 'npcink-toolbox') : activePicker.searchButtonLabel);
+			const imageContextStatus = activePicker.contextScope === 'paragraph'
+				? __('Using selected paragraph with article context', 'npcink-toolbox')
+				: (activePicker.contextScope === 'setting' ? __('Using supplied context or manual query', 'npcink-toolbox') : __('Using article context: title, excerpt, and body', 'npcink-toolbox'));
 			const inspectorSeoContext = imagePickerRequestContext(postContext, activePicker);
 			const inspectorSeo = selectedImage ? Object.assign({}, buildImageSeoFields(selectedImage, inspectorSeoContext), selectedImageSeo || {}) : null;
 			const imageRunningLabel = imageRunning === 'generate'
@@ -4540,54 +4547,61 @@
 								activePicker.generateModeLabel
 							)
 						) : null,
-						createElement('input', {
-							type: 'search',
-							value: imageQuery,
-							placeholder: activeSearchMode === 'generate' ? activePicker.generatePlaceholder : activePicker.searchPlaceholder,
-							onChange: (event) => setImageQuery(event.target.value),
-						}),
-						activeSearchMode === 'generate' ? createElement(
-							Button,
-							{
-								type: 'submit',
-								variant: 'primary',
-								isBusy: imageRunning === 'generate',
-								disabled: Boolean(imageRunning),
-							},
-							imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : activePicker.generateModeLabel
-						) : createElement(
-							Button,
-							{
-								type: 'submit',
-								variant: 'primary',
-								isBusy: imageRunning === 'search',
-								disabled: Boolean(imageRunning),
-							},
-							imageRunning === 'search' ? activePicker.searchBusyLabel : activePicker.searchButtonLabel
-						),
 						createElement(
-							Button,
-							{
-								type: 'button',
-								variant: 'tertiary',
-								className: 'npcink-toolbox-editor-support__article-search-button',
-								isBusy: imageRunning === 'auto',
-								disabled: Boolean(imageRunning),
-								onClick: () => runAutoImageRecommendations(activePicker.mode, activePicker.context, activePicker),
-							},
-							activePicker.autoButtonLabel
+							'div',
+							{ className: 'npcink-toolbox-editor-support__image-search-row' },
+							createElement('input', {
+								type: 'search',
+								value: imageQuery,
+								placeholder: activeSearchMode === 'generate' ? activePicker.generatePlaceholder : activePicker.searchPlaceholder,
+								onChange: (event) => setImageQuery(event.target.value),
+							}),
+							activeSearchMode === 'generate' ? createElement(
+								Button,
+								{
+									type: 'submit',
+									variant: 'primary',
+									isBusy: imageRunning === 'generate',
+									disabled: Boolean(imageRunning),
+								},
+								imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : activePicker.generateModeLabel
+							) : createElement(
+								Button,
+								{
+									type: 'submit',
+									variant: 'primary',
+									isBusy: imageRunning === 'search' || imageRunning === 'auto',
+									disabled: Boolean(imageRunning),
+								},
+								sourceSubmitLabel
+							)
 						),
-						activePicker.allowImagePlan ? createElement(
-							Button,
-							{
-								type: 'button',
-								variant: 'secondary',
-								className: 'npcink-toolbox-editor-support__article-search-button',
-								isBusy: imageRunning === 'brief',
-								disabled: Boolean(imageRunning),
-								onClick: runMediaBrief,
-							},
-							imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : activePicker.briefButtonLabel
+						activeSearchMode === 'source' ? createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__image-context-status' },
+							createElement('span', null, __('Context', 'npcink-toolbox')),
+							createElement('span', null, imageContextStatus)
+						) : null,
+						activeSearchMode === 'generate' && activePicker.allowImagePlan ? createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__image-plan-actions' },
+							createElement(
+								Button,
+								{
+									type: 'button',
+									variant: 'secondary',
+									className: 'npcink-toolbox-editor-support__article-search-button',
+									isBusy: imageRunning === 'brief',
+									disabled: Boolean(imageRunning),
+									onClick: runMediaBrief,
+								},
+								imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : activePicker.briefButtonLabel
+							),
+							createElement(
+								'span',
+								null,
+								__('Optional plan before generation', 'npcink-toolbox')
+							)
 						) : null
 					),
 					activeSearchMode === 'generate' ? createElement(
