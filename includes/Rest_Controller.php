@@ -7,6 +7,7 @@
 
 namespace Npcink_Toolbox;
 
+use Npcink\LocalAutomationRuntime\NightlyInspection\Snapshot_Collector;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -51,6 +52,7 @@ final class Rest_Controller {
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
+		$this->post( '/nightly-inspection/cloud-batch', 'nightly_inspection_cloud_batch' );
 
 		register_rest_route(
 			Plugin::REST_NAMESPACE,
@@ -113,6 +115,15 @@ final class Rest_Controller {
 					'site_helpers_registered' => true,
 					'available'               => $cloud_ready,
 					'posture'                 => 'suggestion_only_core_approval_required',
+				),
+				'pro_nightly_inspection'  => array(
+					'registered'             => true,
+					'available'              => $cloud_ready,
+					'entry_surface'          => 'nightly_inspection_cloud_batch',
+					'runtime_owner'          => 'npcink-local-automation-runtime',
+					'cloud_role'             => 'runtime_detail',
+					'posture'                => 'review_only_core_proposal_required',
+					'direct_wordpress_write' => false,
 				),
 				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',
 			)
@@ -279,6 +290,31 @@ final class Rest_Controller {
 	public function ai_image_generation( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->run_ai_image_generation( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function nightly_inspection_cloud_batch( WP_REST_Request $request ) {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
+				__( 'Connect Npcink Cloud before submitting Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$post_limit      = max( 1, min( 50, (int) ( $request->get_param( 'post_limit' ) ?: 12 ) ) );
+		$media_limit     = max( 1, min( 50, (int) ( $request->get_param( 'media_limit' ) ?: 8 ) ) );
+		$idempotency_key = sanitize_text_field( (string) $request->get_param( 'idempotency_key' ) );
+		$snapshot        = ( new Snapshot_Collector() )->collect( $post_limit, $media_limit );
+
+		return rest_ensure_response(
+			$this->client->submit_nightly_inspection_cloud_batch(
+				$snapshot,
+				array(
+					'idempotency_key' => $idempotency_key,
+					'source'          => 'toolbox_rest',
+				)
+			)
+		);
 	}
 
 	public function agent_feedback( WP_REST_Request $request ) {

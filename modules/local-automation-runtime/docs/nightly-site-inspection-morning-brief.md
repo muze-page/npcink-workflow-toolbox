@@ -29,6 +29,10 @@ Phase 1 is contract-only:
 
 - document the task profile;
 - validate dry-run replay fixtures;
+- validate deterministic rule scoring against fixture snapshots;
+- collect bounded local snapshots only when an administrator requests a manual
+  preview;
+- build manual dry-run replay plans from caller-provided snapshots;
 - keep runtime execution disabled;
 - keep scheduling disabled;
 - keep all WordPress writes disabled.
@@ -44,26 +48,69 @@ Phase 1 must not:
 - approve Core proposals;
 - update post content, metadata, media, taxonomy, comments, or settings.
 
-## Future Basic Edition Shape
+The Phase 1 snapshot collector may read a bounded set of local published posts,
+pages, and image attachments after an administrator requests a manual preview.
+It must not register hooks, schedule work, call Cloud, persist results, create
+Core proposals, or mutate WordPress.
 
-The Basic edition should later use:
+This administrator preview is classified as Phase 1A Manual Read-Only Preview.
+It is a Toolbox-hosted operator UX for producing a dry-run replay sample, not a
+runtime execution phase. Scheduled or supervised execution belongs to the
+`npcink-local-automation-runtime` implementation boundary.
 
-- `WP-Cron` as the default trigger;
-- server cron guidance for reliable production triggering;
-- `Action Scheduler` as the local batch execution substrate;
+The Phase 1 scoring core may accept a caller-provided snapshot and return a
+`nightly_site_inspection_result.v1` preview. It must not query WordPress, mutate
+WordPress, schedule work, call Cloud, or persist results.
+
+The Phase 1 manual planner may wrap that preview in a
+`npcink_local_automation_runtime.v1` `dry_run_replay` envelope for operator
+review. It may produce preview-only actions with the
+`manual_dry_run_preview_only` execution profile. It must not register hooks,
+enqueue jobs, persist job state, call Cloud, create Core proposals, or execute
+WordPress writes.
+
+## Phase 2 Basic Edition Shape
+
+The Basic edition now starts with a constrained WP-Cron dry-run preview:
+
+- `WP-Cron` as the default trigger, disabled by default;
+- enable/disable, local run time, post/page scan limit, and media scan limit;
+- single latest Morning Brief preview storage in
+  `npcink_local_automation_runtime_nightly_inspection_latest_preview`;
 - deterministic checks before AI;
+- WordPress admin review surface.
+
+It still excludes:
+
+- Cloud calls;
+- Cloud scheduler truth;
+- Core proposal creation;
+- WordPress content writes;
+- `Action Scheduler`;
+- custom tables, leases, retries, and dead-letter processing.
+
+Future Basic execution beyond this dry-run preview may add:
+
+- server cron guidance for reliable production triggering;
 - capped batches;
 - manual run;
-- local Morning Brief storage;
-- WordPress admin review surface.
+- richer local Morning Brief storage.
+
+Action Scheduler is not part of the current Basic or Pro plan. It remains a
+future local fallback/substrate candidate only if a confirmed local-batch
+requirement justifies the added plugin complexity.
 
 The local runtime owner remains `npcink-local-automation-runtime`. Toolbox may
 host the UI, but Toolbox buttons must not become the queue or scheduler truth.
 
 ## Future Pro Edition Shape
 
-The Pro edition may later offload heavy analysis to Magick AI Cloud through the
-Cloud Addon and the existing hosted runtime contract.
+The Pro edition should offload batch analysis to Magick AI Cloud through the
+Cloud Addon and the existing hosted runtime contract. The preferred shape is
+Cloud Batch Runtime: Cloud owns run/action state, queue-backed worker execution,
+retry, dead-letter, entitlement, usage, and concurrency detail. The WordPress
+plugin only bridges batch intent, status/result sync, and reviewed Core proposal
+handoff.
 
 Cloud may return:
 
@@ -89,10 +136,14 @@ Required posture:
 
 - `core_runtime_execution`: false;
 - `background_execution`: false;
+- `job.source`: `operator_started`;
+- `job.status`: `planned`;
 - `acceptance.scheduler_created`: false;
 - `acceptance.worker_created`: false;
 - `acceptance.core_tables_created`: false;
+- `acceptance.lease_store_created`: false;
 - `acceptance.dead_letter_processor_created`: false;
+- preview actions use `manual_dry_run_preview_only`;
 - all candidate actions are `ready`, `waiting`, `skipped`, or `blocked`;
 - all final WordPress writes are absent.
 
@@ -102,7 +153,7 @@ When execution phases are approved, the sequence must remain:
 
 ```text
 WP-Cron or manual trigger
--> Action Scheduler local batches
+-> local dry-run preview or Cloud Batch Runtime
 -> deterministic eligibility and scoring
 -> optional Cloud hosted analysis
 -> local Morning Brief

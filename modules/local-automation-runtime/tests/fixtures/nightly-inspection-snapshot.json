@@ -1,0 +1,46 @@
+{
+  "run_id": "local-nightly-preview-001",
+  "site_id": "local-site",
+  "generated_at": "2026-06-16T02:00:00Z",
+  "posts": [
+    {
+      "object_type": "post",
+      "object_id": 101,
+      "title": "2024 WordPress Optimization Guide",
+      "content": "<p>Short intro.</p>",
+      "meta_description": "",
+      "modified_at": "2024-01-10T08:00:00Z",
+      "internal_link_count": 0,
+      "categories": [],
+      "tags": [],
+      "featured_image_present": false,
+      "missing_alt_count": 2
+    },
+    {
+      "object_type": "post",
+      "object_id": 102,
+      "title": "How to prepare a useful editorial maintenance checklist",
+      "content": "<h2>Overview</h2><p>This article has enough structured material for a routine maintenance pass with internal links and reviewed taxonomy context.</p><p>It remains suggestion only.</p>",
+      "meta_description": "A practical maintenance checklist for reviewing content quality, structure, internal links, media evidence, and editorial readiness.",
+      "modified_at": "2026-05-10T08:00:00Z",
+      "internal_link_count": 3,
+      "categories": [
+        "Editorial"
+      ],
+      "tags": [
+        "maintenance"
+      ],
+      "featured_image_present": true,
+      "missing_alt_count": 0
+    }
+  ],
+  "media": [
+    {
+      "object_type": "attachment",
+      "object_id": 201,
+      "title": "Homepage hero image",
+      "filename": "homepage-hero.jpg",
+      "alt": ""
+    }
+  ]
+}

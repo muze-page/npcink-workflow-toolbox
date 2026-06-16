@@ -23,6 +23,13 @@ The first version provides:
   human-written articles;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
+- a Start panel **Preview Morning Brief** entry that reads bounded local
+  public-content evidence and renders a dry-run Nightly Site Inspection preview
+  without cron, Cloud calls, Core proposals, persistence, or WordPress writes;
+- a disabled-by-default **Basic Nightly Inspection** WP-Cron setting that can
+  overwrite one latest dry-run Morning Brief preview for operator review without
+  Cloud calls, Core proposals, Action Scheduler, custom tables, leases, retries,
+  dead letters, or WordPress content writes;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
@@ -118,10 +125,21 @@ rewritten by preview generation.
 Batch media optimization uses bounded review sets: build a review plan,
 generate previews for selected candidates, and submit only selected Core
 reviews. It is intentionally not presented as one-click whole-site replacement.
-Toolbox also bundles a Phase 1 `modules/local-automation-runtime/` skeleton for
-the future `npcink-local-automation-runtime` owner. That module validates dry-run replay fixtures only; it does not register hooks, create runtime job
-tables, schedule workers, acquire leases, retry actions, dead-letter failures,
-approve proposals, execute Adapter actions, or write WordPress data.
+Toolbox also bundles `modules/local-automation-runtime/` for the future
+`npcink-local-automation-runtime` owner. That module supports Phase 1A Manual Read-Only Preview for Morning Brief evidence, validates dry-run replay fixtures,
+and now owns Phase 2 Basic WP-Cron Dry-Run. Phase 1A is a Toolbox-hosted
+operator preview, not a runtime execution phase; it does not register hooks,
+create runtime job tables, schedule workers, acquire leases, retry actions,
+dead-letter failures, persist preview results, approve proposals, execute
+Adapter actions, or write WordPress data. Phase 2 Basic may register one
+disabled-by-default WP-Cron hook that overwrites a single latest-preview option;
+it must not call Cloud, create Core proposals, use Action Scheduler, create
+custom tables, acquire leases, retry actions, process dead letters, or write
+WordPress content. Current Pro planning does not introduce plugin-side Action
+Scheduler; Pro batch processing should use Cloud Batch Runtime, with the plugin
+limited to batch intent, status/result sync, and reviewed Core proposal handoff.
+Action Scheduler is reserved as a future local fallback/substrate candidate only
+if a confirmed local-batch requirement justifies the added plugin complexity.
 The Site Knowledge review plan route builds a blocked Core handoff plan from
 Cloud evidence only; it does not approve, preflight, or execute that plan.
 

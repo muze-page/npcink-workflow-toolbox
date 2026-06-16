@@ -46,8 +46,12 @@ final class Settings {
 
 	public function defaults(): array {
 		return array(
-			'include_raw_responses' => false,
-			'enable_image_source'   => true,
+			'include_raw_responses'             => false,
+			'enable_image_source'               => true,
+			'nightly_inspection_enabled'        => false,
+			'nightly_inspection_time'           => '03:00',
+			'nightly_inspection_post_limit'     => 12,
+			'nightly_inspection_media_limit'    => 8,
 		);
 	}
 
@@ -291,6 +295,22 @@ final class Settings {
 		return $settings[ $key ] ?? null;
 	}
 
+	/**
+	 * Returns bounded Basic WP-Cron settings for Nightly Site Inspection.
+	 *
+	 * @return array<string,bool|int|string>
+	 */
+	public function get_nightly_inspection_settings(): array {
+		$settings = $this->get_all();
+
+		return array(
+			'enabled'     => ! empty( $settings['nightly_inspection_enabled'] ),
+			'time'        => (string) $settings['nightly_inspection_time'],
+			'post_limit'  => (int) $settings['nightly_inspection_post_limit'],
+			'media_limit' => (int) $settings['nightly_inspection_media_limit'],
+		);
+	}
+
 	public function configured_image_source_providers(): array {
 		return $this->cloud_runtime_available()
 			? array( 'cloud_image_sources' )
@@ -359,11 +379,30 @@ final class Settings {
 		$input = is_array( $input ) ? $input : array();
 
 		$sanitized = array(
-			'include_raw_responses' => ! empty( $input['include_raw_responses'] ),
-			'enable_image_source'   => ! empty( $input['enable_image_source'] ),
+			'include_raw_responses'             => ! empty( $input['include_raw_responses'] ),
+			'enable_image_source'               => ! empty( $input['enable_image_source'] ),
+			'nightly_inspection_enabled'        => ! empty( $input['nightly_inspection_enabled'] ),
+			'nightly_inspection_time'           => $this->sanitize_nightly_inspection_time( $input['nightly_inspection_time'] ?? '03:00' ),
+			'nightly_inspection_post_limit'     => max( 1, min( 50, absint( $input['nightly_inspection_post_limit'] ?? 12 ) ) ),
+			'nightly_inspection_media_limit'    => max( 1, min( 50, absint( $input['nightly_inspection_media_limit'] ?? 8 ) ) ),
 		);
 
 		return $sanitized;
+	}
+
+	private function sanitize_nightly_inspection_time( $value ): string {
+		$time = trim( sanitize_text_field( (string) $value ) );
+		if ( 1 !== preg_match( '/^([0-9]{2}):([0-9]{2})$/', $time, $matches ) ) {
+			return '03:00';
+		}
+
+		$hour   = (int) $matches[1];
+		$minute = (int) $matches[2];
+		if ( $hour > 23 || $minute > 59 ) {
+			return '03:00';
+		}
+
+		return sprintf( '%02d:%02d', $hour, $minute );
 	}
 
 	public function sanitize_media_optimization( $input ): array {
@@ -540,6 +579,7 @@ final class Settings {
 			'npcink_toolbox_hosted_ai_cloud_request',
 			'npcink_toolbox_site_knowledge_cloud_request',
 			'npcink_toolbox_image_source_cloud_request',
+			'npcink_toolbox_nightly_inspection_cloud_batch_cloud_request',
 		) as $filter ) {
 			if ( has_filter( $filter ) ) {
 				return true;

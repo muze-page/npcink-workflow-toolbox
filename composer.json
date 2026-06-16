@@ -47,6 +47,10 @@
     "smoke:local-automation-runtime-replay": "php tests/smoke-local-automation-runtime-replay.php",
     "smoke:local-automation-runtime-negative-replay": "php tests/smoke-local-automation-runtime-negative-replay.php",
     "smoke:nightly-site-inspection": "php tests/smoke-nightly-site-inspection-morning-brief.php",
+    "smoke:nightly-inspection-builder": "php tests/smoke-nightly-inspection-builder.php",
+    "smoke:nightly-inspection-manual-planner": "php tests/smoke-nightly-inspection-manual-planner.php",
+    "smoke:nightly-inspection-snapshot-preview": "php tests/smoke-nightly-inspection-snapshot-preview.php",
+    "smoke:nightly-inspection-basic-cron": "php tests/smoke-nightly-inspection-basic-cron.php",
     "smoke:local-featured-image": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-local-featured-image-consent.php",
     "smoke:media-derivative-batch-plan": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/opt/homebrew/bin/wp}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-media-derivative-batch-plan.php",
     "smoke:media-derivative-batch-core": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/opt/homebrew/bin/wp}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; NPCINK_TOOLBOX_MEDIA_DERIVATIVE_BATCH_CORE_SMOKE_PURGE=\"${NPCINK_TOOLBOX_MEDIA_DERIVATIVE_BATCH_CORE_SMOKE_PURGE:-1}\"; export NPCINK_TOOLBOX_MEDIA_DERIVATIVE_BATCH_CORE_SMOKE_PURGE; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-media-derivative-batch-core-proposals.php",
@@ -63,7 +67,11 @@
       "@test:progressive-recommendations",
       "@smoke:local-automation-runtime-replay",
       "@smoke:local-automation-runtime-negative-replay",
-      "@smoke:nightly-site-inspection"
+      "@smoke:nightly-site-inspection",
+      "@smoke:nightly-inspection-builder",
+      "@smoke:nightly-inspection-manual-planner",
+      "@smoke:nightly-inspection-snapshot-preview",
+      "@smoke:nightly-inspection-basic-cron"
     ]
   }
 }

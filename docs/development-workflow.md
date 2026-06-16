@@ -142,6 +142,10 @@ For the bundled local automation runtime Phase 1 skeleton, run:
 ```bash
 composer smoke:local-automation-runtime-replay
 composer smoke:local-automation-runtime-negative-replay
+composer smoke:nightly-inspection-builder
+composer smoke:nightly-inspection-manual-planner
+composer smoke:nightly-inspection-snapshot-preview
+composer smoke:nightly-inspection-basic-cron
 ```
 
 This validates the `modules/local-automation-runtime/` dry-run replay fixture
@@ -151,6 +155,19 @@ process dead letters, approve Core proposals, call Adapter execution routes, or
 write WordPress data.
 The negative replay smoke mutates the fixture to prove scheduler, worker,
 lease, direct-write, execution-status, and blocked-count drift fail closed.
+The Nightly Inspection builder smoke validates deterministic scoring against a
+fixture snapshot and confirms the `nightly_site_inspection_result.v1` preview
+stays local, review-only, no-write, no-Cloud, and no-copy-generation.
+The manual planner smoke wraps the same preview in a
+`npcink_local_automation_runtime.v1` dry-run replay with
+`manual_dry_run_preview_only` actions and verifies it still creates no cron,
+worker, scheduler, lease store, Core proposal, or WordPress write.
+The snapshot preview smoke verifies the administrator-started local collector
+can read bounded public post/page and image evidence, feed the manual planner,
+and still avoid REST routes, cron, Cloud calls, Core proposals, persistence, and
+WordPress writes.
+The Basic WP-Cron dry-run smoke verifies the disabled-by-default scheduler
+settings, bounded latest-preview option, no Cloud calls, no Core proposal, no Action Scheduler, no custom tables, and no WordPress content writes.
 
 For AI-generated image media SEO normalization, run:
 

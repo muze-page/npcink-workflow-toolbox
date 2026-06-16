@@ -7,6 +7,10 @@
 
 namespace Npcink_Toolbox;
 
+use Npcink\LocalAutomationRuntime\NightlyInspection\Manual_Dry_Run_Planner;
+use Npcink\LocalAutomationRuntime\NightlyInspection\Basic_WP_Cron_Dry_Run;
+use Npcink\LocalAutomationRuntime\NightlyInspection\Snapshot_Collector;
+
 defined( 'ABSPATH' ) || exit;
 
 final class Admin_Page {
@@ -362,6 +366,7 @@ final class Admin_Page {
 		$settings        = $this->settings->get_all();
 		$content_context = $this->settings->get_content_context();
 		$cloud_ready     = $this->settings->cloud_runtime_available();
+		$nightly_preview = $this->nightly_inspection_preview_from_request();
 		?>
 		<div class="wrap npcink-toolbox">
 			<h1><?php esc_html_e( 'Npcink Toolbox', 'npcink-toolbox' ); ?></h1>
@@ -381,7 +386,7 @@ final class Admin_Page {
 			</nav>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="start" aria-label="<?php esc_attr_e( 'Toolbox start', 'npcink-toolbox' ); ?>">
-				<?php $this->render_start_panel( $content_context, $cloud_ready ); ?>
+				<?php $this->render_start_panel( $settings, $content_context, $cloud_ready, $nightly_preview ); ?>
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="context" aria-label="<?php esc_attr_e( 'Site context', 'npcink-toolbox' ); ?>" hidden>
@@ -403,7 +408,7 @@ final class Admin_Page {
 		<?php
 	}
 
-	private function render_start_panel( array $content_context, bool $cloud_ready ): void {
+	private function render_start_panel( array $settings, array $content_context, bool $cloud_ready, ?array $nightly_preview ): void {
 		$context_ready = $this->content_context_ready( $content_context );
 		?>
 		<div class="npcink-toolbox__panel-header">
@@ -469,6 +474,10 @@ final class Admin_Page {
 					<strong><?php esc_html_e( 'Manage Site Knowledge', 'npcink-toolbox' ); ?></strong>
 					<span><?php esc_html_e( 'Start or refresh the Cloud-managed public content index.', 'npcink-toolbox' ); ?></span>
 				</a>
+				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>">
+					<strong><?php esc_html_e( 'Preview Morning Brief', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Read bounded local content, score quality signals, and show a dry-run replay without cron, Cloud, Core proposals, or writes.', 'npcink-toolbox' ); ?></span>
+				</a>
 				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=tools&toolbox_tool=media-derivative' ) ); ?>">
 					<strong><?php esc_html_e( 'Optimize Existing Image', 'npcink-toolbox' ); ?></strong>
 					<span><?php esc_html_e( 'Review a media-library image preview before creating one Core proposal.', 'npcink-toolbox' ); ?></span>
@@ -482,7 +491,196 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Use search, image-source, and workflow checks only when troubleshooting.', 'npcink-toolbox' ); ?></span>
 				</a>
 			</section>
+
+			<?php $this->render_nightly_inspection_preview( $nightly_preview ); ?>
+			<?php $this->render_nightly_inspection_basic_settings( $settings ); ?>
 		</div>
+		<?php
+	}
+
+	private function nightly_inspection_preview_url(): string {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'page'                       => self::MENU_SLUG,
+					'toolbox_tab'                => 'start',
+					'nightly_inspection_preview' => '1',
+				),
+				admin_url( 'admin.php' )
+			),
+			'npcink_toolbox_nightly_inspection_preview'
+		);
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	private function nightly_inspection_preview_from_request(): ?array {
+		$requested = filter_input( INPUT_GET, 'nightly_inspection_preview', FILTER_UNSAFE_RAW );
+		if ( '1' !== ( is_scalar( $requested ) ? (string) $requested : '' ) ) {
+			return null;
+		}
+
+		$nonce = filter_input( INPUT_GET, '_wpnonce', FILTER_UNSAFE_RAW );
+		$nonce = is_scalar( $nonce ) ? (string) $nonce : '';
+		if ( ! wp_verify_nonce( $nonce, 'npcink_toolbox_nightly_inspection_preview' ) ) {
+			return array(
+				'error' => __( 'The Morning Brief preview link expired. Reload the page and try again.', 'npcink-toolbox' ),
+			);
+		}
+
+		try {
+			$collector = new Snapshot_Collector();
+			$planner   = new Manual_Dry_Run_Planner();
+			$snapshot  = $collector->collect();
+			$replay    = $planner->plan( $snapshot );
+
+			return array(
+				'snapshot' => $snapshot,
+				'replay'   => $replay,
+			);
+		} catch ( \Throwable $throwable ) {
+			return array(
+				'error' => __( 'Could not build the local Morning Brief preview.', 'npcink-toolbox' ),
+			);
+		}
+	}
+
+	/**
+	 * @param array<string,mixed>|null $preview Preview payload.
+	 */
+	private function render_nightly_inspection_preview( ?array $preview ): void {
+		if ( null === $preview ) {
+			return;
+		}
+
+		if ( isset( $preview['error'] ) ) {
+			?>
+			<section class="npcink-toolbox__card" data-toolbox-nightly-inspection-preview>
+				<h3><?php esc_html_e( 'Morning Brief preview', 'npcink-toolbox' ); ?></h3>
+				<div class="npcink-toolbox__result-notice is-warning"><?php echo esc_html( (string) $preview['error'] ); ?></div>
+			</section>
+			<?php
+			return;
+		}
+
+		$replay   = isset( $preview['replay'] ) && is_array( $preview['replay'] ) ? $preview['replay'] : array();
+		$json     = (string) wp_json_encode( $replay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$download = 'data:application/json;charset=utf-8,' . rawurlencode( $json );
+		$brief    = isset( $replay['preview']['morning_brief'] ) && is_array( $replay['preview']['morning_brief'] ) ? $replay['preview']['morning_brief'] : array();
+		$summary  = isset( $brief['summary'] ) && is_array( $brief['summary'] ) ? $brief['summary'] : array();
+		$priority = isset( $brief['priorities'] ) && is_array( $brief['priorities'] ) ? array_slice( $brief['priorities'], 0, 6 ) : array();
+		?>
+		<section class="npcink-toolbox__card" data-toolbox-nightly-inspection-preview>
+			<div class="npcink-toolbox__section-heading">
+				<div>
+					<h3><?php esc_html_e( 'Morning Brief preview', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Manual dry-run only. The preview reads local content, produces review signals, and does not schedule, call Cloud, create Core proposals, or write WordPress data.', 'npcink-toolbox' ); ?></p>
+				</div>
+				<a class="button" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Refresh preview', 'npcink-toolbox' ); ?></a>
+			</div>
+			<div class="npcink-toolbox__readiness-strip" aria-label="<?php esc_attr_e( 'Morning Brief preview summary', 'npcink-toolbox' ); ?>">
+				<?php
+				$this->render_start_status_item( __( 'Scanned posts', 'npcink-toolbox' ), 'neutral', (string) (int) ( $summary['scanned_posts'] ?? 0 ), __( 'Oldest modified public posts and pages.', 'npcink-toolbox' ) );
+				$this->render_start_status_item( __( 'Scanned media', 'npcink-toolbox' ), 'neutral', (string) (int) ( $summary['scanned_media'] ?? 0 ), __( 'Recent image attachments.', 'npcink-toolbox' ) );
+				$this->render_start_status_item( __( 'Review items', 'npcink-toolbox' ), (int) ( $summary['actions_total'] ?? 0 ) > 0 ? 'warning' : 'ok', (string) (int) ( $summary['actions_total'] ?? 0 ), __( 'Preview-only action candidates.', 'npcink-toolbox' ) );
+				$this->render_start_status_item( __( 'Execution', 'npcink-toolbox' ), 'ok', __( 'Disabled', 'npcink-toolbox' ), __( 'No cron, worker, Cloud call, Core proposal, or write.', 'npcink-toolbox' ) );
+				?>
+			</div>
+			<?php if ( array() === $priority ) : ?>
+				<div class="npcink-toolbox__result-notice is-success"><?php esc_html_e( 'No priority review items were found in this bounded preview.', 'npcink-toolbox' ); ?></div>
+			<?php else : ?>
+				<ul class="npcink-toolbox__usage-list">
+					<?php foreach ( $priority as $item ) : ?>
+						<?php
+						if ( ! is_array( $item ) ) {
+							continue;
+						}
+						$reason_codes = isset( $item['reason_codes'] ) && is_array( $item['reason_codes'] ) ? implode( ', ', array_map( 'strval', $item['reason_codes'] ) ) : '';
+						?>
+						<li>
+							<strong><?php echo esc_html( (string) ( $item['title'] ?? __( 'Untitled item', 'npcink-toolbox' ) ) ); ?></strong>
+							<span>
+								<?php
+								printf(
+									/* translators: 1: object type, 2: object id, 3: score, 4: reason codes. */
+									esc_html__( '%1$s #%2$d, score %3$d. %4$s', 'npcink-toolbox' ),
+									esc_html( (string) ( $item['object_type'] ?? 'post' ) ),
+									(int) ( $item['object_id'] ?? 0 ),
+									(int) ( $item['score'] ?? 0 ),
+									esc_html( $reason_codes )
+								);
+								?>
+							</span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<details class="npcink-toolbox__result-details">
+				<summary><?php esc_html_e( 'Copy or download dry-run JSON', 'npcink-toolbox' ); ?></summary>
+				<p class="description"><?php esc_html_e( 'This is the read-only replay payload produced by the manual preview. It is not saved automatically and does not create scheduled work.', 'npcink-toolbox' ); ?></p>
+				<p><a class="button" href="<?php echo esc_url( $download, array( 'data' ) ); ?>" download="nightly-site-inspection-dry-run.json"><?php esc_html_e( 'Download dry-run JSON', 'npcink-toolbox' ); ?></a></p>
+				<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( $json ); ?></textarea>
+			</details>
+		</section>
+		<?php
+	}
+
+	private function render_nightly_inspection_basic_settings( array $settings ): void {
+		$latest_preview = Basic_WP_Cron_Dry_Run::latest_preview();
+		$brief          = isset( $latest_preview['preview']['morning_brief'] ) && is_array( $latest_preview['preview']['morning_brief'] ) ? $latest_preview['preview']['morning_brief'] : array();
+		$summary        = isset( $brief['summary'] ) && is_array( $brief['summary'] ) ? $brief['summary'] : array();
+		?>
+		<section class="npcink-toolbox__card" data-toolbox-nightly-inspection-basic-settings>
+			<div class="npcink-toolbox__section-heading">
+				<div>
+					<h3><?php esc_html_e( 'Basic Nightly Inspection', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'WP-Cron can generate one latest dry-run Morning Brief preview for operator review. It stays disabled by default and does not call Cloud, create Core proposals, or write WordPress content.', 'npcink-toolbox' ); ?></p>
+				</div>
+			</div>
+			<form class="npcink-toolbox__settings-form" method="post" action="options.php">
+				<?php settings_fields( 'npcink_toolbox' ); ?>
+				<?php if ( ! empty( $settings['include_raw_responses'] ) ) : ?>
+					<input type="hidden" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[include_raw_responses]" value="1" />
+				<?php endif; ?>
+				<?php if ( ! empty( $settings['enable_image_source'] ) ) : ?>
+					<input type="hidden" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[enable_image_source]" value="1" />
+				<?php endif; ?>
+				<label class="npcink-toolbox__check">
+					<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_enabled]" value="1" <?php checked( ! empty( $settings['nightly_inspection_enabled'] ) ); ?> />
+					<span><?php esc_html_e( 'Enable Basic WP-Cron dry-run preview', 'npcink-toolbox' ); ?></span>
+				</label>
+				<div class="npcink-toolbox__split">
+					<label>
+						<span><?php esc_html_e( 'Run time', 'npcink-toolbox' ); ?></span>
+						<input type="time" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_time]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_time'] ); ?>" />
+					</label>
+					<label>
+						<span><?php esc_html_e( 'Post/page scan limit', 'npcink-toolbox' ); ?></span>
+						<input type="number" min="1" max="50" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_post_limit]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_post_limit'] ); ?>" />
+					</label>
+				</div>
+				<label>
+					<span><?php esc_html_e( 'Media scan limit', 'npcink-toolbox' ); ?></span>
+					<input type="number" min="1" max="50" step="1" name="<?php echo esc_attr( Plugin::OPTION_NAME ); ?>[nightly_inspection_media_limit]" value="<?php echo esc_attr( (string) $settings['nightly_inspection_media_limit'] ); ?>" />
+				</label>
+				<?php submit_button( __( 'Save Basic schedule', 'npcink-toolbox' ) ); ?>
+			</form>
+			<?php if ( array() !== $latest_preview ) : ?>
+				<div class="npcink-toolbox__result-notice is-success">
+					<?php
+					printf(
+						/* translators: 1: generated time, 2: action count. */
+						esc_html__( 'Latest cron dry-run preview: %1$s, %2$d review items.', 'npcink-toolbox' ),
+						esc_html( (string) ( $latest_preview['generated_at'] ?? '' ) ),
+						(int) ( $summary['actions_total'] ?? 0 )
+					);
+					?>
+				</div>
+			<?php else : ?>
+				<div class="npcink-toolbox__result-notice is-neutral"><?php esc_html_e( 'No cron dry-run preview has been generated yet.', 'npcink-toolbox' ); ?></div>
+			<?php endif; ?>
+		</section>
 		<?php
 	}
 

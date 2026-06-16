@@ -25,12 +25,19 @@ require_once NPCINK_TOOLBOX_DIR . 'includes/Operation_Classifier.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Provider_Client.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Knowledge_Auto_Sync.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Rest_Controller.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/Contract/Replay_Validator.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Rule_Scorer.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Morning_Brief_Builder.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Manual_Dry_Run_Planner.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Snapshot_Collector.php';
+require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Basic_WP_Cron_Dry_Run.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Admin_Page.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Editor_Content_Support.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Abilities.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Plugin.php';
 
 register_deactivation_hook( NPCINK_TOOLBOX_FILE, array( \Npcink_Toolbox\Site_Knowledge_Auto_Sync::class, 'deactivate' ) );
+register_deactivation_hook( NPCINK_TOOLBOX_FILE, array( \Npcink\LocalAutomationRuntime\NightlyInspection\Basic_WP_Cron_Dry_Run::class, 'deactivate' ) );
 
 add_action(
 	'plugins_loaded',

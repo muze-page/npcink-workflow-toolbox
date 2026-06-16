@@ -151,10 +151,15 @@ runtime, unauthenticated triggers, administrator impersonation, automatic
 publishing, automatic term creation, or direct WordPress writes.
 
 The first local automation runtime step is Phase 1 only: Toolbox may bundle
-`modules/local-automation-runtime/` for contract docs, a dry-run replay
-validator, positive smoke tests, and negative fail-closed replay tests. It must
-not add workers, schedulers, runtime job tables, leases, retries, dead-letter
-processors, unattended approval, or execution buttons in this stage.
+`modules/local-automation-runtime/` for contract docs, deterministic scoring,
+Phase 1A Manual Read-Only Preview, a dry-run replay validator, positive smoke
+tests, and negative fail-closed replay tests. Phase 1A is a Toolbox-hosted
+operator preview, not a runtime execution phase. It must not add workers,
+schedulers, runtime job tables, leases, retries, dead-letter processors,
+unattended approval, persistence, Cloud calls, Core proposal creation, or
+execution buttons in this stage. The first implementation that adds scheduled
+or supervised execution belongs to the `npcink-local-automation-runtime`
+runtime owner boundary.
 
 ## Deferred Decisions
 

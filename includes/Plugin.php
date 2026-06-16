@@ -7,6 +7,8 @@
 
 namespace Npcink_Toolbox;
 
+use Npcink\LocalAutomationRuntime\NightlyInspection\Basic_WP_Cron_Dry_Run;
+
 defined( 'ABSPATH' ) || exit;
 
 final class Plugin {
@@ -23,6 +25,7 @@ final class Plugin {
 	private Admin_Page $admin_page;
 	private Editor_Content_Support $editor_content_support;
 	private Site_Knowledge_Auto_Sync $site_knowledge_auto_sync;
+	private Basic_WP_Cron_Dry_Run $nightly_inspection_cron;
 	private Abilities $abilities;
 
 	private function __construct() {
@@ -32,6 +35,7 @@ final class Plugin {
 		$this->admin_page      = new Admin_Page( $this->settings );
 		$this->editor_content_support = new Editor_Content_Support();
 		$this->site_knowledge_auto_sync = new Site_Knowledge_Auto_Sync( $this->client );
+		$this->nightly_inspection_cron = new Basic_WP_Cron_Dry_Run( $this->settings );
 		$this->abilities       = new Abilities( $this->settings, $this->client );
 	}
 
@@ -51,6 +55,7 @@ final class Plugin {
 		add_action( 'enqueue_block_editor_assets', array( $this->editor_content_support, 'enqueue' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( NPCINK_TOOLBOX_FILE ), array( $this, 'filter_plugin_action_links' ) );
 		$this->site_knowledge_auto_sync->register_hooks();
+		$this->nightly_inspection_cron->register_hooks();
 		add_action( 'rest_api_init', array( $this->rest_controller, 'register_routes' ) );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_with_npcink_abilities_toolkit' ), 1 );
 		add_action( 'wp_abilities_api_categories_init', array( $this->abilities, 'register_native_category' ) );

@@ -40,6 +40,46 @@ The Phase 1 validator and smoke tests must fail closed when replay data claims
 runtime execution, scheduler creation, worker creation, leases, direct
 WordPress writes, execution-status actions, or inconsistent blocked counts.
 
+### Phase 1A Manual Read-Only Preview Classification
+
+Toolbox may host a manual read-only preview entry for Nightly Site Inspection
+while preserving the Core ADR-007 runtime owner decision. This preview is not a
+runtime execution phase. It is a Toolbox operator UX that reads bounded local
+public-content evidence only after a present administrator clicks the preview
+entry, then produces a Morning Brief preview and dry-run replay sample.
+
+This classification is allowed only while all of the following remain true:
+
+- no scheduler, worker, lease, retry, dead-letter, or runtime job state is
+  created;
+- no WP-Cron hook, Action Scheduler job, REST execution route, admin-post
+  execution route, or Ajax execution endpoint is registered;
+- no Cloud call, Core proposal, Adapter execution, persistence, or WordPress
+  write occurs;
+- preview actions remain `manual_dry_run_preview_only`;
+- the owner id and contract remain `npcink-local-automation-runtime` and
+  `npcink_local_automation_runtime.v1`.
+
+The first implementation that adds WP-Cron, Action Scheduler, job storage,
+leases, retry state, dead-letter recovery, or unattended policy must be treated
+as `npcink-local-automation-runtime` runtime implementation work, not Toolbox
+fixed-button work.
+
+Phase 2 Basic WP-Cron Dry-Run is therefore allowed only inside the
+`modules/local-automation-runtime/` boundary. The allowed first step is one
+disabled-by-default WP-Cron hook that overwrites a single latest-preview option
+for operator review. It must not call Cloud, create Core proposals, use Action
+Scheduler, create custom tables, acquire leases, retry actions, process dead
+letters, expose execution routes, or write WordPress content.
+
+Current Pro planning will not introduce plugin-side Action Scheduler. Pro batch
+processing should be modeled as Cloud Batch Runtime: Cloud owns run/action
+state, queue-backed worker execution, retry, dead-letter, entitlement, usage,
+and concurrency detail. The WordPress plugin remains a bridge for batch intent,
+status/result sync, and reviewed Core proposal handoff. Action Scheduler is
+reserved as a future local fallback/substrate candidate only if a confirmed
+local-batch requirement justifies the added plugin complexity.
+
 Toolbox may later host the operator console for this runtime, but Toolbox
 fixed-flow buttons must not become the runtime state machine, scheduler, lease
 manager, retry processor, dead-letter processor, approval path, or final write
