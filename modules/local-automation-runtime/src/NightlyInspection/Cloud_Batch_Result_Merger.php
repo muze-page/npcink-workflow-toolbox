@@ -439,11 +439,19 @@ final class Cloud_Batch_Result_Merger {
 	}
 
 	private function bounded_text( string $value, int $max_chars ): string {
-		$value = trim( strip_tags( $value ) );
+		$value = trim( $this->plain_text( $value ) );
 		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) && mb_strlen( $value ) > $max_chars ) {
 			return mb_substr( $value, 0, $max_chars );
 		}
 
 		return strlen( $value ) > $max_chars ? substr( $value, 0, $max_chars ) : $value;
+	}
+
+	private function plain_text( string $value ): string {
+		if ( function_exists( 'wp_strip_all_tags' ) ) {
+			return (string) wp_strip_all_tags( $value );
+		}
+
+		return (string) preg_replace( '/<[^>]*>/', '', $value );
 	}
 }

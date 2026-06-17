@@ -715,7 +715,7 @@ final class Admin_Page {
 			<?php else : ?>
 				<div class="npcink-toolbox__result-notice is-neutral"><?php esc_html_e( 'No cron dry-run preview has been generated yet.', 'npcink-toolbox' ); ?></div>
 			<?php endif; ?>
-			<form class="npcink-toolbox__inline-form npcink-toolbox__batch-panel" data-toolbox-nightly-cloud-batch data-toolbox-nightly-cloud-ready="<?php echo esc_attr( $cloud_ready ? '1' : '0' ); ?>" data-toolbox-nightly-cloud-enabled="<?php echo esc_attr( $cloud_disabled ? '0' : '1' ); ?>">
+			<form class="npcink-toolbox__inline-form npcink-toolbox__batch-panel" data-toolbox-nightly-cloud-batch data-toolbox-nightly-cloud-ready="<?php echo esc_attr( $cloud_ready ? '1' : '0' ); ?>" data-toolbox-nightly-cloud-enabled="<?php echo esc_attr( $cloud_disabled ? '0' : '1' ); ?>" data-toolbox-nightly-local-brief="<?php echo esc_attr( $brief_json ); ?>">
 				<div class="npcink-toolbox__section-heading">
 					<div>
 						<h3><?php esc_html_e( 'Pro Cloud Runtime', 'npcink-toolbox' ); ?></h3>
@@ -726,9 +726,6 @@ final class Admin_Page {
 					<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Cloud runtime is not configured, so Pro Cloud Runtime controls are disabled.', 'npcink-toolbox' ); ?></div>
 				<?php elseif ( ! $pro_enabled ) : ?>
 					<div class="npcink-toolbox__result-notice is-neutral"><?php esc_html_e( 'Enable Pro Cloud Runtime controls and save settings before submitting a Cloud run.', 'npcink-toolbox' ); ?></div>
-				<?php endif; ?>
-				<?php if ( '' !== $brief_json ) : ?>
-					<script type="application/json" data-toolbox-nightly-local-brief><?php echo $brief_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
 				<?php endif; ?>
 				<div class="npcink-toolbox__inline-actions">
 					<button type="submit" class="button button-primary" data-toolbox-nightly-cloud-submit <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Run Cloud inspection', 'npcink-toolbox' ); ?></button>

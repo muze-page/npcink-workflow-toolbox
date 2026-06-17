@@ -95,7 +95,7 @@ final class Rule_Scorer {
 	 * @param array<int,array<string,mixed>> $findings Findings.
 	 */
 	private function maybe_add_structure_findings( string $content, array &$findings ): void {
-		$plain_text  = trim( strip_tags( $content ) );
+		$plain_text  = trim( $this->plain_text( $content ) );
 		$word_count  = $this->token_count( $plain_text );
 		$h2_count    = preg_match_all( '/<h2\b/i', $content );
 		$h3_count    = preg_match_all( '/<h3\b/i', $content );
@@ -209,6 +209,14 @@ final class Rule_Scorer {
 			'detail'                  => $detail,
 			'recommended_next_action' => $action,
 		);
+	}
+
+	private function plain_text( string $value ): string {
+		if ( function_exists( 'wp_strip_all_tags' ) ) {
+			return (string) wp_strip_all_tags( $value );
+		}
+
+		return (string) preg_replace( '/<[^>]*>/', '', $value );
 	}
 
 	private function token_count( string $text ): int {

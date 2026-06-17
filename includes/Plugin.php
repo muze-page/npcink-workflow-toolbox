@@ -48,7 +48,6 @@ final class Plugin {
 	}
 
 	public function register_hooks(): void {
-		$this->load_textdomain();
 		add_action( 'admin_init', array( $this->settings, 'register' ) );
 		add_action( 'admin_menu', array( $this->admin_page, 'register_menu' ), 45 );
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
@@ -74,7 +73,7 @@ final class Plugin {
 			sprintf(
 				'<a href="%1$s">%2$s</a>',
 				esc_url( $this->plugin_settings_url() ),
-				esc_html__( 'Settings', 'default' )
+				esc_html__( 'Settings', 'npcink-toolbox' )
 			)
 		);
 
@@ -104,11 +103,4 @@ final class Plugin {
 		return false;
 	}
 
-	private function load_textdomain(): void {
-		load_plugin_textdomain(
-			'npcink-toolbox',
-			false,
-			dirname( plugin_basename( NPCINK_TOOLBOX_FILE ) ) . '/languages'
-		);
-	}
 }

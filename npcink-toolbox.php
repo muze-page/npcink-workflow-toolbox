@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Npcink Toolbox
- * Description: Operator-facing AI tools for Cloud-managed web search, Cloud-managed image-source candidates, Qdrant vector search, and repeatable content workflows.
+ * Description: Review-only WordPress content support for image candidates, site knowledge, SEO/AEO/GEO guidance, and governed handoff plans.
  * Version: 0.1.0
  * Requires at least: 6.9
  * Requires PHP: 8.0

@@ -4182,12 +4182,14 @@
 	}
 
 	function nightlyCloudLocalMorningBrief(root) {
-		const script = root.querySelector('[data-toolbox-nightly-local-brief]');
-		if (!script || !String(script.textContent || '').trim()) {
+		const encoded = root.dataset.toolboxNightlyLocalBrief || '';
+		const marker = root.querySelector('[data-toolbox-nightly-local-brief]');
+		const serialized = encoded || (marker ? marker.textContent : '');
+		if (!String(serialized || '').trim()) {
 			return {};
 		}
 		try {
-			const parsed = JSON.parse(script.textContent);
+			const parsed = JSON.parse(serialized);
 			return parsed && typeof parsed === 'object' ? parsed : {};
 		} catch (error) {
 			return {};

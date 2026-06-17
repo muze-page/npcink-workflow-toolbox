@@ -1,5 +1,6 @@
 .git
 .github
+.env*
 .distignore
 AGENTS.md
 README.md

@@ -143,6 +143,7 @@ final class Provider_Client {
 			),
 		);
 		$runtime_payload['data_classification'] = $this->runtime_payload_data_classification( $runtime_payload['input'], 'internal', $input );
+		$runtime_payload['storage_mode']        = $this->runtime_payload_storage_mode( $runtime_payload['data_classification'] );
 
 		if ( isset( $handoff['query_hash'] ) ) {
 			$runtime_payload['input']['source_handoff'] = array(
@@ -550,15 +551,54 @@ final class Provider_Client {
 	}
 
 	private function runtime_payload_data_classification( array $runtime_input, string $default, array $source_input = array() ): string {
-		if ( $this->payload_contains_editor_free_text_context( $runtime_input ) || $this->payload_contains_personal_data( $runtime_input ) ) {
+		if ( $this->payload_contains_editor_free_text_context( $runtime_input ) || $this->payload_contains_personal_data( $runtime_input ) || $this->payload_contains_image_editor_context( $runtime_input ) ) {
 			return 'pii';
 		}
-		if ( array() !== $source_input && ( $this->payload_contains_editor_free_text_context( $source_input ) || $this->payload_contains_personal_data( $source_input ) ) ) {
+		if ( array() !== $source_input && ( $this->payload_contains_editor_free_text_context( $source_input ) || $this->payload_contains_personal_data( $source_input ) || $this->payload_contains_image_editor_context( $source_input ) ) ) {
 			return 'pii';
 		}
 
 		$classification = sanitize_key( $default );
 		return '' !== $classification ? $classification : 'internal';
+	}
+
+	private function runtime_payload_storage_mode( string $data_classification, string $default = 'result_only' ): string {
+		$classification = sanitize_key( $data_classification );
+		if ( in_array( $classification, array( 'pii', 'secret' ), true ) ) {
+			return 'no_store';
+		}
+
+		$storage_mode = sanitize_key( $default );
+		return '' !== $storage_mode ? $storage_mode : 'result_only';
+	}
+
+	private function payload_contains_image_editor_context( $value, int $depth = 0 ): bool {
+		if ( $depth > 6 || ! is_array( $value ) ) {
+			return false;
+		}
+
+		foreach ( array( 'visual_context', 'post_context' ) as $context_key ) {
+			if ( ! is_array( $value[ $context_key ] ?? null ) ) {
+				continue;
+			}
+			$context = $value[ $context_key ];
+			if (
+				'' !== trim( sanitize_text_field( (string) ( $context['post_id'] ?? '' ) ) )
+				|| '' !== trim( sanitize_text_field( (string) ( $context['manual_query'] ?? '' ) ) )
+				|| '' !== trim( sanitize_text_field( (string) ( $context['fallback_query'] ?? '' ) ) )
+				|| '' !== trim( sanitize_text_field( (string) ( $context['image_use'] ?? $context['image_mode'] ?? '' ) ) )
+			) {
+				return true;
+			}
+		}
+
+		foreach ( $value as $child ) {
+			if ( is_array( $child ) && $this->payload_contains_image_editor_context( $child, $depth + 1 ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private function payload_contains_editor_free_text_context( $value, int $depth = 0 ): bool {
@@ -4114,6 +4154,7 @@ final class Provider_Client {
 		if ( array() !== $visual_context ) {
 			$input['visual_context'] = $visual_context;
 		}
+		$data_classification = $this->runtime_payload_data_classification( $input, 'public_reference_media', $options );
 		$runtime_payload = array(
 			'ability_name'        => 'magick-ai-toolbox/search-image-source',
 			'contract_version'    => 'image_source_cloud_request.v1',
@@ -4121,8 +4162,8 @@ final class Provider_Client {
 			'execution_kind'      => 'image_source',
 			'profile_id'          => 'image-source.managed',
 			'input'               => $this->sanitize_payload( $input ),
-			'data_classification' => $this->runtime_payload_data_classification( $input, 'public_reference_media', $options ),
-			'storage_mode'        => 'result_only',
+			'data_classification' => $data_classification,
+			'storage_mode'        => $this->runtime_payload_storage_mode( $data_classification ),
 			'retention_ttl'       => 3600,
 			'timeout_seconds'     => $fast_first ? 5 : 60,
 			'retry_max'           => 0,
