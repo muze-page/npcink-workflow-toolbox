@@ -1007,6 +1007,10 @@
 		document.querySelectorAll('[data-toolbox-site-knowledge]').forEach((root) => {
 			refreshAgentFeedbackSummary(root).catch(() => {});
 		});
+		document.querySelectorAll('[data-toolbox-agent-feedback-quality]').forEach((summary) => {
+			const root = summary.closest('[data-toolbox-cloud-checks]') || document;
+			refreshAgentFeedbackQualityPanel(root).catch(() => {});
+		});
 	}
 
 	async function submitImageAgentFeedback(statusNode, payload, localSurface, button, outcome, labels) {
@@ -1395,7 +1399,7 @@
 			container.appendChild(meta);
 		}
 
-		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'missing_context', 'visual_quality_low', 'source_or_license_risk', 'operator_confidence_high', 'operator_confidence_low'];
+		const importantLabels = ['evidence_useful', 'evidence_weak', 'wrong_next_step', 'wrong_priority', 'already_handled', 'missing_context', 'visual_quality_low', 'source_or_license_risk', 'operator_confidence_high', 'operator_confidence_low'];
 		const labelItems = importantLabels
 			.filter((label) => Number(labels[label] || 0) > 0)
 			.map((label) => ({ name: formatLabel(label), value: labels[label] }));
@@ -1427,6 +1431,33 @@
 				})),
 				'No rejected reasons returned.'
 			);
+		}
+
+		const nightly = payload && payload.nightly_inspection && typeof payload.nightly_inspection === 'object' ? payload.nightly_inspection : {};
+		if (Number(nightly.events_total || 0) > 0) {
+			const nightlyMeta = el('div', 'npcink-toolbox__result-meta');
+			appendMeta(nightlyMeta, 'Nightly events', nightly.events_total);
+			appendMeta(nightlyMeta, 'Action feedback', nightly.action_feedback_total);
+			appendMeta(nightlyMeta, 'Avg source score', nightly.average_source_score);
+			appendMeta(nightlyMeta, 'Wrong priority', nightly.rates && nightly.rates.wrong_priority_rate !== undefined ? formatRate(nightly.rates.wrong_priority_rate) : '');
+			appendMeta(nightlyMeta, 'Already handled', nightly.rates && nightly.rates.already_handled_rate !== undefined ? formatRate(nightly.rates.already_handled_rate) : '');
+			if (nightlyMeta.childNodes.length) {
+				const section = createSection('Nightly Inspection feedback');
+				section.appendChild(nightlyMeta);
+				const rejectedReasonCodes = Array.isArray(nightly.rejected_reason_codes) ? nightly.rejected_reason_codes : [];
+				if (rejectedReasonCodes.length) {
+					renderSupportItems(
+						section,
+						'Rejected reason codes',
+						rejectedReasonCodes.map((item) => ({
+							name: formatLabel(item.label || ''),
+							value: item.count,
+						})),
+						'No rejected reason codes returned.'
+					);
+				}
+				container.appendChild(section);
+			}
 		}
 
 		const scenarios = Array.isArray(payload && payload.scenarios) ? payload.scenarios : [];
@@ -4176,6 +4207,203 @@
 		result.appendChild(section);
 	}
 
+	function nightlyCloudResultPayload(payload) {
+		return payload && payload.result && typeof payload.result === 'object' ? payload.result : {};
+	}
+
+	function nightlyCloudMorningBriefV2(payload) {
+		const cloudResult = nightlyCloudResultPayload(payload);
+		return cloudResult.morning_brief && typeof cloudResult.morning_brief === 'object' ? cloudResult.morning_brief : {};
+	}
+
+	function nightlyCloudFeedbackPayload(payload, item, outcome, labels) {
+		const cloudResult = nightlyCloudResultPayload(payload);
+		const runId = nightlyCloudRunIdFromPayload(payload) || String(cloudResult.run_id || '');
+		const reasonCodes = Array.isArray(item && item.reason_codes) ? item.reason_codes.map((reason) => String(reason || '')).filter(Boolean).slice(0, 12) : [];
+		const actionId = String((item && item.action_id) || '').slice(0, 191);
+		const objectType = String((item && item.object_type) || '').slice(0, 64);
+		const objectId = String((item && item.object_id) || '').slice(0, 191);
+		return {
+			contract_version: 'cloud_agent_feedback.v1',
+			agent_id: 'nightly_site_inspection_cloud_runtime',
+			agent_version: String(cloudResult.agent_version || 'nightly_inspection_cloud_runtime.v1'),
+			source_runtime: 'nightly_site_inspection',
+			source_run_id: runId,
+			handoff_id: actionId || ['nightly_site_inspection', objectType, objectId].filter(Boolean).join(':') || 'nightly_site_inspection',
+			handoff_type: 'morning_brief_priority',
+			local_surface: 'toolbox_nightly_inspection_morning_brief',
+			local_outcome: outcome,
+			feedback_labels: labels,
+			operator_note: '',
+			local_proposal_id: '',
+			evidence_ref_ids: [actionId, objectType && objectId ? objectType + ':' + objectId : '', runId ? 'run:' + runId : ''].filter(Boolean).slice(0, 24),
+			source_action_id: actionId,
+			source_object_type: objectType,
+			source_object_id: objectId,
+			source_reason_codes: reasonCodes,
+			source_score: Number.isFinite(Number(item && item.score)) ? Number(item.score) : null,
+			source_severity: String((item && item.severity) || ''),
+			redaction_status: 'metadata_only',
+			retention_class: 'quality_eval',
+			created_at: new Date().toISOString()
+		};
+	}
+
+	async function submitNightlyCloudFeedback(statusNode, payload, item, button, outcome, labels) {
+		const originalText = button ? button.textContent : '';
+		if (button) {
+			button.disabled = true;
+			button.textContent = 'Sending...';
+		}
+		statusNode.className = 'npcink-toolbox__result-notice is-pending';
+		statusNode.textContent = 'Sending Morning Brief feedback to Cloud eval...';
+		try {
+			const receipt = await postJson(config.restUrl, 'agent-feedback', nightlyCloudFeedbackPayload(payload, item, outcome, labels));
+			statusNode.className = 'npcink-toolbox__result-notice is-ok';
+			statusNode.textContent = receipt && receipt.accepted_for_eval
+				? 'Morning Brief feedback accepted for Cloud eval. WordPress approval and writes remain local.'
+				: 'Morning Brief feedback sent. WordPress approval and writes remain local.';
+			refreshVisibleAgentFeedbackSummaries();
+		} catch (error) {
+			statusNode.className = 'npcink-toolbox__result-notice is-error';
+			statusNode.textContent = (error && error.message ? error.message : 'Could not send Morning Brief feedback.') + ' WordPress approval and writes remain local.';
+		} finally {
+			if (button) {
+				button.disabled = false;
+				button.textContent = originalText;
+			}
+		}
+	}
+
+	function appendNightlyCloudFeedbackControls(container, payload, item) {
+		const feedback = el('div', 'npcink-toolbox__result-feedback');
+		feedback.setAttribute('data-toolbox-nightly-agent-feedback', 'true');
+		feedback.setAttribute('data-toolbox-agent-feedback-quick', 'true');
+		feedback.appendChild(el('h4', '', 'Morning Brief feedback'));
+		const actions = el('div', 'npcink-toolbox__result-actions');
+		const status = el('div', 'npcink-toolbox__result-notice is-pending', 'Feedback updates Cloud eval only. Core approval, preflight, and final WordPress writes stay local.');
+		const options = [
+			{ label: 'Useful', outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
+			{ label: 'Wrong priority', outcome: 'rejected', labels: ['wrong_priority', 'operator_confidence_low'] },
+			{ label: 'Already handled', outcome: 'rejected', labels: ['already_handled'] },
+			{ label: 'Evidence weak', outcome: 'rejected', labels: ['evidence_weak', 'operator_confidence_low'] },
+			{ label: 'Wrong next step', outcome: 'rejected', labels: ['wrong_next_step'] }
+		];
+		options.forEach((option) => {
+			const button = el('button', 'button button-small', option.label);
+			button.type = 'button';
+			button.title = 'Send metadata-only Morning Brief feedback to Cloud eval.';
+			button.setAttribute('data-toolbox-nightly-feedback-outcome', option.outcome);
+			button.setAttribute('data-toolbox-nightly-feedback-labels', option.labels.join(','));
+			button.addEventListener('click', () => submitNightlyCloudFeedback(status, payload, item, button, option.outcome, option.labels));
+			actions.appendChild(button);
+		});
+		feedback.appendChild(actions);
+		feedback.appendChild(status);
+		container.appendChild(feedback);
+	}
+
+	function renderNightlyCloudMorningBrief(result, payload) {
+		const brief = nightlyCloudMorningBriefV2(payload);
+		const priorityQueue = Array.isArray(brief.priority_queue) ? brief.priority_queue : [];
+		const issueGroups = Array.isArray(brief.issue_groups) ? brief.issue_groups : [];
+		if (!priorityQueue.length && !issueGroups.length && !brief.top_summary) {
+			return;
+		}
+
+		const section = createSection('Morning Brief review queue');
+		const topSummary = brief.top_summary && typeof brief.top_summary === 'object' ? brief.top_summary : {};
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Scanned', topSummary.items_scanned);
+		appendMeta(meta, 'Reviewable', topSummary.reviewable_items);
+		appendMeta(meta, 'Warnings', topSummary.warnings);
+		appendMeta(meta, 'Critical', topSummary.critical);
+		appendMeta(meta, 'Average score', topSummary.average_score);
+		appendMeta(meta, 'Score version', topSummary.score_version);
+		if (meta.childNodes.length) {
+			section.appendChild(meta);
+		}
+
+		if (issueGroups.length) {
+			renderSupportItems(
+				section,
+				'Issue groups',
+				issueGroups.slice(0, 8).map((group) => ({
+					name: formatLabel(group.label || group.id || 'Issue group'),
+					value: (group.count || 0) + ' item' + (Number(group.count || 0) === 1 ? '' : 's'),
+					reason: Array.isArray(group.reason_codes) ? group.reason_codes.map(formatLabel).join(', ') : ''
+				})),
+				'No issue groups returned.'
+			);
+		}
+
+		if (priorityQueue.length) {
+			const list = el('div', 'npcink-toolbox__result-list');
+			priorityQueue.slice(0, 5).forEach((item) => {
+				const row = el('article', 'npcink-toolbox__result-item');
+				row.appendChild(el('h4', '', [
+					item.title || 'Review item',
+					item.object_type ? formatLabel(item.object_type) : '',
+					item.object_id ? '#' + item.object_id : ''
+				].filter(Boolean).join(' ')));
+				if (item.evidence_summary) {
+					row.appendChild(el('p', '', item.evidence_summary));
+				}
+				const itemMeta = el('div', 'npcink-toolbox__result-meta');
+				appendMeta(itemMeta, 'Score', item.score);
+				appendMeta(itemMeta, 'Severity', item.severity ? formatLabel(item.severity) : '');
+				appendMeta(itemMeta, 'Priority', item.priority_reason ? formatLabel(item.priority_reason) : '');
+				appendMeta(itemMeta, 'Groups', Array.isArray(item.group_ids) ? item.group_ids.map(formatLabel).join(', ') : '');
+				appendMeta(itemMeta, 'Next action', item.recommended_next_action ? formatLabel(item.recommended_next_action) : '');
+				if (itemMeta.childNodes.length) {
+					row.appendChild(itemMeta);
+				}
+				appendNightlyCloudFeedbackControls(row, payload, item);
+				list.appendChild(row);
+			});
+			section.appendChild(list);
+		}
+		result.appendChild(section);
+	}
+
+	function renderNightlyCloudScoreBreakdown(result, payload) {
+		const cloudResult = nightlyCloudResultPayload(payload);
+		const actions = Array.isArray(cloudResult.actions) ? cloudResult.actions : [];
+		const scoredActions = actions.filter((action) => action && action.score_breakdown && Array.isArray(action.score_breakdown.dimensions));
+		if (!scoredActions.length) {
+			return;
+		}
+		const section = createSection('Score breakdown');
+		scoredActions.slice(0, 3).forEach((action) => {
+			const item = el('article', 'npcink-toolbox__result-item');
+			item.appendChild(el('h4', '', [
+				action.title || 'Scored item',
+				action.object_type ? formatLabel(action.object_type) : '',
+				action.object_id ? '#' + action.object_id : ''
+			].filter(Boolean).join(' ')));
+			const meta = el('div', 'npcink-toolbox__result-meta');
+			appendMeta(meta, 'Overall', action.score);
+			appendMeta(meta, 'Severity', action.severity ? formatLabel(action.severity) : '');
+			appendMeta(meta, 'Priority', action.priority_reason ? formatLabel(action.priority_reason) : '');
+			item.appendChild(meta);
+			renderSupportItems(
+				item,
+				'Dimensions',
+				action.score_breakdown.dimensions
+					.filter((dimension) => Number(dimension.impact || 0) > 0)
+					.slice(0, 6)
+					.map((dimension) => ({
+						name: formatLabel(dimension.label || dimension.id || 'Dimension'),
+						value: 'impact ' + String(dimension.impact || 0),
+						reason: Array.isArray(dimension.reason_codes) ? dimension.reason_codes.map(formatLabel).join(', ') : ''
+					})),
+				'No scoring impacts returned.'
+			);
+			section.appendChild(item);
+		});
+		result.appendChild(section);
+	}
+
 	function firstNightlyCloudText(source, keys) {
 		const item = source && typeof source === 'object' ? source : {};
 		for (let index = 0; index < keys.length; index += 1) {
@@ -4355,6 +4583,8 @@
 
 		renderNightlyCloudRunDetail(result, payload);
 		renderNightlyCloudActions(result, patch);
+		renderNightlyCloudMorningBrief(result, payload);
+		renderNightlyCloudScoreBreakdown(result, payload);
 		renderNightlyCloudHandoff(result, payload, patch, merged);
 
 		if (merged.cloud_runtime) {

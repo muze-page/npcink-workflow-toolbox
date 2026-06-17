@@ -169,6 +169,7 @@ For the bundled local automation runtime Phase 1 skeleton, run:
 ```bash
 composer smoke:local-automation-runtime-replay
 composer smoke:local-automation-runtime-negative-replay
+composer smoke:local-automation-media-conversion-review-set
 composer smoke:nightly-inspection-builder
 composer smoke:nightly-inspection-manual-planner
 composer smoke:nightly-inspection-snapshot-preview
@@ -185,6 +186,9 @@ process dead letters, approve Core proposals, call Adapter execution routes, or
 write WordPress data.
 The negative replay smoke mutates the fixture to prove scheduler, worker,
 lease, direct-write, execution-status, and blocked-count drift fail closed.
+The media conversion review-set smoke validates the first non-nightly governed
+batch contract and proves that local queues and direct WordPress writes fail
+closed.
 The Nightly Inspection builder smoke validates deterministic scoring against a
 fixture snapshot and confirms the `nightly_site_inspection_result.v1` preview
 stays local, review-only, no-write, no-Cloud, and no-copy-generation.

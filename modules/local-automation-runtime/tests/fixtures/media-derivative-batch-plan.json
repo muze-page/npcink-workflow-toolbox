@@ -1,0 +1,92 @@
+{
+  "success": true,
+  "data": {
+    "plan_contract_version": "media_derivative_batch_plan.v1",
+    "readonly": true,
+    "plan_mode": "dry_run",
+    "requires_approval": true,
+    "commit_execution": false,
+    "filters": {
+      "mime_type": "image",
+      "target_format": "webp",
+      "target_max_width": 1920,
+      "quality": 82,
+      "max_items": 3,
+      "page": 1
+    },
+    "eligibility_summary": {
+      "total_count": 3,
+      "scanned_count": 3,
+      "eligible_count": 2,
+      "candidate_count": 2,
+      "blocked_count": 1,
+      "skipped_count": 1,
+      "selected_count": 2,
+      "truncated": false,
+      "cloud_calls_included": false
+    },
+    "candidates": [
+      {
+        "attachment_id": 101,
+        "status": "eligible",
+        "reason": "eligible",
+        "result_ref": "attachment:101",
+        "title": "JPEG candidate",
+        "mime_type": "image/jpeg",
+        "source_format": "jpeg",
+        "target_format": "webp",
+        "url": "https://example.test/uploads/jpeg-candidate.jpg",
+        "width": 1600,
+        "height": 900,
+        "filesize_bytes": 640000,
+        "warnings": [],
+        "cloud_request_ability": "npcink-abilities-toolkit/build-media-derivative-cloud-request",
+        "cloud_request_input": {
+          "attachment_id": 101,
+          "target_max_width": 1920,
+          "large_file_threshold_bytes": 524288,
+          "preferred_format": "webp",
+          "quality": 82
+        },
+        "proposal_required": true,
+        "preview_required": true
+      },
+      {
+        "attachment_id": 102,
+        "status": "eligible",
+        "reason": "eligible",
+        "result_ref": "attachment:102",
+        "title": "PNG candidate",
+        "mime_type": "image/png",
+        "source_format": "png",
+        "target_format": "webp",
+        "url": "https://example.test/uploads/png-candidate.png",
+        "width": 1280,
+        "height": 720,
+        "filesize_bytes": 820000,
+        "warnings": [],
+        "cloud_request_ability": "npcink-abilities-toolkit/build-media-derivative-cloud-request",
+        "cloud_request_input": {
+          "attachment_id": 102,
+          "target_max_width": 1920,
+          "large_file_threshold_bytes": 524288,
+          "preferred_format": "webp",
+          "quality": 82
+        },
+        "proposal_required": true,
+        "preview_required": true
+      }
+    ],
+    "blocked_items": [
+      {
+        "attachment_id": 203,
+        "mime_type": "image/webp",
+        "blocked_reason": "already_target_format",
+        "operator_next_action": "skip"
+      }
+    ],
+    "retryable": true,
+    "retry_guidance": "Change selected media or rebuild the plan after adjusting filters before generating previews again.",
+    "operator_next_action": "Review eligible media, generate selected previews, then submit selected Core reviews."
+  }
+}

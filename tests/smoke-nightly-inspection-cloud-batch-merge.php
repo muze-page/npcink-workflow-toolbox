@@ -47,9 +47,33 @@ $morning_brief = array(
 );
 
 $cloud_result = array(
-	'run_id'  => 'run_cloud_123',
-	'status'  => 'succeeded',
-	'actions' => array(
+	'run_id'              => 'run_cloud_123',
+	'status'              => 'succeeded',
+	'worker_phase'        => 'result_ready',
+	'execution_kind'      => 'nightly_site_inspection',
+	'eligibility_summary' => array(
+		'items_total'      => 2,
+		'eligible_count'  => 1,
+		'blocked_count'   => 1,
+		'reviewable_count' => 1,
+		'selected_count'  => 1,
+	),
+	'blocked_items'       => array(
+		array(
+			'object_type'          => 'page',
+			'object_id'            => 202,
+			'blocked_reason'       => 'insufficient_public_evidence',
+			'operator_next_action' => 'review_local_snapshot',
+		),
+	),
+	'operator_next_action' => 'review_cloud_batch_result',
+	'retryable'           => false,
+	'retry_guidance'      => array(
+		'retryable'            => false,
+		'reason'               => 'terminal_result_available',
+		'operator_next_action' => 'review_cloud_batch_result',
+	),
+	'actions'             => array(
 		array(
 			'object_type'    => 'post',
 			'object_id'      => 101,
@@ -81,6 +105,27 @@ if ( 1 !== ( $patch['action_count'] ?? 0 ) ) {
 if ( false !== ( $patch['direct_wordpress_write'] ?? true ) ) {
 	$fail( 'Cloud Batch patch must not grant direct writes.' );
 }
+if ( 'result_ready' !== ( $patch['worker_phase'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve worker phase.' );
+}
+if ( 'nightly_site_inspection' !== ( $patch['execution_kind'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve execution kind.' );
+}
+if ( 1 !== (int) ( $patch['eligibility_summary']['blocked_count'] ?? 0 ) ) {
+	$fail( 'Cloud Batch patch should preserve blocked count.' );
+}
+if ( 'insufficient_public_evidence' !== ( $patch['blocked_items'][0]['blocked_reason'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve blocked item reason.' );
+}
+if ( 'review_cloud_batch_result' !== ( $patch['operator_next_action'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve operator next action.' );
+}
+if ( false !== ( $patch['retryable'] ?? true ) ) {
+	$fail( 'Cloud Batch patch should keep terminal retryability false.' );
+}
+if ( 'terminal_result_available' !== ( $patch['retry_guidance']['reason'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve retry guidance reason.' );
+}
 if ( 'core_proposal_required' !== ( $patch['final_write_path'] ?? '' ) ) {
 	$fail( 'Cloud Batch patch must keep Core proposal handoff.' );
 }
@@ -95,6 +140,12 @@ if ( false !== ( $merged['safety']['cloud_scheduler_truth'] ?? true ) ) {
 }
 if ( false !== ( $merged['safety']['action_scheduler_used'] ?? true ) ) {
 	$fail( 'Merged Morning Brief must not mark Action Scheduler as used.' );
+}
+if ( 'result_ready' !== ( $merged['cloud_runtime']['worker_phase'] ?? '' ) ) {
+	$fail( 'Merged Morning Brief should preserve Cloud worker phase.' );
+}
+if ( 1 !== (int) ( $merged['cloud_runtime']['eligibility_summary']['reviewable_count'] ?? 0 ) ) {
+	$fail( 'Merged Morning Brief should preserve Cloud reviewable count.' );
 }
 if ( 'needs_refresh' !== ( $merged['priorities'][0]['cloud_runtime']['reason_codes'][0] ?? '' ) ) {
 	$fail( 'Merged Morning Brief should attach Cloud runtime detail to the matching priority.' );

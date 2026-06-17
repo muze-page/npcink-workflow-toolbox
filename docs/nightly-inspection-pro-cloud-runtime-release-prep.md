@@ -9,6 +9,10 @@ This slice packages the accepted Pro Cloud Runtime path for Nightly Site
 Inspection. It should be reviewed as a bounded bridge from Toolbox to Cloud
 Batch Runtime, not as a new local scheduler or autonomous writing runtime.
 
+When Cloud, Core, Abilities, or Adapter are being changed in parallel, use
+[Nightly Inspection Cross-Repo Handoff Checklist](nightly-inspection-cross-repo-handoff-checklist.md)
+as the coordination contract before wiring new endpoints or payload fields.
+
 The review target is:
 
 - submit one bounded local Nightly Site Inspection snapshot to Cloud;

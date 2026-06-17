@@ -13,6 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit( 1 );
 }
 
+$toolbox_media_batch_smoke_root = dirname( __DIR__ );
+require_once $toolbox_media_batch_smoke_root . '/modules/local-automation-runtime/src/Contract/Media_Conversion_Review_Set_Normalizer.php';
+require_once $toolbox_media_batch_smoke_root . '/modules/local-automation-runtime/src/Contract/Media_Conversion_Review_Set_Validator.php';
+
 $toolbox_media_batch_smoke_attachment_ids = array();
 $toolbox_media_batch_smoke_paths          = array();
 
@@ -165,6 +169,18 @@ toolbox_media_batch_smoke_assert( 'already_target_format' === (string) ( $data['
 toolbox_media_batch_smoke_assert( true === (bool) ( $data['retryable'] ?? false ), 'Batch plan is marked retryable as a rebuildable review set.' );
 toolbox_media_batch_smoke_assert( is_string( $data['operator_next_action'] ?? null ) && '' !== $data['operator_next_action'], 'Batch plan includes operator next action.' );
 toolbox_media_batch_smoke_assert( ! isset( $data['write_actions'], $data['wordpress_write_decision'], $data['approval_decision'], $data['commit'] ), 'Batch plan omits write and approval execution fields.' );
+
+$review_set = ( new \Npcink\LocalAutomationRuntime\Contract\Media_Conversion_Review_Set_Normalizer() )->from_media_derivative_batch_plan( $plan );
+$validation = ( new \Npcink\LocalAutomationRuntime\Contract\Media_Conversion_Review_Set_Validator() )->validate( $review_set );
+toolbox_media_batch_smoke_assert( true === (bool) ( $validation['valid'] ?? false ), 'Batch plan normalizes to the local automation media conversion review-set contract.' );
+toolbox_media_batch_smoke_assert( 'npcink_local_automation_media_conversion_review_set.v1' === (string) ( $review_set['contract_version'] ?? '' ), 'Normalized review set declares the local automation media conversion contract.' );
+toolbox_media_batch_smoke_assert( 1 === (int) ( $review_set['eligibility_summary']['selected_count'] ?? 0 ), 'Normalized review set preserves selected candidate count.' );
+toolbox_media_batch_smoke_assert( 1 === (int) ( $review_set['eligibility_summary']['blocked_count'] ?? 0 ), 'Normalized review set preserves blocked item count.' );
+toolbox_media_batch_smoke_assert( 'npcink-abilities-toolkit/build-media-derivative-cloud-request' === (string) ( $review_set['selected_items'][0]['target_ability_id'] ?? '' ), 'Normalized review set preserves the selected media derivative target ability.' );
+toolbox_media_batch_smoke_assert( true === (bool) ( $review_set['retryable'] ?? false ) && true === (bool) ( $review_set['retry_guidance']['retryable'] ?? false ), 'Normalized review set preserves rebuildable retry guidance without owning execution retries.' );
+toolbox_media_batch_smoke_assert( false === (bool) ( $review_set['safety']['local_queue_created'] ?? true ), 'Normalized review set does not create a local queue.' );
+toolbox_media_batch_smoke_assert( false === (bool) ( $review_set['safety']['direct_wordpress_write'] ?? true ), 'Normalized review set does not authorize direct WordPress writes.' );
+
 toolbox_media_batch_smoke_assert( $before_jpeg_file === (string) get_post_meta( $jpeg_id, '_wp_attached_file', true ), 'Eligible fixture attached file is unchanged by planning.' );
 toolbox_media_batch_smoke_assert( $before_png_file === (string) get_post_meta( $png_id, '_wp_attached_file', true ), 'Blocked fixture attached file is unchanged by planning.' );
 

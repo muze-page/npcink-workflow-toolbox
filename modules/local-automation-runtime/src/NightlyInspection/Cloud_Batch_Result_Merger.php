@@ -19,6 +19,7 @@ final class Cloud_Batch_Result_Merger {
 		$actions_by_key = $this->actions_by_key( $cloud_result );
 		$merged         = $morning_brief;
 		$merged_count   = 0;
+		$operational    = $this->operational_detail( $cloud_result, count( $actions_by_key ) );
 
 		if ( isset( $merged['priorities'] ) && is_array( $merged['priorities'] ) ) {
 			foreach ( $merged['priorities'] as $index => $priority ) {
@@ -41,6 +42,13 @@ final class Cloud_Batch_Result_Merger {
 			'composition_role'       => 'morning_brief_cloud_runtime_detail',
 			'source_run_id'          => $this->text_value( $cloud_result, array( 'run_id', 'cloud_run_id', 'source_run_id' ) ),
 			'status'                 => $this->text_value( $cloud_result, array( 'status' ), 'merged' ),
+			'worker_phase'           => $operational['worker_phase'],
+			'execution_kind'         => $operational['execution_kind'],
+			'eligibility_summary'    => $operational['eligibility_summary'],
+			'blocked_items'          => $operational['blocked_items'],
+			'operator_next_action'   => $operational['operator_next_action'],
+			'retryable'              => $operational['retryable'],
+			'retry_guidance'         => $operational['retry_guidance'],
 			'action_count'           => count( $actions_by_key ),
 			'merged_priority_count'  => $merged_count,
 			'direct_wordpress_write' => false,
@@ -72,6 +80,8 @@ final class Cloud_Batch_Result_Merger {
 	 */
 	public function patch( array $cloud_result ): array {
 		$actions = array_values( $this->actions_by_key( $cloud_result ) );
+		$operational = $this->operational_detail( $cloud_result, count( $actions ) );
+		$action_summaries = array_map( array( $this, 'cloud_action_summary' ), $actions );
 
 		return array(
 			'contract_version'       => self::CONTRACT_VERSION,
@@ -79,11 +89,87 @@ final class Cloud_Batch_Result_Merger {
 			'composition_role'       => 'morning_brief_cloud_runtime_patch',
 			'source_run_id'          => $this->text_value( $cloud_result, array( 'run_id', 'cloud_run_id', 'source_run_id' ) ),
 			'status'                 => $this->text_value( $cloud_result, array( 'status' ), 'available' ),
-			'actions'                => array_map( array( $this, 'cloud_action_summary' ), $actions ),
+			'worker_phase'           => $operational['worker_phase'],
+			'execution_kind'         => $operational['execution_kind'],
+			'eligibility_summary'    => $operational['eligibility_summary'],
+			'blocked_items'          => $operational['blocked_items'],
+			'review_items'           => $action_summaries,
+			'operator_next_action'   => $operational['operator_next_action'],
+			'retryable'              => $operational['retryable'],
+			'retry_guidance'         => $operational['retry_guidance'],
+			'actions'                => $action_summaries,
 			'action_count'           => count( $actions ),
 			'direct_wordpress_write' => false,
 			'final_write_path'       => 'core_proposal_required',
 			'requires_local_review'  => true,
+		);
+	}
+
+	/**
+	 * @param array<string,mixed> $cloud_result Cloud result.
+	 * @return array<string,mixed>
+	 */
+	private function operational_detail( array $cloud_result, int $review_item_count ): array {
+		return array(
+			'worker_phase'         => $this->text_value( $cloud_result, array( 'worker_phase' ), '' ),
+			'execution_kind'       => $this->sanitize_key( $this->text_value( $cloud_result, array( 'execution_kind' ), 'nightly_site_inspection' ) ),
+			'eligibility_summary'  => $this->eligibility_summary( $cloud_result['eligibility_summary'] ?? array(), $review_item_count ),
+			'blocked_items'        => $this->blocked_items( $cloud_result['blocked_items'] ?? array() ),
+			'operator_next_action' => $this->sanitize_key( $this->text_value( $cloud_result, array( 'operator_next_action' ), 'review_cloud_batch_result' ) ),
+			'retryable'            => true === ( $cloud_result['retryable'] ?? false ),
+			'retry_guidance'       => $this->retry_guidance( $cloud_result['retry_guidance'] ?? array() ),
+		);
+	}
+
+	/**
+	 * @param mixed $summary Cloud eligibility summary.
+	 * @return array<string,int>
+	 */
+	private function eligibility_summary( $summary, int $review_item_count ): array {
+		$summary = is_array( $summary ) ? $summary : array();
+		return array(
+			'items_total'      => max( 0, (int) ( $summary['items_total'] ?? $summary['total_count'] ?? 0 ) ),
+			'eligible_count'  => max( 0, (int) ( $summary['eligible_count'] ?? 0 ) ),
+			'blocked_count'   => max( 0, (int) ( $summary['blocked_count'] ?? 0 ) ),
+			'reviewable_count' => max( 0, (int) ( $summary['reviewable_count'] ?? $review_item_count ) ),
+			'selected_count'  => max( 0, (int) ( $summary['selected_count'] ?? $review_item_count ) ),
+		);
+	}
+
+	/**
+	 * @param mixed $items Cloud blocked items.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function blocked_items( $items ): array {
+		$items  = is_array( $items ) ? $items : array();
+		$result = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$result[] = array(
+				'object_type'          => $this->sanitize_key( (string) ( $item['object_type'] ?? $item['type'] ?? '' ) ),
+				'object_id'            => max( 0, (int) ( $item['object_id'] ?? $item['post_id'] ?? $item['attachment_id'] ?? 0 ) ),
+				'blocked_reason'       => $this->sanitize_key( (string) ( $item['blocked_reason'] ?? $item['reason'] ?? '' ) ),
+				'operator_next_action' => $this->sanitize_key( (string) ( $item['operator_next_action'] ?? '' ) ),
+			);
+			if ( count( $result ) >= 20 ) {
+				break;
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * @param mixed $guidance Cloud retry guidance.
+	 * @return array<string,mixed>
+	 */
+	private function retry_guidance( $guidance ): array {
+		$guidance = is_array( $guidance ) ? $guidance : array();
+		return array(
+			'retryable'            => true === ( $guidance['retryable'] ?? false ),
+			'reason'               => $this->sanitize_key( (string) ( $guidance['reason'] ?? '' ) ),
+			'operator_next_action' => $this->sanitize_key( (string) ( $guidance['operator_next_action'] ?? '' ) ),
 		);
 	}
 

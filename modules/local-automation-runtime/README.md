@@ -16,6 +16,8 @@ Current scope:
   snapshot;
 - optionally register the disabled-by-default Phase 2 Basic WP-Cron dry-run
   preview hook;
+- define the first governed local batch operation review-set contract for media
+  format conversion;
 - keep runtime execution disabled;
 - provide a stable module path for future isolated development:
   `modules/local-automation-runtime/`.
@@ -32,6 +34,13 @@ Current non-scope:
 - no retry or dead-letter processor;
 - no unattended approval;
 - no final WordPress writes.
+
+The first non-nightly local batch target is
+`npcink_local_automation_media_conversion_review_set.v1`. It is a bounded
+operator review-set contract for image format conversion candidates. It may
+reference the existing media derivative preview and Core proposal handoff, but
+it does not create a queue, schedule work, create Core proposals, approve,
+preflight, execute, replace media, or write metadata.
 
 The module namespace is `Npcink\LocalAutomationRuntime`. If later phases add a
 runtime console or worker, they must keep this module isolated from Toolbox

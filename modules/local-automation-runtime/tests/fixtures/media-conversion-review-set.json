@@ -1,0 +1,83 @@
+{
+  "contract_version": "npcink_local_automation_media_conversion_review_set.v1",
+  "fixture_id": "toolbox_local_automation_media_conversion_review_set_v1",
+  "runtime_owner": "npcink-local-automation-runtime",
+  "operation_family": "media_conversion",
+  "mode": "governed_review_set",
+  "trigger": "operator_manual_review",
+  "scope": {
+    "object_type": "attachment",
+    "source": "media_library",
+    "target_format": "webp",
+    "max_items": 3,
+    "selected_attachment_ids": [
+      101,
+      102,
+      203
+    ]
+  },
+  "eligibility_summary": {
+    "items_total": 3,
+    "eligible_count": 2,
+    "selected_count": 2,
+    "blocked_count": 1,
+    "needs_input_count": 0,
+    "risk_level": "medium",
+    "target_ability_ids": [
+      "npcink-abilities-toolkit/build-media-derivative-cloud-request"
+    ]
+  },
+  "selected_items": [
+    {
+      "attachment_id": 101,
+      "source_mime_type": "image/jpeg",
+      "target_format": "webp",
+      "preview_required": true,
+      "target_ability_id": "npcink-abilities-toolkit/build-media-derivative-cloud-request",
+      "proposal_path": "core_proposal_required",
+      "result_ref": "attachment:101",
+      "direct_wordpress_write": false
+    },
+    {
+      "attachment_id": 102,
+      "source_mime_type": "image/png",
+      "target_format": "webp",
+      "preview_required": true,
+      "target_ability_id": "npcink-abilities-toolkit/build-media-derivative-cloud-request",
+      "proposal_path": "core_proposal_required",
+      "result_ref": "attachment:102",
+      "direct_wordpress_write": false
+    }
+  ],
+  "blocked_items": [
+    {
+      "attachment_id": 203,
+      "source_mime_type": "image/webp",
+      "blocked_reason": "already_target_format",
+      "operator_next_action": "skip",
+      "retryable": false
+    }
+  ],
+  "operator_next_action": "generate_selected_previews",
+  "retryable": false,
+  "retry_guidance": {
+    "retryable": false,
+    "reason": "review_set_not_execution_state",
+    "operator_next_action": "adjust_selection_or_generate_selected_previews"
+  },
+  "safety": {
+    "dry_run": true,
+    "direct_wordpress_write": false,
+    "core_proposal_created": false,
+    "approval_performed": false,
+    "preflight_performed": false,
+    "execution_performed": false,
+    "action_scheduler_used": false,
+    "custom_tables_created": false,
+    "local_queue_created": false,
+    "lease_store_created": false,
+    "retry_worker_created": false,
+    "dead_letter_created": false,
+    "cloud_scheduler_truth": false
+  }
+}

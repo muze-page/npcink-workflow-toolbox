@@ -116,7 +116,11 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
 1. Stabilize `media_optimization_v1` batch review sets.
    The product surface should build a bounded review plan, show eligible and
    blocked candidates, generate selected previews, and submit only selected Core
-   reviews.
+   reviews. The local automation runtime contract anchor for this first target
+   is
+   `npcink_local_automation_media_conversion_review_set.v1`, which validates the
+   review-set shape without adding a queue, scheduler, proposal creator, or
+   WordPress write path.
 2. Normalize batch response contracts.
    Add the same eligibility, blocked-item, retryability, and operator-next-action
    fields to new batch planning artifacts before adding more batch surfaces.

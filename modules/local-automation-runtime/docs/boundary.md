@@ -18,6 +18,12 @@ executor.
 - no-write smoke tests;
 - static contract checks.
 
+Phase 1 may also define governed batch review-set contracts, including
+`npcink_local_automation_media_conversion_review_set.v1`, when the contract is
+review-only and proves that media conversion candidates are scoped, eligible or
+blocked, and routed toward Core-governed proposal handoff without local
+execution.
+
 ## Phase 1A Manual Read-Only Preview
 
 The Toolbox Start panel may expose a manual read-only Morning Brief preview.
@@ -95,6 +101,8 @@ Batch Runtime.
 - calling Adapter approve-and-execute;
 - calling WordPress write abilities;
 - publishing, importing media, mutating SEO, or changing settings.
+- creating media conversion queues, retry loops, approval shortcuts, or direct
+  media replacement paths.
 
 ## Handoff Rule
 
