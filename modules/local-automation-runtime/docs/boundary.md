@@ -90,6 +90,18 @@ retry, dead-letter, entitlement, usage, quota enforcement, result retention, and
 concurrency detail. The WordPress plugin may only bridge batch intent, poll or
 receive bounded status/results, and hand reviewed outputs to Core proposal governance.
 
+Use Cloud for the parts that are unsuitable for a local WordPress plugin:
+long-running analysis, durable queue-backed execution, retry and dead-letter
+recovery, entitlement or quota enforcement, result retention, observability,
+and cross-site diagnostics. Keep WordPress local for operator controls, bounded
+snapshots, review displays, explicit trigger settings, Core proposal handoff,
+and final-write governance.
+
+This split is not cloud-only. Cloud must stay runtime/detail and must not become WordPress schedule truth,
+Core approval truth, a second ability registry, or a WordPress write owner. Any
+Cloud run starts from a local bounded intent or trigger contract and stops when
+local controls disable it.
+
 Action Scheduler is deferred as a future local fallback/substrate candidate. It
 should not be introduced unless a confirmed local-batch requirement exists, such
 as offline local execution, long-running WordPress-local work, or cloud-unavailable

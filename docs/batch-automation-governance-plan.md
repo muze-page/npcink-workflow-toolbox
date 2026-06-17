@@ -80,6 +80,20 @@ handoff. It is not a general workflow runtime. New batch workflows should not
 copy that bridge unless the task is a narrow content-change notification with
 no WordPress write.
 
+### Cloud-Fit Decision Rule
+
+Batch work should stay local only when it is an operator-facing review, eligibility,
+preview, or Core handoff surface around WordPress-owned objects. Move the difficult
+runtime parts to Cloud when the workflow needs queue-backed execution, long-running
+analysis, retry and dead-letter recovery, quota or entitlement enforcement, result
+retention, observability, or cross-site diagnostics.
+
+Cloud remains runtime and detail only. It may process accepted runs and expose status
+or entitlement detail, but it must not become WordPress schedule truth, Core approval
+truth, a second ability registry, or a WordPress write owner. Local controls must
+decide whether a site submits a bounded batch intent, and reviewed write outcomes
+must still land through Core, Adapter, and Abilities.
+
 ## Rejected Imports
 
 Do not import these legacy automation shapes:
