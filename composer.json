@@ -58,6 +58,7 @@
     "smoke:nightly-inspection-snapshot-preview": "php tests/smoke-nightly-inspection-snapshot-preview.php",
     "smoke:nightly-inspection-basic-cron": "php tests/smoke-nightly-inspection-basic-cron.php",
     "smoke:nightly-inspection-cloud-batch-merge": "php tests/smoke-nightly-inspection-cloud-batch-merge.php",
+    "smoke:nightly-inspection-cloud-payload-minimization": "php tests/smoke-nightly-inspection-cloud-payload-minimization.php",
     "smoke:nightly-inspection-cloud-ui": "php tests/smoke-nightly-inspection-cloud-ui-contract.php",
     "smoke:nightly-inspection-orchestration-boundary": "php tests/smoke-nightly-inspection-orchestration-boundary.php",
     "smoke:nightly-inspection-cloud-e2e": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/opt/homebrew/bin/wp}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" -d pdo_mysql.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-nightly-inspection-cloud-e2e.php",
@@ -85,6 +86,7 @@
       "@smoke:nightly-inspection-snapshot-preview",
       "@smoke:nightly-inspection-basic-cron",
       "@smoke:nightly-inspection-cloud-batch-merge",
+      "@smoke:nightly-inspection-cloud-payload-minimization",
       "@smoke:nightly-inspection-cloud-ui",
       "@smoke:nightly-inspection-orchestration-boundary"
     ]

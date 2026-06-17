@@ -248,9 +248,10 @@ final class Provider_Client {
 	}
 
 	public function submit_nightly_inspection_cloud_batch( array $snapshot, array $options = array() ) {
-		$payload_mode  = $this->nightly_inspection_cloud_payload_mode( (string) ( $options['payload_mode'] ?? 'metadata_only' ) );
-		$retention_ttl = $this->nightly_inspection_cloud_retention_ttl( $options['retention_ttl'] ?? null );
-		$items         = $this->nightly_inspection_cloud_batch_items( $snapshot, $payload_mode );
+		$payload_mode          = $this->nightly_inspection_cloud_payload_mode( (string) ( $options['payload_mode'] ?? 'metadata_only' ) );
+		$retention_ttl         = $this->nightly_inspection_cloud_retention_ttl( $options['retention_ttl'] ?? null );
+		$payload_minimization  = array();
+		$items                 = $this->nightly_inspection_cloud_batch_items( $snapshot, $payload_mode, $payload_minimization );
 		if ( array() === $items ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_empty',
@@ -271,6 +272,7 @@ final class Provider_Client {
 				'excerpt_included'           => 'excerpt' === $payload_mode,
 				'full_content_included'      => false,
 				'cloud_result_retention_ttl' => $retention_ttl,
+				'payload_minimization'       => $payload_minimization,
 			),
 			'direct_wordpress_write' => false,
 		);
@@ -428,8 +430,9 @@ final class Provider_Client {
 		return $this->normalize_nightly_inspection_cloud_runtime_entitlement_response( is_array( $response ) ? $response : array() );
 	}
 
-	private function nightly_inspection_cloud_batch_items( array $snapshot, string $payload_mode ): array {
-		$items = array();
+	private function nightly_inspection_cloud_batch_items( array $snapshot, string $payload_mode, array &$minimization_report = array() ): array {
+		$items               = array();
+		$minimization_events = array();
 		$posts = is_array( $snapshot['posts'] ?? null ) ? $snapshot['posts'] : array();
 		foreach ( $posts as $post ) {
 			if ( ! is_array( $post ) ) {
@@ -437,11 +440,12 @@ final class Provider_Client {
 			}
 			$content     = wp_strip_all_tags( (string) ( $post['content'] ?? '' ) );
 			$modified_at = sanitize_text_field( (string) ( $post['modified_at'] ?? '' ) );
+			$object_id   = absint( $post['object_id'] ?? 0 );
 			$items[]     = array(
 				'object_type'         => sanitize_key( (string) ( $post['object_type'] ?? 'post' ) ),
-				'object_id'           => absint( $post['object_id'] ?? 0 ),
-				'title'               => sanitize_text_field( (string) ( $post['title'] ?? '' ) ),
-				'meta_description'    => sanitize_textarea_field( (string) ( $post['meta_description'] ?? '' ) ),
+				'object_id'           => $object_id,
+				'title'               => $this->nightly_inspection_cloud_safe_text( (string) ( $post['title'] ?? '' ), 'content item metadata', 'post', $object_id, 'title', $minimization_events ),
+				'meta_description'    => $this->nightly_inspection_cloud_safe_text( (string) ( $post['meta_description'] ?? '' ), '', 'post', $object_id, 'meta_description', $minimization_events ),
 				'word_count'          => $this->nightly_inspection_word_count( $content ),
 				'internal_link_count' => max( 0, (int) ( $post['internal_link_count'] ?? 0 ) ),
 				'image_alt_missing'   => max( 0, (int) ( $post['missing_alt_count'] ?? 0 ) ),
@@ -449,9 +453,17 @@ final class Provider_Client {
 				'direct_wordpress_write' => false,
 			);
 			if ( 'excerpt' === $payload_mode ) {
-				$items[ count( $items ) - 1 ]['excerpt'] = $this->trim_chars( $content, 800 );
+				$items[ count( $items ) - 1 ]['excerpt'] = $this->nightly_inspection_cloud_safe_text(
+					$this->trim_chars( $content, 800 ),
+					'content excerpt minimized',
+					'post',
+					$object_id,
+					'excerpt',
+					$minimization_events
+				);
 			}
 			if ( count( $items ) >= 50 ) {
+				$minimization_report = $this->nightly_inspection_cloud_payload_minimization_report( $minimization_events );
 				return $items;
 			}
 		}
@@ -461,10 +473,12 @@ final class Provider_Client {
 			if ( ! is_array( $media_item ) ) {
 				continue;
 			}
+			$object_id = absint( $media_item['object_id'] ?? 0 );
+			$title     = $this->nightly_inspection_cloud_attachment_label( $media_item, $object_id, $minimization_events );
 			$items[] = array(
 				'object_type'         => 'attachment',
-				'object_id'           => absint( $media_item['object_id'] ?? 0 ),
-				'title'               => sanitize_text_field( (string) ( $media_item['title'] ?? $media_item['filename'] ?? '' ) ),
+				'object_id'           => $object_id,
+				'title'               => $title,
 				'meta_description'    => '',
 				'word_count'          => 0,
 				'internal_link_count' => 0,
@@ -473,14 +487,93 @@ final class Provider_Client {
 				'direct_wordpress_write' => false,
 			);
 			if ( 'excerpt' === $payload_mode ) {
-				$items[ count( $items ) - 1 ]['excerpt'] = sanitize_text_field( (string) ( $media_item['filename'] ?? '' ) );
+				$items[ count( $items ) - 1 ]['excerpt'] = $title;
 			}
 			if ( count( $items ) >= 50 ) {
 				break;
 			}
 		}
 
+		$minimization_report = $this->nightly_inspection_cloud_payload_minimization_report( $minimization_events );
 		return $items;
+	}
+
+	private function nightly_inspection_cloud_attachment_label( array $media_item, int $object_id, array &$events ): string {
+		$title    = sanitize_text_field( (string) ( $media_item['title'] ?? '' ) );
+		$filename = sanitize_text_field( (string) ( $media_item['filename'] ?? '' ) );
+		if ( '' !== $title || '' !== $filename ) {
+			$events[] = array(
+				'object_type' => 'attachment',
+				'object_id'   => $object_id,
+				'field'       => '' !== $title ? 'title' : 'filename',
+				'reason'      => 'attachment_free_text_minimized',
+			);
+		}
+
+		return 'media attachment metadata';
+	}
+
+	private function nightly_inspection_cloud_safe_text( string $value, string $fallback, string $object_type, int $object_id, string $field, array &$events ): string {
+		$text = sanitize_textarea_field( $value );
+		if ( '' === trim( $text ) ) {
+			return '';
+		}
+		if ( ! $this->nightly_inspection_cloud_text_needs_minimization( $text ) ) {
+			return $text;
+		}
+
+		$events[] = array(
+			'object_type' => sanitize_key( $object_type ),
+			'object_id'   => $object_id,
+			'field'       => sanitize_key( $field ),
+			'reason'      => 'sensitive_pattern_minimized',
+		);
+
+		return sanitize_text_field( $fallback );
+	}
+
+	private function nightly_inspection_cloud_text_needs_minimization( string $value ): bool {
+		$text = trim( $value );
+		if ( '' === $text ) {
+			return false;
+		}
+		if ( preg_match( '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $text ) ) {
+			return true;
+		}
+		if ( preg_match( '/(?:api[_-]?key|secret|password|token|bearer\s+[A-Z0-9._\-]+)/i', $text ) ) {
+			return true;
+		}
+
+		$digits = preg_replace( '/\D+/', '', $text );
+		return is_string( $digits ) && strlen( $digits ) >= 8;
+	}
+
+	private function nightly_inspection_cloud_payload_minimization_report( array $events ): array {
+		$fields = array();
+		$items  = array();
+		foreach ( $events as $event ) {
+			if ( ! is_array( $event ) ) {
+				continue;
+			}
+			$field = sanitize_key( (string) ( $event['field'] ?? '' ) );
+			if ( '' !== $field ) {
+				$fields[ $field ] = true;
+			}
+			$item_key = sanitize_key( (string) ( $event['object_type'] ?? '' ) ) . ':' . absint( $event['object_id'] ?? 0 );
+			if ( ':' !== $item_key ) {
+				$items[ $item_key ] = true;
+			}
+		}
+
+		return array(
+			'applied'                  => array() !== $events,
+			'modified_item_count'      => count( $items ),
+			'modified_field_count'     => count( $events ),
+			'modified_fields'          => array_slice( array_keys( $fields ), 0, 12 ),
+			'policy'                   => 'cloud_batch_free_text_minimization',
+			'raw_values_included'      => false,
+			'direct_wordpress_write'   => false,
+		);
 	}
 
 	private function nightly_inspection_cloud_payload_mode( string $value ): string {
