@@ -120,6 +120,23 @@ replacement. The default surface should:
 5. leave Core/Adapter to approve, execute, audit, and roll back each governed
    proposal.
 
+Batch "direct replacement" is allowed only as a productized result of the
+OpenClaw/Adapter batch contract. The implementation order is:
+
+1. prove selected-batch execution in OpenClaw/Adapter with Core
+   approval/preflight, execution profile allowlist evidence, per-action results,
+   and Abilities media replacement callbacks;
+2. keep Toolbox at review-set and selected proposal submission until that proof
+   exists;
+3. expose the accepted path in Toolbox as a fixed best-practice action that
+   renders Adapter/Core/Abilities outcomes, not as a Toolbox writer.
+
+The single-image smoke already proves the desired governed replacement shape:
+Toolbox handoff, Adapter Cloud derivative run, Core proposal intake,
+Adapter `approve-and-execute`, Abilities replacement, backup history, and
+governed restore. The batch proof should reuse that path for selected items
+instead of adding a new replacement mechanism.
+
 Avoid labels such as "replace all" or "whole site optimization" in the current
 stage. Broad scopes may exist as bounded candidate searches, but the visible
 language should keep the operator focused on sampled review sets and selected

@@ -30,6 +30,13 @@ Core proposal handoff as the OpenClaw recipe. Toolbox must not fork the flow
 into a separate approval path, media registry, prompt/model control plane, or
 WordPress write executor.
 
+For batch workflows, the order is stricter: prove the OpenClaw/Adapter batch
+contract first, including execution profiles, Core approval/preflight evidence,
+per-action results, retry guidance, and Abilities write callbacks; only then
+freeze the accepted path into a Toolbox button. Toolbox is the fixed-button
+best-practice projection of OpenClaw, not the place to invent batch execution
+semantics.
+
 ## Primary Users
 
 - WordPress administrators who want controlled AI tools without touching raw
@@ -100,6 +107,10 @@ present **Optimize Existing Image** as `media_optimization_v1`, with visible
 steps from media selection through Cloud preview and Core proposal handoff, but
 it must not add a workflow runtime, persistent run store, media registry,
 approval path, provider routing UI, or direct WordPress write executor.
+Batch media conversion and direct replacement should reuse the same
+OpenClaw/Adapter/Core/Abilities replacement path once the OpenClaw batch
+contract is accepted; Toolbox should not duplicate attachment replacement or URL
+repair logic locally.
 
 High-frequency article support belongs in the WordPress post editor as a
 Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor

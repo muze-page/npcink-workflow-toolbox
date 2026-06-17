@@ -63,6 +63,14 @@ display candidates, build preview artifacts, and submit reviewed proposals, but
 they must not own OpenClaw projection truth, approval truth, prompt/model
 routing truth, media registry truth, or final WordPress write execution.
 
+For batch operations, OpenClaw/Adapter must prove the governed execution
+contract before Toolbox productizes it. The required proof includes bounded
+scope, selected actions, execution profile allowlist evidence, Core approval,
+commit preflight, per-action status/result payloads, retry guidance, and final
+Abilities callbacks. Toolbox may then render that accepted path as a fixed
+best-practice button. It must not implement a separate batch writer, queue, or
+direct attachment replacement path.
+
 ## AI Tool Composition Boundary
 
 Toolbox may expose tool abilities needed by external AI workflows. Article
@@ -296,6 +304,12 @@ per-attachment previews, and selected Core proposal submissions. It must still
 use the per-attachment Adapter media derivative recipe for Cloud artifacts and
 must not create a Toolbox-side media registry, approval queue, scheduler, or
 write executor.
+When "replace original image" becomes available for selected batch items, it
+must be the Adapter/Core/Abilities approved execution path: Core approval and
+preflight first, Adapter allowlisted execution second, Abilities media
+replacement callback last. Toolbox may show Adapter's per-action results and
+rollback evidence, but it must not update attachment files or URL references
+directly.
 
 After a local media replacement has been approved and executed, the admin
 surface may ask Adapter to run `npcink-abilities-toolkit/build-media-reference-repair-plan`

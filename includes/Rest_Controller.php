@@ -48,6 +48,7 @@ final class Rest_Controller {
 		$this->post( '/flows/image-candidate-adoption-plan', 'image_candidate_adoption_plan' );
 		$this->post( '/local-admin-consent/featured-image', 'local_admin_consent_featured_image' );
 		$this->post( '/flows/site-knowledge-review-plan', 'site_knowledge_review_plan' );
+		$this->post( '/flows/nightly-inspection-review-plan', 'nightly_inspection_review_plan' );
 		$this->post( '/flows/content-metadata-apply-plan', 'content_metadata_apply_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
@@ -552,6 +553,11 @@ final class Rest_Controller {
 	public function site_knowledge_review_plan( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_site_knowledge_review_plan( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function nightly_inspection_review_plan( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->build_nightly_inspection_review_plan( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function content_metadata_apply_plan( WP_REST_Request $request ) {

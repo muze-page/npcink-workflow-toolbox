@@ -501,6 +501,12 @@ It is implemented with current admin state, Adapter media derivative routes,
 Cloud Addon transport, Core proposal handoff, and Abilities media contracts. It
 does not introduce a Toolbox custom table, a /workflow-runs route, queue,
 scheduler, retry lease, artifact registry, or direct media writer.
+Batch media replacement follows the same dependency direction: OpenClaw/Adapter
+must prove selected-batch execution with Core approval, commit preflight,
+execution profile allowlist evidence, per-action results, and Abilities media
+replacement callbacks before Toolbox presents it as a fixed best-practice
+button. Toolbox may render review sets, selected previews, proposal submission,
+and returned execution outcomes; it must not own the batch execution semantics.
 
 Cloud Checks use compact tabs under the visible **Advanced Checks** label for
 Cloud-managed search, image-source, preview-only media derivative, and

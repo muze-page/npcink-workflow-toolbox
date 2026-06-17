@@ -142,6 +142,7 @@ final class Provider_Client {
 				'allow_fallback' => false,
 			),
 		);
+		$runtime_payload['data_classification'] = $this->runtime_payload_data_classification( $runtime_payload['input'], 'internal', $input );
 
 		if ( isset( $handoff['query_hash'] ) ) {
 			$runtime_payload['input']['source_handoff'] = array(
@@ -546,6 +547,80 @@ final class Provider_Client {
 
 		$digits = preg_replace( '/\D+/', '', $text );
 		return is_string( $digits ) && strlen( $digits ) >= 8;
+	}
+
+	private function runtime_payload_data_classification( array $runtime_input, string $default, array $source_input = array() ): string {
+		if ( $this->payload_contains_editor_free_text_context( $runtime_input ) || $this->payload_contains_personal_data( $runtime_input ) ) {
+			return 'pii';
+		}
+		if ( array() !== $source_input && ( $this->payload_contains_editor_free_text_context( $source_input ) || $this->payload_contains_personal_data( $source_input ) ) ) {
+			return 'pii';
+		}
+
+		$classification = sanitize_key( $default );
+		return '' !== $classification ? $classification : 'internal';
+	}
+
+	private function payload_contains_editor_free_text_context( $value, int $depth = 0 ): bool {
+		if ( $depth > 6 || ! is_array( $value ) ) {
+			return false;
+		}
+
+		$context_keys = array( 'visual_context', 'post_context' );
+		$text_fields  = array( 'title', 'excerpt', 'content_summary', 'selected_text', 'selected_block_text' );
+		foreach ( $context_keys as $context_key ) {
+			$context = is_array( $value[ $context_key ] ?? null ) ? $value[ $context_key ] : array();
+			foreach ( $text_fields as $field ) {
+				if ( '' !== trim( sanitize_textarea_field( (string) ( $context[ $field ] ?? '' ) ) ) ) {
+					return true;
+				}
+			}
+		}
+
+		foreach ( $value as $child ) {
+			if ( is_array( $child ) && $this->payload_contains_editor_free_text_context( $child, $depth + 1 ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private function payload_contains_personal_data( $value, int $depth = 0 ): bool {
+		if ( $depth > 6 ) {
+			return false;
+		}
+		if ( is_array( $value ) ) {
+			foreach ( $value as $key => $child ) {
+				$normalized_key = is_string( $key ) ? strtolower( preg_replace( '/[^a-z0-9]+/', '_', $key ) ?? $key ) : '';
+				if ( in_array( trim( $normalized_key, '_' ), array( 'email', 'email_address', 'phone', 'phone_number', 'mobile', 'mobile_phone', 'contact_email', 'contact_phone' ), true ) && '' !== trim( (string) $child ) ) {
+					return true;
+				}
+				if ( $this->payload_contains_personal_data( $child, $depth + 1 ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		if ( ! is_scalar( $value ) ) {
+			return false;
+		}
+
+		$text = trim( (string) $value );
+		if ( '' === $text ) {
+			return false;
+		}
+		if ( preg_match( '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $text ) ) {
+			return true;
+		}
+		if ( preg_match( '/(?:\+?\d[\d\s().-]{7,}\d)/', $text ) || preg_match( '/\b1[3-9]\d{9}\b/', $text ) ) {
+			return true;
+		}
+		if ( preg_match( '/\b\d{15}\b|\b\d{17}[\dXx]\b/', $text ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private function nightly_inspection_cloud_payload_minimization_report( array $events ): array {
@@ -2706,6 +2781,137 @@ final class Provider_Client {
 		);
 	}
 
+	public function build_nightly_inspection_review_plan( array $input ) {
+		$selected_items = is_array( $input['selected_items'] ?? null ) ? array_values( $input['selected_items'] ) : array();
+		if ( empty( $selected_items ) ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_review_items_required',
+				__( 'Select at least one Morning Brief review item before creating a Core proposal.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$selected_items = array_slice( $selected_items, 0, 5 );
+		$cloud_run_id   = sanitize_text_field( (string) ( $input['cloud_run_id'] ?? ( $input['run_id'] ?? '' ) ) );
+		$agent_version  = sanitize_text_field( (string) ( $input['agent_version'] ?? 'nightly_site_inspection_cloud_runtime.v1' ) );
+		$evidence_refs  = array();
+		$issue_types    = array();
+		$max_score      = null;
+
+		foreach ( $selected_items as $index => $raw_item ) {
+			$item = is_array( $raw_item ) ? $raw_item : array();
+			$action_id = sanitize_text_field( (string) ( $item['action_id'] ?? '' ) );
+			if ( '' === $action_id ) {
+				$action_id = 'morning_brief_review_' . ( $index + 1 );
+			}
+			$object_type  = sanitize_key( (string) ( $item['object_type'] ?? 'content' ) );
+			$object_id    = sanitize_text_field( (string) ( $item['object_id'] ?? '' ) );
+			$reason_codes = $this->sanitize_string_list( $item['reason_codes'] ?? array() );
+			$score        = is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null;
+			if ( null !== $score ) {
+				$max_score = null === $max_score ? $score : max( $max_score, $score );
+			}
+			$issue_types = array_merge( $issue_types, $reason_codes );
+
+			$evidence_refs[] = array(
+				'action_id'               => $action_id,
+				'title'                   => $this->bounded_text( sanitize_text_field( (string) ( $item['title'] ?? __( 'Morning Brief review item', 'npcink-toolbox' ) ) ), 160 ),
+				'object_type'             => $object_type,
+				'object_id'               => $object_id,
+				'post_id'                 => absint( $item['post_id'] ?? ( 'post' === $object_type ? $object_id : 0 ) ),
+				'score'                   => null === $score ? null : $score,
+				'severity'                => sanitize_key( (string) ( $item['severity'] ?? '' ) ),
+				'reason_codes'            => $reason_codes,
+				'evidence_summary'        => $this->bounded_text( sanitize_textarea_field( (string) ( $item['evidence_summary'] ?? '' ) ), 500 ),
+				'recommended_next_action' => sanitize_key( (string) ( $item['recommended_next_action'] ?? 'operator_review' ) ),
+				'suggested_use'           => 'morning_brief_review_evidence',
+			);
+		}
+
+		$run_basis       = '' !== $cloud_run_id ? $cloud_run_id : wp_json_encode( $evidence_refs );
+		$idempotency_key = 'nightly-inspection-review-' . substr( md5( (string) $run_basis ), 0, 16 );
+		$issue_types     = array_values( array_unique( array_filter( $issue_types ) ) );
+		if ( empty( $issue_types ) ) {
+			$issue_types = array( 'nightly_site_inspection' );
+		}
+
+		return array(
+			'artifact_type'          => 'nightly_site_inspection_review_plan',
+			'contract_version'       => 'nightly_site_inspection_core_review_plan.v1',
+			'version'                => 1,
+			'batch_id'               => '' !== $cloud_run_id ? $cloud_run_id : $idempotency_key,
+			'cloud_run_id'           => $cloud_run_id,
+			'requires_approval'      => true,
+			'dry_run'                => true,
+			'commit_execution'       => false,
+			'proposal_mode'          => 'single',
+			'write_posture'          => 'core_proposal_handoff',
+			'direct_wordpress_write' => false,
+			'runtime_owner'          => 'npcink-local-automation-runtime',
+			'agent_id'               => 'nightly_site_inspection_cloud_runtime',
+			'agent_version'          => $agent_version,
+			'workflow'               => 'nightly_site_inspection',
+			'intent'                 => 'morning_review_preparation',
+			'cloud_output'           => 'proposal_candidate',
+			'local_next_action'      => 'operator_review',
+			'evidence_gate_status'   => 'passed',
+			'evidence_refs'          => $this->sanitize_payload( $evidence_refs ),
+			'blocked_outputs'        => array(
+				'direct_wordpress_write',
+				'article_body',
+				'article_write_plan',
+				'final_seo_copy',
+				'automatic_publish',
+			),
+			'issue_types'            => $this->sanitize_payload( $issue_types ),
+			'risk'                   => array(
+				'level'  => null !== $max_score && $max_score >= 80 ? 'high' : 'medium',
+				'reason' => 'operator_review_required',
+			),
+			'preview'                => array(
+				array(
+					'action_id'          => 'review_nightly_site_inspection',
+					'proposal_ready'     => false,
+					'evidence_ref_count' => count( $evidence_refs ),
+				),
+			),
+			'write_actions'          => array(
+				array(
+					'action_id'         => 'review_nightly_site_inspection',
+					'target_ability_id' => 'npcink-abilities-toolkit/create-draft',
+					'recipe_step'       => 'host_governed_review_draft',
+					'input'             => array(
+						'title'           => '',
+						'content'         => '',
+						'status'          => 'draft',
+						'meta'            => array(
+							'nightly_inspection_cloud_run_id' => $cloud_run_id,
+							'nightly_inspection_evidence_refs' => $this->sanitize_payload( $evidence_refs ),
+						),
+						'dry_run'         => true,
+						'commit'          => false,
+						'idempotency_key' => $idempotency_key,
+					),
+					'risk'              => null !== $max_score && $max_score >= 80 ? 'high' : 'medium',
+					'requires_approval' => true,
+					'commit_execution'  => false,
+					'proposal_ready'    => false,
+					'requires_input'    => array( 'title', 'content' ),
+					'reason'            => __( 'Morning Brief found reviewable content quality signals. Human draft title and content are required before execution can be considered.', 'npcink-toolbox' ),
+				),
+			),
+			'handoff'                => array(
+				'plan_ability_id'        => 'npcink-toolbox/build-nightly-inspection-review-plan',
+				'recipe_id'              => 'nightly_inspection_review_v1',
+				'recipe_ref'             => 'workflow/nightly_site_inspection_review',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'proposal_ready'         => false,
+			),
+		);
+	}
+
 	public function build_content_metadata_apply_plan( array $input ) {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		if ( $post_id <= 0 ) {
@@ -3915,7 +4121,7 @@ final class Provider_Client {
 			'execution_kind'      => 'image_source',
 			'profile_id'          => 'image-source.managed',
 			'input'               => $this->sanitize_payload( $input ),
-			'data_classification' => 'public_reference_media',
+			'data_classification' => $this->runtime_payload_data_classification( $input, 'public_reference_media', $options ),
 			'storage_mode'        => 'result_only',
 			'retention_ttl'       => 3600,
 			'timeout_seconds'     => $fast_first ? 5 : 60,
