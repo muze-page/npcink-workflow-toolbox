@@ -40,6 +40,23 @@ Run when changing Composer metadata:
 composer validate --no-check-publish
 ```
 
+## Git Remote Gate
+
+Before creating, pushing, or updating a PR branch, verify that local Git can
+reach the configured remote without opening an interactive credential prompt:
+
+```bash
+gh auth status
+gh auth setup-git
+composer git:remote-check
+```
+
+This check runs `git ls-remote origin HEAD` with `GIT_TERMINAL_PROMPT=0` and a
+30 second alarm. If it fails or times out, fix the Git credential or network
+path before creating commits for a PR. Do not use GitHub's Git Data API for
+normal branch publishing; it is only an emergency fallback and can create commit
+objects that do not match the local commit SHA.
+
 ## WordPress Smoke Gate
 
 When a local WordPress site and WP-CLI are available, mount or install the
