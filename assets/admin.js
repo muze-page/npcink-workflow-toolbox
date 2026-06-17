@@ -3154,7 +3154,11 @@
 		appendMeta(meta, 'Eligible', eligibility.eligible_count || summary.candidate_count || candidates.length);
 		appendMeta(meta, 'Blocked', eligibility.blocked_count || summary.skipped_count || blockedItems.length || skipped.length);
 		appendMeta(meta, 'Matched', eligibility.items_total || eligibility.total_count || summary.total_matched);
-		appendMeta(meta, 'Selected', eligibility.selected_count || candidates.length);
+		const selectedMetaItem = el('span', 'npcink-toolbox__result-meta-item');
+		selectedMetaItem.appendChild(el('span', 'npcink-toolbox__result-meta-label', 'Selected'));
+		selectedMetaItem.appendChild(el('span', 'npcink-toolbox__result-meta-value', eligibility.selected_count || candidates.length));
+		selectedMetaItem.setAttribute('data-toolbox-media-batch-selected-meta', '');
+		meta.appendChild(selectedMetaItem);
 		appendMeta(meta, 'Retryable', reviewSet.retryable || plan.retryable ? 'Yes' : 'No');
 		appendMeta(meta, 'Mode', reviewSet.mode || plan.plan_mode || 'dry_run');
 		appendMeta(meta, 'Contract', reviewSet.contract_version);
@@ -3185,6 +3189,9 @@
 			checkbox.type = 'checkbox';
 			checkbox.checked = true;
 			checkbox.setAttribute('data-toolbox-media-batch-candidate', String(candidate.attachment_id || ''));
+			checkbox.addEventListener('change', function () {
+				updateMediaBatchSelectedCount(form);
+			});
 			row.appendChild(checkbox);
 			const body = el('span', 'npcink-toolbox__batch-row-body');
 			body.appendChild(el('strong', '', '#' + String(candidate.attachment_id || '') + ' ' + String(candidate.title || 'Untitled media')));
@@ -3230,6 +3237,7 @@
 		}
 
 		panel.appendChild(createRawDetails(planEnvelope, 'Batch plan payload'));
+		updateMediaBatchSelectedCount(form);
 	}
 
 	function renderMediaUrlResolution(form, resolutionEnvelope, resolution) {
@@ -3311,6 +3319,18 @@
 				return row && row.__magickMediaBatchCandidate ? row.__magickMediaBatchCandidate : null;
 			})
 			.filter(Boolean);
+	}
+
+	function updateMediaBatchSelectedCount(form) {
+		const selectedCount = selectedMediaBatchCandidates(form).length;
+		const selectedValue = form.querySelector('[data-toolbox-media-batch-selected-meta] .npcink-toolbox__result-meta-value');
+		const previewButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
+		if (selectedValue) {
+			selectedValue.textContent = String(selectedCount);
+		}
+		if (previewButton instanceof HTMLButtonElement) {
+			previewButton.disabled = selectedCount < 1;
+		}
 	}
 
 	function renderMediaDerivativeBatchResults(form, states, title, summary, batchContext) {
