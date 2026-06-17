@@ -87,7 +87,20 @@
 	const Spinner = components.Spinner || function SpinnerFallback() {
 		return createElement('span', { className: 'npcink-toolbox-editor-support__spinner' }, '...');
 	};
-	const sidebarIcon = createElement('span', { className: 'npcink-toolbox-editor-support__toolbar-icon', 'aria-hidden': 'true' }, 'AI');
+	const sidebarIcon = createElement(
+		'svg',
+		{
+			className: 'npcink-toolbox-editor-support__toolbar-icon',
+			viewBox: '0 0 24 24',
+			width: 24,
+			height: 24,
+			'aria-hidden': 'true',
+			focusable: 'false',
+			role: 'img',
+		},
+		createElement('rect', { x: 2, y: 2, width: 20, height: 20, rx: 5, fill: '#3858e9' }),
+		createElement('text', { x: 12, y: 15, textAnchor: 'middle', fill: '#fff', fontSize: 9, fontWeight: 700, fontFamily: 'Arial, sans-serif' }, 'AI')
+	);
 	const paragraphImageIcon = createElement('span', { className: 'dashicons dashicons-format-image npcink-toolbox-editor-support__block-toolbar-icon', 'aria-hidden': 'true' });
 
 	const imagePickerPresets = {
