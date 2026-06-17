@@ -1359,6 +1359,10 @@
 	gap: 8px;
 }
 
+.npcink-toolbox-editor-support__selected-actions.is-single {
+	grid-template-columns: 1fr;
+}
+
 .npcink-toolbox-editor-support__selected-actions .components-button {
 	justify-content: center;
 	min-width: 0;
