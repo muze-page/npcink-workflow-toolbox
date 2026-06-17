@@ -279,6 +279,8 @@
       "Import media for paragraph": ["为段落导入媒体"],
       "Import paragraph image": ["导入段落配图"],
       "Import media only": ["仅导入媒体"],
+      "Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.": ["通过 Adapter/Core 完成导入、媒体 SEO 字段和特色图变更。Toolbox 不直接写媒体。"],
+      "Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.": ["通过 Adapter/Core 完成媒体导入和媒体 SEO 字段。Toolbox 不直接把图片插入段落。"],
       "Featured image adopted": ["已采用为特色图"],
       "Media imported": ["媒体已导入"],
       "Existing media is now the featured image.": ["现有媒体已设为特色图。"],

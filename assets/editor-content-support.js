@@ -2130,6 +2130,8 @@
 					adoptionAction === 'import' ? __('Importing media', 'npcink-toolbox') : __('Import only', 'npcink-toolbox')
 				)
 			),
+			adoptionError ? createElement(Notice, { status: 'error', isDismissible: false }, adoptionError) : null,
+			renderAdoptionResult(adoptionResult),
 			renderAiImageRegenerationControls(selectedImage, regenerationRunning, onRegenerate),
 			createElement(
 				'div',
@@ -2181,9 +2183,7 @@
 				selectedImage.download_location ? createElement('small', null, __('Download tracking preserved', 'npcink-toolbox')) : null,
 				createElement('small', null, __('Filename: ', 'npcink-toolbox') + (seo.file_name || ''))
 			),
-			renderEditorImageFeedbackControls(selectedImage, feedbackRunning, feedbackStatus, onSubmitFeedback),
-			adoptionError ? createElement(Notice, { status: 'error', isDismissible: false }, adoptionError) : null,
-			renderAdoptionResult(adoptionResult)
+			renderEditorImageFeedbackControls(selectedImage, feedbackRunning, feedbackStatus, onSubmitFeedback)
 		);
 	}
 
