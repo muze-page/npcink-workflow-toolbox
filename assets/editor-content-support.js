@@ -2081,6 +2081,7 @@
 					{
 						type: 'button',
 						variant: 'primary',
+						className: 'npcink-toolbox-editor-support__primary-image-action',
 						disabled: adoptionRunning,
 						onClick: onSelectOnly,
 					},
@@ -2090,6 +2091,7 @@
 					{
 						type: 'button',
 						variant: 'primary',
+						className: 'npcink-toolbox-editor-support__primary-image-action',
 						isBusy: adoptionRunning,
 						disabled: adoptionRunning,
 						onClick: onImportOnly,
@@ -2100,6 +2102,7 @@
 					{
 						type: 'button',
 						variant: 'primary',
+						className: 'npcink-toolbox-editor-support__primary-image-action',
 						isBusy: adoptionRunning,
 						disabled: adoptionRunning,
 						onClick: onAdoptFeatured,
@@ -2111,6 +2114,7 @@
 					{
 						type: 'button',
 						variant: 'secondary',
+						className: 'npcink-toolbox-editor-support__secondary-image-action',
 						disabled: adoptionRunning,
 						onClick: onImportOnly,
 					},
@@ -4569,6 +4573,128 @@
 			const imageRunningLabel = imageRunning === 'generate'
 				? __('Generating AI image candidate...', 'npcink-toolbox')
 				: (imageRunning === 'brief' ? __('Generating image plan...', 'npcink-toolbox') : __('Loading cloud image candidates...', 'npcink-toolbox'));
+			const imageModeControl = activePicker.allowGeneration ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__image-mode', role: 'group', 'aria-label': __('Image candidate mode', 'npcink-toolbox') },
+				createElement(
+					'button',
+					{
+						type: 'button',
+						className: imageSearchMode === 'source' ? 'is-active' : '',
+						'aria-pressed': imageSearchMode === 'source' ? 'true' : 'false',
+						onClick: () => setImageSearchMode('source'),
+					},
+					activePicker.sourceModeLabel
+				),
+				createElement(
+					'button',
+					{
+						type: 'button',
+						className: imageSearchMode === 'generate' ? 'is-active' : '',
+						'aria-pressed': imageSearchMode === 'generate' ? 'true' : 'false',
+						onClick: () => setImageSearchMode('generate'),
+					},
+					activePicker.generateModeLabel
+				)
+			) : null;
+			const sourceSearchForm = activeSearchMode === 'source' ? createElement(
+				'form',
+				{ className: 'npcink-toolbox-editor-support__image-search', onSubmit: runImageSearch },
+				createElement(
+					'div',
+					{ className: 'npcink-toolbox-editor-support__image-search-row' },
+					createElement('input', {
+						type: 'search',
+						value: imageQuery,
+						placeholder: activePicker.searchPlaceholder,
+						onChange: (event) => setImageQuery(event.target.value),
+					}),
+					createElement(
+						Button,
+						{
+							type: 'submit',
+							variant: 'secondary',
+							className: 'npcink-toolbox-editor-support__image-search-submit',
+							isBusy: imageRunning === 'search' || imageRunning === 'auto',
+							disabled: Boolean(imageRunning),
+						},
+						sourceSubmitLabel
+					)
+				)
+			) : null;
+			const aiGenerationPanel = activeSearchMode === 'generate' ? createElement(
+				'form',
+				{ className: 'npcink-toolbox-editor-support__image-generate-form', onSubmit: runAiImageGeneration },
+				createElement(
+					'div',
+					{ className: 'npcink-toolbox-editor-support__image-prompt-panel' },
+					createElement(
+						'label',
+						{
+							className: 'npcink-toolbox-editor-support__image-prompt-label',
+							htmlFor: imagePromptId,
+						},
+						__('AI image prompt', 'npcink-toolbox')
+					),
+					createElement('textarea', {
+						id: imagePromptId,
+						className: 'npcink-toolbox-editor-support__image-prompt-textarea',
+						value: imageQuery,
+						placeholder: activePicker.generatePlaceholder,
+						rows: 4,
+						disabled: Boolean(imageRunning),
+						onChange: (event) => setImageQuery(event.target.value),
+					}),
+					createElement(
+						'div',
+						{ className: 'npcink-toolbox-editor-support__image-generate-actions' },
+						createElement(
+							Button,
+							{
+								type: 'submit',
+								variant: 'primary',
+								isBusy: imageRunning === 'generate',
+								disabled: Boolean(imageRunning),
+							},
+							imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : (activePicker.generateButtonLabel || __('Generate AI image', 'npcink-toolbox'))
+						),
+						activePicker.allowImagePlan ? createElement(
+							Button,
+							{
+								type: 'button',
+								variant: 'secondary',
+								className: 'npcink-toolbox-editor-support__article-search-button',
+								isBusy: imageRunning === 'brief',
+								disabled: Boolean(imageRunning),
+								onClick: runMediaBrief,
+							},
+							imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : activePicker.briefButtonLabel
+						) : null
+					),
+					createElement(
+						'div',
+						{ className: 'npcink-toolbox-editor-support__image-options' },
+						renderAiImageOption(__('Aspect ratio', 'npcink-toolbox'), aiImageAspectRatio, setAiImageAspectRatio, [
+							{ value: '16:9', label: '16:9' },
+							{ value: '1:1', label: '1:1' },
+							{ value: '4:3', label: '4:3' },
+							{ value: '3:4', label: '3:4' },
+							{ value: '9:16', label: '9:16' },
+						]),
+						renderAiImageOption(__('Quality', 'npcink-toolbox'), aiImageResolution, setAiImageResolution, [
+							{ value: 'high', label: __('High', 'npcink-toolbox') },
+							{ value: 'medium', label: __('Medium', 'npcink-toolbox') },
+							{ value: 'low', label: __('Low', 'npcink-toolbox') },
+						]),
+						renderAiImageOption(__('Candidates', 'npcink-toolbox'), aiImageCandidateCount, setAiImageCandidateCount, [
+							{ value: '1', label: '1' },
+							{ value: '2', label: '2' },
+							{ value: '3', label: '3' },
+							{ value: '4', label: '4' },
+						])
+					)
+				)
+			) : null;
 			return createElement(
 				Modal,
 				{
@@ -4582,124 +4708,8 @@
 					createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__image-modal-body' },
-						createElement(
-						'form',
-						{ className: 'npcink-toolbox-editor-support__image-search', onSubmit: activeSearchMode === 'generate' ? runAiImageGeneration : runImageSearch },
-						activePicker.allowGeneration ? createElement(
-							'div',
-							{ className: 'npcink-toolbox-editor-support__image-mode', role: 'group', 'aria-label': __('Image candidate mode', 'npcink-toolbox') },
-							createElement(
-								'button',
-								{
-									type: 'button',
-									className: imageSearchMode === 'source' ? 'is-active' : '',
-									'aria-pressed': imageSearchMode === 'source' ? 'true' : 'false',
-									onClick: () => setImageSearchMode('source'),
-								},
-								activePicker.sourceModeLabel
-							),
-							createElement(
-								'button',
-								{
-									type: 'button',
-									className: imageSearchMode === 'generate' ? 'is-active' : '',
-									'aria-pressed': imageSearchMode === 'generate' ? 'true' : 'false',
-									onClick: () => setImageSearchMode('generate'),
-								},
-								activePicker.generateModeLabel
-							)
-						) : null,
-						activeSearchMode === 'generate' ? createElement(
-							'div',
-							{ className: 'npcink-toolbox-editor-support__image-prompt-panel' },
-							createElement(
-								'label',
-								{
-									className: 'npcink-toolbox-editor-support__image-prompt-label',
-									htmlFor: imagePromptId,
-								},
-								__('AI image prompt', 'npcink-toolbox')
-							),
-							createElement('textarea', {
-								id: imagePromptId,
-								className: 'npcink-toolbox-editor-support__image-prompt-textarea',
-								value: imageQuery,
-								placeholder: activePicker.generatePlaceholder,
-								rows: 4,
-								disabled: Boolean(imageRunning),
-								onChange: (event) => setImageQuery(event.target.value),
-							}),
-							createElement(
-								'div',
-								{ className: 'npcink-toolbox-editor-support__image-generate-actions' },
-								createElement(
-									Button,
-									{
-										type: 'submit',
-										variant: 'primary',
-										isBusy: imageRunning === 'generate',
-										disabled: Boolean(imageRunning),
-									},
-									imageRunning === 'generate' ? __('Generating', 'npcink-toolbox') : (activePicker.generateButtonLabel || __('Generate AI image', 'npcink-toolbox'))
-								),
-								activePicker.allowImagePlan ? createElement(
-									Button,
-									{
-										type: 'button',
-										variant: 'secondary',
-										className: 'npcink-toolbox-editor-support__article-search-button',
-										isBusy: imageRunning === 'brief',
-										disabled: Boolean(imageRunning),
-										onClick: runMediaBrief,
-									},
-									imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : activePicker.briefButtonLabel
-								) : null
-							),
-							createElement(
-								'div',
-								{ className: 'npcink-toolbox-editor-support__image-options' },
-								renderAiImageOption(__('Aspect ratio', 'npcink-toolbox'), aiImageAspectRatio, setAiImageAspectRatio, [
-									{ value: '16:9', label: '16:9' },
-									{ value: '1:1', label: '1:1' },
-									{ value: '4:3', label: '4:3' },
-									{ value: '3:4', label: '3:4' },
-									{ value: '9:16', label: '9:16' },
-								]),
-								renderAiImageOption(__('Quality', 'npcink-toolbox'), aiImageResolution, setAiImageResolution, [
-									{ value: 'high', label: __('High', 'npcink-toolbox') },
-									{ value: 'medium', label: __('Medium', 'npcink-toolbox') },
-									{ value: 'low', label: __('Low', 'npcink-toolbox') },
-								]),
-								renderAiImageOption(__('Candidates', 'npcink-toolbox'), aiImageCandidateCount, setAiImageCandidateCount, [
-									{ value: '1', label: '1' },
-									{ value: '2', label: '2' },
-									{ value: '3', label: '3' },
-									{ value: '4', label: '4' },
-								])
-							)
-						) : createElement(
-							'div',
-							{ className: 'npcink-toolbox-editor-support__image-search-row' },
-							createElement('input', {
-								type: 'search',
-								value: imageQuery,
-								placeholder: activePicker.searchPlaceholder,
-								onChange: (event) => setImageQuery(event.target.value),
-							}),
-							createElement(
-								Button,
-								{
-									type: 'submit',
-									variant: 'primary',
-									isBusy: imageRunning === 'search' || imageRunning === 'auto',
-									disabled: Boolean(imageRunning),
-								},
-								sourceSubmitLabel
-							)
-						)
-					),
-					imageGuidance ? createElement(Notice, { status: 'info', isDismissible: false }, imageGuidance) : null,
-					imageError ? createElement(Notice, { status: 'error', isDismissible: false }, imageError) : null,
+						imageGuidance ? createElement(Notice, { status: 'info', isDismissible: false }, imageGuidance) : null,
+						imageError ? createElement(Notice, { status: 'error', isDismissible: false }, imageError) : null,
 					createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__image-workspace' },
@@ -4712,6 +4722,9 @@
 						createElement(
 							'section',
 							{ className: 'npcink-toolbox-editor-support__image-inspector' },
+							imageModeControl,
+							sourceSearchForm,
+							aiGenerationPanel,
 							renderSelectedImagePanel(
 								selectedImage,
 								inspectorSeo,
