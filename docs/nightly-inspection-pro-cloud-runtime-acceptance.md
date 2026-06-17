@@ -39,11 +39,16 @@ The product shape is Cloud-first, not cloud-only:
   kept inside `Advanced details`.
 - Result merging is review-only. It may add Cloud runtime details and writing
   preparation signals to the Morning Brief, but it must not create Core
-  proposals or write WordPress content.
+  proposals automatically or write WordPress content.
 - When Cloud returns a `priority_queue`, Toolbox may expose a bounded,
   sanitized review queue in the merged Morning Brief so the operator can see
   what to review first. This is Cloud result detail only; it is not a local
   queue, worker, lease, retry, or scheduling surface.
+- The operator may explicitly select Morning Brief review items and submit one
+  blocked Core review proposal through Adapter/Core `from-plan` intake. The
+  generated `nightly_site_inspection_review_plan` keeps `proposal_ready=false`
+  and requires human title/content input before approval, preflight, or final
+  execution can proceed.
 - The panel keeps a browser-local `Recent run` entry so an operator can reload
   the last visible run ID, check Cloud status, or read Cloud result without
   creating a server-side run table.
@@ -52,8 +57,9 @@ The product shape is Cloud-first, not cloud-only:
   quota, and next action only.
 - The main result surface shows `Cloud run detail` for read-only run state and
   `Core handoff` for review direction. Merged results use `Review in Core` as
-  the next-step entry, but the Toolbox panel does not submit proposals
-  automatically.
+  the next-step entry. Toolbox may submit a proposal only after the operator
+  selects specific review items; it does not approve, preflight, execute, or
+  write content.
 - When quota is exhausted, new runs are disabled while existing run IDs can
   still be refreshed or loaded.
 
@@ -68,8 +74,9 @@ without opening raw payloads:
   priorities, Cloud review items, or the bounded Cloud `priority_queue` before
   showing raw payload details.
 - Where should approval and write work happen? The next-step action must be
-  `Review in Core`, and the copy must state that Toolbox does not create
-  proposals or write content.
+  `Review in Core`, and the copy must state that Toolbox only creates selected,
+  blocked review proposals while Core/Adapter own approval, preflight,
+  execution, and final write boundaries.
 
 ## Explicit Non-Goals
 
@@ -123,7 +130,8 @@ Expected visible result:
   status/result from Cloud;
 - low-frequency manual status/result controls are in `Advanced details`;
 - merged results expose a `Review in Core` link as the next-step entry, but
-  do not create a Core proposal automatically.
+- only selected Morning Brief items can create one blocked Core review proposal;
+  no Core proposal is created automatically.
 
 ## Boundary Check
 

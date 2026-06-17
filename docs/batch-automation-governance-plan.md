@@ -127,7 +127,15 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
 
 ## Implementation Order
 
-1. Stabilize `media_optimization_v1` batch review sets.
+1. Prove the OpenClaw/Adapter selected-batch execution contract.
+   Batch media replacement should first work as an OpenClaw/Adapter governed
+   path with selected actions, execution profile allowlist evidence, Core
+   approval, commit preflight, per-action result payloads, retry guidance, and
+   final Abilities callbacks. For media conversion, reuse the existing
+   `adopt-cloud-media-derivative` / `replace-media-file` / `restore-media-backup`
+   ability path that the single-image Optimize Existing Image smoke already
+   proves. Do not build a Toolbox-specific replacement writer.
+2. Stabilize `media_optimization_v1` batch review sets.
    The product surface should build a bounded review plan, show eligible and
    blocked candidates, generate selected previews, and submit only selected Core
    reviews. The local automation runtime contract anchor for this first target
@@ -135,13 +143,19 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
    `npcink_local_automation_media_conversion_review_set.v1`, which validates the
    review-set shape without adding a queue, scheduler, proposal creator, or
    WordPress write path.
-2. Normalize batch response contracts.
+3. Productize the accepted OpenClaw path as a Toolbox fixed button.
+   After the OpenClaw/Adapter selected-batch execution proof is accepted,
+   Toolbox may add a visible "replace original image" or equivalent action that
+   calls the accepted path and renders Adapter/Core/Abilities results. The UI
+   must still show eligibility, selected previews, Core approval/preflight
+   posture, per-item execution status, rollback evidence, and retry guidance.
+4. Normalize batch response contracts.
    Add the same eligibility, blocked-item, retryability, and operator-next-action
    fields to new batch planning artifacts before adding more batch surfaces.
-3. Extend content metadata only as governed handoff.
+5. Extend content metadata only as governed handoff.
    Existing excerpt, category, and tag choices may become Core proposal plans;
    missing term creation and direct local apply remain out of scope.
-4. Add more fixed batch candidates only after the first surface is accepted.
+6. Add more fixed batch candidates only after the first surface is accepted.
    Possible follow-ups are media ALT review, taxonomy/tag review, and internal-link
    review sets. Do not add old-article source coverage as a separate Toolbox local batch candidate. Nightly Inspection Cloud Batch already owns site-wide article/data analysis; keep source coverage local only for current-post publish preflight or a single operator-triggered review artifact.
 

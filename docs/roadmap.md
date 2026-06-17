@@ -73,6 +73,8 @@ Target features:
 - batch review-set planning for media optimization, with explicit eligibility
   summaries, blocked reasons, selected previews, and selected Core proposal
   submissions;
+- OpenClaw/Adapter selected-batch execution proof before any Toolbox batch
+  "replace original image" button is treated as product-ready;
 - article write plan artifact for one reviewed human draft as a fallback
   off-ramp;
 - set featured image proposal handoff;
@@ -149,6 +151,10 @@ Toolbox may adopt rule-first eligibility, blocked-item reporting, selected
 previews, and operator recovery guidance, but it must not import local queue
 runtime, unauthenticated triggers, administrator impersonation, automatic
 publishing, automatic term creation, or direct WordPress writes.
+For batch media replacement, the canonical order is OpenClaw first and Toolbox
+second: Adapter proves selected-batch execution with Core approval/preflight,
+execution profiles, per-action results, and Abilities callbacks; Toolbox then
+turns that accepted path into a fixed best-practice button.
 
 The first local automation runtime step is Phase 1 only: Toolbox may bundle
 `modules/local-automation-runtime/` for contract docs, deterministic scoring,

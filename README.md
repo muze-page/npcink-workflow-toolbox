@@ -71,6 +71,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Content Discoverability Context](docs/content-discoverability-context.md)
 - [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
+- [OpenClaw Batch Media Optimization Handoff](docs/openclaw-batch-media-optimization-handoff.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
 - [Article Assistant Workbench](docs/article-assistant-workbench.md)
 - [Media Optimization V1](docs/media-optimization-v1.md)
@@ -249,6 +250,11 @@ recipe guidance, and Core proposal handoff as OpenClaw natural-language flows.
 Toolbox must not turn those buttons into a separate approval store, media
 registry, workflow runtime, prompt/model control plane, or WordPress write
 executor.
+Batch replacement must be developed and accepted first as an OpenClaw/Adapter
+contract with Core approval, commit preflight, execution profile evidence,
+per-action results, and Abilities media replacement callbacks. Toolbox then
+exposes that accepted path as the fixed `media_optimization_v1` best-practice
+button; it must not create a separate batch writer.
 
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
@@ -424,7 +430,9 @@ Toolbox does not store the site media policy, own Cloud credentials, create an
 artifact registry, approve proposals, execute proposals, replace files, write
 attachment metadata, patch post content, or update options/theme mods directly.
 See [Media Optimization V1](docs/media-optimization-v1.md) for the fixed
-workflow contract and expansion rule.
+workflow contract and expansion rule, and
+[OpenClaw Batch Media Optimization Handoff](docs/openclaw-batch-media-optimization-handoff.md)
+for the two-stage batch implementation order.
 
 ## Connector Configuration
 

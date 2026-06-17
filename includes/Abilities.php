@@ -302,6 +302,21 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
+			'npcink-toolbox/build-nightly-inspection-review-plan' => $this->definition(
+				__( 'Build Nightly Inspection Review Plan', 'npcink-toolbox' ),
+				__( 'Build a blocked Core review proposal plan from selected Nightly Morning Brief items without writing WordPress content.', 'npcink-toolbox' ),
+				array( 'selected_items' ),
+				array( $this, 'build_nightly_inspection_review_plan' ),
+				'cap.toolbox.workflow_suggest',
+				array(
+					'data_classification' => 'planning_artifact',
+					'composition_role'    => 'core_nightly_inspection_review_plan',
+					'local_recipe_id'     => 'nightly_inspection_review_v1',
+					'ability_recipe_ref'  => 'workflow/nightly_site_inspection_review',
+					'provider_execution'  => 'none',
+					'write_posture'       => 'core_proposal_handoff',
+				)
+			),
 			'npcink-toolbox/build-content-metadata-apply-plan' => $this->definition(
 				__( 'Build Content Metadata Apply Plan', 'npcink-toolbox' ),
 				__( 'Build a Core-ready content_metadata_apply_plan from reviewed excerpt, category, and tag choices without writing WordPress content.', 'npcink-toolbox' ),
@@ -561,6 +576,10 @@ final class Abilities {
 
 	public function build_site_knowledge_review_plan( $input = array() ) {
 		return $this->client->build_site_knowledge_review_plan( is_array( $input ) ? $input : array() );
+	}
+
+	public function build_nightly_inspection_review_plan( $input = array() ) {
+		return $this->client->build_nightly_inspection_review_plan( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_content_metadata_apply_plan( $input = array() ) {
