@@ -26,6 +26,34 @@ callback layer.
 | `npcink-abilities-toolkit` | WordPress ability schemas, metadata, dry-run previews, and final callback implementations. | Approval truth, audit truth, workflow runtime, or Cloud queue state. |
 | `magick-ai-adapter` | Authenticated channel behavior, Core proposal relay, capability guidance, execution profile allowlist, and approved execution proxy. | Local workflow runtime, scheduler truth, or unapproved writes. |
 
+## Cloud Development Sync Packet
+
+Use this packet when continuing the Cloud Batch Runtime work in another session:
+
+- Cloud should own the difficult runtime parts: queue-backed execution,
+  long-running analysis, retry/dead-letter detail, entitlement and quota
+  enforcement, result retention, observability, and diagnostics.
+- Toolbox should stay the local WordPress control and review surface: bounded
+  snapshot submit, local enable/disable or trigger settings, status/result
+  display, review-only merge, and operator-triggered Core handoff.
+- Cloud must not become WordPress schedule truth, Core approval truth, a second
+  ability registry, a second workflow registry, or a WordPress write owner.
+- Cloud run submission must originate from a local bounded intent or local
+  trigger contract and must stop when local controls disable it.
+- Cloud result payloads should be review artifacts with evidence, blocked
+  reasons, retry guidance, and correlation ids; they must not contain hidden
+  write authorization or provider secrets.
+- Core remains the only proposal/approval/preflight/audit owner. Adapter remains
+  the approved execution proxy. Abilities remain the final WordPress callback
+  layer.
+
+Old article source coverage is part of this Cloud Nightly Inspection shape when it
+means site-wide or multi-article analysis. Do not add it as a separate Toolbox local batch candidate
+while Cloud Nightly Inspection is already covering article/data checks. Toolbox may
+keep current-post publish preflight or a single operator-triggered review artifact,
+but whole-site old-article source coverage belongs in Cloud result detail and review
+handoff.
+
 ## Integration Shape
 
 The intended Pro path is:

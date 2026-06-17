@@ -122,12 +122,12 @@ Candidate buttons:
 - find internal-link opportunities;
 - find configured image-source candidates for featured or inline images;
 - build content discoverability suggestions from the operator-filled context;
-- run publish/readiness preflight for source coverage, duplicate risk, and
-  missing media metadata;
+- run current-post publish/readiness preflight for source coverage, duplicate
+  risk, and missing media metadata;
 - optimize old article;
 - complete media alt and caption suggestions for site-level media review;
 - build FAQ suggestions;
-- check source coverage.
+- check source coverage for the current editor or one explicit operator review.
 - generate article outline with references only as an Article Assistant
   fallback after the operator chooses a writing-support route.
 - rerank source, image, and vector candidates with Jina Reranker.
@@ -165,6 +165,8 @@ Current Nightly Inspection automation should follow ADR-005: no plugin-side
 Action Scheduler for Basic or Pro, WP-Cron only as local fallback preview or
 future bounded local submit trigger, and Cloud Batch Runtime as the Pro
 orchestration path without Cloud scheduler truth or WordPress write authority.
+Site-wide or multi-article old-article source coverage overlaps with Nightly Inspection
+and should stay in Cloud Batch Runtime result detail and reviewed Core handoff; it should not become a separate Toolbox local batch surface.
 
 ## Deferred Decisions
 

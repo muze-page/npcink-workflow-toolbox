@@ -142,8 +142,8 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
    Existing excerpt, category, and tag choices may become Core proposal plans;
    missing term creation and direct local apply remain out of scope.
 4. Add more fixed batch candidates only after the first surface is accepted.
-   Possible follow-ups are old article refresh, media ALT review, source
-   coverage checks, and internal-link review sets.
+   Possible follow-ups are media ALT review, taxonomy/tag review, and internal-link
+   review sets. Do not add old-article source coverage as a separate Toolbox local batch candidate. Nightly Inspection Cloud Batch already owns site-wide article/data analysis; keep source coverage local only for current-post publish preflight or a single operator-triggered review artifact.
 
 ## Acceptance Gate
 
