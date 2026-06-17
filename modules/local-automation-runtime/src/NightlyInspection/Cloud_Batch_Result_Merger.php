@@ -20,6 +20,7 @@ final class Cloud_Batch_Result_Merger {
 		$merged         = $morning_brief;
 		$merged_count   = 0;
 		$operational    = $this->operational_detail( $cloud_result, count( $actions_by_key ) );
+		$priority_queue = $this->priority_queue( $cloud_result, $actions_by_key );
 
 		if ( isset( $merged['priorities'] ) && is_array( $merged['priorities'] ) ) {
 			foreach ( $merged['priorities'] as $index => $priority ) {
@@ -51,10 +52,15 @@ final class Cloud_Batch_Result_Merger {
 			'retry_guidance'         => $operational['retry_guidance'],
 			'action_count'           => count( $actions_by_key ),
 			'merged_priority_count'  => $merged_count,
+			'priority_queue_count'   => count( $priority_queue ),
 			'direct_wordpress_write' => false,
 			'final_write_path'       => 'core_proposal_required',
 			'requires_local_review'  => true,
 		);
+
+		if ( array() !== $priority_queue ) {
+			$merged['priority_queue'] = $priority_queue;
+		}
 
 		$merged['writing_preparation'] = $this->merge_writing_preparation(
 			isset( $merged['writing_preparation'] ) && is_array( $merged['writing_preparation'] ) ? $merged['writing_preparation'] : array(),
@@ -79,9 +85,11 @@ final class Cloud_Batch_Result_Merger {
 	 * @return array<string,mixed>
 	 */
 	public function patch( array $cloud_result ): array {
-		$actions = array_values( $this->actions_by_key( $cloud_result ) );
-		$operational = $this->operational_detail( $cloud_result, count( $actions ) );
+		$actions_by_key   = $this->actions_by_key( $cloud_result );
+		$actions          = array_values( $actions_by_key );
+		$operational      = $this->operational_detail( $cloud_result, count( $actions ) );
 		$action_summaries = array_map( array( $this, 'cloud_action_summary' ), $actions );
+		$priority_queue   = $this->priority_queue( $cloud_result, $actions_by_key );
 
 		return array(
 			'contract_version'       => self::CONTRACT_VERSION,
@@ -99,6 +107,8 @@ final class Cloud_Batch_Result_Merger {
 			'retry_guidance'         => $operational['retry_guidance'],
 			'actions'                => $action_summaries,
 			'action_count'           => count( $actions ),
+			'priority_queue'         => $priority_queue,
+			'priority_queue_count'   => count( $priority_queue ),
 			'direct_wordpress_write' => false,
 			'final_write_path'       => 'core_proposal_required',
 			'requires_local_review'  => true,
@@ -211,6 +221,93 @@ final class Cloud_Batch_Result_Merger {
 		}
 
 		return array();
+	}
+
+	/**
+	 * @param array<string,mixed>                $cloud_result Cloud result.
+	 * @param array<string,array<string,mixed>> $actions_by_key Cloud actions indexed by object.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function priority_queue( array $cloud_result, array $actions_by_key ): array {
+		$queue = $this->extract_priority_queue( $cloud_result );
+		$items = array();
+
+		foreach ( $queue as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$summary = $this->priority_queue_item( $item, $actions_by_key );
+			if ( 0 === (int) $summary['object_id'] || '' === (string) $summary['object_type'] ) {
+				continue;
+			}
+			$items[] = $summary;
+			if ( count( $items ) >= 10 ) {
+				break;
+			}
+		}
+
+		if ( array() === $items ) {
+			foreach ( $actions_by_key as $action ) {
+				$summary = $this->priority_queue_item( $action, $actions_by_key );
+				if ( 0 === (int) $summary['object_id'] || '' === (string) $summary['object_type'] ) {
+					continue;
+				}
+				$items[] = $summary;
+				if ( count( $items ) >= 10 ) {
+					break;
+				}
+			}
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @param array<string,mixed> $cloud_result Cloud result.
+	 * @return array<int,mixed>
+	 */
+	private function extract_priority_queue( array $cloud_result ): array {
+		if ( isset( $cloud_result['morning_brief'] ) && is_array( $cloud_result['morning_brief'] ) ) {
+			$brief = $cloud_result['morning_brief'];
+			if ( isset( $brief['priority_queue'] ) && is_array( $brief['priority_queue'] ) ) {
+				return $brief['priority_queue'];
+			}
+		}
+		if ( isset( $cloud_result['priority_queue'] ) && is_array( $cloud_result['priority_queue'] ) ) {
+			return $cloud_result['priority_queue'];
+		}
+		if ( isset( $cloud_result['result'] ) && is_array( $cloud_result['result'] ) ) {
+			return $this->extract_priority_queue( $cloud_result['result'] );
+		}
+
+		return array();
+	}
+
+	/**
+	 * @param array<string,mixed>                $item Queue item.
+	 * @param array<string,array<string,mixed>> $actions_by_key Cloud actions indexed by object.
+	 * @return array<string,mixed>
+	 */
+	private function priority_queue_item( array $item, array $actions_by_key ): array {
+		$key = $this->object_key( $item );
+		$action = '' !== $key && isset( $actions_by_key[ $key ] ) ? $actions_by_key[ $key ] : array();
+		$reason_codes = $this->string_list( $item['reason_codes'] ?? ( $action['reason_codes'] ?? array() ), 12 );
+
+		return array(
+			'action_id'              => $this->bounded_text( (string) ( $item['action_id'] ?? $action['action_id'] ?? '' ), 120 ),
+			'object_type'            => $this->sanitize_key( (string) ( $item['object_type'] ?? $action['object_type'] ?? $item['type'] ?? $action['type'] ?? '' ) ),
+			'object_id'              => max( 0, (int) ( $item['object_id'] ?? $action['object_id'] ?? $item['post_id'] ?? $action['post_id'] ?? $item['attachment_id'] ?? $action['attachment_id'] ?? 0 ) ),
+			'quality_score'          => max( 0, min( 100, (int) ( $item['score'] ?? $item['quality_score'] ?? $action['score'] ?? $action['quality_score'] ?? 0 ) ) ),
+			'severity'               => $this->sanitize_key( (string) ( $item['severity'] ?? $action['severity'] ?? 'notice' ) ),
+			'priority_reason'        => $this->bounded_text( (string) ( $item['priority_reason'] ?? $action['priority_reason'] ?? '' ), 500 ),
+			'reason_codes'           => $reason_codes,
+			'group_ids'              => $this->string_list( $item['group_ids'] ?? ( $action['group_ids'] ?? array() ), 8 ),
+			'evidence_summary'       => $this->bounded_text( (string) ( $item['evidence_summary'] ?? $action['evidence_summary'] ?? '' ), 500 ),
+			'recommended_next_action' => $this->sanitize_key( (string) ( $item['recommended_next_action'] ?? $action['recommended_next_action'] ?? 'review_item' ) ),
+			'direct_wordpress_write' => false,
+			'final_write_path'       => 'core_proposal_required',
+			'requires_local_review'  => true,
+		);
 	}
 
 	/**

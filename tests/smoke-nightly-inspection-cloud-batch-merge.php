@@ -75,11 +75,15 @@ $cloud_result = array(
 	),
 	'actions'             => array(
 		array(
+			'action_id'      => 'action_001',
 			'object_type'    => 'post',
 			'object_id'      => 101,
+			'score'          => 62,
 			'quality_score'  => 62,
 			'severity'       => 'warning',
 			'reason_codes'   => array( 'needs_refresh', 'weak_internal_links' ),
+			'priority_reason' => 'Lower score with stale content and weak internal links.',
+			'recommended_next_action' => 'review_content',
 			'recommendation' => 'Refresh the stale article before drafting new follow-up content.',
 			'evidence_refs'  => array(
 				array(
@@ -87,6 +91,23 @@ $cloud_result = array(
 					'label'  => 'Local post metadata',
 					'source' => 'local_snapshot',
 				),
+			),
+		),
+	),
+	'morning_brief'       => array(
+		'priority_queue' => array(
+			array(
+				'action_id'               => 'action_001',
+				'object_type'             => 'post',
+				'object_id'               => 101,
+				'score'                   => 62,
+				'severity'                => 'warning',
+				'priority_reason'         => 'Lower score with stale content and weak internal links.',
+				'reason_codes'            => array( 'needs_refresh', 'weak_internal_links' ),
+				'group_ids'               => array( 'content_quality' ),
+				'evidence_summary'        => 'The post is stale and has weak internal links.',
+				'recommended_next_action' => 'review_content',
+				'direct_wordpress_write'  => false,
 			),
 		),
 	),
@@ -101,6 +122,9 @@ if ( 'nightly_site_inspection_cloud_batch_merge.v1' !== ( $patch['contract_versi
 }
 if ( 1 !== ( $patch['action_count'] ?? 0 ) ) {
 	$fail( 'Cloud Batch patch should expose one action.' );
+}
+if ( 1 !== ( $patch['priority_queue_count'] ?? 0 ) ) {
+	$fail( 'Cloud Batch patch should expose one priority queue item.' );
 }
 if ( false !== ( $patch['direct_wordpress_write'] ?? true ) ) {
 	$fail( 'Cloud Batch patch must not grant direct writes.' );
@@ -149,6 +173,15 @@ if ( 1 !== (int) ( $merged['cloud_runtime']['eligibility_summary']['reviewable_c
 }
 if ( 'needs_refresh' !== ( $merged['priorities'][0]['cloud_runtime']['reason_codes'][0] ?? '' ) ) {
 	$fail( 'Merged Morning Brief should attach Cloud runtime detail to the matching priority.' );
+}
+if ( 1 !== (int) ( $merged['cloud_runtime']['priority_queue_count'] ?? 0 ) ) {
+	$fail( 'Merged Morning Brief should count Cloud priority queue items.' );
+}
+if ( 'action_001' !== ( $merged['priority_queue'][0]['action_id'] ?? '' ) ) {
+	$fail( 'Merged Morning Brief should expose the Cloud priority queue.' );
+}
+if ( false !== ( $merged['priority_queue'][0]['direct_wordpress_write'] ?? true ) ) {
+	$fail( 'Merged priority queue items must remain review-only.' );
 }
 if ( 'cloud_batch_runtime' !== ( $merged['writing_preparation'][0]['source'] ?? '' ) ) {
 	$fail( 'Merged Morning Brief should add Cloud writing preparation evidence.' );

@@ -40,6 +40,10 @@ The product shape is Cloud-first, not cloud-only:
 - Result merging is review-only. It may add Cloud runtime details and writing
   preparation signals to the Morning Brief, but it must not create Core
   proposals or write WordPress content.
+- When Cloud returns a `priority_queue`, Toolbox may expose a bounded,
+  sanitized review queue in the merged Morning Brief so the operator can see
+  what to review first. This is Cloud result detail only; it is not a local
+  queue, worker, lease, retry, or scheduling surface.
 - The panel keeps a browser-local `Recent run` entry so an operator can reload
   the last visible run ID, check Cloud status, or read Cloud result without
   creating a server-side run table.
@@ -61,7 +65,8 @@ without opening raw payloads:
 - Did the Cloud inspection finish? `Cloud run detail` and the run summary must
   show run state, worker phase, and whether Cloud is still processing.
 - What is most worth reviewing? `Core handoff` must summarize matched local
-  priorities or Cloud review items before showing raw payload details.
+  priorities, Cloud review items, or the bounded Cloud `priority_queue` before
+  showing raw payload details.
 - Where should approval and write work happen? The next-step action must be
   `Review in Core`, and the copy must state that Toolbox does not create
   proposals or write content.
