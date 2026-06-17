@@ -80,19 +80,11 @@
 }
 
 .npcink-toolbox-editor-support__toolbar-icon {
-	display: inline-grid;
-	place-items: center;
+	display: block;
 	width: 24px;
 	height: 24px;
-	color: #fff;
-	background: #3858e9;
-	border: 2px solid #fff;
-	border-radius: 999px;
-	box-shadow: 0 0 0 2px #1d2327;
-	font-size: 10px;
-	font-weight: 700;
-	line-height: 1;
-	letter-spacing: 0;
+	flex: 0 0 24px;
+	overflow: visible;
 }
 
 .npcink-toolbox-editor-support__block-toolbar-icon {

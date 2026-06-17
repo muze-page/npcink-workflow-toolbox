@@ -801,6 +801,7 @@ toolbox_assert( false !== strpos( $auto_sync, 'health_snapshot' ) && false !== s
 $editor_js = file_get_contents( $root . '/assets/editor-content-support.js' );
 $editor_css = file_get_contents( $root . '/assets/editor-content-support.css' );
 toolbox_assert( false !== strpos( $editor_js, 'PluginSidebar' ) && false !== strpos( $editor_js, 'npcink-content-support-sidebar' ), 'Editor JavaScript registers a Npcink Content Support plugin sidebar.' );
+toolbox_assert( false !== strpos( $editor_js, "'svg'" ) && false !== strpos( $editor_js, "createElement('text'" ) && false !== strpos( $editor_js, 'npcink-toolbox-editor-support__toolbar-icon' ) && false === strpos( $editor_js, "const sidebarIcon = createElement('span'" ), 'Editor JavaScript uses a stable SVG AI icon for the plugin sidebar toolbar entry.' );
 toolbox_assert( false === strpos( $editor_js, 'PluginDocumentSettingPanel' ) && false === strpos( $editor_js, 'openGeneralSidebar' ), 'Editor JavaScript does not add a duplicate document settings shortcut.' );
 foreach ( array( 'progressive_recommendations', 'writing_support', 'title_suggestions', 'article_outline', 'polish_notes', 'publish_preflight', 'discoverability', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'internal_links', 'image_candidates', 'image_alt_suggestions' ) as $editor_intent ) {
 	toolbox_assert( false !== strpos( $editor_js, $editor_intent ), "Editor Content Support exposes fixed flow intent {$editor_intent}." );
