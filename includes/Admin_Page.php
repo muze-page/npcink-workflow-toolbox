@@ -2516,6 +2516,7 @@ final class Admin_Page {
 					<button type="button" class="button" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build review plan', 'npcink-toolbox' ); ?></button>
 					<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'npcink-toolbox' ); ?></button>
 					<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected Core reviews', 'npcink-toolbox' ); ?></button>
+					<button type="button" class="button button-primary" data-toolbox-execute-media-batch-replacements disabled><?php esc_html_e( 'Approve and execute replacements', 'npcink-toolbox' ); ?></button>
 				</div>
 				<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 			</div>
