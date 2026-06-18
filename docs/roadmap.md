@@ -72,7 +72,9 @@ Target features:
 - image candidate adoption proposal handoff;
 - consolidate **Optimize Existing Image** as `media_optimization_v1`, the fixed
   governed media optimization workflow over the existing media derivative,
-  reviewed metadata, Adapter recipe, and Core proposal handoff surface;
+  reviewed metadata, Adapter recipe, and Core proposal handoff surface
+  (validated and frozen for V1 after the 2026-06-18 real-attachment operator
+  trial);
 - batch review-set planning for media optimization, with explicit eligibility
   summaries, blocked reasons, selected previews, and selected Core proposal
   submissions;
@@ -146,6 +148,7 @@ media ALT suggestions response with bounded eligibility, selected items,
 blocked reasons, retry guidance, and an explicit no-write posture. It uses
 media-library metadata only and requires human visual confirmation.
 
+The media optimization operator trial has accepted the current low-risk flow.
 The preferred follow-up order remains:
 
 1. media ALT and caption review set;
@@ -155,7 +158,9 @@ The preferred follow-up order remains:
 These should remain bounded planning or Core handoff surfaces. The media
 ALT/caption P0 must not become direct media metadata writes, automatic proposal
 creation, or media-library batch execution until Abilities, Core, and Adapter
-have an accepted media metadata update path.
+have an accepted media metadata update path. Do not add another write-like batch
+surface beyond `media_optimization_v1` without a new trial and boundary
+decision.
 
 Rule:
 

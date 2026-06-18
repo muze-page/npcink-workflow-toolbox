@@ -1,6 +1,6 @@
 # Media Optimization Stage Summary
 
-Status: current stage closed for validation.
+Status: V1 validated and frozen for follow-up planning.
 
 This summary records the accepted shape of the Cloud-backed media optimization
 work after the first closed-loop proof. It is meant for future maintainers and
@@ -9,8 +9,9 @@ features.
 
 ## Stage Decision
 
-Freeze the first media optimization slice as a governed fixed flow and validate
-real operator usage before expanding capabilities.
+Freeze the first media optimization slice as a governed fixed flow. Real
+operator validation has passed for one single-image execution plus one selected
+batch review set on low-risk local attachments.
 
 The current slice is not a generic workflow runner, a whole-site replacement
 tool, a Cloud-controlled media registry, or a second WordPress control plane.
@@ -36,6 +37,8 @@ gate in [Media Optimization Release Checklist](media-optimization-release-checkl
 The selected batch path is covered separately by
 `composer smoke:media-derivative-batch-execute`; it proves selected review-set
 execution only, not unattended whole-library automation.
+The first real-attachment validation is recorded in
+[Media Optimization Operator Trial Results - 2026-06-18](media-optimization-operator-trial-results-2026-06-18.md).
 
 ## Ownership Boundary
 
@@ -98,13 +101,19 @@ composer smoke:media-derivative-batch-execute
 The release checklist must pass the six closed-loop criteria: preview,
 preflight, proposal, execution, evidence, and rollback.
 
+## Current Closeout
+
+`media_optimization_v1` should now be treated as done for this stage. Do not add
+more replacement mechanics, background execution, or broader media mutation to
+this V1. Future work should maintain the existing contract and fix defects only.
+
 ## Next Stage
 
 Do not add video transcoding, global search-replace, complex media registry
 features, unattended whole-library replacement, or more image operations by
-default. First run the
-[Media Optimization Operator Trial](media-optimization-operator-trial.md) and
-collect real operator feedback on whether the fixed flow is understandable:
+default. The
+[Media Optimization Operator Trial](media-optimization-operator-trial.md) has
+accepted the fixed flow for the current low-risk scope:
 
 - Do users know to generate preview before submitting Core review?
 - Do they understand attachment adoption versus content URL repair versus
@@ -113,9 +122,10 @@ collect real operator feedback on whether the fixed flow is understandable:
 - Do batch controls feel like selected review sets rather than whole-site
   replacement?
 
-Only after that validation should the next media capability be selected. The
-preferred next batch candidates are media ALT/caption review sets first,
-taxonomy/tag review sets second, and internal-link review sets third. Do not
-add old-article source coverage as a local Toolbox batch surface; site-wide or
-multi-article source coverage belongs in Nightly Inspection Cloud Batch result
-detail and reviewed Core handoff.
+The next batch capability is media ALT/caption review sets. Keep it as bounded
+suggestion/planning output or Core handoff evidence; it must not become a
+direct media metadata writer. Taxonomy/tag review sets remain second, and
+internal-link review sets remain third. Do not add old-article source coverage
+as a local Toolbox batch surface; site-wide or multi-article source coverage
+belongs in Nightly Inspection Cloud Batch result detail and reviewed Core
+handoff.

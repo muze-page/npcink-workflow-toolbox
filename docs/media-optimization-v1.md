@@ -1,11 +1,16 @@
 # Media Optimization V1
 
-Status: active fixed workflow contract.
+Status: validated fixed workflow contract; V1 frozen for defect fixes only.
 
 `media_optimization_v1` names the existing **Optimize Existing Image** surface
 as a fixed, governed Toolbox workflow. This is a product contract over the
 current media derivative, metadata review, Adapter recipe, and Core proposal
 handoff. It is not a new workflow runtime.
+
+The current V1 has passed release smokes and one real-attachment operator trial:
+one single-image execution, one selected batch review set, governed execution,
+and governed restore. See
+[Media Optimization Operator Trial Results - 2026-06-18](media-optimization-operator-trial-results-2026-06-18.md).
 
 ## Position
 
@@ -173,7 +178,13 @@ optimization into multiple unrelated proposals.
 
 ## Expansion Rule
 
-Only after this fixed surface is clear and tested should the same pattern be
-copied to another fixed workflow such as publish preflight or old-article
-refresh. Do not generalize it into a workflow builder until a separate runtime
+This V1 should not grow additional replacement mechanics after validation.
+Defect fixes and copy clarifications are acceptable; new media write surfaces,
+unattended execution, video transcoding, global search-replace, or whole-library
+replacement require a separate boundary decision.
+
+The next batch pattern should be copied to a lower-risk surface first: media
+ALT/caption review sets. That follow-up should remain suggestion/planning or
+Core handoff evidence, not a direct Toolbox media metadata writer. Do not
+generalize this workflow into a workflow builder until a separate runtime
 decision defines storage, retries, leases, quotas, cancellation, and ownership.
