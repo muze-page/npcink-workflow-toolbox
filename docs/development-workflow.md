@@ -149,11 +149,12 @@ NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/
 ```
 
 This opens the local editor, opens the Npcink Content Support sidebar, verifies
-the automatic Fast recommendations request, checks candidate source/action
-labels, clicks Refresh, and confirms no Cloud, Adapter, or Core proposal route
-is called. It is intentionally outside `composer test:all` because it depends on
-a running local WordPress site, WP-CLI login-cookie generation, Playwright, and
-a local browser.
+the automatic local progressive request stays hidden on success, opens the
+compact `Local suggestions` entry, checks candidate source/action labels,
+clicks Refresh, and confirms no Cloud, Adapter, or Core proposal route is
+called. It is intentionally outside `composer test:all` because it depends on a
+running local WordPress site, WP-CLI login-cookie generation, Playwright, and a
+local browser.
 
 For the post-editor review artifact surface, run:
 

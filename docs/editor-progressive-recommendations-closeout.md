@@ -42,8 +42,9 @@ The editor sidebar now:
 
 - prefetches the progressive result after the sidebar has editor context;
 - applies a 2.5 second timeout fallback;
-- shows `Fast recommendations`, local candidate count, and fingerprint status;
-- limits quick actions to the top three focused next steps;
+- keeps successful local suggestions hidden by default behind a compact `Local
+  suggestions` entry;
+- automatically expands only for warning, error, or empty-context states;
 - opens a `progressive recommendations` review view without running a new Cloud
   request.
 
@@ -100,10 +101,10 @@ The implementation was verified with these gates:
 Browser smoke confirmed:
 
 - the `Npcink 内容支持` toolbar button opens the sidebar;
-- the progressive panel shows `Local suggestions are ready.`;
-- the panel shows local candidate count and `Fingerprint ready`;
-- quick actions are limited to three focused actions plus Review/Refresh;
-- `Review local suggestions` opens the result view;
+- the automatic progressive request completes without showing a default success
+  card;
+- the compact `Local suggestions` entry expands the local detail panel;
+- `View suggestions` opens the result view;
 - result copy does not contain `Matched tokens: .`;
 - result copy does not contain `Matched tokens: this`.
 

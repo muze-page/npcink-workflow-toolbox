@@ -190,14 +190,19 @@ try {
 			dispatch.openGeneralSidebar('npcink-toolbox-editor-content-support/npcink-content-support-sidebar');
 		}
 	});
-	await page.waitForSelector('text=/Fast recommendations|快速推荐/', { timeout: 30000 });
 	await waitForProgressiveRequest(requests, 1);
+	await page.waitForSelector('text=/Run fixed support flows|围绕当前草稿运行固定支持流程/', { timeout: 30000 });
+	const defaultProgressiveCardCount = await page.locator('text=/Fast recommendations|快速推荐|Local suggestions are ready|本地建议已就绪/').count();
+	assert(defaultProgressiveCardCount === 0, 'Successful local progressive recommendations stay hidden by default.');
 
 	const firstRequest = progressiveRequests(requests)[0];
 	assert(firstRequest.method === 'POST', 'Automatic prefetch uses POST /editor/content-support.');
 	assert(firstRequest.body.includes('progressive_recommendations'), 'Automatic prefetch sends the progressive_recommendations intent.');
 	assert(!/writing_support|proposal|adapterRestUrl/i.test(firstRequest.body), 'Automatic prefetch does not send writing support or proposal handoff data.');
 	assert(forbiddenRequests(requests).length === 0, 'Automatic prefetch does not call Cloud, Adapter, or Core proposal routes.');
+
+	await page.getByRole('button', { name: /Local suggestions|本地建议/ }).click();
+	await page.waitForSelector('text=/View suggestions|查看建议/', { timeout: 10000 });
 
 	const beforeRefresh = progressiveRequests(requests).length;
 	await page.getByRole('button', { name: /Refresh|刷新/ }).click();
@@ -206,7 +211,7 @@ try {
 	assert(afterRefresh === beforeRefresh + 1, 'Refresh triggers exactly one more local progressive request.');
 	assert(forbiddenRequests(requests).length === 0, 'Refresh remains local-only and does not call Cloud, Adapter, or Core proposal routes.');
 
-	await page.getByRole('button', { name: /Review local suggestions|查看本地建议/ }).click();
+	await page.getByRole('button', { name: /View suggestions|查看建议/ }).click();
 	await page.waitForSelector('text=/Source:|来源：|Action:|动作：/', { timeout: 10000 });
 	const reviewText = await page.locator('.npcink-toolbox-editor-support').innerText({ timeout: 10000 });
 	assert(/Source:|来源：/.test(reviewText) && /Action:|动作：/.test(reviewText), 'Review view shows candidate source and action labels.');

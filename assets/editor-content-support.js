@@ -406,7 +406,7 @@
 			if (error && error.name === 'AbortError') {
 				throw {
 					code: 'npcink_toolbox_progressive_timeout',
-					message: __('Fast recommendation timed out. Showing cached local suggestions if available.', 'npcink-toolbox'),
+					message: __('Local suggestions timed out. Showing cached suggestions if available.', 'npcink-toolbox'),
 				};
 			}
 			throw error;
@@ -694,40 +694,40 @@
 		return Array.isArray(section.recommendation_candidates) ? section.recommendation_candidates.length : 0;
 	}
 
-	function renderProgressiveRecommendationPanel(progressiveResult, progressiveStatus, onOpen, onRefresh) {
+	function shouldShowProgressiveRecommendationPanel(progressiveResult, progressiveStatus, expanded) {
+		if (expanded) {
+			return true;
+		}
+		const status = progressiveStatus && progressiveStatus.status ? progressiveStatus.status : '';
+		if (status === 'warning' || status === 'error') {
+			return true;
+		}
+		return status === 'success' && progressiveSuggestionCount(progressiveResult) === 0;
+	}
+
+	function renderProgressiveRecommendationPanel(progressiveResult, progressiveStatus, expanded, onOpen, onRefresh) {
+		if (!shouldShowProgressiveRecommendationPanel(progressiveResult, progressiveStatus, expanded)) {
+			return null;
+		}
 		const section = progressiveResult && progressiveResult.sections ? progressiveResult.sections.progressive_recommendations : null;
-		const recommendationSet = progressiveResult && progressiveResult.recommendation_set ? progressiveResult.recommendation_set : {};
 		const count = progressiveSuggestionCount(progressiveResult);
-		const nextIntents = section && Array.isArray(section.next_fast_intents) ? section.next_fast_intents : [];
+		const status = progressiveStatus && progressiveStatus.status ? progressiveStatus.status : '';
+		const isLoading = status === 'loading';
+		const statusMessage = progressiveStatus && progressiveStatus.message ? progressiveStatus.message : '';
+		const panelMessage = isLoading
+			? (statusMessage || __('Preparing local suggestions...', 'npcink-toolbox'))
+			: (status === 'error' || status === 'warning'
+			? (statusMessage || __('Local suggestions are unavailable.', 'npcink-toolbox'))
+			: (count ? sprintf(__('%d local suggestions are ready.', 'npcink-toolbox'), count) : __('No local suggestions found for this draft. Add a clearer title, excerpt, or body context, then refresh.', 'npcink-toolbox')));
 		return createElement(
 			'section',
 			{ className: 'npcink-toolbox-editor-support__progressive' },
 			createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__progressive-head' },
-				createElement('strong', null, __('Fast recommendations', 'npcink-toolbox')),
-				createElement('span', null, progressiveStatus && progressiveStatus.message ? progressiveStatus.message : __('Local context is ready for quick review.', 'npcink-toolbox'))
+				createElement('strong', null, __('Local suggestions', 'npcink-toolbox')),
+				createElement('span', null, panelMessage)
 			),
-			createElement(
-				'div',
-				{ className: 'npcink-toolbox-editor-support__progressive-meta' },
-				createElement('span', null, count ? sprintf(__('%d local candidates', 'npcink-toolbox'), count) : __('Waiting for local context', 'npcink-toolbox')),
-				recommendationSet.content_fingerprint ? createElement('span', null, __('Fingerprint ready', 'npcink-toolbox')) : null
-			),
-			nextIntents.length ? createElement(
-				'div',
-				{ className: 'npcink-toolbox-editor-support__progressive-actions' },
-				nextIntents.slice(0, 3).map((intent) => createElement(
-					Button,
-					{
-						key: intent,
-						type: 'button',
-						variant: 'tertiary',
-						onClick: () => onOpen(intent),
-					},
-					formatIntentLabel(intent)
-				))
-			) : null,
 			createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__progressive-actions' },
@@ -738,18 +738,18 @@
 						variant: 'secondary',
 						onClick: () => onOpen('progressive_recommendations'),
 					},
-					__('Review local suggestions', 'npcink-toolbox')
+					__('View suggestions', 'npcink-toolbox')
 				) : null,
 				createElement(
 					Button,
 					{
 						type: 'button',
 						variant: 'tertiary',
-						isBusy: progressiveStatus && progressiveStatus.status === 'loading',
-						disabled: progressiveStatus && progressiveStatus.status === 'loading',
+						isBusy: isLoading,
+						disabled: isLoading,
 						onClick: onRefresh,
 					},
-					progressiveStatus && progressiveStatus.status === 'loading' ? __('Refreshing', 'npcink-toolbox') : __('Refresh', 'npcink-toolbox')
+					isLoading ? __('Refreshing', 'npcink-toolbox') : __('Refresh', 'npcink-toolbox')
 				)
 			)
 		);
@@ -2067,16 +2067,9 @@
 
 		const seo = seoFields || {};
 		const sourceUrl = imageSourceUrl(selectedImage);
-		const existingAttachmentId = findAttachmentId(selectedImage, 0);
-		const providerDetails = imageCandidateProviderDetails(selectedImage);
-		const selectedBoundaryNote = selectOnlyMode
-			? __('Selection is returned to the calling field. Toolbox does not write settings directly.', 'npcink-toolbox')
-			: (paragraphMode ? __('Uses Adapter/Core for media import and media SEO fields. Toolbox does not insert images into the paragraph directly.', 'npcink-toolbox') : (existingAttachmentId > 0 ? __('Existing media can be set as the featured image through local admin consent with Core audit. External candidates still use Adapter/Core import.', 'npcink-toolbox') : __('Uses Adapter/Core for import, media SEO fields, and featured image changes. Toolbox does not write media directly.', 'npcink-toolbox')));
 		const sourceDetailRows = [
 			renderInfoRow(__('Source', 'npcink-toolbox'), imageCandidateSourceLabel(selectedImage), 'source'),
 			renderInfoRow(__('Review', 'npcink-toolbox'), selectedImage.license_review_status ? formatMetaLabel(selectedImage.license_review_status) : '', 'review'),
-			renderInfoRow(__('Size', 'npcink-toolbox'), imageDimensionLabel(selectedImage), 'size'),
-			renderInfoRow(__('Use', 'npcink-toolbox'), selectedImage.recommended_use ? formatMetaLabel(selectedImage.recommended_use) : '', 'use'),
 		].filter(Boolean);
 		return createElement(
 			'aside',
@@ -2172,16 +2165,8 @@
 					{ className: 'npcink-toolbox-editor-support__info-list' },
 					sourceDetailRows
 				) : null,
-				selectedBoundaryNote ? createElement('small', null, selectedBoundaryNote) : null,
 				sourceUrl ? createElement('a', { href: sourceUrl, target: '_blank', rel: 'noreferrer' }, __('Open source', 'npcink-toolbox')) : null,
-				selectedImage.source_type ? createElement('small', null, __('Type: ', 'npcink-toolbox') + formatMetaLabel(selectedImage.source_type)) : null,
-				providerDetails.length ? createElement('small', null, __('Runtime: ', 'npcink-toolbox') + providerDetails.join(' / ')) : null,
-				imageFormatLabel(selectedImage) ? createElement('small', null, __('Format: ', 'npcink-toolbox') + imageFormatLabel(selectedImage)) : null,
-				selectedImage.match_reason ? createElement('small', null, __('Match reason: ', 'npcink-toolbox') + selectedImage.match_reason) : null,
-				Array.isArray(selectedImage.visual_keywords) && selectedImage.visual_keywords.length ? createElement('small', null, __('Visual keywords: ', 'npcink-toolbox') + selectedImage.visual_keywords.slice(0, 6).join(', ')) : null,
-				selectedImage.attribution ? createElement('small', null, selectedImage.attribution) : null,
-				selectedImage.download_location ? createElement('small', null, __('Download tracking preserved', 'npcink-toolbox')) : null,
-				createElement('small', null, __('Filename: ', 'npcink-toolbox') + (seo.file_name || ''))
+				selectedImage.attribution ? createElement('small', null, selectedImage.attribution) : null
 			),
 			renderEditorImageFeedbackControls(selectedImage, feedbackRunning, feedbackStatus, onSubmitFeedback)
 		);
@@ -3650,6 +3635,7 @@
 			const [progressiveResult, setProgressiveResult] = useState(null);
 			const [progressiveStatus, setProgressiveStatus] = useState(null);
 			const [progressiveLoadedKey, setProgressiveLoadedKey] = useState('');
+			const [progressivePanelOpen, setProgressivePanelOpen] = useState(false);
 			const progressiveKey = progressiveRecommendationKey(postContext);
 			const progressiveMountedRef = useRef(false);
 			const progressiveRequestSeqRef = useRef(0);
@@ -3673,6 +3659,10 @@
 				}, progressiveRecommendationDelay(postContext));
 				return () => window.clearTimeout(timer);
 			}, [progressiveKey, progressiveLoadedKey]);
+
+			useEffect(() => {
+				setProgressivePanelOpen(false);
+			}, [progressiveKey]);
 
 			useEffect(() => {
 				const images = extractImageCandidates(imageResult);
@@ -3766,6 +3756,13 @@
 					return;
 				}
 				runFlow(intent);
+			}
+
+			function openProgressivePanel() {
+				setProgressivePanelOpen(true);
+				if (!progressiveResult && (!progressiveStatus || progressiveStatus.status !== 'loading')) {
+					runProgressivePrefetch(progressiveRecommendationKey(postContext), true);
+				}
 			}
 
 			async function runFlow(intent, options) {
@@ -4903,10 +4900,25 @@
 						renderProgressiveRecommendationPanel(
 							progressiveResult,
 							progressiveStatus,
+							progressivePanelOpen,
 							openProgressiveRecommendation,
 							() => runProgressivePrefetch(progressiveRecommendationKey(postContext), true)
 						),
-						createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
+						createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__intro-row' },
+							createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-toolbox')),
+							createElement(
+								Button,
+								{
+									type: 'button',
+									variant: 'tertiary',
+									isBusy: progressiveStatus && progressiveStatus.status === 'loading',
+									onClick: openProgressivePanel,
+								},
+								__('Local suggestions', 'npcink-toolbox')
+							)
+						),
 						flowGroups.map((group) => createElement(
 							'section',
 							{ className: 'npcink-toolbox-editor-support__flow-group', key: group.id },

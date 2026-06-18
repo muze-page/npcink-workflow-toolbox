@@ -881,6 +881,33 @@ msgstr "此 WordPress 站点的 Cloud 覆盖摘要。"
 msgid "Refresh"
 msgstr "刷新"
 
+msgid "Local suggestions"
+msgstr "本地建议"
+
+msgid "%d local suggestions are ready."
+msgstr "%d 个本地建议已就绪。"
+
+msgid "No local suggestions found for this draft. Add a clearer title, excerpt, or body context, then refresh."
+msgstr "当前草稿还没有本地建议。请补充更清晰的标题、摘要或正文后刷新。"
+
+msgid "Preparing local suggestions..."
+msgstr "正在准备本地建议..."
+
+msgid "Local suggestions timed out. Showing cached suggestions if available."
+msgstr "本地建议超时。若有缓存，将显示缓存建议。"
+
+msgid "Local suggestions are ready."
+msgstr "本地建议已就绪。"
+
+msgid "Local suggestions are unavailable."
+msgstr "本地建议不可用。"
+
+msgid "View suggestions"
+msgstr "查看建议"
+
+msgid "Refreshing"
+msgstr "刷新中"
+
 msgid "Manage index"
 msgstr "管理索引"
 
