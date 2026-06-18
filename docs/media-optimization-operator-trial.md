@@ -41,6 +41,26 @@ Do not run the trial if either smoke fails, if Core proposals cannot be created,
 if Adapter `approve-and-execute` is unavailable, or if governed restore cannot
 restore a smoke attachment.
 
+The smoke scripts are release gates, not the real-attachment trial runner. They
+create temporary fixture attachments and clean them up. Do not edit those scripts
+to sweep the media library or accept arbitrary production attachment IDs.
+
+## Candidate Packet
+
+Before executing any real attachment, prepare a read-only candidate packet for
+operator review. The packet should include attachment id, MIME type, date,
+filename, title, whether the file is referenced by published post/page content,
+and the proposed action.
+
+Use a read-only WP-CLI query or equivalent admin report. Prefer candidates with
+`public_content_refs=0` for the first pass, then add one or two referenced
+images only after the operator has seen rollback evidence on media-only items.
+
+Do not start with generated test fixtures, site-logo assets, watermark logos,
+brand-critical hero images, or files with unknown ownership. Do not run a
+whole-library scan-and-replace. The operator must explicitly choose the 5 to 10
+trial attachments before preview generation or Core proposal submission.
+
 ## Trial Record
 
 Copy one row per attempted item or selected batch candidate.
