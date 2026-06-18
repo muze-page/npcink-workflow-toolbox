@@ -21,6 +21,7 @@ final class Cloud_Batch_Result_Merger {
 		$merged_count   = 0;
 		$operational    = $this->operational_detail( $cloud_result, count( $actions_by_key ) );
 		$priority_queue = $this->priority_queue( $cloud_result, $actions_by_key );
+		$core_intake_package = $this->core_intake_package( $cloud_result );
 
 		if ( isset( $merged['priorities'] ) && is_array( $merged['priorities'] ) ) {
 			foreach ( $merged['priorities'] as $index => $priority ) {
@@ -53,10 +54,18 @@ final class Cloud_Batch_Result_Merger {
 			'action_count'           => count( $actions_by_key ),
 			'merged_priority_count'  => $merged_count,
 			'priority_queue_count'   => count( $priority_queue ),
+			'core_intake_package_available' => array() !== $core_intake_package,
+			'core_intake_package_contract'  => (string) ( $core_intake_package['contract_version'] ?? '' ),
+			'core_intake_target_route'      => (string) ( $core_intake_package['target_route'] ?? '' ),
+			'core_intake_receipt_owner'     => (string) ( $core_intake_package['receipt_expectation']['receipt_owner'] ?? '' ),
 			'direct_wordpress_write' => false,
 			'final_write_path'       => 'core_proposal_required',
 			'requires_local_review'  => true,
 		);
+
+		if ( array() !== $core_intake_package ) {
+			$merged['cloud_runtime']['core_intake_package'] = $core_intake_package;
+		}
 
 		if ( array() !== $priority_queue ) {
 			$merged['priority_queue'] = $priority_queue;
@@ -90,8 +99,9 @@ final class Cloud_Batch_Result_Merger {
 		$operational      = $this->operational_detail( $cloud_result, count( $actions ) );
 		$action_summaries = array_map( array( $this, 'cloud_action_summary' ), $actions );
 		$priority_queue   = $this->priority_queue( $cloud_result, $actions_by_key );
+		$core_intake_package = $this->core_intake_package( $cloud_result );
 
-		return array(
+		$patch = array(
 			'contract_version'       => self::CONTRACT_VERSION,
 			'provider'               => 'magick_ai_cloud',
 			'composition_role'       => 'morning_brief_cloud_runtime_patch',
@@ -109,10 +119,20 @@ final class Cloud_Batch_Result_Merger {
 			'action_count'           => count( $actions ),
 			'priority_queue'         => $priority_queue,
 			'priority_queue_count'   => count( $priority_queue ),
+			'core_intake_package_available' => array() !== $core_intake_package,
+			'core_intake_package_contract'  => (string) ( $core_intake_package['contract_version'] ?? '' ),
+			'core_intake_target_route'      => (string) ( $core_intake_package['target_route'] ?? '' ),
+			'core_intake_receipt_owner'     => (string) ( $core_intake_package['receipt_expectation']['receipt_owner'] ?? '' ),
 			'direct_wordpress_write' => false,
 			'final_write_path'       => 'core_proposal_required',
 			'requires_local_review'  => true,
 		);
+
+		if ( array() !== $core_intake_package ) {
+			$patch['core_intake_package'] = $core_intake_package;
+		}
+
+		return $patch;
 	}
 
 	/**
@@ -311,6 +331,91 @@ final class Cloud_Batch_Result_Merger {
 	}
 
 	/**
+	 * @param array<string,mixed> $cloud_result Cloud result.
+	 * @return array<string,mixed>
+	 */
+	private function core_intake_package( array $cloud_result ): array {
+		$package = $this->extract_core_intake_package( $cloud_result );
+		if ( ! is_array( $package ) || array() === $package ) {
+			return array();
+		}
+
+		$receipt = is_array( $package['receipt_expectation'] ?? null ) ? $package['receipt_expectation'] : array();
+
+		return array(
+			'contract_version'                    => $this->bounded_text( (string) ( $package['contract_version'] ?? '' ), 120 ),
+			'selected_review_item_ids'            => $this->text_list( $package['selected_review_item_ids'] ?? array(), 10, 160 ),
+			'selected_review_items'               => $this->core_intake_selected_items( $package['selected_review_items'] ?? array() ),
+			'target_route'                        => $this->bounded_text( (string) ( $package['target_route'] ?? '' ), 160 ),
+			'target_plan_ability_id'              => $this->bounded_text( (string) ( $package['target_plan_ability_id'] ?? '' ), 160 ),
+			'target_plan_contract'                => $this->bounded_text( (string) ( $package['target_plan_contract'] ?? '' ), 160 ),
+			'core_review_plan_idempotency_key'    => $this->bounded_text( (string) ( $package['core_review_plan_idempotency_key'] ?? '' ), 191 ),
+			'proposal_created'                    => false,
+			'proposal_state_owner'                => $this->sanitize_key( (string) ( $package['proposal_state_owner'] ?? 'magick-ai-core' ) ),
+			'approval_truth'                      => $this->sanitize_key( (string) ( $package['approval_truth'] ?? 'wordpress_local' ) ),
+			'final_write_truth'                   => $this->sanitize_key( (string) ( $package['final_write_truth'] ?? 'wordpress_local' ) ),
+			'cloud_role'                          => $this->sanitize_key( (string) ( $package['cloud_role'] ?? 'runtime_detail' ) ),
+			'cloud_scheduler_truth'               => false,
+			'direct_wordpress_write'              => false,
+			'receipt_expectation'                 => array(
+				'expected_local_receipt' => $this->bounded_text( (string) ( $receipt['expected_local_receipt'] ?? 'core_proposal_id' ), 120 ),
+				'receipt_owner'          => $this->sanitize_key( (string) ( $receipt['receipt_owner'] ?? 'wordpress_toolbox_local' ) ),
+				'cloud_receipt_storage'  => $this->sanitize_key( (string) ( $receipt['cloud_receipt_storage'] ?? 'not_canonical' ) ),
+			),
+		);
+	}
+
+	/**
+	 * @param array<string,mixed> $cloud_result Cloud result.
+	 * @return mixed
+	 */
+	private function extract_core_intake_package( array $cloud_result ) {
+		if ( isset( $cloud_result['core_intake_package'] ) && is_array( $cloud_result['core_intake_package'] ) ) {
+			return $cloud_result['core_intake_package'];
+		}
+		if ( isset( $cloud_result['result'] ) && is_array( $cloud_result['result'] ) ) {
+			return $this->extract_core_intake_package( $cloud_result['result'] );
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param mixed $items Selected Core intake items.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function core_intake_selected_items( $items ): array {
+		$items  = is_array( $items ) ? $items : array();
+		$result = array();
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$result[] = array(
+				'action_id'               => $this->bounded_text( (string) ( $item['action_id'] ?? '' ), 120 ),
+				'title'                   => $this->bounded_text( (string) ( $item['title'] ?? '' ), 160 ),
+				'object_type'             => $this->sanitize_key( (string) ( $item['object_type'] ?? $item['type'] ?? '' ) ),
+				'object_id'               => max( 0, (int) ( $item['object_id'] ?? $item['post_id'] ?? $item['attachment_id'] ?? 0 ) ),
+				'score'                   => max( 0, min( 100, (int) ( $item['score'] ?? $item['quality_score'] ?? 0 ) ) ),
+				'severity'                => $this->sanitize_key( (string) ( $item['severity'] ?? '' ) ),
+				'reason_codes'            => $this->string_list( $item['reason_codes'] ?? array(), 12 ),
+				'evidence_summary'        => $this->bounded_text( (string) ( $item['evidence_summary'] ?? '' ), 500 ),
+				'recommended_next_action' => $this->sanitize_key( (string) ( $item['recommended_next_action'] ?? 'operator_review' ) ),
+				'direct_wordpress_write'  => false,
+				'final_write_path'        => 'core_proposal_required',
+				'requires_local_review'   => true,
+			);
+			if ( count( $result ) >= 5 ) {
+				break;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param array<string,mixed> $item Item.
 	 */
 	private function object_key( array $item ): string {
@@ -409,6 +514,26 @@ final class Cloud_Batch_Result_Merger {
 		$list   = array();
 		foreach ( $values as $item ) {
 			$value = $this->sanitize_key( (string) $item );
+			if ( '' !== $value && ! in_array( $value, $list, true ) ) {
+				$list[] = $value;
+			}
+			if ( count( $list ) >= $limit ) {
+				break;
+			}
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @param mixed $items Items.
+	 * @return array<int,string>
+	 */
+	private function text_list( $items, int $limit, int $max_chars ): array {
+		$values = is_array( $items ) ? $items : array();
+		$list   = array();
+		foreach ( $values as $item ) {
+			$value = $this->bounded_text( (string) $item, $max_chars );
 			if ( '' !== $value && ! in_array( $value, $list, true ) ) {
 				$list[] = $value;
 			}

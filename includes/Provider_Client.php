@@ -2834,6 +2834,20 @@ final class Provider_Client {
 		$selected_items = array_slice( $selected_items, 0, 5 );
 		$cloud_run_id   = sanitize_text_field( (string) ( $input['cloud_run_id'] ?? ( $input['run_id'] ?? '' ) ) );
 		$agent_version  = sanitize_text_field( (string) ( $input['agent_version'] ?? 'nightly_site_inspection_cloud_runtime.v1' ) );
+		$core_intake_package = is_array( $input['core_intake_package'] ?? null ) ? $this->sanitize_payload( $input['core_intake_package'] ) : array();
+		$core_intake_summary = array(
+			'contract_version'                 => sanitize_text_field( (string) ( $core_intake_package['contract_version'] ?? '' ) ),
+			'target_route'                     => sanitize_text_field( (string) ( $core_intake_package['target_route'] ?? '' ) ),
+			'target_plan_ability_id'           => sanitize_text_field( (string) ( $core_intake_package['target_plan_ability_id'] ?? '' ) ),
+			'target_plan_contract'             => sanitize_text_field( (string) ( $core_intake_package['target_plan_contract'] ?? '' ) ),
+			'core_review_plan_idempotency_key' => sanitize_text_field( (string) ( $core_intake_package['core_review_plan_idempotency_key'] ?? '' ) ),
+			'proposal_state_owner'             => sanitize_key( (string) ( $core_intake_package['proposal_state_owner'] ?? '' ) ),
+			'approval_truth'                   => sanitize_key( (string) ( $core_intake_package['approval_truth'] ?? '' ) ),
+			'final_write_truth'                => sanitize_key( (string) ( $core_intake_package['final_write_truth'] ?? '' ) ),
+			'receipt_expectation'              => is_array( $core_intake_package['receipt_expectation'] ?? null ) ? $this->sanitize_payload( $core_intake_package['receipt_expectation'] ) : array(),
+			'direct_wordpress_write'           => false,
+			'proposal_created'                 => false,
+		);
 		$evidence_refs  = array();
 		$issue_types    = array();
 		$max_score      = null;
@@ -2896,6 +2910,14 @@ final class Provider_Client {
 			'local_next_action'      => 'operator_review',
 			'evidence_gate_status'   => 'passed',
 			'evidence_refs'          => $this->sanitize_payload( $evidence_refs ),
+			'source_context'         => array(
+				'cloud_intake_package_available' => ! empty( array_filter( $core_intake_summary ) ),
+				'cloud_core_intake_package'      => $this->sanitize_payload( $core_intake_summary ),
+				'direct_wordpress_write'         => false,
+				'proposal_created'               => false,
+				'approval_truth'                 => 'wordpress_local',
+				'final_write_truth'              => 'wordpress_local',
+			),
 			'blocked_outputs'        => array(
 				'direct_wordpress_write',
 				'article_body',
@@ -2927,6 +2949,7 @@ final class Provider_Client {
 						'meta'            => array(
 							'nightly_inspection_cloud_run_id' => $cloud_run_id,
 							'nightly_inspection_evidence_refs' => $this->sanitize_payload( $evidence_refs ),
+							'nightly_inspection_core_intake_package' => $this->sanitize_payload( $core_intake_summary ),
 						),
 						'dry_run'         => true,
 						'commit'          => false,
@@ -2945,6 +2968,7 @@ final class Provider_Client {
 				'recipe_id'              => 'nightly_inspection_review_v1',
 				'recipe_ref'             => 'workflow/nightly_site_inspection_review',
 				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
+				'core_intake_package'    => $this->sanitize_payload( $core_intake_summary ),
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 				'proposal_ready'         => false,

@@ -94,6 +94,40 @@ $cloud_result = array(
 			),
 		),
 	),
+	'core_intake_package' => array(
+		'contract_version'                 => 'nightly_site_inspection_core_intake_package.v1',
+		'selected_review_item_ids'         => array( 'action_001' ),
+		'selected_review_items'            => array(
+			array(
+				'action_id'               => 'action_001',
+				'title'                   => 'Stale article',
+				'object_type'             => 'post',
+				'object_id'               => 101,
+				'score'                   => 62,
+				'severity'                => 'warning',
+				'reason_codes'            => array( 'needs_refresh', 'weak_internal_links' ),
+				'evidence_summary'        => 'The post is stale and has weak internal links.',
+				'recommended_next_action' => 'review_content',
+				'direct_wordpress_write'  => true,
+			),
+		),
+		'target_route'                     => 'core:/proposals/from-plan',
+		'target_plan_ability_id'           => 'npcink-toolbox/build-nightly-inspection-review-plan',
+		'target_plan_contract'             => 'nightly_site_inspection_core_review_plan.v1',
+		'core_review_plan_idempotency_key' => 'nightly-inspection-review-abc123',
+		'proposal_created'                 => true,
+		'proposal_state_owner'             => 'magick-ai-core',
+		'approval_truth'                   => 'wordpress_local',
+		'final_write_truth'                => 'wordpress_local',
+		'cloud_role'                       => 'runtime_detail',
+		'cloud_scheduler_truth'            => true,
+		'direct_wordpress_write'           => true,
+		'receipt_expectation'              => array(
+			'expected_local_receipt' => 'core_proposal_id',
+			'receipt_owner'          => 'wordpress_toolbox_local',
+			'cloud_receipt_storage'  => 'not_canonical',
+		),
+	),
 	'morning_brief'       => array(
 		'priority_queue' => array(
 			array(
@@ -153,6 +187,30 @@ if ( 'terminal_result_available' !== ( $patch['retry_guidance']['reason'] ?? '' 
 if ( 'core_proposal_required' !== ( $patch['final_write_path'] ?? '' ) ) {
 	$fail( 'Cloud Batch patch must keep Core proposal handoff.' );
 }
+if ( true !== ( $patch['core_intake_package_available'] ?? false ) ) {
+	$fail( 'Cloud Batch patch should expose Core intake package availability.' );
+}
+if ( 'nightly_site_inspection_core_intake_package.v1' !== ( $patch['core_intake_package']['contract_version'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve the Core intake package contract.' );
+}
+if ( 'core:/proposals/from-plan' !== ( $patch['core_intake_package']['target_route'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should preserve the Core intake target route.' );
+}
+if ( false !== ( $patch['core_intake_package']['proposal_created'] ?? true ) ) {
+	$fail( 'Cloud Batch patch must not treat Cloud as proposal creator.' );
+}
+if ( false !== ( $patch['core_intake_package']['direct_wordpress_write'] ?? true ) ) {
+	$fail( 'Cloud Batch patch must force Core intake package to review-only.' );
+}
+if ( false !== ( $patch['core_intake_package']['selected_review_items'][0]['direct_wordpress_write'] ?? true ) ) {
+	$fail( 'Cloud Batch patch must force selected Core intake items to review-only.' );
+}
+if ( false !== ( $patch['core_intake_package']['cloud_scheduler_truth'] ?? true ) ) {
+	$fail( 'Cloud Batch patch must not treat Cloud as local scheduler truth.' );
+}
+if ( 'not_canonical' !== ( $patch['core_intake_package']['receipt_expectation']['cloud_receipt_storage'] ?? '' ) ) {
+	$fail( 'Cloud Batch patch should keep Cloud receipt storage non-canonical.' );
+}
 if ( true !== ( $merged['safety']['cloud_called'] ?? false ) ) {
 	$fail( 'Merged Morning Brief should record that Cloud detail was used.' );
 }
@@ -176,6 +234,15 @@ if ( 'needs_refresh' !== ( $merged['priorities'][0]['cloud_runtime']['reason_cod
 }
 if ( 1 !== (int) ( $merged['cloud_runtime']['priority_queue_count'] ?? 0 ) ) {
 	$fail( 'Merged Morning Brief should count Cloud priority queue items.' );
+}
+if ( true !== ( $merged['cloud_runtime']['core_intake_package_available'] ?? false ) ) {
+	$fail( 'Merged Morning Brief should expose Core intake package availability.' );
+}
+if ( 'nightly_site_inspection_core_intake_package.v1' !== ( $merged['cloud_runtime']['core_intake_package_contract'] ?? '' ) ) {
+	$fail( 'Merged Morning Brief should preserve the Core intake package contract summary.' );
+}
+if ( 'wordpress_toolbox_local' !== ( $merged['cloud_runtime']['core_intake_receipt_owner'] ?? '' ) ) {
+	$fail( 'Merged Morning Brief should preserve the local receipt owner.' );
 }
 if ( 'action_001' !== ( $merged['priority_queue'][0]['action_id'] ?? '' ) ) {
 	$fail( 'Merged Morning Brief should expose the Cloud priority queue.' );

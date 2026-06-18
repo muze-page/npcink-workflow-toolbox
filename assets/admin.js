@@ -4468,6 +4468,22 @@
 		return payload && payload.result && typeof payload.result === 'object' ? payload.result : {};
 	}
 
+	function nightlyCloudCoreIntakePackage(payload) {
+		const cloudResult = nightlyCloudResultPayload(payload);
+		const merged = payload && payload.merged_morning_brief && typeof payload.merged_morning_brief === 'object' ? payload.merged_morning_brief : {};
+		const runtime = merged.cloud_runtime && typeof merged.cloud_runtime === 'object' ? merged.cloud_runtime : {};
+		if (cloudResult.core_intake_package && typeof cloudResult.core_intake_package === 'object') {
+			return cloudResult.core_intake_package;
+		}
+		if (runtime.core_intake_package && typeof runtime.core_intake_package === 'object') {
+			return runtime.core_intake_package;
+		}
+		if (payload && payload.core_intake_package && typeof payload.core_intake_package === 'object') {
+			return payload.core_intake_package;
+		}
+		return {};
+	}
+
 	function nightlyCloudMorningBriefV2(payload) {
 		const cloudResult = nightlyCloudResultPayload(payload);
 		return cloudResult.morning_brief && typeof cloudResult.morning_brief === 'object' ? cloudResult.morning_brief : {};
@@ -4608,7 +4624,8 @@
 			const plan = await postJson(config.restUrl, 'flows/nightly-inspection-review-plan', {
 				cloud_run_id: nightlyCloudRunIdFromPayload(payload) || String(cloudResult.run_id || ''),
 				agent_version: String(cloudResult.agent_version || 'nightly_site_inspection_cloud_runtime.v1'),
-				selected_items: selectedItems
+				selected_items: selectedItems,
+				core_intake_package: nightlyCloudCoreIntakePackage(payload)
 			});
 			statusNode.textContent = 'Submitting selected Morning Brief items to Core proposal intake...';
 			const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
@@ -4718,6 +4735,14 @@
 			handoff.setAttribute('data-toolbox-nightly-core-review-handoff', 'true');
 			handoff.appendChild(el('h4', '', 'Core proposal handoff'));
 			handoff.appendChild(el('p', '', 'Selected items become one blocked Core review proposal. Toolbox does not approve, preflight, execute, or write content.'));
+			const coreIntakePackage = nightlyCloudCoreIntakePackage(payload);
+			if (coreIntakePackage.contract_version) {
+				const intakeMeta = el('div', 'npcink-toolbox__result-meta');
+				appendMeta(intakeMeta, 'Core intake package', coreIntakePackage.contract_version);
+				appendMeta(intakeMeta, 'Target route', coreIntakePackage.target_route);
+				appendMeta(intakeMeta, 'Receipt owner', coreIntakePackage.receipt_expectation && coreIntakePackage.receipt_expectation.receipt_owner);
+				handoff.appendChild(intakeMeta);
+			}
 			const actions = el('div', 'npcink-toolbox__result-actions');
 			const submit = el('button', 'button button-primary', 'Submit selected to Core review');
 			submit.type = 'button';
