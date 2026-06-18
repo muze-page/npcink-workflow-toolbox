@@ -128,14 +128,23 @@ planning flows:
 - `/media-derivative-handoff`
 - `/nightly-inspection/cloud-runtime-entitlement`
 - `/nightly-inspection/cloud-batch`
+- `/nightly-inspection/cloud-batch/recent`
 - `/nightly-inspection/cloud-batch/{run_id}`
 - `/nightly-inspection/cloud-batch/{run_id}/result`
+- `/nightly-inspection/cloud-batch/{run_id}/retry`
 
 Do not add Toolbox REST routes for publishing, delivery, workflow runs, queues,
 schedulers, approvals, write confirmation, featured image setting, media
 upload/import, SEO mutation, content indexing, or re-indexing without a new
 boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
+
+Nightly Inspection recent-run and retry routes are Cloud detail bridges only.
+`/cloud-batch/recent` reads Cloud-owned run cards for display and recovery.
+`/cloud-batch/{run_id}/retry` asks Cloud to queue a retry with a fresh
+idempotency key and a new bounded local snapshot. Neither route stores a
+server-side Toolbox run history, claims retry ownership, creates Core
+proposals, or writes WordPress data.
 
 `local_admin_consent` is now implemented only for one narrow proof:
 `/local-admin-consent/featured-image` may set one existing WordPress image

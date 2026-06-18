@@ -730,6 +730,7 @@ final class Admin_Page {
 				<div class="npcink-toolbox__inline-actions">
 					<button type="submit" class="button button-primary" data-toolbox-nightly-cloud-submit <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Run Cloud inspection', 'npcink-toolbox' ); ?></button>
 					<button type="button" class="button" data-toolbox-nightly-cloud-entitlement <?php disabled( ! $cloud_ready ); ?>><?php esc_html_e( 'Refresh Cloud quota', 'npcink-toolbox' ); ?></button>
+					<button type="button" class="button" data-toolbox-nightly-cloud-recent <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Load Cloud recent', 'npcink-toolbox' ); ?></button>
 				</div>
 				<div class="npcink-toolbox__readiness-strip" data-toolbox-nightly-cloud-recent-run hidden></div>
 				<div class="npcink-toolbox__readiness-strip" data-toolbox-nightly-cloud-run-summary hidden></div>
@@ -743,8 +744,9 @@ final class Admin_Page {
 					<div class="npcink-toolbox__inline-actions">
 						<button type="button" class="button" data-toolbox-nightly-cloud-status <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Check status', 'npcink-toolbox' ); ?></button>
 						<button type="button" class="button" data-toolbox-nightly-cloud-result-read <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Read result', 'npcink-toolbox' ); ?></button>
+						<button type="button" class="button" data-toolbox-nightly-cloud-retry <?php disabled( $cloud_disabled ); ?>><?php esc_html_e( 'Retry run', 'npcink-toolbox' ); ?></button>
 					</div>
-					<p class="description"><?php esc_html_e( 'Use these controls only when recovering or inspecting a known Cloud run ID. Cloud remains the run-state owner.', 'npcink-toolbox' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Use these controls only when recovering, retrying, or inspecting a known Cloud run ID. Cloud remains the run-state owner and retry processor.', 'npcink-toolbox' ); ?></p>
 				</details>
 			</form>
 		</section>

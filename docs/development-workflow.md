@@ -238,6 +238,9 @@ The current phase acceptance summary is recorded in
 [`Nightly Inspection Pro Cloud Runtime Acceptance`](nightly-inspection-pro-cloud-runtime-acceptance.md).
 The review packaging and PR split are recorded in
 [`Nightly Inspection Pro Cloud Runtime Release Prep`](nightly-inspection-pro-cloud-runtime-release-prep.md).
+The production-prep operator checklist for healthy, partial-success, retry,
+recent-run, and trial-record handling is recorded in
+[`Nightly Inspection Production Operator Runbook`](nightly-inspection-production-operator-runbook.md).
 
 For the real local WordPress + Cloud integration proof, first make sure the
 Cloud API and runtime worker are running:

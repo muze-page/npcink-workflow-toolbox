@@ -4344,6 +4344,71 @@
 		};
 	}
 
+	function nightlyCloudResultStatus(payload) {
+		const result = payload && payload.result && typeof payload.result === 'object' ? payload.result : {};
+		return String((payload && payload.result_status) || result.status || '').toLowerCase();
+	}
+
+	function nightlyCloudRunState(payload) {
+		const cloudRun = payload && payload.cloud_run && typeof payload.cloud_run === 'object' ? payload.cloud_run : {};
+		if (cloudRun.run_state && typeof cloudRun.run_state === 'object') {
+			return cloudRun.run_state;
+		}
+		if (payload && payload.run_state && typeof payload.run_state === 'object') {
+			return payload.run_state;
+		}
+		return {};
+	}
+
+	function nightlyCloudRetryGuidance(payload) {
+		const result = payload && payload.result && typeof payload.result === 'object' ? payload.result : {};
+		const runState = nightlyCloudRunState(payload);
+		if (result.retry_guidance && typeof result.retry_guidance === 'object') {
+			return result.retry_guidance;
+		}
+		if (payload && payload.retry_guidance && typeof payload.retry_guidance === 'object') {
+			return payload.retry_guidance;
+		}
+		if (runState.retry && typeof runState.retry === 'object') {
+			return runState.retry;
+		}
+		return {};
+	}
+
+	function nightlyCloudRetryable(payload) {
+		const guidance = nightlyCloudRetryGuidance(payload);
+		return guidance.retryable === true || guidance.available === true;
+	}
+
+	function nightlyCloudPayloadFromRecentCard(card) {
+		const item = card && typeof card === 'object' ? card : {};
+		const summary = item.summary && typeof item.summary === 'object' ? item.summary : {};
+		return {
+			provider: 'magick_ai_cloud',
+			provider_mode: 'cloud_managed',
+			contract_version: 'nightly_site_inspection_recent_run_card.v1',
+			status: String(item.status || item.result_status || ''),
+			result_status: String(item.result_status || ''),
+			cloud_runtime: 'magick_ai_cloud_addon',
+			cloud_run: {
+				run_id: String(item.run_id || ''),
+				status: String(item.status || ''),
+				trace_id: String(item.trace_id || ''),
+				run_lifecycle: item.run_lifecycle && typeof item.run_lifecycle === 'object' ? item.run_lifecycle : {},
+				run_state: item.run_state && typeof item.run_state === 'object' ? item.run_state : {}
+			},
+			morning_brief_patch: {
+				action_count: Number.isFinite(Number(summary.reviewable_count)) ? Number(summary.reviewable_count) : null
+			},
+			retry_guidance: item.retry_guidance && typeof item.retry_guidance === 'object' ? item.retry_guidance : {},
+			safety: {
+				direct_wordpress_write: false,
+				cloud_scheduler_truth: false,
+				requires_local_review: true
+			}
+		};
+	}
+
 	function nightlyCloudStoredRun() {
 		try {
 			const parsed = JSON.parse(window.localStorage.getItem(NIGHTLY_CLOUD_RECENT_KEY) || '{}');
@@ -4363,8 +4428,10 @@
 		const record = {
 			run_id: runId,
 			status: nightlyCloudStatus(payload) || 'submitted',
+			result_status: nightlyCloudResultStatus(payload),
 			phase: nightlyCloudRunPhase(payload),
 			merged: counts.merged,
+			retryable: nightlyCloudRetryable(payload),
 			action_count: counts.actionCount,
 			merged_priority_count: counts.mergedPriorityCount,
 			label: label || '',
@@ -4413,6 +4480,14 @@
 			record.merged ? 'Local review required' : 'Result not merged',
 			count
 		));
+		if (record.result_status === 'partially_succeeded' || record.retryable) {
+			container.appendChild(nightlyCloudSummaryItem(
+				'Retry',
+				'warning',
+				record.retryable ? 'Available' : 'Review guidance',
+				record.result_status === 'partially_succeeded' ? 'Cloud reported partial success.' : 'Cloud returned retry guidance.'
+			));
+		}
 
 		const actions = el('div', 'npcink-toolbox__result-actions');
 		const useButton = el('button', 'button', 'Use run');
@@ -4440,6 +4515,14 @@
 			readNightlyCloudBatchResult(root, resultButton);
 		});
 		actions.appendChild(resultButton);
+		const retryButton = el('button', 'button', 'Retry run');
+		retryButton.type = 'button';
+		retryButton.disabled = !nightlyCloudControlsEnabled(root);
+		retryButton.addEventListener('click', () => {
+			setNightlyCloudRunId(root, record.run_id);
+			retryNightlyCloudBatch(root, retryButton);
+		});
+		actions.appendChild(retryButton);
 		container.appendChild(actions);
 		container.hidden = false;
 	}
@@ -4452,13 +4535,13 @@
 		root.querySelectorAll('[data-toolbox-nightly-cloud-submit]').forEach((button) => {
 			button.disabled = busy || !nightlyCloudSubmitAllowed(root);
 		});
-		root.querySelectorAll('[data-toolbox-nightly-cloud-status], [data-toolbox-nightly-cloud-result-read]').forEach((button) => {
+		root.querySelectorAll('[data-toolbox-nightly-cloud-status], [data-toolbox-nightly-cloud-result-read], [data-toolbox-nightly-cloud-recent], [data-toolbox-nightly-cloud-retry]').forEach((button) => {
 			button.disabled = busy || !controlsEnabled;
 		});
 	}
 
 	function setNightlyCloudBusy(root, busy, activeButton) {
-		root.querySelectorAll('[data-toolbox-nightly-cloud-entitlement], [data-toolbox-nightly-cloud-submit], [data-toolbox-nightly-cloud-status], [data-toolbox-nightly-cloud-result-read]').forEach((button) => {
+		root.querySelectorAll('[data-toolbox-nightly-cloud-entitlement], [data-toolbox-nightly-cloud-submit], [data-toolbox-nightly-cloud-status], [data-toolbox-nightly-cloud-result-read], [data-toolbox-nightly-cloud-recent], [data-toolbox-nightly-cloud-retry]').forEach((button) => {
 			if (!button.__magickOriginalText) {
 				button.__magickOriginalText = button.textContent;
 			}
@@ -4518,6 +4601,78 @@
 			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'New runs are disabled until Cloud reports remaining quota. Existing run IDs can still be refreshed or loaded.'));
 		}
 		result.appendChild(createRawDetails(payload, 'Advanced details: Cloud entitlement payload'));
+	}
+
+	function renderNightlyCloudRecentRuns(root, payload) {
+		const items = Array.isArray(payload && payload.items) ? payload.items : [];
+		const latest = payload && payload.latest && typeof payload.latest === 'object' ? payload.latest : (items[0] || {});
+		const latestFailure = payload && payload.latest_failure && typeof payload.latest_failure === 'object' ? payload.latest_failure : {};
+		if (latest.run_id) {
+			setNightlyCloudRunId(root, latest.run_id);
+			storeNightlyCloudRun(root, nightlyCloudPayloadFromRecentCard(latest), 'Cloud recent run');
+		}
+
+		const result = renderShell(
+			root,
+			payload || { provider: 'Cloud recent runs' },
+			'Cloud recent runs',
+			items.length ? 'Cloud returned recent Nightly Inspection run cards for this site. Toolbox displays them as review-only run detail.' : 'Cloud did not return recent Nightly Inspection runs for this site.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const guidance = payload && payload.toolbox_guidance && typeof payload.toolbox_guidance === 'object' ? payload.toolbox_guidance : {};
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Runs', items.length);
+		appendMeta(meta, 'Next action', guidance.primary_next_action ? formatLabel(guidance.primary_next_action) : '');
+		appendMeta(meta, 'Cloud scheduler truth', guidance.cloud_scheduler_truth === false ? 'No' : '');
+		appendMeta(meta, 'Direct writes', payload && payload.safety && payload.safety.direct_wordpress_write === false ? 'No' : '');
+		if (meta.childNodes.length) {
+			result.appendChild(meta);
+		}
+
+		if (latestFailure.run_id) {
+			const failurePayload = nightlyCloudPayloadFromRecentCard(latestFailure);
+			const retry = nightlyCloudRetryGuidance(failurePayload);
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Latest retry candidate: ' + latestFailure.run_id + '. Retry guidance remains Cloud-owned and final writes remain local.'));
+			const retryMeta = el('div', 'npcink-toolbox__result-meta');
+			appendMeta(retryMeta, 'Retryable', nightlyCloudRetryable(failurePayload) ? 'Yes' : '');
+			appendMeta(retryMeta, 'Failed actions', Array.isArray(retry.failed_action_ids) ? retry.failed_action_ids.join(', ') : '');
+			appendMeta(retryMeta, 'Next action', retry.operator_next_action ? formatLabel(retry.operator_next_action) : '');
+			if (retryMeta.childNodes.length) {
+				result.appendChild(retryMeta);
+			}
+		}
+
+		if (items.length) {
+			const section = createSection('Recent Cloud run cards');
+			items.slice(0, 5).forEach((item) => {
+				const card = nightlyCloudPayloadFromRecentCard(item);
+				const row = el('article', 'npcink-toolbox__result-item');
+				row.appendChild(el('h4', '', String(item.run_id || 'Cloud run')));
+				const rowMeta = el('div', 'npcink-toolbox__result-meta');
+				appendMeta(rowMeta, 'Run status', item.status ? formatLabel(item.status) : '');
+				appendMeta(rowMeta, 'Result', item.result_status ? formatLabel(item.result_status) : '');
+				appendMeta(rowMeta, 'Reviewable', item.summary && item.summary.reviewable_count);
+				appendMeta(rowMeta, 'Retryable', nightlyCloudRetryable(card) ? 'Yes' : '');
+				row.appendChild(rowMeta);
+				const actions = el('div', 'npcink-toolbox__result-actions');
+				const use = el('button', 'button button-small', 'Use run');
+				use.type = 'button';
+				use.addEventListener('click', () => {
+					setNightlyCloudRunId(root, item.run_id);
+					storeNightlyCloudRun(root, card, 'Cloud recent run');
+					renderTextResult(root, 'Cloud recent run loaded. Refresh status, load result, or retry from Advanced details.', 'pending');
+				});
+				actions.appendChild(use);
+				row.appendChild(actions);
+				section.appendChild(row);
+			});
+			result.appendChild(section);
+		}
+
+		result.appendChild(createRawDetails(payload, 'Advanced details: Cloud recent runs'));
 	}
 
 	function renderNightlyCloudActions(result, patch) {
@@ -5080,6 +5235,9 @@
 	}
 
 	function nightlyCloudOutcomeLabel(payload) {
+		if (nightlyCloudResultStatus(payload) === 'partially_succeeded') {
+			return 'Partial success';
+		}
 		if (nightlyCloudSucceeded(payload)) {
 			return 'Complete';
 		}
@@ -5115,13 +5273,16 @@
 		const cloudRun = payload && payload.cloud_run && typeof payload.cloud_run === 'object' ? payload.cloud_run : {};
 		const lifecycle = cloudRun.run_lifecycle && typeof cloudRun.run_lifecycle === 'object' ? cloudRun.run_lifecycle : {};
 		const requestSummary = payload && payload.cloud_request_summary && typeof payload.cloud_request_summary === 'object' ? payload.cloud_request_summary : {};
+		const retryGuidance = nightlyCloudRetryGuidance(payload);
 		const section = createSection('Cloud run detail');
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Run state', nightlyCloudOutcomeLabel(payload));
 		appendMeta(meta, 'Worker phase', formatLabel(nightlyCloudRunPhase(payload)));
+		appendMeta(meta, 'Result', nightlyCloudResultStatus(payload) ? formatLabel(nightlyCloudResultStatus(payload)) : '');
 		appendMeta(meta, 'Started', formatDateTime(lifecycle.processing_started_at || lifecycle.started_at || cloudRun.started_at));
 		appendMeta(meta, 'Finished', formatDateTime(lifecycle.processing_finished_at || lifecycle.completed_at || lifecycle.terminal_at || cloudRun.completed_at));
 		appendMeta(meta, 'Failure code', firstNightlyCloudText(lifecycle, ['error_code', 'failure_code', 'reason_code']) || firstNightlyCloudText(cloudRun, ['error_code', 'failure_code', 'reason_code']));
+		appendMeta(meta, 'Retryable', nightlyCloudRetryable(payload) ? 'Yes' : '');
 		appendPositiveMeta(meta, 'Snapshot items', requestSummary.item_count);
 		appendMeta(meta, 'Retention', requestSummary.retention_ttl ? Math.round(Number(requestSummary.retention_ttl) / 86400) + ' days' : '');
 		appendMeta(meta, 'Cloud role', requestSummary.cloud_role ? formatLabel(requestSummary.cloud_role) : '');
@@ -5130,8 +5291,19 @@
 		}
 		if (nightlyCloudTerminal(payload) && !nightlyCloudSucceeded(payload)) {
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Cloud finished without a mergeable result. Review the advanced payload or retry after resolving the Cloud-side reason.'));
+		} else if (nightlyCloudResultStatus(payload) === 'partially_succeeded') {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Cloud returned partial success. Review failed items and retry only after confirming the local bounded snapshot is still current.'));
 		} else if (!nightlyCloudTerminal(payload)) {
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Cloud is still the run-state owner. Refresh status later; Toolbox is not running a local queue.'));
+		}
+		if (nightlyCloudRetryable(payload)) {
+			const retryMeta = el('div', 'npcink-toolbox__result-meta');
+			appendMeta(retryMeta, 'Retry owner', retryGuidance.retry_owner ? formatLabel(retryGuidance.retry_owner) : 'Cloud Runtime');
+			appendMeta(retryMeta, 'Retry action', retryGuidance.operator_next_action ? formatLabel(retryGuidance.operator_next_action) : 'Retry run');
+			appendMeta(retryMeta, 'Failed actions', Array.isArray(retryGuidance.failed_action_ids) ? retryGuidance.failed_action_ids.join(', ') : '');
+			if (retryMeta.childNodes.length) {
+				section.appendChild(retryMeta);
+			}
 		}
 		result.appendChild(section);
 	}
@@ -5195,6 +5367,7 @@
 		const merged = payload && payload.merged_morning_brief && typeof payload.merged_morning_brief === 'object' ? payload.merged_morning_brief : {};
 		const runId = nightlyCloudRunIdFromPayload(payload) || nightlyCloudRunId(root);
 		const status = payload && payload.status ? String(payload.status) : String(cloudRun.status || '');
+		const resultStatus = nightlyCloudResultStatus(payload);
 		const succeeded = status === 'succeeded' || lifecycle.terminal_status === 'succeeded';
 		const failed = status === 'failed' || status === 'canceled' || lifecycle.terminal_status === 'failed' || lifecycle.terminal_status === 'canceled';
 		const phase = lifecycle.phase || (succeeded || failed ? 'terminal' : status || 'submitted');
@@ -5203,8 +5376,8 @@
 
 		summary.appendChild(nightlyCloudSummaryItem(
 			'Run status',
-			failed ? 'warning' : succeeded ? 'ok' : 'warning',
-			status ? formatLabel(status) : formatLabel(stageLabel || 'Submitted'),
+			failed || resultStatus === 'partially_succeeded' ? 'warning' : succeeded ? 'ok' : 'warning',
+			resultStatus === 'partially_succeeded' ? 'Partial Success' : status ? formatLabel(status) : formatLabel(stageLabel || 'Submitted'),
 			runId ? 'Run ID: ' + runId : 'Waiting for Cloud run id.'
 		));
 		summary.appendChild(nightlyCloudSummaryItem(
@@ -5236,6 +5409,7 @@
 		const merged = payload && payload.merged_morning_brief && typeof payload.merged_morning_brief === 'object' ? payload.merged_morning_brief : {};
 		appendMeta(meta, 'Run', nightlyCloudRunIdFromPayload(payload));
 		appendMeta(meta, 'Status', payload && payload.status ? formatLabel(payload.status) : (cloudRun.status ? formatLabel(cloudRun.status) : ''));
+		appendMeta(meta, 'Result', nightlyCloudResultStatus(payload) ? formatLabel(nightlyCloudResultStatus(payload)) : '');
 		appendPositiveMeta(meta, 'Snapshot items', requestSummary.item_count);
 		appendMeta(meta, 'Payload', requestSummary.payload_mode ? formatLabel(requestSummary.payload_mode) : '');
 		appendMeta(meta, 'Retention', requestSummary.retention_ttl ? Math.round(Number(requestSummary.retention_ttl) / 86400) + ' days' : '');
@@ -5346,6 +5520,20 @@
 		}
 	}
 
+	async function refreshNightlyCloudRecentRuns(root, button) {
+		setNightlyCloudBusy(root, true, button);
+		try {
+			const payload = await getJson(config.restUrl, 'nightly-inspection/cloud-batch/recent?limit=5');
+			renderNightlyCloudRecentRuns(root, payload);
+			return payload;
+		} catch (error) {
+			renderErrorResult(root, error, 'Cloud recent runs failed.');
+			return null;
+		} finally {
+			setNightlyCloudBusy(root, false, button);
+		}
+	}
+
 	async function refreshNightlyCloudBatchStatus(root, button) {
 		const runId = nightlyCloudRunId(root);
 		if (!runId) {
@@ -5395,6 +5583,34 @@
 		}
 	}
 
+	async function retryNightlyCloudBatch(root, button) {
+		const runId = nightlyCloudRunId(root);
+		if (!runId) {
+			renderTextResult(root, 'Enter a Cloud run ID before retrying the run.', 'warning');
+			return null;
+		}
+		setNightlyCloudBusy(root, true, button);
+		try {
+			const payload = await postJson(config.restUrl, 'nightly-inspection/cloud-batch/' + encodeURIComponent(runId) + '/retry', nightlyCloudRequestPayload());
+			setNightlyCloudRunId(root, nightlyCloudRunIdFromPayload(payload) || runId);
+			renderNightlyCloudBatchPayload(root, payload, 'Cloud inspection retry queued', 'Cloud queued a retry with a new idempotency key. Toolbox did not create a local queue, Core proposal, or WordPress write.');
+			const retryRunId = nightlyCloudRunIdFromPayload(payload);
+			if (retryRunId) {
+				const statusPayload = await autoPollNightlyCloudBatch(root, retryRunId);
+				if (nightlyCloudSucceeded(statusPayload)) {
+					return await autoReadNightlyCloudBatchResult(root, retryRunId);
+				}
+				return statusPayload || payload;
+			}
+			return payload;
+		} catch (error) {
+			renderErrorResult(root, error, 'Cloud inspection retry failed.');
+			return null;
+		} finally {
+			setNightlyCloudBusy(root, false, button);
+		}
+	}
+
 	function initNightlyCloudBatch() {
 		document.querySelectorAll('[data-toolbox-nightly-cloud-batch]').forEach((root) => {
 			updateNightlyCloudButtonState(root, false);
@@ -5403,6 +5619,12 @@
 			if (entitlementButton) {
 				entitlementButton.addEventListener('click', () => {
 					refreshNightlyCloudEntitlement(root, entitlementButton);
+				});
+			}
+			const recentButton = root.querySelector('[data-toolbox-nightly-cloud-recent]');
+			if (recentButton) {
+				recentButton.addEventListener('click', () => {
+					refreshNightlyCloudRecentRuns(root, recentButton);
 				});
 			}
 			const submitButton = root.querySelector('[data-toolbox-nightly-cloud-submit]');
@@ -5424,6 +5646,12 @@
 			if (resultButton) {
 				resultButton.addEventListener('click', () => {
 					readNightlyCloudBatchResult(root, resultButton);
+				});
+			}
+			const retryButton = root.querySelector('[data-toolbox-nightly-cloud-retry]');
+			if (retryButton) {
+				retryButton.addEventListener('click', () => {
+					retryNightlyCloudBatch(root, retryButton);
 				});
 			}
 		});

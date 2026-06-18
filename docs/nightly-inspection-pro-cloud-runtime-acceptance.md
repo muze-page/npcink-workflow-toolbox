@@ -37,6 +37,13 @@ The product shape is Cloud-first, not cloud-only:
 - If the run is still processing after the short follow-up, the `Recent run`
   entry can refresh status or load the result later. Manual run-ID recovery is
   kept inside `Advanced details`.
+- `Load Cloud recent` reads Cloud-owned `nightly_site_inspection_recent_runs.v1`
+  cards and can load the latest run ID into the browser-local convenience
+  entry. This is display/recovery detail only, not server-side Toolbox run
+  history.
+- `Retry run` asks Cloud to queue a retry for the selected terminal run with a
+  new idempotency key and a new bounded local snapshot. Toolbox shows the new
+  Cloud run and does not own retry processing.
 - Result merging is review-only. It may add Cloud runtime details and writing
   preparation signals to the Morning Brief, but it must not create Core
   proposals automatically or write WordPress content.
@@ -60,6 +67,8 @@ The product shape is Cloud-first, not cloud-only:
   the next-step entry. Toolbox may submit a proposal only after the operator
   selects specific review items; it does not approve, preflight, execute, or
   write content.
+- Partial-success results must show retry guidance and failed-action context
+  without turning Toolbox into a retry queue or repair console.
 - When quota is exhausted, new runs are disabled while existing run IDs can
   still be refreshed or loaded.
 
@@ -124,7 +133,11 @@ Expected visible result:
 - quota summary shows package, used, remaining, run limit, batch limit,
   retention, payload modes, and Cloud role;
 - submit creates a visible Cloud run ID;
+- `Load Cloud recent` displays Cloud recent run cards and can load a known run
+  ID without creating server-side Toolbox history;
 - status summary shows run status, worker phase, and merge state;
+- partial-success or retryable runs show retry guidance and can request a
+  Cloud-owned retry with a fresh idempotency key;
 - succeeded runs can show `Merged preview` with local review still required;
 - a `Recent run` entry can reload the last browser-local run ID and refresh
   status/result from Cloud;

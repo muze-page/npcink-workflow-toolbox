@@ -16,7 +16,8 @@ as the coordination contract before wiring new endpoints or payload fields.
 The review target is:
 
 - submit one bounded local Nightly Site Inspection snapshot to Cloud;
-- read Cloud entitlement, status, and result detail back into Toolbox;
+- read Cloud entitlement, recent-run cards, status, retry, and result detail
+  back into Toolbox;
 - merge Cloud scoring into the local Morning Brief preview for review;
 - show a clear Core handoff when proposal or write work is needed;
 - preserve the local fallback preview and Core write-governance boundaries.
@@ -41,6 +42,7 @@ Files:
 - `docs/nightly-inspection-pro-cloud-runtime-acceptance.md`
 - `docs/nightly-inspection-pro-cloud-runtime-operator-trial.md`
 - `docs/nightly-inspection-pro-cloud-runtime-release-prep.md`
+- `docs/nightly-inspection-production-operator-runbook.md`
 
 Reviewer question:
 
@@ -66,6 +68,8 @@ Reviewer questions:
 - Are payload mode and retention settings bounded and sanitized?
 - Does the merge remain review-only, with no Core proposal creation and no
   WordPress writes?
+- Do recent-run and retry routes stay Cloud-owned detail/request bridges rather
+  than local server-side history, queue, or repair ownership?
 
 ### 3. Admin operator surface
 
@@ -83,6 +87,8 @@ Reviewer questions:
 - Are manual status/result controls kept in `Advanced details`?
 - Can the operator answer whether the run finished, what to review, and where
   approval/write work happens without opening raw payloads?
+- Can the operator see partial-success retry guidance and request a Cloud retry
+  without creating a local queue or Core proposal?
 
 ### 4. Smoke coverage and default gate
 
@@ -138,7 +144,10 @@ https://magick-ai.local/wp-admin/admin.php?page=npcink-toolbox
 Expected manual result:
 
 - Cloud quota can be refreshed;
+- Cloud recent runs can be loaded from Cloud-owned run cards;
 - a Pro run can be submitted;
+- retry of a known terminal run queues a new Cloud run with a fresh
+  idempotency key;
 - a succeeded run displays `Cloud run detail`, `Cloud review details`, and
   `Core handoff`;
 - result detail shows `Review in Core`;

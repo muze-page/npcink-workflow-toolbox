@@ -55,9 +55,11 @@ final class Rest_Controller {
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
 		$this->post( '/nightly-inspection/cloud-batch', 'nightly_inspection_cloud_batch' );
 		$this->get( '/nightly-inspection/cloud-runtime-entitlement', 'nightly_inspection_cloud_runtime_entitlement' );
+		$this->get( '/nightly-inspection/cloud-batch/recent', 'nightly_inspection_cloud_batch_recent' );
 		$this->get( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)', 'nightly_inspection_cloud_batch_status' );
 		$this->get( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result', 'nightly_inspection_cloud_batch_result' );
 		$this->post( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result', 'nightly_inspection_cloud_batch_result' );
+		$this->post( '/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/retry', 'nightly_inspection_cloud_batch_retry' );
 
 		register_rest_route(
 			Plugin::REST_NAMESPACE,
@@ -131,6 +133,8 @@ final class Rest_Controller {
 					'direct_wordpress_write' => false,
 					'polling_registered'     => true,
 					'entitlement_route'      => '/nightly-inspection/cloud-runtime-entitlement',
+					'recent_route'           => '/nightly-inspection/cloud-batch/recent',
+					'retry_registered'       => true,
 				),
 				'boundary'                 => 'Toolbox returns Cloud-managed image-source and Cloud-managed site-knowledge suggestions only. Cloud owns web search execution and provider configuration. WordPress writes should be handed to Abilities/Core governance.',
 			)
@@ -344,6 +348,22 @@ final class Rest_Controller {
 		);
 	}
 
+	public function nightly_inspection_cloud_batch_recent( WP_REST_Request $request ) {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
+				__( 'Connect Npcink Cloud before reading recent Pro Nightly Inspection runs.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		return rest_ensure_response(
+			$this->client->get_nightly_inspection_cloud_recent_runs(
+				max( 1, min( 50, (int) ( $request->get_param( 'limit' ) ?: 5 ) ) )
+			)
+		);
+	}
+
 	public function nightly_inspection_cloud_runtime_entitlement() {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
@@ -372,6 +392,41 @@ final class Rest_Controller {
 			$this->client->get_nightly_inspection_cloud_batch_result(
 				sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
 				$morning_brief
+			)
+		);
+	}
+
+	public function nightly_inspection_cloud_batch_retry( WP_REST_Request $request ) {
+		if ( ! $this->settings->cloud_runtime_available() ) {
+			return new WP_Error(
+				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
+				__( 'Connect Npcink Cloud before retrying Pro Nightly Inspection runs.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$params          = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		$params          = is_array( $params ) ? $params : array();
+		$config          = $this->settings->get_nightly_inspection_settings();
+		$post_limit_raw  = $params['post_limit'] ?? $request->get_param( 'post_limit' );
+		$media_limit_raw = $params['media_limit'] ?? $request->get_param( 'media_limit' );
+		$post_limit      = max( 1, min( 50, (int) ( $post_limit_raw ?: 12 ) ) );
+		$media_limit     = max( 1, min( 50, (int) ( $media_limit_raw ?: 8 ) ) );
+		$idempotency_key = sanitize_text_field( (string) ( $params['idempotency_key'] ?? $request->get_param( 'idempotency_key' ) ) );
+		$snapshot        = ( new Snapshot_Collector() )->collect( $post_limit, $media_limit );
+		$payload_mode    = (string) ( $params['payload_mode'] ?? $request->get_param( 'payload_mode' ) );
+		$retention_ttl   = $params['retention_ttl'] ?? $request->get_param( 'retention_ttl' );
+
+		return rest_ensure_response(
+			$this->client->retry_nightly_inspection_cloud_batch(
+				sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
+				$snapshot,
+				array(
+					'idempotency_key' => $idempotency_key,
+					'payload_mode'    => '' !== $payload_mode ? $payload_mode : (string) $config['cloud_payload_mode'],
+					'retention_ttl'   => (int) ( $retention_ttl ?: $config['cloud_retention_ttl'] ),
+					'source'          => 'toolbox_rest_retry',
+				)
 			)
 		);
 	}
