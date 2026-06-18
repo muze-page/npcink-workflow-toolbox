@@ -1945,8 +1945,6 @@
 
 		renderHostedAiQualityGuardrails(result, payload);
 
-		renderMediaAltCaptionReviewSet(result, payload.media_alt_caption_review_set);
-
 		if (payload.output_text) {
 			const pre = el('pre', 'npcink-toolbox__result-raw');
 			pre.textContent = String(payload.output_text);
@@ -1986,6 +1984,8 @@
 		result.appendChild(meta);
 
 		renderHostedAiQualityGuardrails(result, payload);
+
+		renderMediaAltCaptionReviewSet(result, payload.media_alt_caption_review_set);
 
 		if (payload.output_text) {
 			const pre = el('pre', 'npcink-toolbox__result-raw');
