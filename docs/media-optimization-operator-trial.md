@@ -6,6 +6,9 @@ Use this trial after the media optimization release gates pass. The goal is to
 learn whether real operators understand the fixed flow and trust the rollback
 story before Toolbox adds another media or batch feature.
 
+Latest local validation:
+[2026-06-18 trial results](media-optimization-operator-trial-results-2026-06-18.md).
+
 ## Scope
 
 Run the trial against 5 to 10 real but low-risk media attachments on a local or
