@@ -2799,6 +2799,12 @@ final class Rest_Controller {
 			);
 		}
 
+		$format_consistency   = $this->editor_article_checkup_format_consistency( $paragraphs );
+		$format_items         = is_array( $format_consistency['items'] ?? null ) ? $format_consistency['items'] : array();
+		foreach ( $format_items as $format_item ) {
+			$items[] = $format_item;
+		}
+
 		$semantic_consistency = $this->editor_article_checkup_semantic_consistency( $text );
 		$semantic_items       = is_array( $semantic_consistency['items'] ?? null ) ? $semantic_consistency['items'] : array();
 		foreach ( $semantic_items as $semantic_item ) {
@@ -2826,11 +2832,13 @@ final class Rest_Controller {
 			'write_posture'          => 'suggestion_only',
 			'final_write_path'       => 'operator_review_only',
 			'direct_wordpress_write' => false,
+			'format_consistency'     => $format_consistency,
 			'semantic_consistency'   => $semantic_consistency,
 			'items'                  => array_slice( $items, 0, 12 ),
 			'summary'                => array(
 				'paragraph_count'          => count( $paragraphs ),
 				'issue_count'              => count( $items ),
+				'format_consistency_count' => count( $format_items ),
 				'semantic_consistency_count' => count( $semantic_items ),
 				'cloud_calls'              => false,
 				'no_rewrite'               => true,
@@ -2886,6 +2894,47 @@ final class Rest_Controller {
 					implode( ', ', $signals )
 				)
 			),
+		);
+	}
+
+	private function editor_article_checkup_format_consistency( array $paragraphs ): array {
+		$items = array();
+
+		foreach ( $paragraphs as $index => $paragraph ) {
+			if ( ! is_string( $paragraph ) || '' === trim( $paragraph ) ) {
+				continue;
+			}
+			$inline_marker_count = preg_match_all( '/(?:^|[。；;：:\\s])(?:\\d+[.．、]|[（(]?\\d+[）)]|[A-Za-z][.．、])(?=\\s*[^\\s])/u', $paragraph );
+			if ( (int) $inline_marker_count < 2 ) {
+				continue;
+			}
+			$location = sprintf(
+				/* translators: %d: paragraph number. */
+				__( 'Paragraph %d', 'npcink-toolbox' ),
+				$index + 1
+			);
+			$items[] = $this->editor_article_checkup_issue(
+				'format_inline_list_' . ( $index + 1 ),
+				'format',
+				'info',
+				$location,
+				$paragraph,
+				__( 'The paragraph looks like an inline numbered or option list.', 'npcink-toolbox' ),
+				__( 'Review whether these points should become bullets, table rows, or separate paragraphs. Keep this as layout guidance only; do not auto-rewrite the article.', 'npcink-toolbox' )
+			);
+			if ( count( $items ) >= 3 ) {
+				break;
+			}
+		}
+
+		return array(
+			'artifact_type'          => 'format_consistency.v1',
+			'source'                 => 'current_full_draft_local_heuristic',
+			'status'                 => 'ready',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
+			'no_rewrite'             => true,
+			'items'                  => $items,
 		);
 	}
 

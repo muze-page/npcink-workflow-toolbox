@@ -313,12 +313,13 @@ $article_result = toolbox_editor_hosted_no_result_rest(
 		'post_status' => 'draft',
 		'title'       => 'Article checkup glue smoke',
 		'excerpt'     => '',
-		'content'     => '核心要点文章计划先生成可审查 Gutenberg 结构。可维护性编辑体验响应式表现治理边界主要差异把差异写进段落和对比卡片。方案 A适合追求最小改动和快速上线的场景。AEO 关注回答型体验。读者或搜索系统提出一个明确问题时，文章不能先给直接答案，再补充条件、步骤和限制。',
+		'content'     => '核心要点文章计划先生成可审查 Gutenberg 结构。可维护性编辑体验响应式表现治理边界主要差异把差异写进段落和对比卡片。方案 A适合追求最小改动和快速上线的场景。操作顺序 1. 先确认边界 2. 再整理证据 3. 最后人工发布。AEO 关注回答型体验。读者或搜索系统提出一个明确问题时，文章不能先给直接答案，再补充条件、步骤和限制。',
 		'intent'      => 'article_checkup',
 	)
 );
 $article_checkup = is_array( $article_result['sections']['article_checkup'] ?? null ) ? $article_result['sections']['article_checkup'] : array();
 $article_items   = is_array( $article_checkup['items'] ?? null ) ? $article_checkup['items'] : array();
+$format_consistency = is_array( $article_checkup['format_consistency'] ?? null ) ? $article_checkup['format_consistency'] : array();
 $semantic_consistency = is_array( $article_checkup['semantic_consistency'] ?? null ) ? $article_checkup['semantic_consistency'] : array();
 $article_ids     = array_map(
 	static function ( $item ): string {
@@ -328,6 +329,9 @@ $article_ids     = array_map(
 );
 
 toolbox_editor_hosted_no_result_assert( in_array( 'structural_glue_1', $article_ids, true ), 'Article checkup detects glued heading labels, phrase groups, or option labels as one scannable issue.' );
+toolbox_editor_hosted_no_result_assert( 'format_consistency.v1' === (string) ( $format_consistency['artifact_type'] ?? '' ), 'Article checkup returns a bounded format consistency sub-artifact.' );
+toolbox_editor_hosted_no_result_assert( in_array( 'format_inline_list_1', $article_ids, true ), 'Article checkup flags inline numbered lists as layout guidance instead of rewriting them.' );
 toolbox_editor_hosted_no_result_assert( 'semantic_consistency.v1' === (string) ( $semantic_consistency['artifact_type'] ?? '' ), 'Article checkup returns a bounded semantic consistency sub-artifact.' );
 toolbox_editor_hosted_no_result_assert( in_array( 'semantic_aeo_answer_order', $article_ids, true ), 'Article checkup flags reversed AEO answer-order wording for manual review.' );
+toolbox_editor_hosted_no_result_assert( ! empty( $format_consistency['no_rewrite'] ) && false === (bool) ( $format_consistency['direct_wordpress_write'] ?? true ), 'Format consistency check stays no-rewrite and no-write.' );
 toolbox_editor_hosted_no_result_assert( ! empty( $semantic_consistency['no_rewrite'] ) && false === (bool) ( $semantic_consistency['direct_wordpress_write'] ?? true ), 'Semantic consistency check stays no-rewrite and no-write.' );
