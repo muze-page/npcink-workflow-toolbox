@@ -17,7 +17,7 @@ Status: MVP architecture.
 | `modules/local-automation-runtime/` | Phase 1 bundled skeleton for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview and dry-run replay validation while registering no WordPress hooks. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
-| `assets/editor-content-support.js` | Block editor sidebar panel for publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph checks. |
+| `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph checks. |
 | `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
 ## Current Data Storage
@@ -290,25 +290,39 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`writing_support`, `title_suggestions`, `article_outline`, selection-only
-paragraph checks via `polish_notes`, `publish_preflight`, `discoverability`, `summary_suggestions`,
+`writing_support`, local full-draft diagnostics via `article_checkup`,
+`title_suggestions`, `article_outline`, selection-only paragraph checks via
+`polish_notes`, `publish_preflight`, `discoverability`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
 `taxonomy_tags`, `internal_links`, `image_candidates`, or
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
-recommendations appear first: title suggestions, summary suggestions, tag
-suggestions, category suggestions, image candidates, and internal links.
+recommendations appear first: article checkup, title suggestions, summary
+suggestions, tag suggestions, category suggestions, image candidates, and
+internal links.
 Related existing-post review is folded into publish preflight duplicate-risk
 checks and internal-link candidates; `writing_support` remains a supported route
-intent for compatibility but is not a default editor button. Outline actions sit
+intent for compatibility but is not a default editor button. Article checkup is
+a local suggestion-only diagnostic that points to sentence-density, fact-gap,
+tone, structure, and format review items without rewriting or inserting text.
+Outline actions sit
 in a writing-assist group, while paragraph checks live in the selected-block
 toolbar. Publish preflight, discoverability,
 and current-article image ALT suggestions sit in the pre-publish package group.
+The discoverability result may show a current-draft image ALT/caption check and
+CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
+back into the discoverability panel while preserving the
+`current_article_media_metadata_only` and no-media-write boundary.
 The standalone discoverability result is a post-publish optimization task
 panel: SEO title, SEO description, slug, and excerpt are shown as actionable
-review tasks; SEO title and description can create one pending Core review
-proposal, while AEO/GEO/FAQ/schema ideas remain optional crawler-facing review
-notes.
+review tasks. SEO title and description use the governed SEO handoff, then ask
+Adapter/Core to approve, preflight, and execute the created proposal when host
+policy allows; if policy blocks execution, the proposal remains available for
+Core review. Excerpt can update the current editor draft after an explicit
+operator click. Slug is separated into a permalink-risk action with
+confirmation before the editor draft slug is changed; published posts receive
+stronger URL/indexing warning copy. AEO/GEO/FAQ/schema ideas remain optional
+crawler-facing review notes.
 The focused result view accepts a bounded
 operator instruction for regeneration; that instruction is treated as tone,
 angle, audience, or ranking preference only, not as factual source material or

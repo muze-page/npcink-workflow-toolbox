@@ -40,6 +40,37 @@ Run when changing Composer metadata:
 composer validate --no-check-publish
 ```
 
+## Commit Scope Gate
+
+Before staging, inspect the worktree:
+
+```bash
+git status --short --branch
+git diff --stat
+```
+
+If unrelated local edits already exist, name them and leave them unstaged. Do
+not use `git add -A` for mixed worktrees. When a file contains both current-task
+and unrelated hunks, stage only the intended hunk with `git add -p` or
+`git apply --cached`.
+
+Before committing, verify the staged scope:
+
+```bash
+git diff --cached --stat
+git diff --cached --name-only
+```
+
+After committing, verify the actual commit:
+
+```bash
+git show --name-status --stat HEAD
+```
+
+If unexpected files or hunks entered the commit, immediately run
+`git reset --mixed HEAD~1` and recommit the correct scope. This keeps the
+working tree changes intact while fixing the commit boundary.
+
 ## Git Remote Gate
 
 Before creating, pushing, or updating a PR branch, verify that local Git can
@@ -56,6 +87,24 @@ This check runs `git ls-remote origin HEAD` with `GIT_TERMINAL_PROMPT=0` and a
 path before creating commits for a PR. Do not use GitHub's Git Data API for
 normal branch publishing; it is only an emergency fallback and can create commit
 objects that do not match the local commit SHA.
+
+## Publication Status Gate
+
+Local commit cleanup is not the same as publishing. Before calling a milestone
+closed, run:
+
+```bash
+git status --short --branch
+```
+
+If the branch is ahead of its upstream, decide one of these outcomes:
+
+- push the branch and open or update the PR;
+- keep the commits local intentionally and record why in the final response;
+- split or move the commits to a dedicated branch before publishing.
+
+Do not report a stage as fully closed while omitting the branch ahead/behind
+state or hiding remaining modified/untracked files.
 
 ## WordPress Smoke Gate
 
@@ -169,6 +218,48 @@ Cloud Site Knowledge, verifies `internal_link_candidates.v1`,
 `seo_meta_handoff_preview.v1`, creates one pending SEO Core review proposal
 through Adapter `/proposals`, purges that fixture, and proves the sampled post
 is not mutated.
+
+For the post-editor SEO apply loop, run:
+
+```bash
+composer smoke:editor-seo-apply
+```
+
+This creates a temporary draft, gets the `discoverability` SEO handoff preview,
+creates an executable `npcink-abilities-toolkit/set-post-seo-meta` Core
+proposal through Adapter `/proposals`, and calls Adapter
+`approve-and-execute`. If local Core policy allows execution, it verifies the
+SEO title and description meta were written by the Core-approved ability. If
+policy blocks automatic execution, it verifies the Core proposal remains
+reviewable and the temporary post SEO meta is unchanged. It is intentionally
+outside `composer test:all` because it depends on a running local WordPress site
+with Adapter, Core, and Abilities active.
+
+For hosted AI no-result editor diagnostics, run:
+
+```bash
+composer smoke:editor-hosted-ai-no-result
+```
+
+This dispatches the selected-paragraph check through the editor REST route while
+mocking Cloud omitted, zero provider-call, and idempotent replay empty responses.
+It verifies that the editor keeps the suggestion-only local paragraph-check
+fallback, preserves runtime diagnostics, and does not replace selected text. It
+is intentionally outside `composer test:all` because it depends on a running
+local WordPress site and WP-CLI.
+
+For the post-editor follow-up quality trial through eval-lab, run:
+
+```bash
+composer eval:editor-followup:trial
+```
+
+This proxies to the sibling `magick-ai-eval-lab` task registry and runs
+`editor_followup_trial` against recent local WordPress posts. The trial checks
+article checkup, discoverability, publish preflight, SEO handoff preview, slug
+candidate visibility, and no WordPress mutation. It is intentionally outside
+`composer test:all` because it depends on a local WordPress site and the
+development-only eval-lab checkout.
 
 For the Site Knowledge review handoff UI, run:
 

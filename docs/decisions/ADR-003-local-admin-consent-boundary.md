@@ -53,6 +53,14 @@ modal. All other write-like Toolbox actions must continue to use Core proposal
 handoff, Adapter unified user actions, and reusable WordPress abilities until
 their own boundary decision exists.
 
+The post-editor SEO title/description apply action is not a Local Admin Consent
+expansion. It remains a Core proposal plus Adapter unified user action:
+Toolbox may submit the reviewed single-post `set-post-seo-meta` proposal and
+then ask Adapter to approve, preflight, and execute it. Core policy may allow
+that current editor action or leave the proposal pending for Core review.
+Toolbox still does not mutate SEO meta directly and does not own approval,
+preflight, audit, or final write execution.
+
 ## Current Mapping
 
 | Operation class | Current Toolbox behavior |
@@ -60,7 +68,7 @@ their own boundary decision exists.
 | `suggestion_only` | Return candidates or planning artifacts. No proposal required. No WordPress write. |
 | `local_admin_consent` | Implemented only for one existing image attachment -> current post featured image, with Core audit and rollback on completion-audit failure. |
 | `strong_local_confirmation` | Classification only. Requires a future confirmation and audit contract or Core proposal. |
-| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. The article/media batch proof is the high-risk contrast: draft, media upload, metadata, and featured-image actions are grouped into one Core batch proposal, not local consent. |
+| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. Some current-editor actions, such as reviewed SEO title/description, may ask Adapter/Core to approve and execute the created proposal immediately when policy allows. The article/media batch proof is the high-risk contrast: draft, media upload, metadata, and featured-image actions are grouped into one Core batch proposal, not local consent. |
 
 ## Future Strong Local Confirmation Candidate
 
@@ -127,6 +135,9 @@ images, or emit `local_admin_consent.*` audit events.
   write path.
 - A future Local Admin Consent implementation must include audit evidence from
   the start.
-- Featured-image, media import, SEO meta, publishing, deletion, batch, external
-  agent, and incomplete-preview writes continue to use Core proposal review
-  unless a later ADR explicitly narrows an exception.
+- Featured-image, media import, publishing, deletion, batch, external agent,
+  and incomplete-preview writes continue to use Core proposal review unless a
+  later ADR explicitly narrows an exception.
+- SEO meta remains Core-governed, but the current editor may ask Adapter/Core
+  to execute the reviewed single-post title/description proposal immediately
+  when host policy allows; blocked execution remains a Core review proposal.

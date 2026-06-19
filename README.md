@@ -18,8 +18,9 @@ The first version provides:
 - a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
 - a post editor **Npcink Content Support** sidebar for title suggestions,
-  outline support, summary suggestions, taxonomy/tag, internal-link, image, and
-  publish readiness support around human-written articles, plus
+  article checkup, outline support, summary suggestions, taxonomy/tag,
+  internal-link, image, and publish readiness support around human-written
+  articles, plus
   selected-paragraph toolbar checks that do not replace body text;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
@@ -267,12 +268,15 @@ fallback panel that renders the plan artifacts, risk report, final
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
 opened from the editor top toolbar. Its visible buttons run fixed flows for
-title suggestions, outline support, publish preflight,
+article checkup, title suggestions, outline support, publish preflight,
 discoverability suggestions, summary suggestions, category suggestions, tag
 suggestions, internal-link candidates, image-source candidates, and
 current-article image ALT suggestions from the current draft context. Related
 existing-post review is handled through publish preflight duplicate-risk checks
 and internal-link candidates rather than a separate visible button. The sidebar
+article checkup is a local full-draft diagnostic surface for sentence density,
+fact-gap, tone, and structure review; it points to paragraphs and editing
+direction, but does not rewrite, insert, or replace article text. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,

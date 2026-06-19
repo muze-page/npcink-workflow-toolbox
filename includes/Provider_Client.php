@@ -4876,11 +4876,13 @@ final class Provider_Client {
 		return array();
 	}
 
-	private function normalize_hosted_ai_content_support_response( array $response, array $runtime_payload, string $intent ): array {
-		$result      = $this->extract_cloud_runtime_result( $response );
-		$output_text = sanitize_textarea_field(
-			(string) (
-				$result['output_text']
+		private function normalize_hosted_ai_content_support_response( array $response, array $runtime_payload, string $intent ): array {
+			$result      = $this->extract_cloud_runtime_result( $response );
+			$data        = is_array( $response['data'] ?? null ) ? $response['data'] : array();
+			$context     = is_array( $data['execution_context'] ?? null ) ? $data['execution_context'] : array();
+			$output_text = sanitize_textarea_field(
+				(string) (
+					$result['output_text']
 				?? $result['text']
 				?? $result['content']
 				?? ( $result['message']['content'] ?? '' )
@@ -4897,13 +4899,19 @@ final class Provider_Client {
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-content-support' ) ),
 			'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_content_support.v1' ) ),
 				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.ai' ) ),
-				'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? '' ) ),
-				'intent'                     => sanitize_key( $intent ),
-				'status'                     => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'ready' ) ) ),
-				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
-				'output_text'                => $output_text,
-				'output_json'                => $this->sanitize_payload( $output_json ),
-				'result'                     => $this->sanitize_payload( $result ),
+					'model_id'                   => sanitize_text_field( (string) ( $result['model_id'] ?? '' ) ),
+					'intent'                     => sanitize_key( $intent ),
+					'status'                     => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'ready' ) ) ),
+					'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
+					'cloud_run_id'               => sanitize_text_field( (string) ( $data['run_id'] ?? $response['run_id'] ?? '' ) ),
+					'cloud_status'               => sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? '' ) ),
+					'cloud_storage_mode'         => sanitize_key( (string) ( $context['storage_mode'] ?? $runtime_payload['storage_mode'] ?? '' ) ),
+					'cloud_data_classification'  => sanitize_key( (string) ( $context['data_classification'] ?? $runtime_payload['data_classification'] ?? '' ) ),
+					'cloud_idempotent_replay'    => ! empty( $data['idempotent_replay'] ),
+					'cloud_provider_call_count'  => absint( $data['provider_call_count'] ?? 0 ),
+					'output_text'                => $output_text,
+					'output_json'                => $this->sanitize_payload( $output_json ),
+					'result'                     => $this->sanitize_payload( $result ),
 				'summary_prompt_mode'        => sanitize_key( (string) ( $runtime_payload['summary_prompt_mode'] ?? '' ) ),
 				'quality_contract'           => $this->sanitize_payload( $quality_contract ),
 				'output_shape'               => $this->sanitize_payload( $quality_contract['output_shape'] ?? array() ),

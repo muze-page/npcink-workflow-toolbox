@@ -180,10 +180,14 @@ considered.
 `/ai/content-support` sends one bounded suggestion request to the Cloud hosted
 AI runtime. It returns review-only content-support suggestions and must not
 create proposals, approve proposals, publish content, or write WordPress data.
-Its default user-facing intents are title/summary suggestions, compact outline
-support, selection-only paragraph checks, and summary/category/tag review
-support. They must stay lightweight and must not be presented as one-click
-long-form article generation. Default draft-support results must include a small quality
+Its default user-facing intents are local article checkup, title/summary
+suggestions, compact outline support, selection-only paragraph checks, and
+summary/category/tag review support. Article checkup is a full-draft diagnostic
+surface for sentence density, fact-gap, tone, structure, and format issues; it
+must point to review locations and editing direction without rewriting,
+inserting, or replacing body text. They must stay lightweight and must not be
+presented as one-click long-form article generation. Default draft-support
+results must include a small quality
 contract: expected output shape, operator review checklist, and reject-if rules
 for full-article output, unsupported claims, or write-like actions. Summary
 and terms optimization may suggest excerpts, categories, and tags, but it must
@@ -222,13 +226,20 @@ Publish preflight may aggregate summary, taxonomy, image, internal-link,
 duplicate-risk, and SEO readiness into `pre_publish_review.v1`, but that
 artifact remains advisory. SEO metadata support is limited to a single current
 post `seo_meta_handoff_preview.v1` proposal payload that the editor may submit
-through Adapter as one pending Core review proposal; Toolbox must not approve
-or execute that proposal, batch SEO changes, mutate SEO plugin fields, or write
-schema/GEO metadata directly.
+through Adapter. For this single current-post SEO title/description action, the
+editor may ask Adapter `/proposals/{proposal_id}/approve-and-execute` to finish
+the same reviewed user action when host policy allows. Adapter/Core remain the
+approval, preflight, proposal, and audit owner, and Abilities remain the final
+WordPress write executor. If policy blocks execution, the proposal stays in
+Core review. Toolbox must not batch SEO changes, mutate SEO plugin fields
+directly, or write schema/GEO metadata directly.
 The standalone discoverability button may render post-publish optimization
-tasks and expose the same SEO Core handoff button. Slug, FAQ, answer-summary,
-GEO-summary, and schema suggestions remain review notes or copyable candidates
-unless a separate governed write path exists.
+tasks and expose the same SEO Adapter/Core apply action. Excerpt and slug
+suggestions may update the current editor draft only after an explicit operator
+click; slug application must show a permalink-risk confirmation, with stronger
+warning for already published posts. FAQ, answer-summary, GEO-summary, and
+schema suggestions remain review notes or copyable candidates unless a
+separate governed write path exists.
 A future direct apply path for one current post's excerpt plus existing
 category/tag ids must not be treated as Local Admin Consent expansion. It
 would first require a `strong_local_confirmation` UX and audit contract with

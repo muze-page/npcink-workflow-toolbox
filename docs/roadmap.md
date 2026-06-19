@@ -38,10 +38,12 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
-- Post editor Content Support panel for fixed flows: title suggestions, outline
-  support, discoverability suggestions, publish preflight, summary suggestions,
-  category suggestions, tag suggestions, internal-link candidates, image
-  candidates, and current article image ALT suggestions. Selection-only
+- Post editor Content Support panel for fixed flows: local article checkup,
+  title suggestions, outline support, discoverability suggestions, publish
+  preflight, summary suggestions, category suggestions, tag suggestions,
+  internal-link candidates, image candidates, and current article image ALT
+  suggestions. Article checkup should diagnose full-draft sentence-density,
+  fact-gap, tone, structure, and format issues without rewriting text. Selection-only
   paragraph checks belong in the selected-block toolbar beside paragraph image
   suggestions, not as an article-level sidebar button. Related existing-post
   review belongs inside publish preflight duplicate-risk checks and internal-link

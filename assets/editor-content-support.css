@@ -298,15 +298,7 @@
 	text-transform: uppercase;
 }
 
-.npcink-toolbox-editor-support__preflight-compact-list {
-	display: grid;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.npcink-toolbox-editor-support__preflight-compact-list li {
+.npcink-toolbox-editor-support__preflight-blocking-hint {
 	display: grid;
 	gap: 6px;
 	padding: 8px;
@@ -315,16 +307,22 @@
 	border-radius: 4px;
 }
 
-.npcink-toolbox-editor-support__preflight-compact-list strong,
-.npcink-toolbox-editor-support__preflight-compact-list span {
+.npcink-toolbox-editor-support__preflight-blocking-hint strong,
+.npcink-toolbox-editor-support__preflight-blocking-hint span,
+.npcink-toolbox-editor-support__preflight-blocking-hint p {
 	display: block;
 	overflow-wrap: anywhere;
 	font-size: 12px;
 	line-height: 1.35;
 }
 
-.npcink-toolbox-editor-support__preflight-compact-list span {
+.npcink-toolbox-editor-support__preflight-blocking-hint span,
+.npcink-toolbox-editor-support__preflight-blocking-hint p {
 	color: #646970;
+}
+
+.npcink-toolbox-editor-support__preflight-blocking-hint p {
+	margin: 2px 0 0;
 }
 
 .npcink-toolbox-editor-support__preflight-summary-actions {
@@ -622,7 +620,9 @@
 
 .npcink-toolbox-editor-support__discoverability-summary,
 .npcink-toolbox-editor-support__discoverability-group,
-.npcink-toolbox-editor-support__discoverability-next-step {
+.npcink-toolbox-editor-support__discoverability-next-step,
+.npcink-toolbox-editor-support__discoverability-slug,
+.npcink-toolbox-editor-support__discoverability-media {
 	display: grid;
 	gap: 7px;
 	padding: 10px;
@@ -635,6 +635,15 @@
 	background: #f6f7f7;
 }
 
+.npcink-toolbox-editor-support__discoverability-next-step {
+	border-color: #3858e9;
+}
+
+.npcink-toolbox-editor-support__discoverability-slug {
+	background: #fff8e5;
+	border-color: #dba617;
+}
+
 .npcink-toolbox-editor-support__discoverability-summary strong {
 	color: #1d2327;
 	font-size: 13px;
@@ -642,11 +651,57 @@
 }
 
 .npcink-toolbox-editor-support__discoverability-summary p,
-.npcink-toolbox-editor-support__discoverability-list p {
+.npcink-toolbox-editor-support__discoverability-list p,
+.npcink-toolbox-editor-support__discoverability-slug p,
+.npcink-toolbox-editor-support__discoverability-media p {
 	margin: 0;
 	color: #50575e;
 	font-size: 12px;
 	line-height: 1.4;
+}
+
+.npcink-toolbox-editor-support__discoverability-media-counts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.npcink-toolbox-editor-support__discoverability-media-counts span {
+	display: inline-flex;
+	padding: 2px 6px;
+	color: #1d2327;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.npcink-toolbox-editor-support__discoverability-media-results {
+	display: grid;
+	gap: 6px;
+}
+
+.npcink-toolbox-editor-support__discoverability-media-results > strong {
+	color: #1d2327;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__discoverability-more {
+	display: grid;
+	gap: 8px;
+}
+
+.npcink-toolbox-editor-support__discoverability-more summary {
+	cursor: pointer;
+	color: #3858e9;
+	font-weight: 600;
+}
+
+.npcink-toolbox-editor-support__discoverability-more[open] summary {
+	margin-bottom: 8px;
 }
 
 .npcink-toolbox-editor-support__discoverability-list {
@@ -701,6 +756,19 @@
 	border-radius: 3px;
 }
 
+.npcink-toolbox-editor-support__discoverability-slug code {
+	display: block;
+	padding: 5px 6px;
+	overflow-wrap: anywhere;
+	white-space: normal;
+	color: #1d2327;
+	background: #fff;
+	border: 1px solid #e0c46c;
+	border-radius: 3px;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
 .npcink-toolbox-editor-support__discoverability-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -713,27 +781,51 @@
 	font-size: 12px;
 }
 
-.npcink-toolbox-editor-support__preflight-review-sections {
+.npcink-toolbox-editor-support__preflight-checklist {
 	display: grid;
-	gap: 10px;
+	gap: 8px;
 }
 
-.npcink-toolbox-editor-support__preflight-review-group,
-.npcink-toolbox-editor-support__preflight-detail-section {
+.npcink-toolbox-editor-support__preflight-checklist-head {
 	display: grid;
-	gap: 6px;
+	grid-template-columns: 88px minmax(120px, 0.8fr) minmax(220px, 1.6fr) 160px;
+	gap: 10px;
+	padding: 0 10px 4px;
+	color: #646970;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.3;
 }
 
 .npcink-toolbox-editor-support__preflight-review-list,
 .npcink-toolbox-editor-support__preflight-evidence-list {
 	display: grid;
-	gap: 6px;
+	gap: 0;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
-.npcink-toolbox-editor-support__preflight-review-row,
+.npcink-toolbox-editor-support__preflight-review-list {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.npcink-toolbox-editor-support__preflight-review-row {
+	display: grid;
+	grid-template-columns: 88px minmax(120px, 0.8fr) minmax(220px, 1.6fr) 160px;
+	gap: 10px;
+	align-items: start;
+	padding: 9px 10px;
+	background: #fff;
+	border-top: 1px solid #dcdcde;
+}
+
+.npcink-toolbox-editor-support__preflight-review-row:first-child {
+	border-top: 0;
+}
+
 .npcink-toolbox-editor-support__preflight-evidence-list li {
 	display: grid;
 	gap: 6px;
@@ -743,20 +835,9 @@
 	border-radius: 4px;
 }
 
-.npcink-toolbox-editor-support__preflight-review-row {
-	grid-template-columns: minmax(0, 1fr) auto;
-	align-items: start;
-}
-
-.npcink-toolbox-editor-support__preflight-review-title {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	align-items: center;
-}
-
-.npcink-toolbox-editor-support__preflight-review-title strong,
-.npcink-toolbox-editor-support__preflight-review-row p,
+.npcink-toolbox-editor-support__preflight-review-status,
+.npcink-toolbox-editor-support__preflight-review-item strong,
+.npcink-toolbox-editor-support__preflight-review-decision p,
 .npcink-toolbox-editor-support__preflight-evidence-list strong,
 .npcink-toolbox-editor-support__preflight-evidence-list span,
 .npcink-toolbox-editor-support__preflight-evidence-list code {
@@ -765,21 +846,67 @@
 	line-height: 1.35;
 }
 
-.npcink-toolbox-editor-support__preflight-review-title span {
-	padding: 1px 6px;
-	color: #646970;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
+.npcink-toolbox-editor-support__preflight-review-status {
+	display: inline-flex;
+	width: fit-content;
+	padding: 2px 6px;
 	border-radius: 3px;
-	font-size: 10px;
 	font-weight: 600;
-	line-height: 1.4;
 }
 
-.npcink-toolbox-editor-support__preflight-review-row p,
+.npcink-toolbox-editor-support__preflight-review-row.is-action .npcink-toolbox-editor-support__preflight-review-status {
+	color: #6f4e00;
+	background: #fff8e5;
+}
+
+.npcink-toolbox-editor-support__preflight-review-row.is-review .npcink-toolbox-editor-support__preflight-review-status {
+	color: #2c5d87;
+	background: #edf6ff;
+}
+
+.npcink-toolbox-editor-support__preflight-review-item,
+.npcink-toolbox-editor-support__preflight-review-decision,
+.npcink-toolbox-editor-support__preflight-review-action {
+	min-width: 0;
+}
+
+.npcink-toolbox-editor-support__preflight-review-action {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.npcink-toolbox-editor-support__preflight-review-action .components-button {
+	min-height: 30px;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.npcink-toolbox-editor-support__preflight-review-decision p,
 .npcink-toolbox-editor-support__preflight-evidence-list span {
 	margin: 0;
 	color: #646970;
+}
+
+.npcink-toolbox-editor-support__preflight-row-details {
+	margin-top: 4px;
+}
+
+.npcink-toolbox-editor-support__preflight-row-details summary {
+	cursor: pointer;
+	color: #3858e9;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__preflight-inline-detail {
+	display: grid;
+	gap: 6px;
+	margin-top: 6px;
+	padding: 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
 }
 
 .npcink-toolbox-editor-support__preflight-evidence-list code {
@@ -915,6 +1042,31 @@
 	margin-top: 8px;
 }
 
+.npcink-toolbox-editor-support__runtime-diagnostics {
+	display: block;
+	padding: 10px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+}
+
+.npcink-toolbox-editor-support__runtime-diagnostics[open] {
+	border-color: #f0b849;
+	background: #fff8e5;
+}
+
+.npcink-toolbox-editor-support__runtime-diagnostics summary {
+	cursor: pointer;
+	color: #1d2327;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.npcink-toolbox-editor-support__runtime-diagnostics .npcink-toolbox-editor-support__list {
+	margin-top: 8px;
+}
+
 .npcink-toolbox-editor-support__metadata-handoff {
 	display: block;
 	padding: 10px;
@@ -983,6 +1135,25 @@
 	display: grid;
 	gap: 10px;
 	padding-bottom: 12px;
+}
+
+.npcink-toolbox-editor-support__preflight-modal-head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+}
+
+.npcink-toolbox-editor-support__preflight-modal-head p {
+	margin: 0;
+}
+
+.npcink-toolbox-editor-support__preflight-modal-head .components-button {
+	min-height: 30px;
+	font-size: 12px;
+	white-space: nowrap;
 }
 
 .npcink-toolbox-editor-support__preflight-detail h4 {
@@ -1092,6 +1263,10 @@
 .npcink-toolbox-editor-support__image-generate-main-actions .components-button {
 	justify-content: center;
 	width: 100%;
+}
+
+.npcink-toolbox-editor-support__image-generate-main-actions .components-button:only-child {
+	grid-column: 1 / -1;
 }
 
 .npcink-toolbox-editor-support__image-prompt-required {
@@ -1266,6 +1441,49 @@
 	border-radius: 6px;
 }
 
+.npcink-toolbox-editor-support__visual-brief.is-compact-selector {
+	gap: 6px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+}
+
+.npcink-toolbox-editor-support__visual-brief-head {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.npcink-toolbox-editor-support__visual-brief-head strong {
+	min-width: 0;
+}
+
+.npcink-toolbox-editor-support__direction-refresh.components-button {
+	flex: 0 0 auto;
+	min-height: 28px;
+	padding: 0 6px;
+	font-size: 12px;
+}
+
+.npcink-toolbox-editor-support__visual-brief.is-compact-selector .npcink-toolbox-editor-support__prompt-candidates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.npcink-toolbox-editor-support__visual-brief.is-compact-selector .npcink-toolbox-editor-support__prompt-card {
+	display: inline-flex;
+	width: auto;
+	min-height: 32px;
+	padding: 5px 10px;
+	align-items: center;
+	background: #f6f7f7;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
 .npcink-toolbox-editor-support__visual-brief strong,
 .npcink-toolbox-editor-support__visual-brief span,
 .npcink-toolbox-editor-support__visual-brief small {
@@ -1307,22 +1525,28 @@
 
 .npcink-toolbox-editor-support__prompt-candidates {
 	display: grid;
-	gap: 6px;
+	gap: 4px;
 }
 
 .npcink-toolbox-editor-support__prompt-card {
-	padding: 6px 8px;
+	display: grid;
+	width: 100%;
+	gap: 2px;
+	padding: 8px 10px;
 	text-align: left;
 	color: #1d2327;
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
+	cursor: pointer;
 	font-size: 12px;
 	line-height: 1.35;
 }
 
-.npcink-toolbox-editor-support__prompt-card:focus-within {
+.npcink-toolbox-editor-support__prompt-card:hover,
+.npcink-toolbox-editor-support__prompt-card:focus {
 	border-color: #3858e9;
+	box-shadow: 0 0 0 1px #3858e9;
 }
 
 .npcink-toolbox-editor-support__prompt-card strong,
@@ -1337,30 +1561,7 @@
 
 .npcink-toolbox-editor-support__prompt-card span,
 .npcink-toolbox-editor-support__prompt-card small {
-	margin-top: 2px;
 	color: #646970;
-}
-
-.npcink-toolbox-editor-support__prompt-card-action {
-	display: inline-flex;
-	align-items: center;
-	min-height: 28px;
-	margin-top: 6px;
-	padding: 3px 8px;
-	color: #3858e9;
-	background: #fff;
-	border: 1px solid #3858e9;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: 500;
-	line-height: 1.35;
-}
-
-.npcink-toolbox-editor-support__prompt-card-action:hover,
-.npcink-toolbox-editor-support__prompt-card-action:focus {
-	color: #fff;
-	background: #3858e9;
 }
 
 .npcink-toolbox-editor-support__image-inspector {
@@ -2040,5 +2241,20 @@
 
 	.npcink-toolbox-editor-support__image-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 720px) {
+	.npcink-toolbox-editor-support__preflight-checklist-head {
+		display: none;
+	}
+
+	.npcink-toolbox-editor-support__preflight-review-row {
+		grid-template-columns: 1fr;
+		gap: 5px;
+	}
+
+	.npcink-toolbox-editor-support__preflight-review-action {
+		justify-content: flex-start;
 	}
 }

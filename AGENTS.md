@@ -84,6 +84,15 @@ implementing it inside Toolbox.
   product boundary changes.
 - Add or update `tests/run.php` static contracts for public behavior.
 - Stage only files changed for the current task. Do not use `git add -A`.
+- Before staging, inspect `git status --short` and `git diff --stat`. If
+  unrelated edits already exist, name them and leave them unstaged.
+- When one file contains unrelated hunks, stage with `git add -p` or
+  `git apply --cached` so the commit contains only the intended scope.
+- Before committing, run `git diff --cached --stat` and
+  `git diff --cached --name-only`; after committing, check
+  `git show --name-status --stat HEAD`. If unexpected files entered the commit,
+  reset that commit with `git reset --mixed HEAD~1` and recommit the correct
+  scope while preserving the working tree.
 
 ## Verification Gates
 
@@ -115,4 +124,8 @@ Before final response:
 - run the relevant verification gate;
 - commit only if explicitly requested or if the session is clearly a complete
   local milestone and the user expects commits;
+- report whether the branch is ahead/behind its upstream and whether any
+  worktree files remain modified or untracked;
+- if the branch is ahead after a completed milestone, either push/open the
+  expected PR or explicitly state why the commits are intentionally local-only;
 - report changed files and verification results.

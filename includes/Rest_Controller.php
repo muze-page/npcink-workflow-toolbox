@@ -656,7 +656,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
@@ -735,21 +735,25 @@ final class Rest_Controller {
 			return rest_ensure_response( $result );
 		}
 
-		if ( 'writing_support' === $intent ) {
-			$result['sections']['writing_support'] = $this->editor_support_section(
-				$this->editor_cached_site_knowledge(
-					array(
+			if ( 'writing_support' === $intent ) {
+				$result['sections']['writing_support'] = $this->editor_support_section(
+					$this->editor_cached_site_knowledge(
+						array(
 						'query'           => $query,
 						'intent'          => 'writing_support_plan',
 						'current_post_id' => absint( $context['post_id'] ?? 0 ),
 						'max_results'     => 6,
 					)
 				)
-			);
-		}
+				);
+			}
 
-		if ( 'taxonomy_tags' === $intent ) {
-			$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
+			if ( 'article_checkup' === $intent ) {
+				$result['sections']['article_checkup'] = $this->editor_article_checkup_section( $context );
+			}
+
+			if ( 'taxonomy_tags' === $intent ) {
+				$result['sections']['taxonomy_terms'] = $this->editor_taxonomy_term_candidates( $context, $query );
 		}
 
 		if ( 'title_suggestions' === $intent ) {
@@ -2683,6 +2687,180 @@ final class Rest_Controller {
 		);
 	}
 
+	private function editor_article_checkup_section( array $context ): array {
+		$text       = trim( (string) ( $context['content_full_text'] ?? $context['content_text'] ?? '' ) );
+		$title      = trim( (string) ( $context['title'] ?? '' ) );
+		$excerpt    = trim( (string) ( $context['excerpt'] ?? '' ) );
+		$paragraphs = $this->editor_article_checkup_paragraphs( $text );
+		$items      = array();
+
+		foreach ( $paragraphs as $index => $paragraph ) {
+			$length          = $this->editor_text_length( $paragraph );
+			$sentence_parts  = preg_split( '/[。！？!?；;]+/u', $paragraph );
+			$longest_sentence = 0;
+			foreach ( is_array( $sentence_parts ) ? $sentence_parts : array() as $sentence ) {
+				$longest_sentence = max( $longest_sentence, $this->editor_text_length( trim( (string) $sentence ) ) );
+			}
+			$location = sprintf(
+				/* translators: %d: paragraph number. */
+				__( 'Paragraph %d', 'npcink-toolbox' ),
+				$index + 1
+			);
+
+			if ( $length >= 220 ) {
+				$items[] = $this->editor_article_checkup_issue(
+					'paragraph_too_long_' . ( $index + 1 ),
+					'format',
+					'warning',
+					$location,
+					$paragraph,
+					__( 'Paragraph is dense and may be hard to scan.', 'npcink-toolbox' ),
+					__( 'Consider splitting the paragraph by claim, condition, or conclusion. Keep the editor responsible for the final wording.', 'npcink-toolbox' )
+				);
+			}
+
+			if ( $longest_sentence >= 95 ) {
+				$items[] = $this->editor_article_checkup_issue(
+					'long_sentence_' . ( $index + 1 ),
+					'clarity',
+					'warning',
+					$location,
+					$paragraph,
+					__( 'One sentence carries too many clauses.', 'npcink-toolbox' ),
+					__( 'Review whether the sentence should be broken into shorter factual steps before publishing.', 'npcink-toolbox' )
+				);
+			}
+
+			if ( 1 === preg_match( '/(\d|万|倍|%|百分|快|慢|耗时|性能|测试|经测试|同等|相当|无明显|明显|适合)/u', $paragraph ) ) {
+				$items[] = $this->editor_article_checkup_issue(
+					'fact_claim_' . ( $index + 1 ),
+					'fact_gap',
+					'warning',
+					$location,
+					$paragraph,
+					__( 'The paragraph contains a metric, comparison, performance, or scope claim.', 'npcink-toolbox' ),
+					__( 'Verify the source, test condition, comparison object, and applicable scope. Do not let Toolbox turn one observed result into a universal fact.', 'npcink-toolbox' )
+				);
+			}
+
+			if ( 1 === preg_match( '/(最|绝对|完全|一键|显著|极大|领先|革命性|无敌|完美|保证)/u', $paragraph ) ) {
+				$items[] = $this->editor_article_checkup_issue(
+					'tone_risk_' . ( $index + 1 ),
+					'tone',
+					'info',
+					$location,
+					$paragraph,
+					__( 'Tone may read stronger than the supporting evidence.', 'npcink-toolbox' ),
+					__( 'Review whether the claim should be softened or tied to a specific condition.', 'npcink-toolbox' )
+				);
+			}
+		}
+
+		$word_count = str_word_count( $text );
+		$text_length = $this->editor_text_length( $text );
+		if ( '' === $title ) {
+			$items[] = $this->editor_article_checkup_issue(
+				'missing_title',
+				'structure',
+				'error',
+				__( 'Title', 'npcink-toolbox' ),
+				'',
+				__( 'The article title is missing.', 'npcink-toolbox' ),
+				__( 'Add a human-reviewed title before running title or metadata handoff actions.', 'npcink-toolbox' )
+			);
+		}
+		if ( '' === $excerpt && ( $word_count >= 120 || $text_length >= 360 ) ) {
+			$items[] = $this->editor_article_checkup_issue(
+				'missing_excerpt',
+				'structure',
+				'warning',
+				__( 'Excerpt', 'npcink-toolbox' ),
+				'',
+				__( 'The article has enough body content but no excerpt.', 'npcink-toolbox' ),
+				__( 'Review whether a summary suggestion should be generated, then accept it manually before saving.', 'npcink-toolbox' )
+			);
+		}
+		if ( count( $paragraphs ) >= 5 && ! $this->editor_article_checkup_has_heading_signal( $text ) ) {
+			$items[] = $this->editor_article_checkup_issue(
+				'missing_heading_structure',
+				'structure',
+				'info',
+				__( 'Full article', 'npcink-toolbox' ),
+				'',
+				__( 'The draft is long enough to need scan-friendly structure, but no obvious heading signal was found.', 'npcink-toolbox' ),
+				__( 'Review whether section headings, lists, or clearer paragraph grouping would help readers scan the article.', 'npcink-toolbox' )
+			);
+		}
+		if ( empty( $items ) ) {
+			$items[] = $this->editor_article_checkup_issue(
+				'no_blocking_local_issue',
+				'clarity',
+				'info',
+				__( 'Full article', 'npcink-toolbox' ),
+				'',
+				__( 'No high-confidence local article issues were found.', 'npcink-toolbox' ),
+				__( 'This is a local heuristic check only. Run focused title, summary, taxonomy, internal-link, image, or publish preflight actions when needed.', 'npcink-toolbox' )
+			);
+		}
+
+		return array(
+			'artifact_type'          => 'article_checkup.v1',
+			'composition_role'       => 'full_draft_review',
+			'candidate_contract'     => 'article_checkup_issue.v1',
+			'status'                 => 'ready',
+			'provider_execution'     => 'local_article_checkup',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'operator_review_only',
+			'direct_wordpress_write' => false,
+			'items'                  => array_slice( $items, 0, 12 ),
+			'summary'                => array(
+				'paragraph_count' => count( $paragraphs ),
+				'issue_count'     => count( $items ),
+				'cloud_calls'     => false,
+				'no_rewrite'      => true,
+			),
+		);
+	}
+
+	private function editor_article_checkup_paragraphs( string $text ): array {
+		$normalized = preg_replace( "/\r\n?/", "\n", $text );
+		$parts      = preg_split( "/\n{2,}|(?<=[。！？!?])\s+(?=\\S)/u", is_string( $normalized ) ? $normalized : $text );
+		$paragraphs = array();
+		foreach ( is_array( $parts ) ? $parts : array( $text ) as $part ) {
+			$paragraph = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( (string) $part ) ) ?: '' );
+			if ( '' === $paragraph ) {
+				continue;
+			}
+			$paragraphs[] = $paragraph;
+			if ( count( $paragraphs ) >= 24 ) {
+				break;
+			}
+		}
+		return $paragraphs;
+	}
+
+	private function editor_article_checkup_has_heading_signal( string $text ): bool {
+		return 1 === preg_match( '/(^|\n)\s*(#{2,6}\s+|[一二三四五六七八九十]+[、.．]|\\d+[.．、]|[（(][一二三四五六七八九十\\d]+[）)])|<h[1-6][^>]*>/iu', $text );
+	}
+
+	private function editor_article_checkup_issue( string $id, string $type, string $severity, string $location, string $evidence, string $issue, string $edit_direction ): array {
+		return array(
+			'id'             => sanitize_key( $id ),
+			'type'           => sanitize_key( $type ),
+			'severity'       => sanitize_key( $severity ),
+			'location'       => sanitize_text_field( $location ),
+			'evidence'       => sanitize_text_field( $this->editor_trim_chars( $evidence, 120 ) ),
+			'issue'          => sanitize_text_field( $issue ),
+			'edit_direction' => sanitize_textarea_field( $edit_direction ),
+			'action_policy'  => 'operator_review_only_no_insert',
+			'evidence_refs'  => array( 'current_draft:' . sanitize_key( $id ) ),
+		);
+	}
+
+	private function editor_text_length( string $text ): int {
+		return function_exists( 'mb_strlen' ) ? mb_strlen( $text, 'UTF-8' ) : strlen( $text );
+	}
+
 	private function editor_hosted_draft_support( array $context, string $provider_intent ): array {
 		$content = (string) ( $context['content_text'] ?? '' );
 		if ( 'polish_notes' === $provider_intent ) {
@@ -2703,18 +2881,19 @@ final class Rest_Controller {
 		}
 
 		$section = $this->editor_support_section(
-			$this->editor_cached_hosted_ai_content_support(
-				array(
-					'intent'             => $provider_intent,
-					'post_id'            => absint( $context['post_id'] ?? 0 ),
+				$this->editor_cached_hosted_ai_content_support(
+					array(
+						'intent'             => $provider_intent,
+						'post_id'            => absint( $context['post_id'] ?? 0 ),
 					'title'              => (string) ( $context['title'] ?? '' ),
 					'excerpt'            => (string) ( $context['excerpt'] ?? '' ),
 					'content'            => $content,
-					'user_instruction'   => (string) ( $context['user_instruction'] ?? '' ),
-					'generation_variant' => (string) ( $context['generation_variant'] ?? '' ),
+						'user_instruction'   => (string) ( $context['user_instruction'] ?? '' ),
+						'generation_variant' => (string) ( $context['generation_variant'] ?? '' ),
+					),
+					! empty( $context['force_regenerate'] )
 				)
-			)
-		);
+			);
 		$section['provider_execution'] = 'hosted_ai';
 		$section['provider_intent']    = $provider_intent;
 		$section['write_posture']      = 'suggestion_only';
