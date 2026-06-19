@@ -183,11 +183,11 @@ create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are local article checkup, title/summary
 suggestions, compact outline support, selection-only paragraph checks, and
 summary/category/tag review support. Article checkup is a full-draft diagnostic
-surface for sentence density, fact-gap, tone, structure, and format issues; it
-must point to review locations and editing direction without rewriting,
-inserting, or replacing body text. They must stay lightweight and must not be
-presented as one-click long-form article generation. Default draft-support
-results must include a small quality
+surface for sentence density, fact-gap, tone, structure, semantic consistency,
+and format issues; it must point to review locations and editing direction
+without rewriting, inserting, or replacing body text. They must stay lightweight
+and must not be presented as one-click long-form article generation. Default
+draft-support results must include a small quality
 contract: expected output shape, operator review checklist, and reject-if rules
 for full-article output, unsupported claims, or write-like actions. Summary
 and terms optimization may suggest excerpts, categories, and tags, but it must

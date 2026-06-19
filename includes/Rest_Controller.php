@@ -2795,6 +2795,13 @@ final class Rest_Controller {
 				__( 'Review whether section headings, lists, or clearer paragraph grouping would help readers scan the article.', 'npcink-toolbox' )
 			);
 		}
+
+		$semantic_consistency = $this->editor_article_checkup_semantic_consistency( $text );
+		$semantic_items       = is_array( $semantic_consistency['items'] ?? null ) ? $semantic_consistency['items'] : array();
+		foreach ( $semantic_items as $semantic_item ) {
+			$items[] = $semantic_item;
+		}
+
 		if ( empty( $items ) ) {
 			$items[] = $this->editor_article_checkup_issue(
 				'no_blocking_local_issue',
@@ -2816,12 +2823,14 @@ final class Rest_Controller {
 			'write_posture'          => 'suggestion_only',
 			'final_write_path'       => 'operator_review_only',
 			'direct_wordpress_write' => false,
+			'semantic_consistency'   => $semantic_consistency,
 			'items'                  => array_slice( $items, 0, 12 ),
 			'summary'                => array(
-				'paragraph_count' => count( $paragraphs ),
-				'issue_count'     => count( $items ),
-				'cloud_calls'     => false,
-				'no_rewrite'      => true,
+				'paragraph_count'          => count( $paragraphs ),
+				'issue_count'              => count( $items ),
+				'semantic_consistency_count' => count( $semantic_items ),
+				'cloud_calls'              => false,
+				'no_rewrite'               => true,
 			),
 		);
 	}
@@ -2875,6 +2884,176 @@ final class Rest_Controller {
 				)
 			),
 		);
+	}
+
+	private function editor_article_checkup_semantic_consistency( string $text ): array {
+		$sentences = $this->editor_article_checkup_sentences( $text );
+		$items     = array();
+
+		foreach ( $this->editor_article_checkup_semantic_aeo_answer_order_issues( $sentences ) as $item ) {
+			$items[] = $item;
+			if ( count( $items ) >= 4 ) {
+				break;
+			}
+		}
+
+		if ( count( $items ) < 4 ) {
+			foreach ( $this->editor_article_checkup_semantic_term_tensions( $sentences ) as $item ) {
+				$items[] = $item;
+				if ( count( $items ) >= 4 ) {
+					break;
+				}
+			}
+		}
+
+		if ( count( $items ) < 4 ) {
+			foreach ( $this->editor_article_checkup_semantic_boundary_tensions( $sentences ) as $item ) {
+				$items[] = $item;
+				if ( count( $items ) >= 4 ) {
+					break;
+				}
+			}
+		}
+
+		return array(
+			'artifact_type'          => 'semantic_consistency.v1',
+			'status'                 => empty( $items ) ? 'clear' : 'review',
+			'source'                 => 'current_full_draft_local_heuristic',
+			'write_posture'          => 'suggestion_only_no_replacement_text',
+			'action_policy'          => 'operator_review_only_no_insert',
+			'direct_wordpress_write' => false,
+			'no_rewrite'             => true,
+			'items'                  => array_slice( $items, 0, 4 ),
+		);
+	}
+
+	private function editor_article_checkup_sentences( string $text ): array {
+		$normalized = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $text ) ) ?: '' );
+		if ( '' === $normalized ) {
+			return array();
+		}
+
+		$parts     = preg_split( '/(?<=[。！？!?；;])\s*/u', $normalized );
+		$sentences = array();
+		foreach ( is_array( $parts ) ? $parts : array( $normalized ) as $part ) {
+			$sentence = trim( (string) $part );
+			if ( '' === $sentence ) {
+				continue;
+			}
+			$sentences[] = $sentence;
+			if ( count( $sentences ) >= 80 ) {
+				break;
+			}
+		}
+
+		return $sentences;
+	}
+
+	private function editor_article_checkup_semantic_aeo_answer_order_issues( array $sentences ): array {
+		$items = array();
+		foreach ( $sentences as $index => $sentence ) {
+			$next_sentence = isset( $sentences[ $index + 1 ] ) ? (string) $sentences[ $index + 1 ] : '';
+			$window        = trim( $sentence . ' ' . $next_sentence );
+			if ( 1 !== preg_match( '/(AEO|回答型体验|回答型|直接答案)/iu', $window ) ) {
+				continue;
+			}
+			if ( 1 !== preg_match( '/(不能|不应|不要|避免)先给(出)?直接答案/u', $window ) ) {
+				continue;
+			}
+			$items[] = $this->editor_article_checkup_issue(
+				'semantic_aeo_answer_order',
+				'semantic_consistency',
+				'warning',
+				__( 'Full article', 'npcink-toolbox' ),
+				$window,
+				__( 'The AEO section may reverse answer-first guidance.', 'npcink-toolbox' ),
+				__( 'Confirm whether the cannot-answer-first wording is intentional. For answer-oriented content, manually verify the direct answer, conditions, steps, and limits before publishing.', 'npcink-toolbox' )
+			);
+			return $items;
+		}
+
+		return $items;
+	}
+
+	private function editor_article_checkup_semantic_term_tensions( array $sentences ): array {
+		$terms = array( 'SEO', 'AEO', 'GEO', 'AI', 'Toolbox', 'Core', 'Cloud', 'Adapter', 'WordPress', 'OpenClaw' );
+		$items = array();
+
+		foreach ( $terms as $term ) {
+			$negative = '';
+			$positive = '';
+			foreach ( $sentences as $sentence ) {
+				if ( false === stripos( $sentence, $term ) ) {
+					continue;
+				}
+				if ( '' === $negative && $this->editor_article_checkup_has_negative_semantic_marker( $sentence ) ) {
+					$negative = $sentence;
+				}
+				if ( '' === $positive && $this->editor_article_checkup_has_positive_semantic_marker( $sentence ) ) {
+					$positive = $sentence;
+				}
+				if ( '' !== $negative && '' !== $positive && $negative !== $positive ) {
+					$items[] = $this->editor_article_checkup_issue(
+						'semantic_term_tension_' . strtolower( $term ),
+						'semantic_consistency',
+						'warning',
+						__( 'Full article', 'npcink-toolbox' ),
+						$negative . ' ' . $positive,
+						sprintf(
+							/* translators: %s: term. */
+							__( 'The draft uses both limiting and enabling language around %s.', 'npcink-toolbox' ),
+							$term
+						),
+						__( 'Confirm whether the contrast is intentional, stage-specific, or a real contradiction before publishing. Keep any final wording change manual.', 'npcink-toolbox' )
+					);
+					break;
+				}
+			}
+		}
+
+		return $items;
+	}
+
+	private function editor_article_checkup_semantic_boundary_tensions( array $sentences ): array {
+		$items = array();
+		foreach ( $sentences as $index => $sentence ) {
+			if ( ! $this->editor_article_checkup_has_free_generation_marker( $sentence ) ) {
+				continue;
+			}
+			foreach ( $sentences as $other_index => $other_sentence ) {
+				if ( $index === $other_index || ! $this->editor_article_checkup_has_review_boundary_marker( $other_sentence ) ) {
+					continue;
+				}
+				$items[] = $this->editor_article_checkup_issue(
+					'semantic_generation_boundary_' . ( $index + 1 ),
+					'semantic_consistency',
+					'warning',
+					__( 'Full article', 'npcink-toolbox' ),
+					$other_sentence . ' ' . $sentence,
+					__( 'The draft mixes review-boundary wording with free-generation or replacement wording.', 'npcink-toolbox' ),
+					__( 'Check whether the free-generation phrase is a counterexample or the actual recommendation. Do not turn this into an automatic rewrite.', 'npcink-toolbox' )
+				);
+				return $items;
+			}
+		}
+
+		return $items;
+	}
+
+	private function editor_article_checkup_has_negative_semantic_marker( string $sentence ): bool {
+		return 1 === preg_match( '/(不是|不能|不要|不应|不得|避免|禁止|不等于|不要让|不替换|不生成|不写入)/u', $sentence );
+	}
+
+	private function editor_article_checkup_has_positive_semantic_marker( string $sentence ): bool {
+		return 1 === preg_match( '/(应该|需要|可以|用于|负责|依赖|直接|自动|一键|生成|替换|写入|发布)/u', $sentence );
+	}
+
+	private function editor_article_checkup_has_free_generation_marker( string $sentence ): bool {
+		return 1 === preg_match( '/(自由发挥|生成全文|替换正文|一键优化|自动改写|自动发布|直接写入)/u', $sentence );
+	}
+
+	private function editor_article_checkup_has_review_boundary_marker( string $sentence ): bool {
+		return 1 === preg_match( '/(人工|审阅|审核|建议|只读|不生成|不替换|不写入|约束|治理|Core|proposal)/iu', $sentence );
 	}
 
 	private function editor_article_checkup_has_heading_signal( string $text ): bool {
