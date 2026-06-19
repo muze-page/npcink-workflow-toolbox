@@ -461,8 +461,8 @@ msgstr "内容支持"
 msgid "Writing Support"
 msgstr "写作辅助"
 
-msgid "Titles, summaries, outlines, and polish for human-written articles."
-msgstr "为人工撰写的文章提供标题、摘要、大纲和润色建议。"
+msgid "Titles, summaries, outlines, and paragraph checks for human-written articles."
+msgstr "为人工撰写的文章提供标题、摘要、大纲和段落检查。"
 
 msgid "Title suggestions"
 msgstr "标题建议"
@@ -476,14 +476,35 @@ msgstr "大纲建议"
 msgid "Build a compact outline that an editor can expand manually."
 msgstr "生成一份编辑可手动扩展的精简大纲。"
 
-msgid "Polish selected text"
-msgstr "润色选中文本"
+msgid "Check selected paragraph"
+msgstr "检查选中段落"
 
-msgid "Improve clarity and tone for selected text or the current draft without adding facts."
-msgstr "在不添加事实的前提下，改善选中文本或当前草稿的清晰度和语气。"
+msgid "Review clarity, fact gaps, and tone notes for the selected paragraph. It will not replace text."
+msgstr "检查选中段落的清晰度、事实跳跃和语气问题，不替换正文。"
 
-msgid "Polish notes"
-msgstr "润色说明"
+msgid "Select paragraph text before running a paragraph check."
+msgstr "请先选择段落文字再运行段落检查。"
+
+msgid "Paragraph check"
+msgstr "段落检查"
+
+msgid "Clarity check"
+msgstr "清晰度检查"
+
+msgid "Fact gaps"
+msgstr "事实缺口"
+
+msgid "Tone consistency"
+msgstr "语气一致性"
+
+msgid "Editing suggestions"
+msgstr "编辑建议"
+
+msgid "Assumptions to verify"
+msgstr "待核实假设"
+
+msgid "Paragraph check note"
+msgstr "段落检查说明"
 
 msgid "Content Support groups"
 msgstr "内容支持分组"
@@ -503,9 +524,6 @@ msgstr "替换文章标题前先审阅标题选项。"
 msgid "Use the outline as planning notes; it does not write the article body."
 msgstr "把大纲作为规划笔记使用；它不会写入文章正文。"
 
-msgid "Review polished wording against the original before using it."
-msgstr "使用润色文本前先与原文对照审阅。"
-
 msgid "Use SEO, AEO, GEO, and proposal-field suggestions as review notes only."
 msgstr "仅把 SEO、AEO、GEO 和提案字段建议作为审阅笔记使用。"
 
@@ -521,8 +539,8 @@ msgstr "没有返回标题建议。"
 msgid "No outline suggestions returned."
 msgstr "没有返回大纲建议。"
 
-msgid "No polish suggestions returned."
-msgstr "没有返回润色建议。"
+msgid "No paragraph check notes returned."
+msgstr "没有返回段落检查建议。"
 
 msgid "Outline Helper"
 msgstr "大纲助手"
@@ -2237,6 +2255,9 @@ msgstr "发布预检"
 msgid "Check missing terms, excerpt, image, duplicate risk, and discoverability hints."
 msgstr "检查缺失的分类/标签、摘要、图片、重复风险和可发现性提示。"
 
+msgid "Check missing fields and compare related existing posts for duplicate-risk before publishing."
+msgstr "发布前检查缺失字段，并对比相关旧文章的重复风险。"
+
 msgid "Discoverability suggestions"
 msgstr "可发现性建议"
 
@@ -2275,6 +2296,21 @@ msgstr "查找内链"
 
 msgid "Use Site Knowledge to find related public content for links."
 msgstr "使用站点知识查找可用于内链的相关公开内容。"
+
+msgid "Find related existing posts to cite manually after the draft direction is clear."
+msgstr "在草稿方向明确后，查找可手动引用的相关旧文章。"
+
+msgid "Pre-writing reference check"
+msgstr "写前参考检查"
+
+msgid "Find related Site Knowledge content and turn it into reference, overlap, and gap tasks before drafting."
+msgstr "根据当前文章从站点知识库找相关内容，并列出可参考、需避开重复、需要补充的写作任务。"
+
+msgid "Find related existing posts"
+msgstr "查相似旧文"
+
+msgid "Find similar published content, then decide whether to avoid overlap, add a new angle, use it as reference, or run internal links later."
+msgstr "查找相似的已发布内容，然后决定是避开重复、补充新角度、作为参考，还是稍后作为内链使用。"
 
 msgid "Find image candidates"
 msgstr "查找图片候选"
@@ -2405,8 +2441,20 @@ msgstr "例如：优先推荐教程文章，少推荐公告文章。"
 msgid "Example: concise, factual ALT text; no keyword stuffing."
 msgstr "例如：简洁、事实化的 ALT，不堆关键词。"
 
+msgid "Example: focus on content gaps, avoid repeating older posts, list concrete next steps."
+msgstr "例如：重点找内容缺口，避免重复旧文章，列出具体下一步。"
+
+msgid "Example: focus on what is already covered, what angle is missing, and what I should do next."
+msgstr "例如：重点看哪些内容已经写过、缺什么角度、下一步该做什么。"
+
 msgid "Example: more practical, concise, and less promotional."
 msgstr "例如：更实用、更简洁、少一点宣传感。"
+
+msgid "Find related content, overlap risks, and next writing tasks. It will not write the article body."
+msgstr "查找相关内容、重复风险和下一步写作任务。它不会写入文章正文。"
+
+msgid "Finds similar published content first, then helps you decide how this draft should differ."
+msgstr "先查找相似的已发布内容，再帮助判断当前草稿应该如何做出差异。"
 
 msgid "AI reads the current draft and returns an editor-ready excerpt candidate."
 msgstr "AI 会读取当前草稿，并返回可直接审阅的摘要候选。"
@@ -2482,6 +2530,93 @@ msgstr "推荐摘要"
 
 msgid "Hosted summary"
 msgstr "托管摘要"
+
+msgid "Reference content and next steps"
+msgstr "可参考内容与下一步"
+
+msgid "No reference content or writing tasks returned."
+msgstr "没有返回可参考内容或写作任务。"
+
+msgid "Reference content"
+msgstr "参考内容"
+
+msgid "Related existing posts: decide what to do next"
+msgstr "相似旧文：决定下一步怎么处理"
+
+msgid "This is not the internal-link tool yet. First compare these older posts with the draft: avoid repeating them, add a new angle, borrow facts manually, or run internal links later if you decide to cite one."
+msgstr "这还不是内链工具。先把这些旧文章和当前草稿对比：避开重复、补充新角度、手动借鉴事实；如果决定引用某篇，再去跑内链。"
+
+msgid "No related existing posts were found for this draft."
+msgstr "没有找到与当前草稿相关的旧文章。"
+
+msgid "Untitled existing post"
+msgstr "未命名旧文章"
+
+msgid "Related existing post: %s"
+msgstr "相似旧文：%s"
+
+msgid "Background or gap signal"
+msgstr "背景或缺口线索"
+
+msgid "Background reference"
+msgstr "背景参考"
+
+msgid "Content gap signal"
+msgstr "内容缺口线索"
+
+msgid "Overlap signal"
+msgstr "重复风险线索"
+
+msgid "Internal reference"
+msgstr "站内参考"
+
+msgid "Source evidence"
+msgstr "来源依据"
+
+msgid "Verify facts against the source"
+msgstr "对照来源核实事实"
+
+msgid "Decide whether to expand older coverage or write a new angle"
+msgstr "判断是扩展旧内容，还是改写新角度"
+
+msgid "Collect internal link and media candidates"
+msgstr "收集内链和配图候选"
+
+msgid "Compare overlap before publishing"
+msgstr "发布前对比内容重叠度"
+
+msgid "Add to outline notes"
+msgstr "加入大纲笔记"
+
+msgid "This indexed content can reduce research work, but it is only a reference, not article copy."
+msgstr "这条已索引内容可以减少资料准备工作，但它只是参考，不是文章正文。"
+
+msgid "This looks relevant to the draft. Use it to avoid repeating old coverage or to add a clearer new angle."
+msgstr "这篇旧文看起来和当前草稿相关。用它来避免重复旧内容，或补出更清楚的新角度。"
+
+msgid "Use as: "
+msgstr "可用方式："
+
+msgid "Suggested action: "
+msgstr "建议动作："
+
+msgid "Why it matters: "
+msgstr "为什么相关："
+
+msgid "What to decide: does this draft repeat it, extend it, or need a different angle?"
+msgstr "需要判断：当前草稿是在重复它、扩展它，还是需要换一个角度？"
+
+msgid "Why it appeared: "
+msgstr "为什么出现："
+
+msgid "Do next: "
+msgstr "下一步："
+
+msgid "After drafting: run internal links only if you want to link to this post."
+msgstr "写完后：只有决定引用这篇旧文时，再运行内链功能。"
+
+msgid "Note: "
+msgstr "说明："
 
 msgid "Title option"
 msgstr "标题选项"
@@ -2618,6 +2753,12 @@ msgstr "重复检查"
 msgid "No duplicate-risk candidates returned."
 msgstr "没有返回重复风险候选。"
 
+msgid "Existing post"
+msgstr "旧文章"
+
+msgid "This replaces the old separate related-post check: review overlap here, then use internal links only when you decide to cite an existing post."
+msgstr "这里承接原来的相似旧文检查：先在这里审阅重叠风险；只有决定引用旧文章时，再使用内链功能。"
+
 msgid "Internal link candidate"
 msgstr "内链候选"
 
@@ -2626,6 +2767,9 @@ msgstr "内链候选"
 
 msgid "Recommended internal links"
 msgstr "推荐内链"
+
+msgid "Use this after the draft direction is clear. These are related existing posts to cite manually, not a duplicate-risk review."
+msgstr "草稿方向明确后再使用这里。这些是可手动引用的相关旧文章，不是重复风险审阅。"
 
 msgid "Anchor: "
 msgstr "锚文本："
@@ -2735,6 +2879,12 @@ msgstr "生成图片计划前请先保存草稿。"
 msgid "Generated an article image plan from the saved post context. Review candidates before search, generation, import, or featured-image adoption."
 msgstr "已根据已保存的文章上下文生成图片计划。搜索、生成、导入或设为特色图前，请先审阅候选项。"
 
+msgid "Generated a prompt from the article context. Review it before creating an AI image candidate."
+msgstr "已根据文章上下文生成提示词。创建 AI 图片候选前请先审阅。"
+
+msgid "Generated prompt directions from the article context. Choose one direction before creating an AI image candidate."
+msgstr "已根据文章上下文生成提示词方向。创建 AI 图片候选前请选择一个方向。"
+
 msgid "Image plan generation failed."
 msgstr "图片计划生成失败。"
 
@@ -2749,6 +2899,15 @@ msgstr "生成图片计划"
 
 msgid "Generate featured image plan"
 msgstr "生成特色图计划"
+
+msgid "Generate prompt"
+msgstr "生成提示词"
+
+msgid "Enter a prompt, or generate one from the article first."
+msgstr "请先输入提示词，或根据文章生成提示词。"
+
+msgid "Enter an AI image prompt, or generate one from the article first."
+msgstr "请先输入 AI 生图提示词，或根据文章生成一个提示词。"
 
 msgid "AI image generation is available from the featured image entry. Paragraph image suggestions use the selected paragraph to find source images."
 msgstr "AI 生图仅在特色图入口可用。段落配图建议会使用选中段落查找来源图片。"
@@ -2933,8 +3092,8 @@ msgstr "建议和计划不会直接发布、修改媒体或写入 SEO 字段。"
 msgid "Current article work"
 msgstr "当前文章工作"
 
-msgid "High-frequency writing preparation, metadata suggestions, links, image candidates, and publish checks live in the post editor sidebar."
-msgstr "高频写作准备、元数据建议、链接、配图候选和发布检查位于文章编辑器侧栏。"
+msgid "High-frequency metadata suggestions, links, image candidates, duplicate-risk checks, and publish checks live in the post editor sidebar."
+msgstr "高频元数据建议、链接、配图候选、重复风险检查和发布检查位于文章编辑器侧栏。"
 
 msgid "New post"
 msgstr "新建文章"
@@ -3187,3 +3346,153 @@ msgstr "默认格式"
 
 msgid "Default max width"
 msgstr "默认最大宽度"
+
+msgid "Image by %1$s / %2$s"
+msgstr "图片：%1$s / %2$s"
+
+msgid "Try another image direction"
+msgstr "换个配图方向"
+
+msgid "Generation directions"
+msgstr "生成方向"
+
+msgid "Generation direction reference"
+msgstr "生成方向参考"
+
+msgid "Direction option"
+msgstr "方向选项"
+
+msgid "Use direction"
+msgstr "使用方向"
+
+msgid "Search this direction"
+msgstr "按这个方向搜图"
+
+msgid "Generate this direction"
+msgstr "按这个方向生成"
+
+msgid "Editorial scene direction"
+msgstr "编辑场景方向"
+
+msgid "Conceptual metaphor direction"
+msgstr "概念隐喻方向"
+
+msgid "Workspace detail direction"
+msgstr "工作区细节方向"
+
+msgid "Workflow detail direction"
+msgstr "流程细节方向"
+
+msgid "Featured image direction"
+msgstr "特色图方向"
+
+msgid "Product context direction"
+msgstr "产品场景方向"
+
+msgid "Search workflow direction"
+msgstr "搜索流程方向"
+
+msgid "Adoption planned"
+msgstr "计划采用"
+
+msgid "Low quality"
+msgstr "质量低"
+
+msgid "Source risk"
+msgstr "来源风险"
+
+msgid "Feedback recorded."
+msgstr "反馈已记录。"
+
+msgid "Needs action"
+msgstr "需处理"
+
+msgid "Needs review"
+msgstr "需审阅"
+
+msgid "Passed"
+msgstr "已通过"
+
+msgid "No urgent preflight items were returned. Open the full check to review SEO and duplicate-risk evidence."
+msgstr "没有返回紧急预检项。请打开完整检查审阅 SEO 和重复风险证据。"
+
+msgid "Handle required items before publishing."
+msgstr "发布前请先处理必需项。"
+
+msgid "Review evidence before publishing."
+msgstr "发布前请审阅证据。"
+
+msgid "No required preflight fixes were found."
+msgstr "没有发现发布前必须修复的问题。"
+
+msgid "Publish preflight summary"
+msgstr "发布预检总览"
+
+msgid "Plus %d more item(s) in the full check."
+msgstr "完整检查中还有 %d 个项目。"
+
+msgid "Open full preflight"
+msgstr "打开完整预检"
+
+msgid "The sidebar shows only the decision summary. Full duplicate-risk, SEO, and evidence details open in the preflight dialog."
+msgstr "侧栏仅显示决策总览。完整重复风险、SEO 和证据详情将在预检弹窗中打开。"
+
+msgid "Review overlap here, then use internal links only when you decide to cite an existing post."
+msgstr "在这里审阅内容重叠，再只在决定引用旧文时使用内链。"
+
+msgid "Passed checks"
+msgstr "已通过检查"
+
+msgid "No passed checks returned."
+msgstr "没有返回已通过检查。"
+
+msgid "No required fixes."
+msgstr "没有必须处理项。"
+
+msgid "No review-only checks."
+msgstr "没有仅需审阅项。"
+
+msgid "URL slug"
+msgstr "URL 别名"
+
+msgid "Excerpt"
+msgstr "摘要"
+
+msgid "FAQ"
+msgstr "FAQ"
+
+msgid "Answer summary"
+msgstr "答案摘要"
+
+msgid "GEO summary"
+msgstr "GEO 摘要"
+
+msgid "Structured data hints"
+msgstr "结构化数据提示"
+
+msgid "Q: "
+msgstr "问："
+
+msgid "A: "
+msgstr "答："
+
+msgid "%d possible overlap(s) found. Review these related posts once before publishing."
+msgstr "发现 %d 个可能重叠的旧文。发布前集中审阅一次即可。"
+
+msgid "If the draft repeats an older post, add a new angle or cite the old post instead."
+msgstr "如果当前草稿重复旧文，请补充新角度，或改为引用旧文。"
+
+msgid "More discoverability candidates (%d)"
+msgstr "更多可发现性候选（%d）"
+
+msgid "SEO title and description stay in the Core handoff section. Other SEO/AEO/GEO ideas are review notes only."
+msgstr "SEO 标题和描述保留在 Core 交接区。其他 SEO/AEO/GEO 想法仅作为审阅备注。"
+
+msgid "SEO Core review"
+msgstr "SEO Core 审核"
+
+msgid "Review the SEO title and description candidate before creating a pending Core proposal."
+msgstr "创建待审核 Core 提案前，请先审阅 SEO 标题和描述候选。"
+
+msgid "Use this dialog to finish the publish decision. Toolbox shows review evidence and handoff actions, but it does not publish or write WordPress fields."
+msgstr "使用此弹窗完成发布判断。Toolbox 会显示审阅证据和交接动作，但不会发布或写入 WordPress 字段。"

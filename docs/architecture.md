@@ -17,7 +17,7 @@ Status: MVP architecture.
 | `modules/local-automation-runtime/` | Phase 1 bundled skeleton for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview and dry-run replay validation while registering no WordPress hooks. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
-| `assets/editor-content-support.js` | Block editor sidebar panel for writing preparation, publish preflight, taxonomy/tag, internal-link, and image-candidate support flows. |
+| `assets/editor-content-support.js` | Block editor sidebar panel for publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph checks. |
 | `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
 ## Current Data Storage
@@ -290,17 +290,26 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`writing_support`, `title_suggestions`, `article_outline`, `polish_notes`,
-`publish_preflight`, `discoverability`, `summary_suggestions`,
+`writing_support`, `title_suggestions`, `article_outline`, selection-only
+paragraph checks via `polish_notes`, `publish_preflight`, `discoverability`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
 `taxonomy_tags`, `internal_links`, `image_candidates`, or
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
 recommendations appear first: title suggestions, summary suggestions, tag
-suggestions, category suggestions, image candidates, and internal links. Writing
-preparation, outline, and polish actions sit in a writing-assist group, while
-publish preflight, discoverability, and current-article image ALT suggestions
-sit in the pre-publish package group. The focused result view accepts a bounded
+suggestions, category suggestions, image candidates, and internal links.
+Related existing-post review is folded into publish preflight duplicate-risk
+checks and internal-link candidates; `writing_support` remains a supported route
+intent for compatibility but is not a default editor button. Outline actions sit
+in a writing-assist group, while paragraph checks live in the selected-block
+toolbar. Publish preflight, discoverability,
+and current-article image ALT suggestions sit in the pre-publish package group.
+The standalone discoverability result is a post-publish optimization task
+panel: SEO title, SEO description, slug, and excerpt are shown as actionable
+review tasks; SEO title and description can create one pending Core review
+proposal, while AEO/GEO/FAQ/schema ideas remain optional crawler-facing review
+notes.
+The focused result view accepts a bounded
 operator instruction for regeneration; that instruction is treated as tone,
 angle, audience, or ranking preference only, not as factual source material or
 write authorization. Reviewed title and summary candidates may be applied to
@@ -479,10 +488,13 @@ that can be set as the current post featured image through the
 Local Admin Consent route with Core audit. External URLs, generated URLs,
 media import, metadata writes, and multi-image operations still use governed
 handoff paths.
-The selected-block toolbar exposes the same modal as an image-icon paragraph
-image suggestion shortcut. In that mode the selected paragraph or block is the
-primary image context and the default reviewed action is media import only; the
-sidebar image-source entry stays the article-level featured-image path.
+The selected-block toolbar exposes selection-only paragraph check and paragraph
+image shortcuts. The paragraph check returns clarity, fact-gap, tone, and
+editing-direction notes without replacement copy. The image shortcut opens the
+same modal as an image-icon paragraph image suggestion shortcut. In that mode
+the selected paragraph or block is the primary image context and the default
+reviewed action is media import only; the sidebar image-source entry stays the
+article-level featured-image path.
 The modal is implemented as a reusable image-source picker. Future settings or
 other image fields can open it with a manual query and optional context, then
 listen for the selected `image_candidate.v1` and media SEO payload. That

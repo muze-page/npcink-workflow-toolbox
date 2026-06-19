@@ -17,10 +17,10 @@ The first version provides:
 
 - a Npcink admin page at **Npcink -> Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Toolbox** fallback for standalone installs;
-- a post editor **Npcink Content Support** sidebar for writing preparation,
-  title suggestions, outline support, polish notes, summary suggestions,
-  taxonomy/tag, internal-link, image, and publish readiness support around
-  human-written articles;
+- a post editor **Npcink Content Support** sidebar for title suggestions,
+  outline support, summary suggestions, taxonomy/tag, internal-link, image, and
+  publish readiness support around human-written articles, plus
+  selected-paragraph toolbar checks that do not replace body text;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
 - a Start panel **Preview Morning Brief** entry that reads bounded local
@@ -48,9 +48,9 @@ posts, upload media, publish content, or bypass governance. WordPress writes
 should continue through WordPress abilities and Core proposal approval.
 
 The default product posture is content support outside the article body:
-writing-preparation evidence, taxonomy/tag candidates, internal-link
-candidates, image candidates, SEO/AEO/GEO suggestions, media metadata plans,
-and publish-readiness checks. Human editors own the article text. Article
+taxonomy/tag candidates, internal-link candidates, image candidates,
+SEO/AEO/GEO suggestions, media metadata plans, duplicate-risk checks, and
+publish-readiness checks. Human editors own the article text. Article
 Assistant exists only as a fallback workbench for reviewed local draft
 artifacts.
 
@@ -267,11 +267,13 @@ fallback panel that renders the plan artifacts, risk report, final
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
 opened from the editor top toolbar. Its visible buttons run fixed flows for
-writing preparation, title suggestions, outline support, polish notes, publish
-preflight, discoverability suggestions, summary suggestions, category
-suggestions, tag suggestions, internal-link candidates, image-source
-candidates, and current-article image ALT suggestions from the current draft
-context. The sidebar also prefetches a local-only progressive recommendation
+title suggestions, outline support, publish preflight,
+discoverability suggestions, summary suggestions, category suggestions, tag
+suggestions, internal-link candidates, image-source candidates, and
+current-article image ALT suggestions from the current draft context. Related
+existing-post review is handled through publish preflight duplicate-risk checks
+and internal-link candidates rather than a separate visible button. The sidebar
+also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
 while Cloud title/summary generation, image-source search, image generation,
@@ -357,11 +359,12 @@ that include draft creation, media upload, media metadata, and featured-image
 actions are submitted to Core as one `plan_to_proposal_batch` through
 `npcink-toolbox/build-article-media-batch-write-plan`; they do not use Local
 Admin Consent and do not write posts or media during proposal intake.
-The selected-block toolbar also exposes a compact image-icon paragraph image
-suggestion button. That entry uses the selected paragraph or block as the
-primary context and defaults to a media-import plan for later placement, while
-the sidebar image-source entry remains the article-level featured-image
-recommendation path.
+The selected-block toolbar also exposes compact paragraph actions: a paragraph
+check button that returns clarity, fact-gap, and tone notes without replacement
+copy, plus an image-icon paragraph image suggestion button. The image entry uses
+the selected paragraph or block as the primary context and defaults to a
+media-import plan for later placement, while the sidebar image-source entry
+remains the article-level featured-image recommendation path.
 The same image-source picker contract can be reused by future image fields,
 including settings screens. Those callers may pass a manual query and optional
 context, receive the selected `image_candidate.v1` plus media SEO suggestions,
@@ -380,8 +383,8 @@ image indexing, media-library writes, settings writes, or long-term adoption
 history.
 
 The post editor **Npcink Content Support** sidebar owns high-frequency writing
-preparation, title suggestions, outline support, polish notes, summary,
-discoverability, taxonomy/tag, internal-link, image, current-article image ALT,
+preparation, title suggestions, outline support, summary, discoverability,
+taxonomy/tag, internal-link, image, current-article image ALT,
 and publish-readiness support because those actions need the current article context. The admin
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing

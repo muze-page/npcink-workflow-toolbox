@@ -665,13 +665,34 @@ final class Rest_Controller {
 		}
 
 		$context = $this->editor_post_context( $request );
-		if ( 'title_suggestions' === $intent ) {
-			$context['context_scope']        = 'full_article';
-			$context['selected_text']        = '';
-			$context['selected_block_text']  = '';
-			$context['selected_block_name']  = '';
-		}
-		$query   = $this->editor_support_query( $context );
+			if ( 'title_suggestions' === $intent ) {
+				$context['context_scope']        = 'full_article';
+				$context['selected_text']        = '';
+				$context['selected_block_text']  = '';
+				$context['selected_block_name']  = '';
+			}
+			if ( 'polish_notes' === $intent ) {
+				$selected_review_text = trim(
+					implode(
+						' ',
+						array_filter(
+							array(
+								(string) ( $context['selected_text'] ?? '' ),
+								(string) ( $context['selected_block_text'] ?? '' ),
+							)
+						)
+					)
+				);
+				if ( '' === $selected_review_text ) {
+					return new WP_Error(
+						'npcink_toolbox_missing_editor_selection',
+						__( 'Select paragraph text before running a paragraph check.', 'npcink-toolbox' ),
+						array( 'status' => 400 )
+					);
+				}
+				$context['context_scope'] = 'selected_text';
+			}
+			$query   = $this->editor_support_query( $context );
 		if ( 'image_candidates' === $intent ) {
 			$query = $this->editor_image_support_query( $context );
 		}
@@ -798,6 +819,10 @@ final class Rest_Controller {
 					)
 				)
 			);
+		}
+
+		if ( 'discoverability' === $intent ) {
+			$result['sections']['seo_handoff'] = $this->editor_seo_meta_handoff_preview( $context, $result['sections']['discoverability'] );
 		}
 
 		if ( 'publish_preflight' === $intent ) {
@@ -2088,7 +2113,7 @@ final class Rest_Controller {
 	}
 
 	private function editor_image_candidate_items( array $section ): array {
-		foreach ( array( 'image_candidates', 'images', 'candidates' ) as $key ) {
+		foreach ( array( 'image_candidates', 'images', 'image_source_candidates', 'source_candidates', 'media_candidates', 'assets', 'candidates' ) as $key ) {
 			if ( is_array( $section[ $key ] ?? null ) ) {
 				return array_values( array_filter( $section[ $key ], 'is_array' ) );
 			}
@@ -2696,8 +2721,103 @@ final class Rest_Controller {
 		if ( 'title_summary' === $provider_intent ) {
 			$section = $this->editor_title_recommendation_section( $section, $context );
 		}
+		if ( 'polish_notes' === $provider_intent && ! $this->editor_paragraph_check_has_output( $section ) ) {
+			$section = $this->editor_paragraph_check_local_fallback_section( $section, $content );
+		}
 
 		return $section;
+	}
+
+	private function editor_paragraph_check_has_output( array $section ): bool {
+		if ( ! empty( $section['items'] ) && is_array( $section['items'] ) ) {
+			return true;
+		}
+		if ( '' !== trim( sanitize_textarea_field( (string) ( $section['output_text'] ?? '' ) ) ) ) {
+			return true;
+		}
+		$output_json = is_array( $section['output_json'] ?? null ) ? $section['output_json'] : array();
+		foreach ( array( 'clarity_check', 'fact_gaps', 'tone_consistency', 'editing_suggestions', 'assumptions_to_verify' ) as $key ) {
+			if ( ! empty( $output_json[ $key ] ) ) {
+				return true;
+			}
+		}
+		$result = is_array( $section['result'] ?? null ) ? $section['result'] : array();
+		foreach ( array( 'clarity_check', 'fact_gaps', 'tone_consistency', 'editing_suggestions', 'assumptions_to_verify' ) as $key ) {
+			if ( ! empty( $result[ $key ] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private function editor_paragraph_check_local_fallback_section( array $section, string $selected_text ): array {
+		$output = $this->editor_paragraph_check_local_output( $selected_text );
+		$status = sanitize_key( (string) ( $section['status'] ?? 'unknown' ) );
+
+		$section['provider_execution']     = 'hosted_ai_with_local_empty_fallback';
+		$section['hosted_ai_status']       = $status;
+		$section['fallback_reason']        = 'local_paragraph_check_after_hosted_ai_empty';
+		$section['fallback_source']        = 'current_selected_paragraph_only';
+		$section['fallback_write_posture'] = 'suggestion_only_no_replacement_text';
+		$section['output_json']            = $output;
+		$section['items']                  = array(
+			array(
+				'name'          => __( 'Clarity check', 'npcink-toolbox' ),
+				'detail'        => $output['clarity_check'],
+				'action_policy' => 'operator_review_only_no_insert',
+				'evidence_refs' => array( 'current_selection:paragraph' ),
+			),
+			array(
+				'name'          => __( 'Fact gaps', 'npcink-toolbox' ),
+				'detail'        => $output['fact_gaps'],
+				'action_policy' => 'operator_review_only_no_insert',
+				'evidence_refs' => array( 'current_selection:paragraph' ),
+			),
+			array(
+				'name'          => __( 'Tone consistency', 'npcink-toolbox' ),
+				'detail'        => $output['tone_consistency'],
+				'action_policy' => 'operator_review_only_no_insert',
+				'evidence_refs' => array( 'current_selection:paragraph' ),
+			),
+			array(
+				'name'          => __( 'Editing suggestions', 'npcink-toolbox' ),
+				'detail'        => $output['editing_suggestions'],
+				'action_policy' => 'operator_review_only_no_insert',
+				'evidence_refs' => array( 'current_selection:paragraph' ),
+			),
+		);
+
+		return $section;
+	}
+
+	private function editor_paragraph_check_local_output( string $selected_text ): array {
+		$text     = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $selected_text ) ) ?: '' );
+		$length   = function_exists( 'mb_strlen' ) ? mb_strlen( $text, 'UTF-8' ) : strlen( $text );
+		$punctuation_count = preg_match_all( '/[。！？!?；;]/u', $text );
+		$has_metric_claim  = 1 === preg_match( '/(\d|万|倍|%|百分|快|慢|耗时|性能|测试|经测试|同等|相当|无明显|明显|适合)/u', $text );
+		$has_scope_claim   = 1 === preg_match( '/(可用于|适合|场景|条件|因此|所以|由于|因为)/u', $text );
+
+		$clarity = $length > 150 || $punctuation_count >= 3
+			? __( '段落信息量偏高，建议人工检查性能结论、保存耗时和适用场景是否需要拆开呈现，避免读者把多个结论混在一起。', 'npcink-toolbox' )
+			: __( '段落结构基本清楚；重点检查比较结论和适用边界是否已经在上下文中交代。', 'npcink-toolbox' );
+
+		$fact_gaps = $has_metric_claim
+			? __( '包含测试、数量、速度或耗时类结论；发布前需要确认测试条件、数据规模、对比对象和结论来源，避免把单次测试写成通用事实。', 'npcink-toolbox' )
+			: __( '未发现明显数字或性能结论；仍需人工确认段落中的判断是否有上下文依据。', 'npcink-toolbox' );
+
+		$tone = $has_scope_claim
+			? __( '语气整体偏说明性；涉及“适合/因此/场景”等判断时，建议保持审慎，不要超过已验证范围。', 'npcink-toolbox' )
+			: __( '语气整体中性；保持事实说明即可。', 'npcink-toolbox' );
+
+		$editing = __( '不要直接替换正文。优先核对依据，再决定是否补充测试条件、缩小适用范围，或把性能表现和适用场景分开审阅。', 'npcink-toolbox' );
+
+		return array(
+			'clarity_check'       => $clarity,
+			'fact_gaps'           => $fact_gaps,
+			'tone_consistency'    => $tone,
+			'editing_suggestions' => $editing,
+			'assumptions_to_verify' => __( '托管 AI 本次未返回建议，以上为本地兜底检查；仍以人工编辑和原始测试记录为准。', 'npcink-toolbox' ),
+		);
 	}
 
 	private function editor_title_recommendation_section( array $section, array $context ): array {

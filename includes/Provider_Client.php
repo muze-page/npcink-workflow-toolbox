@@ -160,6 +160,7 @@ final class Provider_Client {
 				array( 'status' => 500 )
 			);
 		}
+		$runtime_payload = $this->runtime_payload_with_data_classification( $runtime_payload, 'internal', $input );
 
 		$handled = apply_filters( 'npcink_toolbox_ai_image_generation_cloud_request', null, $runtime_payload, $input );
 		if ( is_wp_error( $handled ) ) {
@@ -633,6 +634,10 @@ final class Provider_Client {
 	}
 
 	private function runtime_payload_data_classification( array $runtime_input, string $default, array $source_input = array() ): string {
+		$requested_classification = sanitize_key( (string) ( $source_input['runtime_data_classification'] ?? $source_input['data_classification'] ?? '' ) );
+		if ( in_array( $requested_classification, array( 'pii', 'secret' ), true ) ) {
+			return $requested_classification;
+		}
 		if ( $this->payload_contains_editor_free_text_context( $runtime_input ) || $this->payload_contains_personal_data( $runtime_input ) || $this->payload_contains_image_editor_context( $runtime_input ) ) {
 			return 'pii';
 		}
@@ -642,6 +647,18 @@ final class Provider_Client {
 
 		$classification = sanitize_key( $default );
 		return '' !== $classification ? $classification : 'internal';
+	}
+
+	private function runtime_payload_with_data_classification( array $runtime_payload, string $default, array $source_input = array() ): array {
+		$runtime_input  = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+		$current        = sanitize_key( (string) ( $runtime_payload['data_classification'] ?? $default ) );
+		$classification = $this->runtime_payload_data_classification( $runtime_input, '' !== $current ? $current : $default, $source_input );
+		$runtime_payload['data_classification'] = $classification;
+		$runtime_payload['storage_mode']        = $this->runtime_payload_storage_mode(
+			$classification,
+			sanitize_key( (string) ( $runtime_payload['storage_mode'] ?? 'result_only' ) )
+		);
+		return $runtime_payload;
 	}
 
 	private function runtime_payload_storage_mode( string $data_classification, string $default = 'result_only' ): string {
@@ -3583,10 +3600,10 @@ final class Provider_Client {
 				$context
 			);
 
-		$runtime_payload = array(
-			'ability_name'        => 'npcink-toolbox/ai-content-support',
-			'contract_version'    => 'hosted_ai_content_support.v1',
-			'profile_id'          => 'text.ai',
+			$runtime_payload = array(
+				'ability_name'        => 'npcink-toolbox/ai-content-support',
+				'contract_version'    => 'hosted_ai_content_support.v1',
+				'profile_id'          => 'text.ai',
 			'execution_kind'      => 'text',
 			'execution_pattern'   => 'inline',
 			'summary_prompt_mode' => $is_fast_summary ? 'fast_summary_v2' : ( 'summary_suggestions' === $intent ? 'full_quality_contract' : '' ),
@@ -3614,19 +3631,21 @@ final class Provider_Client {
 				'retry_max'           => 0,
 			'policy'              => array(
 				'allow_fallback' => false,
-			),
-		);
+				),
+			);
+			$runtime_payload = $this->runtime_payload_with_data_classification( $runtime_payload, 'public_site_content', $input );
 
-		$runtime_payload = apply_filters( 'npcink_toolbox_hosted_ai_runtime_payload', $runtime_payload, $input );
-		if ( ! is_array( $runtime_payload ) ) {
-			return new WP_Error(
+			$runtime_payload = apply_filters( 'npcink_toolbox_hosted_ai_runtime_payload', $runtime_payload, $input );
+			if ( ! is_array( $runtime_payload ) ) {
+				return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_runtime_payload',
 				__( 'The hosted AI runtime payload was not valid.', 'npcink-toolbox' ),
-				array( 'status' => 500 )
-			);
-		}
+					array( 'status' => 500 )
+				);
+			}
+			$runtime_payload = $this->runtime_payload_with_data_classification( $runtime_payload, 'public_site_content', $input );
 
-		$handled = apply_filters( 'npcink_toolbox_hosted_ai_cloud_request', null, $runtime_payload, $input );
+			$handled = apply_filters( 'npcink_toolbox_hosted_ai_cloud_request', null, $runtime_payload, $input );
 		if ( is_wp_error( $handled ) ) {
 			return $handled;
 		}
@@ -4104,7 +4123,13 @@ final class Provider_Client {
 	}
 
 	public function build_media_brief( string $post_context ) {
-		return $this->image_candidates( $this->post_context_to_image_query( $post_context ), array( 'per_page' => 8 ) );
+		return $this->image_candidates(
+			$this->post_context_to_image_query( $post_context ),
+			array(
+				'per_page'                     => 8,
+				'runtime_data_classification' => 'pii',
+			)
+		);
 	}
 
 	public function build_media_derivative_handoff( array $input ) {
@@ -4390,6 +4415,7 @@ final class Provider_Client {
 				array( 'status' => 500 )
 			);
 		}
+		$runtime_payload = $this->runtime_payload_with_data_classification( $runtime_payload, 'public_reference_media', $options );
 
 		$handled = apply_filters( 'npcink_toolbox_image_source_cloud_request', null, $runtime_payload, $query, $options );
 		if ( is_wp_error( $handled ) ) {
@@ -4822,7 +4848,7 @@ final class Provider_Client {
 			return array_values( array_filter( $result, 'is_array' ) );
 		}
 
-		foreach ( array( 'images', 'candidates', 'image_candidates', 'results', 'items', 'photos' ) as $key ) {
+		foreach ( array( 'images', 'image_source_candidates', 'source_candidates', 'media_candidates', 'assets', 'candidates', 'image_candidates', 'results', 'items', 'photos' ) as $key ) {
 			if ( ! is_array( $result[ $key ] ?? null ) ) {
 				continue;
 			}
@@ -4860,6 +4886,7 @@ final class Provider_Client {
 				?? ( $result['message']['content'] ?? '' )
 			)
 		);
+		$output_json = $this->hosted_ai_structured_output( $result, $output_text, $intent );
 		$input            = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
 		$quality_contract = is_array( $input['quality_contract'] ?? null ) ? $input['quality_contract'] : $this->hosted_ai_quality_contract( $intent );
 
@@ -4875,6 +4902,7 @@ final class Provider_Client {
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'ready' ) ) ),
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
 				'output_text'                => $output_text,
+				'output_json'                => $this->sanitize_payload( $output_json ),
 				'result'                     => $this->sanitize_payload( $result ),
 				'summary_prompt_mode'        => sanitize_key( (string) ( $runtime_payload['summary_prompt_mode'] ?? '' ) ),
 				'quality_contract'           => $this->sanitize_payload( $quality_contract ),
@@ -4892,6 +4920,71 @@ final class Provider_Client {
 			'hosted_ai_content_support',
 			'hosted_ai_content_support'
 		);
+	}
+
+	private function hosted_ai_structured_output( array $result, string $output_text, string $intent ): array {
+		foreach ( array( 'output_json', 'structured_output', 'json' ) as $key ) {
+			if ( is_array( $result[ $key ] ?? null ) ) {
+				return $result[ $key ];
+			}
+		}
+
+		foreach ( array( 'output', 'data', 'payload' ) as $key ) {
+			if ( is_array( $result[ $key ] ?? null ) ) {
+				$nested = $this->hosted_ai_structured_output( $result[ $key ], '', $intent );
+				if ( array() !== $nested ) {
+					return $nested;
+				}
+			}
+		}
+
+		if ( 'article_outline' === $intent ) {
+			foreach ( array( 'working_title', 'reader_promise', 'sections', 'missing_source_questions' ) as $key ) {
+				if ( isset( $result[ $key ] ) ) {
+					return $result;
+				}
+			}
+		}
+
+		if ( 'polish_notes' === $intent ) {
+			foreach ( array( 'clarity_check', 'fact_gaps', 'tone_consistency', 'editing_suggestions', 'assumptions_to_verify' ) as $key ) {
+				if ( isset( $result[ $key ] ) ) {
+					return $result;
+				}
+			}
+		}
+
+		return $this->decode_json_object_from_text( $output_text );
+	}
+
+	private function decode_json_object_from_text( string $text ): array {
+		$trimmed = trim( $text );
+		if ( '' === $trimmed ) {
+			return array();
+		}
+
+		$direct = json_decode( $trimmed, true );
+		if ( is_array( $direct ) ) {
+			return $direct;
+		}
+
+		if ( 1 === preg_match( '/```(?:json)?\s*(\{.*\})\s*```/is', $trimmed, $matches ) ) {
+			$fenced = json_decode( $matches[1], true );
+			if ( is_array( $fenced ) ) {
+				return $fenced;
+			}
+		}
+
+		$first_brace = strpos( $trimmed, '{' );
+		$last_brace  = strrpos( $trimmed, '}' );
+		if ( false !== $first_brace && false !== $last_brace && $last_brace > $first_brace ) {
+			$embedded = json_decode( substr( $trimmed, $first_brace, $last_brace - $first_brace + 1 ), true );
+			if ( is_array( $embedded ) ) {
+				return $embedded;
+			}
+		}
+
+		return array();
 	}
 
 	private function normalize_hosted_ai_site_helper_response( array $response, array $runtime_payload, string $intent, array $local_review_set = array() ): array {
@@ -4970,14 +5063,15 @@ final class Provider_Client {
 			),
 			'polish_notes'    => array(
 				'output_shape'     => array(
-					'revised_text'       => 'one polished version of the supplied short draft section',
-					'review_notes'       => 'brief explanation of clarity, tone, or structure changes',
-					'meaning_preserved'  => 'yes/no with a short caveat when needed',
+					'clarity_check'      => 'brief notes on confusing wording, structure, or reader friction',
+					'fact_gaps'          => 'claims, numbers, or jumps that need source or editor confirmation',
+					'tone_consistency'   => 'brief notes on whether the paragraph matches the site voice',
+					'editing_suggestions' => 'actionable editing directions without replacement copy',
 					'assumptions_to_verify' => 'short list, only when needed',
 				),
 				'review_checklist' => array(
-					'Compare the revised text against the original before using it.',
-					'Reject any wording that changes meaning or adds facts.',
+					'Use these notes as paragraph review guidance only.',
+					'Do not replace the selected text with AI-generated wording.',
 					'Keep claims, numbers, and product details under human review.',
 				),
 			),
@@ -5596,7 +5690,7 @@ final class Provider_Client {
 		$task = array(
 			'title_summary'       => 'Generate only local draft-support suggestions: 5 editor-ready title options, one concise excerpt, one SEO title, one meta description, and one direct answer summary. Titles must reflect the actual supplied draft, avoid clickbait, avoid generic labels, avoid article/draft meta phrasing, and stay under 80 characters.',
 			'article_outline'     => 'Generate only a compact article outline: working title, reader promise, 5-7 section headings, key points per section, and missing source questions for the editor.',
-			'polish_notes'        => 'Polish the supplied short draft section for clarity, tone, and structure. Preserve meaning, avoid new facts, and return the revised text plus review notes.',
+			'polish_notes'        => 'Check only the supplied selected paragraph or short selected text. Return clarity, fact-gap, tone consistency, and editing-direction notes. Do not provide replacement wording, rewritten copy, or insert-ready prose.',
 			'summary_suggestions' => 'Generate high-quality reader-facing WordPress excerpt candidates for the article after publication. Use the supplied title, existing excerpt, and draft body only as source material; first identify the core subject, content type, title-stated positioning, primary reader value, 2 to 4 must-cover points, and relationship rules; then produce an editor-ready recommended excerpt plus two alternate wordings. Do not truncate text, do not summarize only the first section, do not drop title-level differentiators, do not repeat the title, do not add unsupported facts, and do not mention draft, article, post, 本文, 这篇文章, or the act of summarizing.',
 			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, normalization notes, feedback metric hints, and risk notes. Prefer existing terms when supplied, include a reason and evidence_source for every term candidate, and mark proposed new tags separately.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
@@ -5636,7 +5730,7 @@ final class Provider_Client {
 				'For summary_suggestions, prefer one compact JSON object with recommended_excerpt, why_this_works, coverage_check, alternate_excerpt, and third_excerpt; do not wrap it in markdown fences.',
 				'For summary_suggestions regeneration, treat generation_variant as a fresh-request marker: use a different natural wording while preserving the same draft-grounded facts.',
 				'Return reviewable suggestions only.',
-				'Do not generate a full article unless the operator explicitly supplied a reviewed draft section to polish.',
+				'Do not generate a full article or replacement paragraph text.',
 				'Do not write or publish WordPress content.',
 				'Flag assumptions and claims that require operator confirmation.',
 				'Prefer bullets that can be copied into Core proposal review.',
@@ -6955,7 +7049,7 @@ final class Provider_Client {
 			return wp_trim_words( wp_strip_all_tags( $text ), 26, '' );
 		}
 		if ( 'slug' === $field ) {
-			return sanitize_title( $title );
+			return $this->content_discoverability_slug_candidate( $title, $topic, $text );
 		}
 		if ( 'excerpt' === $field ) {
 			return wp_trim_words( wp_strip_all_tags( $text ), 36, '' );
@@ -6994,6 +7088,29 @@ final class Provider_Client {
 		}
 
 		return null;
+	}
+
+	private function content_discoverability_slug_candidate( string $title, string $topic, string $text ): string {
+		$source = remove_accents( $title . ' ' . $topic . ' ' . wp_trim_words( wp_strip_all_tags( $text ), 12, '' ) );
+		preg_match_all( '/[a-z0-9]+/i', strtolower( $source ), $matches );
+		$tokens = array();
+		foreach ( $matches[0] ?? array() as $token ) {
+			$token = sanitize_key( $token );
+			if ( '' === $token || in_array( $token, array( 'the', 'and', 'for', 'with', 'about' ), true ) ) {
+				continue;
+			}
+			if ( ! in_array( $token, $tokens, true ) ) {
+				$tokens[] = $token;
+			}
+			if ( 6 <= count( $tokens ) ) {
+				break;
+			}
+		}
+		if ( ! empty( $tokens ) ) {
+			return implode( '-', $tokens );
+		}
+
+		return sanitize_title( $title );
 	}
 
 	private function post_context_to_image_query( string $post_context ): string {

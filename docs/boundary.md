@@ -181,9 +181,9 @@ considered.
 AI runtime. It returns review-only content-support suggestions and must not
 create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are title/summary suggestions, compact outline
-support, short-draft polish, and summary/category/tag review support. They must
-stay lightweight and must not be presented as one-click long-form article
-generation. Default draft-support results must include a small quality
+support, selection-only paragraph checks, and summary/category/tag review
+support. They must stay lightweight and must not be presented as one-click
+long-form article generation. Default draft-support results must include a small quality
 contract: expected output shape, operator review checklist, and reject-if rules
 for full-article output, unsupported claims, or write-like actions. Summary
 and terms optimization may suggest excerpts, categories, and tags, but it must
@@ -225,6 +225,10 @@ post `seo_meta_handoff_preview.v1` proposal payload that the editor may submit
 through Adapter as one pending Core review proposal; Toolbox must not approve
 or execute that proposal, batch SEO changes, mutate SEO plugin fields, or write
 schema/GEO metadata directly.
+The standalone discoverability button may render post-publish optimization
+tasks and expose the same SEO Core handoff button. Slug, FAQ, answer-summary,
+GEO-summary, and schema suggestions remain review notes or copyable candidates
+unless a separate governed write path exists.
 A future direct apply path for one current post's excerpt plus existing
 category/tag ids must not be treated as Local Admin Consent expansion. It
 would first require a `strong_local_confirmation` UX and audit contract with

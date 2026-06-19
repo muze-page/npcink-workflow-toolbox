@@ -87,10 +87,12 @@ not belong in Toolbox.
 
 The admin page should default to Start: readiness, current article entry, and
 next actions. Article-specific jobs use the editor Content Support sidebar:
-writing preparation, publish preflight, summary suggestions, category
-suggestions, tag suggestions, internal links, and image candidates. The admin
-Workflows tab defaults to Media, with Optimize Existing Image as the first
-visible tool, and keeps Site Helpers as a secondary low-frequency group.
+publish preflight, summary suggestions, category suggestions, tag suggestions,
+internal links, and image candidates. Related existing-post review is folded
+into publish preflight duplicate-risk checks and internal-link candidates, so
+`writing_support` remains route-compatible but is not a default editor button.
+The admin Workflows tab defaults to Media, with Optimize Existing Image as the
+first visible tool, and keeps Site Helpers as a secondary low-frequency group.
 Governed Handoffs and Fallback Bundles sit under the folded advanced/fallback
 area so the combined Article Planning Bundle remains a backup package, not the
 primary workflow. The lower-level `taxonomy_tags` intent remains available to
@@ -210,15 +212,18 @@ Post editor content support:
 - Supported intents are `writing_support`, `publish_preflight`,
   `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
-  `image_candidates`, and
+  `image_candidates`, selection-only paragraph checks via `polish_notes`, and
   `discoverability`.
-- The editor UI shows primary buttons for `writing_support`,
-  `publish_preflight`, `summary_suggestions`, `category_suggestions`,
-  `tag_suggestions`, `internal_links`, and `image_candidates`;
-  `summary_terms_optimization` and `taxonomy_tags` are not separate default
-  buttons.
+- The editor UI shows primary buttons for `publish_preflight`,
+  `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
+  `internal_links`, and `image_candidates`; `writing_support`,
+  `summary_terms_optimization`, and `taxonomy_tags` remain supported route
+  intents but are not separate default buttons.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
+- The selected-block toolbar may trigger `polish_notes` for the current
+  selection or paragraph only. It returns clarity, fact-gap, tone, and editing
+  direction notes; it does not return replacement copy or update the block.
 - `internal_links` returns `internal_link_candidates.v1`: related internal
   targets, suggested anchor text, placement hints, and Site Knowledge evidence
   for manual editor review only.
@@ -430,15 +435,28 @@ The first-version route matrix is exact:
 - `POST /flows/article-assistant`
 - `POST /flows/article-plan`
 - `POST /flows/image-candidate-adoption-plan`
+- `POST /local-admin-consent/featured-image`
 - `POST /flows/site-knowledge-review-plan`
+- `POST /flows/nightly-inspection-review-plan`
+- `POST /flows/content-metadata-apply-plan`
 - `POST /flows/media-brief`
 - `POST /editor/content-support`
 - `POST /media-derivative-handoff`
+- `GET /nightly-inspection/cloud-runtime-entitlement`
+- `POST /nightly-inspection/cloud-batch`
+- `GET /nightly-inspection/cloud-batch/recent`
+- `GET /nightly-inspection/cloud-batch/{run_id}`
+- `GET|POST /nightly-inspection/cloud-batch/{run_id}/result`
+- `POST /nightly-inspection/cloud-batch/{run_id}/retry`
 
 Do not add routes for publish, delivery, workflow-run consoles, queues,
 schedulers, approval stores, write confirmation, featured-image mutation, media
 upload/import, SEO mutation, indexing, or re-indexing without a new boundary
 decision.
+
+Nightly Inspection recent and retry routes are bounded Cloud detail bridges.
+They do not create a server-side Toolbox run history, local queue, retry
+processor, Core proposal, or WordPress write.
 
 ## Verification Gates
 

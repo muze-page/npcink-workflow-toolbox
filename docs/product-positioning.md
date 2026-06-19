@@ -114,13 +114,15 @@ repair logic locally.
 
 High-frequency article support belongs in the WordPress post editor as a
 Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor
-panel may run fixed flows for writing preparation, publish preflight,
-summary suggestions, category suggestions, tag suggestions, internal-link
-candidates, and image candidates, but it must keep the same suggestion-only and
-Core-governed write posture as the admin surface. Internal-link candidates are
-manual review aids, publish preflight is a unified advisory review panel, SEO
-metadata is only a single-post Core handoff preview, and new vocabulary remains
-Core policy-gated strong review.
+panel may run fixed flows for publish preflight, summary suggestions, category
+suggestions, tag suggestions, internal-link candidates, and image candidates,
+but it must keep the same suggestion-only and Core-governed write posture as the
+admin surface. Related existing-post review belongs inside publish preflight
+duplicate-risk checks and internal-link candidates rather than a separate
+writing-preparation button. Internal-link candidates are manual review aids,
+publish preflight is a unified advisory review panel, SEO metadata is only a
+single-post Core handoff preview, and new vocabulary remains Core policy-gated
+strong review.
 
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source

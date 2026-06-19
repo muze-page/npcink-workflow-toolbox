@@ -451,7 +451,7 @@ final class Admin_Page {
 				<div class="npcink-toolbox__section-heading">
 					<div>
 						<h3><?php esc_html_e( 'Current article work', 'npcink-toolbox' ); ?></h3>
-						<p><?php esc_html_e( 'High-frequency writing preparation, metadata suggestions, links, image candidates, and publish checks live in the post editor sidebar.', 'npcink-toolbox' ); ?></p>
+							<p><?php esc_html_e( 'High-frequency metadata suggestions, links, image candidates, duplicate-risk checks, and publish checks live in the post editor sidebar.', 'npcink-toolbox' ); ?></p>
 					</div>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><?php esc_html_e( 'New post', 'npcink-toolbox' ); ?></a>
