@@ -1,6 +1,7 @@
 # Editor Content Support Follow-up Trial - 2026-06-19
 
-Status: local operator trial evidence for the editor follow-up workflow slice.
+Status: local operator trial evidence and next-stage checklist for the editor
+follow-up workflow slice.
 
 This trial validates the post-editor follow-up changes after the discoverability
 and article-checkup UI update. The goal is to prove the current slice is usable
@@ -23,6 +24,7 @@ Not covered:
 - AI judge scoring of article-checkup issue usefulness;
 - FAQ, GEO, schema, or crawler-note proposal execution;
 - production site redirect/indexing behavior after slug changes.
+- production Cloud runtime sampling for every hosted no-result variant.
 
 ## Commands Run
 
@@ -68,6 +70,44 @@ The current follow-up workflow has enough proof to stop this development slice:
   recommendation entry instead of opening noisy default panels.
 - Eval-lab integration is available as a project-quality evidence layer without
   becoming part of the default test gate.
+
+The next UI follow-up narrows the remaining ambiguity:
+
+- the ordinary result view labels the arrow as a return to the tool list, not a
+  hidden undo or navigation away from the editor;
+- contextual selected-paragraph checks keep the inline-result posture and do
+  not show the ordinary tool-list return;
+- hosted AI no-result states render runtime diagnostics in the result surface,
+  including Cloud status, storage mode, data classification, provider call
+  count, idempotent replay, and any local no-rewrite fallback reason;
+- article checkup empty states avoid overclaiming success by saying that the
+  local heuristic did not find high-confidence issues.
+
+## Real Article Review Checklist
+
+Use this checklist before adding any new editor content-support ability:
+
+| Check | Pass condition | Notes |
+| --- | --- | --- |
+| Article checkup on a short draft | Shows either concrete review items or a clear high-confidence-empty local message. | It must not rewrite, insert, or replace body text. |
+| Article checkup on a long draft | Flags dense paragraphs, long sentences, missing structure, or factual-claim review points without overwhelming the panel. | False positives should be recorded by paragraph number. |
+| Selected paragraph check | Opens from the selected-block toolbar and keeps the selected paragraph context when the sidebar opens. | If hosted AI omits text, local fallback and runtime diagnostics must be visible. |
+| Summary/title hosted AI result | Displays useful candidates when runtime output exists. | If no candidates appear, diagnostics must distinguish Cloud omitted, zero provider calls, replay, and local fallback. |
+| Discoverability action | Keeps SEO apply behind Adapter/Core and keeps FAQ/GEO/schema notes collapsed. | No direct SEO/schema writes from Toolbox. |
+| Back/tool-list control | On ordinary sidebar results, the arrow clearly returns to the fixed-flow tool list. | On contextual paragraph checks, the result should not imply a separate navigation stack. |
+
+Record each article with:
+
+```text
+Post:
+Status: draft | published | imported test
+Flow tested:
+Result useful: yes | no | mixed
+False positives:
+No-result diagnostic seen: none | omitted | zero-provider-call | replay | local-fallback
+Write boundary preserved: yes | no
+Decision:
+```
 
 ## Remaining Product Questions
 
