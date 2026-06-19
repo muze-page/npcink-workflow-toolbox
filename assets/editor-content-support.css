@@ -1438,10 +1438,27 @@
 }
 
 .npcink-toolbox-editor-support__visual-brief.is-compact-selector {
-	gap: 8px;
+	gap: 6px;
 	padding: 0;
 	background: transparent;
 	border: 0;
+}
+
+.npcink-toolbox-editor-support__visual-brief.is-compact-selector .npcink-toolbox-editor-support__prompt-candidates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.npcink-toolbox-editor-support__visual-brief.is-compact-selector .npcink-toolbox-editor-support__prompt-card {
+	display: inline-flex;
+	width: auto;
+	min-height: 32px;
+	padding: 5px 10px;
+	align-items: center;
+	background: #f6f7f7;
+	border-radius: 999px;
+	white-space: nowrap;
 }
 
 .npcink-toolbox-editor-support__visual-brief strong,

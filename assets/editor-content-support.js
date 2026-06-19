@@ -2435,6 +2435,13 @@
 		};
 	}
 
+	function compactPromptDirectionLabel(label) {
+		return String(label || '')
+			.replace(/方向$/u, '')
+			.replace(/\sdirection$/i, '')
+			.trim();
+	}
+
 	function localizedVisualBriefIntent(brief) {
 		const localized = firstLocalizedText(brief, ['localized_visual_intent', 'visual_intent_zh', 'zh_visual_intent', 'localized_summary', 'summary_zh']);
 		if (localized) {
@@ -2448,12 +2455,12 @@
 		if (!payload || typeof payload !== 'object') {
 			return null;
 		}
-			const settings = Object.assign({
-				actionLabel: __('Use direction', 'npcink-toolbox'),
-				heading: __('Image direction reference', 'npcink-toolbox'),
-				hideContext: false,
-				compactSelector: false,
-			}, options || {});
+		const settings = Object.assign({
+			actionLabel: __('Use direction', 'npcink-toolbox'),
+			heading: __('Image direction reference', 'npcink-toolbox'),
+			hideContext: false,
+			compactSelector: false,
+		}, options || {});
 
 		const source = payload.sections && payload.sections.image_candidates ? payload.sections.image_candidates : payload;
 		const brief = source.visual_brief && typeof source.visual_brief === 'object' ? source.visual_brief : {};
@@ -2470,32 +2477,32 @@
 			.filter((candidate) => candidate && String(candidate.prompt || '').trim())
 			.slice(0, 3);
 		const visualIntent = localizedVisualBriefIntent(brief);
-			const chips = []
-				.concat(brief.primary_query ? [brief.primary_query] : [])
-				.concat(Array.isArray(brief.alternate_queries) ? brief.alternate_queries.slice(0, 4) : [])
-				.filter(Boolean)
-				.filter((chip, index, all) => all.indexOf(chip) === index)
-				.slice(0, 3);
+		const chips = []
+			.concat(brief.primary_query ? [brief.primary_query] : [])
+			.concat(Array.isArray(brief.alternate_queries) ? brief.alternate_queries.slice(0, 4) : [])
+			.filter(Boolean)
+			.filter((chip, index, all) => all.indexOf(chip) === index)
+			.slice(0, 3);
 		if (!chips.length && !promptCandidates.length && !visualIntent) {
 			return null;
 		}
 
 		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__visual-brief' + (settings.compactSelector ? ' is-compact-selector' : '') },
+			createElement('strong', null, settings.heading),
+			!settings.hideContext && visualIntent ? createElement('span', null, truncateText(visualIntent, 160)) : null,
+			!settings.hideContext && chips.length ? createElement(
 				'div',
-				{ className: 'npcink-toolbox-editor-support__visual-brief' + (settings.compactSelector ? ' is-compact-selector' : '') },
-				createElement('strong', null, settings.heading),
-				!settings.hideContext && visualIntent ? createElement('span', null, truncateText(visualIntent, 160)) : null,
-				!settings.hideContext && chips.length ? createElement(
-					'div',
-					{ className: 'npcink-toolbox-editor-support__query-chips' },
-					chips.map((chip, index) => createElement('span', { key: String(index) }, chip))
-				) : null,
-				promptCandidates.length ? createElement(
-					'div',
-					{ className: 'npcink-toolbox-editor-support__prompt-candidates' },
-					promptCandidates.map((candidate, index) => {
-						const prompt = String(candidate.prompt || '');
-						const usePrompt = (event) => {
+				{ className: 'npcink-toolbox-editor-support__query-chips' },
+				chips.map((chip, index) => createElement('span', { key: String(index) }, chip))
+			) : null,
+			promptCandidates.length ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__prompt-candidates' },
+				promptCandidates.map((candidate, index) => {
+					const prompt = String(candidate.prompt || '');
+					const usePrompt = (event) => {
 						if (event && event.preventDefault) {
 							event.preventDefault();
 						}
@@ -2506,22 +2513,22 @@
 							onUsePrompt(prompt);
 						}
 					};
-						const display = localizedPromptCandidateDisplay(candidate);
-						return createElement(
-							'button',
-							{
-								key: String(candidate.id || index),
-								className: 'npcink-toolbox-editor-support__prompt-card',
-								type: 'button',
-								'data-toolbox-ai-prompt-direction': 'true',
-								onClick: usePrompt,
-							},
-							createElement('strong', null, truncateText(display.label, 72)),
-							display.strategy ? createElement('span', null, truncateText(display.strategy, 120)) : null,
-							display.reason ? createElement('small', null, truncateText(display.reason, 180)) : null
-						);
-					})
-				) : null
+					const display = localizedPromptCandidateDisplay(candidate);
+					return createElement(
+						'button',
+						{
+							key: String(candidate.id || index),
+							className: 'npcink-toolbox-editor-support__prompt-card',
+							type: 'button',
+							'data-toolbox-ai-prompt-direction': 'true',
+							onClick: usePrompt,
+						},
+						createElement('strong', null, truncateText(settings.compactSelector ? compactPromptDirectionLabel(display.label) : display.label, 72)),
+						!settings.compactSelector && display.strategy ? createElement('span', null, truncateText(display.strategy, 120)) : null,
+						!settings.compactSelector && display.reason ? createElement('small', null, truncateText(display.reason, 180)) : null
+					);
+				})
+			) : null
 		);
 	}
 
