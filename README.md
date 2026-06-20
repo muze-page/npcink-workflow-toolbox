@@ -309,8 +309,9 @@ See [Editor Progressive Recommendations Closeout](docs/editor-progressive-recomm
 for the local prefetch contract, quality rules, and verification record.
 Accepted excerpt, existing category, and existing tag choices can be
 converted into a dry-run `content_metadata_apply_plan` through
-`/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan` or
-`npcink-toolbox/build-content-metadata-apply-plan`; Core still owns proposal
+`/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`; the plan uses
+`npcink-abilities-toolkit/build-content-metadata-apply-plan` as its Core
+handoff ability so third-party plugins do not need to depend on Toolbox. Core still owns proposal
 approval and final execution remains outside Toolbox. That packet exposes four proposal-ready action
 labels: Generate and apply summary, Recommend and apply tags, Recommend
 categories, and Create new tags and assign. Summary application and existing
@@ -479,7 +480,7 @@ preserving legacy URL fields for existing callers. The normalized fields include
 provenance, and warnings. Stock providers return `source_type=stock`;
 generated candidates return `source_type=ai_generated`.
 
-After an operator reviews one candidate, `npcink-toolbox/build-image-candidate-adoption-plan`
+After an operator reviews one candidate, `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 or `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
 can build an `image_candidate_adoption_plan`. That plan targets only
 `npcink-abilities-toolkit/upload-media-from-url`, `npcink-abilities-toolkit/update-media-details`, and

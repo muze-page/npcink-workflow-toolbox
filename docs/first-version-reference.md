@@ -142,7 +142,7 @@ Toolbox ability ids stay under `npcink-toolbox/*`:
 - `npcink-toolbox/request-site-knowledge-sync`
 - `npcink-toolbox/build-article-brief`
 - `npcink-toolbox/build-article-write-plan`
-- `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 - `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
@@ -164,7 +164,7 @@ General-purpose provider abilities:
   `ai_generation_handoff`. It calls hosted image generation through Cloud
   Addon, returns candidates only, and does not import media or write
   WordPress.
-- `npcink-toolbox/build-image-candidate-adoption-plan` turns one reviewed
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan` turns one reviewed
   `image_candidate.v1` into a Core-ready `image_candidate_adoption_plan` for
   media upload, metadata, and optional featured-image proposal intake.
 - `npcink-toolbox/search-site-knowledge` is the Cloud-managed site knowledge
@@ -261,7 +261,7 @@ For content-support AI callers, the canonical composition sequence is:
 1. `npcink-toolbox/build-content-discoverability-brief`
 2. `npcink-toolbox/search-site-knowledge`
 3. `npcink-toolbox/search-image-source`
-4. `npcink-toolbox/build-image-candidate-adoption-plan` after operator
+4. `npcink-abilities-toolkit/build-image-candidate-adoption-plan` after operator
    review
 5. `npcink-toolbox/build-media-brief`
 6. `npcink-toolbox/build-ai-article-writing-pack` only as a broad

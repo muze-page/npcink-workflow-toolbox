@@ -214,11 +214,12 @@ summary, Recommend and apply tags, and Recommend categories. Auto-approval
 eligibility belongs to Core policy; Toolbox must not auto-approve, create
 terms, assign terms, or update excerpts itself. Proposed new terms are deferred
 to a later taxonomy governance workflow; they are not current editor shortcut
-candidates or apply-plan inputs. The only apply-oriented local surface is
-`/flows/content-metadata-apply-plan` / `npcink-toolbox/build-content-metadata-apply-plan`,
-which is still read-only planning output: it packages reviewed excerpt,
-existing category, and existing tag choices into dry-run Core handoff actions
-and rejects missing term creation by keeping `create_missing=false`.
+candidates or apply-plan inputs. The only apply-oriented local Toolbox surface is
+`/flows/content-metadata-apply-plan`; its Core handoff ability id is
+`npcink-abilities-toolkit/build-content-metadata-apply-plan`. The route still
+returns read-only planning output: it packages reviewed excerpt, existing
+category, and existing tag choices into dry-run Core handoff actions and rejects
+missing term creation by keeping `create_missing=false`.
 Internal-link support returns `internal_link_candidates.v1` with reviewable
 targets, anchor suggestions, and placement hints. The REST route must not
 insert links, patch post content, or submit a post-content patch on the

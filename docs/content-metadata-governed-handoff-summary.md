@@ -78,9 +78,9 @@ Implemented in `magick-ai-toolbox`.
 - The apply plan route is:
   `/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`.
 - The apply plan ability is:
-  `npcink-toolbox/build-content-metadata-apply-plan`.
+  `npcink-abilities-toolkit/build-content-metadata-apply-plan`.
 - The editor submits the apply plan to Adapter `/proposals/from-plan` using
-  `npcink-toolbox/build-content-metadata-apply-plan`.
+  `npcink-abilities-toolkit/build-content-metadata-apply-plan`.
 - Proposed new terms are preserved as manual-review vocabulary-gap notes only.
 - Legacy metadata `proposal_targets` preview scaffolding was removed after the
   dedicated apply-plan path became the real handoff contract.
@@ -98,7 +98,7 @@ Relevant commits:
 
 Implemented in `magick-ai-core`.
 
-- Core accepts `npcink-toolbox/build-content-metadata-apply-plan` as a bounded
+- Core accepts `npcink-abilities-toolkit/build-content-metadata-apply-plan` as a bounded
   plan-to-proposal source.
 - Core validates the plan fail-closed before proposal creation:
   - `artifact_type=content_metadata_apply_plan`;

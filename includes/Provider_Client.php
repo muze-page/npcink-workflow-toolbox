@@ -2653,236 +2653,47 @@ final class Provider_Client {
 	}
 
 	public function build_image_candidate_adoption_plan( array $input ) {
-		$raw_candidate = $input['image_candidate'] ?? ( $input['candidate'] ?? array() );
-		if ( is_string( $raw_candidate ) ) {
-			$decoded = json_decode( $raw_candidate, true );
-			$raw_candidate = is_array( $decoded ) ? $decoded : array();
-		}
-		$candidate = is_array( $raw_candidate ) ? $raw_candidate : array();
-		if ( empty( $candidate ) ) {
-			$direct_url = $this->first_non_empty_url(
-				array(
-					$input['download_url'] ?? '',
-					$input['image_url'] ?? '',
-					$input['url'] ?? '',
-				)
-			);
-			if ( '' !== $direct_url ) {
-				$candidate = array(
-					'download_url'           => $direct_url,
-					'thumbnail_url'          => $input['thumbnail_url'] ?? '',
-					'source_url'             => $input['source_url'] ?? '',
-					'source_type'            => $input['source_type'] ?? 'external',
-					'provider'               => $input['provider'] ?? 'manual',
-					'provider_origin'        => $input['provider_origin'] ?? 'toolbox',
-					'title'                  => $input['title'] ?? '',
-					'description'            => $input['description'] ?? ( $input['alt'] ?? '' ),
-					'alt_description'        => $input['alt'] ?? '',
-					'attribution'            => $input['attribution_text'] ?? '',
-					'photographer'           => $input['photographer_name'] ?? '',
-					'prompt'                 => $input['prompt'] ?? '',
-					'model'                  => $input['model'] ?? '',
-					'license_review_status'  => $input['license_review_status'] ?? '',
-					'warnings'               => $this->sanitize_string_list( $input['warnings'] ?? array() ),
-				);
-			}
-		}
-		if ( empty( $candidate ) ) {
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
-				'npcink_toolbox_image_candidate_required',
-				__( 'A selected image URL or image_candidate object is required before building an adoption plan.', 'npcink-toolbox' ),
-				array( 'status' => 400 )
+				'npcink_toolbox_image_candidate_toolkit_unavailable',
+				__( 'The Toolkit image candidate adoption-plan ability is not currently available.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
 			);
 		}
 
-		$candidate = $this->normalize_image_candidate_contract( $candidate );
-		$image_url = $this->first_non_empty_url(
-			array(
-				$candidate['download_url'] ?? '',
-				$candidate['regular_url'] ?? '',
-				$candidate['small_url'] ?? '',
-				$candidate['url'] ?? '',
-			)
-		);
-		if ( '' === $image_url ) {
+		$registered = npcink_abilities_toolkit_get_registered();
+		$ability    = is_array( $registered ) ? ( $registered['npcink-abilities-toolkit/build-image-candidate-adoption-plan'] ?? null ) : null;
+		$callback   = is_array( $ability ) ? ( $ability['execute_callback'] ?? null ) : null;
+		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
-				'npcink_toolbox_image_candidate_url_missing',
-				__( 'The selected image candidate must include a download_url, regular_url, small_url, or url.', 'npcink-toolbox' ),
-				array( 'status' => 400 )
+				'npcink_toolbox_image_candidate_toolkit_plan_unavailable',
+				__( 'The Toolkit image candidate adoption-plan ability is not currently callable.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
 			);
 		}
 
-		$post_id = absint( $input['post_id'] ?? 0 );
-		$set_featured_image = $post_id > 0 && ! empty( $input['set_featured_image'] );
-		$title = trim( sanitize_text_field( (string) ( $input['title'] ?? $candidate['title'] ?? $candidate['description'] ?? __( 'Selected image candidate', 'npcink-toolbox' ) ) ) );
-		$alt = trim( sanitize_textarea_field( (string) ( $input['alt'] ?? $candidate['alt_description'] ?? $candidate['description'] ?? $title ) ) );
-		$description = trim( sanitize_textarea_field( (string) ( $input['description'] ?? $candidate['description'] ?? $alt ) ) );
-		$attribution = trim( sanitize_textarea_field( (string) ( $input['attribution_text'] ?? $candidate['attribution'] ?? '' ) ) );
-		$source_type = sanitize_key( (string) ( $candidate['source_type'] ?? 'external' ) );
-		if ( ! in_array( $source_type, array( 'owned', 'ai_generated', 'stock', 'external', 'manual_upload', 'test' ), true ) ) {
-			$source_type = 'external';
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
-		if ( 'manual_upload' === $source_type ) {
-			$source_type = 'owned';
-		}
-
-		$source_url = esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) );
-		$photographer = sanitize_text_field( (string) ( $candidate['photographer'] ?? $candidate['photographer_name'] ?? '' ) );
-		$file_name = sanitize_file_name( (string) ( $input['file_name'] ?? $candidate['file_name'] ?? $candidate['suggested_filename'] ?? '' ) );
-		$asset_persistence = is_array( $candidate['asset_persistence'] ?? null )
-			? $this->sanitize_payload( $candidate['asset_persistence'] )
-			: $this->ai_generated_asset_persistence_policy( $image_url, $candidate );
-		$is_temporary_generated_url = 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' );
-		$adoption_risk = $is_temporary_generated_url ? 'high' : 'medium';
-		$adoption_notes = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
-		if ( $is_temporary_generated_url ) {
-			$adoption_notes[] = __( 'The selected generated image URL may expire before delayed approval. Approve promptly or regenerate before import.', 'npcink-toolbox' );
-		}
-		$filename_policy = array(
-			'owner'                          => 'wordpress_write_ability_final',
-			'proposed_filename'              => $file_name,
-			'final_sanitize_unique_required' => true,
-			'preserve_attachment_metadata'   => true,
-			'source'                         => '' !== $file_name ? 'reviewed_or_candidate_suggestion' : 'wordpress_default',
-		);
-		$upload_id = 'upload_image_candidate';
-		$metadata_id = 'update_image_candidate_details';
-		$featured_id = 'set_image_candidate_featured_image';
-
-		$upload_input = array(
-			'url'               => $image_url,
-			'title'             => $title,
-			'file_name'         => $file_name,
-			'alt'               => $alt,
-			'caption'           => $attribution,
-			'description'       => $description,
-			'source_type'       => $source_type,
-			'source_page_url'   => $source_url,
-			'photographer_name' => $photographer,
-			'attribution_text'  => $attribution,
-			'copyright_notice'  => sanitize_text_field( (string) ( $input['copyright_notice'] ?? $candidate['copyright_notice'] ?? '' ) ),
-			'dry_run'           => true,
-			'commit'            => false,
-			'idempotency_key'   => 'image-candidate-upload-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
-		);
-		if ( $post_id > 0 ) {
-			$upload_input['attach_to_post_id'] = $post_id;
-		}
-
-		$write_actions = array(
-			array(
-				'action_id'           => $upload_id,
-				'target_ability_id'   => 'npcink-abilities-toolkit/upload-media-from-url',
-				'recipe_step'         => 'host_governed_upload_image_candidate',
-				'input'               => $upload_input,
-				'source_asset_policy' => $asset_persistence,
-				'adoption_notes'      => array_values( array_unique( $adoption_notes ) ),
-				'risk'                => $adoption_risk,
-				'requires_approval'   => true,
-				'commit_execution'    => false,
-				'proposal_ready'      => true,
-				'reason'              => __( 'Import the reviewed image candidate into the media library after Core approval.', 'npcink-toolbox' ),
-			),
-			array(
-				'action_id'           => $metadata_id,
-				'target_ability_id'   => 'npcink-abilities-toolkit/update-media-details',
-				'recipe_step'         => 'host_governed_update_image_candidate_metadata',
-				'depends_on'          => array( $upload_id ),
-				'input'               => array(
-					'attachment_id'     => '$outputs.' . $upload_id . '.attachment_id',
-					'title'             => $title,
-					'alt'               => $alt,
-					'caption'           => $attribution,
-					'description'       => $description,
-					'source_type'       => $source_type,
-					'source_page_url'   => $source_url,
-					'photographer_name' => $photographer,
-					'attribution_text'  => $attribution,
-					'copyright_notice'  => sanitize_text_field( (string) ( $input['copyright_notice'] ?? $candidate['copyright_notice'] ?? '' ) ),
-					'dry_run'           => true,
-					'commit'            => false,
-					'idempotency_key'   => 'image-candidate-details-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
-				),
-				'source_asset_policy' => $asset_persistence,
-				'adoption_notes'      => array_values( array_unique( $adoption_notes ) ),
-				'risk'                => $adoption_risk,
-				'requires_approval'   => true,
-				'commit_execution'    => false,
-				'proposal_ready'      => true,
-				'reason'              => __( 'Apply reviewed image candidate metadata after media import.', 'npcink-toolbox' ),
-			),
-		);
-
-		if ( $set_featured_image ) {
-			$write_actions[] = array(
-				'action_id'         => $featured_id,
-				'target_ability_id' => 'npcink-abilities-toolkit/set-post-featured-image',
-				'recipe_step'       => 'host_governed_set_image_candidate_featured_image',
-				'depends_on'        => array( $upload_id ),
-				'input'             => array(
-					'post_id'         => $post_id,
-					'attachment_id'   => '$outputs.' . $upload_id . '.attachment_id',
-					'dry_run'         => true,
-					'commit'          => false,
-					'idempotency_key' => 'image-candidate-featured-' . substr( md5( $image_url . '|' . $post_id ), 0, 12 ),
-				),
-				'risk'              => 'medium',
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Set the imported image candidate as the post featured image after Core approval.', 'npcink-toolbox' ),
+		if ( ! is_array( $result ) ) {
+			return new WP_Error(
+				'npcink_toolbox_image_candidate_toolkit_plan_invalid',
+				__( 'The Toolkit image candidate adoption-plan ability returned an invalid response.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
 			);
 		}
 
-		return array(
-			'artifact_type'               => 'image_candidate_adoption_plan',
-			'composition_role'            => 'core_image_candidate_adoption_plan',
-			'version'                     => 1,
-			'candidate_contract_version'  => 'image_candidate.v1',
-			'source_recipe_id'            => 'image_candidate_adoption_v1',
-			'source_recipe_ref'           => 'workflow/image_candidate_adoption',
-			'source_recipe_provider'      => 'npcink-toolbox',
-			'recipe_execution'            => 'local_operator_orchestration',
-			'write_posture'               => 'core_proposal_handoff',
-			'direct_wordpress_write'      => false,
-			'proposed_filename'           => $file_name,
-			'filename_policy'             => $filename_policy,
-			'source_asset_policy'         => $asset_persistence,
-			'adoption_notes'              => array_values( array_unique( $adoption_notes ) ),
-			'batch_id'                    => 'image_candidate_adoption_' . substr( md5( $image_url . '|' . $post_id . '|' . wp_json_encode( $write_actions ) ), 0, 12 ),
-			'requires_approval'           => true,
-			'dry_run'                     => true,
-			'commit_execution'            => false,
-			'proposal_mode'               => 'batch',
-			'batch_approval'              => true,
-			'action_count'                => count( $write_actions ),
-			'selected_image_candidate'    => $this->sanitize_payload( $candidate ),
-			'preview'                     => array(
-				array(
-					'action_id'        => $upload_id,
-					'image_url'        => $image_url,
-					'thumbnail_url'    => esc_url_raw( (string) ( $candidate['thumbnail_url'] ?? $image_url ) ),
-					'source_type'      => $source_type,
-					'provider'         => sanitize_key( (string) ( $candidate['provider'] ?? 'external' ) ),
-					'provider_origin'  => sanitize_key( (string) ( $candidate['provider_origin'] ?? 'toolbox' ) ),
-					'proposed_filename' => $file_name,
-					'filename_policy'   => $filename_policy,
-					'post_id'           => $post_id,
-					'set_featured_image' => $set_featured_image,
-					'attribution'       => $attribution,
-					'source_asset_policy' => $asset_persistence,
-				),
-			),
-			'write_actions'               => $write_actions,
-			'handoff'                     => array(
-				'plan_ability_id'        => 'npcink-toolbox/build-image-candidate-adoption-plan',
-				'recipe_id'              => 'image_candidate_adoption_v1',
-				'recipe_ref'             => 'workflow/image_candidate_adoption',
-				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
-				'final_write_path'       => 'core_proposal_required',
-				'direct_wordpress_write' => false,
-			),
-		);
+		$data = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+		if ( empty( $data['artifact_type'] ) || 'image_candidate_adoption_plan' !== (string) $data['artifact_type'] ) {
+			return new WP_Error(
+				'npcink_toolbox_image_candidate_toolkit_plan_invalid_artifact',
+				__( 'The Toolkit image candidate adoption-plan ability did not return the expected artifact.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $data;
 	}
 
 	public function build_site_knowledge_review_plan( array $input ) {
@@ -3172,270 +2983,48 @@ final class Provider_Client {
 	}
 
 	public function build_content_metadata_apply_plan( array $input ) {
-		$post_id = absint( $input['post_id'] ?? 0 );
-		if ( $post_id <= 0 ) {
+		$ability_id = 'npcink-abilities-toolkit/build-content-metadata-apply-plan';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
-				'npcink_toolbox_content_metadata_post_required',
-				__( 'A post_id is required to build a content metadata apply plan.', 'npcink-toolbox' ),
-				array( 'status' => 400 )
+				'npcink_toolbox_content_metadata_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build a content metadata apply plan.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
 			);
 		}
 
-		$post = get_post( $post_id );
-		if ( ! $post ) {
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
-				'npcink_toolbox_content_metadata_post_not_found',
-				__( 'The requested post was not found.', 'npcink-toolbox' ),
-				array( 'status' => 404 )
+				'npcink_toolbox_content_metadata_toolkit_plan_unavailable',
+				__( 'The Toolkit content metadata apply-plan ability is not currently callable.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
 			);
 		}
 
-		$excerpt = trim(
-			$this->bounded_text(
-				(string) ( $input['excerpt'] ?? ( $input['selected_excerpt'] ?? ( $input['summary'] ?? '' ) ) ),
-				500
-			)
-		);
-		$category_ids = $this->sanitize_existing_term_ids( $input['category_ids'] ?? ( $input['categories'] ?? array() ), 'category' );
-		if ( is_wp_error( $category_ids ) ) {
-			return $category_ids;
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
-		$tag_ids = $this->sanitize_existing_term_ids( $input['tag_ids'] ?? ( $input['tags'] ?? array() ), 'post_tag' );
-		if ( is_wp_error( $tag_ids ) ) {
-			return $tag_ids;
-		}
-
-		if ( '' === $excerpt && empty( $category_ids ) && empty( $tag_ids ) ) {
+		if ( ! is_array( $result ) ) {
 			return new WP_Error(
-				'npcink_toolbox_content_metadata_selection_required',
-				__( 'At least one reviewed excerpt, category id, or tag id is required to build a content metadata apply plan.', 'npcink-toolbox' ),
-				array( 'status' => 400 )
+				'npcink_toolbox_content_metadata_toolkit_plan_invalid',
+				__( 'The Toolkit content metadata apply-plan ability returned an invalid response.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
 			);
 		}
 
-		$category_mode = sanitize_key( (string) ( $input['category_mode'] ?? ( $input['mode'] ?? 'append' ) ) );
-		if ( ! in_array( $category_mode, array( 'append', 'replace' ), true ) ) {
-			$category_mode = 'append';
-		}
-		$tag_mode = sanitize_key( (string) ( $input['tag_mode'] ?? ( $input['mode'] ?? 'append' ) ) );
-		if ( ! in_array( $tag_mode, array( 'append', 'replace' ), true ) ) {
-			$tag_mode = 'append';
-		}
-
-		$new_term_candidates = $this->content_metadata_new_term_candidates_from_input( $input );
-		$evidence_refs       = is_array( $input['evidence_refs'] ?? null ) ? array_values( $input['evidence_refs'] ) : array();
-		$source_delta        = is_array( $input['content_metadata_delta'] ?? null )
-			? $input['content_metadata_delta']
-			: ( is_array( $input['source_delta'] ?? null ) ? $input['source_delta'] : array() );
-		$current_categories = $this->current_post_term_ids( $post_id, 'category' );
-		$current_tags       = $this->current_post_term_ids( $post_id, 'post_tag' );
-		$hash_basis         = wp_json_encode(
-			array(
-				'post_id'       => $post_id,
-				'excerpt'       => $excerpt,
-				'category_ids'  => $category_ids,
-				'tag_ids'       => $tag_ids,
-				'category_mode' => $category_mode,
-				'tag_mode'      => $tag_mode,
-			)
-		);
-		$hash_basis         = is_string( $hash_basis ) ? $hash_basis : (string) $post_id;
-		$batch_suffix       = substr( md5( $hash_basis ), 0, 12 );
-		$write_actions      = array();
-		$accepted_choices   = array(
-			'excerpt_selected'         => '' !== $excerpt,
-			'category_ids'             => $category_ids,
-			'category_mode'            => $category_mode,
-			'tag_ids'                  => $tag_ids,
-			'tag_mode'                 => $tag_mode,
-			'new_term_candidate_count' => count( $new_term_candidates ),
-			'new_term_policy'          => 'manual_review_only_no_create_term_action',
-		);
-
-		if ( '' !== $excerpt ) {
-			$write_actions[] = array(
-				'action_id'         => 'apply_selected_excerpt',
-				'target_ability_id' => 'npcink-abilities-toolkit/update-post',
-				'recipe_step'       => 'host_governed_update_excerpt',
-				'input'             => array(
-					'post_id'         => $post_id,
-					'excerpt'         => $excerpt,
-					'dry_run'         => true,
-					'commit'          => false,
-					'idempotency_key' => 'content-metadata-excerpt-' . $post_id . '-' . $batch_suffix,
-				),
-				'risk'              => 'low',
-				'required_scopes'   => array( 'post.write' ),
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Apply the reviewed excerpt through Core-governed update-post.', 'npcink-toolbox' ),
+		$data = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+		if ( empty( $data['artifact_type'] ) || 'content_metadata_apply_plan' !== (string) $data['artifact_type'] ) {
+			return new WP_Error(
+				'npcink_toolbox_content_metadata_toolkit_plan_invalid_artifact',
+				__( 'The Toolkit content metadata apply-plan ability did not return the expected artifact.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
 			);
 		}
 
-		if ( ! empty( $category_ids ) ) {
-			$write_actions[] = array(
-				'action_id'         => 'assign_existing_categories',
-				'target_ability_id' => 'npcink-abilities-toolkit/set-post-terms',
-				'recipe_step'       => 'host_governed_assign_existing_categories',
-				'input'             => array(
-					'post_id'         => $post_id,
-					'taxonomy'        => 'category',
-					'mode'            => $category_mode,
-					'term_ids'        => $category_ids,
-					'create_missing'  => false,
-					'dry_run'         => true,
-					'commit'          => false,
-					'idempotency_key' => 'content-metadata-categories-' . $post_id . '-' . $batch_suffix,
-				),
-				'risk'              => 'medium',
-				'required_scopes'   => array( 'taxonomy.manage' ),
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Assign reviewed existing categories through Core-governed set-post-terms; Toolbox does not create or assign terms directly.', 'npcink-toolbox' ),
-			);
-		}
-
-		if ( ! empty( $tag_ids ) ) {
-			$write_actions[] = array(
-				'action_id'         => 'assign_existing_tags',
-				'target_ability_id' => 'npcink-abilities-toolkit/set-post-terms',
-				'recipe_step'       => 'host_governed_assign_existing_tags',
-				'input'             => array(
-					'post_id'         => $post_id,
-					'taxonomy'        => 'post_tag',
-					'mode'            => $tag_mode,
-					'term_ids'        => $tag_ids,
-					'create_missing'  => false,
-					'dry_run'         => true,
-					'commit'          => false,
-					'idempotency_key' => 'content-metadata-tags-' . $post_id . '-' . $batch_suffix,
-				),
-				'risk'              => 'low',
-				'required_scopes'   => array( 'taxonomy.manage' ),
-				'requires_approval' => true,
-				'commit_execution'  => false,
-				'proposal_ready'    => true,
-				'reason'            => __( 'Assign reviewed existing tags through Core-governed set-post-terms; Toolbox does not create or assign terms directly.', 'npcink-toolbox' ),
-			);
-		}
-
-		$manual_review = array();
-		if ( ! empty( $new_term_candidates ) ) {
-			$manual_review[] = array(
-				'code'       => 'new_term_candidates_not_applied',
-				'fields'     => array( 'new_term_candidates' ),
-				'item_count' => count( $new_term_candidates ),
-				'reason'     => __( 'Proposed new terms are preserved as vocabulary-gap review notes only. This plan never creates missing taxonomy terms.', 'npcink-toolbox' ),
-			);
-		}
-
-		$preview = array(
-			array(
-				'action_id' => 'content_metadata_apply',
-				'post_id'   => $post_id,
-				'before'    => array(
-					'excerpt'      => sanitize_textarea_field( (string) ( $post->post_excerpt ?? '' ) ),
-					'category_ids' => $current_categories,
-					'tag_ids'      => $current_tags,
-				),
-				'after_suggestion' => array(
-					'excerpt'       => $excerpt,
-					'category_ids'  => $category_ids,
-					'category_mode' => $category_mode,
-					'tag_ids'       => $tag_ids,
-					'tag_mode'      => $tag_mode,
-				),
-			),
-		);
-		$authorization = $this->content_metadata_apply_authorization( $post_id, $write_actions, $accepted_choices );
-
-		return array(
-			'artifact_type'          => 'content_metadata_apply_plan',
-			'composition_role'       => 'core_content_metadata_apply_plan',
-			'version'                => 1,
-			'source_recipe_id'       => 'content_metadata_delta_v1',
-			'source_recipe_ref'      => 'workflow/content_metadata_delta',
-			'source_recipe_provider' => 'npcink-toolbox',
-			'recipe_execution'       => 'local_operator_orchestration',
-			'write_posture'          => 'core_proposal_handoff',
-			'direct_wordpress_write' => false,
-			'batch_id'               => 'content_metadata_apply_' . $batch_suffix,
-			'requires_approval'      => true,
-			'dry_run'                => true,
-			'commit_execution'       => false,
-			'proposal_mode'          => 'batch',
-			'batch_approval'         => true,
-			'post'                   => array(
-				'post_id'     => $post_id,
-				'post_type'   => get_post_type( $post ),
-				'post_status' => get_post_status( $post ),
-				'title'       => sanitize_text_field( get_the_title( $post ) ),
-			),
-			'accepted_choices'       => $accepted_choices,
-			'authorization'          => $authorization,
-			'evidence_refs'          => $this->sanitize_payload( $evidence_refs ),
-			'source_delta'           => $this->sanitize_payload( $source_delta ),
-			'new_term_candidates'    => $this->sanitize_payload( $new_term_candidates ),
-			'preview'                => $preview,
-			'manual_review'          => $manual_review,
-			'write_actions'          => $write_actions,
-			'risk'                   => array(
-				'level'   => ! empty( $category_ids ) ? 'medium' : 'low',
-				'reasons' => array(
-					'excerpt_update_only_if_selected',
-					'existing_terms_only',
-					'no_create_missing_terms',
-					'core_proposal_required',
-				),
-			),
-			'handoff'                => array(
-				'plan_ability_id'        => 'npcink-toolbox/build-content-metadata-apply-plan',
-				'recipe_id'              => 'content_metadata_delta_v1',
-				'recipe_ref'             => 'workflow/content_metadata_delta',
-				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
-				'final_write_path'       => 'core_proposal_required',
-				'direct_wordpress_write' => false,
-				'proposal_ready'         => true,
-			),
-		);
-	}
-
-	private function content_metadata_apply_authorization( int $post_id, array $write_actions, array $accepted_choices ): array {
-		$operation = array(
-			'request_source'          => Operation_Classifier::SOURCE_WP_ADMIN_UI,
-			'actor_presence'          => Operation_Classifier::ACTOR_PRESENT_CLICK,
-			'preview_completeness'    => Operation_Classifier::PREVIEW_SUFFICIENT,
-			'scope'                   => Operation_Classifier::SCOPE_ONE_OBJECT,
-			'reversibility'           => Operation_Classifier::REVERSIBILITY_EASY_UNDO,
-			'operation_kind'          => Operation_Classifier::KIND_BATCH_PLAN,
-			'writes_wordpress_state'  => true,
-			'target_post_id'          => $post_id,
-			'action_count'            => count( $write_actions ),
-			'accepted_choices'        => $accepted_choices,
-			'commit_execution'        => false,
-			'direct_wordpress_write'  => false,
-		);
-		$classifier = new Operation_Classifier();
-		$result     = $classifier->classify( $operation );
-
-		return array(
-			'classification'    => (string) ( $result['classification'] ?? Operation_Classifier::CORE_PROPOSAL_REQUIRED ),
-			'reason'            => __( 'Accepted content metadata changes are packaged as a Core proposal batch, not local admin consent.', 'npcink-toolbox' ),
-			'reasons'           => (array) ( $result['reasons'] ?? array( 'operation_kind_requires_core_proposal' ) ),
-			'required_evidence' => (array) ( $result['required_evidence'] ?? array() ),
-			'policy_version'    => (string) ( $result['policy_version'] ?? 'operation-classification-v1' ),
-			'decision_envelope' => array_merge(
-				array(
-					'decision_version' => (string) ( $result['policy_version'] ?? 'operation-classification-v1' ),
-					'classification'   => (string) ( $result['classification'] ?? Operation_Classifier::CORE_PROPOSAL_REQUIRED ),
-					'reasons'          => (array) ( $result['reasons'] ?? array( 'operation_kind_requires_core_proposal' ) ),
-					'required_evidence' => (array) ( $result['required_evidence'] ?? array() ),
-				),
-				$operation
-			),
-		);
+		return $data;
 	}
 
 	public function build_content_discoverability_brief( array $input ) {
@@ -6726,84 +6315,6 @@ final class Provider_Client {
 					$items
 				),
 				static fn( string $item ): bool => '' !== $item
-			)
-		);
-	}
-
-	private function sanitize_existing_term_ids( $value, string $taxonomy ) {
-		$ids     = $this->sanitize_absint_list( $value );
-		$missing = array();
-		foreach ( $ids as $term_id ) {
-			$term = get_term( $term_id, $taxonomy );
-			if ( ! $term || is_wp_error( $term ) ) {
-				$missing[] = $term_id;
-			}
-		}
-
-		if ( ! empty( $missing ) ) {
-			return new WP_Error(
-				'npcink_toolbox_content_metadata_term_not_found',
-				__( 'Content metadata apply plans may use only existing WordPress term ids.', 'npcink-toolbox' ),
-				array(
-					'status'   => 400,
-					'taxonomy' => $taxonomy,
-					'term_ids' => $missing,
-				)
-			);
-		}
-
-		return $ids;
-	}
-
-	private function current_post_term_ids( int $post_id, string $taxonomy ): array {
-		$ids = wp_get_object_terms(
-			$post_id,
-			$taxonomy,
-			array(
-				'fields' => 'ids',
-			)
-		);
-		if ( is_wp_error( $ids ) || ! is_array( $ids ) ) {
-			return array();
-		}
-
-		return $this->sanitize_absint_list( $ids );
-	}
-
-	private function content_metadata_new_term_candidates_from_input( array $input ): array {
-		$candidates = array();
-		foreach ( array( 'new_term_candidates', 'proposed_new_terms', 'new_terms' ) as $key ) {
-			if ( ! array_key_exists( $key, $input ) ) {
-				continue;
-			}
-			$value = $input[ $key ];
-			if ( is_string( $value ) ) {
-				$decoded = json_decode( $value, true );
-				$value   = is_array( $decoded ) ? $decoded : $this->sanitize_string_list( $value );
-			}
-			if ( is_array( $value['items'] ?? null ) ) {
-				$value = $value['items'];
-			}
-			if ( is_array( $value ) ) {
-				$candidates = array_merge( $candidates, array_values( $value ) );
-			}
-		}
-
-		return array_values(
-			array_filter(
-				array_map(
-					function ( $item ) {
-						if ( is_array( $item ) ) {
-							return $this->sanitize_payload( $item );
-						}
-
-						return sanitize_text_field( (string) $item );
-					},
-					$candidates
-				),
-				static function ( $item ): bool {
-					return is_array( $item ) ? ! empty( $item ) : '' !== (string) $item;
-				}
 			)
 		);
 	}

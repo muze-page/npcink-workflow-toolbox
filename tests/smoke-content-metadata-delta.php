@@ -265,7 +265,7 @@ toolbox_metadata_delta_smoke_assert( ! empty( $apply_actions ), 'Content metadat
 toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $apply_authorization['classification'] ?? '' ), 'Content metadata apply plan declares Core proposal-required authorization.' );
 toolbox_metadata_delta_smoke_assert( 'operation-classification-v1' === (string) ( $apply_decision_envelope['decision_version'] ?? '' ), 'Content metadata apply plan carries the operation-classification decision envelope.' );
 toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $apply_decision_envelope['classification'] ?? '' ), 'Content metadata apply plan decision envelope requires Core proposal review.' );
-toolbox_metadata_delta_smoke_assert( 'npcink-toolbox/build-content-metadata-apply-plan' === (string) ( $apply_plan['handoff']['plan_ability_id'] ?? '' ), 'Content metadata apply plan points to its Core handoff ability.' );
+toolbox_metadata_delta_smoke_assert( 'npcink-abilities-toolkit/build-content-metadata-apply-plan' === (string) ( $apply_plan['handoff']['plan_ability_id'] ?? '' ), 'Content metadata apply plan points to its Toolkit Core handoff ability.' );
 toolbox_metadata_delta_smoke_assert( ! empty( $apply_plan['manual_review'] ?? array() ), 'Content metadata apply plan keeps new terms as manual-review notes.' );
 
 $has_excerpt_action = false;
@@ -287,7 +287,7 @@ toolbox_metadata_delta_smoke_assert( $has_excerpt_action, 'Content metadata appl
 $created = toolbox_metadata_delta_smoke_rest(
 	'/npcink-governance-core/v1/proposals/from-plan',
 	array(
-		'plan_ability_id' => 'npcink-toolbox/build-content-metadata-apply-plan',
+		'plan_ability_id' => 'npcink-abilities-toolkit/build-content-metadata-apply-plan',
 		'plan'            => $apply_plan,
 		'plan_input'      => array(
 			'post_id'      => $sample_post_id,
@@ -301,7 +301,7 @@ $created = toolbox_metadata_delta_smoke_rest(
 	)
 );
 
-toolbox_metadata_delta_smoke_assert( 'npcink-toolbox/build-content-metadata-apply-plan' === (string) ( $created['plan_ability_id'] ?? '' ), 'Core response records the metadata planning ability.' );
+toolbox_metadata_delta_smoke_assert( 'npcink-abilities-toolkit/build-content-metadata-apply-plan' === (string) ( $created['plan_ability_id'] ?? '' ), 'Core response records the Toolkit metadata planning ability.' );
 toolbox_metadata_delta_smoke_assert( 1 === (int) ( $created['proposal_count'] ?? 0 ), 'Core creates one batch proposal from the metadata apply plan.' );
 toolbox_metadata_delta_smoke_assert( count( $apply_actions ) === (int) ( $created['action_count'] ?? 0 ), 'Core response preserves the metadata action count.' );
 toolbox_metadata_delta_smoke_assert( false === (bool) ( $created['commit_execution'] ?? true ), 'Core metadata from-plan intake remains non-commit.' );

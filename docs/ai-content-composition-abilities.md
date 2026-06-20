@@ -65,7 +65,7 @@ For normal WordPress editorial support, compose abilities in this order:
 3. `npcink-toolbox/search-image-source`
    - Retrieve featured, inline, layout, reference, or media-planning image
      candidates and preserve attribution.
-4. `npcink-toolbox/build-image-candidate-adoption-plan`
+4. `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
    - After operator review, build a Core-ready media adoption plan when the
      operator wants to import a selected image candidate.
 5. `npcink-toolbox/build-site-knowledge-review-plan`
@@ -167,7 +167,7 @@ tab remains the management, testing, and cross-article surface.
 | `npcink-toolbox/build-article-write-plan` | `core_article_write_plan` | Reviewed draft plan for Core proposal intake. |
 | `npcink-toolbox/build-article-batch-write-plan` | `core_article_batch_write_plan` | Reviewed draft batch plan for one Core batch proposal. |
 | `npcink-toolbox/build-article-media-batch-write-plan` | `core_article_media_batch_write_plan` | Reviewed article plus image-source plan for Core-governed draft, media upload, metadata, and featured-image actions. |
-| `npcink-toolbox/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
+| `npcink-abilities-toolkit/build-image-candidate-adoption-plan` | `core_image_candidate_adoption_plan` | Reviewed image candidate plan for Core-governed media upload, metadata, and optional featured-image actions. |
 | `npcink-toolbox/build-site-knowledge-review-plan` | `core_site_knowledge_review_plan` | Blocked Site Knowledge review plan with preserved evidence refs and human title/content input still required. |
 | `npcink-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
 
@@ -244,7 +244,7 @@ caller must:
 AI-generated candidates are not public image-source search results. They remain
 suggestion-only candidates until Core approval and a local WordPress media
 write ability handles import. To adopt one reviewed candidate, callers should
-build `npcink-toolbox/build-image-candidate-adoption-plan` and send the
+build `npcink-abilities-toolkit/build-image-candidate-adoption-plan` and send the
 returned `image_candidate_adoption_plan` to Core from-plan intake.
 
 Cloud Site Knowledge agent handoffs are narrower. To review an evidence-backed

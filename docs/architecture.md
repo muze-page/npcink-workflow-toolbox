@@ -125,7 +125,7 @@ Current ability ids:
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
-- `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
 - `npcink-toolbox/validate-content-discoverability-context`
@@ -147,7 +147,7 @@ image-source candidates. It does not upload media, set featured images, approve
 proposals, or execute writes. It is the high-risk contrast for Local Admin
 Consent: multiple draft, media import, media metadata, and featured-image
 actions must become one Core `plan_to_proposal_batch`, not local consent.
-`npcink-toolbox/build-image-candidate-adoption-plan` assembles a Core-ready
+`npcink-abilities-toolkit/build-image-candidate-adoption-plan` assembles a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or
 execute writes.
@@ -379,10 +379,12 @@ Operators can scope the input to the full article,
 selected text or block, or a topic-only brief. The same section may expose
 future taxonomy-gap signals only as deferred governance notes, not as current
 editor recommendations, and may include a preview-only Core handoff packet for
-accepted summary and existing-term choices. `/flows/content-metadata-apply-plan` and
-`npcink-toolbox/build-content-metadata-apply-plan` can turn accepted excerpt,
-existing category, and existing tag choices into a dry-run
-`content_metadata_apply_plan` for Core plan-to-proposal intake. The plan targets
+accepted summary and existing-term choices. `/flows/content-metadata-apply-plan`
+remains the Toolbox product surface for accepted excerpt, existing category,
+and existing tag choices. The Core handoff uses
+`npcink-abilities-toolkit/build-content-metadata-apply-plan`, which lets
+OpenClaw, Adapter, and third-party plugins build the same dry-run
+`content_metadata_apply_plan` without depending on Toolbox. The plan targets
 only `npcink-abilities-toolkit/update-post` for excerpts and
 `npcink-abilities-toolkit/set-post-terms` for existing category or post-tag ids,
 always with `create_missing=false`, `dry_run=true`, and `commit=false`. The

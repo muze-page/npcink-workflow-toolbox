@@ -271,22 +271,6 @@ final class Abilities {
 					'write_posture'       => 'core_proposal_handoff',
 				)
 			),
-			'npcink-toolbox/build-image-candidate-adoption-plan' => $this->definition(
-				__( 'Build Image Candidate Adoption Plan', 'npcink-toolbox' ),
-				__( 'Build a Core-ready image_candidate_adoption_plan for one reviewed image candidate without importing media or writing WordPress content.', 'npcink-toolbox' ),
-				array( 'image_candidate' ),
-				array( $this, 'build_image_candidate_adoption_plan' ),
-				'cap.toolbox.workflow_suggest',
-				array(
-					'data_classification' => 'planning_artifact',
-					'composition_role'    => 'core_image_candidate_adoption_plan',
-					'local_recipe_id'     => 'image_candidate_adoption_v1',
-					'ability_recipe_ref'  => 'workflow/image_candidate_adoption',
-					'provider_execution'  => 'none',
-					'write_posture'       => 'core_proposal_handoff',
-					'candidate_contract'  => 'image_candidate.v1',
-				)
-			),
 			'npcink-toolbox/build-site-knowledge-review-plan' => $this->definition(
 				__( 'Build Site Knowledge Review Plan', 'npcink-toolbox' ),
 				__( 'Build a Core review proposal plan from a Cloud Site Knowledge agent handoff without writing WordPress content.', 'npcink-toolbox' ),
@@ -315,64 +299,6 @@ final class Abilities {
 					'ability_recipe_ref'  => 'workflow/nightly_site_inspection_review',
 					'provider_execution'  => 'none',
 					'write_posture'       => 'core_proposal_handoff',
-				)
-			),
-			'npcink-toolbox/build-content-metadata-apply-plan' => $this->definition(
-				__( 'Build Content Metadata Apply Plan', 'npcink-toolbox' ),
-				__( 'Build a Core-ready content_metadata_apply_plan from reviewed excerpt, category, and tag choices without writing WordPress content.', 'npcink-toolbox' ),
-				array( 'post_id' ),
-				array( $this, 'build_content_metadata_apply_plan' ),
-				'cap.toolbox.workflow_suggest',
-				array(
-					'data_classification' => 'planning_artifact',
-					'composition_role'    => 'core_content_metadata_apply_plan',
-					'local_recipe_id'     => 'content_metadata_delta_v1',
-					'ability_recipe_ref'  => 'workflow/content_metadata_delta',
-					'provider_execution'  => 'none',
-					'write_posture'            => 'core_proposal_handoff',
-					'accepted_input_contract'  => 'reviewed_excerpt_existing_terms_only_no_create_missing',
-				),
-				array(
-					'post_id'                => array(
-						'type'        => 'integer',
-						'description' => __( 'Current WordPress post ID receiving reviewed metadata suggestions.', 'npcink-toolbox' ),
-					),
-					'excerpt'                => array(
-						'type'        => 'string',
-						'description' => __( 'Reviewed excerpt text to package into a dry-run Core proposal action.', 'npcink-toolbox' ),
-					),
-					'category_ids'           => array(
-						'type'        => 'array',
-						'items'       => array( 'type' => 'integer' ),
-						'description' => __( 'Reviewed existing category term IDs. Missing terms are never created by this plan.', 'npcink-toolbox' ),
-					),
-					'tag_ids'                => array(
-						'type'        => 'array',
-						'items'       => array( 'type' => 'integer' ),
-						'description' => __( 'Reviewed existing tag term IDs. Missing terms are never created by this plan.', 'npcink-toolbox' ),
-					),
-					'category_mode'          => array(
-						'type'        => 'string',
-						'enum'        => array( 'append', 'replace' ),
-						'description' => __( 'Whether Core should append or replace reviewed existing categories during later approved execution.', 'npcink-toolbox' ),
-					),
-					'tag_mode'               => array(
-						'type'        => 'string',
-						'enum'        => array( 'append', 'replace' ),
-						'description' => __( 'Whether Core should append or replace reviewed existing tags during later approved execution.', 'npcink-toolbox' ),
-					),
-					'content_metadata_delta' => array(
-						'type'        => 'object',
-						'description' => __( 'Source content_metadata_delta artifact used as review evidence for the Core proposal.', 'npcink-toolbox' ),
-					),
-					'evidence_refs'          => array(
-						'type'        => 'array',
-						'description' => __( 'Evidence references preserved from the metadata delta review.', 'npcink-toolbox' ),
-					),
-					'new_term_candidates'    => array(
-						'type'        => 'array',
-						'description' => __( 'Review-only vocabulary-gap notes. This plan keeps create_missing disabled.', 'npcink-toolbox' ),
-					),
 				)
 			),
 			'npcink-toolbox/build-media-brief'                  => $this->definition(
@@ -568,10 +494,6 @@ final class Abilities {
 
 	public function build_article_media_batch_write_plan( $input = array() ) {
 		return $this->client->build_article_media_batch_write_plan( is_array( $input ) ? $input : array() );
-	}
-
-	public function build_image_candidate_adoption_plan( $input = array() ) {
-		return $this->client->build_image_candidate_adoption_plan( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_site_knowledge_review_plan( $input = array() ) {

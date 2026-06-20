@@ -570,7 +570,7 @@
 
 	async function postContentMetadataApplyPlanToAdapter(plan, planInput) {
 		return postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
-			plan_ability_id: 'npcink-toolbox/build-content-metadata-apply-plan',
+			plan_ability_id: 'npcink-abilities-toolkit/build-content-metadata-apply-plan',
 			plan,
 			plan_input: planInput,
 			caller: {
@@ -634,7 +634,7 @@
 
 	async function postAdapterAdoption(plan, planInput) {
 		const bridge = await postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
-			plan_ability_id: 'npcink-toolbox/build-image-candidate-adoption-plan',
+			plan_ability_id: 'npcink-abilities-toolkit/build-image-candidate-adoption-plan',
 			plan,
 			plan_input: planInput,
 			caller: {

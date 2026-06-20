@@ -38,7 +38,7 @@ External AI callers should discover and call Toolbox abilities such as:
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
-- `npcink-toolbox/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 - `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
@@ -110,7 +110,7 @@ callers may pass the explicit source type. The contract includes
 and warnings so OpenClaw, Toolbox buttons, and Core proposal intake can consume
 one candidate shape.
 
-`npcink-toolbox/build-image-candidate-adoption-plan` converts one reviewed
+`npcink-abilities-toolkit/build-image-candidate-adoption-plan` converts one reviewed
 `image_candidate.v1` into an `image_candidate_adoption_plan` with governed
 write actions for media upload, metadata update, and optional featured-image
 setting. It is read-only and suggestion-only; final adoption still goes through
