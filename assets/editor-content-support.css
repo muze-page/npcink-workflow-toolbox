@@ -367,6 +367,19 @@
 	color: #646970;
 }
 
+.npcink-toolbox-editor-support__article-checkup-groups {
+	display: grid;
+	gap: 10px;
+}
+
+.npcink-toolbox-editor-support__article-checkup-group h5 {
+	margin: 0 0 6px;
+	font-size: 11px;
+	line-height: 1.3;
+	text-transform: uppercase;
+	color: #50575e;
+}
+
 .npcink-toolbox-editor-support__candidate-meta {
 	display: flex;
 	flex-wrap: wrap;

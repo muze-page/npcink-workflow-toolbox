@@ -3620,6 +3620,12 @@ msgstr "事实缺口"
 msgid "Format"
 msgstr "版式"
 
+msgid "Semantic consistency"
+msgstr "语义一致性"
+
+msgid "Other"
+msgstr "其他"
+
 msgid "Example: focus on structure and factual claims, not style preference."
 msgstr "例如：重点看结构和事实主张，不看个人风格偏好。"
 

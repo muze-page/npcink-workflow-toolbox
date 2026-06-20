@@ -1373,6 +1373,8 @@
 			fact_gap: __('Fact gap', 'npcink-toolbox'),
 			tone: __('Tone', 'npcink-toolbox'),
 			format: __('Format', 'npcink-toolbox'),
+			semantic_consistency: __('Semantic consistency', 'npcink-toolbox'),
+			other: __('Other', 'npcink-toolbox'),
 			publish_preflight: __('Publish preflight', 'npcink-toolbox'),
 			title_suggestions: __('Title suggestions', 'npcink-toolbox'),
 			article_outline: __('Outline suggestions', 'npcink-toolbox'),
@@ -3180,16 +3182,54 @@
 			const direction = readableItemText(item.edit_direction || item.detail || item.reason || '', '');
 			const evidence = readableItemText(item.evidence || '', '');
 			const location = readableItemText(item.location || '', '');
+			const rawType = String(item.type || 'other').trim().toLowerCase().replace(/[\s-]+/g, '_') || 'other';
 			const severity = item.severity ? formatMetaLabel(item.severity) : '';
-			const type = item.type ? formatMetaLabel(item.type) : '';
+			const type = rawType !== 'other' ? formatMetaLabel(rawType) : '';
 			return {
 				name: [location, issue].filter(Boolean).join(' · ') || __('Review item', 'npcink-toolbox'),
 				detail: [direction, evidence ? __('Evidence: ', 'npcink-toolbox') + evidence : '', [type, severity].filter(Boolean).join(' / ')].filter(Boolean).join(' · '),
 				action_policy: item.action_policy || 'operator_review_only_no_insert',
 				evidence_refs: item.evidence_refs || [],
 				id: item.id || String(index),
+				group_key: rawType,
 			};
 		}).filter((item) => item.name || item.detail);
+	}
+
+	function articleCheckupGroups(items) {
+		const order = ['clarity', 'fact_gap', 'tone', 'structure', 'format', 'semantic_consistency', 'other'];
+		const buckets = {};
+		(Array.isArray(items) ? items : []).forEach((item) => {
+			const key = order.indexOf(item.group_key) >= 0 ? item.group_key : 'other';
+			if (!buckets[key]) {
+				buckets[key] = [];
+			}
+			buckets[key].push(item);
+		});
+		return order
+			.filter((key) => buckets[key] && buckets[key].length)
+			.map((key) => ({
+				key,
+				label: formatMetaLabel(key),
+				items: buckets[key],
+			}));
+	}
+
+	function renderArticleCheckupItems(section) {
+		const items = articleCheckupItems(section);
+		if (!items.length) {
+			return renderItems(items, __('No high-confidence local article checkup issues were found.', 'npcink-toolbox'));
+		}
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__article-checkup-groups' },
+			articleCheckupGroups(items).map((group) => createElement(
+				'section',
+				{ key: group.key, className: 'npcink-toolbox-editor-support__article-checkup-group' },
+				createElement('h5', null, group.label),
+				renderItems(group.items, '')
+			))
+		);
 	}
 
 	function flowAcceptsUserInstruction(intent) {
@@ -4970,7 +5010,7 @@
 			if (sections.article_checkup) {
 				blocks.push(createElement('h4', { key: 'article-checkup-title' }, __('Article checkup', 'npcink-toolbox')));
 				blocks.push(createElement('p', { key: 'article-checkup-help', className: 'npcink-toolbox-editor-support__muted' }, __('Review these full-draft issues manually. Toolbox points to paragraphs and editing direction, but does not rewrite or insert text.', 'npcink-toolbox')));
-				blocks.push(renderItems(articleCheckupItems(sections.article_checkup), __('No high-confidence local article checkup issues were found.', 'npcink-toolbox')));
+				blocks.push(renderArticleCheckupItems(sections.article_checkup));
 			}
 
 			if (sections.title_suggestions) {

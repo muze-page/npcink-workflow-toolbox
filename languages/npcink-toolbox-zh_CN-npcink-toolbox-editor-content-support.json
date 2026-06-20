@@ -252,6 +252,8 @@
       "Fact gap": ["事实缺口"],
       "Tone": ["语气"],
       "Format": ["版式"],
+      "Semantic consistency": ["语义一致性"],
+      "Other": ["其他"],
       "Good": ["良好"],
       "OK": ["正常"],
       "Warning": ["需注意"],
