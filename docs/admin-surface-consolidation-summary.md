@@ -38,11 +38,12 @@ Inspection local fallback settings, Pro Cloud Runtime quota/detail, and Cloud
 run recovery stay here instead of competing with the Start page's primary
 operator entries.
 
-Site Knowledge status now distinguishes the Cloud index state from the local
-auto-sync queue. A ready index with a debounced or idle local queue is no longer
-rendered as a warning. Only delayed queue work, due WP-Cron work, or disabled
-WP-Cron is escalated into a cron action. Status values and common Cloud status
-messages are localized for the zh_CN admin surface.
+Site Knowledge status now distinguishes the Cloud index state from automatic
+public-change delivery health. When Cloud Addon exposes the Site Knowledge
+change bridge, Toolbox displays that bridge health and does not register its
+legacy local auto-sync hooks. The legacy queue remains only for standalone
+fallback installs. Status values and common Cloud status messages are localized
+for the zh_CN admin surface.
 
 Media optimization defaults remain an independent settings form because they
 submit to `options.php`, but they are now an attached settings panel for the

@@ -2186,6 +2186,9 @@ msgstr "站点知识自动同步已入队，但 WP-Cron 似乎延迟。低流量
 msgid "Site Knowledge auto-sync is debounced and processed by WP-Cron. Use a server cron in production for low-traffic sites."
 msgstr "站点知识自动同步已防抖，并由 WP-Cron 处理。低流量生产站点请使用服务器 cron。"
 
+msgid "Site Knowledge change delivery is owned by Cloud Addon. Toolbox is showing bridge health only."
+msgstr "站点知识变更投递由 Cloud Addon 拥有。Toolbox 仅显示桥接健康状态。"
+
 msgid "Site knowledge"
 msgstr "站点知识"
 

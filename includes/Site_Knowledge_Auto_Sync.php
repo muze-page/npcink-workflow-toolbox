@@ -31,6 +31,10 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public function register_hooks(): void {
+		if ( self::cloud_addon_bridge_available() ) {
+			return;
+		}
+
 		if ( ! self::cloud_runtime_available() ) {
 			return;
 		}
@@ -57,8 +61,15 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public static function health_snapshot(): array {
+		if ( self::cloud_addon_bridge_available() ) {
+			return self::cloud_addon_bridge_health_snapshot();
+		}
+
 		if ( ! self::cloud_runtime_available() ) {
 			return array(
+				'owner'                   => 'toolbox_legacy_fallback',
+				'mode'                    => 'legacy_toolbox_auto_sync',
+				'legacy_toolbox_fallback' => true,
 				'status'                  => 'disabled',
 				'queue_count'             => 0,
 				'attempts'                => 0,
@@ -98,6 +109,9 @@ final class Site_Knowledge_Auto_Sync {
 		$curl_command   = '*/5 * * * * curl -fsS --max-time 20 ' . esc_url_raw( $wp_cron_url ) . ' >/dev/null 2>&1';
 
 		return array(
+			'owner'                   => 'toolbox_legacy_fallback',
+			'mode'                    => 'legacy_toolbox_auto_sync',
+			'legacy_toolbox_fallback' => true,
 			'status'                  => $is_overdue ? 'delayed' : ( $queue_count > 0 ? 'queued' : 'idle' ),
 			'queue_count'             => $queue_count,
 			'attempts'                => is_array( $value ) ? absint( $value['attempts'] ?? 0 ) : 0,
@@ -218,6 +232,11 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public function process_queue(): void {
+		if ( self::cloud_addon_bridge_available() ) {
+			delete_option( self::QUEUE_OPTION );
+			return;
+		}
+
 		$post_ids = $this->queued_post_ids();
 		if ( array() === $post_ids ) {
 			delete_option( self::QUEUE_OPTION );
@@ -254,6 +273,10 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	public function queue_recent_public_content(): void {
+		if ( self::cloud_addon_bridge_available() ) {
+			return;
+		}
+
 		if ( ! function_exists( 'get_posts' ) ) {
 			return;
 		}
@@ -287,6 +310,10 @@ final class Site_Knowledge_Auto_Sync {
 	}
 
 	private function enqueue_post_ids( array $post_ids ): void {
+		if ( self::cloud_addon_bridge_available() ) {
+			return;
+		}
+
 		if ( ! self::cloud_runtime_available() ) {
 			return;
 		}
@@ -422,6 +449,32 @@ final class Site_Knowledge_Auto_Sync {
 
 		$client = self::cloud_runtime_client();
 		return is_object( $client ) && method_exists( $client, 'execute_runtime' );
+	}
+
+	public static function cloud_addon_bridge_available(): bool {
+		return function_exists( 'npcink_cloud_addon_site_knowledge_change_bridge_health' );
+	}
+
+	private static function cloud_addon_bridge_health_snapshot(): array {
+		$snapshot = npcink_cloud_addon_site_knowledge_change_bridge_health();
+		if ( ! is_array( $snapshot ) ) {
+			$snapshot = array();
+		}
+
+		$buffer_count = absint( $snapshot['buffer_count'] ?? 0 );
+
+		return array_merge(
+			$snapshot,
+			array(
+				'owner'                   => 'cloud_addon',
+				'mode'                    => 'site_knowledge_change_bridge',
+				'legacy_toolbox_fallback' => false,
+				'status'                  => empty( $snapshot['enabled'] ) ? 'disabled' : ( $buffer_count > 0 ? 'queued' : 'idle' ),
+				'queue_count'             => $buffer_count,
+				'server_cron_recommended' => true,
+				'message'                 => __( 'Site Knowledge change delivery is owned by Cloud Addon. Toolbox is showing bridge health only.', 'npcink-toolbox' ),
+			)
+		);
 	}
 
 	private static function cloud_runtime_client() {

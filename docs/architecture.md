@@ -14,6 +14,7 @@ Status: MVP architecture.
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
+| `Site_Knowledge_Auto_Sync` | Legacy standalone fallback for public content-change refresh hints. It is inactive when Cloud Addon exposes the Site Knowledge change bridge health seam. |
 | `modules/local-automation-runtime/` | Phase 1 bundled skeleton for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview and dry-run replay validation while registering no WordPress hooks. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
@@ -212,7 +213,10 @@ Cloud credentials and does not own the Cloud index lifecycle.
 calling Cloud: published posts and pages, plus bounded approved comments for
 the selected public entries. The comment manifest carries public text and
 source identifiers only. WordPress still owns moderation, edits, deletion, and
-final write decisions.
+final write decisions. Automatic public content-change delivery is owned by
+Cloud Addon when `npcink_cloud_addon_site_knowledge_change_bridge_health()` is
+available; Toolbox skips its legacy fallback hooks and only displays bridge
+health.
 
 The first admin REST surface remains `manage_options` gated by default.
 External AI access should be mediated by Core/app-key scope checks in the host

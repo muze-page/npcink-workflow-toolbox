@@ -101,6 +101,9 @@ host-provided site knowledge filter. Toolbox remains the local Ability
 registration and contract surface. Cloud may manage embeddings, vector storage,
 indexing, reranking, and status detail, but it must not become a second
 WordPress write owner, second ability registry, or local control plane.
+Automatic public content-change delivery belongs to Cloud Addon when its Site
+Knowledge bridge is present. Toolbox may keep only a legacy standalone fallback
+that is disabled as soon as the Cloud Addon bridge health seam exists.
 
 ## REST Route Boundary
 

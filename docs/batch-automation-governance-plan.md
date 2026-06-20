@@ -74,11 +74,12 @@ validates it before forwarding or executing.
 
 ### Thin Local Event Bridges
 
-The existing Site Knowledge auto-sync bridge is the exception pattern:
+Site Knowledge auto-sync has moved to the Cloud Addon change bridge as the
+preferred owner. Toolbox retains only a legacy standalone fallback with
 debounced post ids, bounded batch size, capped retries, and Cloud status
 handoff. It is not a general workflow runtime. New batch workflows should not
 copy that bridge unless the task is a narrow content-change notification with
-no WordPress write.
+no WordPress write and a separate boundary owner has been named.
 
 ### Cloud-Fit Decision Rule
 

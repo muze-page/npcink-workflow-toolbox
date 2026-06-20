@@ -526,27 +526,22 @@ Comment payloads include only public comment text and source IDs needed for
 Cloud indexing; moderation, edits, deletion, and final writes remain local
 WordPress responsibilities.
 
-When an allow-listed public post type is published, updated while published,
-leaves public status, is trashed, or is permanently deleted, Toolbox queues a
-bounded Cloud Site Knowledge refresh for that object. The default allow-list is
-`post` and `page`; hosts may extend it with
-`npcink_toolbox_site_knowledge_post_types` for public content types such as
-docs, products, or FAQs. Attachments are excluded from this text indexing path
-by default. When a comment is approved, edited while approved, trashed, deleted,
-or moved out of approved status, Toolbox queues a refresh for the parent
-allow-listed post/page so Cloud can add or drop comment chunks. A low-frequency
-daily reconciliation queues the latest public allow-listed entries as a
-missed-event safety net. These jobs only call the existing Cloud sync contract;
-they do not store provider credentials, run embeddings locally, or write
-WordPress content. The Site Knowledge status panel also separates the ready
-Cloud index from the local auto-sync queue: debounced queued changes are shown
-as ordinary pending background work, while due or delayed WP-Cron work points to
-the server cron command suggestion for low-traffic production sites.
+When Cloud Addon exposes `npcink_cloud_addon_site_knowledge_change_bridge_health()`,
+it owns the public content-change bridge for Site Knowledge. Toolbox then shows
+that bridge health in the Site Knowledge status response and does not register
+its legacy local auto-sync hooks. The legacy Toolbox fallback remains only for
+standalone installs without the Cloud Addon bridge: it watches allow-listed
+public `post` and `page` changes plus approved comment changes, then sends
+bounded refresh hints through the existing Cloud sync contract. It does not
+store provider credentials, run embeddings locally, own the index lifecycle, or
+write WordPress content.
 
 The admin **Site Knowledge** tab lets operators start or refresh the
 Cloud-managed index and inspect coverage without configuring vector provider
 keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
-Toolbox only starts sync from local public content and displays returned status.
+Toolbox only starts explicit sync requests, displays returned status, and
+surfaces Cloud Addon bridge health when automatic public-change delivery is
+available.
 The **Advanced Checks -> Site Knowledge** panel is a read-only verification surface
 for Cloud-managed site knowledge search; status and refresh operations stay in
 Site Knowledge. It does not expose provider keys, embedding settings,
