@@ -16,7 +16,9 @@ Abilities.
 
 The admin page now starts from a compact **Start** tab. It summarizes Cloud
 runtime readiness, Site Context, Site Knowledge ownership, and final-write
-posture before sending operators to the right task surface.
+posture, then shows the primary operator entries before folding setup,
+diagnostics, fallback previews, and lower-frequency workbench links into an
+advanced directory.
 
 The former broad content-support admin area is now **Workflows**. It defaults to
 **Media**, with **Optimize Existing Image** as the first visible tool. Site
@@ -29,9 +31,12 @@ Workflows no longer expose publish preflight, summary/category/tag support,
 internal-link candidates, or image candidates as backend article buttons.
 
 **Advanced Checks** keeps the stable `cloud-checks` deep-link id, but it now
-presents search, image, Site Knowledge search verification, and Agent feedback
-quality as troubleshooting surfaces. Site Knowledge status and refresh controls
-stay in the Site Knowledge tab.
+presents search, image, Site Knowledge search verification, Nightly Inspection
+runtime detail, and Agent feedback quality as troubleshooting surfaces. Site
+Knowledge status and refresh controls stay in the Site Knowledge tab. Nightly
+Inspection local fallback settings, Pro Cloud Runtime quota/detail, and Cloud
+run recovery stay here instead of competing with the Start page's primary
+operator entries.
 
 Site Knowledge status now distinguishes the Cloud index state from the local
 auto-sync queue. A ready index with a debounced or idle local queue is no longer

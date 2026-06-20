@@ -4122,12 +4122,39 @@ final class Provider_Client {
 		);
 	}
 
-	public function build_media_brief( string $post_context ) {
+	public function build_media_brief( string $post_context, array $options = array() ) {
+		$decoded_context = json_decode( $post_context, true );
+		if ( ! is_array( $decoded_context ) ) {
+			$decoded_context = array();
+		}
+		$refresh_variant = sanitize_text_field( (string) ( $options['refresh_variant'] ?? '' ) );
+		$image_mode      = sanitize_key( (string) ( $options['image_mode'] ?? 'featured_image' ) );
+		if ( ! in_array( $image_mode, array( 'featured_image', 'paragraph_image', 'inline_image', 'setting_image' ), true ) ) {
+			$image_mode = 'featured_image';
+		}
+		$visual_context = array(
+			'post_id'         => absint( $decoded_context['id'] ?? 0 ),
+			'title'           => sanitize_text_field( (string) ( $decoded_context['title'] ?? '' ) ),
+			'excerpt'         => sanitize_textarea_field( (string) ( $decoded_context['excerpt'] ?? '' ) ),
+			'content_summary' => sanitize_textarea_field( (string) ( $decoded_context['content'] ?? '' ) ),
+			'image_use'       => $image_mode,
+			'refresh_variant' => $refresh_variant,
+			'query_intent'    => array(
+				'rewrite_abstract_terms'       => true,
+				'prefer_concrete_visual_scene' => true,
+				'return_alternate_queries'     => true,
+				'direction_count'              => 4,
+				'prompt_candidate_count'       => 4,
+			),
+		);
 		return $this->image_candidates(
 			$this->post_context_to_image_query( $post_context ),
 			array(
 				'per_page'                     => 8,
 				'runtime_data_classification' => 'pii',
+				'image_mode'                   => $image_mode,
+				'refresh_variant'              => $refresh_variant,
+				'visual_context'               => $visual_context,
 			)
 		);
 	}
@@ -4487,6 +4514,8 @@ final class Provider_Client {
 				'rewrite_abstract_terms'       => ! empty( $context['query_intent']['rewrite_abstract_terms'] ),
 				'prefer_concrete_visual_scene' => ! empty( $context['query_intent']['prefer_concrete_visual_scene'] ),
 				'return_alternate_queries'     => ! empty( $context['query_intent']['return_alternate_queries'] ),
+				'direction_count'              => max( 1, min( 4, absint( $context['query_intent']['direction_count'] ?? $options['direction_count'] ?? 3 ) ) ),
+				'prompt_candidate_count'       => max( 1, min( 4, absint( $context['query_intent']['prompt_candidate_count'] ?? $options['prompt_candidate_count'] ?? 3 ) ) ),
 			),
 			'constraints'            => array(
 				'avoid_brand_logos'     => ! empty( $context['avoid_brand_logos'] ),

@@ -588,7 +588,13 @@ final class Abilities {
 
 	public function build_media_brief( $input = array() ) {
 		$input = is_array( $input ) ? $input : array();
-		return $this->client->build_media_brief( sanitize_textarea_field( (string) ( $input['post_context'] ?? '' ) ) );
+		return $this->client->build_media_brief(
+			sanitize_textarea_field( (string) ( $input['post_context'] ?? '' ) ),
+			array(
+				'refresh_variant' => sanitize_text_field( (string) ( $input['refresh_variant'] ?? '' ) ),
+				'image_mode'      => sanitize_key( (string) ( $input['image_mode'] ?? 'featured_image' ) ),
+			)
+		);
 	}
 
 	public function build_media_derivative_handoff( $input = array() ) {

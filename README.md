@@ -61,6 +61,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Boundary](docs/boundary.md)
 - [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md)
 - [Architecture](docs/architecture.md)
+- [Feature Ownership And Plugin Boundary](docs/feature-ownership-and-plugin-boundary.md)
 - [Roadmap](docs/roadmap.md)
 - [Admin Surface Consolidation Summary](docs/admin-surface-consolidation-summary.md)
 - [Content Support Product Readiness](docs/content-support-product-readiness.md)

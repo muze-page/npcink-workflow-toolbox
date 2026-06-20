@@ -72,9 +72,10 @@ per-user isolation without a new decision.
 
 Advanced Checks keep the stable Cloud Checks deep-link id while opening
 directly into verification tools for Cloud-managed search, image-source
-candidates, preview-only media derivatives, and Site Knowledge search. The tabs
-may show compact readiness labels, but each panel should prioritize the Toolbox
-ability reachability check instead of repeating provider ownership detail.
+candidates, preview-only media derivatives, Site Knowledge search, and Nightly
+Inspection runtime detail. The tabs may show compact readiness labels, but each
+panel should prioritize the Toolbox ability reachability check or recovery task
+instead of repeating provider ownership detail.
 Search checks use Cloud auto execution only; provider
 selection, Jina Reader toggles, routing diagnostics, Cloud API key verification,
 entitlement, billing, quota, and request logs belong in Cloud Addon or Cloud
@@ -85,8 +86,9 @@ batch proposal, and URL repair handoffs stay in Workflows. Marketplace,
 provider routing, vector provider settings, and vector lifecycle controls do
 not belong in Toolbox.
 
-The admin page should default to Start: readiness, current article entry, and
-next actions. Article-specific jobs use the editor Content Support sidebar:
+The admin page should default to Start: readiness, current article entry, three
+common next actions, and one folded advanced directory. Article-specific jobs
+use the editor Content Support sidebar:
 publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal links, and image candidates. Related existing-post review is folded
 into publish preflight duplicate-risk checks and internal-link candidates, so

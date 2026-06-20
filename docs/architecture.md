@@ -20,6 +20,11 @@ Status: MVP architecture.
 | `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph checks. |
 | `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
+Feature ownership and plugin split decisions should follow
+[Feature Ownership And Plugin Boundary](feature-ownership-and-plugin-boundary.md).
+New AI features should usually become Cloud capabilities, Ability contracts,
+Core-governed recipes, and Toolbox surfaces before a new plugin is considered.
+
 ## Current Data Storage
 
 The MVP stores two WordPress options:
@@ -425,11 +430,14 @@ draft title, draft body, SEO hints, and risk level. Its result renderer shows
 not submit the plan to Core or approve execution.
 
 The admin page defaults to a **Start** surface with a readiness strip for Cloud
-runtime, Site Context, Site Knowledge, and final-write posture. Its primary
-article path points operators back to the post editor sidebar because
-high-frequency article-specific work belongs there. Admin tabs after Start are
-setup, operations, and diagnostics: **Site Context**, **Site Knowledge**,
-**Workflows**, and **Advanced Checks**.
+runtime, Site Context, Site Knowledge, and final-write posture, followed by
+three common next steps and one folded advanced directory. Its primary article
+path points operators back to the post editor sidebar because high-frequency
+article-specific work belongs there. Admin tabs after Start are setup,
+operations, and diagnostics: **Site Context**, **Site Knowledge**,
+**Workflows**, and **Advanced Checks**. Nightly Inspection fallback preview
+settings, Pro Cloud Runtime checks, and run recovery live under **Advanced
+Checks**, not the default Start view.
 
 The admin **Workflows** tab groups lower-frequency buttons by operator job and
 defaults to **Media**, with **Optimize Existing Image** as the first visible

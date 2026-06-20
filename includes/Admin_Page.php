@@ -387,7 +387,7 @@ final class Admin_Page {
 			</nav>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="start" aria-label="<?php esc_attr_e( 'Toolbox start', 'npcink-toolbox' ); ?>">
-				<?php $this->render_start_panel( $settings, $content_context, $cloud_ready, $nightly_preview ); ?>
+				<?php $this->render_start_panel( $content_context, $cloud_ready ); ?>
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="context" aria-label="<?php esc_attr_e( 'Site context', 'npcink-toolbox' ); ?>" hidden>
@@ -403,18 +403,18 @@ final class Admin_Page {
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="cloud-checks" aria-label="<?php esc_attr_e( 'Cloud checks', 'npcink-toolbox' ); ?>" hidden>
-				<?php $this->render_cloud_checks_panel( $settings, $cloud_ready ); ?>
+				<?php $this->render_cloud_checks_panel( $settings, $cloud_ready, $nightly_preview ); ?>
 			</section>
 		</div>
 		<?php
 	}
 
-	private function render_start_panel( array $settings, array $content_context, bool $cloud_ready, ?array $nightly_preview ): void {
+	private function render_start_panel( array $content_context, bool $cloud_ready ): void {
 		$context_ready = $this->content_context_ready( $content_context );
 		?>
 		<div class="npcink-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Start', 'npcink-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Check readiness, then open the right operator surface for the current task.', 'npcink-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Check readiness, then choose the main operator surface for today\'s task.', 'npcink-toolbox' ); ?></p>
 		</div>
 
 		<div class="npcink-toolbox__start" data-toolbox-start>
@@ -451,50 +451,56 @@ final class Admin_Page {
 				<div class="npcink-toolbox__section-heading">
 					<div>
 						<h3><?php esc_html_e( 'Current article work', 'npcink-toolbox' ); ?></h3>
-							<p><?php esc_html_e( 'High-frequency metadata suggestions, links, image candidates, duplicate-risk checks, and publish checks live in the post editor sidebar.', 'npcink-toolbox' ); ?></p>
+						<p><?php esc_html_e( 'High-frequency metadata suggestions, links, image candidates, duplicate-risk checks, and publish checks live in the post editor sidebar.', 'npcink-toolbox' ); ?></p>
 					</div>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><?php esc_html_e( 'New post', 'npcink-toolbox' ); ?></a>
 						<a class="button" href="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>"><?php esc_html_e( 'Open posts', 'npcink-toolbox' ); ?></a>
 					</div>
 				</div>
-				<ul class="npcink-toolbox__usage-list">
-					<li>
-						<strong><?php esc_html_e( 'Use editor support for article-specific decisions.', 'npcink-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'The admin surface stays focused on setup, reusable site operations, fallback bundles, governed handoffs, and diagnostics.', 'npcink-toolbox' ); ?></span>
-					</li>
-					<li>
-						<strong><?php esc_html_e( 'Review before handoff.', 'npcink-toolbox' ); ?></strong>
-						<span><?php esc_html_e( 'Toolbox may prepare a plan, but final WordPress writes stay in Core approval or a separately defined local-consent proof.', 'npcink-toolbox' ); ?></span>
-					</li>
-				</ul>
 			</section>
 
+			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
+				<div>
+					<h3><?php esc_html_e( 'Common next steps', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Use these entry points for the main operator jobs; diagnostics and fallback controls stay folded below.', 'npcink-toolbox' ); ?></p>
+				</div>
+			</div>
 			<section class="npcink-toolbox__start-actions" aria-label="<?php esc_attr_e( 'Next actions', 'npcink-toolbox' ); ?>">
 				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=site-knowledge' ) ); ?>">
 					<strong><?php esc_html_e( 'Manage Site Knowledge', 'npcink-toolbox' ); ?></strong>
 					<span><?php esc_html_e( 'Start or refresh the Cloud-managed public content index.', 'npcink-toolbox' ); ?></span>
 				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>">
-					<strong><?php esc_html_e( 'Preview Morning Brief', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Read bounded local content, score quality signals, and show a dry-run replay without cron, Cloud, Core proposals, or writes.', 'npcink-toolbox' ); ?></span>
-				</a>
 				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=tools&toolbox_tool=media-derivative' ) ); ?>">
 					<strong><?php esc_html_e( 'Optimize Existing Image', 'npcink-toolbox' ); ?></strong>
 					<span><?php esc_html_e( 'Review a media-library image preview before creating one Core proposal.', 'npcink-toolbox' ); ?></span>
 				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=context' ) ); ?>">
-					<strong><?php esc_html_e( 'Edit Site Context', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Maintain the site brief used as suggestion-only guidance.', 'npcink-toolbox' ); ?></span>
-				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=cloud-checks' ) ); ?>">
-					<strong><?php esc_html_e( 'Open Advanced Checks', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Use search, image-source, and workflow checks only when troubleshooting.', 'npcink-toolbox' ); ?></span>
+				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>">
+					<strong><?php esc_html_e( 'Open editor support', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Choose a post, then use the Npcink Content Support sidebar for article-specific checks.', 'npcink-toolbox' ); ?></span>
 				</a>
 			</section>
 
-			<?php $this->render_nightly_inspection_preview( $nightly_preview ); ?>
-			<?php $this->render_nightly_inspection_basic_settings( $settings ); ?>
+			<details class="npcink-toolbox__start-advanced">
+				<summary>
+					<span><?php esc_html_e( 'Advanced directory', 'npcink-toolbox' ); ?></span>
+					<small><?php esc_html_e( 'Setup, diagnostics, fallback previews, and lower-frequency workbench entries.', 'npcink-toolbox' ); ?></small>
+				</summary>
+				<div class="npcink-toolbox__start-actions" aria-label="<?php esc_attr_e( 'Advanced entries', 'npcink-toolbox' ); ?>">
+					<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=context' ) ); ?>">
+						<strong><?php esc_html_e( 'Edit Site Context', 'npcink-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Maintain the site brief used as suggestion-only guidance.', 'npcink-toolbox' ); ?></span>
+					</a>
+					<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>">
+						<strong><?php esc_html_e( 'Preview Morning Brief', 'npcink-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Open the Nightly Inspection diagnostics surface with a nonce-protected local dry-run preview.', 'npcink-toolbox' ); ?></span>
+					</a>
+					<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=cloud-checks' ) ); ?>">
+						<strong><?php esc_html_e( 'Open Advanced Checks', 'npcink-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Use search, image-source, and workflow checks only when troubleshooting.', 'npcink-toolbox' ); ?></span>
+					</a>
+				</div>
+			</details>
 		</div>
 		<?php
 	}
@@ -504,7 +510,8 @@ final class Admin_Page {
 			add_query_arg(
 				array(
 					'page'                       => self::MENU_SLUG,
-					'toolbox_tab'                => 'start',
+					'toolbox_tab'                => 'cloud-checks',
+					'toolbox_cloud_check'        => 'nightly-inspection',
 					'nightly_inspection_preview' => '1',
 				),
 				admin_url( 'admin.php' )
@@ -964,12 +971,12 @@ final class Admin_Page {
 			<?php
 	}
 
-	private function render_cloud_checks_panel( array $settings, bool $cloud_ready ): void {
+	private function render_cloud_checks_panel( array $settings, bool $cloud_ready, ?array $nightly_preview ): void {
 		$image_ready = $this->settings->has_image_source_provider();
 		?>
 		<div class="npcink-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Advanced Checks', 'npcink-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Verify Cloud-managed search, image-source, Site Knowledge, and workflow evidence when an operator flow needs troubleshooting.', 'npcink-toolbox' ); ?></p>
+			<p><?php esc_html_e( 'Verify Cloud-managed search, image-source, Site Knowledge, Nightly Inspection, and workflow evidence when an operator flow needs troubleshooting.', 'npcink-toolbox' ); ?></p>
 		</div>
 		<?php
 		if ( ! $cloud_ready ) {
@@ -990,6 +997,10 @@ final class Admin_Page {
 				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="site-knowledge" aria-selected="false">
 					<span><?php esc_html_e( 'Site Knowledge', 'npcink-toolbox' ); ?></span>
 					<small><?php echo esc_html( $cloud_ready ? __( 'Connected', 'npcink-toolbox' ) : __( 'Cloud connection needed', 'npcink-toolbox' ) ); ?></small>
+				</button>
+				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="nightly-inspection" aria-selected="false">
+					<span><?php esc_html_e( 'Nightly Inspection', 'npcink-toolbox' ); ?></span>
+					<small><?php esc_html_e( 'Runtime detail', 'npcink-toolbox' ); ?></small>
 				</button>
 				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="agent-quality" aria-selected="false">
 					<span><?php esc_html_e( 'Agent Quality', 'npcink-toolbox' ); ?></span>
@@ -1128,6 +1139,20 @@ final class Admin_Page {
 						<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=site-knowledge' ) ); ?>"><?php esc_html_e( 'Manage index', 'npcink-toolbox' ); ?></a>
 					</div>
 					<?php $this->render_site_knowledge_search_check( false, $cloud_ready ); ?>
+				</section>
+
+				<section class="npcink-toolbox__cloud-check-panel-stack" data-toolbox-cloud-check-panel="nightly-inspection" hidden>
+					<section class="npcink-toolbox__card">
+						<div class="npcink-toolbox__section-heading">
+							<div>
+								<h3><?php esc_html_e( 'Nightly Inspection runtime', 'npcink-toolbox' ); ?></h3>
+								<p><?php esc_html_e( 'Use this surface for fallback preview settings, Pro Cloud Runtime checks, and run recovery. Daily article work stays in the editor sidebar.', 'npcink-toolbox' ); ?></p>
+							</div>
+							<a class="button" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview Morning Brief', 'npcink-toolbox' ); ?></a>
+						</div>
+					</section>
+					<?php $this->render_nightly_inspection_preview( $nightly_preview ); ?>
+					<?php $this->render_nightly_inspection_basic_settings( $settings ); ?>
 				</section>
 
 				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="agent-quality" hidden>

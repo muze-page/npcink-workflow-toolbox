@@ -24,8 +24,8 @@ The product shape is Cloud-first, not cloud-only:
 
 ## Accepted Behavior
 
-- The Start panel exposes `Pro Cloud Runtime` controls only when Cloud is
-  configured and the local Pro control is enabled.
+- The Advanced Checks Nightly Inspection panel exposes `Pro Cloud Runtime`
+  controls only when Cloud is configured and the local Pro control is enabled.
 - `Refresh Cloud quota` reads `pro_cloud_runtime` entitlement detail from Cloud
   and disables new submits when Cloud reports exhausted quota.
 - `Run Cloud inspection` is the single primary action. It sends metadata-only

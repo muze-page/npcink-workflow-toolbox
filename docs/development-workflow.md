@@ -315,9 +315,9 @@ The Cloud Batch merge smoke verifies that Cloud runtime detail and
 `pro_cloud_runtime` quota display remain review-only: Cloud may return scoring,
 status, result, and entitlement detail, while local scheduling, Core proposals,
 and WordPress writes stay outside Toolbox.
-The Cloud Runtime UI smoke is a source-only contract check. It verifies the
-Start panel's Pro Cloud Runtime quota hooks, short automatic submit/status/result
-follow-up, not-ready guidance, and no local execution or write ownership. It is
+The Cloud Runtime UI smoke is a source-only contract check. It verifies Pro
+Cloud Runtime quota hooks in Advanced Checks, short automatic submit/status/result follow-up,
+not-ready guidance, and no local execution or write ownership. It is
 safe for the default `composer test:all` gate because it does not open a browser
 or require Cloud credentials.
 The orchestration boundary smoke is also source-only. It verifies ADR-005,

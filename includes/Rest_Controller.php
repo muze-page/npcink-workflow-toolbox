@@ -652,7 +652,15 @@ final class Rest_Controller {
 			JSON_PRETTY_PRINT
 		);
 
-		return rest_ensure_response( $this->client->build_media_brief( (string) $context ) );
+		return rest_ensure_response(
+			$this->client->build_media_brief(
+				(string) $context,
+				array(
+					'refresh_variant' => sanitize_text_field( (string) ( $request->get_param( 'refresh_variant' ) ?: '' ) ),
+					'image_mode'      => sanitize_key( (string) ( $request->get_param( 'image_mode' ) ?: 'featured_image' ) ),
+				)
+			)
+		);
 	}
 
 	public function editor_content_support( WP_REST_Request $request ) {

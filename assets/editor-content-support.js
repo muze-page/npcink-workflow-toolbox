@@ -30,6 +30,7 @@
 	const IMAGE_RESULT_CACHE_TTL = 5 * 60 * 1000;
 	const IMAGE_RESULT_CACHE_MAX_ENTRIES = 20;
 	const IMAGE_CANDIDATE_TARGET_COUNT = 9;
+	const IMAGE_DIRECTION_TARGET_COUNT = 4;
 	const imageResultCache = {};
 	const implicitAgentFeedbackSent = {};
 	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
@@ -2423,13 +2424,37 @@
 		return labels[key] || '';
 	}
 
-	function localizedPromptCandidateDisplay(candidate) {
+	function inferredPromptDirectionLabel(prompt, index) {
+		const value = String(prompt || '').toLowerCase();
+		if (/(privacy|security|account|verification|credential|permission)/.test(value)) {
+			return __('Privacy detail', 'npcink-toolbox');
+		}
+		if (/(memo|note|notebook|document|writing|draft)/.test(value)) {
+			return __('Memo scene', 'npcink-toolbox');
+		}
+		if (/(workflow|process|step|timeline|pipeline|journey)/.test(value)) {
+			return __('Workflow detail', 'npcink-toolbox');
+		}
+		if (/(concept|metaphor|abstract|symbol|illustration)/.test(value)) {
+			return __('Concept metaphor', 'npcink-toolbox');
+		}
+		if (/(product|app|screen|interface|dashboard|workspace)/.test(value)) {
+			return __('Product scene', 'npcink-toolbox');
+		}
+		if (/(editorial|scene|photo|natural|lifestyle)/.test(value)) {
+			return __('Editorial scene', 'npcink-toolbox');
+		}
+		return sprintf(__('Direction %d', 'npcink-toolbox'), index + 1);
+	}
+
+	function localizedPromptCandidateDisplay(candidate, index) {
 		const label = firstLocalizedText(candidate, ['localized_label', 'localized_title', 'label_zh', 'title_zh', 'zh_label', 'zh_title']);
 		const strategy = firstLocalizedText(candidate, ['localized_strategy', 'localized_visual_strategy', 'strategy_zh', 'visual_strategy_zh', 'zh_strategy']);
 		const reason = firstLocalizedText(candidate, ['localized_reason', 'reason_zh', 'zh_reason', 'localized_summary', 'summary_zh']);
 		const mappedLabel = imageDirectionTypeLabel(candidate.direction_type);
+		const fallbackLabel = inferredPromptDirectionLabel(candidate.prompt, index || 0);
 		return {
-			label: label || mappedLabel || __('Direction option', 'npcink-toolbox'),
+			label: label || mappedLabel || fallbackLabel,
 			strategy: strategy || (label ? mappedLabel : ''),
 			reason,
 		};
@@ -2440,6 +2465,21 @@
 			.replace(/方向$/u, '')
 			.replace(/\sdirection$/i, '')
 			.trim();
+	}
+
+	function uniquePromptDirectionCandidates(candidates, limit) {
+		const seen = new Set();
+		return candidates.filter((candidate, index) => {
+			const display = localizedPromptCandidateDisplay(candidate, index);
+			const labelKey = compactPromptDirectionLabel(display.label).toLowerCase();
+			const promptKey = String(candidate.prompt || '').trim().toLowerCase();
+			const key = labelKey || promptKey;
+			if (!key || seen.has(key)) {
+				return false;
+			}
+			seen.add(key);
+			return true;
+		}).slice(0, limit);
 	}
 
 	function localizedVisualBriefIntent(brief) {
@@ -2461,12 +2501,14 @@
 			headingAction: null,
 			hideContext: false,
 			compactSelector: false,
+			maxDirections: IMAGE_DIRECTION_TARGET_COUNT,
 		}, options || {});
 
 		const source = payload.sections && payload.sections.image_candidates ? payload.sections.image_candidates : payload;
 		const brief = source.visual_brief && typeof source.visual_brief === 'object' ? source.visual_brief : {};
 		const handoff = source.ai_generation_handoff && typeof source.ai_generation_handoff === 'object' ? source.ai_generation_handoff : {};
-		const promptCandidates = []
+		const maxDirections = Math.max(1, Math.min(IMAGE_DIRECTION_TARGET_COUNT, parseInt(settings.maxDirections || IMAGE_DIRECTION_TARGET_COUNT, 10) || IMAGE_DIRECTION_TARGET_COUNT));
+		const rawPromptCandidates = []
 			.concat(Array.isArray(source.prompt_candidates) ? source.prompt_candidates : [])
 			.concat(Array.isArray(handoff.prompt_candidates) ? handoff.prompt_candidates : [])
 			.map((candidate, index) => {
@@ -2475,8 +2517,8 @@
 				}
 				return candidate && typeof candidate === 'object' ? candidate : null;
 			})
-			.filter((candidate) => candidate && String(candidate.prompt || '').trim())
-			.slice(0, 3);
+			.filter((candidate) => candidate && String(candidate.prompt || '').trim());
+		const promptCandidates = uniquePromptDirectionCandidates(rawPromptCandidates, maxDirections);
 		const visualIntent = localizedVisualBriefIntent(brief);
 		const chips = []
 			.concat(brief.primary_query ? [brief.primary_query] : [])
@@ -2519,7 +2561,7 @@
 							onUsePrompt(prompt);
 						}
 					};
-					const display = localizedPromptCandidateDisplay(candidate);
+					const display = localizedPromptCandidateDisplay(candidate, index);
 					return createElement(
 						'button',
 						{
@@ -5117,6 +5159,7 @@
 			const [imageResult, setImageResult] = useState(null);
 			const [imageSourceResult, setImageSourceResult] = useState(null);
 			const [imageGenerationResult, setImageGenerationResult] = useState(null);
+			const [imageDirectionResult, setImageDirectionResult] = useState(null);
 			const [imageError, setImageError] = useState('');
 		const [imageGuidance, setImageGuidance] = useState('');
 			const [imageQuery, setImageQuery] = useState('');
@@ -5127,7 +5170,7 @@
 			const [imageMode, setImageMode] = useState('featured');
 		const [aiImageAspectRatio, setAiImageAspectRatio] = useState('16:9');
 		const [aiImageResolution, setAiImageResolution] = useState('high');
-		const [aiImageCandidateCount, setAiImageCandidateCount] = useState('1');
+		const [aiImageCandidateCount, setAiImageCandidateCount] = useState('2');
 		const [imagePicker, setImagePicker] = useState(() => normalizeImagePickerOptions({ mode: 'featured' }));
 		const [selectedImage, setSelectedImage] = useState(null);
 		const [selectedImageSeo, setSelectedImageSeo] = useState(null);
@@ -5702,7 +5745,8 @@
 
 		async function runMediaBrief() {
 			const postId = parseInt(postContext.post_id || '0', 10) || 0;
-			const targetSearchMode = activeSearchMode;
+			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
+			const targetSearchMode = activePicker.allowGeneration && imageSearchModeRef.current === 'generate' ? 'generate' : 'source';
 			if (!postId) {
 				setImageError(__('Save the draft before generating an image plan.', 'npcink-toolbox'));
 				return;
@@ -5710,26 +5754,39 @@
 				setImageRunning('brief');
 				setImageError('');
 				setImageGuidance('');
-				setImageResultForSearchMode(targetSearchMode, null, true);
-				setSelectedImage(null);
-			setSelectedImageSeo(null);
-			setImagePreviewLightbox(null);
-			setImageAdoptionResult(null);
-			setImageAdoptionError('');
-			resetImageFeedbackState();
-				try {
-					const result = await postJson('flows/media-brief', { post_id: postId });
-					setImageResultForSearchMode(targetSearchMode, result);
-					if (targetSearchMode === 'generate') {
-					const prompt = firstImagePromptCandidate(result) || (result && result.query ? String(result.query) : '');
-					setImageSearchMode('generate');
-					setImageQuery(prompt);
-					setImageGuidance(prompt ? __('Generated a prompt from the article context. Review it before creating an AI image candidate.', 'npcink-toolbox') : __('Generated prompt directions from the article context. Choose one direction before creating an AI image candidate.', 'npcink-toolbox'));
+				if (targetSearchMode === 'source') {
+					setImageResultForSearchMode('source', null, true);
+					setSelectedImage(null);
+					setSelectedImageSeo(null);
+					setImagePreviewLightbox(null);
+					setImageAdoptionResult(null);
+					setImageAdoptionError('');
+					resetImageFeedbackState();
 				} else {
-					setImageSearchMode('source');
-					setImageQuery(result && result.query ? String(result.query) : '');
-					setImageGuidance(__('Generated an article image plan from the saved post context. Review candidates before search, generation, import, or featured-image adoption.', 'npcink-toolbox'));
+					setImageDirectionResult(null);
+					setImageResult(imageGenerationResult || null);
 				}
+				try {
+					const refreshVariant = '';
+					const result = await postJson('flows/media-brief', {
+						post_id: postId,
+						image_mode: activePicker.imageUse,
+						refresh_variant: refreshVariant,
+					});
+					if (targetSearchMode === 'generate') {
+						const prompt = firstImagePromptCandidate(result) || (result && result.query ? String(result.query) : '');
+						imageSearchModeRef.current = 'generate';
+						setImageDirectionResult(result);
+						setImageSearchMode('generate');
+						setImageResult(imageGenerationResult || null);
+						setImageQuery(prompt);
+						setImageGuidance(prompt ? __('Generated a prompt from the article context. Review it before creating an AI image candidate.', 'npcink-toolbox') : __('Generated prompt directions from the article context. Choose one direction before creating an AI image candidate.', 'npcink-toolbox'));
+					} else {
+						setImageResultForSearchMode('source', result);
+						setImageSearchMode('source');
+						setImageQuery(result && result.query ? String(result.query) : '');
+						setImageGuidance(__('Generated an article image plan from the saved post context. Review candidates before search, generation, import, or featured-image adoption.', 'npcink-toolbox'));
+					}
 			} catch (requestError) {
 				setImageError(requestError && requestError.message ? requestError.message : __('Image plan generation failed.', 'npcink-toolbox'));
 			} finally {
@@ -5749,6 +5806,7 @@
 			}
 			const context = imagePickerRequestContext(postContext || {}, activePicker);
 			const override = promptOverride && typeof promptOverride === 'object' ? promptOverride : {};
+			const preserveExistingCandidates = Boolean(override.preserveExistingCandidates);
 			const prompt = String(override.prompt || imageQuery || '').trim();
 			if (!prompt) {
 				setImageError(__('Enter an AI image prompt, or generate one from the article first.', 'npcink-toolbox'));
@@ -5757,15 +5815,17 @@
 				setImageRunning('generate');
 				setImageError('');
 				setImageGuidance(override.guidance || '');
-				setImageResultForSearchMode('generate', null, true);
-				setSelectedImage(null);
-			setSelectedImageSeo(null);
-			setImagePreviewLightbox(null);
-			setImageAdoptionResult(null);
-			setImageAdoptionError('');
-			resetImageFeedbackState();
+				if (!preserveExistingCandidates) {
+					setImageResultForSearchMode('generate', null, true);
+					setSelectedImage(null);
+					setSelectedImageSeo(null);
+					setImagePreviewLightbox(null);
+					setImageAdoptionResult(null);
+					setImageAdoptionError('');
+					resetImageFeedbackState();
+				}
 			try {
-				const candidateCount = Math.max(1, Math.min(4, parseInt(aiImageCandidateCount || '1', 10) || 1));
+				const candidateCount = Math.max(1, Math.min(4, parseInt(aiImageCandidateCount || '2', 10) || 2));
 				const result = await postJson('ai/image-generation', {
 					prompt,
 					aspect_ratio: aiImageAspectRatio,
@@ -5834,6 +5894,7 @@
 				await runAiImageGeneration(null, {
 					prompt,
 					regenerationMode: revisionMode,
+					preserveExistingCandidates: true,
 					guidance: __('Regenerating a revised AI image while preserving the selected paragraph meaning.', 'npcink-toolbox'),
 				});
 			} finally {
@@ -5916,6 +5977,7 @@
 					setImageCompletionRunning(false);
 					setImageSourceResult(null);
 					setImageGenerationResult(null);
+					setImageDirectionResult(null);
 				setSelectedImage(null);
 			setSelectedImageSeo(null);
 			setImagePreviewLightbox(null);
@@ -6429,24 +6491,12 @@
 					)
 				)
 			) : null;
-				const generationDirectionPayload = imageGenerationResult || imageSourceResult || imageResult;
+				const generationDirectionPayload = imageDirectionResult || imageGenerationResult || imageSourceResult || imageResult;
 				const generatedImages = extractImageCandidates(imageGenerationResult);
 				const generationDirectionsPanel = activeSearchMode === 'generate' && !generatedImages.length
 					? renderImageVisualBrief(generationDirectionPayload, useAiPromptCandidate, {
 						actionLabel: __('Use direction', 'npcink-toolbox'),
 						heading: __('Generation direction reference', 'npcink-toolbox'),
-						headingAction: activePicker.allowImagePlan ? createElement(
-							Button,
-							{
-								type: 'button',
-								variant: 'tertiary',
-								className: 'npcink-toolbox-editor-support__direction-refresh',
-								isBusy: imageRunning === 'brief',
-								disabled: Boolean(imageRunning),
-								onClick: runMediaBrief,
-							},
-							imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : __('Refresh directions', 'npcink-toolbox')
-						) : null,
 						hideContext: true,
 						compactSelector: true,
 					})
@@ -6478,7 +6528,7 @@
 					createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__image-generate-actions npcink-toolbox-editor-support__image-generate-main-actions' },
-						activePicker.allowImagePlan && !generationDirectionsPanel ? createElement(
+						activePicker.allowImagePlan && !generationDirectionsPanel && !imageQueryText ? createElement(
 							Button,
 							{
 								type: 'button',
@@ -6488,7 +6538,7 @@
 								disabled: Boolean(imageRunning),
 								onClick: runMediaBrief,
 							},
-							imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : __('Refresh directions', 'npcink-toolbox')
+							imageRunning === 'brief' ? __('Planning', 'npcink-toolbox') : __('Generate prompt', 'npcink-toolbox')
 						) : null,
 						createElement(
 							Button,

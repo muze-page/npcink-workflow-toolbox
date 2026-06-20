@@ -152,6 +152,38 @@
 	line-height: 1.4;
 }
 
+.npcink-toolbox__start-advanced {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+}
+
+.npcink-toolbox__start-advanced summary {
+	display: grid;
+	gap: 4px;
+	padding: 12px 14px;
+	cursor: pointer;
+}
+
+.npcink-toolbox__start-advanced summary:hover,
+.npcink-toolbox__start-advanced summary:focus {
+	background: #f6f7f7;
+}
+
+.npcink-toolbox__start-advanced summary span {
+	color: #1d2327;
+	font-weight: 600;
+}
+
+.npcink-toolbox__start-advanced summary small {
+	color: #646970;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__start-advanced .npcink-toolbox__start-actions {
+	padding: 0 14px 14px;
+}
+
 .npcink-toolbox__site-knowledge {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
@@ -165,6 +197,10 @@
 	gap: 16px;
 	align-items: flex-start;
 	margin: 0 0 14px;
+}
+
+.npcink-toolbox__section-heading--compact {
+	margin: 2px 0 -4px;
 }
 
 .npcink-toolbox__section-heading h3,
@@ -474,6 +510,15 @@
 .npcink-toolbox__cloud-check-tab small {
 	color: #646970;
 	line-height: 1.35;
+}
+
+.npcink-toolbox__cloud-check-panel-stack {
+	display: grid;
+	gap: 12px;
+}
+
+.npcink-toolbox__cloud-check-panel-stack[hidden] {
+	display: none;
 }
 
 .npcink-toolbox__context-workspace {
