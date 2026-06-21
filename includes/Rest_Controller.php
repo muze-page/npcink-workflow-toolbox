@@ -1271,7 +1271,7 @@ final class Rest_Controller {
 			'direct_wordpress_write'    => false,
 			'comment_publication_policy' => 'operator_review_only_no_comment_publish',
 			'comment_status_unchanged'  => true,
-			'provider_execution'        => 'local_comment_reply_suggestion',
+			'provider_execution'        => 'toolkit_comment_reply_suggestion',
 			'source_policy'             => 'current_article_and_operator_supplied_comment_only',
 			'post_context'              => array(
 				'post_id' => absint( $context['post_id'] ?? 0 ),
@@ -1292,51 +1292,115 @@ final class Rest_Controller {
 			);
 		}
 
-		$reply_seed = wp_trim_words( $comment_text, 26, '' );
-		$topic      = '' !== $post_title ? $post_title : __( 'this article', 'npcink-toolbox' );
-		$items      = array(
+		$result = $this->editor_toolkit_comment_reply_suggestions(
 			array(
-				'id'            => 'acknowledge_and_answer',
-				'label'         => __( 'Acknowledge and answer', 'npcink-toolbox' ),
-				'reply_text'    => sprintf(
-					/* translators: 1: comment excerpt, 2: post title. */
-					__( 'Thanks for raising this. On "%2$s", the practical answer is to treat "%1$s" as a review point and verify it against the article before taking action.', 'npcink-toolbox' ),
-					$reply_seed,
-					$topic
-				),
-				'reason'        => __( 'Useful when the comment asks for clarification or a concrete next step.', 'npcink-toolbox' ),
-				'status'        => 'review_required',
-				'action_policy' => 'operator_review_only_no_comment_publish',
-				'target_field'  => 'comment_reply',
-			),
-			array(
-				'id'            => 'ask_for_detail',
-				'label'         => __( 'Ask for detail', 'npcink-toolbox' ),
-				'reply_text'    => __( 'Thanks for the note. Could you share one concrete example or the context where you saw this issue? That will make the follow-up more accurate.', 'npcink-toolbox' ),
-				'reason'        => __( 'Useful when the comment is broad, ambiguous, or missing enough context for a confident answer.', 'npcink-toolbox' ),
-				'status'        => 'review_required',
-				'action_policy' => 'operator_review_only_no_comment_publish',
-				'target_field'  => 'comment_reply',
-			),
-			array(
-				'id'            => 'editorial_boundary',
-				'label'         => __( 'Set boundary', 'npcink-toolbox' ),
-				'reply_text'    => __( 'Thanks for flagging this. I will review it against the source material first, because I do not want to overstate anything that the article has not supported.', 'npcink-toolbox' ),
-				'reason'        => __( 'Useful when the comment asks for a claim, recommendation, or commitment that needs source review.', 'npcink-toolbox' ),
-				'status'        => 'review_required',
-				'action_policy' => 'operator_review_only_no_comment_publish',
-				'target_field'  => 'comment_reply',
-			),
+				'comment_id'     => absint( $comment_context['comment_id'] ?? 0 ),
+				'post_id'        => absint( $context['post_id'] ?? 0 ),
+				'post_title'     => $post_title,
+				'comment_text'   => $comment_text,
+				'comment_author' => sanitize_text_field( (string) ( $comment_context['comment_author'] ?? '' ) ),
+				'comment_status' => sanitize_key( (string) ( $comment_context['comment_status'] ?? '' ) ),
+				'trigger_type'   => 'support_request',
+				'always_suggest' => true,
+			)
 		);
+		if ( is_wp_error( $result ) ) {
+			return array_merge(
+				$base,
+				array(
+					'status'            => 'toolkit_required',
+					'source_ability_id' => 'npcink-abilities-toolkit/build-comment-mention-reply-suggest',
+					'toolkit_required'  => true,
+					'error_code'        => sanitize_key( $result->get_error_code() ),
+					'message'           => sanitize_text_field( $result->get_error_message() ),
+					'items'             => array(),
+				)
+			);
+		}
+
+		$data  = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+		$items = $this->editor_comment_reply_items_from_toolkit( $data );
 
 		return array_merge(
 			$base,
 			array(
 				'status'                   => 'ready',
+				'source_ability_id'        => 'npcink-abilities-toolkit/build-comment-mention-reply-suggest',
+				'toolkit_artifact'         => $data,
 				'items'                    => $items,
 				'recommendation_candidates' => $this->editor_comment_reply_recommendation_candidates( $items ),
 			)
 		);
+	}
+
+	private function editor_toolkit_comment_reply_suggestions( array $input ) {
+		$ability_id = 'npcink-abilities-toolkit/build-comment-mention-reply-suggest';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_comment_reply_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build comment reply suggestions.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error(
+				'npcink_toolbox_comment_reply_toolkit_unavailable',
+				__( 'The Toolkit comment reply suggestion ability is not currently callable.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		if ( ! is_array( $result ) ) {
+			return new WP_Error(
+				'npcink_toolbox_comment_reply_toolkit_invalid_response',
+				__( 'The Toolkit comment reply suggestion ability returned an invalid response.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $result;
+	}
+
+	private function editor_comment_reply_items_from_toolkit( array $data ): array {
+		$options = is_array( $data['reply_options'] ?? null ) ? $data['reply_options'] : array();
+		if ( empty( $options ) && '' !== trim( (string) ( $data['reply_suggestion'] ?? '' ) ) ) {
+			$options[] = array(
+				'id'         => 'toolkit_reply_suggestion',
+				'label'      => __( 'Reply suggestion', 'npcink-toolbox' ),
+				'reply_text' => (string) $data['reply_suggestion'],
+				'reason'     => __( 'Generated by the Toolkit comment reply suggestion ability.', 'npcink-toolbox' ),
+			);
+		}
+
+		$items = array();
+		foreach ( $options as $index => $option ) {
+			if ( ! is_array( $option ) ) {
+				continue;
+			}
+			$reply_text = sanitize_textarea_field( (string) ( $option['reply_text'] ?? $option['value'] ?? '' ) );
+			if ( '' === $reply_text ) {
+				continue;
+			}
+			$items[] = array(
+				'id'            => sanitize_key( (string) ( $option['id'] ?? 'toolkit_reply_' . ( $index + 1 ) ) ),
+				'label'         => sanitize_text_field( (string) ( $option['label'] ?? __( 'Reply suggestion', 'npcink-toolbox' ) ) ),
+				'reply_text'    => $reply_text,
+				'reason'        => sanitize_textarea_field( (string) ( $option['reason'] ?? '' ) ),
+				'status'        => sanitize_key( (string) ( $option['status'] ?? 'review_required' ) ),
+				'action_policy' => 'operator_review_only_no_comment_publish',
+				'target_field'  => 'comment_reply',
+			);
+		}
+
+		return $items;
 	}
 
 	private function editor_comment_reply_context( array $context ): array {

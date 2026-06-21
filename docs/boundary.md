@@ -256,6 +256,11 @@ that contract exists, accepted metadata choices stay on the Core proposal path.
 Site-level and media-helper AI routes must be added as separate narrow
 surfaces; they must not be hidden compatibility modes inside the draft-support
 route.
+Comment reply suggestions in the editor are a review-only projection over
+`npcink-abilities-toolkit/build-comment-mention-reply-suggest`; Toolbox supplies
+the current article context and selected or operator-supplied comment text, but
+does not publish replies, approve comments, mutate comment status, or own
+comment workflow governance.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and
