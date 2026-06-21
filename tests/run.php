@@ -174,6 +174,15 @@ foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'magick-a
 foreach ( array( 'Core preflight', 'host approval context', 'The only current Toolbox Local Admin Consent write path', 'metadata apply', 'SEO mutation', 'media import', 'settings mutation', 'batch operation', 'second ability registry, workflow registry, approval store' ) as $required_cross_repo_boundary_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_cross_repo_boundary_text ), 'Cross-repo boundary matrix preserves boundary: ' . $required_cross_repo_boundary_text );
 }
+foreach ( array( 'Remaining Migration Audit', 'No broad migration should continue by default', 'Move to Toolkit only when', 'Do not migrate provider runtime, Cloud indexing, editor UI state', 'approval, audit, preflight, or final WordPress writes into Toolkit', 'Next Work Rule' ) as $required_migration_audit_text ) {
+	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_migration_audit_text ), 'Cross-repo boundary matrix preserves migration audit rule: ' . $required_migration_audit_text );
+}
+foreach ( array( 'npcink-abilities-toolkit/resolve-internal-link-targets', 'npcink-abilities-toolkit/suggest-post-taxonomy-terms', 'npcink-abilities-toolkit/build-comment-mention-reply-suggest', 'npcink-abilities-toolkit/build-image-candidate-review-artifact', 'npcink-abilities-toolkit/build-image-candidate-adoption-plan', 'npcink-abilities-toolkit/build-content-metadata-apply-plan' ) as $required_toolkit_migration_ability ) {
+	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_toolkit_migration_ability ), 'Cross-repo boundary matrix records Toolkit migration ability: ' . $required_toolkit_migration_ability );
+}
+toolbox_assert( false !== strpos( $cross_repo_boundary_doc, 'Site Knowledge / vector related content' ) && false !== strpos( $cross_repo_boundary_doc, 'Cloud owns vector/index/rerank runtime and collection lifecycle' ), 'Cross-repo boundary matrix keeps Site Knowledge and vector runtime out of Toolkit.' );
+toolbox_assert( false !== strpos( $cross_repo_boundary_doc, 'OpenClaw projection' ) && false !== strpos( $cross_repo_boundary_doc, 'OpenClaw/Adapter own natural-language projection' ), 'Cross-repo boundary matrix keeps OpenClaw projection outside Toolbox and Toolkit.' );
+toolbox_assert( false !== strpos( $cross_repo_boundary_doc, 'Moving prompt/runtime generation into Toolkit would make Toolkit too heavy' ), 'Cross-repo boundary matrix rejects moving hosted AI text runtime into Toolkit.' );
 
 $media_optimization_doc = file_get_contents( $root . '/docs/media-optimization-v1.md' );
 foreach ( array( 'media_optimization_v1', 'fixed, governed Toolbox workflow', 'not a new workflow runtime', 'Select media', 'Generate Cloud preview', 'Review media metadata', 'Submit optimization review', 'persistent Toolbox run table', 'one Core proposal', 'Expansion Rule' ) as $required_media_optimization_doc ) {

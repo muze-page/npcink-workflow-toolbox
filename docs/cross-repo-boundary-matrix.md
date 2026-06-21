@@ -44,3 +44,52 @@ code:
 - second ability registry, workflow registry, approval store
 - prompt/router/preset truth
 - WordPress write control plane
+
+## Remaining Migration Audit
+
+No broad migration should continue by default. The current Content Support
+shape is intentionally split: Toolkit owns reusable WordPress ability-shaped
+artifacts, Toolbox owns the operator/editor surface, Cloud owns hosted provider
+runtime and Site Knowledge evidence, and Core/Adapter own proposal, approval,
+preflight, audit, and governed execution.
+
+Move to Toolkit only when all of these are true:
+
+- the logic is reusable across Toolbox, OpenClaw, and third-party WordPress
+  hosts;
+- the output is a stable WordPress ability artifact, plan, dry-run, or
+  host-approved callback contract;
+- the logic has no provider/model routing, hosted runtime, billing, quota,
+  request-log, vector-index, queue, scheduler, lease, or retry ownership;
+- the logic has no Toolbox editor/admin UI state and no OpenClaw projection
+  state;
+- the result remains review-only, dry-run, or Core-proposal-ready unless Core
+  and Adapter supply an approved host commit context.
+
+Do not migrate provider runtime, Cloud indexing, editor UI state, proposal
+approval, audit, preflight, or final WordPress writes into Toolkit.
+
+| Candidate | Decision | Boundary |
+| --- | --- | --- |
+| Internal-link candidate assembly | Migrated; no further migration. | `npcink-abilities-toolkit/resolve-internal-link-targets` owns `internal_link_candidates.v1`. Toolbox passes bounded editor context and optional Cloud related-content evidence, then renders copy/open review actions. |
+| Taxonomy/tag candidate ranking | Migrated; no further migration. | `npcink-abilities-toolkit/suggest-post-taxonomy-terms` owns candidate ranking from supplied context and evidence. Toolbox must not create new terms or assign taxonomy outside a governed handoff. |
+| Comment reply suggestion artifact | Migrated; no further migration. | `npcink-abilities-toolkit/build-comment-mention-reply-suggest` owns review-only reply candidates. Toolbox owns comment selection and editor presentation; it must not publish comments or change status. |
+| Image candidate review projection | Migrated; no further migration. | `npcink-abilities-toolkit/build-image-candidate-review-artifact` owns `image_candidate_review.v1` projections. Toolbox and Cloud still own image-source search, AI image generation requests, and provider UX. |
+| Image candidate adoption plan | Already Toolkit-owned. | `npcink-abilities-toolkit/build-image-candidate-adoption-plan` owns adoption planning for reviewed candidates. Core/Adapter govern any final media action. |
+| Content metadata apply plan | Already Toolkit-owned. | `npcink-abilities-toolkit/build-content-metadata-apply-plan` owns the reusable apply-plan artifact. Toolbox only packages accepted operator selections for Core proposal intake. |
+| SEO meta handoff preview | Keep split; defer only if a reusable preview artifact stabilizes. | Toolkit owns `npcink-abilities-toolkit/set-post-seo-meta` for approved writes. Toolbox may present a single-post Core handoff preview but must not own SEO mutation. |
+| Title, summary, outline, polish, and other hosted AI text outputs | Do not migrate now. | These are provider/model runtime results surfaced as Toolbox suggestions. Moving prompt/runtime generation into Toolkit would make Toolkit too heavy. |
+| Image-source search and AI image generation | Do not migrate. | Toolbox owns source UX and Cloud/provider requests; Toolkit may consume already retrieved candidate evidence for review or adoption artifacts only. |
+| Site Knowledge / vector related content | Do not migrate. | Cloud owns vector/index/rerank runtime and collection lifecycle. Toolbox may pass optional evidence into Toolkit; Toolkit must not become a RAG, indexing, or collection owner. |
+| Media derivative preview and batch runtime | Do not migrate. | Cloud/Adapter/Core own runtime, proposal, approval, and execution boundaries. Toolkit may own reusable planning and write abilities; Toolbox must not become a queue, scheduler, or batch writer. |
+| Progressive local recommendations | Defer. | Keep aggregation in Toolbox while it is editor UX glue. Extract only a stable, host-reusable artifact that satisfies the Move-to-Toolkit rule above. |
+| Operator feedback and quality loop | Do not migrate to Toolkit. | Feedback capture, evaluation, and quality signals are runtime/product evidence. They must not become WordPress ability definitions unless a concrete reusable ability contract appears. |
+| OpenClaw projection | Do not migrate to Toolbox or Toolkit. | OpenClaw/Adapter own natural-language projection. They should call the same Toolkit artifacts and Core proposal paths, not create a parallel Toolbox button contract. |
+
+## Next Work Rule
+
+Future Content Support work should start from this audit before adding new
+abilities. Add a Toolkit ability only for a repeated, host-reusable WordPress
+artifact or callback contract. Otherwise keep the work in Toolbox UI, Cloud
+runtime, Core governance, or Adapter/OpenClaw projection according to the matrix
+above.
