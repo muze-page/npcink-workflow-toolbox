@@ -151,6 +151,10 @@ actions must become one Core `plan_to_proposal_batch`, not local consent.
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or
 execute writes.
+`npcink-abilities-toolkit/build-image-candidate-review-artifact` can normalize
+already retrieved image candidates into `image_candidate_review.v1` and
+`recommendation_candidate.v1` projections for editor or third-party review
+surfaces. Toolbox still owns the image-source UX and Cloud/provider request.
 For selected candidates that are already WordPress image attachments, the
 editor may use `/local-admin-consent/featured-image` to set one attachment as
 the current post's featured image. That route is the first Local Admin Consent

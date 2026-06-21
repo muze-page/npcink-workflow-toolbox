@@ -2334,92 +2334,35 @@ final class Rest_Controller {
 	}
 
 	private function editor_image_recommendation_section( array $section ): array {
-		$section['candidate_contract']        = 'recommendation_candidate.v1';
-		$section['recommendation_candidates'] = $this->editor_image_recommendation_candidates( $section );
-
-		return $section;
-	}
-
-	private function editor_image_recommendation_candidates( array $section ): array {
-		$candidates = array();
-		foreach ( array_slice( $this->editor_image_candidate_items( $section ), 0, 8 ) as $index => $item ) {
-			$title = sanitize_text_field(
-				(string) (
-					$item['title']
-					?? $item['alt_description']
-					?? $item['description']
-					?? $item['prompt']
-					?? ''
-				)
-			);
-			$url = esc_url_raw(
-				(string) (
-					$item['download_url']
-					?? $item['regular_url']
-					?? $item['small_url']
-					?? $item['url']
-					?? ''
-				)
-			);
-			if ( '' === $title && '' === $url ) {
-				continue;
-			}
-
-			$warnings = array();
-			foreach ( array( 'warnings', 'risk_flags', 'quality_tags' ) as $key ) {
-				if ( is_array( $item[ $key ] ?? null ) ) {
-					$warnings = array_merge( $warnings, array_map( 'sanitize_text_field', $item[ $key ] ) );
-				}
-			}
-			$license_status = sanitize_key( (string) ( $item['license_review_status'] ?? '' ) );
-			if ( '' !== $license_status && 'not_required' !== $license_status && 'clear' !== $license_status ) {
-				$warnings[] = __( '图片授权或来源需要人工确认。', 'npcink-toolbox' );
-			}
-
-			$match_score = is_numeric( $item['match_score'] ?? null ) ? (float) $item['match_score'] : 0.0;
-			$quality_score = $match_score > 0
-				? ( $match_score <= 1 ? 55 + (int) round( max( 0, min( 1, $match_score ) ) * 35 ) : max( 0, min( 90, (int) round( $match_score ) ) ) )
-				: 65;
-			if ( ! empty( $warnings ) ) {
-				$quality_score = min( $quality_score, 65 );
-			}
-			if ( '' === $url ) {
-				$quality_score = min( $quality_score, 45 );
-				$warnings[]    = __( '缺少可采用的图片 URL。', 'npcink-toolbox' );
-			}
-			if ( empty( $warnings ) ) {
-				$warnings[] = __( '保留完整图片候选用于授权、归因和采用计划审查。', 'npcink-toolbox' );
-			}
-			$source_ref = sanitize_text_field( (string) ( $item['id'] ?? '' ) );
-			if ( '' === $source_ref ) {
-				$source_ref = '' !== $url ? $url : 'image_candidate_' . ( $index + 1 );
-			}
-
-			$candidates[] = $this->editor_recommendation_candidate(
-				array(
-					'id'                   => 'image_candidate_' . ( $index + 1 ),
-					'kind'                 => 'image',
-					'label'                => '' !== $title ? $title : __( 'Image candidate', 'npcink-toolbox' ),
-					'value'                => '' !== $url ? $url : $title,
-					'reason'               => sanitize_text_field( (string) ( $item['match_reason'] ?? $item['reason'] ?? '' ) ),
-					'confidence'           => $match_score > 0 && $match_score <= 1 ? $match_score : null,
-					'target_field'         => 'featured_image',
-					'action_policy'        => 'core_proposal_required',
-					'quality_status'       => $quality_score >= 70 ? 'review' : ( $quality_score >= 50 ? 'review' : 'weak' ),
-					'quality_score'        => $quality_score,
-					'quality_issues'       => array_values( array_unique( $warnings ) ),
-					'evidence_refs'        => array_filter(
-						array(
-							'' !== (string) ( $item['provider'] ?? '' ) ? 'image_provider:' . sanitize_key( (string) $item['provider'] ) : '',
-							'' !== (string) ( $item['source_type'] ?? '' ) ? 'image_source_type:' . sanitize_key( (string) $item['source_type'] ) : '',
-						)
-					),
-					'source_candidate_ref' => $source_ref,
+		$items = $this->editor_image_candidate_items( $section );
+		$target_field = 'paragraph_image' === sanitize_key( (string) ( $section['image_mode'] ?? $section['recommended_use'] ?? '' ) ) ? 'paragraph_image' : 'featured_image';
+		$result = $this->editor_toolkit_image_candidate_review_artifact(
+			array(
+				'image_candidates' => array_slice( $items, 0, 12 ),
+				'target_field'     => $target_field,
+				'candidate_limit'  => 8,
+			)
+		);
+		if ( is_wp_error( $result ) ) {
+			$review_artifact = $this->empty_toolkit_image_candidate_review_artifact( $result );
+		} else {
+			$data = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+			$review_artifact = is_array( $data ) ? $data : $this->empty_toolkit_image_candidate_review_artifact(
+				new WP_Error(
+					'npcink_toolbox_image_candidate_review_toolkit_invalid_artifact',
+					__( 'The Toolkit image candidate review ability returned an invalid artifact.', 'npcink-toolbox' ),
+					array( 'status' => 500 )
 				)
 			);
 		}
 
-		return $candidates;
+		$section['image_candidate_review']     = $review_artifact;
+		$section['image_candidate_contract']   = 'image_candidate.v1';
+		$section['candidate_contract']         = 'recommendation_candidate.v1';
+		$section['source_ability_id']          = 'npcink-abilities-toolkit/build-image-candidate-review-artifact';
+		$section['recommendation_candidates']  = is_array( $review_artifact['recommendation_candidates'] ?? null ) ? $review_artifact['recommendation_candidates'] : array();
+
+		return $section;
 	}
 
 	private function editor_image_candidate_items( array $section ): array {
@@ -2430,6 +2373,61 @@ final class Rest_Controller {
 		}
 
 		return array();
+	}
+
+	private function editor_toolkit_image_candidate_review_artifact( array $input ) {
+		$ability_id = 'npcink-abilities-toolkit/build-image-candidate-review-artifact';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_image_candidate_review_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build image candidate review artifacts.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error(
+				'npcink_toolbox_image_candidate_review_toolkit_unavailable',
+				__( 'The Toolkit image candidate review ability is not currently callable.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		if ( ! is_array( $result ) ) {
+			return new WP_Error(
+				'npcink_toolbox_image_candidate_review_toolkit_invalid_response',
+				__( 'The Toolkit image candidate review ability returned an invalid response.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $result;
+	}
+
+	private function empty_toolkit_image_candidate_review_artifact( WP_Error $error ): array {
+		return array(
+			'artifact_type'             => 'image_candidate_review.v1',
+			'candidate_type'            => 'image_candidates',
+			'candidate_contract'        => 'image_candidate.v1',
+			'projection_contract'       => 'recommendation_candidate.v1',
+			'write_posture'             => 'suggestion_only',
+			'final_write_path'          => 'core_proposal_required',
+			'direct_wordpress_write'    => false,
+			'source_ability_id'         => 'npcink-abilities-toolkit/build-image-candidate-review-artifact',
+			'adoption_plan_ability_id'  => 'npcink-abilities-toolkit/build-image-candidate-adoption-plan',
+			'toolkit_required'          => true,
+			'error_code'                => sanitize_key( $error->get_error_code() ),
+			'error_message'             => sanitize_text_field( $error->get_error_message() ),
+			'items'                     => array(),
+			'recommendation_candidates' => array(),
+		);
 	}
 
 	private function editor_summary_terms_optimization( array $context, string $query ): array {

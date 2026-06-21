@@ -288,6 +288,12 @@ data.
 describe media upload, metadata, and optional featured-image write actions for
 Core proposal intake, but it must not import media, update attachment metadata,
 set featured images, approve proposals, or execute writes.
+Editor image candidate review may delegate already retrieved candidates to
+`npcink-abilities-toolkit/build-image-candidate-review-artifact` for a shared
+`image_candidate_review.v1` artifact and recommendation projection. Toolbox
+still owns the image-source UX and Cloud/provider request; Toolkit does not
+search providers, generate images, download files, import media, or write
+WordPress state.
 When a selected candidate is already an existing WordPress image attachment,
 `/local-admin-consent/featured-image` may set it as the current post's featured
 image without creating a Core proposal. This is not media adoption: it is a

@@ -340,7 +340,9 @@ request so Cloud may build a visual brief, use site context vectors managed by
 Cloud for reranking, and return media SEO suggestions; these are runtime
 details, not local vector/index or provider ownership. Returned images remain
 `image_candidate.v1` suggestions with provider, attribution, source,
-license-review, and Unsplash download tracking metadata preserved; media import
+license-review, and Unsplash download tracking metadata preserved. Editor review
+projection is delegated to
+`npcink-abilities-toolkit/build-image-candidate-review-artifact`; media import
 still flows through a governed adoption plan. When the selected candidate is an
 existing WordPress image attachment, the editor may set that one attachment as
 the current post's featured image through Local Admin Consent: the logged-in
@@ -485,6 +487,12 @@ preserving legacy URL fields for existing callers. The normalized fields include
 `thumbnail_url`, `prompt`, `model`, `license_review_status`, attribution,
 provenance, and warnings. Stock providers return `source_type=stock`;
 generated candidates return `source_type=ai_generated`.
+
+Editor review surfaces can pass those already retrieved candidates to
+`npcink-abilities-toolkit/build-image-candidate-review-artifact` to get a shared
+`image_candidate_review.v1` artifact and `recommendation_candidate.v1`
+projection. That Toolkit ability does not search providers, generate images,
+download files, import media, or write WordPress state.
 
 After an operator reviews one candidate, `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 or `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`

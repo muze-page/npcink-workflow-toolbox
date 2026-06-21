@@ -131,6 +131,8 @@ review, export, and batch dry-run projection:
 - image recommendations keep the full `image_candidate.v1` object as the
   adoption source of truth, including provider, source URL, license review,
   attribution, download tracking, media SEO, and generated-image metadata;
+  editor review projections come from Toolkit's
+  `image_candidate_review.v1` artifact after Toolbox has retrieved candidates;
 - internal-link recommendations keep Toolkit's `internal_link_candidates.v1` as
   the source of truth, including target post, URL, suggested anchor, placement
   hint, supporting evidence, and the no-background-patch review policy;
