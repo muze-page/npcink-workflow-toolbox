@@ -157,6 +157,12 @@ foreach ( array( 'composer test:all', 'composer smoke:editor-review-artifacts', 
 foreach ( array( 'autonomous article writer', 'one-click long-form article generation', 'no new editor buttons', 'no automatic metadata writes', 'no new media registry or workflow run store' ) as $required_release_boundary ) {
 	toolbox_assert( false !== strpos( $content_support_release_doc, $required_release_boundary ), 'Content support release closeout preserves trial boundary: ' . $required_release_boundary );
 }
+foreach ( array( 'Toolkit Migration Closeout - 2026-06-21', 'Stop Toolkit', 'migration here', 'no broad migration should continue by default', 'provider/runtime/Site Knowledge/vector/OpenClaw projection remain outside', 'composer test:progressive-recommendations', 'composer test:editor-progressive-js', 'operator_review_only_no_insert', 'no_link_insertion_in_toolbox' ) as $required_toolkit_migration_closeout ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_toolkit_migration_closeout ), 'Content support release closeout preserves Toolkit migration stop rule: ' . $required_toolkit_migration_closeout );
+}
+foreach ( array( 'npcink-abilities-toolkit/build-content-metadata-apply-plan', 'npcink-abilities-toolkit/suggest-post-taxonomy-terms', 'npcink-abilities-toolkit/build-comment-mention-reply-suggest', 'npcink-abilities-toolkit/resolve-internal-link-targets', 'npcink-abilities-toolkit/build-image-candidate-review-artifact', 'npcink-abilities-toolkit/build-image-candidate-adoption-plan' ) as $required_toolkit_migration_closeout_ability ) {
+	toolbox_assert( false !== strpos( $content_support_release_doc, $required_toolkit_migration_closeout_ability ), 'Content support release closeout records migrated Toolkit ability: ' . $required_toolkit_migration_closeout_ability );
+}
 
 $boundary_doc = file_get_contents( $root . '/docs/boundary.md' );
 foreach ( array( 'OpenClaw Button Surface Boundary', 'UX projection of the same local ability and Core proposal contracts', 'OpenClaw natural-language request', 'Toolbox fixed button', 'reviewed plan or candidate artifact', 'must not own OpenClaw projection truth', 'approval truth, prompt/model', 'media registry truth, or final WordPress write execution', 'OpenClaw/Adapter must prove the governed execution', 'contract before Toolbox productizes it', 'It must not implement a separate batch writer' ) as $required_boundary_doc ) {

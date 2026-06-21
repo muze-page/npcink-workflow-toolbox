@@ -65,6 +65,52 @@ Before using this slice for editorial trial, these gates must pass on master:
 The 2026-06-10 closeout passed all five gates on local master before this
 document was written.
 
+## Toolkit Migration Closeout - 2026-06-21
+
+This follow-up closes the Content Support Toolkit migration slice. Stop Toolkit
+migration here: the remaining work is release validation, operator trial
+evidence, and OpenClaw reuse checks, not more capability movement.
+
+Migration implementation commits from `ba8027b` through `4d16755` moved the
+reusable WordPress ability-shaped artifacts to Toolkit-backed execution:
+
+- `npcink-abilities-toolkit/build-content-metadata-apply-plan`
+- `npcink-abilities-toolkit/suggest-post-taxonomy-terms`
+- `npcink-abilities-toolkit/build-comment-mention-reply-suggest`
+- `npcink-abilities-toolkit/resolve-internal-link-targets`
+- `npcink-abilities-toolkit/build-image-candidate-review-artifact`
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
+
+The closeout decision is intentionally conservative:
+
+- no broad migration should continue by default;
+- provider/runtime/Site Knowledge/vector/OpenClaw projection remain outside
+  Toolkit;
+- Toolbox keeps the editor and operator surface, fixed buttons, candidate
+  display, feedback cues, and Core handoff UX;
+- Cloud keeps hosted AI, image-source lookup, Site Knowledge runtime, vector
+  search, and provider execution;
+- Core and Adapter keep proposal, approval, preflight, audit, and final
+  execution ownership;
+- internal-link success responses must preserve
+  `operator_review_only_no_insert`, `direct_wordpress_write=false`, and
+  `no_link_insertion_in_toolbox`.
+
+Verification run during closeout:
+
+| Repository | Gate | Result |
+| --- | --- | --- |
+| Toolbox | `composer smoke:editor-review-artifacts` | Passed |
+| Toolbox | `composer test:progressive-recommendations` | Passed |
+| Toolbox | `composer test:editor-progressive-js` | Passed |
+| Toolbox | `composer test:all` | Passed |
+
+The field-trial posture after this closeout is: use the existing Content
+Support surface on real human-written posts, verify that OpenClaw/Adapter reuse
+the same Toolkit artifacts and Core proposal paths, and do not add new Toolkit
+abilities unless a repeated, host-reusable WordPress artifact or callback
+contract emerges.
+
 ## PR Closeout Record - 2026-06-10
 
 Pull request:
