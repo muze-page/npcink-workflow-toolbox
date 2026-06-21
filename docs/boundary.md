@@ -224,9 +224,11 @@ Existing category/tag candidate ranking is sourced from
 `npcink-abilities-toolkit/suggest-post-taxonomy-terms`; Toolbox only supplies
 editor context, related-term evidence, and the review UI.
 Internal-link support returns `internal_link_candidates.v1` with reviewable
-targets, anchor suggestions, and placement hints. The REST route must not
-insert links, patch post content, or submit a post-content patch on the
-operator's behalf. The editor sidebar may offer explicit copy-link and
+targets, anchor suggestions, and placement hints from
+`npcink-abilities-toolkit/resolve-internal-link-targets`. Toolbox supplies
+editor context and optional Cloud Site Knowledge related-content evidence, but
+it does not own candidate assembly, link insertion, post-content patching, or a
+link graph control plane. The editor sidebar may offer explicit copy-link and
 open-target actions only; the human editor still owns where any reviewed link is
 placed in the draft.
 Publish preflight may aggregate summary, taxonomy, image, internal-link,

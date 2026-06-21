@@ -65,9 +65,11 @@ The first editor stage is six focused tools plus a publish preflight package:
 - image recommendations use the current article or selected paragraph plus the
   operator image preference text, then continue through `image_candidate.v1`
   review and the existing media adoption path;
-- internal-link recommendations use Cloud Site Knowledge evidence, show target,
-  anchor, and placement hints, then offer copy-link and open-target actions;
-  they do not create backend post-content patches or mutate the current draft;
+- internal-link recommendations pass editor context and optional Cloud Site
+  Knowledge evidence to `npcink-abilities-toolkit/resolve-internal-link-targets`,
+  show target, anchor, and placement hints, then offer copy-link and open-target
+  actions; they do not create backend post-content patches or mutate the current
+  draft;
 - publish preflight aggregates readiness issues and routes operators back to
   the focused tools. It is a closing checklist, not a replacement editing
   workspace.
@@ -129,9 +131,9 @@ review, export, and batch dry-run projection:
 - image recommendations keep the full `image_candidate.v1` object as the
   adoption source of truth, including provider, source URL, license review,
   attribution, download tracking, media SEO, and generated-image metadata;
-- internal-link recommendations keep `internal_link_candidates.v1` as the
-  source of truth, including target post, URL, suggested anchor, placement hint,
-  Site Knowledge evidence, and the no-background-patch review policy;
+- internal-link recommendations keep Toolkit's `internal_link_candidates.v1` as
+  the source of truth, including target post, URL, suggested anchor, placement
+  hint, supporting evidence, and the no-background-patch review policy;
 - projection fields such as `label`, `value`, `reason`, `quality_status`, and
   `action_policy` should point back to the source candidate rather than replace
   it.

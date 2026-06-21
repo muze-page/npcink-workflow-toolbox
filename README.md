@@ -276,7 +276,7 @@ discoverability suggestions, summary suggestions, category suggestions, tag
 suggestions, internal-link candidates, image-source candidates, and
 current-article image ALT suggestions from the current draft context. Related
 existing-post review is handled through publish preflight duplicate-risk checks
-and internal-link candidates rather than a separate visible button. The sidebar
+and Toolkit-backed internal-link candidates rather than a separate visible button. The sidebar
 article checkup is a local full-draft diagnostic surface for sentence density,
 fact-gap, tone, and structure review; it points to paragraphs and editing
 direction, but does not rewrite, insert, or replace article text. The sidebar
@@ -406,6 +406,10 @@ suggestions, and no media library, post, SEO, proposal, crawler, or queue state
 is changed locally.
 Publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal-link candidates, and image candidates belong in the editor sidebar.
+Internal-link candidate assembly is delegated to
+`npcink-abilities-toolkit/resolve-internal-link-targets`; Toolbox only passes
+editor context plus optional Cloud Site Knowledge evidence and renders the
+review/copy/open surface.
 The admin Workflows tab defaults to media work, with **Optimize Existing Image**
 as the first visible tool. Site helpers remain a secondary low-frequency group.
 Governed handoffs and the combined Article Planning Bundle live under the

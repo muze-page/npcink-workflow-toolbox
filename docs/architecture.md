@@ -479,7 +479,8 @@ same fixed workflows that the admin surface owns:
   preview-only Core handoff guidance for summary application, tag assignment,
   category recommendation, and new-tag proposal actions;
 - taxonomy/tag candidates from existing WordPress terms;
-- internal-link candidates through Cloud-managed Site Knowledge;
+- internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
+  optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.
 
 The editor panel reads the current draft title, excerpt, content, terms, status,

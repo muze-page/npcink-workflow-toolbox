@@ -2754,7 +2754,7 @@ final class Rest_Controller {
 	}
 
 	private function editor_internal_link_candidates( array $context, string $query ): array {
-		$knowledge = $this->editor_support_section(
+		$source_knowledge = $this->editor_support_section(
 			$this->editor_cached_site_knowledge(
 				array(
 					'query'           => $query,
@@ -2764,8 +2764,115 @@ final class Rest_Controller {
 				)
 			)
 		);
-		$items     = $this->editor_internal_link_candidate_items( $context, $knowledge );
+		$related_content_evidence = $this->editor_internal_link_related_content_evidence( $source_knowledge );
+		$input = array(
+			'current_post_id'          => absint( $context['post_id'] ?? 0 ),
+			'post_type'                => sanitize_key( (string) ( $context['post_type'] ?? 'post' ) ),
+			'query'                    => sanitize_textarea_field( $query ),
+			'title'                    => sanitize_text_field( (string) ( $context['title'] ?? '' ) ),
+			'excerpt'                  => sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ),
+			'content_text'             => sanitize_textarea_field( (string) ( $context['content_text'] ?? '' ) ),
+			'selected_text'            => sanitize_textarea_field( (string) ( $context['selected_text'] ?? '' ) ),
+			'selected_block_text'      => sanitize_textarea_field( (string) ( $context['selected_block_text'] ?? '' ) ),
+			'user_instruction'         => sanitize_textarea_field( (string) ( $context['user_instruction'] ?? '' ) ),
+			'candidate_limit'          => 8,
+			'max_targets'              => 6,
+			'related_content_evidence' => $related_content_evidence,
+		);
+		if ( 0 >= (int) $input['current_post_id'] ) {
+			unset( $input['current_post_id'] );
+		}
+		if ( array() === $related_content_evidence ) {
+			unset( $input['related_content_evidence'] );
+		}
 
+		$result = $this->editor_toolkit_internal_link_candidates( $input );
+		if ( is_wp_error( $result ) ) {
+			return $this->empty_toolkit_internal_link_candidates( $result, $source_knowledge );
+		}
+
+		$data = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+		$artifact = is_array( $data['internal_link_candidates'] ?? null ) ? $data['internal_link_candidates'] : array();
+		if ( 'internal_link_candidates' !== (string) ( $artifact['candidate_type'] ?? '' ) ) {
+			return $this->empty_toolkit_internal_link_candidates(
+				new WP_Error(
+					'npcink_toolbox_internal_link_toolkit_invalid_artifact',
+					__( 'The Toolkit internal-link ability returned an invalid artifact.', 'npcink-toolbox' ),
+					array( 'status' => 500 )
+				),
+				$source_knowledge
+			);
+		}
+
+		$items = is_array( $artifact['items'] ?? null ) ? $artifact['items'] : array();
+		$artifact['input_scope'] = $this->editor_input_scope( $context );
+		$artifact['source_ability_id'] = 'npcink-abilities-toolkit/resolve-internal-link-targets';
+		$artifact['source_knowledge'] = $source_knowledge;
+		$artifact['toolkit_artifact'] = $data;
+		$artifact['recommendation_candidates'] = $this->editor_internal_link_recommendation_candidates( $items );
+
+		return $artifact;
+	}
+
+	private function editor_internal_link_related_content_evidence( array $source_knowledge ): array {
+		$evidence = array();
+		foreach ( array_slice( $this->editor_related_content_items( $source_knowledge ), 0, 8 ) as $index => $item ) {
+			$post_id = absint( $item['post_id'] ?? ( $item['id'] ?? 0 ) );
+			$evidence[] = array(
+				'post_id'      => $post_id,
+				'title'        => sanitize_text_field( (string) ( $item['title'] ?? $item['name'] ?? '' ) ),
+				'url'          => esc_url_raw( (string) ( $item['url'] ?? ( $item['permalink'] ?? ( $item['link'] ?? ( $item['source_url'] ?? '' ) ) ) ) ),
+				'excerpt'      => sanitize_textarea_field( wp_trim_words( wp_strip_all_tags( (string) ( $item['excerpt'] ?? $item['snippet'] ?? $item['content_excerpt'] ?? '' ) ), 55, '' ) ),
+				'score'        => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
+				'evidence_ref' => 'site_knowledge:' . sanitize_key( (string) ( $post_id ?: $index ) ),
+			);
+		}
+
+		return array_values(
+			array_filter(
+				$evidence,
+				static fn( array $item ): bool => '' !== (string) ( $item['title'] ?? '' ) || '' !== (string) ( $item['url'] ?? '' ) || 0 < absint( $item['post_id'] ?? 0 )
+			)
+		);
+	}
+
+	private function editor_toolkit_internal_link_candidates( array $input ) {
+		$ability_id = 'npcink-abilities-toolkit/resolve-internal-link-targets';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_internal_link_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build internal-link candidates.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error(
+				'npcink_toolbox_internal_link_toolkit_unavailable',
+				__( 'The Toolkit internal-link ability is not currently callable.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		if ( ! is_array( $result ) ) {
+			return new WP_Error(
+				'npcink_toolbox_internal_link_toolkit_invalid_response',
+				__( 'The Toolkit internal-link ability returned an invalid response.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $result;
+	}
+
+	private function empty_toolkit_internal_link_candidates( WP_Error $error, array $source_knowledge ): array {
 		return array(
 			'artifact_type'          => 'internal_link_candidates.v1',
 			'candidate_type'         => 'internal_link_candidates',
@@ -2773,15 +2880,18 @@ final class Rest_Controller {
 			'write_posture'          => 'suggestion_only',
 			'final_write_path'       => 'operator_review_only_no_insert',
 			'direct_wordpress_write' => false,
-			'input_scope'            => $this->editor_input_scope( $context ),
-			'items'                  => $items,
-			'recommendation_candidates' => $this->editor_internal_link_recommendation_candidates( $items ),
-			'source_knowledge'       => $knowledge,
+			'source_ability_id'      => 'npcink-abilities-toolkit/resolve-internal-link-targets',
+			'toolkit_required'       => true,
+			'error_code'             => sanitize_key( $error->get_error_code() ),
+			'error_message'          => sanitize_text_field( $error->get_error_message() ),
+			'items'                  => array(),
+			'recommendation_candidates' => array(),
+			'source_knowledge'       => $source_knowledge,
 			'review_policy'          => array(
-				'link_insertion_owner'      => 'human_editor',
-				'automatic_anchor_insert'   => false,
+				'link_insertion_owner'       => 'human_editor',
+				'automatic_anchor_insert'    => false,
 				'post_content_patch_handoff' => false,
-				'current_post_excluded'     => true,
+				'current_post_excluded'      => true,
 			),
 			'handoff'                => array(
 				'final_writes'           => 'operator_review_only_no_insert',
@@ -2791,44 +2901,8 @@ final class Rest_Controller {
 					'no_patch_post_content_handoff_yet',
 					'no_automatic_anchor_insertion',
 				),
-				'next_steps'             => array(
-					__( 'Review whether the target article genuinely helps the reader before inserting a link manually.', 'npcink-toolbox' ),
-					__( 'Choose anchor text from the article wording; do not let Toolbox rewrite the paragraph.', 'npcink-toolbox' ),
-				),
 			),
 		);
-	}
-
-	private function editor_internal_link_candidate_items( array $context, array $knowledge ): array {
-		$current_post_id = absint( $context['post_id'] ?? 0 );
-		$items           = array();
-
-		foreach ( array_slice( $this->editor_related_content_items( $knowledge ), 0, 8 ) as $index => $item ) {
-			$target_post_id = absint( $item['post_id'] ?? ( $item['id'] ?? 0 ) );
-			if ( 0 < $target_post_id && $target_post_id === $current_post_id ) {
-				continue;
-			}
-
-			$title = sanitize_text_field( (string) ( $item['title'] ?? $item['name'] ?? '' ) );
-			$url   = $this->editor_internal_link_target_url( $item, $target_post_id );
-			if ( '' === $title && '' === $url ) {
-				continue;
-			}
-
-			$items[] = array(
-				'title'                 => '' !== $title ? $title : __( 'Related internal target', 'npcink-toolbox' ),
-				'target_post_id'        => $target_post_id,
-				'target_url'            => $url,
-				'suggested_anchor_text' => $this->editor_internal_link_anchor_text( $title ),
-				'placement_hint'        => __( 'Review near the paragraph where this topic is mentioned; Toolbox does not insert the link.', 'npcink-toolbox' ),
-				'reason'                => $this->editor_internal_link_reason( $item ),
-				'evidence_refs'         => array( 'site_knowledge:' . sanitize_key( (string) ( $target_post_id ?: $index ) ) ),
-				'score'                 => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
-				'status'                => 'review_only_candidate',
-			);
-		}
-
-		return $items;
 	}
 
 	private function editor_internal_link_recommendation_candidates( array $items ): array {
@@ -2876,44 +2950,6 @@ final class Rest_Controller {
 		}
 
 		return $candidates;
-	}
-
-	private function editor_internal_link_target_url( array $item, int $target_post_id ): string {
-		foreach ( array( 'url', 'permalink', 'link', 'source_url' ) as $key ) {
-			$value = esc_url_raw( (string) ( $item[ $key ] ?? '' ) );
-			if ( '' !== $value ) {
-				return $value;
-			}
-		}
-
-		if ( 0 < $target_post_id ) {
-			$permalink = get_permalink( $target_post_id );
-			return is_string( $permalink ) ? esc_url_raw( $permalink ) : '';
-		}
-
-		return '';
-	}
-
-	private function editor_internal_link_anchor_text( string $title ): string {
-		$anchor = trim( sanitize_text_field( wp_trim_words( $title, 8, '' ) ) );
-		return '' !== $anchor ? $anchor : __( 'Related article', 'npcink-toolbox' );
-	}
-
-	private function editor_internal_link_reason( array $item ): string {
-		$reason = trim( sanitize_text_field( (string) ( $item['reason'] ?? $item['summary'] ?? '' ) ) );
-		if ( '' !== $reason ) {
-			return $reason;
-		}
-
-		if ( is_numeric( $item['score'] ?? null ) ) {
-			return sprintf(
-				/* translators: %s: similarity score. */
-				__( 'Site Knowledge returned this internal target with similarity score %s. Review relevance before inserting manually.', 'npcink-toolbox' ),
-				(string) $item['score']
-			);
-		}
-
-		return __( 'Site Knowledge returned this as related public content. Review relevance before inserting manually.', 'npcink-toolbox' );
 	}
 
 	private function editor_ai_summary_suggestions( array $context, string $query ): array {
