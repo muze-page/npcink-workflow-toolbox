@@ -30,7 +30,7 @@ High-frequency article support stays in the post editor sidebar. Admin
 Workflows no longer expose publish preflight, summary/category/tag support,
 internal-link candidates, or image candidates as backend article buttons.
 
-**Advanced Checks** keeps the stable `cloud-checks` deep-link id, but it now
+**Cloud Checks** keeps the stable `cloud-checks` deep-link id, but it now
 presents search, image, Site Knowledge search verification, and Nightly
 Inspection runtime detail as troubleshooting surfaces. Content Operations
 coverage and Agent feedback quality summaries link out to Cloud Addon

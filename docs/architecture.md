@@ -468,8 +468,8 @@ three common next steps and one folded advanced directory. Its primary article
 path points operators back to the post editor sidebar because high-frequency
 article-specific work belongs there. Admin tabs after Start are setup,
 operations, and diagnostics: **Site Context**, **Site Knowledge**,
-**Workflows**, and **Advanced Checks**. Nightly Inspection fallback preview
-settings, Pro Cloud Runtime checks, and run recovery live under **Advanced
+**Workflows**, and **Cloud Checks**. Nightly Inspection fallback preview
+settings, Pro Cloud Runtime checks, and run recovery live under **Cloud
 Checks**, not the default Start view.
 
 The admin **Workflows** tab groups lower-frequency buttons by operator job and

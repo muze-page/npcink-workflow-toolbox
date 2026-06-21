@@ -3065,9 +3065,6 @@ msgstr "高级和备用"
 msgid "Use only after reviewed inputs exist or the editor path is not enough."
 msgstr "仅在已有审阅输入，或编辑器路径不足时使用。"
 
-msgid "Advanced Checks"
-msgstr "高级检查"
-
 msgid "Cloud Capability Checks"
 msgstr "云端能力检查"
 
@@ -3178,9 +3175,6 @@ msgstr "编辑站点上下文"
 
 msgid "Maintain the site brief used as suggestion-only guidance."
 msgstr "维护仅作为建议指导使用的站点简报。"
-
-msgid "Open Advanced Checks"
-msgstr "打开高级检查"
 
 msgid "Open Cloud Checks"
 msgstr "打开云端检查"

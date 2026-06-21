@@ -472,7 +472,7 @@ replace media files, update attachment metadata, or treat preview artifacts as
 WordPress media writes. Those handoff actions stay in Content Support and Core
 governance.
 
-The Advanced Checks Nightly Inspection panel may show read-only Pro Cloud
+The Cloud Checks Nightly Inspection panel may show read-only Pro Cloud
 Runtime quota detail by reading Cloud `pro_cloud_runtime` entitlement through
 the Cloud Addon seam. That display may disable new Cloud Batch submissions when
 Cloud reports exhausted `nightly_site_inspection_runs`, but it must not become

@@ -70,7 +70,7 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
-Advanced Checks keep the stable Cloud Checks deep-link id while opening
+Cloud Checks keep the stable `cloud-checks` deep-link id while opening
 directly into verification tools for Cloud-managed search, image-source
 candidates, preview-only media derivatives, Site Knowledge search, and Nightly
 Inspection runtime detail. The tabs may show compact readiness labels, but each

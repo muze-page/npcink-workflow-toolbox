@@ -1925,12 +1925,12 @@
 					toolbox_cloud_check_group: 'search-test',
 					toolbox_tool: null,
 				}),
-				'Open advanced search check'
+				'Open Cloud search check'
 			));
 			result.appendChild(notice);
 		} else if (payload.research) {
 			const section = createSection('External search');
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Live Cloud web search verification belongs in Advanced Checks. Use this bundle for combined fallback planning and handoff context.'));
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Live Cloud web search verification belongs in Cloud Checks. Use this bundle for combined fallback planning and handoff context.'));
 			section.appendChild(createLink(
 				toolboxAdminUrl({
 					toolbox_tab: 'cloud-checks',
@@ -1938,7 +1938,7 @@
 					toolbox_cloud_check_group: 'search-test',
 					toolbox_tool: null,
 				}),
-				'Open advanced search check'
+				'Open Cloud search check'
 			));
 			result.appendChild(section);
 		}
