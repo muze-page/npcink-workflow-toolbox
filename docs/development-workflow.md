@@ -259,6 +259,38 @@ fallback, preserves runtime diagnostics, and does not replace selected text. It
 is intentionally outside `composer test:all` because it depends on a running
 local WordPress site and WP-CLI.
 
+For scoped permission and debug payload hardening, run:
+
+```bash
+composer smoke:security-permission-debug
+```
+
+This source-only smoke proves route scopes and ability scopes reach the host
+permission filters, unknown REST routes fall back to `cap.toolbox.admin`, and
+`NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES` suppresses redacted raw payloads even
+when a local debug option would otherwise include them. It is part of the
+default `composer test:all` gate.
+
+For an authenticated REST latency baseline, run:
+
+```bash
+NPCINK_TOOLBOX_BASE_URL="https://example.local" \
+NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
+NPCINK_TOOLBOX_NONCE="..." \
+NPCINK_TOOLBOX_PERF_OUTPUT="var/perf/toolbox-baseline.jsonl" \
+composer perf:baseline
+```
+
+Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only when Cloud Addon/runtime
+availability is part of the proof. For local self-signed HTTPS only, add
+`NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. To measure a known Cloud unavailable or
+no-candidate failure path, add `NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1` and
+record the status in the trial notes. This records JSONL timing for the status
+and Site Knowledge status routes, plus Cloud-backed probes when enabled. Any
+probe without an HTTP status, unexpected error status, or over 2500ms exits
+non-zero so the release owner investigates the path instead of shipping an
+unmeasured slowdown.
+
 For the post-editor follow-up quality trial through eval-lab, run:
 
 ```bash

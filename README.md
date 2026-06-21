@@ -76,6 +76,8 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Local Automation Runtime Module](modules/local-automation-runtime/README.md)
 - [Connector Ability Exposure](docs/connector-ability-exposure.md)
 - [Content Discoverability Context](docs/content-discoverability-context.md)
+- [Scoped Permissions First Version](docs/scoped-permissions-first-version.md)
+- [Security And Performance Release Gate](docs/security-performance-release-gate.md)
 - [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
 - [OpenClaw Batch Media Optimization Handoff](docs/openclaw-batch-media-optimization-handoff.md)
@@ -589,6 +591,12 @@ Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include redacted raw provider payloads for debugging.
 Production hosts can define `NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES` to force raw
 payloads off even if the local option is enabled.
+
+For hardening release checks, run `composer smoke:security-permission-debug`
+with the default gate. To capture an authenticated local or staging latency
+baseline, set `NPCINK_TOOLBOX_BASE_URL` plus admin REST authentication headers
+and run `composer perf:baseline`. The release checklist is documented in
+[Security And Performance Release Gate](docs/security-performance-release-gate.md).
 
 ## Development
 

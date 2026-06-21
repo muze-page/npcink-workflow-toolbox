@@ -39,6 +39,7 @@
     "eval:summary:judge:cross": "sh scripts/eval-lab.sh task=summary_judge_cross",
     "check:wporg": "@php scripts/check-wordpress-org-review-rules.php",
     "git:remote-check": "GIT_TERMINAL_PROMPT=0 perl -e 'alarm 30; exec @ARGV' git ls-remote origin HEAD",
+    "perf:baseline": "php scripts/performance-baseline.php",
     "package:release": "rm -rf build/npcink-toolbox build/npcink-toolbox.zip && mkdir -p build && rsync -a --delete --exclude-from=.distignore ./ build/npcink-toolbox/ && cd build && zip -qr npcink-toolbox.zip npcink-toolbox",
     "plugin-check:release": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color plugin check npcink-toolbox --format=table --exclude-directories=tests,.git,vendor,node_modules,build,docs,scripts --exclude-files=.env.summary-eval.local,.gitignore,.distignore,AGENTS.md,README.md,composer.json,composer.lock,phpcs.xml,phpcs.xml.dist,phpstan.neon,phpstan.neon.dist",
     "smoke:article-core": "WP_PATH=\"${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}\"; WP_CLI_BIN=\"${WP_CLI_BIN:-/tmp/wp-cli.phar}\"; WP_CLI_PHP=\"${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}\"; SOCKET=\"${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}\"; NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_PURGE=\"${NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_PURGE:-1}\"; export NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_PURGE; \"$WP_CLI_PHP\" -d display_errors=0 -d error_reporting=8191 -d mysqli.default_socket=\"$SOCKET\" \"$WP_CLI_BIN\" --path=\"$WP_PATH\" --no-color eval-file tests/smoke-article-draft-core-proof.php",
@@ -54,6 +55,7 @@
     "smoke:media-conversion-review-set-browser": "node tests/smoke-media-conversion-review-set-browser.mjs",
     "smoke:site-knowledge-review-ui": "php tests/smoke-site-knowledge-review-ui.php",
     "smoke:site-knowledge-cloud-addon-bridge": "sh scripts/smoke-site-knowledge-cloud-addon-bridge.sh",
+    "smoke:security-permission-debug": "php tests/smoke-security-permission-debug.php",
     "smoke:local-automation-runtime-replay": "php tests/smoke-local-automation-runtime-replay.php",
     "smoke:local-automation-runtime-negative-replay": "php tests/smoke-local-automation-runtime-negative-replay.php",
     "smoke:local-automation-media-conversion-review-set": "php tests/smoke-local-automation-media-conversion-review-set.php",
@@ -93,6 +95,7 @@
       "@smoke:nightly-inspection-basic-cron",
       "@smoke:nightly-inspection-cloud-batch-merge",
       "@smoke:nightly-inspection-cloud-payload-minimization",
+      "@smoke:security-permission-debug",
       "@smoke:nightly-inspection-cloud-ui",
       "@smoke:nightly-inspection-orchestration-boundary"
     ]
