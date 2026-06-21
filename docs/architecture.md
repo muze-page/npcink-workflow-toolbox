@@ -580,7 +580,7 @@ replacement callbacks before Toolbox presents it as a fixed best-practice
 button. Toolbox may render review sets, selected previews, proposal submission,
 and returned execution outcomes; it must not own the batch execution semantics.
 
-Cloud Checks use compact tabs under the visible **Advanced Checks** label for
+Cloud Checks use compact tabs under the visible **Cloud Checks** label for
 Cloud-managed search, image-source, preview-only media derivative, and
 Site Knowledge checks. Each panel opens
 directly into the relevant Toolbox ability reachability check instead of
@@ -595,7 +595,9 @@ proposal submission, batch proposal submission, and URL repair handoffs stay in
 Workflows. The Site Knowledge check is read-only search verification and links
 back to the Site Knowledge tab for index status and refresh operations. The
 surface is not a billing, quota, request-log, marketplace, provider-routing,
-key-rotation, vector-provider, or vector-lifecycle surface.
+key-rotation, vector-provider, vector-lifecycle, content-operations coverage,
+or Agent quality summary surface. Toolbox links those read-only summaries to
+Cloud Addon Monitoring.
 
 ## Dependency Direction
 

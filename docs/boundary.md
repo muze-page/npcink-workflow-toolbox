@@ -458,6 +458,12 @@ quota, billing, request logs, entitlement, or key verification controls here.
 Cloud Addon owns the WordPress-side connection and authorization check; Cloud
 service-plane surfaces own provider/runtime diagnostics.
 
+Content Operations coverage and Agent feedback quality summaries belong in
+Cloud Addon Monitoring or the Cloud service-plane read surface. Toolbox may
+link operators there, but it must not render those summaries as local Cloud
+Checks panels or treat quality rollups as local proposal, approval, workflow,
+or write truth.
+
 Cloud Checks may include a preview-only media derivative check under Image. It
 may select a local attachment, resolve a local uploads URL, apply one-run
 format/size/quality overrides, and show the short-lived Cloud preview artifact.

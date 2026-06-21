@@ -3068,6 +3068,18 @@ msgstr "仅在已有审阅输入，或编辑器路径不足时使用。"
 msgid "Advanced Checks"
 msgstr "高级检查"
 
+msgid "Cloud Capability Checks"
+msgstr "云端能力检查"
+
+msgid "Verify Cloud-managed search, image-source, Site Knowledge, and Nightly Inspection reachability when an operator flow needs troubleshooting."
+msgstr "当操作流程需要排障时，验证 Cloud 托管搜索、图片来源、站点知识和夜间巡检可达性。"
+
+msgid "Content Operations coverage and Agent quality summaries now live in Cloud Addon Monitoring. Toolbox keeps only capability checks and fixed workflow handoffs here."
+msgstr "Content Operations 覆盖范围和 Agent 质量摘要现在位于 Cloud Addon Monitoring。Toolbox 此处只保留能力检查和固定工作流交接。"
+
+msgid "Open Cloud Addon Monitoring"
+msgstr "打开 Cloud Addon Monitoring"
+
 msgid "Toolbox start"
 msgstr "Toolbox 开始页"
 
@@ -3169,6 +3181,9 @@ msgstr "维护仅作为建议指导使用的站点简报。"
 
 msgid "Open Advanced Checks"
 msgstr "打开高级检查"
+
+msgid "Open Cloud Checks"
+msgstr "打开云端检查"
 
 msgid "Use search, image-source, and workflow checks only when troubleshooting."
 msgstr "仅在排障时使用搜索、图片来源和工作流检查。"

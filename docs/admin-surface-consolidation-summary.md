@@ -31,11 +31,13 @@ Workflows no longer expose publish preflight, summary/category/tag support,
 internal-link candidates, or image candidates as backend article buttons.
 
 **Advanced Checks** keeps the stable `cloud-checks` deep-link id, but it now
-presents search, image, Site Knowledge search verification, Nightly Inspection
-runtime detail, and Agent feedback quality as troubleshooting surfaces. Site
-Knowledge status and refresh controls stay in the Site Knowledge tab. Nightly
-Inspection local fallback settings, Pro Cloud Runtime quota/detail, and Cloud
-run recovery stay here instead of competing with the Start page's primary
+presents search, image, Site Knowledge search verification, and Nightly
+Inspection runtime detail as troubleshooting surfaces. Content Operations
+coverage and Agent feedback quality summaries link out to Cloud Addon
+Monitoring instead of rendering as Toolbox panels. Site Knowledge status and
+refresh controls stay in the Site Knowledge tab. Nightly Inspection local
+fallback settings, Pro Cloud Runtime quota/detail, and Cloud run recovery stay
+here instead of competing with the Start page's primary
 operator entries.
 
 Site Knowledge status now distinguishes the Cloud index state from automatic

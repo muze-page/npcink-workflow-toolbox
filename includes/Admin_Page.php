@@ -383,7 +383,7 @@ final class Admin_Page {
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="context" aria-selected="false"><?php esc_html_e( 'Site Context', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="site-knowledge" aria-selected="false"><?php esc_html_e( 'Site Knowledge', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Workflows', 'npcink-toolbox' ); ?></button>
-				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="cloud-checks" aria-selected="false"><?php esc_html_e( 'Advanced Checks', 'npcink-toolbox' ); ?></button>
+				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="cloud-checks" aria-selected="false"><?php esc_html_e( 'Cloud Checks', 'npcink-toolbox' ); ?></button>
 			</nav>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="start" aria-label="<?php esc_attr_e( 'Toolbox start', 'npcink-toolbox' ); ?>">
@@ -496,7 +496,7 @@ final class Admin_Page {
 						<span><?php esc_html_e( 'Open the Nightly Inspection diagnostics surface with a nonce-protected local dry-run preview.', 'npcink-toolbox' ); ?></span>
 					</a>
 					<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=cloud-checks' ) ); ?>">
-						<strong><?php esc_html_e( 'Open Advanced Checks', 'npcink-toolbox' ); ?></strong>
+						<strong><?php esc_html_e( 'Open Cloud Checks', 'npcink-toolbox' ); ?></strong>
 						<span><?php esc_html_e( 'Use search, image-source, and workflow checks only when troubleshooting.', 'npcink-toolbox' ); ?></span>
 					</a>
 				</div>
@@ -975,8 +975,8 @@ final class Admin_Page {
 		$image_ready = $this->settings->has_image_source_provider();
 		?>
 		<div class="npcink-toolbox__panel-header">
-			<h2><?php esc_html_e( 'Advanced Checks', 'npcink-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Verify Cloud-managed search, image-source, Site Knowledge, Nightly Inspection, and workflow evidence when an operator flow needs troubleshooting.', 'npcink-toolbox' ); ?></p>
+			<h2><?php esc_html_e( 'Cloud Capability Checks', 'npcink-toolbox' ); ?></h2>
+			<p><?php esc_html_e( 'Verify Cloud-managed search, image-source, Site Knowledge, and Nightly Inspection reachability when an operator flow needs troubleshooting.', 'npcink-toolbox' ); ?></p>
 		</div>
 		<?php
 		if ( ! $cloud_ready ) {
@@ -1002,15 +1002,11 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Nightly Inspection', 'npcink-toolbox' ); ?></span>
 					<small><?php esc_html_e( 'Runtime detail', 'npcink-toolbox' ); ?></small>
 				</button>
-				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="content-operations" aria-selected="false">
-					<span><?php esc_html_e( 'Content Operations', 'npcink-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Coverage map', 'npcink-toolbox' ); ?></small>
-				</button>
-				<button type="button" class="npcink-toolbox__cloud-check-tab" data-toolbox-cloud-check-target="agent-quality" aria-selected="false">
-					<span><?php esc_html_e( 'Agent Quality', 'npcink-toolbox' ); ?></span>
-					<small><?php esc_html_e( 'Quality summary', 'npcink-toolbox' ); ?></small>
-				</button>
 			</nav>
+			<div class="npcink-toolbox__result-notice is-pending">
+				<?php esc_html_e( 'Content Operations coverage and Agent quality summaries now live in Cloud Addon Monitoring. Toolbox keeps only capability checks and fixed workflow handoffs here.', 'npcink-toolbox' ); ?>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-cloud-addon&tab=monitoring' ) ); ?>"><?php esc_html_e( 'Open Cloud Addon Monitoring', 'npcink-toolbox' ); ?></a>
+			</div>
 
 			<div class="npcink-toolbox__cloud-check-panels">
 				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="search">
@@ -1159,37 +1155,6 @@ final class Admin_Page {
 					<?php $this->render_nightly_inspection_basic_settings( $settings ); ?>
 				</section>
 
-				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="content-operations" hidden>
-					<div class="npcink-toolbox__section-heading">
-						<div>
-							<h3><?php esc_html_e( 'Content operations coverage', 'npcink-toolbox' ); ?></h3>
-							<p><?php esc_html_e( 'Read-only status projection for existing content-support, Nightly, Site Knowledge, media metadata, and feedback surfaces.', 'npcink-toolbox' ); ?></p>
-						</div>
-						<button type="button" class="button" data-toolbox-content-operations-refresh <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Refresh coverage', 'npcink-toolbox' ); ?></button>
-					</div>
-					<?php if ( ! $cloud_ready ) : ?>
-						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before loading Cloud-backed coverage detail.', 'npcink-toolbox' ); ?></div>
-					<?php endif; ?>
-					<div class="npcink-toolbox__knowledge-summary" data-toolbox-content-operations>
-						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Content operations coverage has not been loaded yet.', 'npcink-toolbox' ); ?></div>
-					</div>
-				</section>
-
-				<section class="npcink-toolbox__card" data-toolbox-cloud-check-panel="agent-quality" hidden>
-					<div class="npcink-toolbox__section-heading">
-						<div>
-							<h3><?php esc_html_e( 'Agent feedback quality', 'npcink-toolbox' ); ?></h3>
-							<p><?php esc_html_e( 'Read-only Cloud eval summary across Site Knowledge, image candidates, AI image generation, and editor image suggestions.', 'npcink-toolbox' ); ?></p>
-						</div>
-						<button type="button" class="button" data-toolbox-agent-feedback-quality-refresh <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Refresh quality', 'npcink-toolbox' ); ?></button>
-					</div>
-					<?php if ( ! $cloud_ready ) : ?>
-						<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before loading Agent feedback quality.', 'npcink-toolbox' ); ?></div>
-					<?php endif; ?>
-					<div class="npcink-toolbox__knowledge-summary" data-toolbox-agent-feedback-quality>
-						<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Agent feedback quality has not been loaded yet.', 'npcink-toolbox' ); ?></div>
-					</div>
-				</section>
 			</div>
 		</div>
 		<?php

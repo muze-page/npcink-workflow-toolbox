@@ -573,16 +573,18 @@ keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
 Toolbox only starts explicit sync requests, displays returned status, and
 surfaces Cloud Addon bridge health when automatic public-change delivery is
 available.
-The **Advanced Checks -> Site Knowledge** panel is a read-only verification surface
+The **Cloud Checks -> Site Knowledge** panel is a read-only verification surface
 for Cloud-managed site knowledge search; status and refresh operations stay in
 Site Knowledge. It does not expose provider keys, embedding settings,
 collection names, or vector database configuration.
-The **Advanced Checks -> Search** panel uses Cloud auto execution for a bounded
+The **Cloud Checks -> Search** panel uses Cloud auto execution for a bounded
 Toolbox reachability check; provider selection, Jina Reader toggles, routing
 diagnostics, entitlement, quota, billing, and request logs belong in Cloud
 Addon or Cloud service-plane surfaces.
-The **Advanced Checks -> Image** panel checks Cloud image-source candidates and can
+The **Cloud Checks -> Image** panel checks Cloud image-source candidates and can
 generate a short-lived derivative preview for one existing media-library image,
+while Content Operations coverage and Agent quality summaries live in Cloud
+Addon Monitoring.
 including text or image/logo watermark overrides for that run. Core proposal
 submission, batch proposal submission, and URL repair handoffs remain in
 **Workflows -> Optimize Existing Image**.
