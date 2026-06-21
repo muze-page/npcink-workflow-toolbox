@@ -385,6 +385,7 @@ foreach ( array( 'Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly 
 $readme = file_get_contents( $root . '/README.md' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Product Readiness' ), 'README links the current content support readiness matrix.' );
 toolbox_assert( false !== strpos( $readme, 'Content Support Release And Trial Closeout' ), 'README links the content support release and trial closeout.' );
+toolbox_assert( false !== strpos( $readme, 'Content Support Toolkit Migration History' ), 'README links the content support Toolkit migration history.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Trial' ), 'README links the editor progressive recommendations trial log.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Closeout' ), 'README links the editor progressive recommendations closeout.' );
 toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ), 'README links the cross-repo boundary matrix.' );
@@ -414,6 +415,17 @@ toolbox_assert( false !== strpos( $readme, 'Do not expand Local Admin Consent to
 $metadata_handoff_summary = file_get_contents( $root . '/docs/content-metadata-governed-handoff-summary.md' );
 toolbox_assert( false !== $metadata_handoff_summary && false !== strpos( $metadata_handoff_summary, 'Stage Closeout Decision' ) && false !== strpos( $metadata_handoff_summary, 'Stop feature expansion for this stage' ) && false !== strpos( $metadata_handoff_summary, 'usage validation period' ) && false !== strpos( $metadata_handoff_summary, 'single-post excerpt plus existing category/tag direct apply' ), 'Content metadata handoff summary records the stage closeout and validation-first recommendation.' );
 toolbox_assert( false !== strpos( $metadata_handoff_summary, '2026-06-09 Editor Content Support Acceptance Closeout' ) && false !== strpos( $metadata_handoff_summary, 'split' ) && false !== strpos( $metadata_handoff_summary, 'metadata editor actions' ) && false !== strpos( $metadata_handoff_summary, 'not a separate default editor button' ) && false !== strpos( $metadata_handoff_summary, 'human editing' ) && false !== strpos( $metadata_handoff_summary, 'responsibility' ), 'Content metadata handoff summary records the editor Content Support acceptance closeout.' );
+
+$toolkit_migration_history = file_get_contents( $root . '/docs/content-support-toolkit-migration-history-2026-06-21.md' );
+foreach ( array( 'Content Support Toolkit Migration History - 2026-06-21', 'Starting Question', 'Stop Toolkit migration here', 'Toolbox fixed buttons', 'OpenClaw', 'operator surface', 'Cloud is the runtime', 'Core/Adapter govern writes' ) as $required_toolkit_history_text ) {
+	toolbox_assert( false !== strpos( $toolkit_migration_history, $required_toolkit_history_text ), 'Content support Toolkit migration history preserves summary text: ' . $required_toolkit_history_text );
+}
+foreach ( array( 'npcink-abilities-toolkit/build-content-metadata-apply-plan', 'npcink-abilities-toolkit/suggest-post-taxonomy-terms', 'npcink-abilities-toolkit/build-comment-mention-reply-suggest', 'npcink-abilities-toolkit/resolve-internal-link-targets', 'npcink-abilities-toolkit/build-image-candidate-review-artifact', 'npcink-abilities-toolkit/build-image-candidate-adoption-plan' ) as $required_toolkit_history_ability ) {
+	toolbox_assert( false !== strpos( $toolkit_migration_history, $required_toolkit_history_ability ), 'Content support Toolkit migration history records ability: ' . $required_toolkit_history_ability );
+}
+foreach ( array( '4d16755', 'operator_review_only_no_insert', 'direct_wordpress_write=false', 'no_link_insertion_in_toolbox', 'composer smoke:editor-review-artifacts', 'composer test:all', '89498c6', '98974bd' ) as $required_toolkit_history_evidence ) {
+	toolbox_assert( false !== strpos( $toolkit_migration_history, $required_toolkit_history_evidence ), 'Content support Toolkit migration history records closeout evidence: ' . $required_toolkit_history_evidence );
+}
 
 $composer = file_get_contents( $root . '/composer.json' );
 $site_knowledge_bridge_smoke = file_get_contents( $root . '/scripts/smoke-site-knowledge-cloud-addon-bridge.sh' );
