@@ -5107,7 +5107,7 @@ final class Provider_Client {
 				'attachment_id' => $attachment_id,
 				'title'         => sanitize_text_field( (string) ( $attachment->post_title ?? '' ) ),
 				'caption'       => sanitize_textarea_field( (string) ( $attachment->post_excerpt ?? '' ) ),
-				'description'   => sanitize_textarea_field( wp_trim_words( wp_strip_all_tags( (string) ( $attachment->post_content ?? '' ) ), 80, '' ) ),
+				'description'   => $this->trim_chars( sanitize_textarea_field( wp_strip_all_tags( (string) ( $attachment->post_content ?? '' ) ) ), 240 ),
 				'alt'           => $alt,
 				'alt_length'    => $this->hosted_ai_text_length( $alt ),
 				'missing_alt'   => '' === $alt,
@@ -5191,6 +5191,7 @@ final class Provider_Client {
 					'url'                      => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
 					'alt_candidates'           => $this->media_alt_caption_alt_candidates( $item ),
 					'caption_candidate'        => $this->media_alt_caption_caption_candidate( $item ),
+					'candidate_basis'          => $this->media_alt_caption_candidate_basis( $item ),
 					'needs_human_visual_check' => true,
 					'target_write_path'        => 'core_proposal_required',
 					'direct_wordpress_write'   => false,
@@ -5280,11 +5281,18 @@ final class Provider_Client {
 	}
 
 	private function media_alt_caption_alt_candidates( array $item ): array {
+		$current_alt = $this->media_alt_caption_clean_candidate( (string) ( $item['alt'] ?? '' ) );
+		if ( '' !== $current_alt && $this->hosted_ai_text_length( $current_alt ) >= 18 && ! $this->media_alt_caption_is_filename_like( $current_alt, $item ) ) {
+			return array( $this->trim_chars( $current_alt, 140 ) );
+		}
+
 		$descriptors = array_filter(
 			array(
-				sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
-				sanitize_text_field( (string) ( $item['caption'] ?? '' ) ),
-				$this->media_alt_caption_filename_descriptor( (string) ( $item['filename'] ?? '' ) ),
+				$current_alt,
+				$this->media_alt_caption_clean_candidate( (string) ( $item['description'] ?? '' ) ),
+				$this->media_alt_caption_clean_candidate( (string) ( $item['caption'] ?? '' ) ),
+				$this->media_alt_caption_clean_candidate( (string) ( $item['title'] ?? '' ) ),
+				$this->media_alt_caption_clean_candidate( $this->media_alt_caption_filename_descriptor( (string) ( $item['filename'] ?? '' ) ) ),
 			)
 		);
 		$candidates = array();
@@ -5308,12 +5316,70 @@ final class Provider_Client {
 			return $this->trim_chars( $caption, 180 );
 		}
 
-		$title = trim( sanitize_text_field( (string) ( $item['title'] ?? '' ) ) );
+		$description = $this->media_alt_caption_clean_candidate( (string) ( $item['description'] ?? '' ) );
+		if ( '' !== $description && ! $this->media_alt_caption_is_filename_like( $description, $item ) ) {
+			return $this->trim_chars( $this->media_alt_caption_sentence( $description ), 180 );
+		}
+
+		$alt = $this->media_alt_caption_clean_candidate( (string) ( $item['alt'] ?? '' ) );
+		if ( '' !== $alt && ! $this->media_alt_caption_is_filename_like( $alt, $item ) ) {
+			return $this->trim_chars( $this->media_alt_caption_caption_from_alt( $alt ), 180 );
+		}
+
+		$title = $this->media_alt_caption_clean_candidate( (string) ( $item['title'] ?? '' ) );
 		if ( '' !== $title && ! $this->media_alt_caption_is_filename_like( $title, $item ) ) {
-			return $this->trim_chars( $title, 180 );
+			return $this->trim_chars( $this->media_alt_caption_sentence( $title ), 180 );
 		}
 
 		return 'Add a caption only if the image needs visible context beyond ALT.';
+	}
+
+	private function media_alt_caption_candidate_basis( array $item ): array {
+		$basis = array();
+		foreach ( array( 'alt', 'description', 'caption', 'title', 'filename' ) as $field ) {
+			$value = 'filename' === $field
+				? $this->media_alt_caption_filename_descriptor( (string) ( $item['filename'] ?? '' ) )
+				: (string) ( $item[ $field ] ?? '' );
+			if ( '' !== $this->media_alt_caption_clean_candidate( $value ) ) {
+				$basis[] = $field;
+			}
+		}
+
+		return array_values( array_unique( $basis ) );
+	}
+
+	private function media_alt_caption_clean_candidate( string $value ): string {
+		$value = trim( sanitize_textarea_field( wp_strip_all_tags( $value ) ) );
+		$value = preg_replace( '/\s+/u', ' ', $value ) ?? $value;
+
+		return trim( $value );
+	}
+
+	private function media_alt_caption_sentence( string $value ): string {
+		$value = trim( $value );
+		if ( '' === $value ) {
+			return '';
+		}
+		if ( preg_match( '/[.!?。！？]$/u', $value ) ) {
+			return $value;
+		}
+
+		return $value . '.';
+	}
+
+	private function media_alt_caption_caption_from_alt( string $alt ): string {
+		$alt = preg_replace( '/\bcropped to\s+/i', '', $alt ) ?? $alt;
+		$alt = preg_replace( '/\bvisual\b/i', 'image', $alt ) ?? $alt;
+		$alt = preg_replace( '/\s+/', ' ', $alt ) ?? $alt;
+		$alt = trim( $alt );
+		if ( '' === $alt ) {
+			return '';
+		}
+		if ( preg_match( '/\bhero image\b/i', $alt ) ) {
+			return $this->media_alt_caption_sentence( $alt );
+		}
+
+		return $this->media_alt_caption_sentence( $alt );
 	}
 
 	private function media_alt_caption_filename_descriptor( string $filename ): string {

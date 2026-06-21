@@ -106,8 +106,8 @@ Cross-judge result:
 | Input contract | `media_alt_caption_operator_trial.v1` |
 | Output contract | `media_alt_caption_ai_judge_cross.v1` |
 | Cases reviewed | 2 |
-| Accepted | 0 |
-| Edited | 2 |
+| Accepted | 1 |
+| Edited | 1 |
 | Rejected | 0 |
 | Misleading | 0 |
 
@@ -115,25 +115,29 @@ Attachment-level result:
 
 | Attachment | Outcome | Average score | Passes | Flags |
 | ---: | --- | ---: | ---: | --- |
-| `8053` | `edited` | `0.533` | `0/3` | `caption_redundant`, `too_generic`, `needs_human_visual_check`, `metadata_insufficient` |
-| `7774` | `edited` | `0.49` | `0/3` | `too_generic`, `caption_redundant`, `needs_human_visual_check`, `filename_like` |
+| `8053` | `edited` | `0.567` | `0/3` | `too_generic`, `caption_redundant`, `needs_human_visual_check` |
+| `7774` | `accepted` | `0.867` | `3/3` | `needs_human_visual_check` |
 
 Interpretation:
 
 - The selected candidates did not trip direct write, proposal, execution, or
   misleading-content boundaries.
-- Both candidates are too close to existing title/ALT text and should not be
-  presented as ready-to-use copy.
-- The next product step should improve metadata-only candidate wording and
-  keep every item on the human visual review path.
+- Description-backed candidates can be specific enough to enter human visual
+  confirmation.
+- Metadata-thin candidates still need editing when they only restate title/ALT
+  language.
+- The next product step should keep every item on the human visual review path
+  and collect real operator accept/edit/reject outcomes.
 
 ## Follow-Up Decision
 
 Do not move code to `npcink-abilities-toolkit` from this single trial alone.
-The first AI-assisted review found only `edited` outcomes, with no accepted
-candidate. That argues against migrating implementation now. The next useful
-evidence is improved candidate quality plus operator review quality: accepted,
-edited, rejected, and misleading suggestion counts for selected items.
+The latest AI-assisted review improved to one `accepted` and one `edited`
+outcome after metadata-source selection was tightened. That is useful quality
+evidence, but it is still too small for extraction approval and one
+metadata-thin item still required editing. The next useful evidence is real
+operator review quality: accepted, edited, rejected, and misleading suggestion
+counts for selected items.
 
 Keep the current implementation in Toolbox until at least one real operator
 review records those outcome counts and confirms the artifact is useful outside
