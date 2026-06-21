@@ -59,6 +59,7 @@
 	color: #646970;
 	font-size: 12px;
 	line-height: 1.35;
+	overflow-wrap: anywhere;
 }
 
 .npcink-toolbox-editor-support__view-actions {
@@ -336,7 +337,8 @@
 	margin: 8px 0 0;
 	font-size: 12px;
 	line-height: 1.35;
-	text-transform: uppercase;
+	text-transform: none;
+	overflow-wrap: anywhere;
 }
 
 .npcink-toolbox-editor-support__list {
@@ -353,6 +355,7 @@
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
+	min-width: 0;
 }
 
 .npcink-toolbox-editor-support__list strong,
@@ -360,6 +363,8 @@
 	display: block;
 	font-size: 12px;
 	line-height: 1.35;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .npcink-toolbox-editor-support__list span {

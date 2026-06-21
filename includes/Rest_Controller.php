@@ -211,7 +211,7 @@ final class Rest_Controller {
 					'route'          => '/editor/content-support',
 					'artifact_type'  => 'editor_content_support_flow',
 					'source_layers'  => array( 'local_editor_context', 'cloud_site_knowledge', 'cloud_web_search', 'hosted_ai' ),
-					'intents'        => array( 'progressive_recommendations', 'writing_support', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ),
+					'intents'        => array( 'progressive_recommendations', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ),
 					'feedback_scope' => 'editor_content_support',
 				),
 				'nightly_inspection'     => array(
@@ -795,7 +795,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
@@ -835,7 +835,7 @@ final class Rest_Controller {
 		if ( 'image_candidates' === $intent ) {
 			$query = $this->editor_image_support_query( $context );
 		}
-		if ( '' === $query && 'progressive_recommendations' !== $intent ) {
+		if ( '' === $query && ! in_array( $intent, array( 'progressive_recommendations', 'zhihu_hot_topics' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_editor_context',
 				__( 'A title, excerpt, or post content is required for editor content support.', 'npcink-toolbox' ),
@@ -884,6 +884,34 @@ final class Rest_Controller {
 						'max_results'     => 6,
 					)
 				)
+				);
+			}
+
+			if ( 'zhihu_research' === $intent ) {
+				$result['sections']['zhihu_research'] = $this->editor_support_section(
+					$this->editor_cached_cloud_web_search(
+						array(
+							'query'          => $query,
+							'intent'         => 'zhihu_research',
+							'managed_source' => 'zhihu_research',
+							'max_results'    => 5,
+							'recency_days'   => 30,
+						)
+					)
+				);
+			}
+
+			if ( 'zhihu_hot_topics' === $intent ) {
+				$result['sections']['zhihu_hot_topics'] = $this->editor_support_section(
+					$this->editor_cached_cloud_web_search(
+						array(
+							'query'          => '知乎热榜',
+							'intent'         => 'zhihu_hot_topics',
+							'managed_source' => 'zhihu_hot_topics',
+							'max_results'    => 5,
+							'recency_days'   => 1,
+						)
+					)
 				);
 			}
 
@@ -2343,6 +2371,16 @@ final class Rest_Controller {
 				return $this->client->run_hosted_ai_content_support( $input );
 			},
 			$force_refresh
+		);
+	}
+
+	private function editor_cached_cloud_web_search( array $input ) {
+		return $this->editor_cached_client_result(
+			'cloud_web_search',
+			$input,
+			function () use ( $input ) {
+				return $this->client->test_cloud_web_search( $input );
+			}
 		);
 	}
 

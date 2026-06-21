@@ -234,6 +234,18 @@
 			group: 'writing_assist',
 		},
 		{
+			intent: 'zhihu_research',
+			label: __('知乎选题研究', 'npcink-toolbox'),
+			description: __('写作前查看知乎里的真实问题、常见观点和反对意见，帮助确定角度与引用来源。只做研究，不复制、不改写、不发布。', 'npcink-toolbox'),
+			group: 'writing_assist',
+		},
+		{
+			intent: 'zhihu_hot_topics',
+			label: __('知乎热榜选题', 'npcink-toolbox'),
+			description: __('读取 Cloud 缓存的知乎热榜，作为今天的选题池。只提供趋势信号，不自动写文章。', 'npcink-toolbox'),
+			group: 'writing_assist',
+		},
+		{
 			intent: 'publish_preflight',
 			label: __('Publish preflight', 'npcink-toolbox'),
 			description: __('Check missing fields and compare related existing posts for duplicate-risk before publishing.', 'npcink-toolbox'),
@@ -1639,6 +1651,12 @@
 		if (value === 'writing_support') {
 			return __('Find related existing posts', 'npcink-toolbox');
 		}
+		if (value === 'zhihu_research') {
+			return __('知乎选题研究', 'npcink-toolbox');
+		}
+		if (value === 'zhihu_hot_topics') {
+			return __('知乎热榜选题', 'npcink-toolbox');
+		}
 		if (value === 'article_checkup') {
 			return __('Article checkup', 'npcink-toolbox');
 		}
@@ -1678,6 +1696,12 @@
 	function resultScopeLabel(value) {
 		if (value === 'writing_support') {
 			return __('Finds similar published content first, then helps you decide how this draft should differ.', 'npcink-toolbox');
+		}
+		if (value === 'zhihu_research') {
+			return __('解决写作前“不知道用户真正关心什么、反对什么、该从哪个角度切入”的问题。它只返回知乎来源候选，供你人工判断、改写和引用。', 'npcink-toolbox');
+		}
+		if (value === 'zhihu_hot_topics') {
+			return __('解决每天“不知道写什么”的问题。它读取服务器缓存的知乎热榜，帮助你先挑选值得研究的选题。', 'npcink-toolbox');
 		}
 		if (value === 'article_checkup') {
 			return __('Checks the full draft for review items and points you to affected paragraphs. It will not rewrite the article.', 'npcink-toolbox');
@@ -2804,6 +2828,60 @@
 			});
 	}
 
+	function extractZhihuResearchItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		const results = Array.isArray(section.results) ? section.results : [];
+		return results.map((item, index) => {
+			const source = item && item.source ? formatMetaLabel(item.source) : __('Zhihu', 'npcink-toolbox');
+			const stats = [
+				item && item.content_type ? formatMetaLabel(item.content_type) : '',
+				item && item.vote_up_count ? sprintf(__('赞同 %s', 'npcink-toolbox'), item.vote_up_count) : '',
+				item && item.comment_count ? sprintf(__('评论 %s', 'npcink-toolbox'), item.comment_count) : '',
+				item && item.author_name ? sprintf(__('作者：%s', 'npcink-toolbox'), item.author_name) : '',
+			].filter(Boolean).join(' · ');
+			const snippet = item && item.snippet ? truncateText(item.snippet, 120) : '';
+			return {
+				name: item && item.title ? item.title : sprintf(__('知乎来源 %d', 'npcink-toolbox'), index + 1),
+				detail: [
+					snippet ? __('可参考信号：', 'npcink-toolbox') + snippet : '',
+					stats,
+					__('适合用于选题判断、用户问题提炼、反对意见收集和引用候选；发布前仍需人工核验来源。', 'npcink-toolbox'),
+				].filter(Boolean).join(' · '),
+				source: source,
+				evidence_refs: item && item.url ? ['zhihu:' + item.url] : ['zhihu:research'],
+				action_policy: 'operator_review_only_no_write',
+			};
+		});
+	}
+
+	function extractZhihuHotTopicItems(section) {
+		if (!section || typeof section !== 'object') {
+			return [];
+		}
+		const results = Array.isArray(section.results) ? section.results : [];
+		return results.map((item, index) => {
+			const stats = [
+				item && item.content_type ? formatMetaLabel(item.content_type) : __('热榜', 'npcink-toolbox'),
+				item && item.vote_up_count ? sprintf(__('赞同 %s', 'npcink-toolbox'), item.vote_up_count) : '',
+				item && item.comment_count ? sprintf(__('评论 %s', 'npcink-toolbox'), item.comment_count) : '',
+			].filter(Boolean).join(' · ');
+			const snippet = item && item.snippet ? truncateText(item.snippet, 100) : '';
+			return {
+				name: item && item.title ? item.title : sprintf(__('热榜选题 %d', 'npcink-toolbox'), index + 1),
+				detail: [
+					snippet ? __('选题信号：', 'npcink-toolbox') + snippet : '',
+					stats,
+					__('适合先判断是否贴合本站受众；决定采用后，再运行“知乎选题研究”做深入资料核验。', 'npcink-toolbox'),
+				].filter(Boolean).join(' · '),
+				source: 'zhihu_hot_list',
+				evidence_refs: item && item.url ? ['zhihu_hot:' + item.url] : ['zhihu:hot_topics'],
+				action_policy: 'operator_review_only_no_write',
+			};
+		});
+	}
+
 	function hostedWritingSupportItems(section) {
 		if (!section || typeof section !== 'object') {
 			return [];
@@ -3397,6 +3475,8 @@
 			'category_suggestions',
 				'internal_links',
 				'writing_support',
+				'zhihu_research',
+				'zhihu_hot_topics',
 				'article_checkup',
 				'article_outline',
 				'polish_notes',
@@ -3430,6 +3510,12 @@
 		}
 		if (intent === 'writing_support') {
 			return __('Example: focus on what is already covered, what angle is missing, and what I should do next.', 'npcink-toolbox');
+		}
+		if (intent === 'zhihu_research') {
+			return __('例如：帮我找真实用户问题、争议点、反对意见和可引用来源。', 'npcink-toolbox');
+		}
+		if (intent === 'zhihu_hot_topics') {
+			return __('例如：优先看和 AI、WordPress、内容创作相关的热榜话题。', 'npcink-toolbox');
 		}
 		return __('Example: more practical, concise, and less promotional.', 'npcink-toolbox');
 	}
@@ -5186,6 +5272,18 @@
 				blocks.push(createElement('h4', { key: 'writing-support-title' }, __('Related existing posts: decide what to do next', 'npcink-toolbox')));
 				blocks.push(createElement('p', { key: 'writing-support-help', className: 'npcink-toolbox-editor-support__muted' }, __('This is not the internal-link tool yet. First compare these older posts with the draft: avoid repeating them, add a new angle, borrow facts manually, or run internal links later if you decide to cite one.', 'npcink-toolbox')));
 				blocks.push(renderItems(extractWritingSupportItems(sections.writing_support), __('No related existing posts were found for this draft.', 'npcink-toolbox')));
+			}
+
+			if (sections.zhihu_research) {
+				blocks.push(createElement('h4', { key: 'zhihu-research-title' }, __('知乎研究：用户问题和选题角度', 'npcink-toolbox')));
+				blocks.push(createElement('p', { key: 'zhihu-research-help', className: 'npcink-toolbox-editor-support__muted' }, __('用于写作前判断：用户在问什么、哪些角度更热、有哪些反对意见、哪些来源值得人工引用。Toolbox 不复制原文、不自动改写成文章，也不发布内容。', 'npcink-toolbox')));
+				blocks.push(renderItems(extractZhihuResearchItems(sections.zhihu_research), __('没有返回可用的知乎研究来源。', 'npcink-toolbox')));
+			}
+
+			if (sections.zhihu_hot_topics) {
+				blocks.push(createElement('h4', { key: 'zhihu-hot-topics-title' }, __('知乎热榜：今日选题池', 'npcink-toolbox')));
+				blocks.push(createElement('p', { key: 'zhihu-hot-topics-help', className: 'npcink-toolbox-editor-support__muted' }, __('这些是服务器缓存的知乎热榜信号，用来发现今天可以研究的选题。它不是事实来源，也不会自动生成或发布文章。', 'npcink-toolbox')));
+				blocks.push(renderItems(extractZhihuHotTopicItems(sections.zhihu_hot_topics), __('没有返回可用的知乎热榜选题。', 'npcink-toolbox')));
 			}
 
 			if (sections.article_checkup) {

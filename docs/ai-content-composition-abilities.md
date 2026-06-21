@@ -30,6 +30,13 @@ one kind of evidence:
   current public references, support context, source coverage, or article
   preparation. Npcink Cloud owns web search provider configuration and
   execution;
+- the fixed editor `zhihu_research` flow for Zhihu topic, question, viewpoint,
+  and objection signals before drafting. It is still Cloud-managed web search
+  evidence for the current query, not a local Zhihu provider integration,
+  article rewrite tool, or publish path;
+- the fixed editor `zhihu_hot_topics` flow for a Cloud-cached Zhihu hot-list
+  topic pool. It is a trend and selection surface, not a factual source,
+  article generator, scheduler, publisher, or WordPress write path;
 - `npcink-toolbox/search-image-source` for featured, inline, layout,
   presentation, reference, or media-planning image candidates;
 - `npcink-toolbox/search-site-knowledge` for semantic site search, related
@@ -133,6 +140,8 @@ same ability contracts. The channel changes, but the write boundary does not.
 | --- | --- | --- | --- |
 | Suggest taxonomy/tags | Adapter taxonomy terms recipe | Taxonomy/tag recommendations | Core proposal for `npcink-abilities-toolkit/set-post-terms` after review |
 | Find internal-link opportunities | Adapter/site-knowledge support recipe | Internal-link candidates | No direct write; future reviewed content patch must go through Core |
+| Research Zhihu audience questions and viewpoints | Cloud web search evidence recipe | Zhihu research | No direct write; source candidates only, with manual citation and human drafting |
+| Review daily Zhihu hot topics | Cloud cached hot-list evidence recipe | Zhihu hot topics | No direct write; trend signals only, then manual topic selection and focused research |
 | Find image candidates | Adapter image-source support recipe | Image candidates | No direct write until a candidate adoption plan is reviewed |
 | Suggest SEO/AEO/GEO fields | Adapter content discoverability recipe | Content Discoverability brief | Core proposal for allowed fields only |
 | Run publish/readiness preflight | Adapter site-knowledge/support recipe | Publish preflight | No direct write; returns warnings and operator tasks |
@@ -210,6 +219,24 @@ Every AI caller should:
   truth;
 - avoid inventing facts beyond the source candidates and supplied context;
 - send write-like outcomes to Core proposal flows.
+
+The editor `zhihu_research` button is a fixed productized use of this same
+runtime. Toolbox sends `managed_source=zhihu_research`, which maps to Cloud
+runtime input `provider=zhihu` and `source_type=zhihu_research`. The UI may show
+returned title, URL, source, author, content type, engagement counts, and
+authority metadata as review signals. It must not expose a generic provider
+picker, collect Zhihu credentials locally, mix global hot-list items into the
+current query by default, copy source text into the draft, rewrite Zhihu content
+as an article, or publish anything. It is useful before writing when the editor
+needs real audience questions, common objections, angle discovery, or citation
+candidates.
+
+The editor `zhihu_hot_topics` button is a separate topic-pool surface. Toolbox
+sends `managed_source=zhihu_hot_topics`, which maps to Cloud runtime input
+`provider=zhihu` and `source_type=zhihu_hot_list`. Cloud may return cached
+hot-list items so multiple WordPress clients do not spend provider quota on each
+panel open. The UI should present these as "what might be worth researching
+today", not as facts, drafts, schedules, or publication instructions.
 
 ## Image Usage
 

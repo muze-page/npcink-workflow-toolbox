@@ -1850,12 +1850,13 @@ final class Provider_Client {
 		}
 
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'news' ) );
-		if ( ! in_array( $intent, array( 'general_research', 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links' ), true ) ) {
+		if ( ! in_array( $intent, array( 'general_research', 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links', 'zhihu_research', 'zhihu_hot_topics' ), true ) ) {
 			$intent = 'news';
 		}
 
 		$max_results  = max( 1, min( 5, absint( $input['max_results'] ?? 3 ) ) );
 		$recency_days = max( 0, min( 30, absint( $input['recency_days'] ?? 7 ) ) );
+		$managed_source = sanitize_key( (string) ( $input['managed_source'] ?? '' ) );
 		$runtime_input = array(
 			'contract_version'    => 'web_search.v1',
 			'query'               => $query,
@@ -1868,6 +1869,14 @@ final class Provider_Client {
 			),
 			'write_posture'       => 'suggestion_only',
 		);
+		if ( 'zhihu_research' === $managed_source ) {
+			$runtime_input['provider']         = 'zhihu';
+			$runtime_input['source_type']      = 'zhihu_research';
+		}
+		if ( 'zhihu_hot_topics' === $managed_source ) {
+			$runtime_input['provider']         = 'zhihu';
+			$runtime_input['source_type']      = 'zhihu_hot_list';
+		}
 
 		$runtime_payload = array(
 			'ability_name'        => 'npcink-cloud/web-search',
@@ -4283,6 +4292,11 @@ final class Provider_Client {
 				'snippet'                => sanitize_textarea_field( (string) ( $item['snippet'] ?? $item['content'] ?? '' ) ),
 				'score'                  => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
 				'source'                 => sanitize_key( (string) ( $item['source'] ?? $result['provider'] ?? '' ) ),
+				'content_type'           => sanitize_key( (string) ( $item['content_type'] ?? '' ) ),
+				'author_name'            => sanitize_text_field( (string) ( $item['author_name'] ?? '' ) ),
+				'comment_count'          => absint( $item['comment_count'] ?? 0 ),
+				'vote_up_count'          => absint( $item['vote_up_count'] ?? 0 ),
+				'authority_level'        => sanitize_text_field( (string) ( $item['authority_level'] ?? '' ) ),
 				'write_posture'          => sanitize_key( (string) ( $item['write_posture'] ?? 'suggestion_only' ) ),
 				'direct_wordpress_write' => false,
 			);
