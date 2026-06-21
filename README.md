@@ -88,6 +88,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Media Optimization V1](docs/media-optimization-v1.md)
 - [Batch Automation Governance Plan](docs/batch-automation-governance-plan.md)
 - [Media ALT/Caption Review Set](docs/media-alt-caption-review-set.md)
+- [Media ALT/Caption Toolkit Validation Plan](docs/media-alt-caption-toolkit-validation-plan.md)
 - [Media Optimization Stage Summary](docs/media-optimization-stage-summary.md)
 - [Media Optimization Release Checklist](docs/media-optimization-release-checklist.md)
 - [Media Optimization Operator Trial](docs/media-optimization-operator-trial.md)

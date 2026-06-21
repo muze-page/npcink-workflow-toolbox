@@ -149,6 +149,8 @@ The next batch candidate starts with a review-only P0:
 media ALT suggestions response with bounded eligibility, selected items,
 blocked reasons, retry guidance, and an explicit no-write posture. It uses
 media-library metadata only and requires human visual confirmation.
+Before extracting any reusable logic to Toolkit, run the
+[Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md).
 
 The media optimization operator trial has accepted the current low-risk flow.
 The preferred follow-up order remains:
