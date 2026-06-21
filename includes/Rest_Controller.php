@@ -2808,6 +2808,34 @@ final class Rest_Controller {
 		$artifact['source_knowledge'] = $source_knowledge;
 		$artifact['toolkit_artifact'] = $data;
 		$artifact['recommendation_candidates'] = $this->editor_internal_link_recommendation_candidates( $items );
+		$artifact['final_write_path'] = 'operator_review_only_no_insert';
+		$artifact['direct_wordpress_write'] = false;
+		$artifact['review_policy'] = array_merge(
+			is_array( $artifact['review_policy'] ?? null ) ? $artifact['review_policy'] : array(),
+			array(
+				'link_insertion_owner'       => 'human_editor',
+				'automatic_anchor_insert'    => false,
+				'post_content_patch_handoff' => false,
+				'current_post_excluded'      => true,
+			)
+		);
+		$handoff = is_array( $artifact['handoff'] ?? null ) ? $artifact['handoff'] : array();
+		$blocked_actions = is_array( $handoff['blocked_actions'] ?? null ) ? $handoff['blocked_actions'] : array();
+		$handoff['final_writes'] = 'operator_review_only_no_insert';
+		$handoff['direct_wordpress_write'] = false;
+		$handoff['blocked_actions'] = array_values(
+			array_unique(
+				array_merge(
+					$blocked_actions,
+					array(
+						'no_link_insertion_in_toolbox',
+						'no_patch_post_content_handoff_yet',
+						'no_automatic_anchor_insertion',
+					)
+				)
+			)
+		);
+		$artifact['handoff'] = $handoff;
 
 		return $artifact;
 	}
