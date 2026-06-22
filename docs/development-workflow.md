@@ -505,6 +505,7 @@ composer eval:media-alt-caption:export
 composer eval:media-alt-caption:judge-cross
 composer eval:media-alt-caption:export-batch
 composer eval:media-alt-caption:judge-cross-batch
+composer eval:media-alt-caption:open-samples
 ```
 
 This uses real local image attachments and the existing `/ai/site-helpers`
@@ -538,6 +539,19 @@ rewritten. The default checkpoint interval is 1 completed case so interrupted
 `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_JSON`, `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_MD`, and
 `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_CSV` when a long eval needs dedicated report
 paths instead of replacing the default generated report.
+
+Use `composer eval:media-alt-caption:open-samples` when the local media library
+is too small to calibrate reviewer prompts or candidate filters. The command is
+an eval-lab proxy that fetches bounded public Wikimedia Commons metadata and
+writes local generated JSON/Markdown/CSV under the eval-lab checkout by default.
+It does not download image files, bundle WIT/LAION-scale datasets, touch
+WordPress, create Core proposals, or change the Toolbox product route cap. Tune
+the public query with `MEDIA_ALT_CAPTION_OPEN_QUERY` and the public page request
+count with `MEDIA_ALT_CAPTION_OPEN_LIMIT` capped in eval-lab. Feed the generated
+`media_alt_caption_operator_trial.v1` JSON into
+`media_alt_caption_judge_cross` for three-model calibration only; real
+WordPress media acceptance still requires local export and human visual
+confirmation.
 
 ## Coding Rules
 

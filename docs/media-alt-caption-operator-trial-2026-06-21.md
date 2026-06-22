@@ -20,6 +20,7 @@ composer eval:media-alt-caption:export
 composer eval:media-alt-caption:judge-cross
 composer eval:media-alt-caption:export-batch
 composer eval:media-alt-caption:judge-cross-batch
+composer eval:media-alt-caption:open-samples
 ```
 
 The command runs through WP-CLI against the configured local WordPress site. It
@@ -52,6 +53,15 @@ Use `MEDIA_ALT_CAPTION_JUDGE_OFFSET` only when you intentionally split a run
 into smaller windows. Use `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_JSON`,
 `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_MD`, and `MEDIA_ALT_CAPTION_JUDGE_OUTPUT_CSV`
 when a full run should write to dedicated report paths.
+
+If local media volume is too small for reviewer calibration, use
+`composer eval:media-alt-caption:open-samples`. That command proxies to
+eval-lab and exports bounded Wikimedia Commons public metadata into
+`media_alt_caption_operator_trial.v1`. It is an eval-only accelerator: no
+images are downloaded, no large third-party dataset is bundled, no WordPress
+data is touched, and no write or proposal path is authorized. Open samples can
+stress judge prompts and filter assumptions, but they do not replace this
+trial's real WordPress media evidence or human visual confirmation.
 
 ## Boundary Checked
 

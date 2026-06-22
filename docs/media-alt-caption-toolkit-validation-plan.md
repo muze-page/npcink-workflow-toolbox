@@ -68,6 +68,33 @@ extraction branch:
 5. Stop if operators mostly need image-pixel analysis, provider/model choice,
    UI-only filtering, or immediate apply buttons.
 
+## Open Public Sample Accelerator
+
+When the local media library is too small, use eval-lab open public samples to
+calibrate judge prompts and candidate filters:
+
+```bash
+composer eval:media-alt-caption:open-samples
+```
+
+This calls the development-only `magick-ai-eval-lab` task
+`media_alt_caption_open_samples`. It samples public Wikimedia Commons metadata
+and writes a local `media_alt_caption_operator_trial.v1` artifact that can be
+passed to `media_alt_caption_judge_cross`.
+
+This accelerator is intentionally lightweight:
+
+- it stores URLs and public metadata only;
+- it does not download images or bundle datasets in the plugin;
+- it does not import WIT, LAION, or other large image-text corpora;
+- it does not call WordPress, Core, Adapter, Cloud, or Abilities;
+- it does not create proposals, queues, executions, or media metadata writes.
+
+Use W3C WAI and WebAIM guidance as reviewer-rule references. Treat Wikimedia
+open samples as prompt/filter calibration only, not as proof that the Toolbox
+production review set works on a real WordPress media library. Extraction still
+requires real local WordPress exports and human visual confirmation.
+
 ## Stop Rules
 
 Keep the work in Toolbox if it depends on editor/admin UI state, current-screen
