@@ -23,6 +23,7 @@ final class Plugin {
 	private Provider_Client $client;
 	private Rest_Controller $rest_controller;
 	private Admin_Page $admin_page;
+	private Dashboard_Widget $dashboard_widget;
 	private Editor_Content_Support $editor_content_support;
 	private Site_Knowledge_Auto_Sync $site_knowledge_auto_sync;
 	private Basic_WP_Cron_Dry_Run $nightly_inspection_cron;
@@ -33,6 +34,7 @@ final class Plugin {
 		$this->client          = new Provider_Client( $this->settings );
 		$this->rest_controller = new Rest_Controller( $this->settings, $this->client );
 		$this->admin_page      = new Admin_Page( $this->settings );
+		$this->dashboard_widget = new Dashboard_Widget( $this->client );
 		$this->editor_content_support = new Editor_Content_Support();
 		$this->site_knowledge_auto_sync = new Site_Knowledge_Auto_Sync( $this->client );
 		$this->nightly_inspection_cron = new Basic_WP_Cron_Dry_Run( $this->settings );
@@ -53,6 +55,7 @@ final class Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this->editor_content_support, 'enqueue' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( NPCINK_TOOLBOX_FILE ), array( $this, 'filter_plugin_action_links' ) );
+		$this->dashboard_widget->register_hooks();
 		$this->site_knowledge_auto_sync->register_hooks();
 		$this->nightly_inspection_cron->register_hooks();
 		add_action( 'rest_api_init', array( $this->rest_controller, 'register_routes' ) );

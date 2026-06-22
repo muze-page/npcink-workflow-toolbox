@@ -34,8 +34,8 @@ one kind of evidence:
   and objection signals before drafting. It is still Cloud-managed web search
   evidence for the current query, not a local Zhihu provider integration,
   article rewrite tool, or publish path;
-- the fixed editor `zhihu_hot_topics` flow for a Cloud-cached Zhihu hot-list
-  topic pool. It is a trend and selection surface, not a factual source,
+- the Dashboard `zhihu_hot_topics` topic pool for a Cloud-cached Zhihu hot-list.
+  It is a trend and selection surface, not a factual source,
   article generator, scheduler, publisher, or WordPress write path. OpenClaw
   callers should use `npcink-toolbox/cloud-web-search` with
   `managed_source=zhihu_hot_topics`, `intent=zhihu_hot_topics`, and a neutral
@@ -254,12 +254,12 @@ Zhihu content as an article, or publish anything. It is useful before writing
 when the editor needs real audience questions, common objections, angle
 discovery, or citation candidates.
 
-The editor `zhihu_hot_topics` button is a separate topic-pool surface. Toolbox
-sends `managed_source=zhihu_hot_topics`, which maps to Cloud runtime input
-`provider=zhihu` and `source_type=zhihu_hot_list`. Cloud may return cached
+The Dashboard `zhihu_hot_topics` widget is a separate topic-pool surface.
+Toolbox sends `managed_source=zhihu_hot_topics`, which maps to Cloud runtime
+input `provider=zhihu` and `source_type=zhihu_hot_list`. Cloud may return cached
 hot-list items and `topic_candidate.v1` projections so multiple WordPress
-clients do not spend provider quota on each panel open. The UI should present
-these as "what might be worth researching today", not as facts, drafts,
+clients do not spend provider quota on each dashboard view. The UI should
+present these as "what might be worth researching today", not as facts, drafts,
 schedules, or publication instructions.
 
 For broader source discovery, a feature can call the same Cloud web-search seam

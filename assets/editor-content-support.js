@@ -234,12 +234,6 @@
 			group: 'writing_assist',
 		},
 		{
-			intent: 'zhihu_hot_topics',
-			label: __('热点选题', 'npcink-toolbox'),
-			description: __('从服务器缓存的知乎热榜生成今日选题池，解决“不知道今天写什么”的问题。只做选题信号，不写文章、不发布。', 'npcink-toolbox'),
-			group: 'writing_assist',
-		},
-		{
 			intent: 'publish_preflight',
 			label: __('Publish preflight', 'npcink-toolbox'),
 			description: __('Check missing fields and compare related existing posts for duplicate-risk before publishing.', 'npcink-toolbox'),

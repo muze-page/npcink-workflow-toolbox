@@ -42,17 +42,19 @@ Non-goals:
 
 ## Current Implementation
 
-The editor-facing fixed button is in the post editor Content Support panel:
+The operator-facing entry point is a WordPress Dashboard widget on
+`wp-admin/index.php`:
 
 ```text
 intent=zhihu_hot_topics
-label=热点选题
+widget=今日热点选题池
 ```
 
-The previous `知乎选题研究` lane is still callable through the REST intent and
-low-level ability contract, but it is no longer a default visible button. This
-keeps the current product focused on topic selection while preserving the atom
-for later scenarios.
+The previous editor-side `热点选题` and `知乎选题研究` buttons are not default
+visible flows. Both lanes remain callable through REST intent and low-level
+ability contracts, but the default product surface is the Dashboard topic pool.
+This keeps topic selection in the pre-writing workspace instead of the article
+editing sidebar.
 
 Cloud remains the runtime provider:
 
@@ -62,7 +64,7 @@ Cloud remains the runtime provider:
 
 Toolbox remains the local product and projection surface:
 
-- Toolbox renders the fixed `热点选题` button.
+- Toolbox renders the `今日热点选题池` Dashboard widget.
 - Toolbox calls Cloud through the existing Cloud Addon runtime seam.
 - Toolbox normalizes the Cloud topic candidates into `hot_topic_pool`.
 - Toolbox keeps all outputs `suggestion_only` and `direct_wordpress_write=false`.
@@ -101,13 +103,13 @@ Expected local output:
 
 ## User Experience
 
-In the editor, the user sees:
+On the WordPress Dashboard, the user sees:
 
-- `热点选题`
+- `今日热点选题池`
 - a short explanation that it solves "今天写什么";
-- a returned topic pool headed `热点选题：今日选题池`;
-- per-topic cards with rank, signal, suggested use, source, and review-only
-  action policy.
+- a compact table with rank, topic, signal, suggested use, and source action;
+- a refresh button that clears the local Dashboard transient and reuses the
+  existing Cloud hot-list runtime.
 
 The result should be read as trend signal, not final evidence. If the editor
 chooses one topic, the next human step is manual research and drafting.
@@ -152,4 +154,3 @@ The next useful step is an editor trial:
 3. Mark which selected topics require deeper Zhihu research, web-wide evidence,
    or direct-answer preview.
 4. Only then decide whether to productize one of the remaining atoms.
-
