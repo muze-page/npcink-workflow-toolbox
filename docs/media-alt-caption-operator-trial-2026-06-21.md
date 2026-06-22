@@ -407,3 +407,20 @@ Interpretation:
   enrichment workflow. That evidence path must stay outside local Toolbox
   runtime ownership and still require human visual confirmation before any
   governed media metadata write path.
+
+## AI Vision Evidence POC - 2026-06-22
+
+The next POC keeps the product path simple:
+
+1. Toolbox first runs the local metadata-only review-set builder.
+2. If candidates are blocked as `candidate_quality_insufficient`, Toolbox emits
+   a bounded `image_context_evidence_request.v1` packet for up to 10 items.
+3. A Cloud-owned or host-owned runtime may return `image_context_evidence.v1`
+   with visual summary, scene, objects, visible text, and confidence.
+4. Toolbox uses that evidence only as candidate basis and still requires human
+   visual confirmation before any future governed apply path.
+
+This is intended to reduce operator work on weak local media libraries without
+making local installs heavier. It does not add a local vision model, bundled
+third-party image dataset, queue, Core proposal creation, or media metadata
+write behavior.

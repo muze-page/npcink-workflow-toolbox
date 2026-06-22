@@ -2089,6 +2089,8 @@
 		const eligibility = asObject(reviewSet.eligibility_summary);
 		const selectedItems = asArray(reviewSet.selected_items);
 		const blockedItems = asArray(reviewSet.blocked_items);
+		const imageContextRequest = asObject(reviewSet.image_context_evidence_request);
+		const imageContextRequestItems = asArray(imageContextRequest.items);
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Eligible', eligibility.eligible_count);
 		appendMeta(meta, 'Selected', eligibility.selected_count || selectedItems.length);
@@ -2104,6 +2106,9 @@
 		section.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Review-only. No media metadata was changed.'));
 		if (reviewSet.operator_next_action) {
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Next action: ' + formatLabel(reviewSet.operator_next_action)));
+		}
+		if (imageContextRequest.contract_version && imageContextRequestItems.length) {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Weak metadata found. Cloud-owned image context evidence can be requested for ' + String(imageContextRequestItems.length) + ' item(s); no local vision model or media write is created.'));
 		}
 
 		if (!selectedItems.length) {
@@ -2130,8 +2135,13 @@
 				if (item.caption_candidate) {
 					body.appendChild(el('small', '', 'Caption candidate: ' + String(item.caption_candidate)));
 				}
+				const evidence = asObject(item.image_context_evidence);
+				if (evidence.visual_summary) {
+					body.appendChild(el('small', '', 'Image context evidence: ' + String(evidence.visual_summary)));
+				}
 				const itemMeta = el('div', 'npcink-toolbox__result-meta');
 				appendMeta(itemMeta, 'Visual check', item.needs_human_visual_check ? 'Required' : '');
+				appendMeta(itemMeta, 'Evidence', evidence.contract_version ? formatLabel(evidence.source || 'cloud_or_host_runtime') : '');
 				appendMeta(itemMeta, 'Final path', item.target_write_path || reviewSet.final_write_path);
 				appendMeta(itemMeta, 'Direct write', item.direct_wordpress_write === false ? 'Disabled' : '');
 				if (itemMeta.childNodes.length) {
@@ -2158,6 +2168,10 @@
 			});
 			details.appendChild(blockedList);
 			section.appendChild(details);
+		}
+
+		if (imageContextRequest.contract_version && imageContextRequestItems.length) {
+			section.appendChild(createRawDetails(imageContextRequest, 'Image context evidence request'));
 		}
 
 		container.appendChild(section);

@@ -3633,19 +3633,23 @@ final class Provider_Client {
 		$media_snapshot   = is_array( $input['media_snapshot'] ?? null )
 			? $this->sanitize_payload( $input['media_snapshot'] )
 			: $this->collect_hosted_ai_media_alt_snapshot( 10 );
+		$image_context_evidence = is_array( $input['image_context_evidence'] ?? null )
+			? $this->sanitize_payload( $input['image_context_evidence'] )
+			: array();
 		$review_set_limit = absint( $input['review_set_limit'] ?? ( $input['max_items'] ?? 5 ) );
 		if ( 0 >= $review_set_limit ) {
 			$review_set_limit = 5;
 		}
 		$review_set_limit = max( 1, min( 10, $review_set_limit ) );
 		$media_alt_caption_review_set = 'media_alt_suggestions' === $intent
-			? $this->build_media_alt_caption_review_set( $media_snapshot, $review_set_limit )
+			? $this->build_media_alt_caption_review_set( $media_snapshot, $review_set_limit, $image_context_evidence )
 			: array();
 		$source           = array(
-			'focus'          => wp_trim_words( $focus, 80, '' ),
-			'site_snapshot'  => 'content_snapshot_suggestions' === $intent ? $this->collect_hosted_ai_site_snapshot() : array(),
-			'media_snapshot' => 'media_alt_suggestions' === $intent ? $media_snapshot : array(),
-			'source_policy'  => sanitize_key( (string) ( $input['source_policy'] ?? 'bounded_public_or_media_metadata_sample_only' ) ),
+			'focus'                  => wp_trim_words( $focus, 80, '' ),
+			'site_snapshot'          => 'content_snapshot_suggestions' === $intent ? $this->collect_hosted_ai_site_snapshot() : array(),
+			'media_snapshot'         => 'media_alt_suggestions' === $intent ? $media_snapshot : array(),
+			'image_context_evidence' => 'media_alt_suggestions' === $intent ? $image_context_evidence : array(),
+			'source_policy'          => sanitize_key( (string) ( $input['source_policy'] ?? 'bounded_public_or_media_metadata_sample_only' ) ),
 		);
 		$prompt           = $this->hosted_ai_site_helper_prompt( $intent, $source, $context );
 
@@ -5155,11 +5159,12 @@ final class Provider_Client {
 		);
 	}
 
-	private function build_media_alt_caption_review_set( array $media_snapshot, int $max_items ): array {
-		$items    = is_array( $media_snapshot['items'] ?? null ) ? $media_snapshot['items'] : array();
-		$selected = array();
-		$blocked  = array();
-		$scanned  = 0;
+	private function build_media_alt_caption_review_set( array $media_snapshot, int $max_items, array $image_context_evidence = array() ): array {
+		$items                     = is_array( $media_snapshot['items'] ?? null ) ? $media_snapshot['items'] : array();
+		$image_context_evidence_by_id = $this->media_alt_caption_index_image_context_evidence( $image_context_evidence );
+		$selected                  = array();
+		$blocked                   = array();
+		$scanned                   = 0;
 
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
@@ -5178,6 +5183,10 @@ final class Provider_Client {
 				continue;
 			}
 
+			$item_evidence = $image_context_evidence_by_id[ $attachment_id ] ?? array();
+			if ( ! empty( $item_evidence ) ) {
+				$item = $this->media_alt_caption_apply_image_context_evidence( $item, $item_evidence );
+			}
 			$item_status = $this->media_alt_caption_item_status( $item );
 			if ( empty( $item_status['review_reasons'] ) ) {
 				$blocked[] = array(
@@ -5200,9 +5209,14 @@ final class Provider_Client {
 					'current_alt_status'         => $item_status['current_alt_status'],
 					'current_caption_status'     => $item_status['current_caption_status'],
 					'review_reasons'             => $item_status['review_reasons'],
+					'title'                      => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+					'filename'                   => sanitize_file_name( (string) ( $item['filename'] ?? '' ) ),
+					'thumbnail_url'              => esc_url_raw( (string) ( $item['thumbnail_url'] ?? '' ) ),
+					'url'                        => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+					'mime_type'                  => sanitize_text_field( (string) ( $item['mime_type'] ?? '' ) ),
 					'candidate_quality_flags'    => $candidate_quality['candidate_quality_flags'],
 					'filtered_candidate_notes'   => $candidate_quality['filtered_candidate_notes'],
-					'operator_next_action'       => 'skip_until_better_metadata_or_visual_evidence',
+					'operator_next_action'       => 'request_ai_vision_evidence_or_skip',
 				);
 				continue;
 			}
@@ -5235,6 +5249,7 @@ final class Provider_Client {
 					'candidate_basis'          => $candidate_quality['candidate_basis'],
 					'candidate_quality_flags'  => $candidate_quality['candidate_quality_flags'],
 					'filtered_candidate_notes' => $candidate_quality['filtered_candidate_notes'],
+					'image_context_evidence'   => ! empty( $item_evidence ) ? $this->media_alt_caption_public_image_context_evidence( $item_evidence ) : array(),
 					'needs_human_visual_check' => true,
 					'target_write_path'        => 'core_proposal_required',
 					'direct_wordpress_write'   => false,
@@ -5271,6 +5286,7 @@ final class Provider_Client {
 			),
 			'selected_items'        => $selected,
 			'blocked_items'         => $blocked,
+			'image_context_evidence_request' => $this->media_alt_caption_image_context_evidence_request( $blocked, $max_items ),
 			'operator_next_action'  => 'review_selected_alt_caption_suggestions',
 			'retryable'             => true,
 			'retry_guidance'        => array(
@@ -5290,6 +5306,123 @@ final class Provider_Client {
 				'future_apply_path'          => 'Core proposal only after a media metadata WordPress ability contract exists.',
 				'blocked_direct_apply_reason' => 'Toolbox does not own media metadata writes.',
 			),
+		);
+	}
+
+	private function media_alt_caption_index_image_context_evidence( array $image_context_evidence ): array {
+		if (
+			'image_context_evidence.v1' !== (string) ( $image_context_evidence['contract_version'] ?? '' )
+			|| 'suggestion_only' !== (string) ( $image_context_evidence['write_posture'] ?? '' )
+			|| false !== (bool) ( $image_context_evidence['direct_wordpress_write'] ?? true )
+		) {
+			return array();
+		}
+
+		$items   = is_array( $image_context_evidence['items'] ?? null ) ? $image_context_evidence['items'] : array();
+		$indexed = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$attachment_id = absint( $item['attachment_id'] ?? 0 );
+			if ( 0 >= $attachment_id ) {
+				continue;
+			}
+			$item['contract_version']           = 'image_context_evidence.v1';
+			$item['source']                     = sanitize_key( (string) ( $item['source'] ?? 'cloud_or_host_runtime' ) );
+			$item['write_posture']              = 'suggestion_only';
+			$item['direct_wordpress_write']     = false;
+			$item['needs_human_visual_check']   = true;
+			$indexed[ $attachment_id ]          = $this->sanitize_payload( $item );
+		}
+
+		return $indexed;
+	}
+
+	private function media_alt_caption_apply_image_context_evidence( array $item, array $evidence ): array {
+		$summary = $this->media_alt_caption_clean_candidate( (string) ( $evidence['visual_summary'] ?? '' ) );
+		$scene   = $this->media_alt_caption_clean_candidate( (string) ( $evidence['scene'] ?? '' ) );
+		$objects = $this->sanitize_string_list( $evidence['objects'] ?? array() );
+		$text    = $this->sanitize_string_list( $evidence['text_seen'] ?? array() );
+
+		if ( '' !== $summary ) {
+			$item['image_context_visual_summary'] = $summary;
+		}
+		if ( '' !== $scene ) {
+			$item['image_context_scene'] = $scene;
+		}
+		if ( ! empty( $objects ) ) {
+			$item['image_context_objects_summary'] = implode( ', ', array_slice( $objects, 0, 8 ) );
+		}
+		if ( ! empty( $text ) ) {
+			$item['image_context_text_seen'] = implode( ', ', array_slice( $text, 0, 5 ) );
+		}
+
+		return $item;
+	}
+
+	private function media_alt_caption_public_image_context_evidence( array $evidence ): array {
+		return array(
+			'contract_version'         => 'image_context_evidence.v1',
+			'source'                   => sanitize_key( (string) ( $evidence['source'] ?? 'cloud_or_host_runtime' ) ),
+			'visual_summary'           => $this->trim_chars( $this->media_alt_caption_clean_candidate( (string) ( $evidence['visual_summary'] ?? '' ) ), 180 ),
+			'scene'                    => $this->trim_chars( $this->media_alt_caption_clean_candidate( (string) ( $evidence['scene'] ?? '' ) ), 120 ),
+			'objects'                  => array_slice( $this->sanitize_string_list( $evidence['objects'] ?? array() ), 0, 8 ),
+			'text_seen'                => array_slice( $this->sanitize_string_list( $evidence['text_seen'] ?? array() ), 0, 5 ),
+			'confidence'               => sanitize_text_field( (string) ( $evidence['confidence'] ?? '' ) ),
+			'write_posture'            => 'suggestion_only',
+			'direct_wordpress_write'   => false,
+			'needs_human_visual_check' => true,
+		);
+	}
+
+	private function media_alt_caption_image_context_evidence_request( array $blocked, int $max_items ): array {
+		$items = array();
+		foreach ( $blocked as $item ) {
+			if ( ! is_array( $item ) || 'candidate_quality_insufficient' !== (string) ( $item['blocked_reason'] ?? '' ) ) {
+				continue;
+			}
+			$attachment_id = absint( $item['attachment_id'] ?? 0 );
+			if ( 0 >= $attachment_id ) {
+				continue;
+			}
+			$items[] = array(
+				'attachment_id'            => $attachment_id,
+				'title'                    => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+				'filename'                 => sanitize_file_name( (string) ( $item['filename'] ?? '' ) ),
+				'thumbnail_url'            => esc_url_raw( (string) ( $item['thumbnail_url'] ?? '' ) ),
+				'url'                      => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'mime_type'                => sanitize_text_field( (string) ( $item['mime_type'] ?? '' ) ),
+				'current_alt_status'       => sanitize_key( (string) ( $item['current_alt_status'] ?? '' ) ),
+				'current_caption_status'   => sanitize_key( (string) ( $item['current_caption_status'] ?? '' ) ),
+				'candidate_quality_flags'  => $this->sanitize_string_list( $item['candidate_quality_flags'] ?? array() ),
+				'filtered_candidate_notes' => $this->sanitize_string_list( $item['filtered_candidate_notes'] ?? array() ),
+			);
+			if ( count( $items ) >= min( 10, max( 1, $max_items ) ) ) {
+				break;
+			}
+		}
+
+		if ( empty( $items ) ) {
+			return array();
+		}
+
+		return array(
+			'contract_version'          => 'image_context_evidence_request.v1',
+			'artifact_type'             => 'image_context_evidence_request',
+			'runtime_owner'             => 'cloud_or_host_runtime',
+			'write_posture'             => 'suggestion_only',
+			'direct_wordpress_write'    => false,
+			'proposal_created'          => false,
+			'execution_created'         => false,
+			'no_local_model'            => true,
+			'no_media_write'            => true,
+			'source_policy'             => 'bounded_media_urls_for_visual_context_only',
+			'expected_response_contract' => 'image_context_evidence.v1',
+			'requested_count'           => count( $items ),
+			'max_items'                 => min( 10, max( 1, $max_items ) ),
+			'items'                     => $items,
+			'operator_next_action'      => 'request_cloud_image_context_evidence',
 		);
 	}
 
@@ -5331,7 +5464,7 @@ final class Provider_Client {
 		$caption_candidate = '';
 
 		if ( 'present' !== (string) ( $item_status['current_alt_status'] ?? '' ) ) {
-			foreach ( array( 'description', 'caption', 'title', 'filename' ) as $field ) {
+			foreach ( array( 'image_context_visual_summary', 'image_context_scene', 'image_context_objects_summary', 'description', 'caption', 'title', 'filename' ) as $field ) {
 				$value = 'filename' === $field
 					? $this->media_alt_caption_filename_descriptor( (string) ( $item['filename'] ?? '' ) )
 					: (string) ( $item[ $field ] ?? '' );
@@ -5351,7 +5484,7 @@ final class Provider_Client {
 		}
 
 		if ( 'missing' === (string) ( $item_status['current_caption_status'] ?? '' ) ) {
-			foreach ( array( 'description', 'alt', 'title' ) as $field ) {
+			foreach ( array( 'image_context_visual_summary', 'image_context_scene', 'description', 'alt', 'title' ) as $field ) {
 				$candidate = $this->media_alt_caption_clean_candidate( (string) ( $item[ $field ] ?? '' ) );
 				if ( '' === $candidate ) {
 					continue;
@@ -5470,7 +5603,7 @@ final class Provider_Client {
 
 	private function media_alt_caption_candidate_basis( array $item ): array {
 		$basis = array();
-		foreach ( array( 'alt', 'description', 'caption', 'title', 'filename' ) as $field ) {
+		foreach ( array( 'image_context_visual_summary', 'image_context_scene', 'image_context_objects_summary', 'alt', 'description', 'caption', 'title', 'filename' ) as $field ) {
 			$value = 'filename' === $field
 				? $this->media_alt_caption_filename_descriptor( (string) ( $item['filename'] ?? '' ) )
 				: (string) ( $item[ $field ] ?? '' );

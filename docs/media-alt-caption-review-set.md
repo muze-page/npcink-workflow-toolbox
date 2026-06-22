@@ -27,6 +27,15 @@ Required posture:
 - `execution_created`: `false`;
 - `source_policy`: `media_library_metadata_only_no_pixel_vision`.
 
+Optional weak-metadata follow-up:
+
+- `image_context_evidence_request`: `image_context_evidence_request.v1`;
+- `runtime_owner`: `cloud_or_host_runtime`;
+- `expected_response_contract`: `image_context_evidence.v1`;
+- `no_local_model`: `true`;
+- `no_media_write`: `true`;
+- `direct_wordpress_write`: `false`.
+
 Required operational fields:
 
 - `eligibility_summary`;
@@ -54,6 +63,19 @@ The review set uses a bounded sample of WordPress media-library metadata:
 It does not inspect image pixels. Every selected item has
 `needs_human_visual_check: true`, and operators must visually confirm ALT and
 caption suggestions before any later handoff.
+
+When metadata is too weak to produce useful candidates, Toolbox may include an
+`image_context_evidence_request.v1` packet for up to 10 blocked items. This is
+a bounded request artifact for a Cloud-owned or host-owned visual recognition
+runtime. Toolbox does not run a local vision model, persist provider keys,
+create a queue, create a Core proposal, or write media metadata from this
+request. In short: no local vision model and no local write path.
+
+If a host runtime returns `image_context_evidence.v1`, Toolbox may use the
+returned visual summary, scene, objects, or visible text as additional candidate
+basis. The resulting suggestions still remain review-only. The evidence is not
+treated as final truth; every selected item still requires human visual
+confirmation against the real image.
 
 ## Current P0 Behavior
 
@@ -85,6 +107,7 @@ The admin UI renders the review set as:
 - selected item rows with ALT candidates and caption candidate;
 - candidate quality flags and filtered-candidate notes for audit/debug review;
 - blocked item details;
+- optional image context evidence request details for weak metadata;
 - an explicit "No media metadata was changed" notice.
 
 ## Stage Closeout Decision
@@ -121,6 +144,8 @@ The current stage is considered complete when:
 
 - `/ai/site-helpers` returns `media_alt_caption_review_set.v1`;
 - the admin UI renders selected and blocked items;
+- weak metadata can produce a bounded `image_context_evidence_request.v1`
+  without local image recognition;
 - every selected item requires visual review;
 - the result states that no media metadata was changed;
 - direct writes, proposal creation, queues, and derivative replacement runs
@@ -172,5 +197,6 @@ description, replacement URLs, or attachment file data from this review set.
 - no automatic media metadata update;
 - no automatic proposal creation;
 - no final WordPress write;
-- no claim that AI has viewed image pixels;
+- no claim that Toolbox itself has viewed image pixels;
+- no local image recognition model or bundled vision dataset;
 - no reuse of media derivative replacement execution for metadata writes.

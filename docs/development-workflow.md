@@ -553,6 +553,14 @@ count with `MEDIA_ALT_CAPTION_OPEN_LIMIT` capped in eval-lab. Feed the generated
 WordPress media acceptance still requires local export and human visual
 confirmation.
 
+For weak metadata libraries, `media_alt_caption_review_set.v1` may also return
+an `image_context_evidence_request.v1` packet. Treat it as a bounded request for
+Cloud-owned or host-owned visual evidence only. It is not a local vision model,
+not a queue/runtime, not a Core proposal, and not write authorization. A returned
+`image_context_evidence.v1` packet can improve candidate basis, but selected
+items still require human visual confirmation and unchanged media metadata
+snapshots.
+
 ## Coding Rules
 
 - Keep admin UI server-rendered unless a real build need appears.
