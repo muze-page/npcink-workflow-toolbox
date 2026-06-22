@@ -512,6 +512,21 @@ final class Admin_Page {
 		);
 	}
 
+	private function site_ops_cloud_analysis_url(): string {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'page'                       => self::MENU_SLUG,
+					'toolbox_tab'                => 'operations-insights',
+					'site_ops_insights_preview'  => '1',
+					'site_ops_cloud_analysis'    => '1',
+				),
+				admin_url( 'admin.php' )
+			),
+			'npcink_toolbox_site_ops_insights_preview'
+		);
+	}
+
 	/**
 	 * @param array<string,mixed> $content_context Content context.
 	 * @return array<string,mixed>|null
@@ -548,11 +563,26 @@ final class Admin_Page {
 				$pack,
 				$runtime_context
 			);
+			$cloud_analysis   = null;
+			$cloud_requested  = filter_input( INPUT_GET, 'site_ops_cloud_analysis', FILTER_UNSAFE_RAW );
+			if ( '1' === ( is_scalar( $cloud_requested ) ? (string) $cloud_requested : '' ) ) {
+				if ( ! $cloud_ready ) {
+					$cloud_analysis = new \WP_Error(
+						'npcink_toolbox_site_ops_cloud_not_ready',
+						__( 'Connect or verify Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-toolbox' ),
+						array( 'status' => 503 )
+					);
+				} else {
+					$client         = new Provider_Client( $this->settings );
+					$cloud_analysis = $client->run_site_ops_cloud_analysis( $cloud_request );
+				}
+			}
 
 			return array(
 				'snapshot'      => $snapshot,
 				'pack'          => $pack,
 				'cloud_request' => $cloud_request,
+				'cloud_analysis' => $cloud_analysis,
 			);
 		} catch ( \Throwable $throwable ) {
 			return array(
@@ -569,6 +599,7 @@ final class Admin_Page {
 		$context_ready = $this->content_context_ready( $content_context );
 		$pack          = isset( $preview['pack'] ) && is_array( $preview['pack'] ) ? $preview['pack'] : array();
 		$cloud_request = isset( $preview['cloud_request'] ) && is_array( $preview['cloud_request'] ) ? $preview['cloud_request'] : array();
+		$cloud_analysis = $preview['cloud_analysis'] ?? null;
 		$summary       = isset( $pack['summary'] ) && is_array( $pack['summary'] ) ? $pack['summary'] : array();
 		$findings      = isset( $pack['top_findings'] ) && is_array( $pack['top_findings'] ) ? array_slice( $pack['top_findings'], 0, 8 ) : array();
 		?>
@@ -594,8 +625,8 @@ final class Admin_Page {
 			$this->render_start_status_item(
 				__( 'Cloud', 'npcink-toolbox' ),
 				$cloud_ready ? 'ok' : 'neutral',
-				$cloud_ready ? __( 'Available later', 'npcink-toolbox' ) : __( 'Not required', 'npcink-toolbox' ),
-				__( 'P0 does not call Cloud. Future versions can add semantic and external-data enrichment.', 'npcink-toolbox' )
+				$cloud_ready ? __( 'Ready on request', 'npcink-toolbox' ) : __( 'Not required', 'npcink-toolbox' ),
+				__( 'Local preview does not auto-call Cloud. Use Run Cloud analysis only when deeper runtime/detail ranking is needed.', 'npcink-toolbox' )
 			);
 			$this->render_start_status_item(
 				__( 'Writes', 'npcink-toolbox' ),
@@ -612,7 +643,12 @@ final class Admin_Page {
 					<h3><?php esc_html_e( 'Site operations brief', 'npcink-toolbox' ); ?></h3>
 					<p><?php esc_html_e( 'Generate a local `site_ops_insight_pack.v1` with top findings, evidence summaries, suggested actions, and handoff boundaries.', 'npcink-toolbox' ); ?></p>
 				</div>
-				<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate local insights', 'npcink-toolbox' ); ?></a>
+				<div class="npcink-toolbox__section-actions">
+					<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate local insights', 'npcink-toolbox' ); ?></a>
+					<?php if ( null !== $preview && $cloud_ready ) : ?>
+						<a class="button" href="<?php echo esc_url( $this->site_ops_cloud_analysis_url() ); ?>"><?php esc_html_e( 'Run Cloud analysis', 'npcink-toolbox' ); ?></a>
+					<?php endif; ?>
+				</div>
 			</div>
 
 			<?php if ( isset( $preview['error'] ) ) : ?>
@@ -684,11 +720,79 @@ final class Admin_Page {
 				<?php if ( array() !== $cloud_request ) : ?>
 					<details class="npcink-toolbox__result-details">
 						<summary><?php esc_html_e( 'Copy Cloud analysis request JSON', 'npcink-toolbox' ); ?></summary>
-						<p class="description"><?php esc_html_e( 'This contract is prepared for future Cloud runtime analysis only. Copying it does not call Cloud, schedule work, store a run, create Core proposals, or write WordPress data.', 'npcink-toolbox' ); ?></p>
+						<p class="description"><?php esc_html_e( 'This contract is prepared for Cloud runtime analysis. Copying it does not call Cloud, schedule work, store a local run, create Core proposals, or write WordPress data.', 'npcink-toolbox' ); ?></p>
 						<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( (string) wp_json_encode( $cloud_request, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); ?></textarea>
 					</details>
 				<?php endif; ?>
+				<?php $this->render_site_ops_cloud_analysis_result( $cloud_analysis ); ?>
 			<?php endif; ?>
+		</section>
+		<?php
+	}
+
+	/**
+	 * @param mixed $cloud_analysis Cloud analysis result or WP_Error.
+	 */
+	private function render_site_ops_cloud_analysis_result( $cloud_analysis ): void {
+		if ( null === $cloud_analysis ) {
+			return;
+		}
+		if ( is_wp_error( $cloud_analysis ) ) {
+			?>
+			<div class="npcink-toolbox__result-notice is-warning"><?php echo esc_html( $cloud_analysis->get_error_message() ); ?></div>
+			<?php
+			return;
+		}
+		if ( ! is_array( $cloud_analysis ) ) {
+			return;
+		}
+
+		$result         = is_array( $cloud_analysis['result'] ?? null ) ? $cloud_analysis['result'] : array();
+		$priority_queue = is_array( $result['priority_queue'] ?? null ) ? array_slice( $result['priority_queue'], 0, 5 ) : array();
+		$trend_notes    = is_array( $result['trend_notes'] ?? null ) ? array_slice( $result['trend_notes'], 0, 5 ) : array();
+		$cloud_run      = is_array( $cloud_analysis['cloud_run'] ?? null ) ? $cloud_analysis['cloud_run'] : array();
+		?>
+		<section class="npcink-toolbox__card npcink-toolbox__insight-cloud-result">
+			<div class="npcink-toolbox__section-heading">
+				<div>
+					<h3><?php esc_html_e( 'Cloud analysis result', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Cloud adds runtime/detail ranking only. Review results locally before any Core handoff.', 'npcink-toolbox' ); ?></p>
+				</div>
+				<span class="npcink-toolbox__pill"><?php echo esc_html( (string) ( $cloud_run['status'] ?? $cloud_analysis['status'] ?? 'submitted' ) ); ?></span>
+			</div>
+			<?php if ( array() !== $priority_queue ) : ?>
+				<div class="npcink-toolbox__insight-list">
+					<?php foreach ( $priority_queue as $item ) : ?>
+						<?php if ( ! is_array( $item ) ) { continue; } ?>
+						<article class="npcink-toolbox__insight-card">
+							<div class="npcink-toolbox__insight-card-header">
+								<div>
+									<h3><?php echo esc_html( (string) ( $item['finding_id'] ?? __( 'Cloud priority', 'npcink-toolbox' ) ) ); ?></h3>
+									<p><?php echo esc_html( (string) ( $item['evidence_summary'] ?? '' ) ); ?></p>
+								</div>
+								<span class="npcink-toolbox__insight-score"><?php echo esc_html( (string) (int) ( $item['cloud_priority_score'] ?? 0 ) ); ?></span>
+							</div>
+							<p><?php echo esc_html( (string) ( $item['recommended_action'] ?? '' ) ); ?></p>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+			<?php if ( array() !== $trend_notes ) : ?>
+				<ul class="npcink-toolbox__usage-list">
+					<?php foreach ( $trend_notes as $note ) : ?>
+						<?php if ( ! is_array( $note ) ) { continue; } ?>
+						<li>
+							<strong><?php echo esc_html( (string) ( $note['id'] ?? __( 'Trend note', 'npcink-toolbox' ) ) ); ?></strong>
+							<span><?php echo esc_html( (string) ( $note['summary'] ?? '' ) ); ?></span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<details class="npcink-toolbox__result-details">
+				<summary><?php esc_html_e( 'Copy Cloud result JSON', 'npcink-toolbox' ); ?></summary>
+				<p class="description"><?php esc_html_e( 'This result is suggestion-only and does not create Core proposals or WordPress writes.', 'npcink-toolbox' ); ?></p>
+				<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( (string) wp_json_encode( $cloud_analysis, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); ?></textarea>
+			</details>
 		</section>
 		<?php
 	}

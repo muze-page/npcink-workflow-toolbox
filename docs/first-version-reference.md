@@ -99,9 +99,11 @@ manual local `site_ops_insight_pack.v1` from bounded public content,
 approved-comment signal counts, media metadata, taxonomy summaries, Site
 Context readiness, and Cloud availability. It does not call Cloud, persist run
 state, schedule jobs, create Core proposals, or write WordPress data. It may
-also render a copyable `site_ops_cloud_analysis_request.v1` for a later Cloud
-runtime/detail implementation; generating that request still does not send it
-or create local runtime state.
+also render a copyable `site_ops_cloud_analysis_request.v1`; generating that
+request still does not send it or create local runtime state. When Cloud is
+ready, an administrator can explicitly run Cloud analysis and review the
+suggestion-only `site_ops_cloud_analysis_result.v1` without Toolbox creating a
+local queue, local run table, Core proposal, or WordPress write.
 The admin Workflows tab defaults to Media, with Optimize Existing Image as the
 first visible tool, and keeps Site Helpers as a secondary low-frequency group.
 Governed Handoffs and Fallback Bundles sit under the folded advanced/fallback

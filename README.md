@@ -29,8 +29,11 @@ The first version provides:
   signals, media metadata, taxonomy summaries, Site Context readiness, and
   Cloud availability, without Cloud calls, Core proposals, persistence, or
   WordPress writes, and prepares a copyable
-  `site_ops_cloud_analysis_request.v1` contract for future Cloud runtime
-  analysis without sending it;
+  `site_ops_cloud_analysis_request.v1` contract. When Cloud is connected and
+  the administrator explicitly clicks **Run Cloud analysis**, Toolbox may send
+  that request to Cloud runtime for a suggestion-only
+  `site_ops_cloud_analysis_result.v1`, without local queues, local run tables,
+  Core proposal creation, or WordPress writes;
 - a Start panel **Preview Morning Brief** entry that reads bounded local
   public-content evidence and renders a dry-run Nightly Site Inspection preview
   without cron, Cloud calls, Core proposals, persistence, or WordPress writes;

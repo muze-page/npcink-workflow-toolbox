@@ -285,22 +285,24 @@ emails, IP addresses, user agents, or full comment text.
 
 The output is a ranked decision aid: top findings, evidence summaries, impact,
 recommended actions, blocked items, and handoff candidates. It is not a site
-automation runner. P0 does not call Cloud, schedule jobs, persist run state,
-create Core proposals, submit Adapter actions, mutate comments, update media,
-write SEO fields, create taxonomy terms, or publish content. Future Cloud
-enrichment may add semantic and external-data detail, but Cloud remains runtime
-detail and must not become a second WordPress write owner, approval store, or
-control plane.
+automation runner. The local preview does not call Cloud, schedule jobs,
+persist run state, create Core proposals, submit Adapter actions, mutate
+comments, update media, write SEO fields, create taxonomy terms, or publish
+content. Explicit Cloud analysis may add semantic and external-data detail, but
+Cloud remains runtime detail and must not become a second WordPress write
+owner, approval store, or control plane.
 
 Toolbox may prepare a copyable `site_ops_cloud_analysis_request.v1` from the
-local pack. That request is contract-first handoff material for Cloud, not a
-local execution trigger. It may include aggregate post/page, media, taxonomy,
-and approved-comment signal counts plus local finding summaries. It must not
-include full comment text, comment author email, comment IP address, user agent,
-provider secrets, private content, request logs, queue instructions, local
-scheduler instructions, or WordPress write actions. The expected Cloud result is
+local pack. When Cloud is ready and an administrator explicitly clicks **Run
+Cloud analysis**, Toolbox may send that request through the Cloud runtime seam.
+It may include aggregate post/page, media, taxonomy, and approved-comment
+signal counts plus local finding summaries. It must not include full comment
+text, comment author email, comment IP address, user agent, provider secrets,
+private content, request logs, queue instructions, local scheduler
+instructions, or WordPress write actions. The expected Cloud result is
 `site_ops_cloud_analysis_result.v1`, with `write_posture=suggestion_only` and
-`core_proposal_created=false`.
+`core_proposal_created=false`; Toolbox must not create local queues, local run
+tables, retries, scheduler truth, Core proposals, or WordPress writes.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and

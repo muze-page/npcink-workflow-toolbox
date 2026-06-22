@@ -42,8 +42,10 @@ Target features:
   ranks content, approved-comment, media, taxonomy, Site Context, and Cloud
   readiness findings without Cloud calls, persistence, Core proposals,
   scheduling, or WordPress writes. It may also prepare
-  `site_ops_cloud_analysis_request.v1` as a future Cloud runtime/detail
-  contract, without sending the request from local preview.
+  `site_ops_cloud_analysis_request.v1` as a Cloud runtime/detail contract. When
+  Cloud is ready, an administrator may explicitly run Cloud analysis for a
+  suggestion-only `site_ops_cloud_analysis_result.v1`, without Toolbox owning a
+  local queue, run table, scheduler truth, Core proposal, or WordPress write.
 - Post editor Content Support panel for fixed flows: local article checkup,
   title suggestions, outline support, discoverability suggestions, publish
   preflight, summary suggestions, category suggestions, tag suggestions,

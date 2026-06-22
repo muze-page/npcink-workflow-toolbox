@@ -145,6 +145,29 @@
 	line-height: 1.4;
 }
 
+.npcink-toolbox__section-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+.npcink-toolbox__pill {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	padding: 3px 9px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 999px;
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
 .npcink-toolbox__start-advanced {
 	background: #fff;
 	border: 1px solid #dcdcde;

@@ -364,10 +364,12 @@ The Site Ops smoke validates deterministic `site_ops_insight_pack.v1` output,
 comment privacy omissions, and no-write/no-Cloud posture without requiring
 WordPress.
 The Site Ops Cloud request smoke validates the contract-only
-`site_ops_cloud_analysis_request.v1` packet for future Cloud runtime/detail
-analysis. It proves the local builder does not call Cloud, create a local
-runtime, schedule work, create Core proposals, write WordPress data, or expose
-comment text, author email, IP address, or user agent.
+`site_ops_cloud_analysis_request.v1` packet for Cloud runtime/detail analysis.
+It proves the local builder does not call Cloud, create a local runtime,
+schedule work, create Core proposals, write WordPress data, or expose comment
+text, author email, IP address, or user agent. The manual admin bridge may send
+that prepared request only when Cloud is ready and must not create local
+queues, local run tables, scheduler truth, Core proposals, or WordPress writes.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,

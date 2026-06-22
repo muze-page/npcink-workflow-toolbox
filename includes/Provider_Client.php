@@ -228,6 +228,62 @@ final class Provider_Client {
 		return $this->normalize_agent_feedback_response( is_array( $response ) ? $response : array(), $payload );
 	}
 
+	public function run_site_ops_cloud_analysis( array $cloud_request ) {
+		$runtime_payload = array(
+			'ability_name'        => 'magick-ai-toolbox/analyze-site-ops',
+			'contract_version'    => 'site_ops_cloud_analysis_request.v1',
+			'execution_pattern'   => 'whole_run_offload',
+			'execution_kind'      => 'site_ops_cloud_analysis',
+			'profile_id'          => 'site-ops-analysis.managed',
+			'input'               => $this->sanitize_payload( $cloud_request ),
+			'data_classification' => 'public_site_aggregate',
+			'storage_mode'        => 'result_only',
+			'retention_ttl'       => 3600,
+			'timeout_seconds'     => 60,
+			'http_timeout_seconds' => 60,
+			'connect_timeout_seconds' => self::HTTP_CONNECT_TIMEOUT,
+			'retry_max'           => 0,
+			'policy'              => array(
+				'allow_fallback' => false,
+			),
+		);
+
+		$runtime_payload = apply_filters( 'npcink_toolbox_site_ops_cloud_analysis_runtime_payload', $runtime_payload, $cloud_request );
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error(
+				'npcink_toolbox_invalid_site_ops_cloud_analysis_runtime_payload',
+				__( 'The Operations Insights Cloud runtime payload was not valid.', 'npcink-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		$handled = apply_filters( 'npcink_toolbox_site_ops_cloud_analysis_cloud_request', null, $runtime_payload, $cloud_request );
+		if ( is_wp_error( $handled ) ) {
+			return $handled;
+		}
+		if ( is_array( $handled ) ) {
+			return $this->normalize_site_ops_cloud_analysis_response( $handled, $runtime_payload );
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_site_ops_cloud_analysis_unavailable',
+				__( 'Connect Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$trace_id        = $this->trace_id( 'site_ops_cloud_analysis' );
+		$idempotency_key = 'site-ops-cloud-analysis-' . substr( md5( (string) wp_json_encode( $runtime_payload['input'] ?? array() ) ), 0, 24 );
+		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return $this->normalize_site_ops_cloud_analysis_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
 	public function get_agent_feedback_summary( array $input ) {
 		$window_hours = min( 168, max( 1, absint( $input['window_hours'] ?? 24 ) ) );
 
@@ -961,6 +1017,54 @@ final class Provider_Client {
 		if ( array() !== $morning_brief && is_array( $result ) ) {
 			$payload['merged_morning_brief'] = $this->sanitize_payload( $merger->merge( $morning_brief, $result ) );
 		}
+
+		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
+		}
+
+		return $payload;
+	}
+
+	private function normalize_site_ops_cloud_analysis_response( array $response, array $runtime_payload = array() ): array {
+		$data   = is_array( $response['data'] ?? null ) ? $response['data'] : array();
+		$result = $this->extract_cloud_runtime_result( $response );
+		$status = sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? 'submitted' ) );
+		$payload = $this->with_output_contract(
+			array(
+				'provider'              => 'magick_ai_cloud',
+				'provider_mode'         => 'cloud_managed',
+				'contract_version'      => 'site_ops_cloud_analysis_result.v1',
+				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/analyze-site-ops' ) ),
+				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'status'                => '' !== $status ? $status : 'submitted',
+				'runtime_owner'         => 'magick-ai-cloud',
+				'cloud_role'            => 'runtime_detail',
+				'final_write_path'      => 'core_proposal_required',
+				'cloud_run'             => array(
+					'run_id'        => sanitize_text_field( (string) ( $data['run_id'] ?? $response['run_id'] ?? '' ) ),
+					'status'        => sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? '' ) ),
+					'trace_id'      => sanitize_text_field( (string) ( $data['trace_id'] ?? $response['trace_id'] ?? '' ) ),
+					'task_backend'  => is_array( $data['task_backend'] ?? null ) ? $this->sanitize_payload( $data['task_backend'] ) : array(),
+					'run_lifecycle' => is_array( $data['run_lifecycle'] ?? null ) ? $this->sanitize_payload( $data['run_lifecycle'] ) : array(),
+				),
+				'result'                => is_array( $result ) ? $this->sanitize_payload( $result ) : array(),
+				'safety'                => array(
+					'direct_wordpress_write' => false,
+					'cloud_scheduler_truth'  => false,
+					'core_proposal_created'  => false,
+					'requires_local_review'  => true,
+				),
+				'cloud_request_summary' => array(
+					'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'whole_run_offload' ) ),
+					'execution_kind'    => sanitize_key( (string) ( $runtime_payload['execution_kind'] ?? 'site_ops_cloud_analysis' ) ),
+					'storage_mode'      => sanitize_key( (string) ( $runtime_payload['storage_mode'] ?? 'result_only' ) ),
+					'retention_ttl'     => (int) ( $runtime_payload['retention_ttl'] ?? 0 ),
+					'finding_count'     => count( (array) ( $runtime_payload['input']['input']['local_findings'] ?? array() ) ),
+				),
+			),
+			'site_ops_cloud_analysis_runtime',
+			'site_ops_cloud_analysis_result'
+		);
 
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
