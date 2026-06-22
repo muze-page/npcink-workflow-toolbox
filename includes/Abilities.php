@@ -161,6 +161,10 @@ final class Abilities {
 						'type'        => 'string',
 						'description' => __( 'Search intent hint such as article_background, fact_check, competitor_research, pricing_snapshot, product_comparison, or general_research.', 'npcink-toolbox' ),
 					),
+					'managed_source' => array(
+						'type'        => 'string',
+						'description' => __( 'Optional Cloud-managed source lane such as zhihu_research, zhihu_hot_topics, zhihu_global_search, zhida_simple, zhida_deep, or zhida_deepsearch.', 'npcink-toolbox' ),
+					),
 					'max_results'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
@@ -461,6 +465,7 @@ final class Abilities {
 			array(
 				'query'        => sanitize_textarea_field( (string) ( $input['query'] ?? '' ) ),
 				'intent'       => sanitize_key( (string) ( $input['intent'] ?? 'general_research' ) ),
+				'managed_source' => sanitize_key( (string) ( $input['managed_source'] ?? '' ) ),
 				'max_results'  => (int) ( $input['max_results'] ?? 3 ),
 				'recency_days' => (int) ( $input['recency_days'] ?? 7 ),
 			)

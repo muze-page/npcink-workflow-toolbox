@@ -4309,6 +4309,8 @@ final class Provider_Client {
 				'direct_wordpress_write' => false,
 			);
 		}
+		$atomic_outputs = is_array( $result['atomic_outputs'] ?? null ) ? $this->sanitize_payload( $result['atomic_outputs'] ) : array();
+		$result_count   = array() !== $results ? count( $results ) : absint( $result['result_count'] ?? 0 );
 
 		$payload = $this->with_output_contract(
 			array(
@@ -4324,9 +4326,10 @@ final class Provider_Client {
 				'query'                => sanitize_text_field( (string) ( $input['query'] ?? '' ) ),
 				'intent'               => sanitize_key( (string) ( $result['intent'] ?? $input['intent'] ?? '' ) ),
 				'max_results'          => max( 1, min( 10, (int) ( $input['max_results'] ?? 3 ) ) ),
-				'result_count'         => count( $results ),
+				'result_count'         => $result_count,
 				'evidence_gate'        => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
 				'evidence_pack'        => is_array( $result['evidence_pack'] ?? null ) ? $this->sanitize_payload( $result['evidence_pack'] ) : array(),
+				'atomic_outputs'       => $atomic_outputs,
 				'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
 				'usage_summary'        => array(
 					'provider'             => sanitize_key( (string) ( $result['provider'] ?? 'cloud_web_search' ) ),
@@ -4334,7 +4337,7 @@ final class Provider_Client {
 					'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 					'source_priority'      => sanitize_key( (string) ( $result['source_priority'] ?? $result['evidence_pack']['source_priority'] ?? '' ) ),
 					'provider_call_count'  => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 0 ) ),
-					'result_count'         => count( $results ),
+					'result_count'         => $result_count,
 					'evidence_status'      => sanitize_key( (string) ( $result['evidence_gate']['status'] ?? '' ) ),
 					'failure_reason'       => sanitize_text_field( (string) ( $result['error_code'] ?? $response['error_code'] ?? '' ) ),
 				),

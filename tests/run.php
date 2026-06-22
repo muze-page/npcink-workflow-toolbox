@@ -1316,9 +1316,11 @@ toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/build-image-candid
 toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/web-research' ), 'Toolbox no longer registers a local web-research ability.' );
 toolbox_assert( false !== strpos( $abilities, 'cloud_web_search' ) && false !== strpos( $abilities, "'cloud_contract'         => 'web_search.v1'" ) && false !== strpos( $abilities, "'cloud_ability'          => 'npcink-cloud/web-search'" ), 'Toolbox registers a Cloud-managed web search bridge ability for AI callers.' );
 toolbox_assert( false !== strpos( $abilities, "'provider_execution'     => 'cloud_runtime_via_addon'" ) && false !== strpos( $abilities, "'provider_secret_source' => 'cloud_managed'" ), 'Cloud web search bridge keeps execution and provider secrets in Cloud.' );
+toolbox_assert( false !== strpos( $abilities, "'managed_source' => array(" ) && false !== strpos( $abilities, "'managed_source' => sanitize_key" ), 'Cloud web search ability exposes and forwards the managed_source input for OpenClaw atom calls.' );
 toolbox_assert( false !== strpos( $abilities, 'build_media_brief(' ) && false !== strpos( $abilities, "'refresh_variant' => sanitize_text_field" ) && false !== strpos( $abilities, "'image_mode'      => sanitize_key" ), 'Media brief ability forwards refresh variants and image mode without adding a write path.' );
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
+toolbox_assert( false !== strpos( $client, '$atomic_outputs = is_array' ) && false !== strpos( $client, "'atomic_outputs'       => \$atomic_outputs" ), 'Cloud web search response preserves Cloud atomic_outputs for OpenClaw atom contracts.' );
 $legacy_model_name = 'GPT-' . '5.5';
 $legacy_model_slug = 'gpt' . '55';
 $legacy_route_name = 'free-' . $legacy_model_slug;
