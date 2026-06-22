@@ -344,6 +344,7 @@ composer smoke:nightly-inspection-cloud-batch-merge
 composer smoke:nightly-inspection-cloud-ui
 composer smoke:nightly-inspection-orchestration-boundary
 composer smoke:site-ops-insights-builder
+composer smoke:site-ops-cloud-request
 ```
 
 This validates the `modules/local-automation-runtime/` dry-run replay fixture
@@ -362,6 +363,11 @@ stays local, review-only, no-write, no-Cloud, and no-copy-generation.
 The Site Ops smoke validates deterministic `site_ops_insight_pack.v1` output,
 comment privacy omissions, and no-write/no-Cloud posture without requiring
 WordPress.
+The Site Ops Cloud request smoke validates the contract-only
+`site_ops_cloud_analysis_request.v1` packet for future Cloud runtime/detail
+analysis. It proves the local builder does not call Cloud, create a local
+runtime, schedule work, create Core proposals, write WordPress data, or expose
+comment text, author email, IP address, or user agent.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,

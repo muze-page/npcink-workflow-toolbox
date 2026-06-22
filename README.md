@@ -28,7 +28,9 @@ The first version provides:
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
   Cloud availability, without Cloud calls, Core proposals, persistence, or
-  WordPress writes;
+  WordPress writes, and prepares a copyable
+  `site_ops_cloud_analysis_request.v1` contract for future Cloud runtime
+  analysis without sending it;
 - a Start panel **Preview Morning Brief** entry that reads bounded local
   public-content evidence and renders a dry-run Nightly Site Inspection preview
   without cron, Cloud calls, Core proposals, persistence, or WordPress writes;
@@ -99,6 +101,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Media Optimization Stage Summary](docs/media-optimization-stage-summary.md)
 - [Media Optimization Release Checklist](docs/media-optimization-release-checklist.md)
 - [Media Optimization Operator Trial](docs/media-optimization-operator-trial.md)
+- [Site Ops Cloud Analysis Contract](docs/site-ops-cloud-analysis-contract.md)
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)

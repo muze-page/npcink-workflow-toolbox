@@ -531,20 +531,28 @@ final class Admin_Page {
 		}
 
 		try {
-			$collector = new Site_Ops_Snapshot_Collector();
-			$builder   = new Site_Ops_Insight_Builder();
-			$snapshot  = $collector->collect();
-			$pack      = $builder->build(
+			$collector        = new Site_Ops_Snapshot_Collector();
+			$builder          = new Site_Ops_Insight_Builder();
+			$request_builder  = new Site_Ops_Cloud_Request_Builder();
+			$snapshot         = $collector->collect();
+			$runtime_context  = array(
+				'content_context_ready' => $this->content_context_ready( $content_context ),
+				'cloud_ready'           => $cloud_ready,
+			);
+			$pack             = $builder->build(
 				$snapshot,
-				array(
-					'content_context_ready' => $this->content_context_ready( $content_context ),
-					'cloud_ready'           => $cloud_ready,
-				)
+				$runtime_context
+			);
+			$cloud_request    = $request_builder->build(
+				$snapshot,
+				$pack,
+				$runtime_context
 			);
 
 			return array(
-				'snapshot' => $snapshot,
-				'pack'     => $pack,
+				'snapshot'      => $snapshot,
+				'pack'          => $pack,
+				'cloud_request' => $cloud_request,
 			);
 		} catch ( \Throwable $throwable ) {
 			return array(
@@ -560,6 +568,7 @@ final class Admin_Page {
 	private function render_operations_insights_panel( ?array $preview, array $content_context, bool $cloud_ready ): void {
 		$context_ready = $this->content_context_ready( $content_context );
 		$pack          = isset( $preview['pack'] ) && is_array( $preview['pack'] ) ? $preview['pack'] : array();
+		$cloud_request = isset( $preview['cloud_request'] ) && is_array( $preview['cloud_request'] ) ? $preview['cloud_request'] : array();
 		$summary       = isset( $pack['summary'] ) && is_array( $pack['summary'] ) ? $pack['summary'] : array();
 		$findings      = isset( $pack['top_findings'] ) && is_array( $pack['top_findings'] ) ? array_slice( $pack['top_findings'], 0, 8 ) : array();
 		?>
@@ -672,6 +681,13 @@ final class Admin_Page {
 					<p class="description"><?php esc_html_e( 'This local preview is not stored automatically and does not create a run, queue, Core proposal, or WordPress write.', 'npcink-toolbox' ); ?></p>
 					<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( (string) wp_json_encode( $pack, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); ?></textarea>
 				</details>
+				<?php if ( array() !== $cloud_request ) : ?>
+					<details class="npcink-toolbox__result-details">
+						<summary><?php esc_html_e( 'Copy Cloud analysis request JSON', 'npcink-toolbox' ); ?></summary>
+						<p class="description"><?php esc_html_e( 'This contract is prepared for future Cloud runtime analysis only. Copying it does not call Cloud, schedule work, store a run, create Core proposals, or write WordPress data.', 'npcink-toolbox' ); ?></p>
+						<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( (string) wp_json_encode( $cloud_request, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); ?></textarea>
+					</details>
+				<?php endif; ?>
 			<?php endif; ?>
 		</section>
 		<?php

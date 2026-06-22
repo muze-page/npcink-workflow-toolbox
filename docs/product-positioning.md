@@ -102,6 +102,11 @@ If a feature summarizes local public-site evidence into ranked operational
 findings, suggested actions, blocked items, or Core handoff candidates without
 executing those actions, it may belong in Toolbox.
 
+If a feature needs heavier semantic ranking, trend explanation, anomaly
+diagnosis, or multi-source operations analysis, Toolbox should prepare a
+bounded request contract and leave the complex execution to Cloud runtime/detail
+surfaces.
+
 If a feature authorizes, commits, audits, schedules, or owns final WordPress
 writes, it belongs outside Toolbox.
 

@@ -41,7 +41,9 @@ Target features:
 - Operations Insights tab for a manual local `site_ops_insight_pack.v1` that
   ranks content, approved-comment, media, taxonomy, Site Context, and Cloud
   readiness findings without Cloud calls, persistence, Core proposals,
-  scheduling, or WordPress writes.
+  scheduling, or WordPress writes. It may also prepare
+  `site_ops_cloud_analysis_request.v1` as a future Cloud runtime/detail
+  contract, without sending the request from local preview.
 - Post editor Content Support panel for fixed flows: local article checkup,
   title suggestions, outline support, discoverability suggestions, publish
   preflight, summary suggestions, category suggestions, tag suggestions,
@@ -110,6 +112,9 @@ Goal: make vector search practical for site content.
 Target features:
 
 - Cloud-managed site knowledge Abilities for search, status, and sync;
+- Cloud implementation of `site_ops_cloud_analysis_result.v1` for heavier
+  Operations Insights ranking, trend explanation, and operator next-action
+  detail, using the Toolbox-prepared `site_ops_cloud_analysis_request.v1`;
 - site-content indexing plan;
 - Cloud operator vector provider configuration and migration paths;
 - manual re-index button;
