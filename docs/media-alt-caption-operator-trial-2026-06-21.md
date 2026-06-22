@@ -346,3 +346,64 @@ Interpretation:
 - This still does not approve Toolkit migration or apply behavior. Those remain
   blocked until the same quality holds across more real sites and a governed
   media metadata write path exists through Abilities, Core, and Adapter.
+
+## Cross-Site Validation - npcink.local - 2026-06-22
+
+Command result: pass with zero selected candidates.
+
+The second real-site check mounted the current Toolbox checkout temporarily on
+the local `npcink.local` WordPress site and ran the same batch exporter through
+the existing `/ai/site-helpers` route. The check used real image attachments,
+the same metadata-only source policy, and the same per-request page cap of 10.
+It did not create proposals, executions, media derivative runs, or media
+metadata writes.
+
+Site media-library shape:
+
+| Metric | Result |
+| --- | --- |
+| Image attachments counted by direct SQL | 4,981 |
+| Missing ALT | 4,935 |
+| Missing caption | 4,847 |
+| Weak titles (`image`, blank, or hash-like) | 340 |
+
+Batch export result:
+
+| Metric | Result |
+| --- | --- |
+| Attachments sampled | 500 |
+| Page size | 10 |
+| Selected candidates | 0 |
+| Blocked candidates | 500 |
+| Dominant blocked reason | `candidate_quality_insufficient` |
+
+A targeted follow-up sampled 50 attachments that had either an existing ALT or
+caption. It also selected 0 candidates; all 50 were blocked as
+`candidate_quality_insufficient`.
+
+Representative blocked evidence:
+
+| Attachment | Existing metadata | Filter evidence |
+| ---: | --- | --- |
+| `279007` | caption=`构建页 - 构建` | `too_generic`, `metadata_duplicate`, `filename_like`, `caption_redundant`, `metadata_insufficient` |
+| `21223` | caption=`友情链接提交表单` | `too_generic`, `filename_like`, `caption_redundant`, `metadata_insufficient` |
+| `20056` | ALT/caption/description=`背景图片` | `metadata_duplicate`, `filename_like`, `caption_redundant`, `metadata_insufficient` |
+| `15807` | title=`safar-safarov-MSN8TFhJ0is-unsplash`, caption=`背景图片` | `too_generic`, `source_attribution_or_url`, `caption_redundant`, `metadata_insufficient` |
+
+Interpretation:
+
+- This is a useful negative cross-site result. The filter correctly refused to
+  turn generic labels, source attribution, hashes, screenshots, and UI-purpose
+  words into ALT/caption suggestions.
+- The feature remains valuable only when media-library metadata already
+  contains enough descriptive signal. On weak metadata libraries, the correct
+  output is a blocked review set and an operator next action such as
+  `skip_until_better_metadata_or_visual_evidence`.
+- Do not loosen the deterministic filter just to create volume.
+- Do not move this implementation to Toolkit yet.
+- Do not add direct apply behavior.
+- If this workflow needs to cover weak-metadata libraries, the next design
+  should add optional Cloud-owned visual/image-context evidence or an operator
+  enrichment workflow. That evidence path must stay outside local Toolbox
+  runtime ownership and still require human visual confirmation before any
+  governed media metadata write path.
