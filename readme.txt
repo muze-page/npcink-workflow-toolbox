@@ -4,11 +4,11 @@ Tags: ai, seo, editorial-workflow, media, content
 Requires at least: 6.9
 Requires PHP: 8.0
 Tested up to: 7.0
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Review-only content support for WordPress editors: image candidates, site knowledge, SEO/AEO/GEO guidance, and governed handoff plans.
+Review-only WordPress content support: fixed editorial buttons, image candidates, media ALT review, site knowledge, and governed handoff plans.
 
 == Description ==
 
@@ -17,21 +17,25 @@ reviewable content-support work around human-written articles.
 
 The plugin provides a WordPress admin surface and post-editor panel for:
 
+* a Dashboard Zhihu hot-topic pool for deciding what may be worth researching
+  today before any draft generation or publishing decision;
+* read-only Zhihu capability checks for connected Cloud search, hot-list, and
+  direct-answer lanes;
 * writing preparation, title ideas, outline support, summary suggestions, and
   publish-readiness checks;
 * SEO, AEO, and GEO guidance from operator-maintained site context;
 * existing-category and existing-tag recommendations for review;
 * internal-link candidates and source-coverage notes;
-* image-source candidates, reviewed AI image candidates, and media planning
-  handoff packets;
+* image-source candidates, reviewed AI image candidates, current-article media
+  ALT/caption review sets, and media planning handoff packets;
 * Cloud-managed site knowledge search, status, and sync requests when a
   compatible host runtime is connected;
 * review-only Morning Brief and Cloud runtime inspection panels.
 
 Toolbox returns suggestions, candidates, previews, and planning artifacts. It
 does not publish posts, approve proposals, import media, create terms, update SEO
-metadata, or run a local workflow queue as part of the default content-support
-flow.
+metadata, mutate media metadata, or run a local workflow queue as part of the
+default content-support flow.
 
 When a write-like action is needed, Toolbox prepares a governed handoff plan for
 the host's Npcink Governance Core, OpenClaw Adapter, and WordPress Abilities
@@ -44,6 +48,8 @@ Npcink Toolbox is useful when:
 
 * editors want AI-assisted content checks without one-click publishing;
 * administrators need fixed buttons for repeatable review workflows;
+* editors want a low-friction "what should we research today?" surface backed
+  by a connected Cloud hot-list runtime;
 * a site uses Npcink Cloud or a host-provided runtime for web search, image
   candidates, site knowledge, or hosted AI suggestions;
 * accepted changes must stay reviewable and auditable before any WordPress write.
@@ -154,6 +160,12 @@ planning remain available. Cloud-managed web search, image-source candidates,
 site knowledge, hosted AI suggestions, reviewed AI image generation, and Pro
 Cloud Runtime checks require a connected runtime.
 
+= Does the Zhihu hot-topic pool generate posts? =
+
+No. The Dashboard topic pool is a research-selection surface. It can show
+Cloud-provided hot-list candidates for operator review, but it does not create
+drafts, rewrite content, or publish posts.
+
 = Does Toolbox create new categories or tags? =
 
 No. The first version recommends existing categories and tags for review. New
@@ -172,6 +184,19 @@ approval, preflight, audit, and the final WordPress ability execution remain
 outside Toolbox.
 
 == Changelog ==
+
+= 0.1.1 =
+
+* Added the review-only Dashboard `知乎热榜选题` topic-pool surface for daily
+  research selection.
+* Added read-only Zhihu capability checks for connected Cloud search, hot-list,
+  and direct-answer lanes.
+* Tightened the Zhihu hot-topic table so machine identifiers and URL-like
+  values are hidden from the operator-facing signal column.
+* Clarified current-article media ALT/caption review-set positioning in the
+  WordPress.org-facing readme.
+* Kept hot topics, media ALT/caption suggestions, and accepted choices
+  suggestion-only with no direct WordPress or media metadata writes.
 
 = 0.1.0 =
 

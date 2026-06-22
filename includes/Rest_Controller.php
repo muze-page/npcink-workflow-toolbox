@@ -349,6 +349,7 @@ final class Rest_Controller {
 				array(
 					'query'               => $query,
 					'intent'              => $intent,
+					'managed_source'      => sanitize_key( (string) $request->get_param( 'managed_source' ) ),
 					'max_results'         => max( 1, min( 5, (int) ( $request->get_param( 'max_results' ) ?: 3 ) ) ),
 					'recency_days'        => max( 0, min( 30, $recency_days ) ),
 				)

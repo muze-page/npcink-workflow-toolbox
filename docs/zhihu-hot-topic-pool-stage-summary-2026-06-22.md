@@ -47,7 +47,7 @@ The operator-facing entry point is a WordPress Dashboard widget on
 
 ```text
 intent=zhihu_hot_topics
-widget=今日热点选题池
+widget=知乎热榜选题
 ```
 
 The previous editor-side `热点选题` and `知乎选题研究` buttons are not default
@@ -64,7 +64,7 @@ Cloud remains the runtime provider:
 
 Toolbox remains the local product and projection surface:
 
-- Toolbox renders the `今日热点选题池` Dashboard widget.
+- Toolbox renders the `知乎热榜选题` Dashboard widget.
 - Toolbox calls Cloud through the existing Cloud Addon runtime seam.
 - Toolbox normalizes the Cloud topic candidates into `hot_topic_pool`.
 - Toolbox keeps all outputs `suggestion_only` and `direct_wordpress_write=false`.
@@ -105,7 +105,7 @@ Expected local output:
 
 On the WordPress Dashboard, the user sees:
 
-- `今日热点选题池`
+- `知乎热榜选题`
 - a short explanation that it solves "今天写什么";
 - a compact table with rank, topic, signal, suggested use, and source action;
 - a refresh button that clears the local Dashboard transient and reuses the

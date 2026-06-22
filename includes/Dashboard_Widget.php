@@ -29,18 +29,12 @@ final class Dashboard_Widget {
 			return;
 		}
 		if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
-			$dashboard_file = ABSPATH . 'wp-admin/includes/dashboard.php';
-			if ( file_exists( $dashboard_file ) ) {
-				require_once $dashboard_file;
-			}
-		}
-		if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
 			return;
 		}
 
 		wp_add_dashboard_widget(
 			self::HOT_TOPIC_WIDGET_ID,
-			__( '今日热点选题池', 'npcink-toolbox' ),
+			__( '知乎热榜选题', 'npcink-toolbox' ),
 			array( $this, 'render_hot_topic_pool' ),
 			null,
 			null,
@@ -62,7 +56,7 @@ final class Dashboard_Widget {
 		$pool  = $this->hot_topic_pool( $force_refresh );
 		$items = is_array( $pool['items'] ?? null ) ? $pool['items'] : array();
 
-		echo '<p class="description">' . esc_html__( '来自服务器缓存的知乎热榜趋势信号，用来先判断今天写什么；这里只做选题，不生成、不改写、不发布文章。', 'npcink-toolbox' ) . '</p>';
+		echo '<p class="description">' . esc_html__( '来自服务器缓存的知乎热榜，用来先判断今天写什么；这里只做选题，不生成、不改写、不发布文章。', 'npcink-toolbox' ) . '</p>';
 
 		if ( array() === $items ) {
 			$message = sanitize_text_field( (string) ( $pool['message'] ?? __( '暂时没有可用的热点选题。', 'npcink-toolbox' ) ) );
@@ -153,31 +147,32 @@ final class Dashboard_Widget {
 	}
 
 	private function render_hot_topic_table( array $items ): void {
-		echo '<table class="widefat striped" style="margin-top:10px;">';
+		echo '<table class="widefat striped" style="margin-top:10px;table-layout:fixed;width:100%;">';
 		echo '<thead><tr>';
-		echo '<th scope="col" style="width:56px;">' . esc_html__( '排名', 'npcink-toolbox' ) . '</th>';
-		echo '<th scope="col">' . esc_html__( '选题', 'npcink-toolbox' ) . '</th>';
+		echo '<th scope="col" style="width:52px;">' . esc_html__( '排名', 'npcink-toolbox' ) . '</th>';
+		echo '<th scope="col" style="width:34%;">' . esc_html__( '热榜标题', 'npcink-toolbox' ) . '</th>';
 		echo '<th scope="col">' . esc_html__( '热点信号', 'npcink-toolbox' ) . '</th>';
-		echo '<th scope="col">' . esc_html__( '适合方向', 'npcink-toolbox' ) . '</th>';
-		echo '<th scope="col" style="width:96px;">' . esc_html__( '操作', 'npcink-toolbox' ) . '</th>';
+		echo '<th scope="col" style="width:76px;">' . esc_html__( '操作', 'npcink-toolbox' ) . '</th>';
 		echo '</tr></thead><tbody>';
 
 		foreach ( $items as $index => $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
-			$rank          = absint( $item['rank'] ?? ( $index + 1 ) );
-			$title         = sanitize_text_field( (string) ( $item['title'] ?? '' ) );
-			$signal        = sanitize_textarea_field( (string) ( $item['signal'] ?? $item['snippet'] ?? $item['selection_reason'] ?? '' ) );
-			$suggested_use = sanitize_textarea_field( (string) ( $item['suggested_use'] ?? __( '人工选择后进入资料核验。', 'npcink-toolbox' ) ) );
-			$url           = esc_url_raw( (string) ( $item['url'] ?? '' ) );
+			$rank   = absint( $item['rank'] ?? ( $index + 1 ) );
+			$title  = sanitize_text_field( (string) ( $item['title'] ?? '' ) );
+			$signal = $this->display_hot_topic_signal( $item );
+			$url    = esc_url_raw( (string) ( $item['url'] ?? '' ) );
+			if ( '' === $title ) {
+				/* translators: %d: hot topic rank number. */
+				$title = sprintf( __( '热榜选题 %d', 'npcink-toolbox' ), $rank );
+			}
 
 			echo '<tr>';
-			echo '<td>' . esc_html( '#' . (string) $rank ) . '</td>';
-			echo '<td><strong>' . esc_html( '' !== $title ? $title : sprintf( __( '热榜选题 %d', 'npcink-toolbox' ), $rank ) ) . '</strong></td>';
-			echo '<td>' . esc_html( $this->trim_display_text( $signal, 96 ) ) . '</td>';
-			echo '<td>' . esc_html( $this->trim_display_text( $suggested_use, 72 ) ) . '</td>';
-			echo '<td>';
+			echo '<td style="vertical-align:top;">' . esc_html( '#' . (string) $rank ) . '</td>';
+			echo '<td style="vertical-align:top;word-break:break-word;"><strong>' . esc_html( $title ) . '</strong></td>';
+			echo '<td style="vertical-align:top;word-break:break-word;">' . esc_html( $this->trim_display_text( $signal, 110 ) ) . '</td>';
+			echo '<td style="vertical-align:top;">';
 			if ( '' !== $url ) {
 				echo '<a class="button button-small" target="_blank" rel="noopener noreferrer" href="' . esc_url( $url ) . '">' . esc_html__( '打开', 'npcink-toolbox' ) . '</a>';
 			} else {
@@ -190,14 +185,52 @@ final class Dashboard_Widget {
 		echo '</tbody></table>';
 	}
 
-	private function render_hot_topic_meta( array $pool ): void {
-		$parts = array_filter(
+	private function display_hot_topic_signal( array $item ): string {
+		foreach ( array( 'signal', 'snippet', 'selection_reason' ) as $key ) {
+			$value = sanitize_textarea_field( (string) ( $item[ $key ] ?? '' ) );
+			if ( '' === $value || $this->is_machine_or_url_value( $value ) ) {
+				continue;
+			}
+			return $value;
+		}
+
+		return __( '热榜趋势信号，需人工判断是否适合本站受众。', 'npcink-toolbox' );
+	}
+
+	private function is_machine_or_url_value( string $value ): bool {
+		$normalized = strtolower( trim( $value ) );
+		if ( '' === $normalized ) {
+			return true;
+		}
+		if ( preg_match( '/^https?:\\/\\//', $normalized ) ) {
+			return true;
+		}
+		return in_array(
+			$normalized,
 			array(
-				isset( $pool['fetched_at'] ) ? sprintf( __( '更新时间：%s', 'npcink-toolbox' ), sanitize_text_field( (string) $pool['fetched_at'] ) ) : '',
-				isset( $pool['cache_status'] ) ? sprintf( __( '缓存：%s', 'npcink-toolbox' ), sanitize_key( (string) $pool['cache_status'] ) ) : '',
-				isset( $pool['result_count'] ) ? sprintf( __( '数量：%d', 'npcink-toolbox' ), absint( $pool['result_count'] ) ) : '',
-			)
+				'zhihu_hot_topic_candidate',
+				'zhihu_hot_topic_pool',
+				'topic_candidate.v1',
+				'manual_topic_selection_then_focused_research',
+			),
+			true
 		);
+	}
+
+	private function render_hot_topic_meta( array $pool ): void {
+		$parts = array();
+		if ( isset( $pool['fetched_at'] ) ) {
+			/* translators: %s: hot-topic pool fetch time. */
+			$parts[] = sprintf( __( '更新时间：%s', 'npcink-toolbox' ), sanitize_text_field( (string) $pool['fetched_at'] ) );
+		}
+		if ( isset( $pool['cache_status'] ) ) {
+			/* translators: %s: cache status. */
+			$parts[] = sprintf( __( '缓存：%s', 'npcink-toolbox' ), sanitize_key( (string) $pool['cache_status'] ) );
+		}
+		if ( isset( $pool['result_count'] ) ) {
+			/* translators: %d: number of hot-topic candidates. */
+			$parts[] = sprintf( __( '数量：%d', 'npcink-toolbox' ), absint( $pool['result_count'] ) );
+		}
 
 		if ( array() !== $parts ) {
 			echo '<p class="description" style="margin:8px 0 0;">' . esc_html( implode( ' · ', $parts ) ) . '</p>';

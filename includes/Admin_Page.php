@@ -1016,6 +1016,10 @@ final class Admin_Page {
 									<span><?php esc_html_e( 'Search reachability', 'npcink-toolbox' ); ?></span>
 									<small><?php esc_html_e( 'Read-only query', 'npcink-toolbox' ); ?></small>
 								</button>
+								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="zhihu-capability" aria-selected="false">
+									<span><?php esc_html_e( 'Zhihu capabilities', 'npcink-toolbox' ); ?></span>
+									<small><?php esc_html_e( 'Open Platform lanes', 'npcink-toolbox' ); ?></small>
+								</button>
 								<button type="button" class="npcink-toolbox__cloud-check-group-button" data-toolbox-cloud-check-group-target="search-diagnostic" aria-selected="false">
 									<span><?php esc_html_e( 'Evidence check', 'npcink-toolbox' ); ?></span>
 									<small><?php esc_html_e( 'Workflow evidence', 'npcink-toolbox' ); ?></small>
@@ -1059,6 +1063,45 @@ final class Admin_Page {
 											</label>
 										</div>
 										<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Run search check', 'npcink-toolbox' ); ?></button>
+										<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
+									</form>
+								</div>
+								<div class="npcink-toolbox__cloud-check-group-panel" data-toolbox-cloud-check-group-panel="zhihu-capability" hidden>
+									<form class="npcink-toolbox__inline-form" data-toolbox-endpoint="web-search/test">
+										<h3><?php esc_html_e( 'Zhihu Open Platform checks', 'npcink-toolbox' ); ?></h3>
+										<p><?php esc_html_e( 'Manually verify Zhihu search, hot-list, and direct-answer lanes. These checks are read-only and do not generate, rewrite, publish, or write WordPress content.', 'npcink-toolbox' ); ?></p>
+										<?php if ( ! $cloud_ready ) : ?>
+											<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before running Zhihu capability checks.', 'npcink-toolbox' ); ?></div>
+										<?php endif; ?>
+										<label>
+											<span><?php esc_html_e( 'Query', 'npcink-toolbox' ); ?></span>
+											<input type="text" name="query" value="AI 写作工具用户最关心什么" />
+										</label>
+										<div class="npcink-toolbox__split">
+											<label>
+												<span><?php esc_html_e( 'Capability', 'npcink-toolbox' ); ?></span>
+												<select name="intent">
+													<option value="zhihu_global_search" data-toolbox-managed-source="zhihu_global_search" data-toolbox-query="AI 写作工具有哪些可靠资料来源" data-toolbox-recency="30" data-toolbox-max-results="3"><?php esc_html_e( '全网搜', 'npcink-toolbox' ); ?></option>
+													<option value="zhihu_research" data-toolbox-managed-source="zhihu_research" data-toolbox-query="AI 写作工具用户最关心什么" data-toolbox-recency="30" data-toolbox-max-results="5"><?php esc_html_e( '知乎搜索', 'npcink-toolbox' ); ?></option>
+													<option value="zhihu_hot_topics" data-toolbox-managed-source="zhihu_hot_topics" data-toolbox-query="知乎热榜" data-toolbox-recency="1" data-toolbox-max-results="5"><?php esc_html_e( '热榜', 'npcink-toolbox' ); ?></option>
+													<option value="zhida_simple" data-toolbox-managed-source="zhida_simple" data-toolbox-query="什么是 AI Agent" data-toolbox-recency="30" data-toolbox-max-results="3"><?php esc_html_e( '直答 Simple', 'npcink-toolbox' ); ?></option>
+													<option value="zhida_deep" data-toolbox-managed-source="zhida_deep" data-toolbox-query="AI Agent 在内容生产中有哪些真实使用场景" data-toolbox-recency="30" data-toolbox-max-results="3"><?php esc_html_e( '直答 Deep', 'npcink-toolbox' ); ?></option>
+													<option value="zhida_deepsearch" data-toolbox-managed-source="zhida_deepsearch" data-toolbox-query="2026 年 AI Agent 内容生产工具有哪些新趋势" data-toolbox-recency="7" data-toolbox-max-results="3"><?php esc_html_e( '直答 DeepSearch', 'npcink-toolbox' ); ?></option>
+												</select>
+											</label>
+											<label>
+												<span><?php esc_html_e( 'Max results', 'npcink-toolbox' ); ?></span>
+												<input type="number" name="max_results" min="1" max="5" value="3" />
+											</label>
+										</div>
+										<div class="npcink-toolbox__split">
+											<label>
+												<span><?php esc_html_e( 'Recency days', 'npcink-toolbox' ); ?></span>
+												<input type="number" name="recency_days" min="0" max="30" value="30" />
+											</label>
+										</div>
+										<input type="hidden" name="managed_source" value="zhihu_global_search" />
+										<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php esc_html_e( 'Run Zhihu check', 'npcink-toolbox' ); ?></button>
 										<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 									</form>
 								</div>

@@ -3956,6 +3956,8 @@
 		}
 		const queryInput = form.querySelector('input[name="query"]');
 		const recencyInput = form.querySelector('input[name="recency_days"]');
+		const maxResultsInput = form.querySelector('input[name="max_results"]');
+		const managedSourceInput = form.querySelector('[name="managed_source"]');
 		const presetQuery = option.getAttribute('data-toolbox-query') || '';
 		const previousPreset = form.getAttribute('data-toolbox-last-preset-query') || '';
 		if (queryInput instanceof HTMLInputElement && presetQuery) {
@@ -3968,6 +3970,14 @@
 		const presetRecency = option.getAttribute('data-toolbox-recency');
 		if (recencyInput instanceof HTMLInputElement && presetRecency !== null) {
 			recencyInput.value = presetRecency;
+		}
+		const presetMaxResults = option.getAttribute('data-toolbox-max-results');
+		if (maxResultsInput instanceof HTMLInputElement && presetMaxResults !== null) {
+			maxResultsInput.value = presetMaxResults;
+		}
+		const presetManagedSource = option.getAttribute('data-toolbox-managed-source');
+		if ((managedSourceInput instanceof HTMLInputElement || managedSourceInput instanceof HTMLSelectElement) && presetManagedSource !== null) {
+			managedSourceInput.value = presetManagedSource;
 		}
 	}
 
