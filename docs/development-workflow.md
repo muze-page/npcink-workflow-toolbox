@@ -345,6 +345,7 @@ composer smoke:nightly-inspection-cloud-ui
 composer smoke:nightly-inspection-orchestration-boundary
 composer smoke:site-ops-insights-builder
 composer smoke:site-ops-cloud-request
+composer smoke:site-ops-cloud-e2e
 ```
 
 This validates the `modules/local-automation-runtime/` dry-run replay fixture
@@ -370,6 +371,13 @@ schedule work, create Core proposals, write WordPress data, or expose comment
 text, author email, IP address, or user agent. The manual admin bridge may send
 that prepared request only when Cloud is ready and must not create local
 queues, local run tables, scheduler truth, Core proposals, or WordPress writes.
+The Site Ops Cloud E2E smoke runs against a real local WordPress site with a
+verified Cloud Addon connection and a running Cloud runtime. It submits the
+prepared public aggregate request through `Provider_Client` and verifies the
+`site_ops_cloud_analysis_result.v1` result, Cloud runtime/detail ownership,
+priority and trend detail, no direct WordPress writes, no scheduler truth, no
+local run tables, and no Core proposal creation. It is intentionally outside
+`composer test:all`.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,
@@ -410,10 +418,18 @@ cd /Users/muze/gitee/magick-ai-cloud
 docker compose -f docker-compose.dev.yml --profile runtime up -d worker
 
 cd /Users/muze/gitee/magick-ai-toolbox
+composer smoke:site-ops-cloud-e2e
 composer smoke:nightly-inspection-cloud-e2e
 ```
 
-This submits a metadata-only Pro Nightly Inspection Cloud Batch through the
+The Operations Insights command submits a manual Site Ops Cloud analysis request
+through the verified Cloud Addon, reads the immediate Cloud runtime detail, and
+verifies the result remains suggestion-only review output. It must still prove
+Cloud does not become scheduler truth, does not create local run tables or Core
+proposals, and does not grant direct WordPress writes.
+
+The Nightly Inspection command submits a metadata-only Pro Nightly Inspection
+Cloud Batch through the
 verified Cloud Addon, polls until the Cloud runtime worker reaches a terminal
 status, reads the result, and verifies Toolbox can merge the Cloud detail into
 the local Morning Brief. It is intentionally not part of `composer test:all`
