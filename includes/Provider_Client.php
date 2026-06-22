@@ -1850,7 +1850,7 @@ final class Provider_Client {
 		}
 
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'news' ) );
-		if ( ! in_array( $intent, array( 'general_research', 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links', 'zhihu_research', 'zhihu_hot_topics' ), true ) ) {
+		if ( ! in_array( $intent, array( 'general_research', 'article_background', 'fact_check', 'news', 'writing_context', 'competitor_research', 'pricing_snapshot', 'product_comparison', 'source_discovery', 'external_links', 'zhihu_global_search', 'zhihu_research', 'zhihu_hot_topics', 'zhida_simple', 'zhida_deep', 'zhida_deepsearch' ), true ) ) {
 			$intent = 'news';
 		}
 
@@ -1876,6 +1876,14 @@ final class Provider_Client {
 		if ( 'zhihu_hot_topics' === $managed_source ) {
 			$runtime_input['provider']         = 'zhihu';
 			$runtime_input['source_type']      = 'zhihu_hot_list';
+		}
+		if ( 'zhihu_global_search' === $managed_source ) {
+			$runtime_input['provider']         = 'zhihu';
+			$runtime_input['source_type']      = 'zhihu_global_search';
+		}
+		if ( in_array( $managed_source, array( 'zhida_simple', 'zhida_deep', 'zhida_deepsearch' ), true ) ) {
+			$runtime_input['provider']         = 'zhihu';
+			$runtime_input['source_type']      = $managed_source;
 		}
 
 		$runtime_payload = array(

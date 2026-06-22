@@ -180,6 +180,24 @@ tab remains the management, testing, and cross-article surface.
 | `npcink-toolbox/build-site-knowledge-review-plan` | `core_site_knowledge_review_plan` | Blocked Site Knowledge review plan with preserved evidence refs and human title/content input still required. |
 | `npcink-toolbox/build-media-brief` | `media_planning_bundle` | Image-source planning for existing post context. |
 
+## Atomic Knowledge Outputs
+
+Search-like surfaces should consume Cloud atomic output contracts rather than
+inventing one-off result shapes:
+
+| Atomic capability | Expected contract | Toolbox use |
+| --- | --- | --- |
+| Global web search | `source_evidence.v1` | External facts, citation candidates, comparison material, and support evidence. Zhihu full-web search is available through `managed_source=zhihu_global_search` when Cloud config enables it. |
+| Zhihu search | `source_evidence.v1` plus optional `topic_candidate.v1` | Audience questions, viewpoints, objections, and writing angles |
+| Hot list | `topic_candidate.v1` plus supporting `source_evidence.v1` | Daily topic pool before a draft exists |
+| Direct answer | `grounded_answer.v1` | Short answer preview or FAQ/AEO draft from `managed_source=zhida_simple`, `managed_source=zhida_deep`, or `managed_source=zhida_deepsearch`; never final article text |
+
+Toolbox should treat these as composable atoms. A higher-level flow may combine
+hot-list candidates, Zhihu research, web evidence, and a grounded answer preview,
+but the combination remains `suggestion_only`. The direct-answer atom must not
+be accepted as final article text, and any write-like outcome must still route
+through the existing local/Core review path.
+
 ## Output Contract
 
 Provider-backed Toolbox payloads should include enough contract metadata for AI
@@ -221,22 +239,40 @@ Every AI caller should:
 - send write-like outcomes to Core proposal flows.
 
 The editor `zhihu_research` button is a fixed productized use of this same
-runtime. Toolbox sends `managed_source=zhihu_research`, which maps to Cloud
-runtime input `provider=zhihu` and `source_type=zhihu_research`. The UI may show
-returned title, URL, source, author, content type, engagement counts, and
-authority metadata as review signals. It must not expose a generic provider
-picker, collect Zhihu credentials locally, mix global hot-list items into the
-current query by default, copy source text into the draft, rewrite Zhihu content
-as an article, or publish anything. It is useful before writing when the editor
-needs real audience questions, common objections, angle discovery, or citation
-candidates.
+runtime and should read Cloud `source_evidence.v1` / `topic_candidate.v1`
+projections when present. Toolbox sends `managed_source=zhihu_research`, which
+maps to Cloud runtime input `provider=zhihu` and `source_type=zhihu_research`.
+The UI may show returned title, URL, source, author, content type, engagement
+counts, and authority metadata as review signals. It must not expose a generic
+provider picker, collect Zhihu credentials locally, mix global hot-list items
+into the current query by default, copy source text into the draft, rewrite
+Zhihu content as an article, or publish anything. It is useful before writing
+when the editor needs real audience questions, common objections, angle
+discovery, or citation candidates.
 
 The editor `zhihu_hot_topics` button is a separate topic-pool surface. Toolbox
 sends `managed_source=zhihu_hot_topics`, which maps to Cloud runtime input
 `provider=zhihu` and `source_type=zhihu_hot_list`. Cloud may return cached
-hot-list items so multiple WordPress clients do not spend provider quota on each
-panel open. The UI should present these as "what might be worth researching
-today", not as facts, drafts, schedules, or publication instructions.
+hot-list items and `topic_candidate.v1` projections so multiple WordPress
+clients do not spend provider quota on each panel open. The UI should present
+these as "what might be worth researching today", not as facts, drafts,
+schedules, or publication instructions.
+
+For broader source discovery, a feature can call the same Cloud web-search seam
+with `managed_source=zhihu_global_search`, `intent=zhihu_global_search`, and a
+review query. Toolbox maps that to Cloud runtime input `provider=zhihu` and
+`source_type=zhihu_global_search`. The returned `source_evidence.v1` atom can
+feed fact checking, citation collection, product comparisons, FAQ/AEO research,
+or article background packs. It should not replace official-source review for
+claims that will be published.
+
+For short answers, a feature can call `managed_source=zhida_simple`,
+`managed_source=zhida_deep`, or `managed_source=zhida_deepsearch` with the same
+Cloud web-search seam. Cloud maps these to the Zhihu direct-answer lanes and
+returns `grounded_answer.v1` when configured. Toolbox may show that answer as a
+preview, FAQ/AEO candidate, or research conclusion candidate, but it must remain
+`suggestion_only`; inserting it into a post still requires the local/Core review
+path.
 
 ## Image Usage
 
