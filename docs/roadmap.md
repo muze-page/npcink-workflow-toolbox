@@ -38,6 +38,10 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
+- Operations Insights tab for a manual local `site_ops_insight_pack.v1` that
+  ranks content, approved-comment, media, taxonomy, Site Context, and Cloud
+  readiness findings without Cloud calls, persistence, Core proposals,
+  scheduling, or WordPress writes.
 - Post editor Content Support panel for fixed flows: local article checkup,
   title suggestions, outline support, discoverability suggestions, publish
   preflight, summary suggestions, category suggestions, tag suggestions,

@@ -343,6 +343,7 @@ composer smoke:nightly-inspection-basic-cron
 composer smoke:nightly-inspection-cloud-batch-merge
 composer smoke:nightly-inspection-cloud-ui
 composer smoke:nightly-inspection-orchestration-boundary
+composer smoke:site-ops-insights-builder
 ```
 
 This validates the `modules/local-automation-runtime/` dry-run replay fixture
@@ -358,6 +359,9 @@ closed.
 The Nightly Inspection builder smoke validates deterministic scoring against a
 fixture snapshot and confirms the `nightly_site_inspection_result.v1` preview
 stays local, review-only, no-write, no-Cloud, and no-copy-generation.
+The Site Ops smoke validates deterministic `site_ops_insight_pack.v1` output,
+comment privacy omissions, and no-write/no-Cloud posture without requiring
+WordPress.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,

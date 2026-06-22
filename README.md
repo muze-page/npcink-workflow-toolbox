@@ -24,6 +24,11 @@ The first version provides:
   selected-paragraph toolbar checks that do not replace body text;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
+- an **Operations Insights** tab that builds a local
+  `site_ops_insight_pack.v1` from bounded public content, approved comment
+  signals, media metadata, taxonomy summaries, Site Context readiness, and
+  Cloud availability, without Cloud calls, Core proposals, persistence, or
+  WordPress writes;
 - a Start panel **Preview Morning Brief** entry that reads bounded local
   public-content evidence and renders a dry-run Nightly Site Inspection preview
   without cron, Cloud calls, Core proposals, persistence, or WordPress writes;

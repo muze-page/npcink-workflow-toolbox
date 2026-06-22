@@ -9,6 +9,9 @@ Owned here:
 - vector search actions;
 - Cloud-managed site knowledge actions for vector search;
 - fixed-flow buttons that return planning artifacts;
+- local operations insight previews that turn bounded public content,
+  approved-comment signals, media metadata, taxonomy summaries, and context
+  readiness into `suggestion_only` findings;
 - non-secret content discoverability context for SEO, AEO, and GEO suggestion
   workflows;
 - operator-facing admin UI for the toolbox.
@@ -271,6 +274,23 @@ Comment reply suggestions in the editor are a review-only projection over
 the current article context and selected or operator-supplied comment text, but
 does not publish replies, approve comments, mutate comment status, or own
 comment workflow governance.
+
+## Operations Insights Boundary
+
+The **Operations Insights** tab builds one administrator-requested local
+`site_ops_insight_pack.v1` preview. It may read bounded public posts/pages,
+approved comment signal counts, media metadata, category/tag summaries, Site
+Context readiness, and Cloud availability. It must not return comment author
+emails, IP addresses, user agents, or full comment text.
+
+The output is a ranked decision aid: top findings, evidence summaries, impact,
+recommended actions, blocked items, and handoff candidates. It is not a site
+automation runner. P0 does not call Cloud, schedule jobs, persist run state,
+create Core proposals, submit Adapter actions, mutate comments, update media,
+write SEO fields, create taxonomy terms, or publish content. Future Cloud
+enrichment may add semantic and external-data detail, but Cloud remains runtime
+detail and must not become a second WordPress write owner, approval store, or
+control plane.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and

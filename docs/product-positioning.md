@@ -64,7 +64,10 @@ semantics.
 8. Treat `media_optimization_v1` as the fixed governed Optimize Existing Image
    workflow, improving the existing Toolbox surface rather than creating a
    duplicate runner.
-9. Preserve Core and Abilities boundaries for final WordPress writes.
+9. Surface site-level operations insights that turn content, approved comment,
+   media, taxonomy, context, and runtime signals into prioritized review-only
+   action guidance.
+10. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals
 
@@ -94,6 +97,10 @@ candidate, or planning artifact, it may belong in Toolbox.
 
 If a feature lets an operator fill non-secret site guidance that third-party AI
 can consume as suggestion-only context, it may belong in Toolbox.
+
+If a feature summarizes local public-site evidence into ranked operational
+findings, suggested actions, blocked items, or Core handoff candidates without
+executing those actions, it may belong in Toolbox.
 
 If a feature authorizes, commits, audits, schedules, or owns final WordPress
 writes, it belongs outside Toolbox.

@@ -111,13 +111,6 @@
 	line-height: 1.4;
 }
 
-.npcink-toolbox__start-main {
-	padding: 16px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 6px;
-}
-
 .npcink-toolbox__start-actions {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -243,6 +236,83 @@
 
 .npcink-toolbox__usage-list span {
 	color: #50575e;
+	line-height: 1.4;
+}
+
+.npcink-toolbox__insight-list {
+	display: grid;
+	gap: 12px;
+	margin: 14px 0;
+}
+
+.npcink-toolbox__insight-card {
+	display: grid;
+	gap: 12px;
+	padding: 14px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #2271b1;
+	border-radius: 6px;
+}
+
+.npcink-toolbox__insight-card-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 14px;
+	align-items: flex-start;
+}
+
+.npcink-toolbox__insight-card-header h3 {
+	margin: 0 0 4px;
+	font-size: 15px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__insight-card-header p {
+	margin: 0;
+	color: #50575e;
+	line-height: 1.45;
+}
+
+.npcink-toolbox__insight-score {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 42px;
+	min-height: 32px;
+	padding: 4px 8px;
+	background: #f0f6fc;
+	border: 1px solid #72aee6;
+	border-radius: 4px;
+	color: #1d2327;
+	font-weight: 700;
+}
+
+.npcink-toolbox__insight-details {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+	margin: 0;
+}
+
+.npcink-toolbox__insight-details div {
+	display: grid;
+	gap: 3px;
+	padding: 10px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+}
+
+.npcink-toolbox__insight-details dt {
+	color: #646970;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.npcink-toolbox__insight-details dd {
+	margin: 0;
+	color: #1d2327;
 	line-height: 1.4;
 }
 
@@ -1323,8 +1393,10 @@ pre.npcink-toolbox__result {
 		grid-template-columns: 1fr;
 	}
 
-	.npcink-toolbox__start-main .npcink-toolbox__section-heading {
+	.npcink-toolbox__insight-card-header,
+	.npcink-toolbox__insight-details {
 		display: grid;
+		grid-template-columns: 1fr;
 	}
 
 	.npcink-toolbox__workflow-scope {

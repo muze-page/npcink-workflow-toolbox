@@ -86,13 +86,19 @@ batch proposal, and URL repair handoffs stay in Workflows. Marketplace,
 provider routing, vector provider settings, and vector lifecycle controls do
 not belong in Toolbox.
 
-The admin page should default to Start: readiness, current article entry, three
-common next actions, and one folded advanced directory. Article-specific jobs
-use the editor Content Support sidebar:
+The admin page should default to Start: readiness, site-level and media next
+actions, and one folded advanced directory. It should not render a single-post
+article-support work block. Article-specific jobs use the editor Content
+Support sidebar:
 publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal links, and image candidates. Related existing-post review is folded
 into publish preflight duplicate-risk checks and internal-link candidates, so
 `writing_support` remains route-compatible but is not a default editor button.
+The Operations Insights tab is the site-level decision surface. It builds a
+manual local `site_ops_insight_pack.v1` from bounded public content,
+approved-comment signal counts, media metadata, taxonomy summaries, Site
+Context readiness, and Cloud availability. It does not call Cloud, persist run
+state, schedule jobs, create Core proposals, or write WordPress data.
 The admin Workflows tab defaults to Media, with Optimize Existing Image as the
 first visible tool, and keeps Site Helpers as a secondary low-frequency group.
 Governed Handoffs and Fallback Bundles sit under the folded advanced/fallback

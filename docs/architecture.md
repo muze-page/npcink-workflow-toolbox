@@ -14,6 +14,8 @@ Status: MVP architecture.
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
+| `Site_Ops_Snapshot_Collector` | Bounded read-only collector for Operations Insights: public posts/pages, approved-comment signals, media metadata, taxonomy summaries, and site info. |
+| `Site_Ops_Insight_Builder` | Deterministic `site_ops_insight_pack.v1` builder that ranks local operations findings without Cloud calls, persistence, proposals, or WordPress writes. |
 | `Site_Knowledge_Auto_Sync` | Compatibility status projection for the Cloud Addon Site Knowledge change bridge plus retired legacy state cleanup. It does not own public content-change hooks, queues, retries, or refresh hints. |
 | `modules/local-automation-runtime/` | Bundled module for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview plus one Phase 2 disabled-by-default Basic WP-Cron dry-run hook for the Local Fallback Preview. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
@@ -464,13 +466,17 @@ not submit the plan to Core or approve execution.
 
 The admin page defaults to a **Start** surface with a readiness strip for Cloud
 runtime, Site Context, Site Knowledge, and final-write posture, followed by
-three common next steps and one folded advanced directory. Its primary article
-path points operators back to the post editor sidebar because high-frequency
-article-specific work belongs there. Admin tabs after Start are setup,
-operations, and diagnostics: **Site Context**, **Site Knowledge**,
-**Workflows**, and **Cloud Checks**. Nightly Inspection fallback preview
-settings, Pro Cloud Runtime checks, and run recovery live under **Cloud
-Checks**, not the default Start view.
+site-level and media next steps plus one folded advanced directory. Single-post
+article support stays in the post editor sidebar and is not rendered as a Start
+page work block. Admin tabs after Start are setup, operations, and diagnostics:
+**Site Context**, **Site Knowledge**, **Operations Insights**, **Workflows**,
+and **Cloud Checks**. **Operations Insights** builds a local
+`site_ops_insight_pack.v1` from bounded public content, approved comment signal
+counts, media metadata, taxonomy summaries, Site Context readiness, and Cloud
+availability. It is a manual preview surface, not a Cloud batch, local queue,
+Core proposal creator, or WordPress write path. Nightly Inspection fallback
+preview settings, Pro Cloud Runtime checks, and run recovery live under
+**Cloud Checks**, not the default Start view.
 
 The admin **Workflows** tab groups lower-frequency buttons by operator job and
 defaults to **Media**, with **Optimize Existing Image** as the first visible
