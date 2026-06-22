@@ -308,3 +308,31 @@ Interpretation:
   but it still does not justify migration or apply behavior. The next evidence
   should be real operator accept/edit/reject outcomes on these filtered
   candidates.
+
+## Human Visual Confirmation
+
+Command result: pass.
+
+The operator reviewed the 11 filtered candidates against the actual image URLs
+from `build/eval/media-alt-caption-human-review-filtered-11.csv`.
+
+Human review result:
+
+| Metric | Result |
+| --- | --- |
+| Candidates reviewed | 11 |
+| Correct | 11 |
+| Needs edit | 0 |
+| Rejected | 0 |
+| Misleading | 0 |
+
+Interpretation:
+
+- The filtered review set is useful as a Toolbox operator-facing review
+  surface for this local media library.
+- The current evidence supports keeping the feature in Toolbox with
+  `suggestion_only`, `needs_human_visual_check`, and no direct media metadata
+  writes.
+- This still does not approve Toolkit migration or apply behavior. Those remain
+  blocked until the same quality holds across more real sites and a governed
+  media metadata write path exists through Abilities, Core, and Adapter.
