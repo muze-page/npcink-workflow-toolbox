@@ -106,6 +106,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Media Optimization Release Checklist](docs/media-optimization-release-checklist.md)
 - [Media Optimization Operator Trial](docs/media-optimization-operator-trial.md)
 - [Site Ops Cloud Analysis Contract](docs/site-ops-cloud-analysis-contract.md)
+- [Full-site Insights Operator Loop](docs/full-site-insights-operator-loop.md)
 - [Development Workflow](docs/development-workflow.md)
 - [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
 - [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)

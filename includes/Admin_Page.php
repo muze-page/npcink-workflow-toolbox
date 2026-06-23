@@ -620,11 +620,30 @@ final class Admin_Page {
 			<span><strong><?php esc_html_e( 'Writes', 'npcink-toolbox' ); ?></strong><?php esc_html_e( 'Disabled', 'npcink-toolbox' ); ?></span>
 		</section>
 
+		<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Full-site Insights operator loop', 'npcink-toolbox' ); ?>">
+			<div>
+				<strong><?php esc_html_e( '1. Scan local data', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Build a current snapshot from public content, approved comment signals, media metadata, taxonomy, Site Context, and Cloud readiness.', 'npcink-toolbox' ); ?></span>
+			</div>
+			<div>
+				<strong><?php esc_html_e( '2. Read the priority queue', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Use the overview, charts, dimensions, findings, and evidence tabs to decide which problem matters first.', 'npcink-toolbox' ); ?></span>
+			</div>
+			<div>
+				<strong><?php esc_html_e( '3. Add Cloud detail when useful', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Cloud may add AI summary, semantic ranking, trend explanation, and closure detail, but it remains review guidance only.', 'npcink-toolbox' ); ?></span>
+			</div>
+			<div>
+				<strong><?php esc_html_e( '4. Choose the follow-up path', 'npcink-toolbox' ); ?></strong>
+				<span><?php esc_html_e( 'Handle simple items manually, or turn eligible items into Core-governed handoff plans outside this report.', 'npcink-toolbox' ); ?></span>
+			</div>
+		</section>
+
 		<section class="npcink-toolbox__card" data-toolbox-site-ops-insights>
 			<div class="npcink-toolbox__section-heading">
 				<div>
 					<h3><?php esc_html_e( 'Site analysis report', 'npcink-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'Generate a local `site_ops_insight_pack.v1` with site-wide metrics, problem summaries, suggested actions, and handoff boundaries.', 'npcink-toolbox' ); ?></p>
+					<p><?php esc_html_e( 'Generate a local `site_ops_insight_pack.v1` that turns current site data into a review queue, evidence, and next-step boundaries.', 'npcink-toolbox' ); ?></p>
 				</div>
 				<div class="npcink-toolbox__section-actions">
 					<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate full-site report', 'npcink-toolbox' ); ?></a>
