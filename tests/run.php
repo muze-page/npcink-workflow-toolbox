@@ -631,9 +631,11 @@ toolbox_assert( false !== strpos( $roadmap_doc, 'The media optimization operator
 $admin_page = file_get_contents( $root . '/includes/Admin_Page.php' );
 toolbox_assert( false !== strpos( $admin_page, "private const PARENT_MENU_SLUG = 'npcink-ai';" ), 'Admin page targets the shared Npcink AI parent menu.' );
 toolbox_assert( false !== strpos( $admin_page, "private const MENU_SLUG        = 'npcink-toolbox';" ), 'Admin page uses stable Toolbox menu slug.' );
-toolbox_assert( false !== strpos( $admin_page, "private const LEGACY_MENU_SLUG = 'magick-ai-toolbox';" ) && false !== strpos( $admin_page, 'redirect_legacy_menu_slug' ) && false !== strpos( $admin_page, "admin_url( 'admin.php' )" ), 'Admin page redirects the legacy magick-ai-toolbox slug to the stable Toolbox slug.' );
-toolbox_assert( false !== strpos( $admin_page, 'filter_input( INPUT_GET' ) && false === strpos( $admin_page, '$_GET[' ), 'Legacy admin redirect uses allowlisted filter_input query params instead of direct $_GET reads.' );
-toolbox_assert( false !== strpos( $admin_page, 'add_menu_page(' ) && false !== strpos( $admin_page, 'self::LEGACY_MENU_SLUG' ) && false !== strpos( $admin_page, 'remove_menu_page( self::LEGACY_MENU_SLUG )' ) && false !== strpos( $admin_page, '$_registered_pages[ $hook_suffix ]       = true;' ) && false !== strpos( $admin_page, "add_action( 'load-' . \$hook_suffix" ), 'Admin page registers the legacy Toolbox slug as a hidden redirect page before access checks.' );
+$retired_toolbox_slug = implode( '-', array( 'magick', 'ai', 'toolbox' ) );
+$retired_menu_const   = 'LEGACY_' . 'MENU_SLUG';
+$retired_redirect     = 'redirect_' . 'legacy_menu_slug';
+toolbox_assert( false === strpos( $admin_page, $retired_toolbox_slug ) && false === strpos( $admin_page, $retired_menu_const ) && false === strpos( $admin_page, $retired_redirect ), 'Admin page does not keep retired Toolbox menu slug compatibility.' );
+toolbox_assert( false === strpos( $admin_page, '$_GET[' ), 'Admin page avoids direct $_GET reads.' );
 toolbox_assert( false !== strpos( $admin_page, "wp_set_script_translations(\n\t\t\t'npcink-toolbox-admin'" ) && false !== strpos( $admin_page, "NPCINK_TOOLBOX_DIR . 'languages'" ), 'Admin page registers the Toolbox script translation path.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_submenu_page' ) && false !== strpos( $admin_page, '45' ), 'Admin page registers after Abilities and before Cloud Addon.' );
 toolbox_assert( false !== strpos( $admin_page, 'add_management_page' ), 'Admin page keeps a Tools fallback for standalone installs.' );
