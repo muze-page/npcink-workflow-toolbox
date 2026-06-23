@@ -1518,7 +1518,7 @@ toolbox_assert( false !== strpos( $client, "'assistant_ability_id'   => 'npcink-
 toolbox_assert( false !== strpos( $client, 'build_article_write_plan' ), 'Provider client can build Core-ready article write plans.' );
 toolbox_assert( false !== strpos( $client, "'artifact_type'          => 'article_write_plan'" ), 'Article write plan declares the Core contract artifact type.' );
 toolbox_assert( false !== strpos( $client, "'composition_role'       => 'core_article_write_plan'" ), 'Article write plan declares its composition role.' );
-toolbox_assert( false !== strpos( $client, "'source_recipe_id'       => 'article_draft_v1'" ) && false !== strpos( $client, "'source_recipe_ref'      => 'workflow/wordpress_article_draft'" ), 'Article write plan is explicitly tied to the local article_draft_v1 Ability recipe.' );
+toolbox_assert( false !== strpos( $client, "'source_recipe_id'       => 'article_draft_v1'" ) && false !== strpos( $client, "'source_recipe_ref'      => 'npcink-abilities-toolkit/recipes/article-draft'" ), 'Article write plan is explicitly tied to the local article_draft_v1 Ability recipe.' );
 toolbox_assert( false !== strpos( $client, "'target_ability_id' => 'npcink-abilities-toolkit/create-draft'" ), 'Article write plan targets the governed create-draft ability.' );
 toolbox_assert( false !== strpos( $client, "'recipe_step'       => 'host_governed_create_draft'" ), 'Article write plan marks create-draft as the host-governed recipe step.' );
 toolbox_assert( false !== strpos( $client, "'status'  => 'draft'" ), 'Article write plan is draft-only.' );
@@ -1713,7 +1713,7 @@ toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_kn
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_knowledge_sync_request'" ), 'Site knowledge sync ability declares its composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'core_article_write_plan'" ), 'Article write plan ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'article_assistant_workbench'" ), 'Article Assistant ability declares its content composition role.' );
-toolbox_assert( false !== strpos( $abilities, "'local_recipe_id'     => 'article_draft_v1'" ) && false !== strpos( $abilities, "'ability_recipe_ref'  => 'workflow/wordpress_article_draft'" ), 'Article write plan ability declares the local Ability recipe reference.' );
+toolbox_assert( false !== strpos( $abilities, "'local_recipe_id'     => 'article_draft_v1'" ) && false !== strpos( $abilities, "'ability_recipe_ref'  => 'npcink-abilities-toolkit/recipes/article-draft'" ), 'Article write plan ability declares the local Ability recipe reference.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'media_derivative_operator_handoff'" ), 'Media derivative handoff ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'site_context'" ), 'Content context ability declares its content composition role.' );
 toolbox_assert( false !== strpos( $abilities, "'composition_role'    => 'context_preflight'" ), 'Context validation ability declares its content composition role.' );

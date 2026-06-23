@@ -39,7 +39,7 @@ The current budget is:
 - Artifact type: `article_assistant_workbench`
 - Composition role: `article_assistant_workbench`
 - Recipe id: `article_draft_v1`
-- Recipe ref: `workflow/wordpress_article_draft`
+- Recipe ref: `npcink-abilities-toolkit/recipes/article-draft`
 - Execution posture: `local_operator_orchestration`
 - Final write path: `core_proposal_required`
 - Direct WordPress writes: `false`
