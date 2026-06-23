@@ -80,7 +80,7 @@ calibrate judge prompts and candidate filters:
 composer eval:media-alt-caption:open-samples
 ```
 
-This calls the development-only `magick-ai-eval-lab` task
+This calls the development-only `npcink-eval-lab` task
 `media_alt_caption_open_samples`. It samples public Wikimedia Commons metadata
 and writes a local `media_alt_caption_operator_trial.v1` artifact that can be
 passed to `media_alt_caption_judge_cross`.

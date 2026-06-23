@@ -6,11 +6,11 @@ if [ "$#" -lt 1 ]; then
 	exit 1
 fi
 
-eval_lab_path="${MAGICK_AI_EVAL_LAB_PATH:-../magick-ai-eval-lab}"
+eval_lab_path="${NPCINK_EVAL_LAB_PATH:-../npcink-eval-lab}"
 
 if [ ! -d "$eval_lab_path" ]; then
-	echo "Magick AI eval lab not found: $eval_lab_path" >&2
-	echo "Set MAGICK_AI_EVAL_LAB_PATH or clone /Users/muze/gitee/magick-ai-eval-lab next to this repo." >&2
+	echo "Npcink eval lab not found: $eval_lab_path" >&2
+	echo "Set NPCINK_EVAL_LAB_PATH or clone /Users/muze/gitee/npcink-eval-lab next to this repo." >&2
 	exit 1
 fi
 

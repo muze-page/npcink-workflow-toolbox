@@ -31,7 +31,7 @@ availability.
 `composer eval:media-alt-caption:export` writes the selected
 `media_alt_caption_operator_trial.v1` cases to local `build/eval/`.
 `composer eval:media-alt-caption:judge-cross` passes that local artifact to
-the development-only `magick-ai-eval-lab` task
+the development-only `npcink-eval-lab` task
 `media_alt_caption_judge_cross`. The eval-lab output is AI-assisted review
 evidence only; it is not final acceptance truth or write authorization.
 

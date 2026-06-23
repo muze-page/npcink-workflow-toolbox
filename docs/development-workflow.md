@@ -297,7 +297,7 @@ For the post-editor follow-up quality trial through eval-lab, run:
 composer eval:editor-followup:trial
 ```
 
-This proxies to the sibling `magick-ai-eval-lab` task registry and runs
+This proxies to the sibling `npcink-eval-lab` task registry and runs
 `editor_followup_trial` against recent local WordPress posts. The trial checks
 article checkup, discoverability, publish preflight, SEO handoff preview, slug
 candidate visibility, and no WordPress mutation. It is intentionally outside

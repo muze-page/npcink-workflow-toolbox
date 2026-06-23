@@ -3,7 +3,7 @@
 Status: first hard-gate scaffold.
 
 This development workflow now lives in the sibling
-`/Users/muze/gitee/magick-ai-eval-lab` repository. Toolbox keeps Composer
+`/Users/muze/gitee/npcink-eval-lab` repository. Toolbox keeps Composer
 proxy commands for convenience, but the scripts, fixtures, generated files, and
 provider-key environment handling are owned by the eval lab.
 

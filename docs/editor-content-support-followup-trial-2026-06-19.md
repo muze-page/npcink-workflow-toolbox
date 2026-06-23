@@ -53,7 +53,7 @@ composer test:all
 | Hosted AI no-result diagnostics | Pass | `composer smoke:editor-hosted-ai-no-result` simulated Cloud omitted, zero provider-call, and idempotent replay empty responses; selected paragraph checks preserved local fallback items, Cloud runtime diagnostics, and no replacement text. |
 | Browser sidebar path | Pass | `composer smoke:editor-progressive-browser` verified local progressive prefetch, hidden-by-default success state, Refresh behavior, no Cloud/Adapter/Core route calls, candidate source/action labels, and no generic Post Formats noise. |
 | Real article follow-up trial | Pass | `composer eval:editor-followup:trial` evaluated 5 local WordPress posts with 45 pass, 0 warn, 0 fail, `human_review_required=false`, and no WordPress mutation. |
-| Eval-lab project quality gate | Pass | `project_quality_gate` wrote `../magick-ai-eval-lab/project-review/generated/toolbox-editor-followup-quality-gate.{json,md}` with `Human review required: false` and `Checks needing review: 0`. |
+| Eval-lab project quality gate | Pass | `project_quality_gate` wrote `../npcink-eval-lab/project-review/generated/toolbox-editor-followup-quality-gate.{json,md}` with `Human review required: false` and `Checks needing review: 0`. |
 
 Eval-lab checks passed:
 
