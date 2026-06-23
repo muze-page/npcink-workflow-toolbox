@@ -225,7 +225,7 @@ final class Abilities {
 					'data_classification' => 'planning_artifact',
 					'composition_role'    => 'article_assistant_workbench',
 					'local_recipe_id'     => 'article_draft_v1',
-					'ability_recipe_ref'  => 'workflow/wordpress_article_draft',
+					'ability_recipe_ref'  => 'npcink-abilities-toolkit/recipes/article-draft',
 					'provider_execution'  => 'server_side_toolbox',
 					'write_posture'       => 'core_proposal_handoff',
 				)
@@ -240,7 +240,7 @@ final class Abilities {
 					'data_classification' => 'planning_artifact',
 					'composition_role'    => 'core_article_write_plan',
 					'local_recipe_id'     => 'article_draft_v1',
-					'ability_recipe_ref'  => 'workflow/wordpress_article_draft',
+					'ability_recipe_ref'  => 'npcink-abilities-toolkit/recipes/article-draft',
 					'provider_execution'  => 'none',
 					'write_posture'       => 'core_proposal_handoff',
 				)
@@ -255,7 +255,7 @@ final class Abilities {
 					'data_classification' => 'planning_artifact',
 					'composition_role'    => 'core_article_batch_write_plan',
 					'local_recipe_id'     => 'article_batch_draft_v1',
-					'ability_recipe_ref'  => 'workflow/wordpress_article_batch_draft',
+					'ability_recipe_ref'  => 'npcink-toolbox/recipes/article-batch-draft',
 					'provider_execution'  => 'none',
 					'write_posture'       => 'core_proposal_handoff',
 				)
@@ -270,7 +270,7 @@ final class Abilities {
 					'data_classification' => 'planning_artifact',
 					'composition_role'    => 'core_article_media_batch_write_plan',
 					'local_recipe_id'     => 'article_media_batch_draft_v1',
-					'ability_recipe_ref'  => 'workflow/wordpress_article_media_batch_draft',
+					'ability_recipe_ref'  => 'npcink-toolbox/recipes/article-media-batch-draft',
 					'provider_execution'  => 'optional_image_source_lookup',
 					'write_posture'       => 'core_proposal_handoff',
 				)
