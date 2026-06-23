@@ -795,19 +795,22 @@ final class Admin_Page {
 		if ( ! is_array( $finding ) ) {
 			return;
 		}
+		$title   = $this->site_ops_finding_title( $finding );
+		$summary = $this->site_ops_finding_evidence_summary( $finding );
+		$action  = $this->site_ops_finding_recommended_action( $finding );
 		?>
 		<article class="npcink-toolbox__ops-priority-row">
 			<div class="npcink-toolbox__ops-priority-main">
 				<span class="npcink-toolbox__priority-label"><?php echo esc_html( $this->site_ops_priority_label( (int) ( $finding['priority_score'] ?? 0 ) ) ); ?></span>
 				<div>
-					<h3><?php echo esc_html( (string) ( $finding['title'] ?? __( 'Operations finding', 'npcink-toolbox' ) ) ); ?></h3>
-					<p><?php echo esc_html( (string) ( $finding['evidence_summary'] ?? '' ) ); ?></p>
+					<h3><?php echo esc_html( $title ); ?></h3>
+					<p><?php echo esc_html( $summary ); ?></p>
 				</div>
 				<span class="npcink-toolbox__priority-score"><?php echo esc_html( (string) (int) ( $finding['priority_score'] ?? 0 ) ); ?></span>
 			</div>
 			<div class="npcink-toolbox__ops-action-line">
 				<strong><?php esc_html_e( 'Next', 'npcink-toolbox' ); ?></strong>
-				<span><?php echo esc_html( (string) ( $finding['recommended_action'] ?? '' ) ); ?></span>
+				<span><?php echo esc_html( $action ); ?></span>
 				<em><?php echo esc_html( $this->site_ops_boundary_label( (string) ( $finding['write_boundary'] ?? 'suggestion_only' ) ) ); ?></em>
 			</div>
 		</article>
@@ -828,10 +831,12 @@ final class Admin_Page {
 				continue;
 			}
 			$rendered = true;
+			$title    = $this->site_ops_finding_title( $finding, __( 'Impact and evidence', 'npcink-toolbox' ) );
+			$impact   = $this->site_ops_finding_impact( $finding );
 			?>
 			<details class="npcink-toolbox__result-details">
-				<summary><?php echo esc_html( (string) ( $finding['title'] ?? __( 'Impact and evidence', 'npcink-toolbox' ) ) ); ?></summary>
-				<p><?php echo esc_html( (string) ( $finding['impact'] ?? '' ) ); ?></p>
+				<summary><?php echo esc_html( $title ); ?></summary>
+				<p><?php echo esc_html( $impact ); ?></p>
 				<?php if ( array() !== $source_refs ) : ?>
 					<ul class="npcink-toolbox__usage-list">
 						<?php foreach ( $source_refs as $ref ) : ?>
@@ -893,7 +898,7 @@ final class Admin_Page {
 			if ( ! is_array( $finding ) ) {
 				continue;
 			}
-			$title = trim( (string) ( $finding['title'] ?? '' ) );
+			$title = trim( $this->site_ops_finding_title( $finding, '' ) );
 			if ( '' !== $title ) {
 				$titles[] = $title;
 			}
@@ -935,6 +940,190 @@ final class Admin_Page {
 	}
 
 	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function site_ops_finding_id( array $finding ): string {
+		$id = (string) ( $finding['id'] ?? $finding['finding_id'] ?? '' );
+		return sanitize_key( $id );
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function site_ops_finding_title( array $finding, string $fallback = '' ): string {
+		$id     = $this->site_ops_finding_id( $finding );
+		$titles = array(
+			'stale_content_backlog'             => __( 'Old content refresh backlog', 'npcink-toolbox' ),
+			'content_depth_and_linking_gap'     => __( 'Content depth and internal-link gaps', 'npcink-toolbox' ),
+			'metadata_review_backlog'           => __( 'Post metadata review backlog', 'npcink-toolbox' ),
+			'comment_signal_review'             => __( 'Comment signal review', 'npcink-toolbox' ),
+			'media_metadata_debt'               => __( 'Media metadata review backlog', 'npcink-toolbox' ),
+			'taxonomy_structure_drift'          => __( 'Taxonomy structure review', 'npcink-toolbox' ),
+			'site_context_incomplete'           => __( 'Site Context brief is incomplete', 'npcink-toolbox' ),
+			'site_knowledge_cloud_unavailable'  => __( 'Cloud Site Knowledge unavailable', 'npcink-toolbox' ),
+		);
+		if ( isset( $titles[ $id ] ) ) {
+			return $titles[ $id ];
+		}
+
+		$title = trim( (string) ( $finding['title'] ?? $finding['finding_id'] ?? $finding['id'] ?? '' ) );
+		if ( '' !== $title ) {
+			return $this->site_ops_dynamic_label( $title );
+		}
+
+		return '' !== $fallback ? $fallback : __( 'Operations finding', 'npcink-toolbox' );
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function site_ops_finding_evidence_summary( array $finding ): string {
+		$id      = $this->site_ops_finding_id( $finding );
+		$summary = trim( (string) ( $finding['evidence_summary'] ?? '' ) );
+		if ( '' === $summary ) {
+			return '';
+		}
+
+		if ( 'stale_content_backlog' === $id && preg_match( '/(\d+)\s+sampled public posts or pages have not been modified for 180\+ days;\s+(\d+)\s+still have approved comments\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: stale item count, 2: stale item count with comments. */
+				__( '%1$d sampled public posts or pages have not been modified for 180+ days; %2$d still have approved comments.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2]
+			);
+		}
+		if ( 'content_depth_and_linking_gap' === $id && preg_match( '/(\d+)\s+sampled items are short;\s+(\d+)\s+have no recorded internal links\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: thin item count, 2: missing internal link count. */
+				__( '%1$d sampled items are short; %2$d have no recorded internal links.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2]
+			);
+		}
+		if ( 'metadata_review_backlog' === $id && preg_match( '/(\d+)\s+sampled items need excerpt or meta-description review;\s+(\d+)\s+need category or tag review\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: missing meta count, 2: missing taxonomy count. */
+				__( '%1$d sampled items need excerpt or meta-description review; %2$d need category or tag review.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2]
+			);
+		}
+		if ( 'comment_signal_review' === $id && preg_match( '/The approved comment sample includes\s+(\d+)\s+question-like comments and\s+(\d+)\s+longer comments;\s+(\d+)\s+comments are pending moderation\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: question-like comments, 2: long comments, 3: pending comments. */
+				__( 'The approved comment sample includes %1$d question-like comments and %2$d longer comments; %3$d comments are pending moderation.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2],
+				(int) $matches[3]
+			);
+		}
+		if ( 'media_metadata_debt' === $id && preg_match( '/(\d+)\s+sampled attachments lack ALT text,\s+(\d+)\s+lack captions,\s+and sampled posts reference\s+(\d+)\s+image ALT gaps\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: missing attachment alt count, 2: missing caption count, 3: referenced image alt gaps. */
+				__( '%1$d sampled attachments lack ALT text, %2$d lack captions, and sampled posts reference %3$d image ALT gaps.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2],
+				(int) $matches[3]
+			);
+		}
+		if ( 'taxonomy_structure_drift' === $id && preg_match( '/(\d+)\s+category\/tag terms are empty and\s+(\d+)\s+are used once in the sampled taxonomy summary\./i', $summary, $matches ) ) {
+			return sprintf(
+				/* translators: 1: empty term count, 2: low-use term count. */
+				__( '%1$d category/tag terms are empty and %2$d are used once in the sampled taxonomy summary.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				(int) $matches[2]
+			);
+		}
+
+		return $this->site_ops_dynamic_label( $summary );
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function site_ops_finding_impact( array $finding ): string {
+		$id       = $this->site_ops_finding_id( $finding );
+		$impacts  = array(
+			'stale_content_backlog'             => __( 'Older but still active content can reduce reader trust and search freshness.', 'npcink-toolbox' ),
+			'content_depth_and_linking_gap'     => __( 'Thin pages and missing internal paths make it harder for readers and AI systems to understand the site map.', 'npcink-toolbox' ),
+			'metadata_review_backlog'           => __( 'Weak metadata reduces snippet quality and makes suggestion workflows less grounded.', 'npcink-toolbox' ),
+			'comment_signal_review'             => __( 'Comment patterns can reveal missing FAQ, troubleshooting, or follow-up content needs.', 'npcink-toolbox' ),
+			'media_metadata_debt'               => __( 'Image metadata affects accessibility, editorial reuse, and media search quality.', 'npcink-toolbox' ),
+			'taxonomy_structure_drift'          => __( 'Sparse vocabulary can fragment content discovery and weaken recommendation quality.', 'npcink-toolbox' ),
+			'site_context_incomplete'           => __( 'Weak site context makes downstream SEO/AEO/GEO and content support suggestions less consistent.', 'npcink-toolbox' ),
+			'site_knowledge_cloud_unavailable'  => __( 'Without Cloud, recommendations stay local and cannot use semantic related-content evidence.', 'npcink-toolbox' ),
+		);
+		if ( isset( $impacts[ $id ] ) ) {
+			return $impacts[ $id ];
+		}
+
+		return $this->site_ops_dynamic_label( (string) ( $finding['impact'] ?? '' ) );
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function site_ops_finding_recommended_action( array $finding ): string {
+		$id      = $this->site_ops_finding_id( $finding );
+		$actions = array(
+			'stale_content_backlog'             => __( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-toolbox' ),
+			'content_depth_and_linking_gap'     => __( 'Prioritize internal-link review and content-depth review before creating new articles on the same topics.', 'npcink-toolbox' ),
+			'metadata_review_backlog'           => __( 'Use editor metadata suggestions for individual posts, then hand accepted values to Core proposals.', 'npcink-toolbox' ),
+			'comment_signal_review'             => __( 'Review high-signal public comments manually; convert repeated needs into FAQ or article-refresh notes.', 'npcink-toolbox' ),
+			'media_metadata_debt'               => __( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-toolbox' ),
+			'taxonomy_structure_drift'          => __( 'Review taxonomy consolidation separately; do not create, merge, or assign terms from this panel.', 'npcink-toolbox' ),
+			'site_context_incomplete'           => __( 'Fill the Site Context brief before relying on repeated AI recommendations.', 'npcink-toolbox' ),
+			'site_knowledge_cloud_unavailable'  => __( 'Connect or verify Cloud Addon before expecting deeper semantic analysis.', 'npcink-toolbox' ),
+		);
+		if ( isset( $actions[ $id ] ) ) {
+			return $actions[ $id ];
+		}
+
+		return $this->site_ops_dynamic_label( (string) ( $finding['recommended_action'] ?? '' ) );
+	}
+
+	private function site_ops_dynamic_label( string $value ): string {
+		$value = trim( $value );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$labels = array(
+			'stale_content_backlog'                                                                                 => __( 'Old content refresh backlog', 'npcink-toolbox' ),
+			'content_depth_and_linking_gap'                                                                         => __( 'Content depth and internal-link gaps', 'npcink-toolbox' ),
+			'metadata_review_backlog'                                                                               => __( 'Post metadata review backlog', 'npcink-toolbox' ),
+			'comment_signal_review'                                                                                 => __( 'Comment signal review', 'npcink-toolbox' ),
+			'media_metadata_debt'                                                                                   => __( 'Media metadata review backlog', 'npcink-toolbox' ),
+			'taxonomy_structure_drift'                                                                              => __( 'Taxonomy structure review', 'npcink-toolbox' ),
+			'site_context_incomplete'                                                                               => __( 'Site Context brief is incomplete', 'npcink-toolbox' ),
+			'site_knowledge_cloud_unavailable'                                                                      => __( 'Cloud Site Knowledge unavailable', 'npcink-toolbox' ),
+			'cloud_semantic_analysis'                                                                               => __( 'Cloud semantic analysis', 'npcink-toolbox' ),
+			'cloud_runtime_unavailable'                                                                             => __( 'Cloud runtime is unavailable', 'npcink-toolbox' ),
+			'connect_or_verify_cloud_addon'                                                                         => __( 'Connect or verify Cloud Addon', 'npcink-toolbox' ),
+			'Old content needs a refresh queue'                                                                     => __( 'Old content refresh backlog', 'npcink-toolbox' ),
+			'Some content lacks depth or internal paths'                                                            => __( 'Content depth and internal-link gaps', 'npcink-toolbox' ),
+			'Metadata review backlog is visible'                                                                    => __( 'Post metadata review backlog', 'npcink-toolbox' ),
+			'Comments contain support and follow-up signals'                                                        => __( 'Comment signal review', 'npcink-toolbox' ),
+			'Media metadata needs review'                                                                           => __( 'Media metadata review backlog', 'npcink-toolbox' ),
+			'Taxonomy structure may need cleanup'                                                                   => __( 'Taxonomy structure review', 'npcink-toolbox' ),
+			'Site Context needs a stronger brief'                                                                   => __( 'Site Context brief is incomplete', 'npcink-toolbox' ),
+			'Cloud Site Knowledge is not available'                                                                 => __( 'Cloud Site Knowledge unavailable', 'npcink-toolbox' ),
+			'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.'       => __( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-toolbox' ),
+			'Start with a media ALT/caption review and make metadata visible before broader adoption.'              => __( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-toolbox' ),
+		);
+		if ( isset( $labels[ $value ] ) ) {
+			return $labels[ $value ];
+		}
+
+		$key = sanitize_key( $value );
+		if ( isset( $labels[ $key ] ) ) {
+			return $labels[ $key ];
+		}
+
+		return $value;
+	}
+
+	/**
 	 * @param mixed $cloud_analysis Cloud analysis result or WP_Error.
 	 */
 	private function render_site_ops_cloud_analysis_result( $cloud_analysis ): void {
@@ -970,7 +1159,7 @@ final class Admin_Page {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
-			$label = trim( (string) ( $item['finding_id'] ?? '' ) );
+			$label = $this->site_ops_finding_title( $item, '' );
 			if ( '' !== $label ) {
 				$cloud_focus[] = $label;
 			}
@@ -1028,18 +1217,23 @@ final class Admin_Page {
 				<div class="npcink-toolbox__ops-priority-list">
 					<?php foreach ( $priority_queue as $item ) : ?>
 						<?php if ( ! is_array( $item ) ) { continue; } ?>
+						<?php
+						$title   = $this->site_ops_finding_title( $item, __( 'Cloud priority', 'npcink-toolbox' ) );
+						$summary = $this->site_ops_finding_evidence_summary( $item );
+						$action  = $this->site_ops_finding_recommended_action( $item );
+						?>
 						<article class="npcink-toolbox__ops-priority-row">
 							<div class="npcink-toolbox__ops-priority-main">
 								<span class="npcink-toolbox__priority-label"><?php echo esc_html( $this->site_ops_priority_label( (int) ( $item['cloud_priority_score'] ?? 0 ) ) ); ?></span>
 								<div>
-									<h3><?php echo esc_html( (string) ( $item['finding_id'] ?? __( 'Cloud priority', 'npcink-toolbox' ) ) ); ?></h3>
-									<p><?php echo esc_html( (string) ( $item['evidence_summary'] ?? '' ) ); ?></p>
+									<h3><?php echo esc_html( $title ); ?></h3>
+									<p><?php echo esc_html( $summary ); ?></p>
 								</div>
 								<span class="npcink-toolbox__priority-score"><?php echo esc_html( (string) (int) ( $item['cloud_priority_score'] ?? 0 ) ); ?></span>
 							</div>
 							<div class="npcink-toolbox__ops-action-line">
 								<strong><?php esc_html_e( 'Next', 'npcink-toolbox' ); ?></strong>
-								<span><?php echo esc_html( (string) ( $item['recommended_action'] ?? '' ) ); ?></span>
+								<span><?php echo esc_html( $action ); ?></span>
 								<em><?php esc_html_e( 'Cloud-ranked suggestion', 'npcink-toolbox' ); ?></em>
 							</div>
 						</article>
@@ -1053,8 +1247,8 @@ final class Admin_Page {
 						<?php foreach ( $trend_notes as $note ) : ?>
 							<?php if ( ! is_array( $note ) ) { continue; } ?>
 							<li>
-								<strong><?php echo esc_html( (string) ( $note['id'] ?? __( 'Trend note', 'npcink-toolbox' ) ) ); ?></strong>
-								<span><?php echo esc_html( (string) ( $note['summary'] ?? '' ) ); ?></span>
+								<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $note['id'] ?? __( 'Trend note', 'npcink-toolbox' ) ) ) ); ?></strong>
+								<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $note['summary'] ?? '' ) ) ); ?></span>
 							</li>
 						<?php endforeach; ?>
 					</ul>
@@ -1071,8 +1265,14 @@ final class Admin_Page {
 									<?php foreach ( $blocked_items as $item ) : ?>
 										<?php if ( ! is_array( $item ) ) { continue; } ?>
 										<li>
-											<strong><?php echo esc_html( (string) ( $item['id'] ?? __( 'Blocked item', 'npcink-toolbox' ) ) ); ?></strong>
-											<span><?php echo esc_html( (string) ( $item['reason'] ?? '' ) . ( isset( $item['next'] ) ? ' -> ' . (string) $item['next'] : '' ) ); ?></span>
+											<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['id'] ?? __( 'Blocked item', 'npcink-toolbox' ) ) ) ); ?></strong>
+											<span>
+												<?php
+												$reason = $this->site_ops_dynamic_label( (string) ( $item['reason'] ?? '' ) );
+												$next   = isset( $item['next'] ) ? $this->site_ops_dynamic_label( (string) $item['next'] ) : '';
+												echo esc_html( '' !== $next ? $reason . ' - ' . $next : $reason );
+												?>
+											</span>
 										</li>
 									<?php endforeach; ?>
 								</ul>
@@ -1085,8 +1285,8 @@ final class Admin_Page {
 									<?php foreach ( $next_actions as $action ) : ?>
 										<?php if ( ! is_array( $action ) ) { continue; } ?>
 										<li>
-											<strong><?php echo esc_html( (string) ( $action['id'] ?? __( 'Review action', 'npcink-toolbox' ) ) ); ?></strong>
-											<span><?php echo esc_html( (string) ( $action['label'] ?? $action['target'] ?? '' ) ); ?></span>
+											<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $action['id'] ?? __( 'Review action', 'npcink-toolbox' ) ) ) ); ?></strong>
+											<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $action['label'] ?? $action['target'] ?? '' ) ) ); ?></span>
 										</li>
 									<?php endforeach; ?>
 								</ul>
@@ -1099,7 +1299,7 @@ final class Admin_Page {
 									<?php foreach ( $handoff_candidates as $candidate ) : ?>
 										<?php if ( ! is_array( $candidate ) ) { continue; } ?>
 										<li>
-											<strong><?php echo esc_html( (string) ( $candidate['finding_id'] ?? __( 'Handoff candidate', 'npcink-toolbox' ) ) ); ?></strong>
+											<strong><?php echo esc_html( $this->site_ops_finding_title( $candidate, __( 'Handoff candidate', 'npcink-toolbox' ) ) ); ?></strong>
 											<span><?php esc_html_e( 'Planning hint only; proposal_ready=false and Core still owns review.', 'npcink-toolbox' ); ?></span>
 										</li>
 									<?php endforeach; ?>

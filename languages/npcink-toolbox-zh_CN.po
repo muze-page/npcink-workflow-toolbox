@@ -4003,3 +4003,102 @@ msgstr "高级：复制 Cloud 结果 JSON"
 
 msgid "This result is suggestion-only and does not create Core proposals or WordPress writes."
 msgstr "此结果仅作为建议，不会创建 Core 提案或 WordPress 写入。"
+
+msgid "Old content refresh backlog"
+msgstr "旧内容刷新积压"
+
+msgid "Content depth and internal-link gaps"
+msgstr "内容深度与内链缺口"
+
+msgid "Post metadata review backlog"
+msgstr "文章元数据复核积压"
+
+msgid "Comment signal review"
+msgstr "评论信号复核"
+
+msgid "Media metadata review backlog"
+msgstr "媒体元数据复核积压"
+
+msgid "Taxonomy structure review"
+msgstr "分类结构复核"
+
+msgid "Site Context brief is incomplete"
+msgstr "站点上下文简报不完整"
+
+msgid "Cloud Site Knowledge unavailable"
+msgstr "Cloud 站点知识不可用"
+
+msgid "%1$d sampled public posts or pages have not been modified for 180+ days; %2$d still have approved comments."
+msgstr "%1$d 个采样公开文章或页面已超过 180 天未更新；其中 %2$d 个仍有已批准评论。"
+
+msgid "%1$d sampled items are short; %2$d have no recorded internal links."
+msgstr "%1$d 个采样项目内容偏短；%2$d 个没有记录到内部链接。"
+
+msgid "%1$d sampled items need excerpt or meta-description review; %2$d need category or tag review."
+msgstr "%1$d 个采样项目需要复核摘要或元描述；%2$d 个需要复核分类或标签。"
+
+msgid "The approved comment sample includes %1$d question-like comments and %2$d longer comments; %3$d comments are pending moderation."
+msgstr "已批准评论样本包含 %1$d 条类似问题的评论和 %2$d 条较长评论；另有 %3$d 条评论待审核。"
+
+msgid "%1$d sampled attachments lack ALT text, %2$d lack captions, and sampled posts reference %3$d image ALT gaps."
+msgstr "%1$d 个采样附件缺少 ALT 文本，%2$d 个缺少说明文字；采样文章中还引用了 %3$d 个图片 ALT 缺口。"
+
+msgid "%1$d category/tag terms are empty and %2$d are used once in the sampled taxonomy summary."
+msgstr "%1$d 个分类/标签词条为空，%2$d 个在采样分类摘要中仅使用一次。"
+
+msgid "Older but still active content can reduce reader trust and search freshness."
+msgstr "较旧但仍有互动的内容会降低读者信任和搜索新鲜度。"
+
+msgid "Thin pages and missing internal paths make it harder for readers and AI systems to understand the site map."
+msgstr "内容偏薄和内部路径缺失会让读者与 AI 系统更难理解站点地图。"
+
+msgid "Weak metadata reduces snippet quality and makes suggestion workflows less grounded."
+msgstr "薄弱的元数据会降低摘要片段质量，也会让建议流程缺少依据。"
+
+msgid "Comment patterns can reveal missing FAQ, troubleshooting, or follow-up content needs."
+msgstr "评论模式可以暴露 FAQ、排障说明或后续内容的缺口。"
+
+msgid "Image metadata affects accessibility, editorial reuse, and media search quality."
+msgstr "图片元数据会影响可访问性、编辑复用和媒体搜索质量。"
+
+msgid "Sparse vocabulary can fragment content discovery and weaken recommendation quality."
+msgstr "稀疏词汇会割裂内容发现路径，并削弱推荐质量。"
+
+msgid "Weak site context makes downstream SEO/AEO/GEO and content support suggestions less consistent."
+msgstr "站点上下文薄弱会让后续 SEO/AEO/GEO 和内容支持建议不够一致。"
+
+msgid "Without Cloud, recommendations stay local and cannot use semantic related-content evidence."
+msgstr "没有 Cloud 时，建议只能停留在本地证据，无法使用语义相关内容证据。"
+
+msgid "Review the oldest active items first, then prepare refresh notes or a Core-governed update plan."
+msgstr "先审阅最旧且仍有互动的内容，再准备刷新说明或 Core 治理的更新计划。"
+
+msgid "Prioritize internal-link review and content-depth review before creating new articles on the same topics."
+msgstr "在同主题新建文章前，优先复核内部链接和内容深度。"
+
+msgid "Use editor metadata suggestions for individual posts, then hand accepted values to Core proposals."
+msgstr "先在单篇文章中使用编辑器元数据建议，再把确认后的值交接为 Core 提案。"
+
+msgid "Review high-signal public comments manually; convert repeated needs into FAQ or article-refresh notes."
+msgstr "人工审阅高信号公开评论；把重复需求转成 FAQ 或文章刷新备注。"
+
+msgid "Start with a media ALT/caption review set; do not update media metadata until a governed path is selected."
+msgstr "先从媒体 ALT/说明文字复核集开始；在选择治理路径前不要更新媒体元数据。"
+
+msgid "Review taxonomy consolidation separately; do not create, merge, or assign terms from this panel."
+msgstr "单独复核分类法合并；不要从此面板创建、合并或分配词条。"
+
+msgid "Fill the Site Context brief before relying on repeated AI recommendations."
+msgstr "在依赖重复 AI 建议前，先补完整站点上下文简报。"
+
+msgid "Connect or verify Cloud Addon before expecting deeper semantic analysis."
+msgstr "在期待更深语义分析前，先连接或验证 Cloud Addon。"
+
+msgid "Cloud semantic analysis"
+msgstr "Cloud 语义分析"
+
+msgid "Cloud runtime is unavailable"
+msgstr "Cloud 运行时不可用"
+
+msgid "Connect or verify Cloud Addon"
+msgstr "连接或验证 Cloud Addon"
