@@ -27,7 +27,7 @@ final class Admin_Page {
 	}
 
 	public function register_menu(): void {
-		if ( $this->has_magick_parent_menu() ) {
+		if ( $this->has_npcink_parent_menu() ) {
 			$this->hook_suffix = add_submenu_page(
 				self::PARENT_MENU_SLUG,
 				__( 'Npcink Toolbox', 'npcink-toolbox' ),
@@ -94,7 +94,7 @@ final class Admin_Page {
 		exit;
 	}
 
-	private function has_magick_parent_menu(): bool {
+	private function has_npcink_parent_menu(): bool {
 		global $menu;
 
 		foreach ( (array) $menu as $item ) {

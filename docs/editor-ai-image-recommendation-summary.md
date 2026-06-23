@@ -181,7 +181,7 @@ Common problems and expected handling:
   source and AI image runtime requests must preserve or set `pii`.
 - `runtime input contains secret-like data at input.visual_context.refresh_token`:
   do not name non-secret refresh variants as tokens.
-- `X-Magick-Timestamp header is outside the accepted time window`: usually a
+- `X-Npcink-Timestamp header is outside the accepted time window`: usually a
   client/server clock or request signing time-window issue, not an image UI
   issue.
 - `http://127.0.0.1:8010` timeout: Cloud Addon or local Cloud runtime bridge is

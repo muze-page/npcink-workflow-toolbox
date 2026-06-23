@@ -123,8 +123,8 @@ Push order:
 
 Final pushed heads:
 
-- `/Users/muze/gitee/magick-ai-cloud-addon`: `master...origin/master`
-- `/Users/muze/gitee/magick-ai-toolbox`: `master...origin/master`
+- `/Users/muze/gitee/npcink-cloud-addon`: `master...origin/master`
+- `/Users/muze/gitee/npcink-toolbox`: `master...origin/master`
 
 Both working trees were clean after push.
 

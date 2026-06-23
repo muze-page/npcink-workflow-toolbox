@@ -348,13 +348,13 @@ into Toolbox.
 Verified local site path:
 
 ```bash
-/Users/muze/Local Sites/magick-ai/app/public
+/Users/muze/Local Sites/npcink/app/public
 ```
 
 Verified plugin symlink:
 
 ```bash
-/Users/muze/Local Sites/magick-ai/app/public/wp-content/plugins/npcink-toolbox -> /Users/muze/gitee/magick-ai-toolbox
+/Users/muze/Local Sites/npcink/app/public/wp-content/plugins/npcink-toolbox -> /Users/muze/gitee/npcink-toolbox
 ```
 
 Global WP-CLI is installed on this workstation and should be preferred for
@@ -376,7 +376,7 @@ Always set `WP_PATH` or pass `--path`; do not assume the current repository is
 the WordPress root. For the local Toolbox site:
 
 ```bash
-WP_PATH="/Users/muze/Local Sites/magick-ai/app/public"
+WP_PATH="/Users/muze/Local Sites/npcink/app/public"
 ```
 
 Do not write local admin passwords into repository files.
@@ -411,7 +411,7 @@ plus Local PHP and the active Local MySQL socket:
 WP_CLI=/tmp/wp-cli.phar
 WP_CLI_PHP="/Users/muze/Library/Application Support/Local/lightning-services/php-8.0.30+0/bin/darwin-arm64/bin/php"
 WP_CLI_MYSQL_SOCKET="/Users/muze/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock"
-WP_PATH="/Users/muze/Local Sites/magick-ai/app/public"
+WP_PATH="/Users/muze/Local Sites/npcink/app/public"
 ```
 
 Adapter and Abilities smoke commands can use the same variables:

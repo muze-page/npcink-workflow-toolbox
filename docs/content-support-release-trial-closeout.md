@@ -114,7 +114,7 @@ contract emerges.
 ## PR Closeout Record - 2026-06-10
 
 Pull request:
-https://gitee.com/gitgreat/magick-ai-toolbox/pulls/3
+https://gitee.com/gitgreat/npcink-toolbox/pulls/3
 
 Branch and commit state during closeout:
 

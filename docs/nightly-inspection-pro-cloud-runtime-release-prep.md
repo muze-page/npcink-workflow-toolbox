@@ -128,17 +128,17 @@ Run the real Cloud proof only when local WordPress and Cloud Runtime are
 available:
 
 ```bash
-cd /Users/muze/gitee/magick-ai-cloud
+cd /Users/muze/gitee/npcink-ai-cloud
 docker compose -f docker-compose.dev.yml --profile runtime up -d worker
 
-cd /Users/muze/gitee/magick-ai-toolbox
+cd /Users/muze/gitee/npcink-toolbox
 composer smoke:nightly-inspection-cloud-e2e
 ```
 
 Manual admin proof:
 
 ```text
-https://magick-ai.local/wp-admin/admin.php?page=npcink-toolbox
+https://npcink.local/wp-admin/admin.php?page=npcink-toolbox
 ```
 
 Expected manual result:

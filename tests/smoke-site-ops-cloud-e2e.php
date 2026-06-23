@@ -80,7 +80,7 @@ if ( is_wp_error( $result ) ) {
 }
 
 $assert( 'site_ops_cloud_analysis_result.v1' === (string) ( $result['contract_version'] ?? '' ), 'Cloud result uses the Site Ops Cloud analysis result contract.' );
-$assert( 'magick-ai-cloud' === (string) ( $result['runtime_owner'] ?? '' ), 'Cloud result declares magick-ai-cloud runtime ownership.' );
+$assert( 'npcink-ai-cloud' === (string) ( $result['runtime_owner'] ?? '' ), 'Cloud result declares npcink-ai-cloud runtime ownership.' );
 $assert( 'runtime_detail' === (string) ( $result['cloud_role'] ?? '' ), 'Cloud result stays runtime/detail.' );
 $assert( 'succeeded' === (string) ( $result['status'] ?? '' ), 'Cloud runtime returns a succeeded Site Ops analysis.' );
 $assert( false === $flag( $result, 'direct_wordpress_write', true ), 'Cloud analysis does not grant direct WordPress writes.' );

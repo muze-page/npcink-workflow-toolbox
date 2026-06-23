@@ -29,10 +29,10 @@ The migration used the existing cross-repo split:
 | Owner | Role During This Migration |
 | --- | --- |
 | `npcink-abilities-toolkit` | Reusable WordPress ability artifacts, schemas, dry-run plans, and approved callbacks. |
-| `magick-ai-toolbox` | Editor/admin UI, fixed buttons, candidate display, operator review, and Core handoff UX. |
-| `magick-ai-cloud` | Hosted AI runtime, provider execution, image-source lookup, Site Knowledge, vector, and rerank runtime. |
+| `npcink-toolbox` | Editor/admin UI, fixed buttons, candidate display, operator review, and Core handoff UX. |
+| `npcink-ai-cloud` | Hosted AI runtime, provider execution, image-source lookup, Site Knowledge, vector, and rerank runtime. |
 | `npcink-governance-core` | Proposal records, approval, preflight, audit, and governance truth. |
-| `magick-ai-adapter` / OpenClaw | Natural-language projection, proposal transport, and approved execution channel. |
+| `npcink-ai-client-adapter` / OpenClaw | Natural-language projection, proposal transport, and approved execution channel. |
 
 The rule that emerged: move to Toolkit only when the logic is a repeated,
 host-reusable WordPress artifact, plan, dry-run, or callback contract. Do not

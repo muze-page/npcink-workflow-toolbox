@@ -95,7 +95,7 @@ The implementation was verified with these gates:
 | --- | --- |
 | `composer test:all` | Passed. Static contract checks: `1192 passed`; progressive behavior checks passed. |
 | `composer smoke:editor-progressive-recommendations` | Passed. Local progressive smoke returned `Progressive candidates=4 elapsed_ms=17`. |
-| Browser editor smoke | Passed on `https://magick-ai.local/wp-admin/post.php?post=19025&action=edit` after administrator login. |
+| Browser editor smoke | Passed on `https://npcink.local/wp-admin/post.php?post=19025&action=edit` after administrator login. |
 | `git diff --check` | Passed. |
 
 Browser smoke confirmed:

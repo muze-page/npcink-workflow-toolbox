@@ -66,7 +66,7 @@ would create artificial signal and extra state without proving product value.
 
 ### Toolbox
 
-Implemented in `magick-ai-toolbox`.
+Implemented in `npcink-toolbox`.
 
 - Related Site Knowledge can influence summary/category/tag ranking as
   evidence only.
@@ -96,7 +96,7 @@ Relevant commits:
 
 ### Core
 
-Implemented in `magick-ai-core`.
+Implemented in `npcink-governance-core`.
 
 - Core accepts `npcink-abilities-toolkit/build-content-metadata-apply-plan` as a bounded
   plan-to-proposal source.

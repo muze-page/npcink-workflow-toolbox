@@ -19,12 +19,12 @@ callback layer.
 
 | Repo | Owns | Must not own |
 | --- | --- | --- |
-| `magick-ai-toolbox` | Operator UI, bounded snapshot submission, quota/status/result display, review-only Morning Brief merge, and operator-triggered Core handoff payloads. | Cloud worker state, scheduler truth, local job tables, retry leases, dead letters, automatic Core proposals, approval, preflight, or WordPress writes. |
-| `magick-ai-cloud` | Cloud Batch Runtime execution, run/action state, worker execution, retry/dead-letter detail, entitlement, usage, quota, retention, and diagnostics. | WordPress schedule truth, Core approval truth, WordPress write authority, or a second ability/workflow registry. |
-| `magick-ai-cloud-addon` | Signed transport, Cloud credentials, runtime/run/result/stats/entitlement reads. | Local control plane, proposal store, write governance, or Toolbox product UI. |
+| `npcink-toolbox` | Operator UI, bounded snapshot submission, quota/status/result display, review-only Morning Brief merge, and operator-triggered Core handoff payloads. | Cloud worker state, scheduler truth, local job tables, retry leases, dead letters, automatic Core proposals, approval, preflight, or WordPress writes. |
+| `npcink-ai-cloud` | Cloud Batch Runtime execution, run/action state, worker execution, retry/dead-letter detail, entitlement, usage, quota, retention, and diagnostics. | WordPress schedule truth, Core approval truth, WordPress write authority, or a second ability/workflow registry. |
+| `npcink-cloud-addon` | Signed transport, Cloud credentials, runtime/run/result/stats/entitlement reads. | Local control plane, proposal store, write governance, or Toolbox product UI. |
 | `npcink-governance-core` | Proposal intake, approval/rejection, commit preflight, audit, policy checks, and review status. | Cloud runtime execution or WordPress ability callbacks. |
 | `npcink-abilities-toolkit` | WordPress ability schemas, metadata, dry-run previews, and final callback implementations. | Approval truth, audit truth, workflow runtime, or Cloud queue state. |
-| `magick-ai-adapter` | Authenticated channel behavior, Core proposal relay, capability guidance, execution profile allowlist, and approved execution proxy. | Local workflow runtime, scheduler truth, or unapproved writes. |
+| `npcink-ai-client-adapter` | Authenticated channel behavior, Core proposal relay, capability guidance, execution profile allowlist, and approved execution proxy. | Local workflow runtime, scheduler truth, or unapproved writes. |
 
 ## Cloud Development Sync Packet
 
@@ -156,10 +156,10 @@ composer smoke:nightly-inspection-orchestration-boundary
 Real integration gate, only when Cloud and local WordPress are available:
 
 ```bash
-cd /Users/muze/gitee/magick-ai-cloud
+cd /Users/muze/gitee/npcink-ai-cloud
 docker compose -f docker-compose.dev.yml --profile runtime up -d worker
 
-cd /Users/muze/gitee/magick-ai-toolbox
+cd /Users/muze/gitee/npcink-toolbox
 composer smoke:nightly-inspection-cloud-e2e
 ```
 

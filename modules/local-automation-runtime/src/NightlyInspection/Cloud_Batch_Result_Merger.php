@@ -40,7 +40,7 @@ final class Cloud_Batch_Result_Merger {
 
 		$merged['cloud_runtime'] = array(
 			'contract_version'       => self::CONTRACT_VERSION,
-			'provider'               => 'magick_ai_cloud',
+			'provider'               => 'npcink_cloud',
 			'composition_role'       => 'morning_brief_cloud_runtime_detail',
 			'source_run_id'          => $this->text_value( $cloud_result, array( 'run_id', 'cloud_run_id', 'source_run_id' ) ),
 			'status'                 => $this->text_value( $cloud_result, array( 'status' ), 'merged' ),
@@ -103,7 +103,7 @@ final class Cloud_Batch_Result_Merger {
 
 		$patch = array(
 			'contract_version'       => self::CONTRACT_VERSION,
-			'provider'               => 'magick_ai_cloud',
+			'provider'               => 'npcink_cloud',
 			'composition_role'       => 'morning_brief_cloud_runtime_patch',
 			'source_run_id'          => $this->text_value( $cloud_result, array( 'run_id', 'cloud_run_id', 'source_run_id' ) ),
 			'status'                 => $this->text_value( $cloud_result, array( 'status' ), 'available' ),
@@ -351,7 +351,7 @@ final class Cloud_Batch_Result_Merger {
 			'target_plan_contract'                => $this->bounded_text( (string) ( $package['target_plan_contract'] ?? '' ), 160 ),
 			'core_review_plan_idempotency_key'    => $this->bounded_text( (string) ( $package['core_review_plan_idempotency_key'] ?? '' ), 191 ),
 			'proposal_created'                    => false,
-			'proposal_state_owner'                => $this->sanitize_key( (string) ( $package['proposal_state_owner'] ?? 'magick-ai-core' ) ),
+			'proposal_state_owner'                => $this->sanitize_key( (string) ( $package['proposal_state_owner'] ?? 'npcink-governance-core' ) ),
 			'approval_truth'                      => $this->sanitize_key( (string) ( $package['approval_truth'] ?? 'wordpress_local' ) ),
 			'final_write_truth'                   => $this->sanitize_key( (string) ( $package['final_write_truth'] ?? 'wordpress_local' ) ),
 			'cloud_role'                          => $this->sanitize_key( (string) ( $package['cloud_role'] ?? 'runtime_detail' ) ),

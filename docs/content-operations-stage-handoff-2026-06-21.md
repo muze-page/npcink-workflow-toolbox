@@ -144,7 +144,7 @@ Toolbox 只负责把能力接入编辑器 fixed-flow，并保持审查边界。
 
 ## 本轮提交
 
-本轮实现与 smoke 收尾完成后，`magick-ai-toolbox` 本地 `master` 相对 `origin/master` ahead 5。本文件作为额外 handoff 总结提交后，ahead 数会变为 6。
+本轮实现与 smoke 收尾完成后，`npcink-toolbox` 本地 `master` 相对 `origin/master` ahead 5。本文件作为额外 handoff 总结提交后，ahead 数会变为 6。
 
 最近相关提交：
 
@@ -158,12 +158,12 @@ Toolbox 只负责把能力接入编辑器 fixed-flow，并保持审查边界。
 
 ## 当前仓库状态
 
-`magick-ai-toolbox`：
+`npcink-toolbox`：
 
 - 本文件写入前，已完成的实现与 smoke 收尾提交处于干净状态。
 - 本文件提交后，`master` 预计相对 `origin/master` ahead 6。
 
-`magick-ai-cloud`：
+`npcink-ai-cloud`：
 
 - 本轮未改 Cloud 代码。
 - 仍有一个既有未跟踪文件：

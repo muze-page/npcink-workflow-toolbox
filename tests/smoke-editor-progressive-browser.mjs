@@ -51,7 +51,7 @@ function wpCli(args, options = {}) {
 	const php = env('WP_CLI_PHP', `${process.env.HOME}/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php`);
 	const wp = env('WP_CLI_BIN', '/opt/homebrew/bin/wp');
 	const socket = env('WP_DB_SOCKET', `${process.env.HOME}/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock`);
-	const wpPath = env('WP_PATH', '/Users/muze/Local Sites/magick-ai/app/public');
+	const wpPath = env('WP_PATH', '/Users/muze/Local Sites/npcink/app/public');
 	return execFileSync(
 		php,
 		[
@@ -150,7 +150,7 @@ async function waitForProgressiveRequest(requests, count, timeoutMs = 7000) {
 }
 
 const { chromium } = await loadPlaywright();
-const baseUrl = env('WP_BASE_URL', 'https://magick-ai.local').replace(/\/$/, '');
+const baseUrl = env('WP_BASE_URL', 'https://npcink.local').replace(/\/$/, '');
 const postId = getPostId();
 const browserOptions = {
 	headless: process.env.HEADLESS !== '0',

@@ -168,7 +168,7 @@ git diff --check
 ```
 
 Browser verification may require a logged-in local WordPress admin session at
-`https://magick-ai.local/wp-admin/index.php`.
+`https://npcink.local/wp-admin/index.php`.
 
 ## Next Stage
 

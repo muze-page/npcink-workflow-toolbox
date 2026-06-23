@@ -1,7 +1,7 @@
 #!/bin/sh
 set -u
 
-WP_PATH="${WP_PATH:-/Users/muze/Local Sites/magick-ai/app/public}"
+WP_PATH="${WP_PATH:-/Users/muze/Local Sites/npcink/app/public}"
 WP_CLI_BIN="${WP_CLI_BIN:-/opt/homebrew/bin/wp}"
 WP_CLI_PHP="${WP_CLI_PHP:-}"
 SOCKET="${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}"

@@ -8,14 +8,14 @@
 $root     = dirname( __DIR__ );
 $failures = array();
 
-function magick_ai_wporg_fail( $message ) {
+function npcink_wporg_fail( $message ) {
 	global $failures;
 	$failures[] = (string) $message;
 }
 
-function magick_ai_wporg_read( $path ) {
+function npcink_wporg_read( $path ) {
 	if ( ! is_readable( $path ) ) {
-		magick_ai_wporg_fail( 'Missing readable file: ' . $path );
+		npcink_wporg_fail( 'Missing readable file: ' . $path );
 		return '';
 	}
 
@@ -23,7 +23,7 @@ function magick_ai_wporg_read( $path ) {
 	return is_string( $contents ) ? $contents : '';
 }
 
-function magick_ai_wporg_php_files() {
+function npcink_wporg_php_files() {
 	global $root;
 
 	$files = glob( $root . '/*.php' );
@@ -61,13 +61,13 @@ $rules = array(
 	'Do not read $_GET directly in plugin views; route reads through nonce-verified helpers.' => '/\$_GET\s*\[/',
 );
 
-foreach ( magick_ai_wporg_php_files() as $file ) {
+foreach ( npcink_wporg_php_files() as $file ) {
 	$relative = str_replace( $root . '/', '', $file );
-	$contents = magick_ai_wporg_read( $file );
+	$contents = npcink_wporg_read( $file );
 
 	foreach ( $rules as $message => $pattern ) {
 		if ( preg_match( $pattern, $contents ) ) {
-			magick_ai_wporg_fail( $relative . ': ' . $message );
+			npcink_wporg_fail( $relative . ': ' . $message );
 		}
 	}
 }

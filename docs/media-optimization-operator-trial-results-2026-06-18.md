@@ -1,6 +1,6 @@
 # Media Optimization Operator Trial Results - 2026-06-18
 
-Status: passed on local `https://magick-ai.local`.
+Status: passed on local `https://npcink.local`.
 
 This records the first real-attachment validation for `media_optimization_v1`.
 The trial used low-risk local media attachments with `public_content_refs=0`.

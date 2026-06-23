@@ -2,7 +2,7 @@
 
 Status: closed baseline
 
-This note records the clean post-release baseline for the Npcink/Magick AI
+This note records the clean post-release baseline for the Npcink
 WordPress stack, the small local regression run, and the next focused work
 area. It is a handoff record, not a new product requirement.
 
@@ -15,9 +15,9 @@ Repositories checked:
 | `npcink-abilities-toolkit` | `948b226c113a` | `master...origin/master`, clean |
 | `npcink-governance-core` | `405cf3e08060` | `master...origin/master`, clean |
 | `npcink-ai-client-adapter` | `103b5de74d9a` | `master...origin/master`, clean |
-| `magick-ai-toolbox` | `61fac0ce07f3` | `master...origin/master`, clean before this handoff doc |
-| `magick-ai-cloud-addon` | `a819bccc08ea` | `master...origin/master`, clean |
-| `magick-ai-cloud` | `dce3d4744340` | `master...origin/master`, clean |
+| `npcink-toolbox` | `61fac0ce07f3` | `master...origin/master`, clean before this handoff doc |
+| `npcink-cloud-addon` | `a819bccc08ea` | `master...origin/master`, clean |
+| `npcink-ai-cloud` | `dce3d4744340` | `master...origin/master`, clean |
 
 All six repositories had only local `master`, only `origin/master` remotely,
 one registered worktree, no ahead/behind state, no uncommitted files, and no
@@ -29,17 +29,17 @@ Release cleanup gates completed before this handoff:
 
 | Repository | Gate | Result |
 | --- | --- | --- |
-| `magick-ai-toolbox` | `composer test:all` | Passed; static contracts reported `2028 passed`. |
+| `npcink-toolbox` | `composer test:all` | Passed; static contracts reported `2028 passed`. |
 | `npcink-abilities-toolkit` | `composer test:all` | Passed; static contracts reported `5069 assertions`. |
 | `npcink-ai-client-adapter` | `composer test:all` | Passed. |
-| `magick-ai-cloud` | `git diff --check` for the closeout doc | Passed. |
+| `npcink-ai-cloud` | `git diff --check` for the closeout doc | Passed. |
 
 ## Local Regression - 2026-06-21
 
 Local environment:
 
 - WordPress path:
-  `/Users/muze/Local Sites/magick-ai/app/public`
+  `/Users/muze/Local Sites/npcink/app/public`
 - WP-CLI:
   `/opt/homebrew/bin/wp`, version `2.12.0`
 - Local MySQL socket:

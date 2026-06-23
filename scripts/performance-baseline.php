@@ -3,7 +3,7 @@
  * Captures a small REST latency baseline for Npcink Toolbox routes.
  *
  * Required:
- * - NPCINK_TOOLBOX_BASE_URL, for example https://magick-ai.local
+ * - NPCINK_TOOLBOX_BASE_URL, for example https://npcink.local
  *
  * Optional authentication:
  * - NPCINK_TOOLBOX_AUTH_COOKIE, copied from a logged-in admin browser session

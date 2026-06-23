@@ -39,10 +39,6 @@ final class Provider_Client {
 			return npcink_cloud_addon_runtime_client();
 		}
 
-		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
-			return magick_ai_cloud_addon_runtime_client();
-		}
-
 		return null;
 	}
 
@@ -112,9 +108,9 @@ final class Provider_Client {
 
 		$handoff = is_array( $input['handoff'] ?? null ) ? $input['handoff'] : array();
 		$template = is_array( $handoff['runtime_request_template'] ?? null ) ? $handoff['runtime_request_template'] : array();
-		$ability_name = sanitize_text_field( (string) ( $template['ability_name'] ?? 'magick-ai-cloud/generate-image' ) );
-		if ( ! in_array( $ability_name, array( 'magick-ai-cloud/generate-image', 'magick-ai-toolbox/generate-image', 'npcink-toolbox/generate-image' ), true ) ) {
-			$ability_name = 'magick-ai-cloud/generate-image';
+		$ability_name = sanitize_text_field( (string) ( $template['ability_name'] ?? 'npcink-cloud/generate-image' ) );
+		if ( ! in_array( $ability_name, array( 'npcink-cloud/generate-image', 'npcink-toolbox/generate-image' ), true ) ) {
+			$ability_name = 'npcink-cloud/generate-image';
 		}
 
 		$runtime_payload = array(
@@ -230,7 +226,7 @@ final class Provider_Client {
 
 	public function run_site_ops_cloud_analysis( array $cloud_request ) {
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-toolbox/analyze-site-ops',
+			'ability_name'        => 'npcink-toolbox/analyze-site-ops',
 			'contract_version'    => 'site_ops_cloud_analysis_request.v1',
 			'execution_pattern'   => 'whole_run_offload',
 			'execution_kind'      => 'site_ops_cloud_analysis',
@@ -549,7 +545,7 @@ final class Provider_Client {
 		);
 
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-toolbox/analyze-nightly-content-batch',
+			'ability_name'        => 'npcink-toolbox/analyze-nightly-content-batch',
 			'contract_version'    => 'cloud_batch_runtime_request.v1',
 			'execution_pattern'   => 'whole_run_offload',
 			'execution_kind'      => 'nightly_site_inspection',
@@ -903,10 +899,10 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'nightly_site_inspection_recent_runs.v1',
-				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'cloud_runtime'         => 'npcink_cloud_addon',
 				'status'                => sanitize_key( (string) ( $response['status'] ?? 'ok' ) ),
 				'limit'                 => max( 1, min( 50, absint( $data['limit'] ?? $limit ) ) ),
 				'items'                 => is_array( $data['items'] ?? null ) ? $this->sanitize_payload( $data['items'] ) : array(),
@@ -921,7 +917,7 @@ final class Provider_Client {
 				'boundary'              => is_array( $data['boundary'] ?? null ) ? $this->sanitize_payload( $data['boundary'] ) : array(
 					'cloud_role'             => 'runtime_detail',
 					'schedule_truth'         => 'wordpress_local',
-					'proposal_truth'         => 'magick_ai_core',
+					'proposal_truth'         => 'npcink_governance_core',
 					'final_write_truth'      => 'wordpress_local',
 					'direct_wordpress_write' => false,
 				),
@@ -942,10 +938,10 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'cloud_batch_runtime_status.v1',
-				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'cloud_runtime'         => 'npcink_cloud_addon',
 				'status'                => sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? 'unknown' ) ),
 				'cloud_run'             => array(
 					'run_id'        => sanitize_text_field( (string) ( $data['run_id'] ?? $run_id ) ),
@@ -977,11 +973,11 @@ final class Provider_Client {
 
 		$payload = $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'cloud_batch_runtime_request.v1',
-				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/analyze-nightly-content-batch' ) ),
-				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/analyze-nightly-content-batch' ) ),
+				'cloud_runtime'         => 'npcink_cloud_addon',
 				'status'                => '' !== $status ? $status : 'submitted',
 				'runtime_owner'         => 'npcink-local-automation-runtime',
 				'cloud_role'            => 'runtime_detail',
@@ -1031,13 +1027,13 @@ final class Provider_Client {
 		$status = sanitize_key( (string) ( $data['status'] ?? $response['status'] ?? 'submitted' ) );
 		$payload = $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'site_ops_cloud_analysis_result.v1',
-				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/analyze-site-ops' ) ),
-				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/analyze-site-ops' ) ),
+				'cloud_runtime'         => 'npcink_cloud_addon',
 				'status'                => '' !== $status ? $status : 'submitted',
-				'runtime_owner'         => 'magick-ai-cloud',
+				'runtime_owner'         => 'npcink-ai-cloud',
 				'cloud_role'            => 'runtime_detail',
 				'final_write_path'      => 'core_proposal_required',
 				'cloud_run'             => array(
@@ -1088,11 +1084,11 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'cloud_batch_runtime_retry.v1',
-				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/analyze-nightly-content-batch' ) ),
-				'cloud_runtime'         => 'magick_ai_cloud_addon',
+				'cloud_ability'         => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/analyze-nightly-content-batch' ) ),
+				'cloud_runtime'         => 'npcink_cloud_addon',
 				'status'                => '' !== $status ? $status : 'queued',
 				'runtime_owner'         => 'npcink-local-automation-runtime',
 				'cloud_role'            => 'runtime_detail',
@@ -1175,7 +1171,7 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'              => 'magick_ai_cloud',
+				'provider'              => 'npcink_cloud',
 				'provider_mode'         => 'cloud_managed',
 				'contract_version'      => 'pro_cloud_runtime_entitlement_status.v1',
 				'status'                => sanitize_key( (string) ( $data['status'] ?? $entitlement['status'] ?? '' ) ),
@@ -1855,7 +1851,7 @@ final class Provider_Client {
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-search',
+			'npcink-cloud/site-knowledge-search',
 			'site_knowledge_search.v1',
 			'inline',
 			$payload,
@@ -1872,7 +1868,7 @@ final class Provider_Client {
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-status',
+			'npcink-cloud/site-knowledge-status',
 			'site_knowledge_status.v1',
 			'inline',
 			$payload,
@@ -1906,7 +1902,7 @@ final class Provider_Client {
 		}
 
 		return $this->execute_site_knowledge_cloud_request(
-			'magick-ai-cloud/site-knowledge-sync',
+			'npcink-cloud/site-knowledge-sync',
 			'site_knowledge_sync.v1',
 			'whole_run_offload',
 			$payload,
@@ -2116,7 +2112,7 @@ final class Provider_Client {
 				'usage_summary'         => is_array( $search['usage_summary'] ?? null ) ? $this->sanitize_payload( $search['usage_summary'] ) : array(),
 				'error_code'            => sanitize_key( (string) ( $search['error_code'] ?? '' ) ),
 				'handoff'               => array(
-					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'cloud_runtime'          => 'npcink_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
 					'direct_wordpress_write' => false,
 				),
@@ -4242,7 +4238,7 @@ final class Provider_Client {
 		}
 		$data_classification = $this->runtime_payload_data_classification( $input, 'public_reference_media', $options );
 		$runtime_payload = array(
-			'ability_name'        => 'magick-ai-toolbox/search-image-source',
+			'ability_name'        => 'npcink-toolbox/search-image-source',
 			'contract_version'    => 'image_source_cloud_request.v1',
 			'execution_pattern'   => 'inline',
 			'execution_kind'      => 'image_source',
@@ -4443,7 +4439,7 @@ final class Provider_Client {
 				'output_contract'      => sanitize_text_field( (string) ( $result['output_contract'] ?? $result['evidence_pack']['contract_version'] ?? '' ) ),
 				'source_priority'      => sanitize_key( (string) ( $result['source_priority'] ?? $result['evidence_pack']['source_priority'] ?? '' ) ),
 				'cloud_ability'        => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/web-search' ) ),
-				'cloud_runtime'        => 'magick_ai_cloud_addon',
+				'cloud_runtime'        => 'npcink_cloud_addon',
 				'status'               => sanitize_key( (string) ( $result['status'] ?? ( $response['status'] ?? 'unknown' ) ) ),
 				'run_id'               => sanitize_text_field( (string) ( $response['run_id'] ?? ( ( $response['data']['run_id'] ?? null ) ?: ( $result['run_id'] ?? '' ) ) ) ),
 				'query'                => sanitize_text_field( (string) ( $input['query'] ?? '' ) ),
@@ -4466,7 +4462,7 @@ final class Provider_Client {
 				),
 				'results'              => $results,
 				'handoff'              => array(
-					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'cloud_runtime'          => 'npcink_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
 					'direct_wordpress_write' => false,
 				),
@@ -4643,13 +4639,13 @@ final class Provider_Client {
 
 		$payload = $this->with_output_contract(
 			array(
-				'provider'                   => 'magick_ai_cloud',
+				'provider'                   => 'npcink_cloud',
 				'provider_mode'              => 'ai_generated',
 				'requested_provider_mode'    => 'ai_generated',
 				'resolved_provider'          => $hosted_profile,
 				'candidate_contract_version' => 'image_candidate.v1',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-cloud/generate-image' ) ),
-				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-cloud/generate-image' ) ),
+				'cloud_runtime'              => 'npcink_cloud_addon',
 				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'image_generation_request.v1' ) ),
 				'hosted_profile'             => $hosted_profile,
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? ( array() === $images ? 'empty' : 'ready' ) ) ),
@@ -4667,7 +4663,7 @@ final class Provider_Client {
 					),
 				),
 				'usage_summary'              => array(
-					'provider'            => sanitize_key( (string) ( $result['provider'] ?? 'magick_ai_cloud' ) ),
+					'provider'            => sanitize_key( (string) ( $result['provider'] ?? 'npcink_cloud' ) ),
 					'provider_mode'       => 'ai_generated',
 					'provider_call_count' => absint( $response['provider_call_count'] ?? ( $response['data']['provider_call_count'] ?? 1 ) ),
 					'result_count'        => count( $images ),
@@ -4734,14 +4730,14 @@ final class Provider_Client {
 
 		$payload = $this->with_output_contract(
 			array(
-				'provider'                   => 'magick_ai_cloud',
+				'provider'                   => 'npcink_cloud',
 				'provider_mode'              => $provider_mode,
 				'requested_provider_mode'    => sanitize_key( (string) ( $result['requested_provider_mode'] ?? $provider_mode ) ),
 				'resolved_provider'          => $resolved_provider,
 				'auto_strategy'              => sanitize_key( (string) ( $result['auto_strategy'] ?? '' ) ),
 				'candidate_contract_version' => 'image_candidate.v1',
-				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'magick-ai-toolbox/search-image-source' ) ),
-				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/search-image-source' ) ),
+				'cloud_runtime'              => 'npcink_cloud_addon',
 				'status'                     => sanitize_key( (string) ( $result['status'] ?? $response['status'] ?? 'unknown' ) ),
 				'message'                    => sanitize_text_field( (string) ( $result['message'] ?? $result['error_message'] ?? $response['message'] ?? '' ) ),
 				'candidate_source_count'     => count( $images ),
@@ -4822,8 +4818,8 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'                   => 'magick_ai_cloud',
-				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'provider'                   => 'npcink_cloud',
+				'cloud_runtime'              => 'npcink_cloud_addon',
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-content-support' ) ),
 			'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_content_support.v1' ) ),
 				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.ai' ) ),
@@ -4937,8 +4933,8 @@ final class Provider_Client {
 
 		return $this->with_output_contract(
 			array(
-				'provider'                   => 'magick_ai_cloud',
-				'cloud_runtime'              => 'magick_ai_cloud_addon',
+				'provider'                   => 'npcink_cloud',
+				'cloud_runtime'              => 'npcink_cloud_addon',
 				'cloud_ability'              => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-site-helper' ) ),
 				'contract_version'           => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_site_helper.v1' ) ),
 				'hosted_profile'             => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'text.ai' ) ),
@@ -6340,7 +6336,7 @@ final class Provider_Client {
 
 		$payload = $this->with_output_contract(
 			array(
-				'provider'          => 'magick_ai_cloud',
+				'provider'          => 'npcink_cloud',
 			'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
 				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
 			'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
@@ -6546,7 +6542,7 @@ final class Provider_Client {
 
 	private function site_knowledge_handoff_for_display( array $agent_handoff = array() ): array {
 		$handoff = array(
-			'cloud_runtime'          => 'magick_ai_cloud_addon',
+			'cloud_runtime'          => 'npcink_cloud_addon',
 			'final_writes'           => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 			'write_posture'          => 'suggestion_only',
@@ -6657,7 +6653,7 @@ final class Provider_Client {
 	private function site_knowledge_active_run_response( string $artifact_type, string $composition_role, array $runtime_payload ): array {
 		return $this->with_output_contract(
 			array(
-				'provider'          => 'magick_ai_cloud',
+				'provider'          => 'npcink_cloud',
 			'contract_version'  => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? '' ) ),
 				'cloud_ability'     => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? '' ) ),
 			'execution_pattern' => sanitize_key( (string) ( $runtime_payload['execution_pattern'] ?? 'inline' ) ),
@@ -6683,7 +6679,7 @@ final class Provider_Client {
 				),
 				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'npcink-toolbox' ),
 				'handoff'           => array(
-					'cloud_runtime'          => 'magick_ai_cloud_addon',
+					'cloud_runtime'          => 'npcink_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
 					'direct_wordpress_write' => false,
 				),

@@ -1576,7 +1576,7 @@
 			.map((item) => String(item || '').trim())
 			.filter((item) => {
 				const key = item.toLowerCase();
-				if (!item || item === 'ai_generated' || item === 'magick_ai_cloud' || item === 'grok_imagine' || seen[key]) {
+				if (!item || item === 'ai_generated' || item === 'npcink_cloud' || item === 'grok_imagine' || seen[key]) {
 					return false;
 				}
 				seen[key] = true;
@@ -6176,7 +6176,7 @@
 						image_use: activePicker.imageUse,
 						regeneration_mode: override.regenerationMode || '',
 						runtime_request_template: {
-							ability_name: 'magick-ai-cloud/generate-image',
+							ability_name: 'npcink-cloud/generate-image',
 						},
 					},
 					});

@@ -27,7 +27,7 @@ This validation gate exists to prevent two wrong moves:
 | Optional hosted AI or image-context runtime | Cloud or host runtime |
 | Reusable review artifact, if proven stable | `npcink-abilities-toolkit` |
 | Proposal, approval, preflight, and audit | `npcink-governance-core` |
-| Approved execution relay | `magick-ai-adapter` |
+| Approved execution relay | `npcink-ai-client-adapter` |
 | Final WordPress media metadata callback | WordPress Abilities callback |
 
 ## Extraction Acceptance Criteria

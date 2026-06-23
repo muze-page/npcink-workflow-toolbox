@@ -35,7 +35,7 @@ composer smoke:editor-review-artifacts
 composer smoke:editor-hosted-ai-no-result
 NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:editor-progressive-browser
 composer eval:editor-followup:trial
-composer eval:lab -- task=project_quality_gate project=/Users/muze/gitee/magick-ai-toolbox mode=head output_json=project-review/generated/toolbox-editor-followup-quality-gate.json output_md=project-review/generated/toolbox-editor-followup-quality-gate.md
+composer eval:lab -- task=project_quality_gate project=/Users/muze/gitee/npcink-toolbox mode=head output_json=project-review/generated/toolbox-editor-followup-quality-gate.json output_md=project-review/generated/toolbox-editor-followup-quality-gate.md
 ```
 
 Previous implementation gate for the committed slice:

@@ -120,12 +120,12 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
 
 | Repo | Near-term responsibility |
 | --- | --- |
-| `magick-ai-toolbox` | Batch review-set UI, eligibility summaries, blocked reasons, selected previews, and selected Core proposal submission. |
+| `npcink-toolbox` | Batch review-set UI, eligibility summaries, blocked reasons, selected previews, and selected Core proposal submission. |
 | `npcink-abilities-toolkit` | Ability schemas, dry-run preview callbacks, read-only plan builders, workflow definition guidance, and host-approved final write callbacks. |
 | `npcink-governance-core` | Proposal intake, approval, preflight, audit, policy evaluation, and review status. |
-| `magick-ai-adapter` | Authenticated channel, Core proposal relay, `write_actions[]` validation, output-reference validation, execution profile allowlist, and approved execution. |
-| `magick-ai-cloud-addon` | Signed Cloud transport, run/result/status reads, entitlement and diagnostics detail. |
-| `magick-ai-cloud` | Hosted processing for allowed non-writing runtime tasks, previews, diagnostics, and service detail. |
+| `npcink-ai-client-adapter` | Authenticated channel, Core proposal relay, `write_actions[]` validation, output-reference validation, execution profile allowlist, and approved execution. |
+| `npcink-cloud-addon` | Signed Cloud transport, run/result/status reads, entitlement and diagnostics detail. |
+| `npcink-ai-cloud` | Hosted processing for allowed non-writing runtime tasks, previews, diagnostics, and service detail. |
 
 ## Implementation Order
 

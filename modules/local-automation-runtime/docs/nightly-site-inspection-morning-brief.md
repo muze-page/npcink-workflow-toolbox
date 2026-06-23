@@ -108,7 +108,7 @@ host the UI, but Toolbox buttons must not become the queue or scheduler truth.
 
 ## Pro Cloud Runtime Shape
 
-The Pro edition offloads batch analysis to Magick AI Cloud through the Cloud
+The Pro edition offloads batch analysis to Npcink AI Cloud through the Cloud
 Addon and the existing hosted runtime contract. The preferred shape is Cloud
 Batch Runtime: Cloud owns run/action state, queue-backed worker execution,
 retry, dead-letter, entitlement, usage metering, quota enforcement, observability,

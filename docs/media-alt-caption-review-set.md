@@ -189,7 +189,7 @@ Restart the write path only when all of these are true:
   dry-run preview;
 - `npcink-governance-core` can intake, approve, preflight, and audit the media
   metadata proposal;
-- `magick-ai-adapter` has an explicit execution profile for the approved media
+- `npcink-ai-client-adapter` has an explicit execution profile for the approved media
   metadata ability;
 - the UI can still present partial failure, retry guidance, and no-write
   fallback states without becoming a queue or workflow runtime.
@@ -206,7 +206,7 @@ Applying accepted ALT/caption changes requires a separate governed path:
    and dry-run preview.
 2. `npcink-governance-core` accepts the proposal, approval, preflight, and audit
    truth.
-3. `magick-ai-adapter` relays the approved action through an allowlisted
+3. `npcink-ai-client-adapter` relays the approved action through an allowlisted
    execution profile.
 4. WordPress Abilities perform the final write callback.
 5. Toolbox productizes that accepted path as a fixed operator button.

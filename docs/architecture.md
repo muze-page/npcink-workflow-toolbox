@@ -113,9 +113,9 @@ Abilities are server-side Toolbox tool wrappers: AI callers provide task input,
 Toolbox uses local configuration or Cloud runtime ownership to execute the
 provider call, and the caller receives a normalized suggestion payload instead
 of provider secrets. For AI composition, callers should treat provider-backed
-abilities as reusable tool inputs. Cloud-managed web search is owned by Magick
-AI Cloud, `search-image-source` is the general local image-candidate ability
-that wraps the Cloud `magick-ai-toolbox/search-image-source` runtime ability on the
+abilities as reusable tool inputs. Cloud-managed web search is owned by Npcink
+Cloud, `search-image-source` is the general local image-candidate ability
+that wraps the Cloud `npcink-toolbox/search-image-source` runtime ability on the
 `image-source.managed` profile, and
 `search-site-knowledge` is the general Cloud-managed semantic site-context
 ability. `vector-search` remains a compatibility pointer only. Article

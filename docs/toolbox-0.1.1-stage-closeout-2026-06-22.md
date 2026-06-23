@@ -97,8 +97,8 @@ human-written articles.
 
 - `npcink.local` was used as a temporary test site only.
 - Formal local development and final smoke confirmation should use
-  `https://magick-ai.local/`.
-- On `magick-ai.local`, the plugin is mounted as `npcink-toolbox`, active, and
+  `https://npcink.local/`.
+- On `npcink.local`, the plugin is mounted as `npcink-toolbox`, active, and
   visible under the Npcink admin menu. The plugin list Settings action is
   translated as `设置`.
 
@@ -122,7 +122,7 @@ Observed results:
 - Release package was generated at `build/npcink-toolbox.zip`.
 - The generated zip contains `npcink-toolbox/npcink-toolbox.php` and
   `npcink-toolbox/readme.txt`, with no `.DS_Store`.
-- `magick-ai.local` reports `npcink-toolbox` active at version `0.1.1`.
+- `npcink.local` reports `npcink-toolbox` active at version `0.1.1`.
 - Admin HTML smoke confirmed:
   - plugin list contains `Npcink Toolbox`;
   - plugin Settings link is shown as `设置`;
@@ -160,7 +160,7 @@ be moved:
 
 ## Recommended Next Stage
 
-1. Human-confirm the final admin UX on `https://magick-ai.local/`.
+1. Human-confirm the final admin UX on `https://npcink.local/`.
 2. Push the local commits when the visual confirmation is accepted.
 3. Add WordPress.org listing assets: icon, banner, and screenshots for the
    Toolbox admin page, editor Content Support panel, Dashboard Zhihu topic

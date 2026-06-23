@@ -160,7 +160,7 @@ Final repository state after the fix:
 - upstream: `origin/master`
 - local branch state: clean and synced
 - local branches: only `master`
-- worktrees: only `/Users/muze/gitee/magick-ai-toolbox`
+- worktrees: only `/Users/muze/gitee/npcink-toolbox`
 - stash: empty
 
 Push notes:

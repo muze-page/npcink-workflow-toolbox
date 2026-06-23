@@ -342,15 +342,11 @@ final class Settings {
 			return '';
 		}
 
-		if ( ! function_exists( 'npcink_cloud_addon_runtime_client' ) && ! function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
+		if ( ! function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
 			return 'cloud_addon_not_installed';
 		}
 
 		if ( function_exists( 'npcink_cloud_addon_is_configured' ) && ! npcink_cloud_addon_is_configured() ) {
-			return 'cloud_addon_not_connected';
-		}
-
-		if ( function_exists( 'magick_ai_cloud_addon_is_configured' ) && ! magick_ai_cloud_addon_is_configured() ) {
 			return 'cloud_addon_not_connected';
 		}
 
@@ -360,10 +356,6 @@ final class Settings {
 	private function cloud_runtime_client() {
 		if ( function_exists( 'npcink_cloud_addon_runtime_client' ) ) {
 			return npcink_cloud_addon_runtime_client();
-		}
-
-		if ( function_exists( 'magick_ai_cloud_addon_runtime_client' ) ) {
-			return magick_ai_cloud_addon_runtime_client();
 		}
 
 		return null;

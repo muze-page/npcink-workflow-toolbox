@@ -5,7 +5,7 @@ Operations and Agent Feedback Quality surfaces.
 
 ## Scope
 
-- Local site: `https://magick-ai.local`
+- Local site: `https://npcink.local`
 - Admin route: `wp-admin/admin.php?page=npcink-toolbox&toolbox_tab=cloud-checks`
 - Plugin: `npcink-toolbox`
 - Mode: local smoke only, no comment publication, no WordPress content write, no

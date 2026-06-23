@@ -1305,7 +1305,7 @@
 		}
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Cloud runtime', payload.cloud_runtime || 'magick_ai_cloud_addon');
+		appendMeta(meta, 'Cloud runtime', payload.cloud_runtime || 'npcink_cloud_addon');
 		appendMeta(meta, 'Provider mode', payload.provider_mode ? formatLabel(payload.provider_mode) : '');
 		appendMeta(meta, 'Auto strategy', payload.auto_strategy ? formatLabel(payload.auto_strategy) : '');
 		appendMeta(meta, 'Resolved provider', payload.resolved_provider ? formatLabel(payload.resolved_provider) : '');
@@ -3529,7 +3529,7 @@
 				body.appendChild(el('small', 'npcink-toolbox__batch-status', status));
 			}
 			row.appendChild(body);
-			row.__magickMediaBatchCandidate = Object.assign({}, candidate, { batch_index: index });
+			row.__npcinkMediaBatchCandidate = Object.assign({}, candidate, { batch_index: index });
 			list.appendChild(row);
 		});
 		panel.appendChild(list);
@@ -3603,7 +3603,7 @@
 			candidates.forEach((candidate) => {
 				const row = el('div', 'npcink-toolbox__batch-row');
 				row.setAttribute('data-toolbox-media-resolution-candidate', String(candidate.attachment_id || ''));
-				row.__magickMediaResolutionCandidate = candidate;
+				row.__npcinkMediaResolutionCandidate = candidate;
 				const button = el('button', 'button button-small', 'Use attachment');
 				button.type = 'button';
 				button.setAttribute('data-toolbox-use-media-resolution-candidate', String(candidate.attachment_id || ''));
@@ -3633,7 +3633,7 @@
 			.filter((checkbox) => checkbox instanceof HTMLInputElement && checkbox.checked)
 			.map((checkbox) => {
 				const row = checkbox.closest('.npcink-toolbox__batch-row');
-				return row && row.__magickMediaBatchCandidate ? row.__magickMediaBatchCandidate : null;
+				return row && row.__npcinkMediaBatchCandidate ? row.__npcinkMediaBatchCandidate : null;
 			})
 			.filter(Boolean);
 	}
@@ -4120,7 +4120,7 @@
 		const previewOnly = form.hasAttribute('data-toolbox-media-derivative-preview-only');
 		renderTextResult(form, 'Submitting media derivative run...', 'pending');
 		const state = await createMediaDerivativePreview(input, mediaDetails, previewOnly);
-		form.__magickMediaDerivativeState = state;
+		form.__npcinkMediaDerivativeState = state;
 		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
 		if (submitButton instanceof HTMLButtonElement) {
 			submitButton.disabled = !state.fromPlanRequest;
@@ -4170,8 +4170,8 @@
 			input,
 		});
 		const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
-		form.__magickMediaDerivativeBatchPlan = plan;
-		form.__magickMediaDerivativeBatchStates = [];
+		form.__npcinkMediaDerivativeBatchPlan = plan;
+		form.__npcinkMediaDerivativeBatchStates = [];
 		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
 		renderTextResult(form, plan.operator_next_action || 'Batch plan ready. Review candidates and generate selected previews.', 'ok');
 		const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
@@ -4214,7 +4214,7 @@
 			states.push(state);
 		}
 
-		form.__magickMediaDerivativeBatchStates = states;
+		form.__npcinkMediaDerivativeBatchStates = states;
 		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
 		const executeButton = form.querySelector('[data-toolbox-execute-media-batch-replacements]');
 		if (submitButton instanceof HTMLButtonElement) {
@@ -4238,7 +4238,7 @@
 			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
-		const states = Array.isArray(form.__magickMediaDerivativeBatchStates) ? form.__magickMediaDerivativeBatchStates : [];
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
 		if (!states.length) {
 			throw { message: 'Generate selected batch previews before submitting Core proposals.' };
 		}
@@ -4295,7 +4295,7 @@
 			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
-		const states = Array.isArray(form.__magickMediaDerivativeBatchStates) ? form.__magickMediaDerivativeBatchStates : [];
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
 		const executableStates = states.filter((state) => proposalIdFromResponse(state && state.batchProposalResult));
 		if (!executableStates.length) {
 			throw { message: 'Submit selected Core reviews before approving and executing replacements.' };
@@ -4363,7 +4363,7 @@
 			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
-		const state = form.__magickMediaDerivativeState;
+		const state = form.__npcinkMediaDerivativeState;
 		if (!state || !state.proposalEnvelope || !state.derivative) {
 			throw { message: 'Generate a derivative preview before submitting a Core proposal.' };
 		}
@@ -4595,12 +4595,12 @@
 		const item = card && typeof card === 'object' ? card : {};
 		const summary = item.summary && typeof item.summary === 'object' ? item.summary : {};
 		return {
-			provider: 'magick_ai_cloud',
+			provider: 'npcink_cloud',
 			provider_mode: 'cloud_managed',
 			contract_version: 'nightly_site_inspection_recent_run_card.v1',
 			status: String(item.status || item.result_status || ''),
 			result_status: String(item.result_status || ''),
-			cloud_runtime: 'magick_ai_cloud_addon',
+			cloud_runtime: 'npcink_cloud_addon',
 			cloud_run: {
 				run_id: String(item.run_id || ''),
 				status: String(item.status || ''),
@@ -4753,14 +4753,14 @@
 
 	function setNightlyCloudBusy(root, busy, activeButton) {
 		root.querySelectorAll('[data-toolbox-nightly-cloud-entitlement], [data-toolbox-nightly-cloud-submit], [data-toolbox-nightly-cloud-status], [data-toolbox-nightly-cloud-result-read], [data-toolbox-nightly-cloud-recent], [data-toolbox-nightly-cloud-retry]').forEach((button) => {
-			if (!button.__magickOriginalText) {
-				button.__magickOriginalText = button.textContent;
+			if (!button.__npcinkOriginalText) {
+				button.__npcinkOriginalText = button.textContent;
 			}
 			button.setAttribute('aria-busy', busy ? 'true' : 'false');
 			if (button === activeButton) {
-				button.textContent = busy ? 'Working...' : button.__magickOriginalText;
+				button.textContent = busy ? 'Working...' : button.__npcinkOriginalText;
 			} else if (!busy) {
-				button.textContent = button.__magickOriginalText;
+				button.textContent = button.__npcinkOriginalText;
 			}
 		});
 		updateNightlyCloudButtonState(root, busy);
@@ -5033,7 +5033,7 @@
 			.filter((checkbox) => checkbox instanceof HTMLInputElement && checkbox.checked)
 			.map((checkbox) => {
 				const row = checkbox.closest('.npcink-toolbox__result-item');
-				return row && row.__magickNightlyReviewItem ? row.__magickNightlyReviewItem : null;
+				return row && row.__npcinkNightlyReviewItem ? row.__npcinkNightlyReviewItem : null;
 			})
 			.filter(Boolean);
 	}
@@ -5325,7 +5325,7 @@
 			const list = el('div', 'npcink-toolbox__result-list');
 			priorityQueue.slice(0, 5).forEach((item, index) => {
 				const row = el('article', 'npcink-toolbox__result-item');
-				row.__magickNightlyReviewItem = item;
+				row.__npcinkNightlyReviewItem = item;
 				const heading = el('label', 'npcink-toolbox__batch-row');
 				const checkbox = document.createElement('input');
 				checkbox.type = 'checkbox';
@@ -5898,12 +5898,12 @@
 		if (!submitButton) {
 			return;
 		}
-		if (!submitButton.__magickOriginalText) {
-			submitButton.__magickOriginalText = submitButton.textContent;
+		if (!submitButton.__npcinkOriginalText) {
+			submitButton.__npcinkOriginalText = submitButton.textContent;
 		}
 		submitButton.disabled = busy;
 		submitButton.setAttribute('aria-busy', busy ? 'true' : 'false');
-		submitButton.textContent = busy ? 'Sending index request...' : submitButton.__magickOriginalText;
+		submitButton.textContent = busy ? 'Sending index request...' : submitButton.__npcinkOriginalText;
 	}
 
 	function updateSiteKnowledgeActionState(root, payload) {
@@ -5919,13 +5919,13 @@
 		const startLabel = button.getAttribute('data-start-label') || 'Start indexing';
 		const refreshLabel = button.getAttribute('data-refresh-label') || 'Refresh index';
 		button.dataset.indexState = hasIndex ? 'ready' : 'empty';
-		button.__magickOriginalText = hasIndex ? refreshLabel : startLabel;
+		button.__npcinkOriginalText = hasIndex ? refreshLabel : startLabel;
 		if (modeInput) {
 			modeInput.value = hasIndex ? 'rebuild' : 'refresh';
 		}
 		button.disabled = active;
 		button.setAttribute('aria-busy', active ? 'true' : 'false');
-		button.textContent = active ? siteKnowledgeActiveButtonLabel(payload) : button.__magickOriginalText;
+		button.textContent = active ? siteKnowledgeActiveButtonLabel(payload) : button.__npcinkOriginalText;
 	}
 
 	function siteKnowledgeStatusStillActive(payload) {
@@ -6777,7 +6777,7 @@
 				if (resolutionCandidateButton && form.contains(resolutionCandidateButton)) {
 					event.preventDefault();
 					const row = resolutionCandidateButton.closest('[data-toolbox-media-resolution-candidate]');
-					const candidate = row && row.__magickMediaResolutionCandidate ? row.__magickMediaResolutionCandidate : {
+					const candidate = row && row.__npcinkMediaResolutionCandidate ? row.__npcinkMediaResolutionCandidate : {
 						attachment_id: resolutionCandidateButton.getAttribute('data-toolbox-use-media-resolution-candidate') || '',
 					};
 					renderSelectedMedia(form, mediaResolutionCandidateAttachment(candidate));
