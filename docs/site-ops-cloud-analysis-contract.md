@@ -32,10 +32,12 @@ The request may ask Cloud to:
 
 ## Cloud Boundary
 
-Cloud role is `runtime_detail`. Cloud may return deeper ranking, trend notes,
-confidence, evidence refs, blocked items, Core handoff candidates, and operator
-next actions. Cloud must not become a second ability registry, workflow
-registry, approval store, scheduler truth, or WordPress write owner.
+Cloud role is `runtime_detail`. Cloud may return an executive summary, deeper
+ranking, dimension summaries, semantic ranked findings, trend notes, trend
+explanations, confidence, evidence refs, blocked items, Core handoff
+candidates, operator next actions, and analysis closure state. Cloud must not
+become a second ability registry, workflow registry, approval store, scheduler
+truth, or WordPress write owner.
 
 The request contract explicitly keeps:
 
@@ -60,9 +62,10 @@ Approved public comments are represented only as aggregate signal counts.
 The only accepted Toolbox bridge is a manual host/runtime call through the
 Cloud Addon runtime client. The bridge may submit the prepared request and
 display returned priority queues, trend notes, blocked items, evidence refs,
-Core handoff candidates, and operator next actions. It must not add local
-queues, custom run tables, Action Scheduler, automatic proposal creation, or
-WordPress writes in Toolbox.
+Core handoff candidates, operator next actions, executive summaries, dimension
+summaries, semantic ranking detail, trend explanations, and analysis closure
+state. It must not add local queues, custom run tables, Action Scheduler,
+automatic proposal creation, or WordPress writes in Toolbox.
 
 When Cloud returns failed runtime detail, Toolbox may display the Cloud
 `error_code`, `error_message`, run status, and copyable result JSON. It must not

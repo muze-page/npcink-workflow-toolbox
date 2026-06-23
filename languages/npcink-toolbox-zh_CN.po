@@ -4073,6 +4073,30 @@ msgstr "Cloud 返回 %d 个优先项"
 msgid "Runtime/detail output is review guidance only and does not create Core proposals or WordPress writes."
 msgstr "运行时/详情输出仅作为审阅指引，不会创建 Core 提案或 WordPress 写入。"
 
+msgid "Cloud executive summary"
+msgstr "Cloud 执行摘要"
+
+msgid "Cloud analysis is ready for operator review."
+msgstr "Cloud 分析已可供运营者审阅。"
+
+msgid "Focus: %s"
+msgstr "重点：%s"
+
+msgid "Loop: %s"
+msgstr "闭环：%s"
+
+msgid "Cloud role: runtime/detail"
+msgstr "Cloud 角色：运行时/详情"
+
+msgid "Cloud dimension summaries"
+msgstr "Cloud 维度摘要"
+
+msgid "Analysis area"
+msgstr "分析区域"
+
+msgid "%1$s priority, %2$d findings"
+msgstr "%1$s 优先级，%2$d 个问题"
+
 msgid "Run: %s"
 msgstr "运行：%s"
 
@@ -4102,6 +4126,165 @@ msgstr "在把结果当作运营优先级清单之前，请先审阅阻塞项和
 
 msgid "Cloud returned no priority queue or trend notes for this bounded request."
 msgstr "Cloud 未针对这个有限请求返回优先队列或趋势备注。"
+
+msgid "Semantic ranking detail"
+msgstr "语义排序详情"
+
+msgid "Semantic finding"
+msgstr "语义问题"
+
+msgid "Trend explanations"
+msgstr "趋势解释"
+
+msgid "Trend explanation"
+msgstr "趋势解释"
+
+msgid "Next check: %s"
+msgstr "下一项检查：%s"
+
+msgid "Analysis closure"
+msgstr "分析闭环"
+
+msgid "Cloud analysis closure detail"
+msgstr "Cloud 分析闭环详情"
+
+msgid "Loop status"
+msgstr "闭环状态"
+
+msgid "Boundary"
+msgstr "边界"
+
+msgid "Cloud detail only; Core and WordPress writes stay local-governed."
+msgstr "仅 Cloud 详情；Core 与 WordPress 写入仍由本地治理。"
+
+msgid "Runtime/detail"
+msgstr "运行时/详情"
+
+msgid "Collect stronger Site Context"
+msgstr "补强站点上下文"
+
+msgid "Blocked until operator review"
+msgstr "需运营者复核后继续"
+
+msgid "Ready for operator prioritization"
+msgstr "可进入运营者优先级排序"
+
+msgid "Clear blocked items, then repeat Cloud analysis"
+msgstr "先清理阻塞项，再重复 Cloud 分析"
+
+msgid "Review the top ranked finding, then choose manual review or Core handoff"
+msgstr "先审阅排序最高的问题，再选择人工复核或 Core 交接"
+
+msgid "Keep this as the current snapshot, or refresh after site changes"
+msgstr "保留为当前快照，或在站点变更后刷新"
+
+msgid "Content quality and discoverability"
+msgstr "内容质量与可发现性"
+
+msgid "Media accessibility and reuse"
+msgstr "媒体可访问性与复用"
+
+msgid "Audience demand signal"
+msgstr "受众需求信号"
+
+msgid "Site structure and context"
+msgstr "站点结构与上下文"
+
+msgid "General site review"
+msgstr "通用站点复核"
+
+msgid "Content refresh trend"
+msgstr "内容刷新趋势"
+
+msgid "Comment question trend"
+msgstr "评论问题趋势"
+
+msgid "Media metadata trend"
+msgstr "媒体元数据趋势"
+
+msgid "Taxonomy drift trend"
+msgstr "分类法漂移趋势"
+
+msgid "Insufficient signal"
+msgstr "信号不足"
+
+msgid "Compare stale items with recent comment activity"
+msgstr "对比旧内容与近期评论活跃度"
+
+msgid "Group repeated comment questions without raw text"
+msgstr "在不返回原始评论文本的前提下归组重复问题"
+
+msgid "Sample a media ALT and caption review set"
+msgstr "抽样媒体 ALT 与说明文字复核集"
+
+msgid "Review empty and low-use terms"
+msgstr "复核空词条和低使用词条"
+
+msgid "Complete Site Context and repeat the local preview"
+msgstr "补全站点上下文后重复本地预览"
+
+msgid "Repeat Cloud detail after the next local scan"
+msgstr "下次本地扫描后重复 Cloud 详情分析"
+
+msgid "Review blockers before turning findings into an action plan."
+msgstr "在把问题转成行动计划前，先复核阻塞项。"
+
+msgid "Prioritize the strongest full-site signals before creating new work."
+msgstr "创建新工作前，先处理最强的全站信号。"
+
+msgid "No priority full-site findings were detected in the current aggregate sample."
+msgstr "当前聚合样本未检测到高优先级全站问题。"
+
+msgid "The analysis found prerequisites that should be cleared before repeated review."
+msgstr "分析发现了重复复核前需要先清理的前置条件。"
+
+msgid "The current aggregate sample is reviewable, but it did not produce a priority queue."
+msgstr "当前聚合样本可供审阅，但没有生成优先队列。"
+
+msgid "Media metadata affects accessibility, reuse, and evidence quality."
+msgstr "媒体元数据会影响可访问性、复用和证据质量。"
+
+msgid "Approved comment signals can reveal unanswered audience needs."
+msgstr "已批准评论信号可以暴露尚未回应的受众需求。"
+
+msgid "Older active content should be refreshed before expanding similar work."
+msgstr "扩展类似工作前，应先刷新仍然活跃的旧内容。"
+
+msgid "This finding is ranked from aggregate local evidence and operator review value."
+msgstr "此问题基于聚合本地证据和运营复核价值排序。"
+
+msgid "Refresh planning should start with active stale pages."
+msgstr "刷新规划应从仍然活跃的旧页面开始。"
+
+msgid "Repeated questions can become FAQ or article-refresh work."
+msgstr "重复问题可转化为 FAQ 或文章刷新工作。"
+
+msgid "Accessibility and media search quality may be weaker."
+msgstr "可访问性和媒体搜索质量可能偏弱。"
+
+msgid "Sparse vocabulary can fragment discovery and recommendations."
+msgstr "稀疏词汇可能割裂发现和推荐质量。"
+
+msgid "Review the aggregate signal before creating new work."
+msgstr "创建新工作前先复核聚合信号。"
+
+msgid "No aggregate signal was strong enough for trend explanation."
+msgstr "没有足够强的聚合信号可用于趋势解释。"
+
+msgid "Run the local scan after more public content evidence is available."
+msgstr "在有更多公开内容证据后再次运行本地扫描。"
+
+msgid "Cloud runtime/detail ranked %1$d findings across %2$s; review the first item before expanding work."
+msgstr "Cloud 运行时/详情在 %2$s 中排序出 %1$d 个问题；请先审阅第一项，再扩展工作。"
+
+msgid "%1$s has %2$d ranked findings in the current request."
+msgstr "%1$s 在当前请求中有 %2$d 个已排序问题。"
+
+msgid "%s has aggregate signals but no ranked local finding."
+msgstr "%s 有聚合信号，但没有已排序的本地问题。"
+
+msgid "%s has no priority signal in the current aggregate sample."
+msgstr "%s 在当前聚合样本中没有优先级信号。"
 
 msgid "Cloud focus"
 msgstr "Cloud 重点"

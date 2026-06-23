@@ -1223,6 +1223,36 @@ final class Admin_Page {
 		if ( '' === $value ) {
 			return '';
 		}
+		if ( preg_match( '/^Cloud runtime\/detail ranked (\d+) findings across (.+); review the first item before expanding work\.$/i', $value, $matches ) ) {
+			return sprintf(
+				/* translators: 1: finding count, 2: dimension list. */
+				__( 'Cloud runtime/detail ranked %1$d findings across %2$s; review the first item before expanding work.', 'npcink-toolbox' ),
+				(int) $matches[1],
+				$this->site_ops_dynamic_dimension_list_label( (string) $matches[2] )
+			);
+		}
+		if ( preg_match( '/^([a-z_]+) has (\d+) ranked finding\(s\) in the current request\.$/i', $value, $matches ) ) {
+			return sprintf(
+				/* translators: 1: dimension label, 2: finding count. */
+				__( '%1$s has %2$d ranked findings in the current request.', 'npcink-toolbox' ),
+				$this->site_ops_dynamic_label( (string) $matches[1] ),
+				(int) $matches[2]
+			);
+		}
+		if ( preg_match( '/^([a-z_]+) has aggregate signals but no ranked local finding\.$/i', $value, $matches ) ) {
+			return sprintf(
+				/* translators: 1: dimension label. */
+				__( '%s has aggregate signals but no ranked local finding.', 'npcink-toolbox' ),
+				$this->site_ops_dynamic_label( (string) $matches[1] )
+			);
+		}
+		if ( preg_match( '/^([a-z_]+) has no priority signal in the current aggregate sample\.$/i', $value, $matches ) ) {
+			return sprintf(
+				/* translators: 1: dimension label. */
+				__( '%s has no priority signal in the current aggregate sample.', 'npcink-toolbox' ),
+				$this->site_ops_dynamic_label( (string) $matches[1] )
+			);
+		}
 
 		$labels = array(
 			'stale_content_backlog'                                                                                 => __( 'Old content refresh backlog', 'npcink-toolbox' ),
@@ -1236,6 +1266,38 @@ final class Admin_Page {
 			'cloud_semantic_analysis'                                                                               => __( 'Cloud semantic analysis', 'npcink-toolbox' ),
 			'cloud_runtime_unavailable'                                                                             => __( 'Cloud runtime is unavailable', 'npcink-toolbox' ),
 			'connect_or_verify_cloud_addon'                                                                         => __( 'Connect or verify Cloud Addon', 'npcink-toolbox' ),
+			'content'                                                                                               => __( 'Content', 'npcink-toolbox' ),
+			'media'                                                                                                 => __( 'Media', 'npcink-toolbox' ),
+			'comments'                                                                                              => __( 'Comments', 'npcink-toolbox' ),
+			'structure'                                                                                             => __( 'Structure', 'npcink-toolbox' ),
+			'high'                                                                                                  => __( 'High', 'npcink-toolbox' ),
+			'medium'                                                                                                => __( 'Medium', 'npcink-toolbox' ),
+			'low'                                                                                                   => __( 'Low', 'npcink-toolbox' ),
+			'review'                                                                                                => __( 'Review', 'npcink-toolbox' ),
+			'runtime_detail'                                                                                        => __( 'Runtime/detail', 'npcink-toolbox' ),
+			'collect_stronger_site_context'                                                                         => __( 'Collect stronger Site Context', 'npcink-toolbox' ),
+			'blocked_until_operator_review'                                                                         => __( 'Blocked until operator review', 'npcink-toolbox' ),
+			'ready_for_operator_prioritization'                                                                     => __( 'Ready for operator prioritization', 'npcink-toolbox' ),
+			'no_priority_findings'                                                                                  => __( 'No priority findings', 'npcink-toolbox' ),
+			'clear_blocked_items_then_repeat_cloud_analysis'                                                        => __( 'Clear blocked items, then repeat Cloud analysis', 'npcink-toolbox' ),
+			'review_top_ranked_finding_then_choose_manual_or_core_handoff'                                          => __( 'Review the top ranked finding, then choose manual review or Core handoff', 'npcink-toolbox' ),
+			'keep_as_current_snapshot_or_refresh_after_site_changes'                                                => __( 'Keep this as the current snapshot, or refresh after site changes', 'npcink-toolbox' ),
+			'content_quality_and_discoverability'                                                                   => __( 'Content quality and discoverability', 'npcink-toolbox' ),
+			'media_accessibility_and_reuse'                                                                         => __( 'Media accessibility and reuse', 'npcink-toolbox' ),
+			'audience_demand_signal'                                                                                => __( 'Audience demand signal', 'npcink-toolbox' ),
+			'site_structure_and_context'                                                                            => __( 'Site structure and context', 'npcink-toolbox' ),
+			'general_site_review'                                                                                   => __( 'General site review', 'npcink-toolbox' ),
+			'content_refresh_trend'                                                                                 => __( 'Content refresh trend', 'npcink-toolbox' ),
+			'comment_question_trend'                                                                                => __( 'Comment question trend', 'npcink-toolbox' ),
+			'media_metadata_trend'                                                                                  => __( 'Media metadata trend', 'npcink-toolbox' ),
+			'taxonomy_drift_trend'                                                                                  => __( 'Taxonomy drift trend', 'npcink-toolbox' ),
+			'insufficient_signal'                                                                                   => __( 'Insufficient signal', 'npcink-toolbox' ),
+			'compare_stale_items_with_recent_comment_activity'                                                      => __( 'Compare stale items with recent comment activity', 'npcink-toolbox' ),
+			'group_repeated_comment_questions_without_raw_text'                                                     => __( 'Group repeated comment questions without raw text', 'npcink-toolbox' ),
+			'sample_media_alt_and_caption_review_set'                                                               => __( 'Sample a media ALT and caption review set', 'npcink-toolbox' ),
+			'review_empty_and_low_use_terms'                                                                        => __( 'Review empty and low-use terms', 'npcink-toolbox' ),
+			'complete_site_context_and_repeat_local_preview'                                                        => __( 'Complete Site Context and repeat the local preview', 'npcink-toolbox' ),
+			'repeat_cloud_detail_after_next_local_scan'                                                             => __( 'Repeat Cloud detail after the next local scan', 'npcink-toolbox' ),
 			'Old content needs a refresh queue'                                                                     => __( 'Old content refresh backlog', 'npcink-toolbox' ),
 			'Some content lacks depth or internal paths'                                                            => __( 'Content depth and internal-link gaps', 'npcink-toolbox' ),
 			'Metadata review backlog is visible'                                                                    => __( 'Post metadata review backlog', 'npcink-toolbox' ),
@@ -1244,6 +1306,22 @@ final class Admin_Page {
 			'Taxonomy structure may need cleanup'                                                                   => __( 'Taxonomy structure review', 'npcink-toolbox' ),
 			'Site Context needs a stronger brief'                                                                   => __( 'Site Context brief is incomplete', 'npcink-toolbox' ),
 			'Cloud Site Knowledge is not available'                                                                 => __( 'Cloud Site Knowledge unavailable', 'npcink-toolbox' ),
+			'Review blockers before turning findings into an action plan.'                                          => __( 'Review blockers before turning findings into an action plan.', 'npcink-toolbox' ),
+			'Prioritize the strongest full-site signals before creating new work.'                                  => __( 'Prioritize the strongest full-site signals before creating new work.', 'npcink-toolbox' ),
+			'No priority full-site findings were detected in the current aggregate sample.'                         => __( 'No priority full-site findings were detected in the current aggregate sample.', 'npcink-toolbox' ),
+			'The analysis found prerequisites that should be cleared before repeated review.'                       => __( 'The analysis found prerequisites that should be cleared before repeated review.', 'npcink-toolbox' ),
+			'The current aggregate sample is reviewable, but it did not produce a priority queue.'                  => __( 'The current aggregate sample is reviewable, but it did not produce a priority queue.', 'npcink-toolbox' ),
+			'Media metadata affects accessibility, reuse, and evidence quality.'                                    => __( 'Media metadata affects accessibility, reuse, and evidence quality.', 'npcink-toolbox' ),
+			'Approved comment signals can reveal unanswered audience needs.'                                        => __( 'Approved comment signals can reveal unanswered audience needs.', 'npcink-toolbox' ),
+			'Older active content should be refreshed before expanding similar work.'                               => __( 'Older active content should be refreshed before expanding similar work.', 'npcink-toolbox' ),
+			'This finding is ranked from aggregate local evidence and operator review value.'                       => __( 'This finding is ranked from aggregate local evidence and operator review value.', 'npcink-toolbox' ),
+			'Refresh planning should start with active stale pages.'                                                => __( 'Refresh planning should start with active stale pages.', 'npcink-toolbox' ),
+			'Repeated questions can become FAQ or article-refresh work.'                                            => __( 'Repeated questions can become FAQ or article-refresh work.', 'npcink-toolbox' ),
+			'Accessibility and media search quality may be weaker.'                                                 => __( 'Accessibility and media search quality may be weaker.', 'npcink-toolbox' ),
+			'Sparse vocabulary can fragment discovery and recommendations.'                                         => __( 'Sparse vocabulary can fragment discovery and recommendations.', 'npcink-toolbox' ),
+			'Review the aggregate signal before creating new work.'                                                 => __( 'Review the aggregate signal before creating new work.', 'npcink-toolbox' ),
+			'No aggregate signal was strong enough for trend explanation.'                                          => __( 'No aggregate signal was strong enough for trend explanation.', 'npcink-toolbox' ),
+			'Run the local scan after more public content evidence is available.'                                   => __( 'Run the local scan after more public content evidence is available.', 'npcink-toolbox' ),
 			'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.'       => __( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-toolbox' ),
 			'Start with a media ALT/caption review and make metadata visible before broader adoption.'              => __( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-toolbox' ),
 		);
@@ -1257,6 +1335,18 @@ final class Admin_Page {
 		}
 
 		return $value;
+	}
+
+	private function site_ops_dynamic_dimension_list_label( string $value ): string {
+		$parts  = preg_split( '/\s*,\s*/', trim( $value ) );
+		$labels = array();
+		foreach ( is_array( $parts ) ? $parts : array() as $part ) {
+			$label = $this->site_ops_dynamic_label( (string) $part );
+			if ( '' !== $label ) {
+				$labels[] = $label;
+			}
+		}
+		return implode( ' / ', $labels );
 	}
 
 	/**
@@ -1277,8 +1367,13 @@ final class Admin_Page {
 		}
 
 		$result             = is_array( $cloud_analysis['result'] ?? null ) ? $cloud_analysis['result'] : array();
+		$executive_summary  = is_array( $result['executive_summary'] ?? null ) ? $result['executive_summary'] : array();
 		$priority_queue     = is_array( $result['priority_queue'] ?? null ) ? array_slice( $result['priority_queue'], 0, 5 ) : array();
+		$dimension_summaries = is_array( $result['dimension_summaries'] ?? null ) ? array_slice( $result['dimension_summaries'], 0, 4 ) : array();
+		$semantic_ranked_findings = is_array( $result['semantic_ranked_findings'] ?? null ) ? array_slice( $result['semantic_ranked_findings'], 0, 5 ) : array();
 		$trend_notes        = is_array( $result['trend_notes'] ?? null ) ? array_slice( $result['trend_notes'], 0, 5 ) : array();
+		$trend_explanations = is_array( $result['trend_explanations'] ?? null ) ? array_slice( $result['trend_explanations'], 0, 5 ) : array();
+		$analysis_closure   = is_array( $result['analysis_closure'] ?? null ) ? $result['analysis_closure'] : array();
 		$blocked_items      = is_array( $result['blocked_items'] ?? null ) ? array_slice( $result['blocked_items'], 0, 5 ) : array();
 		$next_actions       = is_array( $result['operator_next_actions'] ?? null ) ? array_slice( $result['operator_next_actions'], 0, 5 ) : array();
 		$handoff_candidates = is_array( $result['core_handoff_candidates'] ?? null ) ? array_slice( $result['core_handoff_candidates'], 0, 5 ) : array();
@@ -1324,6 +1419,38 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Review: local operator required', 'npcink-toolbox' ); ?></span>
 				</div>
 			</div>
+			<?php if ( array() !== $executive_summary ) : ?>
+				<div class="npcink-toolbox__ops-summary-bar" aria-label="<?php esc_attr_e( 'Cloud executive summary', 'npcink-toolbox' ); ?>">
+					<div>
+						<strong><?php esc_html_e( 'Cloud executive summary', 'npcink-toolbox' ); ?></strong>
+						<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $executive_summary['headline'] ?? __( 'Cloud analysis is ready for operator review.', 'npcink-toolbox' ) ) ) ); ?></span>
+						<?php if ( '' !== (string) ( $executive_summary['summary'] ?? '' ) ) : ?>
+							<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) $executive_summary['summary'] ) ); ?></span>
+						<?php endif; ?>
+					</div>
+					<div class="npcink-toolbox__ops-scope">
+						<?php if ( '' !== (string) ( $executive_summary['primary_focus'] ?? '' ) ) : ?>
+							<span><?php printf( esc_html__( 'Focus: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $executive_summary['primary_focus'] ) ) ); ?></span>
+						<?php endif; ?>
+						<?php if ( '' !== (string) ( $analysis_closure['loop_status'] ?? '' ) ) : ?>
+							<span><?php printf( esc_html__( 'Loop: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $analysis_closure['loop_status'] ) ) ); ?></span>
+						<?php endif; ?>
+						<span><?php esc_html_e( 'Cloud role: runtime/detail', 'npcink-toolbox' ); ?></span>
+					</div>
+				</div>
+			<?php endif; ?>
+			<?php if ( array() !== $dimension_summaries ) : ?>
+				<div class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Cloud dimension summaries', 'npcink-toolbox' ); ?>">
+					<?php foreach ( $dimension_summaries as $dimension ) : ?>
+						<?php if ( ! is_array( $dimension ) ) { continue; } ?>
+						<div>
+							<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['dimension'] ?? __( 'Analysis area', 'npcink-toolbox' ) ) ) ); ?></strong>
+							<span><?php printf( esc_html__( '%1$s priority, %2$d findings', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['priority'] ?? 'review' ) ) ), (int) ( $dimension['finding_count'] ?? 0 ) ); ?></span>
+							<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['summary'] ?? '' ) ) ); ?></span>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( $is_failed ) : ?>
 				<div class="npcink-toolbox__result-notice is-error">
@@ -1372,9 +1499,41 @@ final class Admin_Page {
 								<span><?php echo esc_html( $action ); ?></span>
 								<em><?php esc_html_e( 'Cloud-ranked suggestion', 'npcink-toolbox' ); ?></em>
 							</div>
-						</article>
-					<?php endforeach; ?>
-				</div>
+					</article>
+				<?php endforeach; ?>
+			</div>
+			<?php endif; ?>
+			<?php if ( array() !== $semantic_ranked_findings ) : ?>
+				<details class="npcink-toolbox__result-details">
+					<summary><?php esc_html_e( 'Semantic ranking detail', 'npcink-toolbox' ); ?></summary>
+					<ul class="npcink-toolbox__usage-list">
+						<?php foreach ( $semantic_ranked_findings as $item ) : ?>
+							<?php if ( ! is_array( $item ) ) { continue; } ?>
+							<li>
+								<strong><?php echo esc_html( $this->site_ops_finding_title( $item, __( 'Semantic finding', 'npcink-toolbox' ) ) ); ?></strong>
+								<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['semantic_cluster'] ?? '' ) ) ); ?></span>
+								<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['reason'] ?? '' ) ) ); ?></span>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</details>
+			<?php endif; ?>
+			<?php if ( array() !== $trend_explanations ) : ?>
+				<details class="npcink-toolbox__result-details">
+					<summary><?php esc_html_e( 'Trend explanations', 'npcink-toolbox' ); ?></summary>
+					<ul class="npcink-toolbox__usage-list">
+						<?php foreach ( $trend_explanations as $item ) : ?>
+							<?php if ( ! is_array( $item ) ) { continue; } ?>
+							<li>
+								<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['id'] ?? __( 'Trend explanation', 'npcink-toolbox' ) ) ) ); ?></strong>
+								<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['operator_impact'] ?? $item['summary'] ?? '' ) ) ); ?></span>
+								<?php if ( '' !== (string) ( $item['next_check'] ?? '' ) ) : ?>
+									<span><?php printf( esc_html__( 'Next check: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $item['next_check'] ) ) ); ?></span>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</details>
 			<?php endif; ?>
 			<?php if ( array() !== $trend_notes ) : ?>
 				<details class="npcink-toolbox__result-details">
@@ -1442,6 +1601,25 @@ final class Admin_Page {
 								</ul>
 							</div>
 						<?php endif; ?>
+					</div>
+				</details>
+			<?php endif; ?>
+			<?php if ( array() !== $analysis_closure ) : ?>
+				<details class="npcink-toolbox__result-details">
+					<summary><?php esc_html_e( 'Analysis closure', 'npcink-toolbox' ); ?></summary>
+					<div class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Cloud analysis closure detail', 'npcink-toolbox' ); ?>">
+						<div>
+							<strong><?php esc_html_e( 'Loop status', 'npcink-toolbox' ); ?></strong>
+							<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $analysis_closure['loop_status'] ?? '' ) ) ); ?></span>
+						</div>
+						<div>
+							<strong><?php esc_html_e( 'Next step', 'npcink-toolbox' ); ?></strong>
+							<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $analysis_closure['next_step'] ?? '' ) ) ); ?></span>
+						</div>
+						<div>
+							<strong><?php esc_html_e( 'Boundary', 'npcink-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Cloud detail only; Core and WordPress writes stay local-governed.', 'npcink-toolbox' ); ?></span>
+						</div>
 					</div>
 				</details>
 			<?php endif; ?>
