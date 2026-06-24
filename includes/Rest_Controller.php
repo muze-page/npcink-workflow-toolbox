@@ -49,6 +49,7 @@ final class Rest_Controller {
 		$this->post( '/flows/article-assistant', 'article_assistant' );
 		$this->post( '/flows/article-plan', 'article_plan' );
 		$this->post( '/flows/image-candidate-adoption-plan', 'image_candidate_adoption_plan' );
+		$this->post( '/flows/article-audio-adoption-plan', 'article_audio_adoption_plan' );
 		$this->post( '/local-admin-consent/featured-image', 'local_admin_consent_featured_image' );
 		$this->post( '/flows/site-knowledge-review-plan', 'site_knowledge_review_plan' );
 		$this->post( '/flows/nightly-inspection-review-plan', 'nightly_inspection_review_plan' );
@@ -125,6 +126,7 @@ final class Rest_Controller {
 			'/flows/article-assistant'                     => 'cap.toolbox.workflow_suggest',
 			'/flows/article-plan'                          => 'cap.toolbox.workflow_suggest',
 			'/flows/image-candidate-adoption-plan'         => 'cap.toolbox.workflow_suggest',
+			'/flows/article-audio-adoption-plan'           => 'cap.toolbox.workflow_suggest',
 			'/local-admin-consent' . '/featured-image'     => 'cap.toolbox.local_admin_consent',
 			'/flows/site-knowledge-review-plan'            => 'cap.toolbox.workflow_suggest',
 			'/flows/nightly-inspection-review-plan'        => 'cap.toolbox.workflow_suggest',
@@ -595,6 +597,11 @@ final class Rest_Controller {
 	public function image_candidate_adoption_plan( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_image_candidate_adoption_plan( is_array( $params ) ? $params : array() ) );
+	}
+
+	public function article_audio_adoption_plan( WP_REST_Request $request ) {
+		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+		return rest_ensure_response( $this->client->build_article_audio_adoption_plan( is_array( $params ) ? $params : array() ) );
 	}
 
 	public function local_admin_consent_featured_image( WP_REST_Request $request ) {
@@ -3224,7 +3231,8 @@ final class Rest_Controller {
 			'composition_role'       => 'article_audio_support',
 			'candidate_type'         => $intent,
 			'write_posture'          => 'suggestion_only',
-			'final_write_path'       => 'operator_review_only_no_media_import',
+			'final_write_path'       => 'core_proposal_required',
+			'adoption_plan_route'    => '/wp-json/npcink-toolbox/v1/flows/article-audio-adoption-plan',
 			'direct_wordpress_write' => false,
 			'script'                 => $script,
 			'script_source'          => $script_source,
@@ -3234,11 +3242,13 @@ final class Rest_Controller {
 			'use_case'               => 'article_audio_summary' === $intent ? 'longform_listening_summary' : 'full_article_narration',
 			'review_policy'          => array(
 				'script_review_required' => true,
-				'media_import_owner'     => 'future_core_governed_handoff',
+				'audio_meta_owner'       => 'core_governed_handoff',
+				'media_import_owner'     => 'core_governed_handoff',
 				'no_post_content_patch'  => true,
 			),
 			'handoff'                => array(
-				'final_writes'           => 'operator_review_only_no_media_import',
+				'final_writes'           => 'core_proposal_required',
+				'adoption_plan_route'    => '/wp-json/npcink-toolbox/v1/flows/article-audio-adoption-plan',
 				'direct_wordpress_write' => false,
 				'blocked_actions'        => array(
 					'no_media_import_in_toolbox',

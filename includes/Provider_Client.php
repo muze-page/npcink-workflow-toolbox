@@ -2943,6 +2943,195 @@ final class Provider_Client {
 		return $data;
 	}
 
+	public function build_article_audio_adoption_plan( array $input ) {
+		$post_id = absint( $input['post_id'] ?? 0 );
+		if ( $post_id <= 0 ) {
+			return new WP_Error(
+				'npcink_toolbox_article_audio_post_required',
+				__( 'A post_id is required before preparing an article audio adoption plan.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$candidate = is_array( $input['audio_candidate'] ?? null ) ? $input['audio_candidate'] : array();
+		$audio_url = esc_url_raw( (string) ( $candidate['url'] ?? ( $candidate['audio_url'] ?? ( $input['audio_url'] ?? '' ) ) ) );
+		if ( '' === $audio_url ) {
+			return new WP_Error(
+				'npcink_toolbox_article_audio_url_required',
+				__( 'Select an audio candidate with a playable URL before preparing Core review.', 'npcink-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$candidate_type = sanitize_key( (string) ( $input['candidate_type'] ?? ( $candidate['candidate_type'] ?? 'article_narration' ) ) );
+		if ( ! in_array( $candidate_type, array( 'article_narration', 'article_audio_summary' ), true ) ) {
+			$candidate_type = 'article_narration';
+		}
+
+		$title = sanitize_text_field( (string) ( $candidate['name'] ?? ( $candidate['title'] ?? ( 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-toolbox' ) : __( 'Article narration', 'npcink-toolbox' ) ) ) ) );
+		if ( '' === $title ) {
+			$title = 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-toolbox' ) : __( 'Article narration', 'npcink-toolbox' );
+		}
+
+		$format = sanitize_key( (string) ( $candidate['format'] ?? ( $input['format'] ?? 'mp3' ) ) );
+		if ( '' === $format ) {
+			$format = 'mp3';
+		}
+		$mime_type = sanitize_mime_type( (string) ( $candidate['mime_type'] ?? ( $input['mime_type'] ?? '' ) ) );
+		if ( '' === $mime_type ) {
+			$mime_type = 'wav' === $format ? 'audio/wav' : 'audio/mpeg';
+		}
+
+		$duration_seconds = is_numeric( $candidate['duration_seconds'] ?? null ) ? (float) $candidate['duration_seconds'] : 0.0;
+		if ( $duration_seconds <= 0 && is_numeric( $input['duration_seconds'] ?? null ) ) {
+			$duration_seconds = (float) $input['duration_seconds'];
+		}
+
+		$script = $this->trim_chars(
+			sanitize_textarea_field( (string) ( $input['script'] ?? ( $candidate['script'] ?? '' ) ) ),
+			self::AUDIO_GENERATION_TEXT_CHARS
+		);
+		$source_audio_generation = is_array( $input['source_audio_generation'] ?? null ) ? $this->sanitize_payload( $input['source_audio_generation'] ) : array();
+		$post_type               = sanitize_key( (string) ( $input['post_type'] ?? ( get_post_type( $post_id ) ?: 'post' ) ) );
+		$voice_id                = sanitize_text_field( (string) ( $candidate['voice_id'] ?? ( $source_audio_generation['voice_id'] ?? '' ) ) );
+		$model_id                = sanitize_text_field( (string) ( $candidate['model_id'] ?? ( $source_audio_generation['model_id'] ?? '' ) ) );
+		$provider                = sanitize_key( (string) ( $candidate['provider'] ?? ( $source_audio_generation['provider'] ?? 'cloud_audio' ) ) );
+		$trace_id                = sanitize_text_field( (string) ( $source_audio_generation['trace_id'] ?? ( $source_audio_generation['trace'] ?? '' ) ) );
+		$planner_id              = 'npcink-abilities-toolkit/build-article-audio-adoption-plan';
+		$write_ability_id        = 'npcink-abilities-toolkit/adopt-article-audio';
+		$planner_available       = $this->registered_ability_callable( $planner_id );
+		$write_available         = $this->registered_ability_callable( $write_ability_id );
+		$proposal_ready          = $planner_available && $write_available;
+		$idempotency_key         = 'article-audio-adoption-' . substr( md5( $post_id . '|' . $candidate_type . '|' . $audio_url ), 0, 16 );
+		$audio_hash              = md5( $audio_url );
+
+		$missing_dependencies = array();
+		if ( ! $planner_available ) {
+			$missing_dependencies[] = array(
+				'ability_id' => $planner_id,
+				'status'     => 'not_registered_or_not_callable',
+			);
+		}
+		if ( ! $write_available ) {
+			$missing_dependencies[] = array(
+				'ability_id' => $write_ability_id,
+				'status'     => 'not_registered_or_not_callable',
+			);
+		}
+
+		$meta_projection = array(
+			'_npcink_toolbox_article_audio_url'              => $audio_url,
+			'_npcink_toolbox_article_audio_title'            => $title,
+			'_npcink_toolbox_article_audio_kind'             => $candidate_type,
+			'_npcink_toolbox_article_audio_duration_seconds' => $duration_seconds,
+			'_npcink_toolbox_article_audio_mime_type'        => $mime_type,
+		);
+
+		$audio_candidate = array(
+			'url'              => $audio_url,
+			'title'            => $title,
+			'name'             => $title,
+			'candidate_type'   => $candidate_type,
+			'format'           => $format,
+			'mime_type'        => $mime_type,
+			'duration_seconds' => $duration_seconds,
+			'voice_id'         => $voice_id,
+			'model_id'         => $model_id,
+			'provider'         => $provider,
+		);
+
+		return array(
+			'artifact_type'            => 'article_audio_adoption_plan.v1',
+			'composition_role'         => 'core_article_audio_adoption_plan',
+			'version'                  => 1,
+			'post_id'                  => $post_id,
+			'post_type'                => $post_type,
+			'candidate_type'           => $candidate_type,
+			'write_posture'            => 'core_proposal_handoff',
+			'final_write_path'         => 'core_proposal_required',
+			'direct_wordpress_write'   => false,
+			'proposal_ready'           => $proposal_ready,
+			'requires_approval'        => true,
+			'dry_run'                  => true,
+			'commit_execution'         => false,
+			'proposal_mode'            => 'single',
+			'target_plan_ability_id'   => $planner_id,
+			'target_write_ability_id'  => $write_ability_id,
+			'missing_dependencies'     => $missing_dependencies,
+			'audio_candidate'          => $this->sanitize_payload( $audio_candidate ),
+			'script'                   => $script,
+			'source_audio_generation'  => $source_audio_generation,
+			'evidence_refs'            => array(
+				array(
+					'kind'        => 'article_audio_candidate',
+					'post_id'     => $post_id,
+					'audio_hash'  => $audio_hash,
+					'provider'    => $provider,
+					'model_id'    => $model_id,
+					'voice_id'    => $voice_id,
+					'trace_id'    => $trace_id,
+					'url_host'    => sanitize_text_field( (string) wp_parse_url( $audio_url, PHP_URL_HOST ) ),
+					'script_hash' => '' !== $script ? md5( $script ) : '',
+				),
+			),
+			'preview'                  => array(
+				array(
+					'action_id'        => 'adopt_article_audio',
+					'post_id'          => $post_id,
+					'candidate_type'   => $candidate_type,
+					'audio_title'      => $title,
+					'audio_url'        => $audio_url,
+					'meta_projection'  => $meta_projection,
+					'proposal_ready'   => $proposal_ready,
+					'write_owner'      => 'npcink-abilities-toolkit',
+					'governance_owner' => 'npcink-governance-core',
+				),
+			),
+			'write_actions'            => array(
+				array(
+					'action_id'         => 'adopt_article_audio',
+					'target_ability_id' => $write_ability_id,
+					'recipe_step'       => 'host_governed_article_audio_adoption',
+					'input'             => array(
+						'post_id'          => $post_id,
+						'post_type'        => $post_type,
+						'audio_candidate'  => $this->sanitize_payload( $audio_candidate ),
+						'meta_projection'  => $meta_projection,
+						'source_script'    => $script,
+						'evidence_refs'    => array(
+							'audio_hash' => $audio_hash,
+							'trace_id'   => $trace_id,
+						),
+						'dry_run'          => true,
+						'commit'           => false,
+						'idempotency_key'  => $idempotency_key,
+					),
+					'risk'              => 'medium',
+					'requires_approval' => true,
+					'commit_execution'  => false,
+					'proposal_ready'    => $proposal_ready,
+					'reason'            => __( 'Adopting generated article audio writes playback metadata and may import or attach media, so it must go through Core review.', 'npcink-toolbox' ),
+				),
+			),
+			'blocked_actions'          => array(
+				'no_audio_meta_write_in_toolbox',
+				'no_media_import_in_toolbox',
+				'no_post_content_patch',
+				'no_direct_wordpress_write',
+			),
+			'handoff'                  => array(
+				'plan_ability_id'        => $planner_id,
+				'recipe_id'              => 'article_audio_adoption_v1',
+				'recipe_ref'             => 'workflow/article_audio_adoption',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
+				'adapter_route'          => '/wp-json/npcink-ai-adapter/v1/proposals/from-plan',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'proposal_ready'         => $proposal_ready,
+			),
+		);
+	}
+
 	public function build_site_knowledge_review_plan( array $input ) {
 		$proposal_input = $input['proposal_input'] ?? array();
 		if ( is_string( $proposal_input ) ) {
@@ -7552,6 +7741,21 @@ final class Provider_Client {
 		}
 
 		return $this->sanitize_payload( $candidate );
+	}
+
+	private function registered_ability_callable( string $ability_id ): bool {
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return false;
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		if ( ! is_array( $registered ) ) {
+			return false;
+		}
+
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+
+		return is_callable( $definition['execute_callback'] ?? null );
 	}
 
 	private function sanitize_payload( $value, int $depth = 0 ) {

@@ -3506,7 +3506,43 @@
 		return items.filter((item) => item && typeof item === 'object');
 	}
 
-	function renderAudioGenerationSection(section) {
+	function audioAdoptionPlanItems(plan) {
+		if (!plan || typeof plan !== 'object') {
+			return [];
+		}
+		if (Array.isArray(plan.preview) && plan.preview.length) {
+			return plan.preview.map((item) => ({
+				name: item.audio_title || item.action_id || __('Article audio adoption', 'npcink-toolbox'),
+				detail: compactLabelParts([
+					item.candidate_type,
+					item.proposal_ready === false ? __('Proposal dependency missing', 'npcink-toolbox') : __('Ready for Core review', 'npcink-toolbox'),
+				]).join(' / '),
+			}));
+		}
+		if (Array.isArray(plan.missing_dependencies) && plan.missing_dependencies.length) {
+			return plan.missing_dependencies.map((item) => ({
+				name: item.ability_id || __('Missing dependency', 'npcink-toolbox'),
+				detail: item.status || '',
+			}));
+		}
+		return [];
+	}
+
+	function renderAudioAdoptionPlan(plan) {
+		if (!plan || typeof plan !== 'object') {
+			return null;
+		}
+		const proposalReady = plan.proposal_ready !== false;
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__handoff-result' },
+			createElement('strong', null, proposalReady ? __('Audio adoption plan is ready for Core review.', 'npcink-toolbox') : __('Audio adoption plan is prepared, but the governed audio adoption ability is not available yet.', 'npcink-toolbox')),
+			renderItems(audioAdoptionPlanItems(plan), __('No audio adoption plan items returned.', 'npcink-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Toolbox prepared a dry-run handoff only. It did not import media or write article audio metadata.', 'npcink-toolbox'))
+		);
+	}
+
+	function renderAudioGenerationSection(section, audioAdoptionControls) {
 		const items = audioGenerationItems(section);
 		const script = String(section && section.script ? section.script : '').trim();
 		const audio = section && section.audio && typeof section.audio === 'object' ? section.audio : {};
@@ -3534,6 +3570,7 @@
 			{ key: 'audio-items', className: 'npcink-toolbox-editor-support__audio-list' },
 			items.map((item, index) => {
 				const url = String(item.url || '').trim();
+				const adoptionKey = String(item.id || index);
 				const meta = compactLabelParts([
 					item.format,
 					item.voice_id,
@@ -3546,10 +3583,27 @@
 					createElement('strong', null, item.name || __('Audio candidate', 'npcink-toolbox')),
 					meta ? createElement('span', { className: 'npcink-toolbox-editor-support__muted' }, meta) : null,
 					url ? createElement('audio', { controls: true, preload: 'none', src: url }) : null,
-					url ? createElement('a', { href: url, target: '_blank', rel: 'noreferrer' }, __('Open audio', 'npcink-toolbox')) : null
+					url ? createElement('a', { href: url, target: '_blank', rel: 'noreferrer' }, __('Open audio', 'npcink-toolbox')) : null,
+					url && audioAdoptionControls ? createElement(
+						Button,
+						{
+							type: 'button',
+							variant: 'secondary',
+							isBusy: audioAdoptionControls.running === adoptionKey,
+							disabled: Boolean(audioAdoptionControls.running),
+							onClick: () => audioAdoptionControls.prepare(item, section, adoptionKey),
+						},
+						audioAdoptionControls.running === adoptionKey ? __('Preparing Core review', 'npcink-toolbox') : __('Prepare Core review', 'npcink-toolbox')
+					) : null
 				);
 			})
 		));
+		if (audioAdoptionControls && audioAdoptionControls.error) {
+			blocks.push(createElement('p', { key: 'audio-adoption-error', className: 'npcink-toolbox-editor-support__error' }, audioAdoptionControls.error));
+		}
+		if (audioAdoptionControls && audioAdoptionControls.result) {
+			blocks.push(createElement('div', { key: 'audio-adoption-result' }, renderAudioAdoptionPlan(audioAdoptionControls.result.plan || audioAdoptionControls.result)));
+		}
 		return createElement('div', { className: 'npcink-toolbox-editor-support__audio-generation' }, blocks);
 	}
 
@@ -5392,7 +5446,7 @@
 			}
 
 			if (sections.audio_generation) {
-				blocks.push(renderAudioGenerationSection(sections.audio_generation));
+				blocks.push(renderAudioGenerationSection(sections.audio_generation, metadataHandoffControls && metadataHandoffControls.audioAdoption));
 				if (sections.audio_generation.audio) {
 					blocks.push(renderHostedAiDiagnostics(sections.audio_generation.audio));
 				}
@@ -5615,6 +5669,9 @@
 		const [seoHandoffRunning, setSeoHandoffRunning] = useState(false);
 		const [seoHandoffResult, setSeoHandoffResult] = useState(null);
 		const [seoHandoffError, setSeoHandoffError] = useState('');
+		const [audioAdoptionRunning, setAudioAdoptionRunning] = useState('');
+		const [audioAdoptionResult, setAudioAdoptionResult] = useState(null);
+		const [audioAdoptionError, setAudioAdoptionError] = useState('');
 		const [contentFeedbackRunning, setContentFeedbackRunning] = useState('');
 		const [contentFeedbackStatus, setContentFeedbackStatus] = useState(null);
 		const [internalLinkRunning, setInternalLinkRunning] = useState('');
@@ -5821,6 +5878,9 @@
 				setMetadataHandoffError('');
 				setSeoHandoffResult(null);
 				setSeoHandoffError('');
+				setAudioAdoptionRunning('');
+				setAudioAdoptionResult(null);
+				setAudioAdoptionError('');
 				setContentFeedbackRunning('');
 				setContentFeedbackStatus(null);
 				setInternalLinkRunning('');
@@ -5924,6 +5984,48 @@
 			submitImplicitAgentFeedback(
 				editorContentImplicitFeedbackPayload(result, intent, action, outcome, labels, localProposalId)
 			);
+		}
+
+		function buildArticleAudioAdoptionPlanInput(item, section) {
+			const audio = section && section.audio && typeof section.audio === 'object' ? section.audio : {};
+			return {
+				post_id: postContext.post_id || 0,
+				post_type: postContext.post_type || 'post',
+				candidate_type: section && section.candidate_type ? section.candidate_type : (activeFlowIntent || 'article_narration'),
+				audio_candidate: item || {},
+				audio_url: item && (item.url || item.audio_url) ? String(item.url || item.audio_url) : '',
+				script: section && section.script ? String(section.script) : '',
+				source_audio_generation: Object.assign({}, audio, {
+					items: undefined,
+					audios: undefined,
+					result: undefined,
+				}),
+			};
+		}
+
+		async function prepareArticleAudioAdoptionPlan(item, section, adoptionKey) {
+			const planInput = buildArticleAudioAdoptionPlanInput(item, section);
+			if (!planInput.post_id) {
+				setAudioAdoptionError(__('Save or open a post before preparing article audio Core review.', 'npcink-toolbox'));
+				return;
+			}
+			if (!planInput.audio_url) {
+				setAudioAdoptionError(__('This audio candidate has no playable URL to review.', 'npcink-toolbox'));
+				return;
+			}
+
+			setAudioAdoptionRunning(String(adoptionKey || 'audio'));
+			setAudioAdoptionError('');
+			setAudioAdoptionResult(null);
+			try {
+				const plan = await postJson('flows/article-audio-adoption-plan', planInput);
+				setAudioAdoptionResult({ plan, plan_input: planInput });
+				submitContentImplicitFeedback('article_audio_adoption_plan', plan && plan.proposal_ready === false ? 'edited_before_accept' : 'accepted', ['core_handoff_prepared']);
+			} catch (requestError) {
+				setAudioAdoptionError(requestError && requestError.message ? requestError.message : __('Could not prepare the article audio Core review plan.', 'npcink-toolbox'));
+			} finally {
+				setAudioAdoptionRunning('');
+			}
 		}
 
 		async function copyInternalLinkCandidate(candidate, key) {
@@ -7142,6 +7244,12 @@
 				result: seoHandoffResult,
 				error: seoHandoffError,
 			},
+				audioAdoption: {
+					running: audioAdoptionRunning,
+					result: audioAdoptionResult,
+					error: audioAdoptionError,
+					prepare: prepareArticleAudioAdoptionPlan,
+				},
 		};
 			const showResultView = supportView === 'result';
 			const rerunInstruction = rerunIntent ? String(flowInstructions[rerunIntent] || '') : '';

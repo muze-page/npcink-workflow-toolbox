@@ -136,6 +136,7 @@ planning flows:
 - `/flows/article-assistant`
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
+- `/flows/article-audio-adoption-plan`
 - `/local-admin-consent/featured-image`
 - `/flows/site-knowledge-review-plan`
 - `/flows/nightly-inspection-review-plan`
@@ -177,6 +178,12 @@ separate boundary decision defines the specific local write and audit contract.
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
 not a WordPress write route and not a Core proposal execution route.
+
+`/flows/article-audio-adoption-plan` prepares a Core-governed
+`article_audio_adoption_plan.v1` from one reviewed audio candidate. It may
+describe playback metadata projection, evidence refs, and the target Toolkit
+audio adoption ability, but it must not import media, update post meta, create
+or approve a Core proposal, execute a write ability, or patch post content.
 
 The high-risk contrast for Local Admin Consent is the article/media batch
 handoff. `npcink-toolbox/build-article-media-batch-write-plan` may group

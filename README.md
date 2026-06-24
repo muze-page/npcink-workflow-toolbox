@@ -24,7 +24,8 @@ The first version provides:
   selected-paragraph toolbar checks that do not replace body text;
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
-  candidate artifact path and Toolbox does not generate, adopt, or write audio;
+  candidate artifact path, and Toolbox may prepare a Core-governed article
+  audio adoption plan, but does not adopt, import, or write audio itself;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
 - a **Full-site Insights** tab that builds a local
@@ -141,6 +142,7 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-audio-adoption-plan`
 - `POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image`
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/nightly-inspection-review-plan`

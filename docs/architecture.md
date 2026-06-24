@@ -49,7 +49,9 @@ request logs, quotas, billing details, or write authorization.
 No custom database tables are used in the first version.
 
 Article audio playback uses protected post meta as the local adopted playback
-projection:
+projection. Toolbox may prepare a review-only Core handoff plan for adopting a
+reviewed audio candidate, but the projection is written only by the governed
+Core/Abilities path, not by Toolbox:
 
 - `_npcink_toolbox_article_audio_url`
 - `_npcink_toolbox_article_audio_attachment_id`
@@ -152,6 +154,7 @@ Current ability ids:
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
 - `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-article-audio-adoption-plan`
 - `npcink-toolbox/build-media-brief`
 - `npcink-toolbox/get-content-discoverability-context`
 - `npcink-toolbox/validate-content-discoverability-context`
@@ -177,6 +180,12 @@ actions must become one Core `plan_to_proposal_batch`, not local consent.
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It does
 not import media, update metadata, set featured images, approve proposals, or
 execute writes.
+`npcink-abilities-toolkit/build-article-audio-adoption-plan` is the Core-ready
+planner target for one reviewed narration or audio-summary candidate. Toolbox
+may build an `article_audio_adoption_plan.v1` envelope that names the target
+write ability and evidence refs, but media import, playback metadata writes,
+proposal creation, approval, preflight, audit, and final execution remain
+outside Toolbox.
 `npcink-abilities-toolkit/build-image-candidate-review-artifact` can normalize
 already retrieved image candidates into `image_candidate_review.v1` and
 `recommendation_candidate.v1` projections for editor or third-party review
@@ -281,6 +290,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/article-audio-adoption-plan`
 - `POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image`
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/nightly-inspection-review-plan`
