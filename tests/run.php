@@ -106,6 +106,7 @@ $main = file_get_contents( $root . '/npcink-toolbox.php' );
 toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Toolbox' ), 'Plugin header is present.' );
 toolbox_assert( false !== strpos( $main, 'Text Domain: npcink-toolbox' ) && false !== strpos( $main, 'Domain Path: /languages' ), 'Plugin header declares the Toolbox text domain and languages path.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
+toolbox_assert( false !== strpos( $main, 'includes/Article_Audio_Playback.php' ), 'Plugin bootstrap loads the frontend article audio playback entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Dashboard_Widget.php' ), 'Plugin bootstrap loads the WordPress dashboard widget entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Site_Knowledge_Auto_Sync.php' ), 'Plugin bootstrap loads the Site Knowledge change bridge status projection.' );
 toolbox_assert( false !== strpos( $main, 'includes/Site_Ops_Snapshot_Collector.php' ) && false !== strpos( $main, 'includes/Site_Ops_Insight_Builder.php' ) && false !== strpos( $main, 'includes/Site_Ops_Cloud_Request_Builder.php' ), 'Plugin bootstrap loads the Operations Insights collector, builder, and Cloud request contract builder.' );
@@ -121,6 +122,17 @@ toolbox_assert( false !== $plugin && false === strpos( $plugin, 'load_plugin_tex
 toolbox_assert( false !== $plugin && false !== strpos( $plugin, "add_action( 'admin_menu', array( \$this->admin_page, 'register_menu' ), 45 )" ), 'Plugin registers the Toolbox admin menu after shared parent owners.' );
 toolbox_assert( false !== $plugin && false !== strpos( $plugin, 'plugin_action_links_' ) && false !== strpos( $plugin, 'filter_plugin_action_links' ) && false !== strpos( $plugin, 'menu_page_url' ) && false !== strpos( $plugin, 'admin.php?page=npcink-toolbox' ) && false !== strpos( $plugin, 'tools.php?page=npcink-toolbox' ), 'Plugin screen exposes a Settings shortcut to the registered Toolbox admin page or standalone Tools fallback.' );
 toolbox_assert( false !== strpos( $plugin, 'Basic_WP_Cron_Dry_Run' ) && false !== strpos( $plugin, 'nightly_inspection_cron' ) && false !== strpos( $plugin, 'register_hooks' ), 'Plugin wires the Basic WP-Cron dry-run runtime through the module owner.' );
+toolbox_assert( false !== strpos( $plugin, 'Article_Audio_Playback' ) && false !== strpos( $plugin, 'article_audio_playback' ) && false !== strpos( $plugin, '$this->article_audio_playback->register_hooks();' ), 'Plugin wires the frontend article audio playback surface.' );
+
+$article_audio_playback = file_get_contents( $root . '/includes/Article_Audio_Playback.php' );
+toolbox_assert( false !== $article_audio_playback && false !== strpos( $article_audio_playback, "add_filter( 'the_content'" ) && false !== strpos( $article_audio_playback, "add_action( 'wp_enqueue_scripts'" ) && false !== strpos( $article_audio_playback, "add_action( 'init'" ), 'Article audio playback registers frontend render, asset, and meta hooks.' );
+toolbox_assert( false !== strpos( $article_audio_playback, '_npcink_toolbox_article_audio_url' ) && false !== strpos( $article_audio_playback, '_npcink_toolbox_article_audio_attachment_id' ) && false !== strpos( $article_audio_playback, '_npcink_toolbox_article_audio_duration_seconds' ), 'Article audio playback reads the adopted audio post meta contract.' );
+toolbox_assert( false !== strpos( $article_audio_playback, 'npcink_toolbox_article_audio_playback_meta' ) && false !== strpos( $article_audio_playback, 'adopted_wordpress_meta_read_only' ), 'Article audio playback allows host projection while preserving read-only adopted metadata posture.' );
+foreach ( array( 'wp_remote_post', 'wp_remote_get', 'update_post_meta', 'delete_post_meta', 'wp_insert_post', 'wp_update_post', 'register_rest_route', 'approve-and-execute' ) as $forbidden_article_audio_playback ) {
+	toolbox_assert( false === strpos( $article_audio_playback, $forbidden_article_audio_playback ), 'Article audio playback avoids Cloud calls, REST routes, proposal execution, and WordPress writes: ' . $forbidden_article_audio_playback );
+}
+$article_audio_css = file_get_contents( $root . '/assets/article-audio-playback.css' );
+toolbox_assert( false !== $article_audio_css && false !== strpos( $article_audio_css, '.npcink-toolbox-article-audio' ) && false !== strpos( $article_audio_css, 'audio' ), 'Article audio playback CSS styles the public post audio player.' );
 
 $article_assistant_doc = file_get_contents( $root . '/docs/article-assistant-workbench.md' );
 foreach ( array( 'Surface Budget', 'Article Assistant Workbench', 'one article per run', 'Do not present it as an', 'article generator, autonomous writer', 'no Cloud article generation', 'not the default Toolbox product surface', 'no default button that promises to write the article body' ) as $required_article_assistant_doc ) {

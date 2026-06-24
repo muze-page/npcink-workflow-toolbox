@@ -40,6 +40,9 @@ First-version write posture:
 5. Let external AI workflows compose context, Cloud-managed web search,
    image-source, and vector abilities as inputs, not as write authority.
 6. Use WordPress abilities and Core proposals for final WordPress writes.
+7. Render article audio on the public post only after approved audio has been
+   adopted into local WordPress metadata; the playback surface is read-only and
+   does not call Cloud, create proposals, import media, or write post meta.
 
 ## OpenClaw Button Surface Boundary
 

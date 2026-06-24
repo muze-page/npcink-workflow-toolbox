@@ -59,6 +59,9 @@ Target features:
   review belongs inside publish preflight duplicate-risk checks and internal-link
   candidates rather than a separate writing-preparation button. Image candidates
   may include a secondary saved-post media brief action for image planning.
+- Frontend single-post article audio playback for already adopted narration or
+  audio-summary metadata. This is a playback entry only; generation, adoption,
+  proposal review, media import, and writes stay in the governed path.
 - Clear empty/error/loading states.
 - Reusable image-source picker with short-lived local result caching,
   empty-state query rewrites, concise candidate cards, and selected-image

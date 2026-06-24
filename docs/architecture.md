@@ -13,6 +13,7 @@ Status: MVP architecture.
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
+| `Article_Audio_Playback` | Frontend single-post playback entry for already adopted article audio metadata. It reads protected post meta or a host-projected approved audio packet and does not generate, adopt, or write audio. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
 | `Site_Ops_Snapshot_Collector` | Bounded read-only collector for Full-site Insights: public posts/pages, approved-comment signals, media metadata, taxonomy summaries, and site info. |
 | `Site_Ops_Insight_Builder` | Deterministic `site_ops_insight_pack.v1` builder that ranks local full-site analysis findings without Cloud calls, persistence, proposals, or WordPress writes. |
@@ -46,6 +47,20 @@ third-party AI callers. It must not contain provider keys, private credentials,
 request logs, quotas, billing details, or write authorization.
 
 No custom database tables are used in the first version.
+
+Article audio playback uses protected post meta as the local adopted playback
+projection:
+
+- `_npcink_toolbox_article_audio_url`
+- `_npcink_toolbox_article_audio_attachment_id`
+- `_npcink_toolbox_article_audio_title`
+- `_npcink_toolbox_article_audio_kind`
+- `_npcink_toolbox_article_audio_duration_seconds`
+- `_npcink_toolbox_article_audio_mime_type`
+
+These keys are read by the frontend player only. Audio generation, review,
+adoption, media import, and final writes remain outside this playback entry and
+must use the governed WordPress/Core path.
 
 The bundled local automation runtime module does not change this. Phase 1A may
 collect bounded read-only preview snapshots when an administrator clicks the

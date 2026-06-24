@@ -25,6 +25,7 @@ final class Plugin {
 	private Admin_Page $admin_page;
 	private Dashboard_Widget $dashboard_widget;
 	private Editor_Content_Support $editor_content_support;
+	private Article_Audio_Playback $article_audio_playback;
 	private Site_Knowledge_Auto_Sync $site_knowledge_auto_sync;
 	private Basic_WP_Cron_Dry_Run $nightly_inspection_cron;
 	private Abilities $abilities;
@@ -36,6 +37,7 @@ final class Plugin {
 		$this->admin_page      = new Admin_Page( $this->settings );
 		$this->dashboard_widget = new Dashboard_Widget( $this->client );
 		$this->editor_content_support = new Editor_Content_Support();
+		$this->article_audio_playback = new Article_Audio_Playback();
 		$this->site_knowledge_auto_sync = new Site_Knowledge_Auto_Sync( $this->client );
 		$this->nightly_inspection_cron = new Basic_WP_Cron_Dry_Run( $this->settings );
 		$this->abilities       = new Abilities( $this->settings, $this->client );
@@ -54,6 +56,7 @@ final class Plugin {
 		add_action( 'admin_menu', array( $this->admin_page, 'register_menu' ), 45 );
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this->editor_content_support, 'enqueue' ) );
+		$this->article_audio_playback->register_hooks();
 		add_filter( 'plugin_action_links_' . plugin_basename( NPCINK_TOOLBOX_FILE ), array( $this, 'filter_plugin_action_links' ) );
 		$this->dashboard_widget->register_hooks();
 		$this->site_knowledge_auto_sync->register_hooks();

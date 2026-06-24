@@ -1,0 +1,40 @@
+.npcink-toolbox-article-audio {
+	box-sizing: border-box;
+	display: grid;
+	gap: 12px;
+	margin: 0 0 24px;
+	padding: 16px;
+	border: 1px solid #d8dee8;
+	border-radius: 8px;
+	background: #f8fafc;
+	color: #111827;
+}
+
+.npcink-toolbox-article-audio__summary {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.npcink-toolbox-article-audio__eyebrow,
+.npcink-toolbox-article-audio__duration {
+	font-size: 12px;
+	line-height: 1.4;
+	color: #536176;
+}
+
+.npcink-toolbox-article-audio__eyebrow {
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.npcink-toolbox-article-audio__title {
+	font-size: 16px;
+	line-height: 1.4;
+}
+
+.npcink-toolbox-article-audio__player {
+	display: block;
+	width: 100%;
+}

@@ -22,6 +22,9 @@ The first version provides:
   internal-link, image, and publish readiness support around human-written
   articles, plus
   selected-paragraph toolbar checks that do not replace body text;
+- a frontend article audio playback entry that renders only already adopted
+  WordPress audio metadata near single posts; Cloud generation remains a
+  candidate artifact path and Toolbox does not generate, adopt, or write audio;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
 - a **Full-site Insights** tab that builds a local
