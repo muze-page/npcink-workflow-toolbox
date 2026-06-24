@@ -4462,3 +4462,36 @@ msgstr "Cloud 运行时不可用"
 
 msgid "Connect or verify Cloud Addon"
 msgstr "连接或验证 Cloud Addon"
+
+msgid "Write-like follow-up needs a reviewed Core handoff; this report does not create proposals."
+msgstr "涉及写入的后续处理需要经过已审阅的 Core 交接；此报告不会创建提案。"
+
+msgid "Keep this as operator review unless a separate governed workflow is selected."
+msgstr "除非选择单独的治理工作流，否则保持为操作员人工复核。"
+
+msgid "Resolve the Cloud readiness blocker before expecting semantic runtime detail."
+msgstr "先解决 Cloud 就绪阻塞项，再期待语义运行时详情。"
+
+msgid "Use this as decision support only; no WordPress data changes here."
+msgstr "仅将此作为决策辅助；这里不会更改 WordPress 数据。"
+
+msgid "Cloud follow-up summary"
+msgstr "Cloud 后续摘要"
+
+msgid "Blockers"
+msgstr "阻塞项"
+
+msgid "No Cloud blockers reported."
+msgstr "Cloud 未报告阻塞项。"
+
+msgid "%1$d reported; first: %2$s."
+msgstr "已报告 %1$d 项；第一项：%2$s。"
+
+msgid "Suggested next path"
+msgstr "建议的下一步路径"
+
+msgid "Review the top priority queue item locally."
+msgstr "先在本地审阅优先队列的第一项。"
+
+msgid "%d planning hints; proposal creation remains outside this report."
+msgstr "%d 个计划提示；提案创建仍在此报告之外。"

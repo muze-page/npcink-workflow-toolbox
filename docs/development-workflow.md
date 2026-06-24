@@ -378,6 +378,21 @@ prepared public aggregate request through `Provider_Client` and verifies the
 priority and trend detail, no direct WordPress writes, no scheduler truth, no
 local run tables, and no Core proposal creation. It is intentionally outside
 `composer test:all`.
+
+For the optional real admin UI browser check, run:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:site-ops-insights-browser
+```
+
+This opens the local Full-site Insights wp-admin tab, generates the local
+report, verifies the summary-first overview, switches the content, media,
+comments, structure, findings, evidence, Cloud, and advanced sub-tabs, and
+captures a screenshot under `build/smoke/`. It does not click Cloud analysis,
+create Core proposals, call execute routes, store a local run, or write
+WordPress data. It is intentionally outside `composer test:all` because it
+depends on a running local WordPress site, WP-CLI login-cookie generation,
+Playwright, and a local browser.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,

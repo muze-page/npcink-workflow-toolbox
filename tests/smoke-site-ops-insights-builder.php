@@ -131,6 +131,28 @@ site_ops_smoke_assert( false === ( $pack['direct_wordpress_write'] ?? true ), 'S
 site_ops_smoke_assert( false === ( $pack['cloud_required'] ?? true ), 'Site Ops P0 does not require Cloud.' );
 site_ops_smoke_assert( false === ( $pack['core_proposal_created'] ?? true ), 'Site Ops P0 does not create Core proposals.' );
 site_ops_smoke_assert( ! empty( $pack['top_findings'] ) && count( $pack['top_findings'] ) >= 4, 'Site Ops builder ranks multiple local operations findings.' );
+$issue_types = array_values(
+	array_filter(
+		array_map(
+			static function ( $finding ) {
+				return is_array( $finding ) ? (string) ( $finding['issue_type'] ?? '' ) : '';
+			},
+			$pack['top_findings']
+		)
+	)
+);
+$categories = array_values(
+	array_filter(
+		array_map(
+			static function ( $finding ) {
+				return is_array( $finding ) ? (string) ( $finding['category'] ?? '' ) : '';
+			},
+			$pack['top_findings']
+		)
+	)
+);
+site_ops_smoke_assert( in_array( 'media', $issue_types, true ) && in_array( 'comments', $issue_types, true ), 'Site Ops findings expose issue_type values for dimension panels.' );
+site_ops_smoke_assert( $issue_types === $categories, 'Site Ops findings keep category as an issue_type compatibility alias.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_text_returned'] ?? true ), 'Site Ops insight pack omits full comment text.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_author_email_returned'] ?? true ), 'Site Ops insight pack omits comment author emails.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_ip_returned'] ?? true ), 'Site Ops insight pack omits comment IP addresses.' );

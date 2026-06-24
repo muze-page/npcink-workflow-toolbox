@@ -880,6 +880,7 @@ final class Admin_Page {
 				<strong><?php esc_html_e( 'Next', 'npcink-toolbox' ); ?></strong>
 				<span><?php echo esc_html( $action ); ?></span>
 				<em><?php echo esc_html( $this->site_ops_boundary_label( (string) ( $finding['write_boundary'] ?? 'suggestion_only' ) ) ); ?></em>
+				<span><?php echo esc_html( $this->site_ops_boundary_guidance( (string) ( $finding['write_boundary'] ?? 'suggestion_only' ) ) ); ?></span>
 			</div>
 		</article>
 		<?php
@@ -951,7 +952,7 @@ final class Admin_Page {
 			if ( ! is_array( $finding ) ) {
 				continue;
 			}
-			$category = (string) ( $finding['category'] ?? '' );
+			$category = (string) ( $finding['issue_type'] ?? $finding['category'] ?? '' );
 			if ( isset( $category_map[ $category ] ) ) {
 				$matches[] = $finding;
 			}
@@ -1046,6 +1047,19 @@ final class Admin_Page {
 			return __( 'Manual review only', 'npcink-toolbox' );
 		}
 		return __( 'Suggestion only', 'npcink-toolbox' );
+	}
+
+	private function site_ops_boundary_guidance( string $boundary ): string {
+		if ( 'core_handoff_candidate' === $boundary ) {
+			return __( 'Write-like follow-up needs a reviewed Core handoff; this report does not create proposals.', 'npcink-toolbox' );
+		}
+		if ( 'manual_review_only' === $boundary ) {
+			return __( 'Keep this as operator review unless a separate governed workflow is selected.', 'npcink-toolbox' );
+		}
+		if ( 'blocked_until_cloud_ready' === $boundary ) {
+			return __( 'Resolve the Cloud readiness blocker before expecting semantic runtime detail.', 'npcink-toolbox' );
+		}
+		return __( 'Use this as decision support only; no WordPress data changes here.', 'npcink-toolbox' );
 	}
 
 	/**
@@ -1443,6 +1457,51 @@ final class Admin_Page {
 					<?php esc_html_e( 'Cloud returned no priority queue or trend notes for this bounded request.', 'npcink-toolbox' ); ?>
 				</div>
 			<?php endif; ?>
+			<?php if ( array() !== $blocked_items || array() !== $next_actions || array() !== $handoff_candidates ) : ?>
+				<div class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Cloud follow-up summary', 'npcink-toolbox' ); ?>">
+					<div>
+						<strong><?php esc_html_e( 'Blockers', 'npcink-toolbox' ); ?></strong>
+						<span>
+							<?php
+							if ( array() === $blocked_items ) {
+								esc_html_e( 'No Cloud blockers reported.', 'npcink-toolbox' );
+							} else {
+								$first_blocker = is_array( $blocked_items[0] ?? null ) ? $blocked_items[0] : array();
+								printf(
+									esc_html__( '%1$d reported; first: %2$s.', 'npcink-toolbox' ),
+									(int) count( $blocked_items ),
+									esc_html( $this->site_ops_dynamic_label( (string) ( $first_blocker['reason'] ?? $first_blocker['id'] ?? '' ) ) )
+								);
+							}
+							?>
+						</span>
+					</div>
+					<div>
+						<strong><?php esc_html_e( 'Suggested next path', 'npcink-toolbox' ); ?></strong>
+						<span>
+							<?php
+							if ( array() === $next_actions ) {
+								esc_html_e( 'Review the top priority queue item locally.', 'npcink-toolbox' );
+							} else {
+								$first_action = is_array( $next_actions[0] ?? null ) ? $next_actions[0] : array();
+								echo esc_html( $this->site_ops_dynamic_label( (string) ( $first_action['label'] ?? $first_action['target'] ?? $first_action['id'] ?? '' ) ) );
+							}
+							?>
+						</span>
+					</div>
+					<div>
+						<strong><?php esc_html_e( 'Core handoff candidates', 'npcink-toolbox' ); ?></strong>
+						<span>
+							<?php
+							printf(
+								esc_html__( '%d planning hints; proposal creation remains outside this report.', 'npcink-toolbox' ),
+								(int) count( $handoff_candidates )
+							);
+							?>
+						</span>
+					</div>
+				</div>
+			<?php endif; ?>
 			<?php if ( array() !== $cloud_focus ) : ?>
 				<div class="npcink-toolbox__ops-focus">
 					<strong><?php esc_html_e( 'Cloud focus', 'npcink-toolbox' ); ?></strong>
@@ -1471,6 +1530,7 @@ final class Admin_Page {
 								<strong><?php esc_html_e( 'Next', 'npcink-toolbox' ); ?></strong>
 								<span><?php echo esc_html( $action ); ?></span>
 								<em><?php esc_html_e( 'Cloud-ranked suggestion', 'npcink-toolbox' ); ?></em>
+								<span><?php echo esc_html( $this->site_ops_boundary_guidance( (string) ( $item['write_boundary'] ?? 'suggestion_only' ) ) ); ?></span>
 							</div>
 					</article>
 				<?php endforeach; ?>

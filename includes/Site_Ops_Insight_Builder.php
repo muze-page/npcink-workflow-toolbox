@@ -476,6 +476,7 @@ final class Site_Ops_Insight_Builder {
 			'id'                     => $id,
 			'title'                  => $title,
 			'issue_type'             => $issue_type,
+			'category'               => $issue_type,
 			'severity'               => $severity,
 			'priority_score'         => max( 0, min( 100, $priority_score ) ),
 			'evidence_summary'       => $evidence_summary,
