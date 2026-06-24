@@ -39,6 +39,10 @@ follow-up path is allowed.
 4. **Choose the follow-up path.** Simple items remain manual review. Eligible
    items may become Core-governed handoff plans through existing governed
    workflows outside this report.
+5. **Preview review candidates when needed.** For issues marked as review
+   workflow candidates, the Overview may show a folded handoff draft with
+   candidate objects, evidence, and a suggested review note. This preview is
+   still read-only and does not create a Core proposal.
 
 ## Solved Problems
 
@@ -54,6 +58,9 @@ follow-up path is allowed.
 - Coverage metrics and current-run charts remain available, but they are not
   the default first task. They support audit and orientation after the operator
   has seen what to handle first.
+- Review-workflow candidate previews reduce the gap between "this needs
+  review" and "what should I carry into review" without adding a second
+  approval path.
 
 ## Boundary
 

@@ -1098,6 +1098,9 @@ final class Admin_Page {
 									<dd><?php echo esc_html( $this->site_ops_finding_recommended_action( $finding ) ); ?></dd>
 								</div>
 							</dl>
+							<?php if ( 'core_handoff_candidate' === $boundary ) : ?>
+								<?php $this->render_site_ops_handoff_candidate_preview( $finding ); ?>
+							<?php endif; ?>
 							<details class="npcink-toolbox__ops-follow-up" aria-label="<?php esc_attr_e( 'Handling rules and limits', 'npcink-toolbox' ); ?>">
 								<summary><?php esc_html_e( 'View handling rules and limits', 'npcink-toolbox' ); ?></summary>
 								<div class="npcink-toolbox__ops-follow-up-copy">
@@ -1111,6 +1114,62 @@ final class Admin_Page {
 				<?php endforeach; ?>
 			</div>
 		</section>
+		<?php
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 */
+	private function render_site_ops_handoff_candidate_preview( array $finding ): void {
+		$source_refs = isset( $finding['source_refs'] ) && is_array( $finding['source_refs'] ) ? array_slice( $finding['source_refs'], 0, 3 ) : array();
+		$evidence    = $this->site_ops_finding_evidence_summary( $finding );
+		$action      = $this->site_ops_finding_recommended_action( $finding );
+		?>
+		<details class="npcink-toolbox__ops-handoff-preview" aria-label="<?php esc_attr_e( 'Review workflow candidate preview', 'npcink-toolbox' ); ?>">
+			<summary><?php esc_html_e( 'View review candidate', 'npcink-toolbox' ); ?></summary>
+			<div class="npcink-toolbox__ops-handoff-preview-body">
+				<p><?php esc_html_e( 'Use this as a handoff draft only after choosing one affected item and confirming the evidence.', 'npcink-toolbox' ); ?></p>
+				<?php if ( array() !== $source_refs ) : ?>
+					<div>
+						<strong><?php esc_html_e( 'Candidate objects', 'npcink-toolbox' ); ?></strong>
+						<ul class="npcink-toolbox__ops-handoff-candidates">
+							<?php foreach ( $source_refs as $ref ) : ?>
+								<?php if ( ! is_array( $ref ) ) { continue; } ?>
+								<?php
+								$object_id   = (int) ( $ref['object_id'] ?? 0 );
+								$object_type = sanitize_key( (string) ( $ref['object_type'] ?? 'post' ) );
+								$title       = trim( (string) ( $ref['title'] ?? '' ) );
+								$title       = '' !== $title ? $title : __( 'Untitled item', 'npcink-toolbox' );
+								$link        = $object_id > 0 && current_user_can( 'edit_post', $object_id ) ? get_edit_post_link( $object_id, '' ) : '';
+								?>
+								<li>
+									<?php if ( is_string( $link ) && '' !== $link ) : ?>
+										<a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $title ); ?></a>
+									<?php else : ?>
+										<span><?php echo esc_html( $title ); ?></span>
+									<?php endif; ?>
+									<em><?php echo esc_html( $this->site_ops_object_type_label( $object_type ) ); ?></em>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+				<div class="npcink-toolbox__ops-handoff-copy-grid">
+					<div>
+						<strong><?php esc_html_e( 'Evidence to carry forward', 'npcink-toolbox' ); ?></strong>
+						<span><?php echo esc_html( '' !== $evidence ? $evidence : __( 'Use the finding evidence and selected object before preparing a review workflow.', 'npcink-toolbox' ) ); ?></span>
+					</div>
+					<div>
+						<strong><?php esc_html_e( 'Suggested review note', 'npcink-toolbox' ); ?></strong>
+						<span><?php echo esc_html( $action ); ?></span>
+					</div>
+					<div>
+						<strong><?php esc_html_e( 'Boundary', 'npcink-toolbox' ); ?></strong>
+						<span><?php esc_html_e( 'Draft only. Toolbox does not create proposals, queue work, approve changes, or write WordPress data.', 'npcink-toolbox' ); ?></span>
+					</div>
+				</div>
+			</div>
+		</details>
 		<?php
 	}
 

@@ -4583,6 +4583,30 @@ msgstr "第一步安全操作"
 msgid "Handling"
 msgstr "处理方式"
 
+msgid "Review workflow candidate preview"
+msgstr "审核流程候选预览"
+
+msgid "View review candidate"
+msgstr "查看审核候选"
+
+msgid "Use this as a handoff draft only after choosing one affected item and confirming the evidence."
+msgstr "只有在选择一个受影响对象并确认依据后，才把这里作为交接草稿使用。"
+
+msgid "Candidate objects"
+msgstr "候选对象"
+
+msgid "Evidence to carry forward"
+msgstr "带入审核的证据"
+
+msgid "Use the finding evidence and selected object before preparing a review workflow."
+msgstr "准备审核流程前，请先使用此问题的证据和已选择的对象。"
+
+msgid "Suggested review note"
+msgstr "建议审核说明"
+
+msgid "Draft only. Toolbox does not create proposals, queue work, approve changes, or write WordPress data."
+msgstr "仅为草稿。Toolbox 不会创建提案、排队任务、批准更改或写入 WordPress 数据。"
+
 msgid "Handling rules and limits"
 msgstr "处理规则和限制"
 

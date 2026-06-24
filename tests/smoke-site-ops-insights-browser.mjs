@@ -241,9 +241,14 @@ try {
 		assert(/Why it matters|为什么重要|为何重要/.test(overviewText) && /Affected examples|受影响示例/.test(overviewText), 'Decision queue explains why each issue matters and who is affected.');
 		assert(/First safe action|第一步安全操作|先做什么/.test(overviewText) && /Handling|处理方式/.test(overviewText), 'Decision queue explains the first safe action and handling path.');
 		assert(/High priority|高优先级|Medium priority|中优先级/.test(overviewText), 'Decision queue shows priority as a readable label.');
+		assert(/View review candidate|查看审核候选/.test(overviewText), 'Review-workflow cards expose a folded handoff candidate preview.');
 		assert(/View handling rules and limits|查看处理规则与限制/.test(overviewText), 'Decision queue keeps detailed handling boundaries behind a plain-language disclosure.');
 		assert(!/proposal_ready=false/.test(overviewRawText || ''), 'Default decision queue does not expose raw proposal flags.');
 		assert(/will not create the review task|不会创建审核任务|不会自动更改/.test(overviewRawText || ''), 'Folded follow-up path keeps writes outside the report in operator language.');
+		await page.locator('.npcink-toolbox__ops-handoff-preview summary').first().click();
+		const handoffPreviewText = await page.locator('.npcink-toolbox__ops-handoff-preview').first().innerText();
+		assert(/Candidate objects|候选对象/.test(handoffPreviewText) && /Evidence to carry forward|带入审核的证据/.test(handoffPreviewText), 'Handoff candidate preview shows candidate objects and evidence only after expansion.');
+		assert(/does not create proposals|不会创建提案/.test(handoffPreviewText) && /write WordPress data|写入 WordPress 数据/.test(handoffPreviewText), 'Handoff candidate preview keeps proposal and write creation outside Toolbox.');
 		assert(/View scan scope and charts|查看扫描范围和图表/.test(overviewText), 'Overview folds local coverage and charts behind a scan-detail disclosure.');
 		assert(!/Coverage snapshot|覆盖快照/.test(overviewText), 'Overview does not show coverage charts by default.');
 		assert(/Nothing is changed automatically|不会自动更改|不会自动修改/.test(overviewText), 'Overview makes the no-auto-change boundary readable.');
