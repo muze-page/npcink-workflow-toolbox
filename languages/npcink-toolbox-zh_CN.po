@@ -4495,3 +4495,84 @@ msgstr "先在本地审阅优先队列的第一项。"
 
 msgid "%d planning hints; proposal creation remains outside this report."
 msgstr "%d 个计划提示；提案创建仍在此报告之外。"
+
+msgid "Priority decision queue"
+msgstr "优先决策队列"
+
+msgid "Start here: each item states the problem, evidence, handling path, and next step for the current report only."
+msgstr "从这里开始：每一项都会说明当前报告中的问题、证据、处理路径和下一步。"
+
+msgid "Path"
+msgstr "路径"
+
+msgid "Start with the priority decision queue. %1$d Core planning hints and %2$d manual-review items remain review-only until a follow-up path is chosen."
+msgstr "从优先决策队列开始。%1$d 个 Core 规划提示和 %2$d 个需人工复核项，在选择后续路径前都只用于审阅。"
+
+msgid "Coverage snapshot"
+msgstr "覆盖快照"
+
+msgid "Local analysis summary: %1$d findings across content, media, comments, and structure. First focus: %2$s."
+msgstr "本地分析摘要：内容、媒体、评论和结构中共有 %1$d 个问题。优先关注：%2$s。"
+
+msgid "Deterministic local analysis only; use Cloud only for AI summary, semantic ranking, trends, or heavier runtime detail."
+msgstr "仅为确定性本地分析；只有需要 AI 摘要、语义排序、趋势或更重的运行时详情时才使用 Cloud。"
+
+msgid "Follow-up path"
+msgstr "后续处理路径"
+
+msgid "Handling mode"
+msgstr "处理方式"
+
+msgid "What this means"
+msgstr "这意味着什么"
+
+msgid "Needs before action"
+msgstr "行动前需要"
+
+msgid "Current limit"
+msgstr "当前限制"
+
+msgid "Core handoff candidate"
+msgstr "Core 交接候选"
+
+msgid "Use this as a candidate plan only; choose concrete items and review evidence before any Core proposal is created outside this report."
+msgstr "仅把它作为候选计划；必须先选择具体对象并复核证据，之后才可在此报告之外创建 Core 提案。"
+
+msgid "Operator selection, accepted edits, and a matching Core/Ability route."
+msgstr "需要运营者选择、已接受的编辑内容，以及匹配的 Core/Ability 路径。"
+
+msgid "proposal_ready=false; Toolbox does not create proposals from this report."
+msgstr "proposal_ready=false；Toolbox 不会从此报告创建提案。"
+
+msgid "Use this as an editorial or operator checklist before deciding whether a governed handoff is needed."
+msgstr "先把它作为编辑或运营检查清单，再决定是否需要治理交接。"
+
+msgid "Human review of the affected content, media, comments, taxonomy, or settings."
+msgstr "需要人工复核受影响的内容、媒体、评论、分类结构或设置。"
+
+msgid "No task, proposal, queue, or WordPress change is created here."
+msgstr "这里不会创建任务、提案、队列或 WordPress 变更。"
+
+msgid "Needs Cloud detail"
+msgstr "需要 Cloud 详情"
+
+msgid "Local evidence is enough to show the blocker, but semantic ranking or trend explanation needs Cloud runtime/detail."
+msgstr "本地证据足以显示阻塞项，但语义排序或趋势解释需要 Cloud 运行时/详情。"
+
+msgid "Cloud readiness and an explicit Run Cloud analysis action by the operator."
+msgstr "需要 Cloud 就绪，并由运营者明确点击运行 Cloud 分析。"
+
+msgid "Toolbox will not retry, queue, or run Cloud analysis automatically."
+msgstr "Toolbox 不会自动重试、排队或运行 Cloud 分析。"
+
+msgid "Observation only"
+msgstr "仅观察"
+
+msgid "Use this as decision support for the current report only."
+msgstr "仅作为当前报告的决策辅助。"
+
+msgid "Operator judgment before choosing any follow-up workflow."
+msgstr "选择任何后续工作流之前都需要运营者判断。"
+
+msgid "No automatic action, proposal, queue, or WordPress write is created."
+msgstr "不会创建自动动作、提案、队列或 WordPress 写入。"

@@ -424,12 +424,14 @@ NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/
 ```
 
 This opens the local Full-site Insights wp-admin tab, generates the local
-report, verifies the summary-first overview, switches the content, media,
-comments, structure, findings, evidence, Cloud, and advanced sub-tabs, and
-captures a screenshot under `build/smoke/`. It does not click Cloud analysis,
-create Core proposals, call execute routes, store a local run, or write
-WordPress data. It is intentionally outside `composer test:all` because it
-depends on a running local WordPress site, WP-CLI login-cookie generation,
+report, verifies the summary-first overview and priority decision queue,
+switches the content, media, comments, structure, findings, evidence, Cloud,
+and advanced sub-tabs, and captures a screenshot under `build/smoke/`. It uses
+a short-lived local login helper so WordPress sets the administrator auth
+cookie in the same Web request context as the browser. It does not click Cloud
+analysis, create Core proposals, call execute routes, store a local run, or
+write WordPress data. It is intentionally outside `composer test:all` because
+it depends on a running local WordPress site, a writable local WordPress root,
 Playwright, and a local browser.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
