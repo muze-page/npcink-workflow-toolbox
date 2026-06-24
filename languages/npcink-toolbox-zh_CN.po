@@ -4544,14 +4544,128 @@ msgstr "需要运营者选择、已接受的编辑内容，以及匹配的 Core/
 msgid "proposal_ready=false; Toolbox does not create proposals from this report."
 msgstr "proposal_ready=false；Toolbox 不会从此报告创建提案。"
 
-msgid "Use this as an editorial or operator checklist before deciding whether a governed handoff is needed."
-msgstr "先把它作为编辑或运营检查清单，再决定是否需要治理交接。"
+msgid "Site action checklist"
+msgstr "站点行动清单"
+
+msgid "Scan the current site, then start with the few issues most likely to affect readers, search, and daily operations."
+msgstr "扫描当前站点，然后先处理最可能影响读者、搜索和日常运营的少数问题。"
+
+msgid "Ask AI to summarize deeper"
+msgstr "让 AI 深度总结"
+
+msgid "Start with %d site issues"
+msgstr "先处理 %d 个站点问题"
+
+msgid "The report found %1$d items that may need a review workflow and %2$d items that are manual checks. Nothing is changed automatically."
+msgstr "报告发现 %1$d 个可能需要审核流程处理的问题，以及 %2$d 个适合人工检查的问题。不会自动更改任何内容。"
+
+msgid "Handle these first"
+msgstr "优先处理这些问题"
+
+msgid "Each card explains why it matters, shows sampled affected items, and gives the first safe action."
+msgstr "每张卡片都会说明为什么重要、展示采样到的受影响对象，并给出第一步安全操作。"
+
+msgid "Why it matters"
+msgstr "为什么重要"
+
+msgid "Affected examples"
+msgstr "受影响示例"
+
+msgid "First safe action"
+msgstr "第一步安全操作"
+
+msgid "Handling"
+msgstr "处理方式"
+
+msgid "Handling rules and limits"
+msgstr "处理规则和限制"
+
+msgid "View handling rules and limits"
+msgstr "查看处理规则与限制"
+
+msgid "Before you act"
+msgstr "操作前需要"
+
+msgid "Limit"
+msgstr "限制"
+
+msgid "Media item"
+msgstr "媒体项目"
+
+msgid "High priority"
+msgstr "高优先级"
+
+msgid "Medium priority"
+msgstr "中优先级"
+
+msgid "Needs review workflow"
+msgstr "需要审核流程"
+
+msgid "Manual check only"
+msgstr "仅人工检查"
+
+msgid "Advice only"
+msgstr "仅建议"
+
+msgid "This report only marks a candidate. Pick the exact content and confirm the evidence before using the normal review flow outside this report."
+msgstr "此报告只标出候选问题。请先选择具体内容并确认依据，再在报告之外使用正常审核流程。"
+
+msgid "A selected item, accepted edits or notes, and a matching review path."
+msgstr "需要选定对象、已确认的修改或备注，以及匹配的审核路径。"
+
+msgid "This report will not create the review task or change WordPress."
+msgstr "此报告不会创建审核任务，也不会修改 WordPress。"
+
+msgid "Changes must be reviewed before anything is written. This report only recommends."
+msgstr "任何写入前都必须经过审核。此报告只提供建议。"
+
+msgid "Use this as a checklist. Nothing changes automatically."
+msgstr "把它作为检查清单使用。不会自动更改任何内容。"
+
+msgid "Connect Cloud before expecting deeper AI ranking or trend detail."
+msgstr "如需更深入的 AI 排序或趋势详情，请先连接 Cloud。"
+
+msgid "The current scan found %1$d posts/pages older than 180 days; %2$d still have approved comments."
+msgstr "当前扫描发现 %1$d 篇文章/页面超过 180 天未更新；其中 %2$d 篇仍有已批准评论。"
+
+msgid "The current scan found %1$d short items; %2$d have no recorded internal links."
+msgstr "当前扫描发现 %1$d 个内容偏短的项目；其中 %2$d 个没有记录到内部链接。"
+
+msgid "The current scan found %1$d items needing excerpt or meta-description review; %2$d need category or tag review."
+msgstr "当前扫描发现 %1$d 个项目需要复核摘要或 meta 描述；%2$d 个需要复核分类或标签。"
+
+msgid "The current scan found %1$d media items without ALT text, %2$d without captions, and %3$d referenced image ALT gaps."
+msgstr "当前扫描发现 %1$d 个媒体缺少 ALT 文本、%2$d 个缺少说明文字，并发现 %3$d 处引用图片 ALT 缺口。"
+
+msgid "The current scan found %1$d empty category/tag terms and %2$d terms used only once."
+msgstr "当前扫描发现 %1$d 个空分类/标签，以及 %2$d 个只使用过一次的术语。"
+
+msgid "Open the oldest active items first, then write refresh notes before choosing any review workflow."
+msgstr "先打开最旧且仍有互动的内容，写好刷新备注，再决定是否进入审核流程。"
+
+msgid "Review one post at a time in the editor, then send accepted values through the review workflow."
+msgstr "先在编辑器中逐篇复核文章，再把确认后的值交给审核流程处理。"
+
+msgid "How to use Full-site Insights"
+msgstr "如何使用全站洞察"
+
+msgid "Handle simple items manually, or turn eligible items into reviewed handoff plans outside this report."
+msgstr "简单事项人工处理；符合条件的事项可在此报告之外转成已审阅的交接计划。"
+
+msgid "Current snapshot is ready."
+msgstr "当前快照已生成。"
+
+msgid "Rescan"
+msgstr "重新扫描"
+
+msgid "Use this as an editorial or operator checklist before deciding whether a formal review path is needed."
+msgstr "先把它作为编辑或运营检查清单，再决定是否需要正式审核路径。"
 
 msgid "Human review of the affected content, media, comments, taxonomy, or settings."
 msgstr "需要人工复核受影响的内容、媒体、评论、分类结构或设置。"
 
-msgid "No task, proposal, queue, or WordPress change is created here."
-msgstr "这里不会创建任务、提案、队列或 WordPress 变更。"
+msgid "Nothing is changed automatically from this report."
+msgstr "此报告不会自动更改任何内容。"
 
 msgid "Needs Cloud detail"
 msgstr "需要 Cloud 详情"

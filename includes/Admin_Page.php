@@ -567,44 +567,53 @@ final class Admin_Page {
 		</div>
 
 		<section class="npcink-toolbox__ops-status-row" aria-label="<?php esc_attr_e( 'Full-site Insights readiness', 'npcink-toolbox' ); ?>">
-			<span><strong><?php esc_html_e( 'Local data', 'npcink-toolbox' ); ?></strong><?php echo esc_html( null === $preview ? __( 'Ready to scan', 'npcink-toolbox' ) : __( 'Scanned', 'npcink-toolbox' ) ); ?></span>
-			<span><strong><?php esc_html_e( 'Site Context', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $context_ready ? __( 'Ready', 'npcink-toolbox' ) : __( 'Needs brief', 'npcink-toolbox' ) ); ?></span>
-			<span><strong><?php esc_html_e( 'Cloud', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $cloud_ready ? __( 'Ready on request', 'npcink-toolbox' ) : __( 'Optional', 'npcink-toolbox' ) ); ?></span>
-			<span><strong><?php esc_html_e( 'Writes', 'npcink-toolbox' ); ?></strong><?php esc_html_e( 'Disabled', 'npcink-toolbox' ); ?></span>
+			<div class="npcink-toolbox__ops-status-main">
+				<span><strong><?php esc_html_e( 'Local data', 'npcink-toolbox' ); ?></strong><?php echo esc_html( null === $preview ? __( 'Ready to scan', 'npcink-toolbox' ) : __( 'Scanned', 'npcink-toolbox' ) ); ?></span>
+				<span><strong><?php esc_html_e( 'Site Context', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $context_ready ? __( 'Ready', 'npcink-toolbox' ) : __( 'Needs brief', 'npcink-toolbox' ) ); ?></span>
+				<span><strong><?php esc_html_e( 'Cloud', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $cloud_ready ? __( 'Ready on request', 'npcink-toolbox' ) : __( 'Optional', 'npcink-toolbox' ) ); ?></span>
+				<span><strong><?php esc_html_e( 'Writes', 'npcink-toolbox' ); ?></strong><?php esc_html_e( 'Disabled', 'npcink-toolbox' ); ?></span>
+			</div>
+			<div class="npcink-toolbox__ops-status-actions">
+				<?php if ( null === $preview || isset( $preview['error'] ) ) : ?>
+					<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate full-site report', 'npcink-toolbox' ); ?></a>
+				<?php else : ?>
+					<span><?php esc_html_e( 'Current snapshot is ready.', 'npcink-toolbox' ); ?></span>
+					<a class="button button-small" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Rescan', 'npcink-toolbox' ); ?></a>
+				<?php endif; ?>
+			</div>
 		</section>
 
-		<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Full-site Insights operator loop', 'npcink-toolbox' ); ?>">
-			<div>
-				<strong><?php esc_html_e( '1. Scan local data', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'Build a current snapshot from public content, approved comment signals, media metadata, taxonomy, Site Context, and Cloud readiness.', 'npcink-toolbox' ); ?></span>
-			</div>
-			<div>
-				<strong><?php esc_html_e( '2. Read the priority queue', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'Use the overview, charts, dimensions, findings, and evidence tabs to decide which problem matters first.', 'npcink-toolbox' ); ?></span>
-			</div>
-			<div>
-				<strong><?php esc_html_e( '3. Add Cloud detail when useful', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'Cloud may add AI summary, semantic ranking, trend explanation, and closure detail, but it remains review guidance only.', 'npcink-toolbox' ); ?></span>
-			</div>
-			<div>
-				<strong><?php esc_html_e( '4. Choose the follow-up path', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'Handle simple items manually, or turn eligible items into Core-governed handoff plans outside this report.', 'npcink-toolbox' ); ?></span>
-			</div>
-		</section>
+		<details class="npcink-toolbox__ops-loop-disclosure"<?php echo null === $preview ? ' open' : ''; ?>>
+			<summary><?php esc_html_e( 'How to use Full-site Insights', 'npcink-toolbox' ); ?></summary>
+			<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Full-site Insights operator loop', 'npcink-toolbox' ); ?>">
+				<div>
+					<strong><?php esc_html_e( '1. Scan local data', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Build a current snapshot from public content, approved comment signals, media metadata, taxonomy, Site Context, and Cloud readiness.', 'npcink-toolbox' ); ?></span>
+				</div>
+				<div>
+					<strong><?php esc_html_e( '2. Read the priority queue', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Use the overview, charts, dimensions, findings, and evidence tabs to decide which problem matters first.', 'npcink-toolbox' ); ?></span>
+				</div>
+				<div>
+					<strong><?php esc_html_e( '3. Add Cloud detail when useful', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Cloud may add AI summary, semantic ranking, trend explanation, and closure detail, but it remains review guidance only.', 'npcink-toolbox' ); ?></span>
+				</div>
+				<div>
+					<strong><?php esc_html_e( '4. Choose the follow-up path', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Handle simple items manually, or turn eligible items into reviewed handoff plans outside this report.', 'npcink-toolbox' ); ?></span>
+				</div>
+			</section>
+		</details>
 
 		<section class="npcink-toolbox__card" data-toolbox-site-ops-insights>
-			<div class="npcink-toolbox__section-heading">
-				<div>
-					<h3><?php esc_html_e( 'Site analysis report', 'npcink-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'Generate a local `site_ops_insight_pack.v1` that turns current site data into a review queue, evidence, and next-step boundaries.', 'npcink-toolbox' ); ?></p>
+			<?php if ( null === $preview ) : ?>
+				<div class="npcink-toolbox__section-heading">
+					<div>
+						<h3><?php esc_html_e( 'Site action checklist', 'npcink-toolbox' ); ?></h3>
+						<p><?php esc_html_e( 'Scan the current site, then start with the few issues most likely to affect readers, search, and daily operations.', 'npcink-toolbox' ); ?></p>
+					</div>
 				</div>
-				<div class="npcink-toolbox__section-actions">
-					<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate full-site report', 'npcink-toolbox' ); ?></a>
-					<?php if ( null !== $preview && $cloud_ready ) : ?>
-						<a class="button" href="<?php echo esc_url( $this->site_ops_cloud_analysis_url() ); ?>"><?php esc_html_e( 'Run Cloud analysis', 'npcink-toolbox' ); ?></a>
-					<?php endif; ?>
-				</div>
-			</div>
+			<?php endif; ?>
 
 			<?php if ( isset( $preview['error'] ) ) : ?>
 				<div class="npcink-toolbox__result-notice is-warning"><?php echo esc_html( (string) $preview['error'] ); ?></div>
@@ -627,12 +636,12 @@ final class Admin_Page {
 						<div class="npcink-toolbox__ops-summary-bar npcink-toolbox__ops-summary-bar--compact" aria-label="<?php esc_attr_e( 'Full-site Insights summary', 'npcink-toolbox' ); ?>">
 							<div>
 								<?php /* translators: %d: number of site analysis findings. */ ?>
-								<strong><?php printf( esc_html__( 'Review %d site analysis findings', 'npcink-toolbox' ), (int) $finding_count ); ?></strong>
+								<strong><?php printf( esc_html__( 'Start with %d site issues', 'npcink-toolbox' ), (int) min( 3, $finding_count ) ); ?></strong>
 								<span>
 									<?php
 									printf(
-										/* translators: 1: number of Core-ready planning hints, 2: number of manual-review items. */
-										esc_html__( 'Start with the priority decision queue. %1$d Core planning hints and %2$d manual-review items remain review-only until a follow-up path is chosen.', 'npcink-toolbox' ),
+										/* translators: 1: number of review-workflow candidates, 2: number of manual-check items. */
+										esc_html__( 'The report found %1$d items that may need a review workflow and %2$d items that are manual checks. Nothing is changed automatically.', 'npcink-toolbox' ),
 										(int) $core_handoff_count,
 										(int) $manual_review_count
 									);
@@ -689,6 +698,9 @@ final class Admin_Page {
 						<?php else : ?>
 							<div class="npcink-toolbox__result-notice">
 								<?php esc_html_e( 'Cloud analysis has not run for this local preview. Run it only when AI summary, semantic ranking, trend explanation, or heavier runtime/detail analysis is needed.', 'npcink-toolbox' ); ?>
+								<?php if ( $cloud_ready ) : ?>
+									<p><a class="button" href="<?php echo esc_url( $this->site_ops_cloud_analysis_url() ); ?>"><?php esc_html_e( 'Ask AI to summarize deeper', 'npcink-toolbox' ); ?></a></p>
+								<?php endif; ?>
 							</div>
 						<?php endif; ?>
 					</section>
@@ -783,8 +795,8 @@ final class Admin_Page {
 		<section class="npcink-toolbox__ops-decision-queue" aria-label="<?php esc_attr_e( 'Priority decision queue', 'npcink-toolbox' ); ?>">
 			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
 				<div>
-					<h3><?php esc_html_e( 'Priority decision queue', 'npcink-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'Start here: each item states the problem, evidence, handling path, and next step for the current report only.', 'npcink-toolbox' ); ?></p>
+					<h3><?php esc_html_e( 'Handle these first', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Each card explains why it matters, shows sampled affected items, and gives the first safe action.', 'npcink-toolbox' ); ?></p>
 				</div>
 			</div>
 			<div class="npcink-toolbox__ops-decision-list">
@@ -796,52 +808,40 @@ final class Admin_Page {
 					<article class="npcink-toolbox__ops-decision-card">
 						<div class="npcink-toolbox__ops-decision-rank">
 							<span><?php echo esc_html( (string) ( $index + 1 ) ); ?></span>
-							<em><?php echo esc_html( $this->site_ops_priority_label( (int) ( $finding['priority_score'] ?? 0 ) ) ); ?></em>
 						</div>
 						<div class="npcink-toolbox__ops-decision-body">
-							<h4><?php echo esc_html( $this->site_ops_finding_title( $finding ) ); ?></h4>
-							<dl>
+							<div class="npcink-toolbox__ops-decision-header">
 								<div>
-									<dt><?php esc_html_e( 'Issue', 'npcink-toolbox' ); ?></dt>
+									<span class="npcink-toolbox__ops-priority-pill"><?php echo esc_html( $this->site_ops_priority_action_label( (int) ( $finding['priority_score'] ?? 0 ) ) ); ?></span>
+									<h4><?php echo esc_html( $this->site_ops_finding_title( $finding ) ); ?></h4>
+								</div>
+								<span class="npcink-toolbox__ops-handling-pill">
+									<strong><?php esc_html_e( 'Handling', 'npcink-toolbox' ); ?></strong>
+									<?php echo esc_html( $this->site_ops_boundary_label( $boundary ) ); ?>
+								</span>
+							</div>
+							<dl class="npcink-toolbox__ops-decision-main">
+								<div>
+									<dt><?php esc_html_e( 'Why it matters', 'npcink-toolbox' ); ?></dt>
 									<dd><?php echo esc_html( $this->site_ops_finding_impact( $finding ) ); ?></dd>
 								</div>
 								<div>
-									<dt><?php esc_html_e( 'Evidence', 'npcink-toolbox' ); ?></dt>
-									<dd><?php echo esc_html( $this->site_ops_finding_evidence_summary( $finding ) ); ?></dd>
+									<dt><?php esc_html_e( 'Affected examples', 'npcink-toolbox' ); ?></dt>
+									<dd><?php $this->render_site_ops_affected_examples( $finding ); ?></dd>
 								</div>
 								<div>
-									<dt><?php esc_html_e( 'Path', 'npcink-toolbox' ); ?></dt>
-									<dd>
-										<strong><?php echo esc_html( $this->site_ops_boundary_label( $boundary ) ); ?></strong>
-										<?php echo esc_html( $this->site_ops_boundary_guidance( $boundary ) ); ?>
-									</dd>
-								</div>
-								<div>
-									<dt><?php esc_html_e( 'Next step', 'npcink-toolbox' ); ?></dt>
+									<dt><?php esc_html_e( 'First safe action', 'npcink-toolbox' ); ?></dt>
 									<dd><?php echo esc_html( $this->site_ops_finding_recommended_action( $finding ) ); ?></dd>
 								</div>
 							</dl>
-							<div class="npcink-toolbox__ops-follow-up" aria-label="<?php esc_attr_e( 'Follow-up path', 'npcink-toolbox' ); ?>">
-								<strong><?php esc_html_e( 'Follow-up path', 'npcink-toolbox' ); ?></strong>
-								<dl>
-									<div>
-										<dt><?php esc_html_e( 'Handling mode', 'npcink-toolbox' ); ?></dt>
-										<dd><?php echo esc_html( $follow_up['mode'] ); ?></dd>
-									</div>
-									<div>
-										<dt><?php esc_html_e( 'What this means', 'npcink-toolbox' ); ?></dt>
-										<dd><?php echo esc_html( $follow_up['meaning'] ); ?></dd>
-									</div>
-									<div>
-										<dt><?php esc_html_e( 'Needs before action', 'npcink-toolbox' ); ?></dt>
-										<dd><?php echo esc_html( $follow_up['needs'] ); ?></dd>
-									</div>
-									<div>
-										<dt><?php esc_html_e( 'Current limit', 'npcink-toolbox' ); ?></dt>
-										<dd><?php echo esc_html( $follow_up['limit'] ); ?></dd>
-									</div>
-								</dl>
-							</div>
+							<details class="npcink-toolbox__ops-follow-up" aria-label="<?php esc_attr_e( 'Handling rules and limits', 'npcink-toolbox' ); ?>">
+								<summary><?php esc_html_e( 'View handling rules and limits', 'npcink-toolbox' ); ?></summary>
+								<div class="npcink-toolbox__ops-follow-up-copy">
+									<p><strong><?php esc_html_e( 'What this means', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $follow_up['meaning'] ); ?></p>
+									<p><strong><?php esc_html_e( 'Before you act', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $follow_up['needs'] ); ?></p>
+									<p><strong><?php esc_html_e( 'Limit', 'npcink-toolbox' ); ?></strong><?php echo esc_html( $follow_up['limit'] ); ?></p>
+								</div>
+							</details>
 						</div>
 					</article>
 				<?php endforeach; ?>
@@ -852,36 +852,76 @@ final class Admin_Page {
 
 	/**
 	 * @param array<string,mixed> $finding Finding payload.
-	 * @return array{mode:string,meaning:string,needs:string,limit:string}
+	 */
+	private function render_site_ops_affected_examples( array $finding ): void {
+		$source_refs = isset( $finding['source_refs'] ) && is_array( $finding['source_refs'] ) ? array_slice( $finding['source_refs'], 0, 3 ) : array();
+		if ( array() === $source_refs ) {
+			echo esc_html( $this->site_ops_finding_evidence_summary( $finding ) );
+			return;
+		}
+		?>
+		<span class="npcink-toolbox__ops-evidence-summary"><?php echo esc_html( $this->site_ops_finding_evidence_summary( $finding ) ); ?></span>
+		<ul class="npcink-toolbox__ops-affected-list">
+			<?php foreach ( $source_refs as $ref ) : ?>
+				<?php if ( ! is_array( $ref ) ) { continue; } ?>
+				<?php
+				$object_id   = (int) ( $ref['object_id'] ?? 0 );
+				$object_type = sanitize_key( (string) ( $ref['object_type'] ?? 'post' ) );
+				$title       = trim( (string) ( $ref['title'] ?? '' ) );
+				$title       = '' !== $title ? $title : __( 'Untitled item', 'npcink-toolbox' );
+				$link        = $object_id > 0 && current_user_can( 'edit_post', $object_id ) ? get_edit_post_link( $object_id, '' ) : '';
+				?>
+				<li>
+					<?php if ( is_string( $link ) && '' !== $link ) : ?>
+						<a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $title ); ?></a>
+					<?php else : ?>
+						<span><?php echo esc_html( $title ); ?></span>
+					<?php endif; ?>
+					<em><?php echo esc_html( $this->site_ops_object_type_label( $object_type ) ); ?></em>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+		<?php
+	}
+
+	private function site_ops_object_type_label( string $object_type ): string {
+		if ( 'attachment' === $object_type ) {
+			return __( 'Media item', 'npcink-toolbox' );
+		}
+		if ( 'page' === $object_type ) {
+			return __( 'Page', 'npcink-toolbox' );
+		}
+		return __( 'Post', 'npcink-toolbox' );
+	}
+
+	/**
+	 * @param array<string,mixed> $finding Finding payload.
+	 * @return array{meaning:string,needs:string,limit:string}
 	 */
 	private function site_ops_follow_up_path_detail( array $finding ): array {
 		$boundary = (string) ( $finding['write_boundary'] ?? 'suggestion_only' );
 		if ( 'core_handoff_candidate' === $boundary ) {
 			return array(
-				'mode'    => __( 'Core handoff candidate', 'npcink-toolbox' ),
-				'meaning' => __( 'Use this as a candidate plan only; choose concrete items and review evidence before any Core proposal is created outside this report.', 'npcink-toolbox' ),
-				'needs'   => __( 'Operator selection, accepted edits, and a matching Core/Ability route.', 'npcink-toolbox' ),
-				'limit'   => __( 'proposal_ready=false; Toolbox does not create proposals from this report.', 'npcink-toolbox' ),
+				'meaning' => __( 'This report only marks a candidate. Pick the exact content and confirm the evidence before using the normal review flow outside this report.', 'npcink-toolbox' ),
+				'needs'   => __( 'A selected item, accepted edits or notes, and a matching review path.', 'npcink-toolbox' ),
+				'limit'   => __( 'This report will not create the review task or change WordPress.', 'npcink-toolbox' ),
 			);
 		}
 		if ( 'manual_review_only' === $boundary ) {
 			return array(
-				'mode'    => __( 'Manual review only', 'npcink-toolbox' ),
-				'meaning' => __( 'Use this as an editorial or operator checklist before deciding whether a governed handoff is needed.', 'npcink-toolbox' ),
+				'meaning' => __( 'Use this as an editorial or operator checklist before deciding whether a formal review path is needed.', 'npcink-toolbox' ),
 				'needs'   => __( 'Human review of the affected content, media, comments, taxonomy, or settings.', 'npcink-toolbox' ),
-				'limit'   => __( 'No task, proposal, queue, or WordPress change is created here.', 'npcink-toolbox' ),
+				'limit'   => __( 'Nothing is changed automatically from this report.', 'npcink-toolbox' ),
 			);
 		}
 		if ( 'blocked_until_cloud_ready' === $boundary ) {
 			return array(
-				'mode'    => __( 'Needs Cloud detail', 'npcink-toolbox' ),
 				'meaning' => __( 'Local evidence is enough to show the blocker, but semantic ranking or trend explanation needs Cloud runtime/detail.', 'npcink-toolbox' ),
 				'needs'   => __( 'Cloud readiness and an explicit Run Cloud analysis action by the operator.', 'npcink-toolbox' ),
 				'limit'   => __( 'Toolbox will not retry, queue, or run Cloud analysis automatically.', 'npcink-toolbox' ),
 			);
 		}
 		return array(
-			'mode'    => __( 'Observation only', 'npcink-toolbox' ),
 			'meaning' => __( 'Use this as decision support for the current report only.', 'npcink-toolbox' ),
 			'needs'   => __( 'Operator judgment before choosing any follow-up workflow.', 'npcink-toolbox' ),
 			'limit'   => __( 'No automatic action, proposal, queue, or WordPress write is created.', 'npcink-toolbox' ),
@@ -1166,6 +1206,16 @@ final class Admin_Page {
 		return __( 'Review', 'npcink-toolbox' );
 	}
 
+	private function site_ops_priority_action_label( int $score ): string {
+		if ( $score >= 90 ) {
+			return __( 'High priority', 'npcink-toolbox' );
+		}
+		if ( $score >= 75 ) {
+			return __( 'Medium priority', 'npcink-toolbox' );
+		}
+		return __( 'Needs review', 'npcink-toolbox' );
+	}
+
 	private function site_ops_priority_bucket_label( string $bucket ): string {
 		if ( 'high' === $bucket ) {
 			return __( 'High', 'npcink-toolbox' );
@@ -1178,25 +1228,25 @@ final class Admin_Page {
 
 	private function site_ops_boundary_label( string $boundary ): string {
 		if ( 'core_handoff_candidate' === $boundary ) {
-			return __( 'Core planning hint', 'npcink-toolbox' );
+			return __( 'Needs review workflow', 'npcink-toolbox' );
 		}
 		if ( 'manual_review_only' === $boundary ) {
-			return __( 'Manual review only', 'npcink-toolbox' );
+			return __( 'Manual check only', 'npcink-toolbox' );
 		}
-		return __( 'Suggestion only', 'npcink-toolbox' );
+		return __( 'Advice only', 'npcink-toolbox' );
 	}
 
 	private function site_ops_boundary_guidance( string $boundary ): string {
 		if ( 'core_handoff_candidate' === $boundary ) {
-			return __( 'Write-like follow-up needs a reviewed Core handoff; this report does not create proposals.', 'npcink-toolbox' );
+			return __( 'Changes must be reviewed before anything is written. This report only recommends.', 'npcink-toolbox' );
 		}
 		if ( 'manual_review_only' === $boundary ) {
-			return __( 'Keep this as operator review unless a separate governed workflow is selected.', 'npcink-toolbox' );
+			return __( 'Use this as a checklist. Nothing changes automatically.', 'npcink-toolbox' );
 		}
 		if ( 'blocked_until_cloud_ready' === $boundary ) {
-			return __( 'Resolve the Cloud readiness blocker before expecting semantic runtime detail.', 'npcink-toolbox' );
+			return __( 'Connect Cloud before expecting deeper AI ranking or trend detail.', 'npcink-toolbox' );
 		}
-		return __( 'Use this as decision support only; no WordPress data changes here.', 'npcink-toolbox' );
+		return __( 'Use this as decision support only. No WordPress data changes here.', 'npcink-toolbox' );
 	}
 
 	/**
@@ -1247,7 +1297,7 @@ final class Admin_Page {
 		if ( 'stale_content_backlog' === $id && preg_match( '/(\d+)\s+sampled public posts or pages have not been modified for 180\+ days;\s+(\d+)\s+still have approved comments\./i', $summary, $matches ) ) {
 			return sprintf(
 				/* translators: 1: stale item count, 2: stale item count with comments. */
-				__( '%1$d sampled public posts or pages have not been modified for 180+ days; %2$d still have approved comments.', 'npcink-toolbox' ),
+				__( 'The current scan found %1$d posts/pages older than 180 days; %2$d still have approved comments.', 'npcink-toolbox' ),
 				(int) $matches[1],
 				(int) $matches[2]
 			);
@@ -1255,7 +1305,7 @@ final class Admin_Page {
 		if ( 'content_depth_and_linking_gap' === $id && preg_match( '/(\d+)\s+sampled items are short;\s+(\d+)\s+have no recorded internal links\./i', $summary, $matches ) ) {
 			return sprintf(
 				/* translators: 1: thin item count, 2: missing internal link count. */
-				__( '%1$d sampled items are short; %2$d have no recorded internal links.', 'npcink-toolbox' ),
+				__( 'The current scan found %1$d short items; %2$d have no recorded internal links.', 'npcink-toolbox' ),
 				(int) $matches[1],
 				(int) $matches[2]
 			);
@@ -1263,7 +1313,7 @@ final class Admin_Page {
 		if ( 'metadata_review_backlog' === $id && preg_match( '/(\d+)\s+sampled items need excerpt or meta-description review;\s+(\d+)\s+need category or tag review\./i', $summary, $matches ) ) {
 			return sprintf(
 				/* translators: 1: missing meta count, 2: missing taxonomy count. */
-				__( '%1$d sampled items need excerpt or meta-description review; %2$d need category or tag review.', 'npcink-toolbox' ),
+				__( 'The current scan found %1$d items needing excerpt or meta-description review; %2$d need category or tag review.', 'npcink-toolbox' ),
 				(int) $matches[1],
 				(int) $matches[2]
 			);
@@ -1280,7 +1330,7 @@ final class Admin_Page {
 		if ( 'media_metadata_debt' === $id && preg_match( '/(\d+)\s+sampled attachments lack ALT text,\s+(\d+)\s+lack captions,\s+and sampled posts reference\s+(\d+)\s+image ALT gaps\./i', $summary, $matches ) ) {
 			return sprintf(
 				/* translators: 1: missing attachment alt count, 2: missing caption count, 3: referenced image alt gaps. */
-				__( '%1$d sampled attachments lack ALT text, %2$d lack captions, and sampled posts reference %3$d image ALT gaps.', 'npcink-toolbox' ),
+				__( 'The current scan found %1$d media items without ALT text, %2$d without captions, and %3$d referenced image ALT gaps.', 'npcink-toolbox' ),
 				(int) $matches[1],
 				(int) $matches[2],
 				(int) $matches[3]
@@ -1289,7 +1339,7 @@ final class Admin_Page {
 		if ( 'taxonomy_structure_drift' === $id && preg_match( '/(\d+)\s+category\/tag terms are empty and\s+(\d+)\s+are used once in the sampled taxonomy summary\./i', $summary, $matches ) ) {
 			return sprintf(
 				/* translators: 1: empty term count, 2: low-use term count. */
-				__( '%1$d category/tag terms are empty and %2$d are used once in the sampled taxonomy summary.', 'npcink-toolbox' ),
+				__( 'The current scan found %1$d empty category/tag terms and %2$d terms used only once.', 'npcink-toolbox' ),
 				(int) $matches[1],
 				(int) $matches[2]
 			);
@@ -1326,9 +1376,9 @@ final class Admin_Page {
 	private function site_ops_finding_recommended_action( array $finding ): string {
 		$id      = $this->site_ops_finding_id( $finding );
 		$actions = array(
-			'stale_content_backlog'             => __( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-toolbox' ),
+			'stale_content_backlog'             => __( 'Open the oldest active items first, then write refresh notes before choosing any review workflow.', 'npcink-toolbox' ),
 			'content_depth_and_linking_gap'     => __( 'Prioritize internal-link review and content-depth review before creating new articles on the same topics.', 'npcink-toolbox' ),
-			'metadata_review_backlog'           => __( 'Use editor metadata suggestions for individual posts, then hand accepted values to Core proposals.', 'npcink-toolbox' ),
+			'metadata_review_backlog'           => __( 'Review one post at a time in the editor, then send accepted values through the review workflow.', 'npcink-toolbox' ),
 			'comment_signal_review'             => __( 'Review high-signal public comments manually; convert repeated needs into FAQ or article-refresh notes.', 'npcink-toolbox' ),
 			'media_metadata_debt'               => __( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-toolbox' ),
 			'taxonomy_structure_drift'          => __( 'Review taxonomy consolidation separately; do not create, merge, or assign terms from this panel.', 'npcink-toolbox' ),

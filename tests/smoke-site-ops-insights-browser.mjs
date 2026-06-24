@@ -220,20 +220,26 @@ try {
 			await page.locator('[data-toolbox-tab-target="operations-insights"]').click();
 		}
 		await page.waitForSelector('[data-toolbox-tab-panel="operations-insights"]:not([hidden])', { timeout: 30000 });
-		await page.locator('[data-toolbox-site-ops-insights] .npcink-toolbox__section-actions a.button-primary').click();
+		await page.locator('.npcink-toolbox__ops-status-row .npcink-toolbox__ops-status-actions a.button-primary').click();
 		await page.waitForLoadState('domcontentloaded');
 		await page.waitForSelector('[data-toolbox-ops-tabs]', { timeout: 30000 });
+		assert(await page.locator('[data-toolbox-site-ops-insights] > .npcink-toolbox__section-heading').count() === 0, 'Generated report does not keep the large report action header in the default view.');
+		assert(await page.locator('[data-toolbox-site-ops-insights] .npcink-toolbox__ops-report-toolbar').count() === 0, 'Generated report does not keep a report-internal rescan toolbar.');
+		const statusActionText = await page.locator('.npcink-toolbox__ops-status-row .npcink-toolbox__ops-status-actions').innerText();
+		assert(/Current snapshot is ready|当前快照已生成/.test(statusActionText) && /Rescan|重新扫描/.test(statusActionText), 'Generated report keeps scan actions in the status row.');
 
 		const overviewText = await page.locator('[data-toolbox-ops-panel="overview"]').innerText();
-		assert(/Start with the priority decision queue|从优先决策队列开始/.test(overviewText), 'Overview tells the operator where to start.');
-		assert(/Priority decision queue|优先决策队列/.test(overviewText), 'Overview shows the priority decision queue.');
-		assert(/Issue|问题/.test(overviewText) && /Evidence|依据|证据/.test(overviewText), 'Decision queue explains the problem and evidence.');
-		assert(/Path|路径/.test(overviewText) && /Next step|下一步/.test(overviewText), 'Decision queue explains the handling path and next step.');
-		assert(/Follow-up path|后续处理路径/.test(overviewText) && /Handling mode|处理方式/.test(overviewText), 'Decision queue exposes the follow-up path without executing it.');
-		assert(/proposal_ready=false|不会从此报告创建提案|不会创建任务|不会创建自动动作/.test(overviewText), 'Follow-up path keeps proposals, queues, and writes outside the report.');
+		const overviewRawText = await page.locator('[data-toolbox-ops-panel="overview"]').textContent();
+		assert(/Handle these first|优先处理这些问题|先处理/.test(overviewText), 'Overview tells the operator where to start.');
+		assert(/Why it matters|为什么重要|为何重要/.test(overviewText) && /Affected examples|受影响示例/.test(overviewText), 'Decision queue explains why each issue matters and who is affected.');
+		assert(/First safe action|第一步安全操作|先做什么/.test(overviewText) && /Handling|处理方式/.test(overviewText), 'Decision queue explains the first safe action and handling path.');
+		assert(/High priority|高优先级|Medium priority|中优先级/.test(overviewText), 'Decision queue shows priority as a readable label.');
+		assert(/View handling rules and limits|查看处理规则与限制/.test(overviewText), 'Decision queue keeps detailed handling boundaries behind a plain-language disclosure.');
+		assert(!/proposal_ready=false/.test(overviewRawText || ''), 'Default decision queue does not expose raw proposal flags.');
+		assert(/will not create the review task|不会创建审核任务|不会自动更改/.test(overviewRawText || ''), 'Folded follow-up path keeps writes outside the report in operator language.');
 		assert(/Local analysis summary|本地分析摘要|Coverage snapshot|覆盖快照/.test(overviewText), 'Overview keeps local coverage detail after the decision queue.');
-		assert(/Start with|No priority site analysis findings|从|没有/.test(overviewText), 'Overview gives a clear first-read outcome.');
-		assert(/Core planning|manual review|high priority|Core|人工|高优先级/.test(overviewText), 'Overview shows priority or review-path context.');
+		assert(/Nothing is changed automatically|不会自动更改|不会自动修改/.test(overviewText), 'Overview makes the no-auto-change boundary readable.');
+		assert(/Needs review workflow|Manual check only|需要审核流程|人工检查/.test(overviewText), 'Overview shows operator-friendly handling labels.');
 		assert(await page.locator('[data-toolbox-ops-panel="advanced"]').isHidden(), 'Advanced JSON panel is hidden by default.');
 
 		for (const target of ['content', 'media', 'comments', 'structure', 'findings', 'evidence', 'cloud', 'advanced']) {
@@ -245,6 +251,7 @@ try {
 		await openOpsTab(page, 'cloud');
 		const cloudText = await page.locator('[data-toolbox-ops-panel="cloud"]').innerText();
 		assert(/Cloud analysis has not run|Cloud analysis result|Cloud 分析|云端分析/.test(cloudText), 'Cloud tab renders review-only status without automatic execution.');
+		assert(/Ask AI to summarize deeper|让 AI 深度总结/.test(cloudText), 'Cloud tab owns the optional deeper AI summary action.');
 		assert(forbiddenRequests(requests).length === 0, 'Full-site Insights browser smoke does not call Cloud analysis, Core proposals, or execute routes.');
 
 		await openOpsTab(page, 'overview');
@@ -254,6 +261,10 @@ try {
 				panel.scrollIntoView({ block: 'start' });
 			}
 		});
+		await page.waitForTimeout(300);
+		await page.evaluate(() => new Promise((resolveFrame) => {
+			requestAnimationFrame(() => requestAnimationFrame(resolveFrame));
+		}));
 		mkdirSync(dirname(screenshotPath), { recursive: true });
 		await captureViewportScreenshot(page, screenshotPath);
 		assert(existsSync(screenshotPath), `Screenshot captured at ${screenshotPath}.`);
