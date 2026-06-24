@@ -1,0 +1,12 @@
+# Keep Toolbox changes reviewable through the repository owner. Branch
+# protection can later require CODEOWNERS review without changing this file.
+* @muze-page
+
+# Operator surface and boundary-sensitive contracts.
+/includes/ @muze-page
+/assets/ @muze-page
+/modules/local-automation-runtime/ @muze-page
+/tests/ @muze-page
+/scripts/ @muze-page
+/docs/ @muze-page
+/.github/ @muze-page
