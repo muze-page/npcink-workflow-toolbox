@@ -627,10 +627,12 @@ final class Admin_Page {
 					<section class="npcink-toolbox__ops-panel" data-toolbox-ops-panel="overview">
 						<div class="npcink-toolbox__ops-summary-bar" aria-label="<?php esc_attr_e( 'Full-site Insights summary', 'npcink-toolbox' ); ?>">
 							<div>
+								<?php /* translators: %d: number of site analysis findings. */ ?>
 								<strong><?php printf( esc_html__( 'Review %d site analysis findings', 'npcink-toolbox' ), (int) $finding_count ); ?></strong>
 								<span>
 									<?php
 									printf(
+										/* translators: 1: number of Core-ready planning hints, 2: number of manual-review items. */
 										esc_html__( '%1$d Core-ready planning hints, %2$d manual-review items. Local report does not auto-call Cloud, schedule work, store a local run, create Core proposals, or write WordPress data.', 'npcink-toolbox' ),
 										(int) $core_handoff_count,
 										(int) $manual_review_count
@@ -639,9 +641,13 @@ final class Admin_Page {
 								</span>
 							</div>
 							<div class="npcink-toolbox__ops-scope">
+								<?php /* translators: %d: number of scanned posts and pages. */ ?>
 								<span><?php printf( esc_html__( '%d posts/pages', 'npcink-toolbox' ), (int) ( $summary['scanned_posts'] ?? 0 ) ); ?></span>
+								<?php /* translators: %d: number of scanned media items. */ ?>
 								<span><?php printf( esc_html__( '%d media', 'npcink-toolbox' ), (int) ( $summary['scanned_media'] ?? 0 ) ); ?></span>
+								<?php /* translators: %d: number of sampled comments. */ ?>
 								<span><?php printf( esc_html__( '%d comments', 'npcink-toolbox' ), (int) ( $summary['recent_comment_sample'] ?? 0 ) ); ?></span>
+								<?php /* translators: %d: number of site analysis findings. */ ?>
 								<span><?php printf( esc_html__( '%d findings', 'npcink-toolbox' ), (int) ( $summary['top_finding_count'] ?? 0 ) ); ?></span>
 							</div>
 						</div>
@@ -733,6 +739,7 @@ final class Admin_Page {
 				<span>
 					<?php
 					printf(
+						/* translators: 1: number of findings, 2: suggested first focus area. */
 						esc_html__( 'This current snapshot found %1$d findings across content, media, comments, and structure. Focus first on %2$s.', 'npcink-toolbox' ),
 						(int) $finding_count,
 						esc_html( $this->site_ops_analysis_focus_label( $findings ) )
@@ -742,7 +749,9 @@ final class Admin_Page {
 				<span><?php esc_html_e( 'This is deterministic local analysis for operator review. Use Cloud only for AI summary, semantic ranking, trends, or heavier runtime detail.', 'npcink-toolbox' ); ?></span>
 			</div>
 			<div class="npcink-toolbox__ops-scope">
+				<?php /* translators: %d: number of high priority findings. */ ?>
 				<span><?php printf( esc_html__( '%d high priority', 'npcink-toolbox' ), (int) $high_count ); ?></span>
+				<?php /* translators: %d: number of taxonomy terms. */ ?>
 				<span><?php printf( esc_html__( '%d taxonomy terms', 'npcink-toolbox' ), (int) $taxonomy_terms ); ?></span>
 				<span><?php echo esc_html( $this->site_ops_local_report_status( $finding_count, $high_count ) ); ?></span>
 			</div>
@@ -751,6 +760,7 @@ final class Admin_Page {
 			<?php foreach ( $dimension_counts as $label => $count ) : ?>
 				<div>
 					<strong><?php echo esc_html( (string) $label ); ?></strong>
+					<?php /* translators: %d: number of findings in this analysis area. */ ?>
 					<span><?php printf( esc_html__( '%d findings', 'npcink-toolbox' ), (int) $count ); ?></span>
 				</div>
 			<?php endforeach; ?>
@@ -801,8 +811,11 @@ final class Admin_Page {
 				<div class="npcink-toolbox__ops-donut-row">
 					<span class="npcink-toolbox__ops-donut" style="<?php echo esc_attr( '--core-deg:' . $core_degrees . 'deg;--manual-deg:' . $manual_degrees . 'deg;' ); ?>"></span>
 					<ul class="npcink-toolbox__ops-legend">
+						<?php /* translators: %d: number of findings that are Core planning candidates. */ ?>
 						<li><span class="is-core"></span><?php printf( esc_html__( '%d Core planning', 'npcink-toolbox' ), (int) $core_count ); ?></li>
+						<?php /* translators: %d: number of findings that require manual review. */ ?>
 						<li><span class="is-manual"></span><?php printf( esc_html__( '%d manual review', 'npcink-toolbox' ), (int) $manual_count ); ?></li>
+						<?php /* translators: %d: number of suggestion-only findings. */ ?>
 						<li><span class="is-suggestion"></span><?php printf( esc_html__( '%d suggestion only', 'npcink-toolbox' ), (int) $suggestion_count ); ?></li>
 					</ul>
 				</div>
@@ -838,9 +851,13 @@ final class Admin_Page {
 				<span><?php echo esc_html( $description ); ?></span>
 			</div>
 			<div class="npcink-toolbox__ops-scope">
+				<?php /* translators: %d: number of scanned posts and pages. */ ?>
 				<span><?php printf( esc_html__( '%d posts/pages', 'npcink-toolbox' ), (int) ( $summary['scanned_posts'] ?? 0 ) ); ?></span>
+				<?php /* translators: %d: number of scanned media items. */ ?>
 				<span><?php printf( esc_html__( '%d media', 'npcink-toolbox' ), (int) ( $summary['scanned_media'] ?? 0 ) ); ?></span>
+				<?php /* translators: %d: number of sampled comments. */ ?>
 				<span><?php printf( esc_html__( '%d comments', 'npcink-toolbox' ), (int) ( $summary['recent_comment_sample'] ?? 0 ) ); ?></span>
+				<?php /* translators: %d: number of findings related to this analysis area. */ ?>
 				<span><?php printf( esc_html__( '%d related findings', 'npcink-toolbox' ), (int) count( $dimension_findings ) ); ?></span>
 			</div>
 		</div>
@@ -1397,11 +1414,14 @@ final class Admin_Page {
 
 			<div class="npcink-toolbox__ops-summary-bar">
 				<div>
+					<?php /* translators: %d: number of Cloud-ranked priority items. */ ?>
 					<strong><?php printf( esc_html__( 'Cloud returned %d priority items', 'npcink-toolbox' ), (int) count( $priority_queue ) ); ?></strong>
 					<span><?php esc_html_e( 'Runtime/detail output is review guidance only and does not create Core proposals or WordPress writes.', 'npcink-toolbox' ); ?></span>
 				</div>
 				<div class="npcink-toolbox__ops-scope">
+					<?php /* translators: %s: Cloud runtime run identifier, or not returned. */ ?>
 					<span><?php printf( esc_html__( 'Run: %s', 'npcink-toolbox' ), esc_html( (string) ( $cloud_run['run_id'] ?? __( 'not returned', 'npcink-toolbox' ) ) ) ); ?></span>
+					<?php /* translators: %s: Cloud runtime confidence level, or not reported. */ ?>
 					<span><?php printf( esc_html__( 'Confidence: %s', 'npcink-toolbox' ), esc_html( '' !== $confidence_level ? $confidence_level : __( 'not reported', 'npcink-toolbox' ) ) ); ?></span>
 					<span><?php esc_html_e( 'Review: local operator required', 'npcink-toolbox' ); ?></span>
 				</div>
@@ -1417,9 +1437,11 @@ final class Admin_Page {
 					</div>
 					<div class="npcink-toolbox__ops-scope">
 						<?php if ( '' !== (string) ( $executive_summary['primary_focus'] ?? '' ) ) : ?>
+							<?php /* translators: %s: Cloud-reported primary focus label. */ ?>
 							<span><?php printf( esc_html__( 'Focus: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $executive_summary['primary_focus'] ) ) ); ?></span>
 						<?php endif; ?>
 						<?php if ( '' !== (string) ( $analysis_closure['loop_status'] ?? '' ) ) : ?>
+							<?php /* translators: %s: Cloud-reported analysis loop status. */ ?>
 							<span><?php printf( esc_html__( 'Loop: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $analysis_closure['loop_status'] ) ) ); ?></span>
 						<?php endif; ?>
 						<span><?php esc_html_e( 'Cloud role: runtime/detail', 'npcink-toolbox' ); ?></span>
@@ -1432,6 +1454,7 @@ final class Admin_Page {
 						<?php if ( ! is_array( $dimension ) ) { continue; } ?>
 						<div>
 							<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['dimension'] ?? __( 'Analysis area', 'npcink-toolbox' ) ) ) ); ?></strong>
+							<?php /* translators: 1: Cloud-reported priority label, 2: number of findings in this analysis dimension. */ ?>
 							<span><?php printf( esc_html__( '%1$s priority, %2$d findings', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['priority'] ?? 'review' ) ) ), (int) ( $dimension['finding_count'] ?? 0 ) ); ?></span>
 							<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $dimension['summary'] ?? '' ) ) ); ?></span>
 						</div>
@@ -1468,6 +1491,7 @@ final class Admin_Page {
 							} else {
 								$first_blocker = is_array( $blocked_items[0] ?? null ) ? $blocked_items[0] : array();
 								printf(
+									/* translators: 1: number of Cloud blockers, 2: first blocker label. */
 									esc_html__( '%1$d reported; first: %2$s.', 'npcink-toolbox' ),
 									(int) count( $blocked_items ),
 									esc_html( $this->site_ops_dynamic_label( (string) ( $first_blocker['reason'] ?? $first_blocker['id'] ?? '' ) ) )
@@ -1494,6 +1518,7 @@ final class Admin_Page {
 						<span>
 							<?php
 							printf(
+								/* translators: %d: number of Core handoff planning hints. */
 								esc_html__( '%d planning hints; proposal creation remains outside this report.', 'npcink-toolbox' ),
 								(int) count( $handoff_candidates )
 							);
@@ -1555,16 +1580,17 @@ final class Admin_Page {
 				<details class="npcink-toolbox__result-details">
 					<summary><?php esc_html_e( 'Trend explanations', 'npcink-toolbox' ); ?></summary>
 					<ul class="npcink-toolbox__usage-list">
-						<?php foreach ( $trend_explanations as $item ) : ?>
-							<?php if ( ! is_array( $item ) ) { continue; } ?>
-							<li>
-								<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['id'] ?? __( 'Trend explanation', 'npcink-toolbox' ) ) ) ); ?></strong>
-								<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['operator_impact'] ?? $item['summary'] ?? '' ) ) ); ?></span>
-								<?php if ( '' !== (string) ( $item['next_check'] ?? '' ) ) : ?>
-									<span><?php printf( esc_html__( 'Next check: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $item['next_check'] ) ) ); ?></span>
-								<?php endif; ?>
-							</li>
-						<?php endforeach; ?>
+							<?php foreach ( $trend_explanations as $item ) : ?>
+								<?php if ( ! is_array( $item ) ) { continue; } ?>
+								<li>
+									<strong><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['id'] ?? __( 'Trend explanation', 'npcink-toolbox' ) ) ) ); ?></strong>
+									<span><?php echo esc_html( $this->site_ops_dynamic_label( (string) ( $item['operator_impact'] ?? $item['summary'] ?? '' ) ) ); ?></span>
+									<?php if ( '' !== (string) ( $item['next_check'] ?? '' ) ) : ?>
+										<?php /* translators: %s: suggested next trend check. */ ?>
+										<span><?php printf( esc_html__( 'Next check: %s', 'npcink-toolbox' ), esc_html( $this->site_ops_dynamic_label( (string) $item['next_check'] ) ) ); ?></span>
+									<?php endif; ?>
+								</li>
+							<?php endforeach; ?>
 					</ul>
 				</details>
 			<?php endif; ?>
