@@ -234,6 +234,9 @@ try {
 		assert(/Do first|先做这些/.test(overviewText) && /Defer for now|暂时不做/.test(overviewText), 'Site action brief separates first tasks from deferred scope.');
 		assert(/AI assist|AI 辅助/.test(overviewText) && /Ask AI to summarize deeper|让 AI 深度总结/.test(overviewText), 'Site action brief makes optional AI assist visible without auto-running it.');
 		assert(/Close the loop|形成闭环/.test(overviewText), 'Site action brief tells the operator how to close the loop.');
+		assert(/Choose a treatment path|选择处理路径/.test(overviewText), 'Overview shows a treatment path panel before detailed findings.');
+		assert(/Handle manually|手动处理/.test(overviewText) && /Send to review workflow|进入审核流程/.test(overviewText) && /Watch for now|暂时观察/.test(overviewText), 'Treatment path panel separates manual, review-workflow, and observe paths.');
+		assert(/does not create tasks, proposals, queues, or WordPress changes|不会创建任务、提案、队列或 WordPress 更改/.test(overviewText), 'Treatment path panel keeps no-task, no-proposal, no-queue, and no-write boundary visible.');
 		assert(/Handle these first|优先处理这些问题|先处理/.test(overviewText), 'Overview tells the operator where to start.');
 		assert(/Why it matters|为什么重要|为何重要/.test(overviewText) && /Affected examples|受影响示例/.test(overviewText), 'Decision queue explains why each issue matters and who is affected.');
 		assert(/First safe action|第一步安全操作|先做什么/.test(overviewText) && /Handling|处理方式/.test(overviewText), 'Decision queue explains the first safe action and handling path.');

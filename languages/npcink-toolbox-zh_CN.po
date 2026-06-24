@@ -4751,6 +4751,63 @@ msgstr "当前扫描：%d 篇文章/页面。"
 msgid "No urgent site issue found"
 msgstr "未发现紧急站点问题"
 
+msgid "Treatment paths"
+msgstr "处理路径"
+
+msgid "Choose a treatment path"
+msgstr "选择处理路径"
+
+msgid "Sort each issue before opening details: handle it manually, prepare it for review, or watch it for now."
+msgstr "打开详情前先给每个问题分流：手动处理、准备审核，或暂时观察。"
+
+msgid "Handle manually"
+msgstr "手动处理"
+
+msgid "Open the affected content, media, comments, taxonomy, or settings in WordPress and check it yourself."
+msgstr "在 WordPress 中打开受影响的内容、媒体、评论、分类结构或设置，并由人工检查。"
+
+msgid "Use this path for simple review notes and small operator fixes. If it becomes a write workflow, move it to review."
+msgstr "简单复核备注和小型运营处理走这条路径。如果变成写入流程，请转入审核。"
+
+msgid "No manual-only issues in this scan."
+msgstr "本次扫描没有仅需人工处理的问题。"
+
+msgid "Send to review workflow"
+msgstr "进入审核流程"
+
+msgid "Use this path when the next step may change article content, media metadata, SEO fields, taxonomy, or site content."
+msgstr "如果下一步可能更改文章内容、媒体元数据、SEO 字段、分类结构或站点内容，请走这条路径。"
+
+msgid "Choose one affected item, confirm the evidence, write the accepted note, then prepare a governed handoff outside this report."
+msgstr "先选择一个受影响对象，确认依据，写好已接受的处理备注，再在此报告之外准备受治理的交接。"
+
+msgid "No review-workflow candidates in this scan."
+msgstr "本次扫描没有审核流程候选。"
+
+msgid "Watch for now"
+msgstr "暂时观察"
+
+msgid "Keep these as notes unless Cloud detail is needed to rank or explain the issue."
+msgstr "先作为备注保留；只有需要 Cloud 详情来排序或解释问题时再继续。"
+
+msgid "Keep these as notes unless they block readers, search, or daily site operations."
+msgstr "先作为备注保留；除非它们影响读者、搜索或日常站点运营。"
+
+msgid "Do not start a workflow yet. Review again after the first priority items are handled."
+msgstr "暂时不要启动流程。先处理优先问题，之后再复核。"
+
+msgid "No observe-only issues in this scan."
+msgstr "本次扫描没有仅需观察的问题。"
+
+msgid "%d issues"
+msgstr "%d 个问题"
+
+msgid "First item: %s"
+msgstr "第一项：%s"
+
+msgid "This panel does not create tasks, proposals, queues, or WordPress changes."
+msgstr "此面板不会创建任务、提案、队列或 WordPress 更改。"
+
 msgid "Article narration"
 msgstr "文章朗读"
 

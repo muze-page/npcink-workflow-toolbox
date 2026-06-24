@@ -634,6 +634,7 @@ final class Admin_Page {
 					</nav>
 					<section class="npcink-toolbox__ops-panel" data-toolbox-ops-panel="overview">
 						<?php $this->render_site_ops_operator_brief( $findings, $summary, $cloud_analysis, $cloud_ready ); ?>
+						<?php $this->render_site_ops_handling_path_panel( $findings ); ?>
 						<div class="npcink-toolbox__ops-summary-bar npcink-toolbox__ops-summary-bar--compact" aria-label="<?php esc_attr_e( 'Full-site Insights summary', 'npcink-toolbox' ); ?>">
 							<div>
 								<?php /* translators: %d: number of site analysis findings. */ ?>
@@ -890,6 +891,113 @@ final class Admin_Page {
 			</div>
 		</section>
 		<?php
+	}
+
+	/**
+	 * @param array<int,mixed>    $findings Findings.
+	 */
+	private function render_site_ops_handling_path_panel( array $findings ): void {
+		if ( array() === $findings ) {
+			return;
+		}
+
+		$manual_count = $this->count_site_ops_findings_by_boundary( $findings, 'manual_review_only' );
+		$review_count = $this->count_site_ops_findings_by_boundary( $findings, 'core_handoff_candidate' );
+		$cloud_count  = $this->count_site_ops_findings_by_boundary( $findings, 'blocked_until_cloud_ready' );
+		$watch_count  = max( 0, count( $findings ) - $manual_count - $review_count );
+		$paths        = array(
+			array(
+				'key'        => 'manual',
+				'label'      => __( 'Handle manually', 'npcink-toolbox' ),
+				'count'      => $manual_count,
+				'finding'    => $this->site_ops_first_finding_by_boundary( $findings, array( 'manual_review_only' ) ),
+				'summary'    => __( 'Open the affected content, media, comments, taxonomy, or settings in WordPress and check it yourself.', 'npcink-toolbox' ),
+				'next_step'  => __( 'Use this path for simple review notes and small operator fixes. If it becomes a write workflow, move it to review.', 'npcink-toolbox' ),
+				'empty_text' => __( 'No manual-only issues in this scan.', 'npcink-toolbox' ),
+			),
+			array(
+				'key'        => 'review',
+				'label'      => __( 'Send to review workflow', 'npcink-toolbox' ),
+				'count'      => $review_count,
+				'finding'    => $this->site_ops_first_finding_by_boundary( $findings, array( 'core_handoff_candidate' ) ),
+				'summary'    => __( 'Use this path when the next step may change article content, media metadata, SEO fields, taxonomy, or site content.', 'npcink-toolbox' ),
+				'next_step'  => __( 'Choose one affected item, confirm the evidence, write the accepted note, then prepare a governed handoff outside this report.', 'npcink-toolbox' ),
+				'empty_text' => __( 'No review-workflow candidates in this scan.', 'npcink-toolbox' ),
+			),
+			array(
+				'key'        => 'watch',
+				'label'      => __( 'Watch for now', 'npcink-toolbox' ),
+				'count'      => $watch_count,
+				'finding'    => $this->site_ops_first_finding_by_boundary( $findings, array( 'blocked_until_cloud_ready', 'suggestion_only' ) ),
+				'summary'    => 0 < $cloud_count ? __( 'Keep these as notes unless Cloud detail is needed to rank or explain the issue.', 'npcink-toolbox' ) : __( 'Keep these as notes unless they block readers, search, or daily site operations.', 'npcink-toolbox' ),
+				'next_step'  => __( 'Do not start a workflow yet. Review again after the first priority items are handled.', 'npcink-toolbox' ),
+				'empty_text' => __( 'No observe-only issues in this scan.', 'npcink-toolbox' ),
+			),
+		);
+		?>
+		<section class="npcink-toolbox__ops-path-panel" aria-label="<?php esc_attr_e( 'Treatment paths', 'npcink-toolbox' ); ?>">
+			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
+				<div>
+					<h3><?php esc_html_e( 'Choose a treatment path', 'npcink-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Sort each issue before opening details: handle it manually, prepare it for review, or watch it for now.', 'npcink-toolbox' ); ?></p>
+				</div>
+			</div>
+			<div class="npcink-toolbox__ops-path-grid">
+				<?php foreach ( $paths as $path ) : ?>
+					<?php $finding = is_array( $path['finding'] ?? null ) ? $path['finding'] : array(); ?>
+					<div class="npcink-toolbox__ops-path-row npcink-toolbox__ops-path-row--<?php echo esc_attr( (string) $path['key'] ); ?>">
+						<div class="npcink-toolbox__ops-path-head">
+							<strong><?php echo esc_html( (string) $path['label'] ); ?></strong>
+							<span>
+								<?php
+								printf(
+									/* translators: %d: number of findings for this treatment path. */
+									esc_html__( '%d issues', 'npcink-toolbox' ),
+									(int) $path['count']
+								);
+								?>
+							</span>
+						</div>
+						<p><?php echo esc_html( (string) $path['summary'] ); ?></p>
+						<?php if ( array() !== $finding ) : ?>
+							<p class="npcink-toolbox__ops-path-first">
+								<?php
+								printf(
+									/* translators: %s: first issue title for this treatment path. */
+									esc_html__( 'First item: %s', 'npcink-toolbox' ),
+									esc_html( $this->site_ops_finding_title( $finding ) )
+								);
+								?>
+							</p>
+						<?php else : ?>
+							<p class="npcink-toolbox__ops-path-first"><?php echo esc_html( (string) $path['empty_text'] ); ?></p>
+						<?php endif; ?>
+						<p class="npcink-toolbox__ops-path-next"><?php echo esc_html( (string) $path['next_step'] ); ?></p>
+					</div>
+				<?php endforeach; ?>
+			</div>
+			<p class="npcink-toolbox__ops-path-note"><?php esc_html_e( 'This panel does not create tasks, proposals, queues, or WordPress changes.', 'npcink-toolbox' ); ?></p>
+		</section>
+		<?php
+	}
+
+	/**
+	 * @param array<int,mixed>    $findings Findings.
+	 * @param array<int,string>   $boundaries Boundaries.
+	 * @return array<string,mixed>
+	 */
+	private function site_ops_first_finding_by_boundary( array $findings, array $boundaries ): array {
+		foreach ( $findings as $finding ) {
+			if ( ! is_array( $finding ) ) {
+				continue;
+			}
+			$boundary = (string) ( $finding['write_boundary'] ?? 'suggestion_only' );
+			if ( in_array( $boundary, $boundaries, true ) ) {
+				return $finding;
+			}
+		}
+
+		return array();
 	}
 
 	/**

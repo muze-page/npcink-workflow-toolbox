@@ -646,6 +646,97 @@
 	width: fit-content;
 }
 
+.npcink-toolbox__ops-path-panel {
+	display: grid;
+	gap: 10px;
+	margin: 12px 0;
+	padding: 12px 14px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+}
+
+.npcink-toolbox__ops-path-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.npcink-toolbox__ops-path-row {
+	display: grid;
+	align-content: start;
+	gap: 7px;
+	min-width: 0;
+	padding: 10px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-left: 3px solid #8c8f94;
+	border-radius: 4px;
+}
+
+.npcink-toolbox__ops-path-row--manual {
+	border-left-color: #2271b1;
+}
+
+.npcink-toolbox__ops-path-row--review {
+	border-left-color: #d63638;
+}
+
+.npcink-toolbox__ops-path-row--watch {
+	border-left-color: #646970;
+}
+
+.npcink-toolbox__ops-path-head {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.npcink-toolbox__ops-path-head strong {
+	color: #1d2327;
+	font-size: 14px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__ops-path-head span {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	min-height: 22px;
+	padding: 1px 7px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 999px;
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__ops-path-row p {
+	margin: 0;
+	color: #50575e;
+	line-height: 1.4;
+}
+
+.npcink-toolbox__ops-path-first {
+	font-weight: 700;
+}
+
+.npcink-toolbox__ops-path-next {
+	padding-top: 7px;
+	border-top: 1px solid #dcdcde;
+}
+
+.npcink-toolbox__ops-path-note {
+	margin: 0;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
 .npcink-toolbox__ops-decision-queue {
 	display: grid;
 	gap: 10px;
@@ -2203,6 +2294,10 @@ pre.npcink-toolbox__result {
 		grid-template-columns: 1fr;
 	}
 
+	.npcink-toolbox__ops-path-grid {
+		grid-template-columns: 1fr;
+	}
+
 	.npcink-toolbox__ops-chart-grid {
 		grid-template-columns: 1fr;
 	}
@@ -2239,6 +2334,10 @@ pre.npcink-toolbox__result {
 
 	.npcink-toolbox__ops-operator-brief-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.npcink-toolbox__ops-path-head {
+		display: grid;
 	}
 
 	.npcink-toolbox__ops-priority-main,
