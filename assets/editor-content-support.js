@@ -3515,6 +3515,7 @@
 				name: item.audio_title || item.action_id || __('Article audio adoption', 'npcink-toolbox'),
 				detail: compactLabelParts([
 					item.candidate_type,
+					item.audio_freshness && item.audio_freshness.initial_status ? __('Freshness: ', 'npcink-toolbox') + item.audio_freshness.initial_status : '',
 					item.proposal_ready === false ? __('Proposal dependency missing', 'npcink-toolbox') : __('Ready for Core review', 'npcink-toolbox'),
 				]).join(' / '),
 			}));
@@ -5995,6 +5996,8 @@
 				audio_candidate: item || {},
 				audio_url: item && (item.url || item.audio_url) ? String(item.url || item.audio_url) : '',
 				script: section && section.script ? String(section.script) : '',
+				source_content: postContext.content || '',
+				source_word_count: wordCount(postContext.content || ''),
 				source_audio_generation: Object.assign({}, audio, {
 					items: undefined,
 					audios: undefined,

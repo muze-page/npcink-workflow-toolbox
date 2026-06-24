@@ -16,6 +16,9 @@ final class Article_Audio_Playback {
 	public const META_KIND             = '_npcink_toolbox_article_audio_kind';
 	public const META_DURATION_SECONDS = '_npcink_toolbox_article_audio_duration_seconds';
 	public const META_MIME_TYPE        = '_npcink_toolbox_article_audio_mime_type';
+	public const META_SOURCE_HASH      = '_npcink_toolbox_article_audio_source_content_hash';
+	public const META_SOURCE_WORD_COUNT = '_npcink_toolbox_article_audio_source_word_count';
+	public const META_SOURCE_GENERATED_AT = '_npcink_toolbox_article_audio_source_generated_at';
 
 	public function register_hooks(): void {
 		add_action( 'init', array( $this, 'register_meta' ) );
@@ -110,6 +113,21 @@ final class Article_Audio_Playback {
 				'sanitize_callback' => 'sanitize_mime_type',
 				'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
 			),
+			self::META_SOURCE_HASH      => array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
+			),
+			self::META_SOURCE_WORD_COUNT => array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+				'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
+			),
+			self::META_SOURCE_GENERATED_AT => array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
+			),
 		);
 	}
 
@@ -138,6 +156,9 @@ final class Article_Audio_Playback {
 			'kind'             => sanitize_key( (string) get_post_meta( $post_id, self::META_KIND, true ) ),
 			'duration_seconds' => max( 0.0, (float) get_post_meta( $post_id, self::META_DURATION_SECONDS, true ) ),
 			'mime_type'        => $mime_type,
+			'source_content_hash' => sanitize_text_field( (string) get_post_meta( $post_id, self::META_SOURCE_HASH, true ) ),
+			'source_word_count' => absint( get_post_meta( $post_id, self::META_SOURCE_WORD_COUNT, true ) ),
+			'source_generated_at' => sanitize_text_field( (string) get_post_meta( $post_id, self::META_SOURCE_GENERATED_AT, true ) ),
 			'write_posture'    => 'adopted_wordpress_meta_read_only',
 		);
 
@@ -162,6 +183,10 @@ final class Article_Audio_Playback {
 		$audio['kind']             = sanitize_key( (string) ( $audio['kind'] ?? '' ) );
 		$audio['duration_seconds'] = max( 0.0, (float) ( $audio['duration_seconds'] ?? 0 ) );
 		$audio['mime_type']        = sanitize_mime_type( (string) ( $audio['mime_type'] ?? '' ) );
+		$audio['source_content_hash'] = sanitize_text_field( (string) ( $audio['source_content_hash'] ?? '' ) );
+		$audio['source_word_count'] = absint( $audio['source_word_count'] ?? 0 );
+		$audio['source_generated_at'] = sanitize_text_field( (string) ( $audio['source_generated_at'] ?? '' ) );
+		$audio['freshness']        = $this->freshness_for_post( $post_id, $audio );
 
 		return $audio;
 	}
@@ -173,10 +198,13 @@ final class Article_Audio_Playback {
 		$label    = $this->label_for_kind( (string) $audio['kind'] );
 		$title    = '' !== $audio['title'] ? (string) $audio['title'] : $label;
 		$duration = $this->format_duration( (float) $audio['duration_seconds'] );
+		$freshness = is_array( $audio['freshness'] ?? null ) ? $audio['freshness'] : array();
+		$freshness_status = sanitize_key( (string) ( $freshness['status'] ?? 'unknown' ) );
+		$show_freshness_notice = current_user_can( 'edit_post', get_the_ID() ) && in_array( $freshness_status, array( 'minor_drift', 'review_recommended', 'stale' ), true );
 
 		ob_start();
 		?>
-		<section class="npcink-toolbox-article-audio" aria-label="<?php echo esc_attr( $label ); ?>">
+		<section class="npcink-toolbox-article-audio" aria-label="<?php echo esc_attr( $label ); ?>" data-npcink-audio-freshness="<?php echo esc_attr( $freshness_status ); ?>">
 			<div class="npcink-toolbox-article-audio__summary">
 				<span class="npcink-toolbox-article-audio__eyebrow"><?php echo esc_html__( 'Audio', 'npcink-toolbox' ); ?></span>
 				<strong class="npcink-toolbox-article-audio__title"><?php echo esc_html( $title ); ?></strong>
@@ -188,9 +216,108 @@ final class Article_Audio_Playback {
 				<source src="<?php echo esc_url( (string) $audio['url'] ); ?>"<?php echo '' !== $audio['mime_type'] ? ' type="' . esc_attr( (string) $audio['mime_type'] ) . '"' : ''; ?> />
 				<?php esc_html_e( 'Your browser does not support audio playback.', 'npcink-toolbox' ); ?>
 			</audio>
+			<?php if ( $show_freshness_notice ) : ?>
+				<p class="npcink-toolbox-article-audio__freshness">
+					<?php echo esc_html( $this->freshness_label( $freshness_status ) ); ?>
+				</p>
+			<?php endif; ?>
 		</section>
 		<?php
 		return (string) ob_get_clean();
+	}
+
+	/**
+	 * @param array<string,mixed> $audio Audio playback metadata.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function freshness_for_post( int $post_id, array $audio ): array {
+		$source_hash = sanitize_text_field( (string) ( $audio['source_content_hash'] ?? '' ) );
+		$source_word_count = absint( $audio['source_word_count'] ?? 0 );
+		if ( '' === $source_hash || $source_word_count <= 0 ) {
+			return array(
+				'status'            => 'unknown',
+				'content_change_ratio' => null,
+				'policy'            => 'missing_source_fingerprint',
+			);
+		}
+
+		$post = get_post( $post_id );
+		$current_text = $post ? $this->normalized_content_text( (string) $post->post_content ) : '';
+		$current_hash = $this->content_hash( $current_text );
+		$current_word_count = $this->content_word_count( $current_text );
+		if ( '' !== $current_hash && hash_equals( $source_hash, $current_hash ) ) {
+			return array(
+				'status'            => 'current',
+				'content_change_ratio' => 0.0,
+				'current_word_count' => $current_word_count,
+				'source_word_count' => $source_word_count,
+			);
+		}
+
+		if ( $current_word_count <= 0 ) {
+			return array(
+				'status'            => 'review_recommended',
+				'content_change_ratio' => null,
+				'current_word_count' => $current_word_count,
+				'source_word_count' => $source_word_count,
+			);
+		}
+
+		$ratio = abs( $current_word_count - $source_word_count ) / max( 1, $source_word_count );
+		if ( $ratio < 0.03 ) {
+			$status = 'minor_drift';
+		} elseif ( $ratio <= 0.15 ) {
+			$status = 'review_recommended';
+		} else {
+			$status = 'stale';
+		}
+
+		return array(
+			'status'            => $status,
+			'content_change_ratio' => $ratio,
+			'current_word_count' => $current_word_count,
+			'source_word_count' => $source_word_count,
+		);
+	}
+
+	private function freshness_label( string $status ): string {
+		if ( 'minor_drift' === $status ) {
+			return __( 'Article audio may be slightly out of date after minor edits. Review before regenerating.', 'npcink-toolbox' );
+		}
+		if ( 'review_recommended' === $status ) {
+			return __( 'Article audio needs review because the article changed after generation.', 'npcink-toolbox' );
+		}
+		if ( 'stale' === $status ) {
+			return __( 'Article audio is likely stale. Regenerate after reviewing the article changes.', 'npcink-toolbox' );
+		}
+
+		return __( 'Article audio freshness is unknown.', 'npcink-toolbox' );
+	}
+
+	private function normalized_content_text( string $content ): string {
+		$text = trim( wp_strip_all_tags( $content ) );
+		$text = preg_replace( '/\s+/u', ' ', $text );
+		return is_string( $text ) ? trim( $text ) : '';
+	}
+
+	private function content_hash( string $content ): string {
+		$content = $this->normalized_content_text( $content );
+		return '' === $content ? '' : hash( 'sha256', $content );
+	}
+
+	private function content_word_count( string $content ): int {
+		$content = $this->normalized_content_text( $content );
+		if ( '' === $content ) {
+			return 0;
+		}
+
+		$word_count = str_word_count( $content );
+		if ( $word_count > 0 ) {
+			return $word_count;
+		}
+
+		return function_exists( 'mb_strlen' ) ? mb_strlen( $content, 'UTF-8' ) : strlen( $content );
 	}
 
 	private function label_for_kind( string $kind ): string {

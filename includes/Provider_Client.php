@@ -2993,6 +2993,21 @@ final class Provider_Client {
 		);
 		$source_audio_generation = is_array( $input['source_audio_generation'] ?? null ) ? $this->sanitize_payload( $input['source_audio_generation'] ) : array();
 		$post_type               = sanitize_key( (string) ( $input['post_type'] ?? ( get_post_type( $post_id ) ?: 'post' ) ) );
+		$source_content          = $this->article_audio_normalized_source_text( (string) ( $input['source_content'] ?? ( $input['source_content_text'] ?? '' ) ) );
+		$source_content_hash     = sanitize_text_field( (string) ( $input['source_content_hash'] ?? '' ) );
+		if ( '' === $source_content_hash && '' !== $source_content ) {
+			$source_content_hash = $this->article_audio_content_hash( $source_content );
+		}
+		$source_word_count = absint( $input['source_word_count'] ?? 0 );
+		if ( $source_word_count <= 0 && '' !== $source_content ) {
+			$source_word_count = $this->article_audio_word_count( $source_content );
+		}
+		$source_generated_at = sanitize_text_field(
+			(string) (
+				$candidate['generated_at']
+				?? ( $source_audio_generation['generated_at'] ?? ( $source_audio_generation['created_at'] ?? gmdate( 'c' ) ) )
+			)
+		);
 		$voice_id                = sanitize_text_field( (string) ( $candidate['voice_id'] ?? ( $source_audio_generation['voice_id'] ?? '' ) ) );
 		$model_id                = sanitize_text_field( (string) ( $candidate['model_id'] ?? ( $source_audio_generation['model_id'] ?? '' ) ) );
 		$provider                = sanitize_key( (string) ( $candidate['provider'] ?? ( $source_audio_generation['provider'] ?? 'cloud_audio' ) ) );
@@ -3025,6 +3040,9 @@ final class Provider_Client {
 			'_npcink_toolbox_article_audio_kind'             => $candidate_type,
 			'_npcink_toolbox_article_audio_duration_seconds' => $duration_seconds,
 			'_npcink_toolbox_article_audio_mime_type'        => $mime_type,
+			'_npcink_toolbox_article_audio_source_content_hash' => $source_content_hash,
+			'_npcink_toolbox_article_audio_source_word_count' => $source_word_count,
+			'_npcink_toolbox_article_audio_source_generated_at' => $source_generated_at,
 		);
 
 		$audio_candidate = array(
@@ -3072,6 +3090,9 @@ final class Provider_Client {
 					'trace_id'    => $trace_id,
 					'url_host'    => sanitize_text_field( (string) wp_parse_url( $audio_url, PHP_URL_HOST ) ),
 					'script_hash' => '' !== $script ? md5( $script ) : '',
+					'source_content_hash' => $source_content_hash,
+					'source_word_count' => $source_word_count,
+					'source_generated_at' => $source_generated_at,
 				),
 			),
 			'preview'                  => array(
@@ -3082,6 +3103,13 @@ final class Provider_Client {
 					'audio_title'      => $title,
 					'audio_url'        => $audio_url,
 					'meta_projection'  => $meta_projection,
+					'audio_freshness'  => array(
+						'initial_status'      => '' !== $source_content_hash ? 'current' : 'unknown',
+						'source_content_hash' => $source_content_hash,
+						'source_word_count'   => $source_word_count,
+						'source_generated_at' => $source_generated_at,
+						'policy'              => 'hash_match_current_else_word_count_delta_thresholds',
+					),
 					'proposal_ready'   => $proposal_ready,
 					'write_owner'      => 'npcink-abilities-toolkit',
 					'governance_owner' => 'npcink-governance-core',
@@ -3098,9 +3126,15 @@ final class Provider_Client {
 						'audio_candidate'  => $this->sanitize_payload( $audio_candidate ),
 						'meta_projection'  => $meta_projection,
 						'source_script'    => $script,
+						'source_content_fingerprint' => array(
+							'source_content_hash' => $source_content_hash,
+							'source_word_count'   => $source_word_count,
+							'source_generated_at' => $source_generated_at,
+						),
 						'evidence_refs'    => array(
 							'audio_hash' => $audio_hash,
 							'trace_id'   => $trace_id,
+							'source_content_hash' => $source_content_hash,
 						),
 						'dry_run'          => true,
 						'commit'           => false,
@@ -7756,6 +7790,33 @@ final class Provider_Client {
 		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
 
 		return is_callable( $definition['execute_callback'] ?? null );
+	}
+
+	private function article_audio_normalized_source_text( string $content ): string {
+		$content = trim( wp_strip_all_tags( $content ) );
+		$content = preg_replace( '/\s+/u', ' ', $content );
+
+		return is_string( $content ) ? trim( $content ) : '';
+	}
+
+	private function article_audio_content_hash( string $content ): string {
+		$content = $this->article_audio_normalized_source_text( $content );
+
+		return '' === $content ? '' : hash( 'sha256', $content );
+	}
+
+	private function article_audio_word_count( string $content ): int {
+		$content = $this->article_audio_normalized_source_text( $content );
+		if ( '' === $content ) {
+			return 0;
+		}
+
+		$word_count = str_word_count( $content );
+		if ( $word_count > 0 ) {
+			return $word_count;
+		}
+
+		return function_exists( 'mb_strlen' ) ? mb_strlen( $content, 'UTF-8' ) : strlen( $content );
 	}
 
 	private function sanitize_payload( $value, int $depth = 0 ) {

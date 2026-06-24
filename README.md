@@ -25,7 +25,8 @@ The first version provides:
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
   candidate artifact path, and Toolbox may prepare a Core-governed article
-  audio adoption plan, but does not adopt, import, or write audio itself;
+  audio adoption plan with lightweight source-content freshness evidence, but
+  does not adopt, import, regenerate, or write audio itself;
 - an **AI Site Helpers** entry group for lightweight media ALT suggestions and
   bounded public-content snapshot opportunities;
 - a **Full-site Insights** tab that builds a local

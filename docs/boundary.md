@@ -184,6 +184,11 @@ not a WordPress write route and not a Core proposal execution route.
 describe playback metadata projection, evidence refs, and the target Toolkit
 audio adoption ability, but it must not import media, update post meta, create
 or approve a Core proposal, execute a write ability, or patch post content.
+It may include lightweight source-content freshness evidence such as content
+hash, word count, and generation timestamp so Core/Abilities can later decide
+whether the adopted audio is current, lightly drifted, review-recommended, or
+stale. Toolbox must not use that evidence to auto-regenerate audio, run
+background refresh jobs, or patch audio segments.
 
 The high-risk contrast for Local Admin Consent is the article/media batch
 handoff. `npcink-toolbox/build-article-media-batch-write-plan` may group

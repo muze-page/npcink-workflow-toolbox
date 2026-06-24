@@ -59,10 +59,18 @@ Core/Abilities path, not by Toolbox:
 - `_npcink_toolbox_article_audio_kind`
 - `_npcink_toolbox_article_audio_duration_seconds`
 - `_npcink_toolbox_article_audio_mime_type`
+- `_npcink_toolbox_article_audio_source_content_hash`
+- `_npcink_toolbox_article_audio_source_word_count`
+- `_npcink_toolbox_article_audio_source_generated_at`
 
 These keys are read by the frontend player only. Audio generation, review,
 adoption, media import, and final writes remain outside this playback entry and
 must use the governed WordPress/Core path.
+The source fingerprint keys support a lightweight freshness status:
+`current`, `minor_drift`, `review_recommended`, `stale`, or `unknown`. The
+status is calculated from the current post content at render time and is shown
+only as an editor/admin review hint; it does not trigger automatic
+regeneration, local jobs, segment patching, or WordPress writes.
 
 The bundled local automation runtime module does not change this. Phase 1A may
 collect bounded read-only preview snapshots when an administrator clicks the
@@ -183,9 +191,10 @@ execute writes.
 `npcink-abilities-toolkit/build-article-audio-adoption-plan` is the Core-ready
 planner target for one reviewed narration or audio-summary candidate. Toolbox
 may build an `article_audio_adoption_plan.v1` envelope that names the target
-write ability and evidence refs, but media import, playback metadata writes,
-proposal creation, approval, preflight, audit, and final execution remain
-outside Toolbox.
+write ability, playback metadata projection, source-content fingerprint, and
+evidence refs, but media import, playback metadata writes, proposal creation,
+approval, preflight, audit, regeneration, and final execution remain outside
+Toolbox.
 `npcink-abilities-toolkit/build-image-candidate-review-artifact` can normalize
 already retrieved image candidates into `image_candidate_review.v1` and
 `recommendation_candidate.v1` projections for editor or third-party review

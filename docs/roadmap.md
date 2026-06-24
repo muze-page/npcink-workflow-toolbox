@@ -61,7 +61,9 @@ Target features:
   may include a secondary saved-post media brief action for image planning.
 - Frontend single-post article audio playback for already adopted narration or
   audio-summary metadata. This is a playback entry only; generation, adoption,
-  proposal review, media import, and writes stay in the governed path.
+  proposal review, media import, regeneration, and writes stay in the governed
+  path. Lightweight source-content freshness status may tell editors when
+  adopted audio is current, lightly drifted, review-recommended, or stale.
 - Clear empty/error/loading states.
 - Reusable image-source picker with short-lived local result caching,
   empty-state query rewrites, concise candidate cards, and selected-image
