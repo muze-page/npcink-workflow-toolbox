@@ -3054,17 +3054,19 @@
 		return items;
 	}
 
-	function renderHostedAiDiagnostics(section) {
+	function renderHostedAiDiagnostics(section, options) {
 		const items = hostedAiDiagnosticItems(section);
 		if (!items.length) {
 			return null;
 		}
+		const controls = options && typeof options === 'object' ? options : {};
 		const hasHostedText = hostedAiReturnedText(section);
 		const reason = (!hasHostedText || section.fallback_reason || String(section.cloud_status || '').toLowerCase() === 'omitted') ? hostedAiNoResultReason(section) : '';
 		const isHighlighted = Boolean(reason || section.fallback_reason || String(section.cloud_status || '').toLowerCase() === 'omitted');
+		const defaultOpen = controls.defaultOpen === undefined ? isHighlighted : Boolean(controls.defaultOpen);
 		return createElement(
 			'details',
-			{ className: 'npcink-toolbox-editor-support__runtime-diagnostics', open: isHighlighted },
+			{ className: 'npcink-toolbox-editor-support__runtime-diagnostics', open: defaultOpen },
 			createElement('summary', null, isHighlighted ? __('Why no AI text appeared', 'npcink-toolbox') : __('Runtime diagnostics', 'npcink-toolbox')),
 			reason ? createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, reason) : null,
 			renderItems(items, __('No runtime diagnostics returned.', 'npcink-toolbox'))
@@ -3534,6 +3536,23 @@
 		return items.filter((item) => item && typeof item === 'object');
 	}
 
+	function isHttpAudioUrl(url) {
+		return /^https?:\/\//i.test(String(url || '').trim());
+	}
+
+	function audioPreviewSrc(item) {
+		const url = String(item && (item.url || item.audio_url) ? (item.url || item.audio_url) : '').trim();
+		if (isHttpAudioUrl(url) || /^data:audio\//i.test(url)) {
+			return url;
+		}
+		const b64 = String(item && item.b64_json ? item.b64_json : '').trim();
+		const format = String(item && item.format ? item.format : 'mp3').replace(/[^a-z0-9.+-]/gi, '').toLowerCase() || 'mp3';
+		if (b64) {
+			return 'data:audio/' + format + ';base64,' + b64;
+		}
+		return '';
+	}
+
 	function audioAdoptionPlanItems(plan) {
 		if (!plan || typeof plan !== 'object') {
 			return [];
@@ -3602,7 +3621,7 @@
 		);
 	}
 
-	function renderAudioGenerationSection(section, audioAdoptionControls) {
+	function renderAudioGenerationSection(section, audioAdoptionControls, audioPlaybackControls) {
 		const items = audioGenerationItems(section);
 		const script = String(section && section.script ? section.script : '').trim();
 		const audio = section && section.audio && typeof section.audio === 'object' ? section.audio : {};
@@ -3630,7 +3649,9 @@
 			{ key: 'audio-items', className: 'npcink-toolbox-editor-support__audio-list' },
 			items.map((item, index) => {
 				const url = String(item.url || '').trim();
+				const previewSrc = audioPreviewSrc(item);
 				const adoptionKey = String(item.id || index);
+				const playbackError = Boolean(audioPlaybackControls && audioPlaybackControls.errors && audioPlaybackControls.errors[adoptionKey]);
 				const meta = compactLabelParts([
 					item.format,
 					item.voice_id,
@@ -3642,7 +3663,14 @@
 					{ key: item.id || index, className: 'npcink-toolbox-editor-support__audio-item' },
 					createElement('strong', null, item.name || __('Audio candidate', 'npcink-toolbox')),
 					meta ? createElement('span', { className: 'npcink-toolbox-editor-support__muted' }, meta) : null,
-					url ? createElement('audio', { controls: true, preload: 'none', src: url }) : null,
+					previewSrc ? createElement('audio', {
+						controls: true,
+						preload: 'metadata',
+						src: previewSrc,
+						onError: () => audioPlaybackControls && audioPlaybackControls.markError && audioPlaybackControls.markError(adoptionKey),
+						onLoadedMetadata: () => audioPlaybackControls && audioPlaybackControls.clearError && audioPlaybackControls.clearError(adoptionKey),
+					}) : null,
+					playbackError ? createElement('p', { className: 'npcink-toolbox-editor-support__error' }, __('The browser could not load this audio preview. Open the audio URL to verify the provider file, then rerun if it has expired.', 'npcink-toolbox')) : null,
 					url ? createElement('a', { href: url, target: '_blank', rel: 'noreferrer' }, __('Open audio', 'npcink-toolbox')) : null,
 					url && audioAdoptionControls ? createElement(
 						Button,
@@ -5506,9 +5534,9 @@
 			}
 
 			if (sections.audio_generation) {
-				blocks.push(renderAudioGenerationSection(sections.audio_generation, metadataHandoffControls && metadataHandoffControls.audioAdoption));
+				blocks.push(renderAudioGenerationSection(sections.audio_generation, metadataHandoffControls && metadataHandoffControls.audioAdoption, metadataHandoffControls && metadataHandoffControls.audioPlayback));
 				if (sections.audio_generation.audio) {
-					blocks.push(renderHostedAiDiagnostics(sections.audio_generation.audio));
+					blocks.push(renderHostedAiDiagnostics(sections.audio_generation.audio, { defaultOpen: false }));
 				}
 			}
 
@@ -5732,6 +5760,7 @@
 		const [audioAdoptionRunning, setAudioAdoptionRunning] = useState('');
 		const [audioAdoptionResult, setAudioAdoptionResult] = useState(null);
 		const [audioAdoptionError, setAudioAdoptionError] = useState('');
+		const [audioPlaybackErrors, setAudioPlaybackErrors] = useState({});
 		const [contentFeedbackRunning, setContentFeedbackRunning] = useState('');
 		const [contentFeedbackStatus, setContentFeedbackStatus] = useState(null);
 		const [internalLinkRunning, setInternalLinkRunning] = useState('');
@@ -5941,6 +5970,7 @@
 				setAudioAdoptionRunning('');
 				setAudioAdoptionResult(null);
 				setAudioAdoptionError('');
+				setAudioPlaybackErrors({});
 				setContentFeedbackRunning('');
 				setContentFeedbackStatus(null);
 				setInternalLinkRunning('');
@@ -6077,6 +6107,10 @@
 				setAudioAdoptionError(__('This audio candidate has no playable URL to review.', 'npcink-toolbox'));
 				return;
 			}
+			if (!isHttpAudioUrl(planInput.audio_url)) {
+				setAudioAdoptionError(__('This audio candidate can be previewed, but it has no downloadable http(s) URL for local media import.', 'npcink-toolbox'));
+				return;
+			}
 
 			setAudioAdoptionRunning(String(adoptionKey || 'audio'));
 			setAudioAdoptionError('');
@@ -6098,6 +6132,23 @@
 			} finally {
 				setAudioAdoptionRunning('');
 			}
+		}
+
+		function markAudioPlaybackError(key) {
+			const id = String(key || 'audio');
+			setAudioPlaybackErrors((current) => Object.assign({}, current || {}, { [id]: true }));
+		}
+
+		function clearAudioPlaybackError(key) {
+			const id = String(key || 'audio');
+			setAudioPlaybackErrors((current) => {
+				if (!current || !current[id]) {
+					return current || {};
+				}
+				const next = Object.assign({}, current);
+				delete next[id];
+				return next;
+			});
 		}
 
 		async function copyInternalLinkCandidate(candidate, key) {
@@ -7321,6 +7372,11 @@
 					result: audioAdoptionResult,
 					error: audioAdoptionError,
 					prepare: prepareArticleAudioAdoptionPlan,
+				},
+				audioPlayback: {
+					errors: audioPlaybackErrors,
+					markError: markAudioPlaybackError,
+					clearError: clearAudioPlaybackError,
 				},
 		};
 			const showResultView = supportView === 'result';

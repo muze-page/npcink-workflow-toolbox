@@ -111,6 +111,15 @@
 	color: #646970;
 	font-size: 12px;
 	line-height: 1.45;
+	overflow-wrap: anywhere;
+}
+
+.npcink-toolbox-editor-support__error {
+	margin: 0;
+	color: #b32d2e;
+	font-size: 12px;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
 }
 
 .npcink-toolbox-editor-support__intro-row {
@@ -1066,6 +1075,7 @@
 	background: #f6f7f7;
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
+	overflow-wrap: anywhere;
 }
 
 .npcink-toolbox-editor-support__runtime-diagnostics[open] {
@@ -2224,11 +2234,13 @@
 .npcink-toolbox-editor-support__audio-generation {
 	display: grid;
 	gap: 10px;
+	min-width: 0;
 }
 
 .npcink-toolbox-editor-support__audio-list {
 	display: grid;
 	gap: 10px;
+	min-width: 0;
 }
 
 .npcink-toolbox-editor-support__audio-item {
@@ -2238,9 +2250,26 @@
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
 	background: #fff;
+	min-width: 0;
+	overflow: hidden;
+	overflow-wrap: anywhere;
 }
 
 .npcink-toolbox-editor-support__audio-item audio {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.npcink-toolbox-editor-support__audio-item a {
+	max-width: 100%;
+	overflow-wrap: anywhere;
+}
+
+.npcink-toolbox-editor-support__audio-item .components-button {
+	justify-content: center;
 	width: 100%;
 	max-width: 100%;
 }
