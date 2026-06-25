@@ -19,6 +19,11 @@
 - [ ] `composer check:wporg`
 - [ ] Relevant smoke test if the change touches editor UI, Cloud handoff, Core handoff, activation, or REST routing.
 
+## Risk
+
+- Residual risk:
+- Rollback plan:
+
 ## Release Impact
 
 - [ ] No release impact.
