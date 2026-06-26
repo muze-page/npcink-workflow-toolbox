@@ -87,6 +87,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Site Knowledge Cloud Addon Bridge Closeout](docs/site-knowledge-cloud-addon-bridge-closeout-2026-06-21.md)
 - [Cross-Repo Release And Run Baseline](docs/cross-repo-release-run-baseline-2026-06-21.md)
 - [AI Development Quality Workflow](docs/ai-development-quality-workflow.md)
+- [GitHub Quality Guardrails Closeout](docs/github-quality-guardrails-closeout-2026-06-26.md)
 - [AI Change Envelope Template](docs/ai-change-envelope-template.md)
 - [Toolbox 0.1.1 Stage Closeout](docs/toolbox-0.1.1-stage-closeout-2026-06-22.md)
 - [Content Support Writing Checkup History](docs/content-support-writing-checkup-history.md)
