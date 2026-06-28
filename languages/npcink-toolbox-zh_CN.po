@@ -6016,3 +6016,90 @@ msgstr "基于选中的夜间 Morning Brief 条目生成已阻塞的 Core 审核
 
 msgid "Build a one-run Core/Abilities media derivative handoff from Toolbox defaults without writing WordPress media."
 msgstr "根据 Toolbox 默认设置生成一次性 Core/Abilities 媒体衍生物交接，不写入 WordPress 媒体。"
+
+msgid "SEO, AEO, GEO, claim boundaries, and technical preview."
+msgstr "SEO、AEO、GEO、声明边界和技术预览。"
+
+msgid "Limit what AI can claim and inspect the read-only technical preview exposed to callers."
+msgstr "限制 AI 可以声称的内容，并检查暴露给调用方的只读技术预览。"
+
+msgid "Technical preview"
+msgstr "技术预览"
+
+msgid "Read-only data"
+msgstr "只读数据"
+
+msgid "Choose media-library images, preview safe optimization options, then submit selected items for review."
+msgstr "选择媒体库图片，预览安全的优化选项，然后将选中项提交审核。"
+
+msgid "Batch Fill Missing ALT"
+msgstr "批量补全缺失 ALT"
+
+msgid "Find images that need ALT text, review suggestions, then submit selected rows for review."
+msgstr "查找需要 ALT 文本的图片，审阅建议，然后将选中行提交审核。"
+
+msgid "Submit Reviewed Draft for Review"
+msgstr "提交已审阅草稿审核"
+
+msgid "Use only when a human-reviewed draft already exists. It prepares a review plan and never writes or submits the article."
+msgstr "仅在已有人工审阅草稿后使用。它只准备审核计划，不会写入或提交文章。"
+
+msgid "Low-frequency handoff after a draft is already reviewed."
+msgstr "低频使用；仅在草稿已审阅后交接。"
+
+msgid "Check public content opportunities first. Reviewed-draft handoff is a secondary path; article writing stays with the editor."
+msgstr "优先检查公开内容机会。已审阅草稿交接是次级路径；文章写作仍在编辑器中完成。"
+
+msgid "Default checks find opportunities. Handoff tools only prepare review materials and never write the article body."
+msgstr "默认检查用于发现机会。交接工具只准备审核材料，不会写入文章正文。"
+
+msgid "Review selected image ALT suggestions before submitting them for review."
+msgstr "提交审核前，先审阅选中的图片 ALT 建议。"
+
+msgid "Toolbox only prepares ALT suggestions. Media ALT text changes only after selected rows pass review."
+msgstr "Toolbox 只准备 ALT 建议。选中行通过审核后，媒体 ALT 文本才会变更。"
+
+msgid "No media ALT is changed here. Review the rows, then submit selected items for review."
+msgstr "这里不会更改媒体 ALT。请先审核各行，再提交选中项审核。"
+
+msgid "Optional one-run crop for common publishing ratios. Cloud returns only a preview; final adoption still requires review."
+msgstr "可选的一次性裁剪，用于常见发布比例。Cloud 只返回预览，最终采用仍需审核。"
+
+msgid "Generate a short-lived Cloud preview for one existing media-library image. This check does not submit a review request or write media."
+msgstr "为一张已有媒体库图片生成短期 Cloud 预览。此检查不会提交审核请求，也不会写入媒体。"
+
+msgid "Batch optimization review"
+msgstr "批量优化审核"
+
+msgid "Choose images from the media library or a small sample, preview selected options, then submit only the items you approve for review."
+msgstr "从媒体库或小样本中选择图片，预览选中选项，然后只提交你认可的项目审核。"
+
+msgid "Choose images"
+msgstr "选择图片"
+
+msgid "Build review list"
+msgstr "生成审阅列表"
+
+msgid "Submit for review"
+msgstr "提交审核"
+
+msgid "Advanced selection and filters"
+msgstr "高级选择和筛选"
+
+msgid "Use these only when the selected review list needs exact media IDs, dates, formats, or dimensions."
+msgstr "仅当所选审阅列表需要精确媒体 ID、日期、格式或尺寸时使用。"
+
+msgid "Selected image IDs"
+msgstr "已选图片 ID"
+
+msgid "Submit selected for review"
+msgstr "提交所选项审核"
+
+msgid "Review the returned plan, then send it to the review system. Final publishing still requires approval outside Toolbox."
+msgstr "先审阅返回的计划，再发送到审核系统。最终发布仍需在 Toolbox 外完成审批。"
+
+msgid "Optional review SEO title"
+msgstr "可选审核 SEO 标题"
+
+msgid "Optional review SEO description"
+msgstr "可选审核 SEO 描述"

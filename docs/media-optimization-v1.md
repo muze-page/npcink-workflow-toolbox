@@ -71,7 +71,10 @@ rather than exposing a standalone one-image picker in Toolbox.
 Batch media optimization lives in the Toolbox **Image Handling -> Batch
 Optimize Images** workbench. Media library bulk actions may send selected
 attachment IDs into that workbench, but eligibility review, selected previews,
-Core proposal submission, and explicit Adapter execution stay inside Toolbox.
+and selected review submission stay inside the default admin workbench. Explicit
+replacement execution stays in the accepted Adapter/Core/Abilities path and is
+covered by dedicated execution smoke tests, not by a default visible admin
+button.
 Cloud Checks may keep a preview-only media derivative reachability check, but
 Core proposal submission, batch proposal submission, URL repair, and settings
 repair stay in governed media optimization surfaces.
@@ -93,8 +96,8 @@ The batch UI should present a separate fixed sequence:
 1. Select images in the media library or use a bounded media sample.
 2. Build an eligibility plan.
 3. Generate previews only for selected rows.
-4. Submit selected Core reviews.
-5. Approve and execute only through the accepted Adapter/Core/Abilities path.
+4. Submit selected items for review.
+5. Complete approval and execution only through the accepted Adapter/Core/Abilities path outside the default admin workbench.
 
 ## Operator Flow
 
@@ -107,7 +110,7 @@ The user-facing flow is deliberately small:
 4. Submit the Core optimization review only after the preview is acceptable.
 5. Approve and execute only through the explicit Adapter
    `approve-and-execute` action, whether the operator starts that action from
-   OpenClaw, Core/Adapter, or the fixed Toolbox button.
+   OpenClaw, Core/Adapter, or another governed review surface.
 6. Audit and roll back from Core/Adapter evidence, not from Toolbox state.
 
 Toolbox copy should make clear that preview generation is not a WordPress write.
@@ -142,11 +145,9 @@ replacement. The default surface should:
 2. show `eligibility_summary`, skipped candidates, and blocked reasons before
    any preview or proposal action;
 3. let the operator generate previews only for selected candidates;
-4. submit only selected Core reviews;
-5. let the operator explicitly call Adapter `approve-and-execute` for the
-   selected Core review set after preview/proposal review;
-6. render Adapter/Core execution results, audit evidence, and rollback guidance
-   without storing workflow truth in Toolbox.
+4. submit only selected items for review;
+5. leave Adapter `approve-and-execute` to the governed execution path after review;
+6. render review results without storing workflow truth in Toolbox.
 
 Batch "direct replacement" is allowed only as a productized result of the
 OpenClaw/Adapter batch contract. The implementation order is:

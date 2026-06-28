@@ -320,9 +320,9 @@ button; it must not create a separate batch writer.
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
-The admin **Content Review** surface includes a **Reviewed Draft Core Handoff**
-panel that renders the plan artifacts, risk report, final
-`npcink-abilities-toolkit/create-draft` action, and Core handoff route for operator review.
+The admin **Content Review** surface keeps site content opportunity checks as
+the default path and exposes **Submit Reviewed Draft for Review** as a
+secondary handoff for drafts that have already been reviewed by a person.
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
 opened from the editor top toolbar. Its visible buttons run fixed flows for
@@ -511,13 +511,13 @@ the same preview/proposal flow. The single-image action surface dispatches the
 bounded Adapter media-derivative recipe, polls the short-lived Cloud artifact
 result, renders the same-origin signed Adapter preview proxy when available,
 and can submit a Core replacement proposal with the artifact evidence. The
-Batch Optimize Images workbench can build a bounded batch conversion plan, show
-candidates and skipped reasons, generate selected previews, and submit selected
-Core replacement proposals; it still processes each candidate through the
-governed per-attachment Adapter recipe. The admin batch surface is intentionally
-a fixed operator flow: operators choose selected media or a media range and
-processing goal first, while date, exclusion, and dimension filters remain in an
-advanced disclosure for exceptions. Toolbox
+	Batch Optimize Images workbench can build a bounded batch conversion plan, show
+	candidates and skipped reasons, generate selected previews, and submit selected
+	items for review; final replacement execution stays in the governed
+	Adapter/Core path outside the default admin workbench. The admin batch surface is intentionally
+	a fixed operator flow: operators choose selected media or a media range and
+	processing goal first, while exact ID, date, exclusion, and dimension filters remain in an
+	advanced disclosure for exceptions. Toolbox
 can also build a local media reference repair plan for exact hard-coded URL
 matches and submit that plan to Core from-plan intake as `patch-post-content`
 actions. For theme/plugin settings that store hard-coded media URLs, Toolbox can
