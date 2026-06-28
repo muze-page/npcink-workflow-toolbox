@@ -141,6 +141,7 @@ planning flows:
 - `/flows/site-knowledge-review-plan`
 - `/flows/nightly-inspection-review-plan`
 - `/flows/content-metadata-apply-plan`
+- `/flows/media-alt-caption-review-plan`
 - `/flows/media-brief`
 - `/editor/content-support`
 - `/media-derivative-handoff`
@@ -251,6 +252,13 @@ missing term creation by keeping `create_missing=false`.
 Existing category/tag candidate ranking is sourced from
 `npcink-abilities-toolkit/suggest-post-taxonomy-terms`; Toolbox only supplies
 editor context, related-term evidence, and the review UI.
+Image ALT/caption review follows the same planning boundary. Current-article
+image text checks belong in the editor sidebar; backend Image Handling may build
+a small selected media-library review set and pass accepted items to
+`/flows/media-alt-caption-review-plan`. That plan points at
+`npcink-abilities-toolkit/update-media-details` for later Core review, but
+Toolbox does not create the proposal, approve it, execute it, or write media
+metadata.
 Internal-link support returns `internal_link_candidates.v1` with reviewable
 targets, anchor suggestions, and placement hints from
 `npcink-abilities-toolkit/resolve-internal-link-targets`. Toolbox supplies
@@ -328,12 +336,17 @@ tables, retries, scheduler truth, Core proposals, or WordPress writes.
 
 `/ai/site-helpers` sends one bounded site-helper request to the Cloud hosted AI
 runtime. Its first intents are `media_alt_suggestions` and
-`content_snapshot_suggestions`. Toolbox may sample recent image attachment
-metadata or a small public content snapshot, but Cloud owns the AI output and
-the result is suggestion-only. This route must not claim full-site crawling,
-site-health scoring, analytics/indexing coverage, image-pixel inspection,
-media-library batch updates, local queues, proposal creation, approval, or
-WordPress writes.
+`content_snapshot_suggestions`. The editor uses current-article media metadata
+for single-post image text review; the backend uses only an explicit small
+media-library sample for batch review-set selection. Cloud owns the AI output
+and the result is suggestion-only. This route must not claim full-site
+crawling, site-health scoring, analytics/indexing coverage, image-pixel
+inspection, media-library batch updates, local queues, proposal creation,
+approval, or WordPress writes.
+The backend admin surface exposes content snapshot checks and selected media
+ALT/caption review sets. Current article media ALT support belongs in the
+editor sidebar; backend batch media ALT support must stay on the explicit
+selected review-set surface and must not become a whole-library update path.
 When the editor sidebar needs image ALT support, it may pass only the current
 article's featured image and image-block metadata through `/editor/content-support`;
 that narrow snapshot must not become a media-library scan, batch update path,
@@ -493,9 +506,16 @@ embedding model settings, or vector database lifecycle controls.
 
 ## Cloud Checks Surface
 
-The Toolbox **Cloud Checks** page shows compact tabs for Cloud-managed checks.
-Each tab should open directly into the useful verification tool instead of
-repeating ownership prose or provider catalogs.
+The Toolbox **Cloud Checks** surface is now presented to ordinary site owners
+as **AI Service Checks**. It remains a secondary deep-link diagnostics panel,
+not a visible top-level admin tab. Overview and Advanced may link to it from
+folded or secondary directories, and legacy `toolbox_tab=cloud-checks` URLs
+should continue to open it. Inside that panel, the default operator view should
+be one basic read-only service check. Detailed Cloud-managed checks should stay
+inside a troubleshooting disclosure, and deep links to specific checks may open
+that disclosure automatically. The detailed tabs should open directly into the
+useful verification tool instead of repeating ownership prose or provider
+catalogs.
 
 The verification surface may identify whether a Cloud-backed action is
 reachable from Toolbox, but it should keep provider ownership detail in Cloud

@@ -4949,9 +4949,6 @@ msgstr "重点：标题前后停顿清楚。"
 msgid "Extra request: "
 msgstr "补充要求："
 
-msgid "Tone"
-msgstr "语气"
-
 msgid "Pace"
 msgstr "语速"
 
@@ -5044,3 +5041,828 @@ msgstr "例如：Npcink 要读清楚；标题前后语速稳一点。"
 
 msgid "Example: keep it around two minutes for readers deciding whether to read the full article."
 msgstr "例如：控制在两分钟左右，给正在判断是否阅读全文的读者听。"
+
+msgid "Basic AI service check"
+msgstr "基础 AI 服务检查"
+
+msgid "Start here when AI tools seem unavailable. This sends one read-only test request."
+msgstr "当 AI 工具看起来不可用时，先从这里开始。它只发送一次只读测试请求。"
+
+msgid "Run basic AI service check"
+msgstr "运行基础 AI 服务检查"
+
+msgid "Detailed service checks"
+msgstr "详细服务检查"
+
+msgid "Search, image suggestions, content library, and scheduled review checks for troubleshooting."
+msgstr "用于排查搜索、图片建议、内容库和定期站点检查。"
+
+msgid "Needs connection"
+msgstr "需要连接"
+
+msgid "Detailed check"
+msgstr "详细检查"
+
+msgid "Detailed service monitoring lives in Cloud Addon Monitoring. Toolbox keeps only the checks needed to confirm this plugin can reach the service."
+msgstr "详细服务监控在 Cloud Addon Monitoring 中。Toolbox 只保留确认本插件能连通服务所需的检查。"
+
+msgid "Zhihu source test"
+msgstr "知乎来源测试"
+
+msgid "Optional source"
+msgstr "可选来源"
+
+msgid "Suggestion evidence"
+msgstr "建议依据"
+
+msgid "Result evidence"
+msgstr "结果依据"
+
+msgid "Search service test"
+msgstr "搜索服务测试"
+
+msgid "Connect the AI service before running search checks."
+msgstr "运行搜索检查前，请先连接 AI 服务。"
+
+msgid "Use case"
+msgstr "使用场景"
+
+msgid "Recent days"
+msgstr "最近天数"
+
+msgid "Zhihu source checks"
+msgstr "知乎来源检查"
+
+msgid "Use this only when Zhihu-based sources need troubleshooting. These checks are read-only and do not generate, rewrite, publish, or write WordPress content."
+msgstr "仅在需要排查知乎来源时使用。这些检查是只读的，不会生成、改写、发布或写入 WordPress 内容。"
+
+msgid "Connect the AI service before running Zhihu source checks."
+msgstr "运行知乎来源检查前，请先连接 AI 服务。"
+
+msgid "Source mode"
+msgstr "来源模式"
+
+msgid "Suggestion evidence check"
+msgstr "建议依据检查"
+
+msgid "Run one read-only suggestion scenario and verify whether supporting web evidence is attached."
+msgstr "运行一个只读建议场景，检查是否带有网页依据。"
+
+msgid "Connect the AI service before running suggestion evidence checks."
+msgstr "运行建议依据检查前，请先连接 AI 服务。"
+
+msgid "Check type"
+msgstr "检查类型"
+
+msgid "Reviewed changes stay in the image workflow"
+msgstr "已审阅的更改仍在图片流程中处理"
+
+msgid "Use the full Optimize Existing Image flow when a reviewed preview should become a review proposal, or when batch and URL repair actions are needed."
+msgstr "当已审阅预览需要进入审核提案，或需要批量与 URL 修复操作时，请使用完整的“优化现有图片”流程。"
+
+msgid "Content library search check"
+msgstr "内容库搜索检查"
+
+msgid "Use this only to check whether AI can search existing public posts and pages."
+msgstr "仅用于检查 AI 是否能搜索已有公开文章和页面。"
+
+msgid "Open content library setup"
+msgstr "打开内容库设置"
+
+msgid "Scheduled review checks"
+msgstr "定期站点检查"
+
+msgid "Use this only when scheduled site review needs preview, status, or recovery checks. Daily article work stays in the editor sidebar."
+msgstr "仅在定期站点检查需要预览、状态或恢复检查时使用。日常文章工作仍在编辑器侧边栏中完成。"
+
+msgid "Use these entries only when you need setup, troubleshooting, or occasional review tools."
+msgstr "仅在需要设置、故障排查或偶尔查看工具时使用这些入口。"
+
+msgid "Let AI use existing public posts and pages as reference material."
+msgstr "让 AI 把已有公开文章和页面作为参考材料。"
+
+msgid "Check whether search, image suggestions, content library, and scheduled review are working."
+msgstr "检查搜索、图片建议、内容库和定期站点检查是否正常工作。"
+
+msgid "Site check details"
+msgstr "站点检查详情"
+
+msgid "Open the detailed read-only report for the current site check."
+msgstr "打开当前站点检查的详细只读报告。"
+
+msgid "Preview what the scheduled site review would report. Nothing is changed."
+msgstr "预览定期站点检查会报告什么内容。不会更改任何内容。"
+
+msgid "Check your site, improve images, and prepare safe AI suggestions without changing WordPress automatically."
+msgstr "检查站点、优化图片，并准备安全的 AI 建议，不会自动更改 WordPress。"
+
+msgid "Site Profile"
+msgstr "站点画像"
+
+msgid "Image Optimization"
+msgstr "图片优化"
+
+msgid "Choose the next site task. Advanced diagnostics stay hidden until you need them."
+msgstr "选择下一项站点任务。高级诊断会保持隐藏，直到你需要时再打开。"
+
+msgid "Check my site"
+msgstr "检查我的站点"
+
+msgid "Generate one read-only report with content, image, and setup suggestions. Nothing is changed automatically."
+msgstr "生成一份只读报告，包含内容、图片和设置建议。不会自动更改任何内容。"
+
+msgid "Start site check"
+msgstr "开始站点检查"
+
+msgid "Optimize image"
+msgstr "优化图片"
+
+msgid "AI service"
+msgstr "AI 服务"
+
+msgid "Site checks and image suggestions can use hosted AI."
+msgstr "站点检查和图片建议可以使用托管 AI。"
+
+msgid "AI-powered checks stay disabled until the service is connected."
+msgstr "连接服务前，AI 检查会保持停用。"
+
+msgid "AI suggestions have the basic site brief they need."
+msgstr "AI 建议已具备所需的基础站点简介。"
+
+msgid "Add the basic site brief before relying on repeated suggestions."
+msgstr "在反复使用建议前，请先补充基础站点简介。"
+
+msgid "Safe mode"
+msgstr "安全模式"
+
+msgid "No automatic changes"
+msgstr "不会自动更改"
+
+msgid "Reports and previews are suggestions. WordPress content, media, and SEO fields are not changed here."
+msgstr "报告和预览只是建议。这里不会更改 WordPress 内容、媒体或 SEO 字段。"
+
+msgid "Common tasks"
+msgstr "常用任务"
+
+msgid "Use these when you already know what you want to do next."
+msgstr "当你已经知道下一步要做什么时，可以使用这些入口。"
+
+msgid "Improve an image"
+msgstr "优化一张图片"
+
+msgid "Choose one media-library image, preview improvements, and review before any handoff."
+msgstr "选择一张媒体库图片，先预览优化效果，并在任何交接前完成审阅。"
+
+msgid "Review site profile"
+msgstr "查看站点画像"
+
+msgid "Complete site profile"
+msgstr "完善站点画像"
+
+msgid "Keep the basic site description, audience, tone, and keywords clear."
+msgstr "保持基础站点描述、受众、语气和关键词清晰。"
+
+msgid "Open advanced tools"
+msgstr "打开高级工具"
+
+msgid "Find diagnostics, content library setup, and low-frequency workbench entries."
+msgstr "查找诊断、内容库设置和低频工作台入口。"
+
+msgid "Advanced and troubleshooting"
+msgstr "高级与故障排查"
+
+msgid "Setup, service checks, fallback previews, and lower-frequency workbench entries."
+msgstr "设置、服务检查、备用预览和低频工作台入口。"
+
+msgid "Fill the basic site brief AI needs for consistent suggestions. SEO, AEO, GEO, and claim rules stay folded under advanced guidance."
+msgstr "填写 AI 生成稳定建议所需的基础站点简介。SEO、AEO、GEO 和声明规则会折叠在高级指导中。"
+
+msgid "Site brief"
+msgstr "站点简介"
+
+msgid "Maintain only the fields needed for consistent suggestion behavior. Advanced SEO, AEO, GEO, and claim rules stay folded below."
+msgstr "只维护生成稳定建议所需的字段。高级 SEO、AEO、GEO 和声明规则会折叠在下方。"
+
+msgid "Advanced guidance rules"
+msgstr "高级指导规则"
+
+msgid "SEO, AEO, GEO, claim boundaries, and read-only ability preview."
+msgstr "SEO、AEO、GEO、声明边界和只读能力预览。"
+
+msgid "Final WordPress writes still require review approval; AI receives this profile as suggestion-only guidance."
+msgstr "最终写入 WordPress 仍需要审核批准；AI 只会把这份画像作为建议参考。"
+
+msgid "Save site profile"
+msgstr "保存站点画像"
+
+msgid "%1$s #%2$d, score %3$d. %4$s"
+msgstr "%1$s #%2$d，评分 %3$d。%4$s"
+
+msgid "1:1"
+msgstr "1:1"
+
+msgid "1:1 square"
+msgstr "1:1 方图"
+
+msgid "3:4"
+msgstr "3:4"
+
+msgid "3:4 portrait"
+msgstr "3:4 竖图"
+
+msgid "4:3"
+msgstr "4:3"
+
+msgid "4:3 landscape"
+msgstr "4:3 横图"
+
+msgid "9:16"
+msgstr "9:16"
+
+msgid "9:16 portrait"
+msgstr "9:16 竖图"
+
+msgid "16:9"
+msgstr "16:9"
+
+msgid "16:9 landscape"
+msgstr "16:9 横图"
+
+msgid "Adoption changes the media attachment through Core approval. Hard-coded post URLs and URLs stored in settings, themes, or other plugin options require the separate repair actions."
+msgstr "采用更改会通过 Core 审批修改媒体附件。文章中的硬编码 URL，以及保存在设置、主题或其他插件选项里的 URL，需要使用单独的修复操作。"
+
+msgid "Advanced content context sections"
+msgstr "高级内容上下文章节"
+
+msgid "Advanced details"
+msgstr "高级详情"
+
+msgid "Advanced Toolbox directory"
+msgstr "高级工具箱目录"
+
+msgid "Advanced Toolbox entries"
+msgstr "高级工具箱入口"
+
+msgid "After the library is ready, article suggestions can find related public content without showing index settings to daily users."
+msgstr "内容库准备好后，文章建议可以查找相关公开内容，而不用把索引设置暴露给日常用户。"
+
+msgid "AI-generated image candidate for the hosted image generation smoke test. Review it before importing or setting it as featured media."
+msgstr "托管生图冒烟测试的 AI 生成图片候选。导入或设为特色媒体前请先审阅。"
+
+msgid "AI-powered search, image suggestions, content library search, and hosted checks stay unavailable until the service is connected. Basic site profile editing remains available."
+msgstr "连接服务前，AI 搜索、图片建议、内容库搜索和托管检查不可用。基础站点画像编辑仍可使用。"
+
+msgid "AI image generation governance"
+msgstr "AI 生图治理"
+
+msgid "AI service check groups"
+msgstr "AI 服务检查分组"
+
+msgid "AI service checks"
+msgstr "AI 服务检查"
+
+msgid "AI Service Checks"
+msgstr "AI 服务检查"
+
+msgid "AI service is not connected."
+msgstr "AI 服务尚未连接。"
+
+msgid "Approve and execute replacements"
+msgstr "批准并执行替换"
+
+msgid "Article-used images first"
+msgstr "优先使用文章内图片"
+
+msgid "Article post ID"
+msgstr "文章 ID"
+
+msgid "A successful result shows Cloud runtime, provider mode, candidate count, preview image, suggested filename, license review status, and any reviewed AI image generation handoff. This does not import media or write WordPress."
+msgstr "成功结果会显示 Cloud 运行时、提供方模式、候选数量、预览图、建议文件名、许可审阅状态，以及已审阅的 AI 生图交接。这不会导入媒体，也不会写入 WordPress。"
+
+msgid "Build review plan"
+msgstr "生成审阅计划"
+
+msgid "Check status"
+msgstr "检查状态"
+
+msgid "Cloud"
+msgstr "Cloud"
+
+msgid "Cloud payload"
+msgstr "Cloud 载荷"
+
+msgid "Cloud result retention days"
+msgstr "Cloud 结果保留天数"
+
+msgid "Cloud returns a short-lived derivative artifact. Toolbox owns media optimization defaults and reviewed handoff fields; Core creates one proposal for the metadata update and derivative adoption together."
+msgstr "Cloud 返回一个短期有效的衍生制品。Toolbox 负责媒体优化默认值和已审阅交接字段；Core 会把元数据更新和衍生采用合并成一个提案。"
+
+msgid "Cloud run ID"
+msgstr "Cloud 运行 ID"
+
+msgid "Cloud runtime is not configured, so Pro Cloud Runtime controls are disabled."
+msgstr "Cloud 运行时尚未配置，因此 Pro Cloud Runtime 控制项已禁用。"
+
+msgid "Connect the AI service before reading content library coverage."
+msgstr "读取内容库覆盖情况前，请先连接 AI 服务。"
+
+msgid "Content library"
+msgstr "内容库"
+
+msgid "Content library setup"
+msgstr "内容库设置"
+
+msgid "Content Library Setup"
+msgstr "内容库设置"
+
+msgid "Copy or download dry-run JSON"
+msgstr "复制或下载 dry-run JSON"
+
+msgid "Could not build the local Morning Brief preview."
+msgstr "无法生成本地 Morning Brief 预览。"
+
+msgid "Crop anchor"
+msgstr "裁剪锚点"
+
+msgid "Crop override"
+msgstr "裁剪覆盖"
+
+msgid "Crop ratio"
+msgstr "裁剪比例"
+
+msgid "Current article images (recommended)"
+msgstr "当前文章图片（推荐）"
+
+msgid "Default quality"
+msgstr "默认质量"
+
+msgid "Default scope is images already used by one article. Recent media-library sampling is an advanced fallback for review only."
+msgstr "默认范围是已被某篇文章使用的图片。最近媒体库抽样是高级备用选项，仅供审阅。"
+
+msgid "Default watermark type"
+msgstr "默认水印类型"
+
+msgid "Download dry-run JSON"
+msgstr "下载 dry-run JSON"
+
+msgid "Eligible media sample"
+msgstr "符合条件的媒体样本"
+
+msgid "Enable local WP-Cron fallback preview"
+msgstr "启用本地 WP-Cron 备用预览"
+
+msgid "Enable Pro Cloud Runtime controls"
+msgstr "启用 Pro Cloud Runtime 控制项"
+
+msgid "Enable Pro Cloud Runtime controls and save settings before submitting a Cloud run."
+msgstr "提交 Cloud 运行前，请先启用 Pro Cloud Runtime 控制项并保存设置。"
+
+msgid "Execution"
+msgstr "执行"
+
+msgid "Fixed batch flow: choose a bounded review set and goal, build a plan, generate selected previews, then submit only selected Core reviews. This is not a one-click whole-site replacement."
+msgstr "固定批量流程：选择有边界的审阅集和目标，生成计划，生成所选预览，然后只提交所选 Core 审阅。这不是一键全站替换。"
+
+msgid "Generate preview first, review the derivative and adoption preflight, then submit the Core optimization review only when the result is acceptable."
+msgstr "先生成预览，审阅衍生图和采用预检；只有结果可接受时，才提交 Core 优化审阅。"
+
+msgid "If old image URLs are stored in theme settings or other plugin options, run the settings URL repair action after preview; the derivative adoption proposal does not scan settings automatically."
+msgstr "如果旧图片 URL 存在主题设置或其他插件选项中，请在预览后运行设置 URL 修复操作；衍生图采用提案不会自动扫描设置。"
+
+msgid "Image/logo"
+msgstr "图片/logo"
+
+msgid "Image optimization"
+msgstr "图片优化"
+
+msgid "Image suggestions"
+msgstr "图片建议"
+
+msgid "Include short excerpts"
+msgstr "包含短摘录"
+
+msgid "Indexing is disabled until the AI service connection is available."
+msgstr "AI 服务连接可用前，索引功能保持禁用。"
+
+msgid "Latest cron dry-run preview: %1$s, %2$d review items."
+msgstr "最新 cron dry-run 预览：%1$s，%2$d 个审阅项。"
+
+msgid "Let AI search existing public posts and pages when building suggestions."
+msgstr "生成建议时，让 AI 搜索已有公开文章和页面。"
+
+msgid "Let AI suggestions search your existing public posts and pages. Toolbox sends the public content list; Cloud owns index detail."
+msgstr "让 AI 建议搜索已有公开文章和页面。Toolbox 会发送公开内容列表；Cloud 负责索引详情。"
+
+msgid "Load Cloud recent"
+msgstr "加载最近 Cloud 运行"
+
+msgid "Local Fallback Preview"
+msgstr "本地备用预览"
+
+msgid "Logo attachment ID"
+msgstr "Logo 附件 ID"
+
+msgid "Manual dry-run only. The preview reads local content, produces review signals, and does not schedule, call Cloud, create Core proposals, or write WordPress data."
+msgstr "仅手动 dry-run。预览会读取本地内容并生成审阅信号，不会调度任务、调用 Cloud、创建 Core 提案或写入 WordPress 数据。"
+
+msgid "Media scan limit"
+msgstr "媒体扫描上限"
+
+msgid "Media scope"
+msgstr "媒体范围"
+
+msgid "Metadata only"
+msgstr "仅元数据"
+
+msgid "Morning Brief preview"
+msgstr "Morning Brief 预览"
+
+msgid "Morning Brief preview summary"
+msgstr "Morning Brief 预览摘要"
+
+msgid "No cron, worker, Cloud call, Core proposal, or write."
+msgstr "没有 cron、worker、Cloud 调用、Core 提案或写入。"
+
+msgid "No cron dry-run preview has been generated yet."
+msgstr "尚未生成 cron dry-run 预览。"
+
+msgid "No crop"
+msgstr "不裁剪"
+
+msgid "No priority review items were found in this bounded preview."
+msgstr "这个有边界的预览中没有发现优先审阅项。"
+
+msgid "Oldest modified public posts and pages."
+msgstr "最早修改的公开文章和页面。"
+
+msgid "Open a local dry-run preview for scheduled site review."
+msgstr "打开定期站点检查的本地 dry-run 预览。"
+
+msgid "Operator flow"
+msgstr "运营流程"
+
+msgid "Optional one-run crop for common publishing ratios. Cloud returns only a derivative preview; Core still governs adoption."
+msgstr "用于常见发布比例的可选单次裁剪。Cloud 只返回衍生图预览；采用仍由 Core 治理。"
+
+msgid "Original editorial image for AI image generation governance."
+msgstr "用于 AI 生图治理的原始编辑图片。"
+
+msgid "Page"
+msgstr "页面"
+
+msgid "Post"
+msgstr "文章"
+
+msgid "Post/page scan limit"
+msgstr "文章/页面扫描上限"
+
+msgid "Preview-only action candidates."
+msgstr "仅预览的操作候选。"
+
+msgid "Preview first, review the result, then hand off only the accepted change. Article-specific writing support stays in the editor sidebar."
+msgstr "先预览并审阅结果，然后只交接已接受的更改。单篇文章写作支持仍在编辑器侧边栏中。"
+
+msgid "Preview Morning Brief"
+msgstr "预览 Morning Brief"
+
+msgid "Pro Cloud Runtime"
+msgstr "Pro Cloud Runtime"
+
+msgid "Pro Cloud Runtime is review-only: Cloud may score, meter entitlement, retain results, and return details, but WordPress writes and Core proposals stay local and operator reviewed."
+msgstr "Pro Cloud Runtime 仅供审阅：Cloud 可以评分、计量权益、保留结果并返回详情，但 WordPress 写入和 Core 提案仍保留在本地并由运营人员审阅。"
+
+msgid "Read-only coverage summary for public content AI can use as suggestion context."
+msgstr "公开内容的只读覆盖摘要，AI 可将其作为建议上下文。"
+
+msgid "Read result"
+msgstr "读取结果"
+
+msgid "Recent image attachments."
+msgstr "最近图片附件。"
+
+msgid "Recent media library sample (advanced)"
+msgstr "最近媒体库样本（高级）"
+
+msgid "Recommended Toolbox action"
+msgstr "推荐的 Toolbox 操作"
+
+msgid "Refresh Cloud quota"
+msgstr "刷新 Cloud 配额"
+
+msgid "Refresh preview"
+msgstr "刷新预览"
+
+msgid "Replacement boundary"
+msgstr "替换边界"
+
+msgid "Retry run"
+msgstr "重试运行"
+
+msgid "Review handoff"
+msgstr "审阅交接"
+
+msgid "Review images already used by one article and return ALT/caption ideas without changing media metadata."
+msgstr "审阅某篇文章已使用的图片，并返回 ALT/说明文字建议，不更改媒体元数据。"
+
+msgid "Review items"
+msgstr "审阅项"
+
+msgid "Review set size"
+msgstr "审阅集大小"
+
+msgid "Run a Cloud-scored site inspection and merge review-only findings into the Morning Brief preview. Cloud owns entitlement, usage, queue, retry, and retention detail; no local job queue or write path is created."
+msgstr "运行由 Cloud 评分的站点检查，并把仅供审阅的发现合并进 Morning Brief 预览。Cloud 负责权益、用量、队列、重试和保留详情；本地不会创建任务队列或写入路径。"
+
+msgid "Run Cloud inspection"
+msgstr "运行 Cloud 检查"
+
+msgid "Run ID from Cloud Batch"
+msgstr "Cloud Batch 运行 ID"
+
+msgid "Run time"
+msgstr "运行时间"
+
+msgid "Run Zhihu check"
+msgstr "运行知乎检查"
+
+msgid "Safe image workflow"
+msgstr "安全图片流程"
+
+msgid "Save fallback preview"
+msgstr "保存备用预览"
+
+msgid "Save media optimization defaults"
+msgstr "保存媒体优化默认值"
+
+msgid "Scanned media"
+msgstr "已扫描媒体"
+
+msgid "Scanned posts"
+msgstr "已扫描文章"
+
+msgid "Scheduled review"
+msgstr "定期检查"
+
+msgid "Start or refresh the public content library used by AI suggestions. Advanced cleanup stays outside this page."
+msgstr "启动或刷新 AI 建议使用的公开内容库。高级清理不在此页面处理。"
+
+msgid "Start with one existing media-library image. Broader helper and handoff tools stay folded until you need them."
+msgstr "从一张已有媒体库图片开始。更广泛的辅助和交接工具会保持折叠，直到你需要时再打开。"
+
+msgid "Submit selected Core reviews"
+msgstr "提交所选 Core 审阅"
+
+msgid "The handoff appears only after the content library returns proposal input with evidence references."
+msgstr "只有内容库返回带证据引用的提案输入后，交接才会出现。"
+
+msgid "The Morning Brief preview link expired. Reload the page and try again."
+msgstr "Morning Brief 预览链接已过期。请刷新页面后重试。"
+
+msgid "This is the read-only replay payload produced by the manual preview. It is not saved automatically and does not create scheduled work."
+msgstr "这是手动预览生成的只读 replay 载荷。它不会自动保存，也不会创建定时工作。"
+
+msgid "Toolbox defaults"
+msgstr "Toolbox 默认值"
+
+msgid "Toolbox sends the latest public posts and pages. Approved comments are included only when the hosted service enables comment indexing."
+msgstr "Toolbox 会发送最新公开文章和页面。只有托管服务启用评论索引时，才会包含已批准评论。"
+
+msgid "Tool groups"
+msgstr "工具分组"
+
+msgid "Use Cloud execution when available"
+msgstr "可用时使用 Cloud 执行"
+
+msgid "Use default watermark"
+msgstr "使用默认水印"
+
+msgid "Use only when AI actions fail or support asks for diagnostics."
+msgstr "仅在 AI 操作失败或支持人员要求诊断时使用。"
+
+msgid "Use public categories, tags, and recent article themes as keyword candidates.\nTitles should stay specific to the article topic and avoid clickbait.\nDescriptions should summarize the reader problem and expected value.\nSuggest internal links only when the target content is clearly related.\nUse public entity names from categories, tags, and recent titles as entity hints."
+msgstr "使用公开分类、标签和近期文章主题作为关键词候选。\n标题应聚焦文章主题，并避免标题党。\n描述应概括读者问题和预期价值。\n仅在目标内容明确相关时建议内链。\n使用分类、标签和近期标题中的公开实体名称作为实体提示。"
+
+msgid "Keep conclusions standalone and easy to quote.\nDistinguish observed site content from generated recommendations."
+msgstr "让结论独立且易于引用。\n区分观察到的站点内容和生成的建议。"
+
+msgid "Use these controls only when recovering, retrying, or inspecting a known Cloud run ID. Cloud remains the run-state owner and retry processor."
+msgstr "仅在恢复、重试或检查已知 Cloud 运行 ID 时使用这些控制项。Cloud 仍是运行状态和重试处理的所有者。"
+
+msgid "Use these only when AI actions are unavailable or a support person asks for diagnostics."
+msgstr "仅在 AI 操作不可用或支持人员要求诊断时使用这些入口。"
+
+msgid "Use these only when the fixed review set needs a tighter date, format, or dimension filter. The plan remains bounded by review set size."
+msgstr "仅在固定审阅集需要更严格的日期、格式或尺寸筛选时使用。计划仍受审阅集大小约束。"
+
+msgid "Use this as decision support only. No WordPress data changes here."
+msgstr "仅将其作为决策支持。这里不会更改 WordPress 数据。"
+
+msgid "Use Toolbox default"
+msgstr "使用 Toolbox 默认值"
+
+msgid "Use Toolbox watermark defaults unless this run needs a specific override. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Toolbox logo source for this run."
+msgstr "除非本次运行需要特定覆盖，否则使用 Toolbox 水印默认值。文本水印覆盖不需要 logo 附件；图片/logo 覆盖会使用本次运行配置的 Toolbox logo 来源。"
+
+msgid "When AI returns evidence-backed review input, Toolbox can prepare one blocked review proposal. A person still completes and approves it."
+msgstr "当 AI 返回有证据支持的审阅输入时，Toolbox 可以准备一个阻塞状态的审阅提案。仍需人工补全并批准。"
+
+msgid "Where this helps"
+msgstr "适用场景"
+
+msgid "WP-Cron is the WordPress-side fallback for one latest dry-run Morning Brief preview. The Pro Cloud Runtime remains the primary execution path for reliable scoring, entitlement, status, and result retention."
+msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run Morning Brief 预览。Pro Cloud Runtime 仍是可靠评分、权益、状态和结果保留的主要执行路径。"
+
+msgid "全网搜"
+msgstr "全网搜"
+
+msgid "热榜"
+msgstr "热榜"
+
+msgid "直答 Deep"
+msgstr "直答 Deep"
+
+msgid "直答 DeepSearch"
+msgstr "直答 DeepSearch"
+
+msgid "直答 Simple"
+msgstr "直答 Simple"
+
+msgid "知乎搜索"
+msgstr "知乎搜索"
+
+msgid "Image and Content Checks"
+msgstr "图像与内容检查"
+
+msgid "Image Text Suggestions"
+msgstr "图像文字建议"
+
+msgid "Check images used by one article and draft ALT/caption ideas without changing the media library."
+msgstr "检查一篇文章中使用的图片，并草拟 ALT 和说明文字建议，不会更改媒体库。"
+
+msgid "Check article images"
+msgstr "检查文章图片"
+
+msgid "Review image text and public content opportunities without writing WordPress."
+msgstr "审阅图像文字和公开内容机会，不写入 WordPress。"
+
+msgid "Review only"
+msgstr "仅供审阅"
+
+msgid "Toolbox drafts image text suggestions only. It does not edit media metadata or create proposals from this check."
+msgstr "Toolbox 只草拟图像文字建议。此检查不会编辑媒体元数据，也不会创建提案。"
+
+msgid "Article to check"
+msgstr "要检查的文章"
+
+msgid "Enter the article ID"
+msgstr "输入文章 ID"
+
+msgid "Advanced options"
+msgstr "高级选项"
+
+msgid "Scope, focus, and read-only Cloud detail."
+msgstr "范围、重点和只读 Cloud 细节。"
+
+msgid "Check scope"
+msgstr "检查范围"
+
+msgid "Images used by this article"
+msgstr "这篇文章使用的图片"
+
+msgid "Recent media library sample"
+msgstr "近期媒体库样本"
+
+msgid "Example: product screenshots, diagrams, or images missing useful captions"
+msgstr "例如：产品截图、图表，或缺少有用说明文字的图片"
+
+msgid "Hosted AI check"
+msgstr "托管 AI 检查"
+
+msgid "Toolbox sends a small media metadata sample to Cloud. Results are reviewable suggestions only; no media, content, SEO, or proposal data is changed."
+msgstr "Toolbox 会向 Cloud 发送少量媒体元数据样本。结果仅为可审阅建议；不会更改媒体、内容、SEO 或提案数据。"
+
+msgid "Image Handling"
+msgstr "图片处理"
+
+msgid "Content Preparation"
+msgstr "内容准备"
+
+msgid "Image handling"
+msgstr "图片处理"
+
+msgid "Content preparation"
+msgstr "内容准备"
+
+msgid "Image Text Checks"
+msgstr "图片文字检查"
+
+msgid "Content Checks"
+msgstr "内容检查"
+
+msgid "Preparation Bundles"
+msgstr "准备材料包"
+
+msgid "Image Tools"
+msgstr "图片工具"
+
+msgid "Optimize existing images and plan bounded media support."
+msgstr "优化已有图片，并规划有限的媒体支持。"
+
+msgid "Review ALT and caption suggestions without writing media metadata."
+msgstr "审阅 ALT 和说明文字建议，不写入媒体元数据。"
+
+msgid "Review public content opportunities without running a full site audit."
+msgstr "审阅公开内容机会，不运行完整站点审计。"
+
+msgid "Prepare research, images, knowledge, outline, and handoff context."
+msgstr "准备研究、图片、知识、大纲和交接上下文。"
+
+msgid "Review Handoffs"
+msgstr "审核交接"
+
+msgid "Prepare research, image, site knowledge, outline, and handoff context when the editor sidebar is not enough. Nothing writes the article body."
+msgstr "当编辑器侧边栏不够用时，准备研究、图片、站点知识、大纲和交接上下文。不会写入文章正文。"
+
+msgid "Preparation only"
+msgstr "仅准备材料"
+
+msgid "Use these for planning and reviewed context. Final WordPress writes still go through Core approval."
+msgstr "这些工具只用于规划和已审阅上下文。最终 WordPress 写入仍需经过 Core 审批。"
+
+msgid "Review handoffs"
+msgstr "审核交接"
+
+msgid "Use only after reviewed inputs exist and a Core-ready handoff is needed."
+msgstr "仅在已有审阅输入且需要 Core-ready 交接时使用。"
+
+msgid "Start with existing media-library images. Content preparation and reviewed draft handoffs live in their own tab."
+msgstr "从媒体库中的已有图片开始。内容准备和已审阅草稿交接放在单独的标签页中。"
+
+msgid "Image tasks"
+msgstr "图片任务"
+
+msgid "Optimize existing images, plan bounded media support, or review image text suggestions. Nothing is changed automatically."
+msgstr "优化已有图片、规划有限媒体支持，或审阅图片文字建议。不会自动更改任何内容。"
+
+msgid "Advanced tools"
+msgstr "高级工具"
+
+msgid "Image Text Review"
+msgstr "图片文字审阅"
+
+msgid "Batch Image Text Review"
+msgstr "批量图片文字审阅"
+
+msgid "Build a small review set from recent media-library images with weak ALT or caption metadata, then choose items for Core handoff."
+msgstr "从近期媒体库中 ALT 或说明文字较弱的图片构建小型审阅集，然后选择要交给 Core 的项目。"
+
+msgid "Build review set"
+msgstr "构建审阅集"
+
+msgid "Review selected media ALT and caption suggestions without writing metadata."
+msgstr "审阅已选择媒体的 ALT 和说明文字建议，不写入元数据。"
+
+msgid "Connect Cloud Addon before building image text review sets."
+msgstr "构建图片文字审阅集前，请先连接 Cloud Addon。"
+
+msgid "Batch review set"
+msgstr "批量审阅集"
+
+msgid "Toolbox samples recent media metadata and returns a small review set. You choose items before any Core handoff draft is prepared."
+msgstr "Toolbox 会抽样近期媒体元数据并返回小型审阅集。准备任何 Core 交接草稿前，需先选择项目。"
+
+msgid "5 images"
+msgstr "5 张图片"
+
+msgid "10 images"
+msgstr "10 张图片"
+
+msgid "Focus note"
+msgstr "重点说明"
+
+msgid "Optional: product screenshots, diagrams, or missing captions"
+msgstr "可选：产品截图、图表，或缺少说明文字的图片"
+
+msgid "This does not scan the whole media library, create proposals, or write media metadata."
+msgstr "这不会扫描整个媒体库、创建提案，也不会写入媒体元数据。"
+
+msgid "Check this article images"
+msgstr "检查这篇文章的图片"
+
+msgid "Review ALT and caption suggestions for images already used by this article."
+msgstr "审阅这篇文章已使用图片的 ALT 和说明文字建议。"
+
+msgid "Article image text check"
+msgstr "文章图片文字检查"
+
+msgid "Generate review-only ALT and caption suggestions for images already used by this article. Toolbox will not write media metadata."
+msgstr "为这篇文章已使用的图片生成仅供审阅的 ALT 和说明文字建议。Toolbox 不会写入媒体元数据。"
+
+msgid "Checking article images"
+msgstr "正在检查文章图片"
+
+msgid "Check article image text"
+msgstr "检查文章图片文字"
+
+msgid "Article image text suggestions"
+msgstr "文章图片文字建议"

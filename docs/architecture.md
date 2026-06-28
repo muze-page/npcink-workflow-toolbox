@@ -304,6 +304,7 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/nightly-inspection-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
@@ -320,11 +321,13 @@ availability. `web_search_registered`, `vector_search_registered`,
 Toolbox UI contract from a connected Cloud Addon or host runtime that can
 actually execute the request.
 
-`/ai/site-helpers` is the hosted AI surface for lightweight media ALT and
-content snapshot suggestions. It accepts only narrow site-helper intents,
-samples recent public-site or media metadata locally, and returns a
-`hosted_ai_site_helper` artifact. It must not become a crawler, scoring
-engine, batch media updater, proposal creator, or local queue.
+`/ai/site-helpers` is the hosted AI contract for narrow site-helper suggestions:
+bounded content snapshots, editor/sidebar current-article image metadata, or a
+future explicitly selected media review set. The standalone admin tool exposes
+only content snapshot checks; single-article media ALT/caption review belongs in
+the editor sidebar, and batch media review needs a selected review-set surface.
+The route returns a `hosted_ai_site_helper` artifact and must not become a
+crawler, scoring engine, batch media updater, proposal creator, or local queue.
 When the post editor needs ALT suggestions, `/editor/content-support` passes a
 bounded `current_article_media_metadata_only` snapshot of images already used
 by the current draft into the same hosted helper runtime; it does not trigger
@@ -384,6 +387,11 @@ The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
 `current_article_media_metadata_only` and no-media-write boundary.
+The backend Image Handling tab uses the same hosted site-helper intent only for
+an explicit small media-library review set. Operators can select returned
+items and call `/flows/media-alt-caption-review-plan` to prepare a
+`media_alt_caption_core_handoff_plan.v1` for later Core review; Toolbox does
+not submit, approve, execute, or write media metadata.
 The standalone discoverability result is a post-publish optimization task
 panel: SEO title, SEO description, slug, and excerpt are shown as actionable
 review tasks. SEO title and description use the governed SEO handoff, then ask
@@ -499,13 +507,15 @@ draft title, draft body, SEO hints, and risk level. Its result renderer shows
 `npcink-abilities-toolkit/create-draft` action, and the Core from-plan handoff route. It does
 not submit the plan to Core or approve execution.
 
-The admin page defaults to a **Start** surface with a readiness strip for Cloud
-runtime, Site Context, Site Knowledge, and final-write posture, followed by
-site-level and media next steps plus one folded advanced directory. Single-post
-article support stays in the post editor sidebar and is not rendered as a Start
-page work block. Admin tabs after Start are setup, site analysis, and
-diagnostics: **Site Context**, **Site Knowledge**, **Full-site Insights**,
-**Workflows**, and **Cloud Checks**. **Full-site Insights** builds a local
+The admin page defaults to an **Overview** surface for ordinary site owners,
+with one recommended next action, compact status rows for AI service, Site
+Profile, and safe mode, followed by common site/image next steps plus one
+folded advanced directory. Single-post article support stays in the post editor
+sidebar and is not rendered as an Overview work block. The visible top-level
+admin tabs after Overview are **Site Profile**, **Image Handling**,
+**Content Preparation**, and **Advanced**. **Full-site Insights** remains a
+secondary deep-link panel and is the Overview page's recommended site-check
+action; it builds a local
 `site_ops_insight_pack.v1` from bounded public content, approved comment signal
 counts, media metadata, taxonomy summaries, Site Context readiness, and Cloud
 availability, then presents it as a current-run full-site analysis report with
@@ -518,18 +528,30 @@ administrator may explicitly run Cloud analysis and render the suggestion-only
 `site_ops_cloud_analysis_result.v1`. It is a manual review surface, not a
 Cloud batch owner, local queue, Core proposal creator, or WordPress write path.
 Nightly Inspection fallback
-preview settings, Pro Cloud Runtime checks, and run recovery live under
-**Cloud Checks**, not the default Start view.
+preview settings, Pro Cloud Runtime checks, and run recovery live under folded
+detailed checks inside the secondary **AI Service Checks** deep-link panel, not
+the visible top-level tabs or default Overview view. Site Knowledge status and
+refresh controls live in the secondary **Content Library Setup** panel reached
+from Advanced, not as a default top-level tab.
 
-The admin **Workflows** tab groups lower-frequency buttons by operator job and
-defaults to **Media**, with **Optimize Existing Image** as the first visible
-tool. **Site Helpers** remain a secondary low-frequency group. **Governed
-Handoffs** and **Fallback Bundles** are folded into an advanced/fallback area
-because they require reviewed inputs or backup-package intent. Publish
-preflight, summary suggestions, category suggestions, tag suggestions,
+The admin **Image Handling** tab groups image-first buttons by operator job and
+defaults to **Image Tools**, with **Optimize Existing Image** as the first
+visible tool. It no longer exposes a single-article image text helper; that job
+needs current editor context in the editor sidebar. The separate **Image Text
+Review** group builds a small selected media-library review set and can prepare
+a Core handoff draft without creating a proposal or writing media metadata. The
+separate
+**Content Preparation** tab owns content snapshot checks and preparation bundles
+such as the combined `Article Planning Bundle`; reviewed draft/image handoffs
+sit in a compact **Review Handoffs** group tab because they require reviewed
+inputs.
+The operator-facing Optimize Existing Image deep link is
+`admin.php?page=npcink-toolbox&tab=image&tool=optimize`; legacy
+`toolbox_tab=tools&toolbox_tool=media-derivative` URLs remain accepted as
+compatibility aliases for the same internal panel.
+Publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal-link candidates, and image candidates stay in the post editor panel,
-not as backend buttons. The combined `Article Planning Bundle` remains a
-fallback bundle, not the default support flow.
+not as backend buttons.
 
 Toolbox also renders additive `operator_feedback` payloads from governed
 handoff failures, including reasons, revision fields, next steps, retry state,
@@ -629,13 +651,14 @@ replacement callbacks before Toolbox presents it as a fixed best-practice
 button. Toolbox may render review sets, selected previews, proposal submission,
 and returned execution outcomes; it must not own the batch execution semantics.
 
-Cloud Checks use compact tabs under the visible **Cloud Checks** label for
-Cloud-managed search, image-source, preview-only media derivative, and
-Site Knowledge checks. Each panel opens
-directly into the relevant Toolbox ability reachability check instead of
-repeating provider ownership detail. Search checks use Cloud auto execution
-only; provider selection, Jina Reader toggles, routing diagnostics, Cloud API
-key verification, entitlement, quota, billing, and request logs belong in Cloud
+AI Service Checks default to one basic read-only service test inside the
+secondary `cloud-checks` panel. Detailed checks use compact folded tabs for
+Cloud-managed search, image-source, preview-only media derivative, content
+library search, and scheduled review recovery. Each panel opens directly into
+the relevant Toolbox ability reachability check instead of repeating provider
+ownership detail. Search checks use Cloud auto execution only; provider
+selection, Jina Reader toggles, routing diagnostics, Cloud API key
+verification, entitlement, quota, billing, and request logs belong in Cloud
 Addon or Cloud service-plane surfaces. Image derivative checks may generate
 short-lived Cloud previews only, including bounded aspect-ratio crop overrides
 and one-run text or image/logo watermark overrides that match the

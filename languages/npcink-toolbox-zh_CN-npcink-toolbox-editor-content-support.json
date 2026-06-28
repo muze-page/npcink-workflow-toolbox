@@ -721,7 +721,14 @@
       "Regenerate audio": ["重新生成音频"],
       "Example: pronounce Npcink clearly; keep a steady pace around headings.": ["例如：Npcink 要读清楚；标题前后语速稳一点。"],
       "Example: keep it around two minutes for readers deciding whether to read the full article.": ["例如：控制在两分钟左右，给正在判断是否阅读全文的读者听。"],
-      "Npcink Content Support": ["Npcink 内容支持"]
+      "Npcink Content Support": ["Npcink 内容支持"],
+      "Check this article images": ["检查这篇文章的图片"],
+      "Review ALT and caption suggestions for images already used by this article.": ["审阅这篇文章已使用图片的 ALT 和说明文字建议。"],
+      "Article image text check": ["文章图片文字检查"],
+      "Generate review-only ALT and caption suggestions for images already used by this article. Toolbox will not write media metadata.": ["为这篇文章已使用的图片生成仅供审阅的 ALT 和说明文字建议。Toolbox 不会写入媒体元数据。"],
+      "Checking article images": ["正在检查文章图片"],
+      "Check article image text": ["检查文章图片文字"],
+      "Article image text suggestions": ["文章图片文字建议"]
     }
   }
 }

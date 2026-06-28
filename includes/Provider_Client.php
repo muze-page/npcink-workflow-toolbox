@@ -3504,6 +3504,88 @@ final class Provider_Client {
 		return $this->normalize_content_metadata_apply_plan_contract( $data );
 	}
 
+	public function build_media_alt_caption_review_plan( array $input ): array {
+		$selected_items = is_array( $input['selected_items'] ?? null ) ? $input['selected_items'] : array();
+		$actions        = array();
+
+		foreach ( $selected_items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$attachment_id = absint( $item['attachment_id'] ?? 0 );
+			if ( 0 >= $attachment_id ) {
+				continue;
+			}
+
+			$alt_candidates = is_array( $item['alt_candidates'] ?? null ) ? $item['alt_candidates'] : array();
+			$proposed_alt   = sanitize_text_field( (string) ( $item['accepted_alt'] ?? ( $alt_candidates[0] ?? '' ) ) );
+			$proposed_caption = sanitize_textarea_field( (string) ( $item['accepted_caption'] ?? ( $item['caption_candidate'] ?? '' ) ) );
+			if ( '' === $proposed_alt && '' === $proposed_caption ) {
+				continue;
+			}
+
+			$actions[] = array(
+				'action_id'                   => 'media-alt-caption:' . $attachment_id,
+				'attachment_id'               => $attachment_id,
+				'title'                       => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+				'filename'                    => sanitize_text_field( (string) ( $item['filename'] ?? '' ) ),
+				'current_alt_status'          => sanitize_key( (string) ( $item['current_alt_status'] ?? '' ) ),
+				'current_caption_status'      => sanitize_key( (string) ( $item['current_caption_status'] ?? '' ) ),
+				'accepted_alt'                => $proposed_alt,
+				'accepted_caption'            => $proposed_caption,
+				'needs_human_visual_check'    => true,
+				'visual_confirmation_required' => true,
+				'candidate_basis'             => $this->sanitize_string_list( $item['candidate_basis'] ?? array() ),
+				'candidate_quality_flags'     => $this->sanitize_string_list( $item['candidate_quality_flags'] ?? array() ),
+				'target_ability_id'           => 'npcink-abilities-toolkit/update-media-details',
+				'target_write_path'           => 'core_proposal_required',
+				'direct_wordpress_write'      => false,
+			);
+		}
+
+		$review_set = is_array( $input['review_set'] ?? null ) ? $this->sanitize_payload( $input['review_set'] ) : array();
+		return array(
+			'artifact_type'          => 'media_alt_caption_core_handoff_plan',
+			'contract_version'      => 'media_alt_caption_core_handoff_plan.v1',
+			'composition_role'       => 'core_handoff_draft',
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'core_proposal_required',
+			'direct_wordpress_write' => false,
+			'proposal_created'       => false,
+			'core_submission'        => 'not_submitted',
+			'workflow_runtime'       => false,
+			'queue_created'          => false,
+			'selected_count'         => count( $actions ),
+			'selected_actions'       => $actions,
+			'review_set_summary'     => array(
+				'contract_version' => sanitize_text_field( (string) ( $review_set['contract_version'] ?? '' ) ),
+				'source_policy'    => sanitize_key( (string) ( $review_set['source_policy'] ?? '' ) ),
+				'media_scope'      => sanitize_key( (string) ( $review_set['media_scope'] ?? '' ) ),
+				'selected_count'   => absint( $review_set['selected_count'] ?? count( $actions ) ),
+			),
+			'handoff'                => array(
+				'plan_ability_id'        => 'npcink-toolbox/build-media-alt-caption-review-plan',
+				'target_ability_id'      => 'npcink-abilities-toolkit/update-media-details',
+				'recipe_id'              => 'media_alt_caption_review_v1',
+				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
+				'proposal_ready'         => 0 < count( $actions ),
+				'core_submission'        => 'not_submitted',
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+			),
+			'operator_next_action'   => 0 < count( $actions )
+				? 'review_handoff_in_core_before_media_metadata_update'
+				: 'select_reviewed_media_alt_caption_items',
+			'guardrails'             => array(
+				'no_media_metadata_write_in_toolbox',
+				'no_automatic_proposal_creation',
+				'human_visual_confirmation_required',
+				'core_approval_required_before_final_write',
+			),
+		);
+	}
+
 	/**
 	 * Normalizes delegated Toolkit content metadata plans for Core from-plan intake.
 	 *
@@ -6754,6 +6836,7 @@ final class Provider_Client {
 				'Keep the answer short enough for an operator to review quickly.',
 				'Follow preferred_output_shape when possible; otherwise use clear headings with the same fields.',
 				'Make sample limitations explicit.',
+				'Write visible suggestions in the site or WordPress admin language when possible; for Chinese sites, write ALT and caption candidates in Chinese while preserving product names, filenames, and proper nouns.',
 				'Return suggestions only.',
 				'Do not write, update, publish, approve, crawl, enqueue, import, or mutate WordPress data.',
 				'Flag assumptions and claims that require operator confirmation.',
