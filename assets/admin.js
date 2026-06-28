@@ -4314,24 +4314,20 @@
 			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
 			input,
 		});
-		const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
-		form.__npcinkMediaDerivativeBatchPlan = plan;
-		form.__npcinkMediaDerivativeBatchStates = [];
-		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
-		renderTextResult(form, plan.operator_next_action || 'Batch plan ready. Review candidates and generate selected previews.', 'ok');
-		const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
-		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
-		const executeButton = form.querySelector('[data-toolbox-execute-media-batch-replacements]');
-		if (runButton instanceof HTMLButtonElement) {
-			runButton.disabled = !(asArray(plan.candidates).length > 0);
+			const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
+			form.__npcinkMediaDerivativeBatchPlan = plan;
+			form.__npcinkMediaDerivativeBatchStates = [];
+			renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
+			renderTextResult(form, plan.operator_next_action || 'Review list ready. Select images and generate previews.', 'ok');
+			const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
+			const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
+			if (runButton instanceof HTMLButtonElement) {
+				runButton.disabled = !(asArray(plan.candidates).length > 0);
+			}
+			if (submitButton instanceof HTMLButtonElement) {
+				submitButton.disabled = true;
+			}
 		}
-		if (submitButton instanceof HTMLButtonElement) {
-			submitButton.disabled = true;
-		}
-		if (executeButton instanceof HTMLButtonElement) {
-			executeButton.disabled = true;
-		}
-	}
 
 	async function runMediaDerivativeBatchPreviews(form) {
 		if (!config.adapterRestUrl) {
@@ -4357,25 +4353,21 @@
 			state.batchCandidate = candidate;
 			state.batchStatus = 'preview_ready';
 			states.push(state);
-		}
-
-		form.__npcinkMediaDerivativeBatchStates = states;
-		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
-		const executeButton = form.querySelector('[data-toolbox-execute-media-batch-replacements]');
-		if (submitButton instanceof HTMLButtonElement) {
-			submitButton.disabled = states.length <= 0;
-		}
-		if (executeButton instanceof HTMLButtonElement) {
-			executeButton.disabled = true;
-		}
-		renderMediaDerivativeBatchResults(form, states, '', '', {
-			selected_count: candidates.length,
-			submitted_count: 0,
-			failed_count: 0,
-			retryable: false,
-			operator_next_action: 'Review selected previews, then submit Core proposals for governed review.',
-			retry_guidance: 'Change selected media or rebuild the plan before generating previews again.',
-		});
+			}
+	
+			form.__npcinkMediaDerivativeBatchStates = states;
+			const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
+			if (submitButton instanceof HTMLButtonElement) {
+				submitButton.disabled = states.length <= 0;
+			}
+			renderMediaDerivativeBatchResults(form, states, '', '', {
+				selected_count: candidates.length,
+				submitted_count: 0,
+				failed_count: 0,
+				retryable: false,
+				operator_next_action: 'Review selected previews, then submit selected items for review.',
+				retry_guidance: 'Change selected media or rebuild the plan before generating previews again.',
+			});
 	}
 
 	async function submitMediaDerivativeBatchProposals(form) {
@@ -4383,17 +4375,17 @@
 			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
-		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
-		if (!states.length) {
-			throw { message: 'Generate selected batch previews before submitting Core proposals.' };
-		}
+			const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+			if (!states.length) {
+				throw { message: 'Generate selected previews before submitting items for review.' };
+			}
 
 		const proposals = [];
 		let failed = null;
-		for (let index = 0; index < states.length; index += 1) {
-			const state = states[index];
-			renderTextResult(form, t('Submitting Core proposal ') + String(index + 1) + t(' of ') + String(states.length) + '...', 'pending');
-			try {
+			for (let index = 0; index < states.length; index += 1) {
+				const state = states[index];
+				renderTextResult(form, t('Submitting review request ') + String(index + 1) + t(' of ') + String(states.length) + '...', 'pending');
+				try {
 				const proposal = await postJson(config.adapterRestUrl, 'proposals', {
 					ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative',
 					title: 'Replace media file with Cloud derivative',
@@ -4411,97 +4403,25 @@
 				break;
 			}
 		}
-		renderMediaDerivativeBatchResults(
-			form,
-			states,
-			failed ? 'Batch proposal submission stopped' : 'Batch proposals submitted',
-			failed ? 'One selected derivative failed before all proposals were submitted. Review the failed item and retry after revision.' : 'Selected derivative artifacts are now in Core review. WordPress writes still require Core approval and preflight.',
-			{
-				selected_count: states.length,
-				submitted_count: proposals.length,
-				failed_count: failed ? 1 : 0,
-				retryable: Boolean(failed),
-				operator_next_action: failed ? 'Resolve the failed item before submitting the remaining previews.' : 'Continue review, approval, and preflight in Core.',
-				retry_guidance: failed ? 'Retry after revising the failed preview, authorization, or Core proposal input.' : 'If more media are needed, rebuild the batch plan rather than reusing stale artifacts.',
-			}
-		);
-		const result = form.querySelector('.npcink-toolbox__result');
-		if (result) {
-			result.appendChild(createRawDetails({ proposals, failed: failed ? formatErrorMessage(failed) : null }, 'Core proposals'));
-		}
-		const executeButton = form.querySelector('[data-toolbox-execute-media-batch-replacements]');
-		if (executeButton instanceof HTMLButtonElement) {
-			executeButton.disabled = proposals.length <= 0;
-		}
-	}
-
-	async function executeMediaDerivativeBatchReplacements(form) {
-		if (!config.adapterRestUrl) {
-			throw { message: 'Npcink Adapter REST URL is unavailable.' };
-		}
-
-		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
-		const executableStates = states.filter((state) => proposalIdFromResponse(state && state.batchProposalResult));
-		if (!executableStates.length) {
-			throw { message: 'Submit selected Core reviews before approving and executing replacements.' };
-		}
-
-		const responses = [];
-		let failed = null;
-		for (let index = 0; index < executableStates.length; index += 1) {
-			const state = executableStates[index];
-			const proposalId = proposalIdFromResponse(state.batchProposalResult);
-			renderTextResult(form, t('Approving and executing replacement ') + String(index + 1) + t(' of ') + String(executableStates.length) + '...', 'pending');
-			try {
-				const response = await postJson(
-					config.adapterRestUrl,
-					'proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute',
-					{
-						note: 'Approved from Toolbox fixed media batch replacement flow.',
-					}
-				);
-				state.batchExecutionResult = response;
-				state.batchExecutionError = null;
-				state.batchStatus = 'executed';
-				responses.push(response);
-			} catch (error) {
-				state.batchExecutionError = error;
-				state.batchStatus = 'execution_failed';
-				failed = error;
-				break;
+			renderMediaDerivativeBatchResults(
+				form,
+				states,
+				failed ? 'Batch review submission stopped' : 'Batch review requests submitted',
+				failed ? 'One selected preview failed before all review requests were submitted. Review the failed item and retry after revision.' : 'Selected previews are now waiting for review. WordPress media is not changed here.',
+				{
+					selected_count: states.length,
+					submitted_count: proposals.length,
+					failed_count: failed ? 1 : 0,
+					retryable: Boolean(failed),
+					operator_next_action: failed ? 'Resolve the failed item before submitting the remaining previews.' : 'Continue approval and final media changes in the review system.',
+					retry_guidance: failed ? 'Retry after revising the failed preview, authorization, or review input.' : 'If more media are needed, rebuild the review list rather than reusing stale previews.',
+				}
+			);
+			const result = form.querySelector('.npcink-toolbox__result');
+			if (result) {
+				result.appendChild(createRawDetails({ proposals, failed: failed ? formatErrorMessage(failed) : null }, 'Review request details'));
 			}
 		}
-
-		const failedCount = failed ? 1 : 0;
-		const executedCount = responses.length;
-		const blockedCount = Math.max(0, executableStates.length - executedCount - failedCount);
-		const firstResponse = responses.length ? responses[responses.length - 1] : {};
-		const context = {
-			selected_count: executableStates.length,
-			submitted_count: executableStates.length,
-			executed_count: executedCount,
-			failed_count: failedCount,
-			blocked_count: blockedCount,
-			partial_success: executedCount > 0 && failedCount > 0,
-			retryable: false,
-			operator_next_action: failed
-				? (executedCount > 0 ? 'review_partial_failure_and_create_revised_proposal' : 'review_failed_execution_and_create_revised_proposal')
-				: (firstResponse.operator_next_action || 'review_execution_result'),
-			retry_guidance: failed ? 'Review the failed Adapter/Core evidence and create a revised proposal for remaining items.' : 'Use Core or Adapter execution records for audit and rollback evidence.',
-			core_preflight_evidence: firstResponse.core_preflight_evidence || null,
-		};
-		renderMediaDerivativeBatchResults(
-			form,
-			states,
-			failed ? 'Batch replacement execution stopped' : 'Batch replacements executed',
-			failed ? 'Adapter stopped after the first failed replacement. Completed items keep their Core/Adapter execution records.' : 'Adapter approved, preflighted, and executed the selected media replacement proposals through governed abilities.',
-			context
-		);
-		const result = form.querySelector('.npcink-toolbox__result');
-		if (result) {
-			result.appendChild(createRawDetails({ executions: responses, failed: failed ? failed : null }, 'Adapter approve-and-execute responses'));
-		}
-	}
 
 	async function submitMediaDerivativeProposal(form) {
 		if (!config.adapterRestUrl) {
@@ -7167,16 +7087,7 @@
 					return;
 				}
 
-				const batchExecuteButton = event.target.closest('[data-toolbox-execute-media-batch-replacements]');
-				if (batchExecuteButton && form.contains(batchExecuteButton)) {
-					event.preventDefault();
-					executeMediaDerivativeBatchReplacements(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
-					});
-					return;
-				}
-
-				const proposalButton = event.target.closest('[data-toolbox-submit-media-proposal]');
+					const proposalButton = event.target.closest('[data-toolbox-submit-media-proposal]');
 				if (proposalButton && form.contains(proposalButton)) {
 					event.preventDefault();
 					submitMediaDerivativeProposal(form).catch((error) => {
