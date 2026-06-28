@@ -984,6 +984,17 @@ foreach ( array_unique( $admin_page_translation_matches[2] ?? array() ) as $admi
 	}
 }
 toolbox_assert( array() === $missing_admin_page_translations, 'Bundled zh_CN translation covers every literal Admin_Page gettext string: ' . implode( ' | ', array_slice( $missing_admin_page_translations, 0, 8 ) ) );
+$abilities_for_translation = file_get_contents( $root . '/includes/Abilities.php' );
+preg_match_all( '/(?:__|esc_html__|esc_attr__|esc_html_e|esc_attr_e|_x|esc_html_x|esc_attr_x)\(\s*(["\'])((?:\\.|(?!\1).)*)\1\s*,\s*(["\'])npcink-toolbox\3/s', (string) $abilities_for_translation, $abilities_translation_matches );
+$missing_abilities_translations = array();
+foreach ( array_unique( $abilities_translation_matches[2] ?? array() ) as $ability_msgid ) {
+	$normalized_msgid = str_replace( array( "\\'", '\\"' ), array( "'", '"' ), $ability_msgid );
+	$po_msgid         = 'msgid "' . str_replace( '"', '\\"', $normalized_msgid ) . '"';
+	if ( false === strpos( (string) $zh_cn_po, $po_msgid ) ) {
+		$missing_abilities_translations[] = $normalized_msgid;
+	}
+}
+toolbox_assert( array() === $missing_abilities_translations, 'Bundled zh_CN translation covers every literal Abilities gettext string: ' . implode( ' | ', array_slice( $missing_abilities_translations, 0, 8 ) ) );
 foreach ( array( 'Summary and Terms Optimization', '摘要和分类标签优化', 'Existing Taxonomy/Tag Candidates', '已有分类/标签候选', 'Input scope', '输入范围', 'Auto: selected text when present, otherwise full article', '自动：有选中文本时使用选中文本，否则使用全文' ) as $required_admin_translation ) {
 	toolbox_assert( false !== strpos( $zh_cn_po, $required_admin_translation ), 'Bundled zh_CN translation covers admin Tools copy: ' . $required_admin_translation );
 }

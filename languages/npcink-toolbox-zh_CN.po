@@ -5866,3 +5866,45 @@ msgstr "检查文章图片文字"
 
 msgid "Article image text suggestions"
 msgstr "文章图片文字建议"
+
+msgid "Generate Image Candidate"
+msgstr "生成图片候选"
+
+msgid "Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media."
+msgstr "在运营者审阅提示词后生成一个 Cloud 托管的 AI 图片候选，不导入媒体。"
+
+msgid "Cloud Web Search"
+msgstr "Cloud 网页搜索"
+
+msgid "Run Cloud-managed web search or Zhihu hot-topic atoms for external evidence and topic selection without exposing local provider keys or writing WordPress content."
+msgstr "运行 Cloud 托管网页搜索或知乎热点原子，用于外部证据和选题选择，不暴露本地服务商密钥，也不写入 WordPress 内容。"
+
+msgid "Search query or research question."
+msgstr "搜索查询或研究问题。"
+
+msgid "Search intent hint such as article_background, fact_check, competitor_research, pricing_snapshot, product_comparison, or general_research."
+msgstr "搜索意图提示，例如 article_background、fact_check、competitor_research、pricing_snapshot、product_comparison 或 general_research。"
+
+msgid "Optional Cloud-managed source lane such as zhihu_hot_topics for a cached topic pool, zhihu_research, zhihu_global_search, zhida_simple, zhida_deep, or zhida_deepsearch."
+msgstr "可选的 Cloud 托管来源通道，例如用于缓存选题池的 zhihu_hot_topics、zhihu_research、zhihu_global_search、zhida_simple、zhida_deep 或 zhida_deepsearch。"
+
+msgid "Maximum result count requested from Cloud."
+msgstr "向 Cloud 请求的最大结果数量。"
+
+msgid "Optional freshness window in days."
+msgstr "可选的新鲜度窗口，单位为天。"
+
+msgid "Build Site Knowledge Review Plan"
+msgstr "生成站点知识审核计划"
+
+msgid "Build a Core review proposal plan from a Cloud Site Knowledge agent handoff without writing WordPress content."
+msgstr "基于 Cloud Site Knowledge agent 交接生成 Core 审核提案计划，不写入 WordPress 内容。"
+
+msgid "Build Nightly Inspection Review Plan"
+msgstr "生成夜间巡检审核计划"
+
+msgid "Build a blocked Core review proposal plan from selected Nightly Morning Brief items without writing WordPress content."
+msgstr "基于选中的夜间 Morning Brief 条目生成已阻塞的 Core 审核提案计划，不写入 WordPress 内容。"
+
+msgid "Build a one-run Core/Abilities media derivative handoff from Toolbox defaults without writing WordPress media."
+msgstr "根据 Toolbox 默认设置生成一次性 Core/Abilities 媒体衍生物交接，不写入 WordPress 媒体。"
