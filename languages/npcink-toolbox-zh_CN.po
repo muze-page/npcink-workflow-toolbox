@@ -2126,35 +2126,35 @@ msgstr "建议媒体 ALT"
 msgid "Content Snapshot Suggestions"
 msgstr "内容快照建议"
 
-msgid "Site Content Opportunity Check"
-msgstr "站点内容机会检查"
+msgid "Content Opportunity Check"
+msgstr "内容机会检查"
 
 msgid "Review a bounded public content snapshot and return a few content opportunities, not a full site audit."
 msgstr "审阅有限的公开内容快照，并返回少量内容机会，而不是完整站点审计。"
 
-msgid "Sample public content and find opportunities to update, expand, or improve. It does not generate articles or change content."
-msgstr "抽样查看公开内容，找出可以更新、扩展或改进的机会。不会生成文章，也不会修改内容。"
+msgid "Review a small public-content sample and find practical opportunities to update, expand, link, or add images. It does not generate articles or change content."
+msgstr "审阅少量公开内容样本，找出可更新、扩展、补充内链或增加图片的实际机会。不会生成文章，也不会修改内容。"
 
 msgid "Suggest content opportunities"
 msgstr "建议内容机会"
 
-msgid "Check content opportunities"
-msgstr "检查内容机会"
+msgid "Find content opportunities"
+msgstr "查找内容机会"
 
-msgid "Hosted AI site helper"
-msgstr "托管 AI 站点助手"
+msgid "Content opportunity helper"
+msgstr "内容机会助手"
 
-msgid "Toolbox sends only a small public-site or media metadata sample to Cloud. Results are reviewable suggestions only; no media, content, SEO, or proposal data is changed."
-msgstr "Toolbox 只向 Cloud 发送少量公开站点或媒体元数据样本。结果仅为可审阅建议；不会更改媒体、内容、SEO 或提案数据。"
+msgid "Toolbox sends a limited public-content sample to Cloud and returns reviewable suggestions only. No media, content, SEO, or proposal data is changed."
+msgstr "Toolbox 只向 Cloud 发送有限的公开内容样本，并仅返回可审阅建议。不会更改媒体、内容、SEO 或提案数据。"
 
 msgid "Connect Cloud Addon before running AI site helpers."
 msgstr "运行 AI 站点助手前请先连接 Cloud Addon。"
 
-msgid "Optional focus"
-msgstr "可选关注点"
+msgid "Focus area"
+msgstr "重点关注"
 
-msgid "Optional priority, audience, image type, or content area to review"
-msgstr "可选优先级、受众、图片类型或要审阅的内容区域"
+msgid "Optional: product pages, tutorials, recent campaigns, one category, or a problem to review"
+msgstr "可选：产品页、教程、近期活动、某个分类，或要检查的问题"
 
 msgid "Cloud runtime is not connected."
 msgstr "云端运行时尚未连接。"
@@ -5672,8 +5672,11 @@ msgstr "图片文字检查"
 msgid "Content Checks"
 msgstr "内容检查"
 
-msgid "Site Content Checks"
-msgstr "站点内容检查"
+msgid "Content Opportunities"
+msgstr "内容机会"
+
+msgid "Content Opportunity Checks"
+msgstr "内容机会检查"
 
 msgid "Preparation Bundles"
 msgstr "准备材料包"
@@ -5690,8 +5693,8 @@ msgstr "审阅 ALT 和说明文字建议，不写入媒体元数据。"
 msgid "Review public content opportunities without running a full site audit."
 msgstr "审阅公开内容机会，不运行完整站点审计。"
 
-msgid "Find update or improvement opportunities from a bounded public-content sample."
-msgstr "从有限的公开内容样本中找出可更新或改进的机会。"
+msgid "Find practical update, linking, expansion, or image opportunities from a bounded public-content sample."
+msgstr "从有限的公开内容样本中找出可更新、补充内链、扩展或增加图片的实际机会。"
 
 msgid "Prepare research, images, knowledge, outline, and handoff context."
 msgstr "准备研究、图片、知识、大纲和交接上下文。"

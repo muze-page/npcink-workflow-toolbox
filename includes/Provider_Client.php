@@ -4223,7 +4223,7 @@ final class Provider_Client {
 			'site_snapshot'          => 'content_snapshot_suggestions' === $intent ? $this->collect_hosted_ai_site_snapshot() : array(),
 			'media_snapshot'         => 'media_alt_suggestions' === $intent ? $media_snapshot : array(),
 			'image_context_evidence' => 'media_alt_suggestions' === $intent ? $image_context_evidence : array(),
-			'source_policy'          => sanitize_key( (string) ( $input['source_policy'] ?? ( 'media_alt_suggestions' === $intent ? ( $media_snapshot['snapshot_policy'] ?? 'current_article_media_metadata_only' ) : 'bounded_public_content_sample_only' ) ) ),
+			'source_policy'          => sanitize_key( (string) ( $input['source_policy'] ?? ( 'media_alt_suggestions' === $intent ? ( $media_snapshot['snapshot_policy'] ?? 'current_article_media_metadata_only' ) : 'bounded_public_content_opportunity_sample_only' ) ) ),
 		);
 		$prompt           = $this->hosted_ai_site_helper_prompt( $intent, $source, $context );
 		$data_classification = 'media_alt_suggestions' === $intent ? 'pii' : 'public_site_content';
@@ -5481,6 +5481,9 @@ final class Provider_Client {
 			)
 		);
 		$quality_contract = $this->hosted_ai_site_helper_quality_contract( $intent );
+		$opportunities    = 'content_snapshot_suggestions' === $intent && is_array( $result['opportunities'] ?? null )
+			? $this->sanitize_payload( $result['opportunities'] )
+			: array();
 
 		return $this->with_output_contract(
 			array(
@@ -5495,6 +5498,7 @@ final class Provider_Client {
 				'run_id'                     => sanitize_text_field( (string) ( $response['run_id'] ?? ( $result['run_id'] ?? '' ) ) ),
 				'output_text'                => $output_text,
 				'result'                     => $this->sanitize_payload( $result ),
+				'opportunities'              => $opportunities,
 				'quality_contract'           => $this->sanitize_payload( $quality_contract ),
 				'output_shape'               => $this->sanitize_payload( $quality_contract['output_shape'] ?? array() ),
 				'review_checklist'           => $this->sanitize_string_list( $quality_contract['review_checklist'] ?? array() ),
@@ -5686,12 +5690,12 @@ final class Provider_Client {
 			),
 			'content_snapshot_suggestions' => array(
 				'output_shape'     => array(
-					'snapshot_summary'      => 'brief summary of the bounded public content sample',
-					'opportunities'         => '3 to 5 concise content opportunities with rationale and suggested next tool',
+					'snapshot_summary'      => 'brief summary of the bounded public content opportunity sample',
+					'opportunities'         => '3 to 5 concise opportunity objects with title, rationale, related_content, suggested_action, suggested_next_tool, and assumptions_to_verify when needed',
 					'assumptions_to_verify' => 'short list of assumptions or missing evidence',
 				),
 				'review_checklist' => array(
-					'Treat these as content opportunities, not a full site audit.',
+					'Treat these as content opportunities from recent, older, missing-image, and taxonomy samples, not a full site audit.',
 					'Verify recommendations against actual public posts, pages, and current business priorities.',
 					'Use fixed Toolbox/Core flows for any follow-up edits or proposals.',
 				),
@@ -5772,35 +5776,110 @@ final class Provider_Client {
 	}
 
 	private function collect_hosted_ai_site_snapshot(): array {
-		$recent_posts = function_exists( 'get_posts' ) ? get_posts(
-			array(
-				'post_type'      => array( 'post', 'page' ),
-				'post_status'    => 'publish',
-				'posts_per_page' => 10,
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-			)
-		) : array();
+		$query_defaults = array(
+			'post_type'           => array( 'post', 'page' ),
+			'post_status'         => 'publish',
+			'posts_per_page'      => 6,
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+		);
+		$items_by_id    = array();
+		$append_posts   = function ( array $posts, string $sample_group, string $sample_reason ) use ( &$items_by_id ): void {
+			foreach ( $posts as $post ) {
+				if ( ! is_object( $post ) ) {
+					continue;
+				}
+				$post_id = absint( $post->ID ?? 0 );
+				if ( 0 >= $post_id ) {
+					continue;
+				}
 
-		$items = array();
-		foreach ( is_array( $recent_posts ) ? $recent_posts : array() as $post ) {
-			if ( ! is_object( $post ) ) {
-				continue;
+				if ( isset( $items_by_id[ $post_id ] ) ) {
+					$items_by_id[ $post_id ]['sample_groups'][]  = $sample_group;
+					$items_by_id[ $post_id ]['sample_reasons'][] = $sample_reason;
+					$items_by_id[ $post_id ]['sample_groups']    = array_values( array_unique( $items_by_id[ $post_id ]['sample_groups'] ) );
+					$items_by_id[ $post_id ]['sample_reasons']   = array_values( array_unique( $items_by_id[ $post_id ]['sample_reasons'] ) );
+					continue;
+				}
+
+				$content = wp_strip_all_tags( (string) ( $post->post_content ?? '' ) );
+				$excerpt = function_exists( 'get_the_excerpt' ) ? wp_strip_all_tags( (string) get_the_excerpt( $post ) ) : '';
+				$items_by_id[ $post_id ] = array(
+					'post_id'            => $post_id,
+					'post_type'          => function_exists( 'get_post_type' ) ? sanitize_key( (string) get_post_type( $post_id ) ) : sanitize_key( (string) ( $post->post_type ?? '' ) ),
+					'title'              => function_exists( 'get_the_title' ) ? sanitize_text_field( (string) get_the_title( $post_id ) ) : sanitize_text_field( (string) ( $post->post_title ?? '' ) ),
+					'url'                => function_exists( 'get_permalink' ) ? esc_url_raw( (string) get_permalink( $post_id ) ) : '',
+					'excerpt'            => sanitize_textarea_field( (string) $excerpt ),
+					'content_excerpt'    => sanitize_textarea_field( wp_trim_words( $content, 90, '' ) ),
+					'word_count_approx'  => str_word_count( wp_strip_all_tags( $content ) ),
+					'modified_gmt'       => sanitize_text_field( (string) ( $post->post_modified_gmt ?? '' ) ),
+					'published_gmt'      => sanitize_text_field( (string) ( $post->post_date_gmt ?? '' ) ),
+					'has_featured_image' => function_exists( 'has_post_thumbnail' ) ? (bool) has_post_thumbnail( $post_id ) : false,
+					'sample_groups'      => array( $sample_group ),
+					'sample_reasons'     => array( $sample_reason ),
+				);
 			}
-			$post_id   = absint( $post->ID ?? 0 );
-			$content   = wp_strip_all_tags( (string) ( $post->post_content ?? '' ) );
-			$excerpt   = function_exists( 'get_the_excerpt' ) ? wp_strip_all_tags( (string) get_the_excerpt( $post ) ) : '';
-			$items[] = array(
-				'post_id'         => $post_id,
-				'post_type'       => function_exists( 'get_post_type' ) ? sanitize_key( (string) get_post_type( $post_id ) ) : sanitize_key( (string) ( $post->post_type ?? '' ) ),
-				'title'           => function_exists( 'get_the_title' ) ? sanitize_text_field( (string) get_the_title( $post_id ) ) : sanitize_text_field( (string) ( $post->post_title ?? '' ) ),
-				'url'             => function_exists( 'get_permalink' ) ? esc_url_raw( (string) get_permalink( $post_id ) ) : '',
-				'excerpt'         => sanitize_textarea_field( (string) $excerpt ),
-				'content_excerpt' => sanitize_textarea_field( wp_trim_words( $content, 90, '' ) ),
-				'modified_gmt'    => sanitize_text_field( (string) ( $post->post_modified_gmt ?? '' ) ),
-				'has_featured_image' => function_exists( 'has_post_thumbnail' ) ? (bool) has_post_thumbnail( $post_id ) : false,
+		};
+
+		if ( function_exists( 'get_posts' ) ) {
+			$append_posts(
+				get_posts(
+					array_merge(
+						$query_defaults,
+						array(
+							'orderby' => 'modified',
+							'order'   => 'DESC',
+						)
+					)
+				),
+				'recently_updated',
+				'recent public content that may need follow-up or internal links'
+			);
+			$append_posts(
+				get_posts(
+					array_merge(
+						$query_defaults,
+						array(
+							'orderby' => 'modified',
+							'order'   => 'ASC',
+						)
+					)
+				),
+				'older_content',
+				'older public content that may need refresh or consolidation'
+			);
+			$append_posts(
+				get_posts(
+					array_merge(
+						$query_defaults,
+						array(
+							'orderby'    => 'modified',
+							'order'      => 'DESC',
+							'meta_query' => array(
+								array(
+									'key'     => '_thumbnail_id',
+									'compare' => 'NOT EXISTS',
+								),
+							),
+						)
+					)
+				),
+				'missing_featured_image',
+				'public content without a featured image candidate'
 			);
 		}
+
+		$items = array_values( $items_by_id );
+		$items_in_group = static function ( array $sample_items, string $group ): array {
+			return array_values(
+				array_filter(
+					$sample_items,
+					static function ( array $item ) use ( $group ): bool {
+						return in_array( $group, (array) ( $item['sample_groups'] ?? array() ), true );
+					}
+				)
+			);
+		};
 
 		$counts = array();
 		if ( function_exists( 'wp_count_posts' ) ) {
@@ -5842,8 +5921,18 @@ final class Provider_Client {
 			'home_url'        => function_exists( 'home_url' ) ? esc_url_raw( (string) home_url( '/' ) ) : '',
 			'post_counts'     => $counts,
 			'top_terms'       => $terms,
-			'recent_content'  => $items,
-			'snapshot_policy' => 'public_site_content_sample_only',
+			'content_samples' => $items,
+			'recent_content'  => $items_in_group( $items, 'recently_updated' ),
+			'older_content'   => $items_in_group( $items, 'older_content' ),
+			'missing_featured_image_content' => $items_in_group( $items, 'missing_featured_image' ),
+			'sample_summary'  => array(
+				'total_unique_content_items'       => count( $items ),
+				'recent_content_count'             => count( $items_in_group( $items, 'recently_updated' ) ),
+				'older_content_count'              => count( $items_in_group( $items, 'older_content' ) ),
+				'missing_featured_image_count'     => count( $items_in_group( $items, 'missing_featured_image' ) ),
+				'top_term_count'                   => count( $terms ),
+			),
+			'snapshot_policy' => 'bounded_public_content_opportunity_sample_only',
 		);
 	}
 
@@ -6999,7 +7088,7 @@ final class Provider_Client {
 	private function hosted_ai_site_helper_prompt( string $intent, array $source, array $context ): string {
 		$task = array(
 			'media_alt_suggestions'      => 'Generate reviewable ALT and caption suggestions from the supplied current-article image metadata, or from an explicitly requested media-library sample. Do not claim to see the image pixels; require human visual confirmation for each item.',
-			'content_snapshot_suggestions' => 'Generate 3 to 5 content opportunity suggestions from a bounded public site-content snapshot only. Do not return a full site audit, crawler report, health score, or write plan.',
+			'content_snapshot_suggestions' => 'Generate 3 to 5 practical content opportunity suggestions from the supplied bounded public site-content opportunity sample only. Prefer maintenance actions such as refresh stale content, expand thin coverage, add internal links, clarify summaries, or add a featured image. Return opportunities as JSON-compatible objects when possible. Do not return a full site audit, crawler report, health score, or write plan.',
 		)[ $intent ] ?? 'Generate reviewable WordPress site-helper suggestions from the supplied sample only.';
 		$quality_contract = $this->hosted_ai_site_helper_quality_contract( $intent );
 

@@ -3394,14 +3394,14 @@ final class Admin_Page {
 			),
 			array(
 				'surface'     => 'content-preparation',
-				'group'       => __( 'Site Content Checks', 'npcink-toolbox' ),
+				'group'       => __( 'Content Opportunities', 'npcink-toolbox' ),
 				'group_id'    => 'content-checks',
 				'id'          => 'ai-content-snapshot-suggestions',
 				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Site Content Opportunity Check', 'npcink-toolbox' ),
-				'description' => __( 'Sample public content and find opportunities to update, expand, or improve. It does not generate articles or change content.', 'npcink-toolbox' ),
+				'title'       => __( 'Content Opportunity Check', 'npcink-toolbox' ),
+				'description' => __( 'Review a small public-content sample and find practical opportunities to update, expand, link, or add images. It does not generate articles or change content.', 'npcink-toolbox' ),
 				'intent'      => 'content_snapshot_suggestions',
-				'button'      => __( 'Check content opportunities', 'npcink-toolbox' ),
+				'button'      => __( 'Find content opportunities', 'npcink-toolbox' ),
 				'custom'      => 'hosted_ai_site_helper',
 			),
 			array(
@@ -3437,10 +3437,10 @@ final class Admin_Page {
 					'title'       => __( 'Batch Image ALT', 'npcink-toolbox' ),
 					'description' => __( 'Review selected image ALT suggestions before submitting them for review.', 'npcink-toolbox' ),
 				),
-			'content-checks'    => array(
-				'title'       => __( 'Site Content Checks', 'npcink-toolbox' ),
-				'description' => __( 'Find update or improvement opportunities from a bounded public-content sample.', 'npcink-toolbox' ),
-			),
+				'content-checks'    => array(
+					'title'       => __( 'Content Opportunity Checks', 'npcink-toolbox' ),
+					'description' => __( 'Find practical update, linking, expansion, or image opportunities from a bounded public-content sample.', 'npcink-toolbox' ),
+				),
 				'governed-handoffs' => array(
 					'title'       => __( 'Reviewed Draft Handoff', 'npcink-toolbox' ),
 					'description' => __( 'Low-frequency handoff after a draft is already reviewed.', 'npcink-toolbox' ),
@@ -3699,12 +3699,12 @@ final class Admin_Page {
 				<?php endif; ?>
 				<input type="hidden" name="intent" value="<?php echo esc_attr( $intent ); ?>" />
 				<div class="npcink-toolbox__example is-ai">
-					<strong><?php esc_html_e( 'Hosted AI site helper', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Toolbox sends only a small public-site or media metadata sample to Cloud. Results are reviewable suggestions only; no media, content, SEO, or proposal data is changed.', 'npcink-toolbox' ); ?></span>
+					<strong><?php esc_html_e( 'Content opportunity helper', 'npcink-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Toolbox sends a limited public-content sample to Cloud and returns reviewable suggestions only. No media, content, SEO, or proposal data is changed.', 'npcink-toolbox' ); ?></span>
 				</div>
 				<label>
-					<span><?php esc_html_e( 'Optional focus', 'npcink-toolbox' ); ?></span>
-					<textarea name="focus" rows="3" placeholder="<?php esc_attr_e( 'Optional priority, audience, image type, or content area to review', 'npcink-toolbox' ); ?>"></textarea>
+					<span><?php esc_html_e( 'Focus area', 'npcink-toolbox' ); ?></span>
+					<textarea name="focus" rows="3" placeholder="<?php esc_attr_e( 'Optional: product pages, tutorials, recent campaigns, one category, or a problem to review', 'npcink-toolbox' ); ?>"></textarea>
 				</label>
 				<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
 				<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>

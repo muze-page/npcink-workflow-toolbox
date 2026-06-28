@@ -2069,15 +2069,96 @@
 		result.appendChild(createRawDetails(payload, 'Complete payload'));
 	}
 
+	function hostedAiContentOpportunities(payload) {
+		const result = asObject(payload && payload.result);
+		const candidates = [
+			payload && payload.opportunities,
+			result.opportunities,
+			payload && payload.content_opportunities,
+			result.content_opportunities,
+			result.suggestions,
+		];
+		for (let index = 0; index < candidates.length; index += 1) {
+			if (Array.isArray(candidates[index]) && candidates[index].length) {
+				return candidates[index];
+			}
+		}
+		return [];
+	}
+
+	function contentOpportunityRelatedText(value) {
+		const related = asArray(value);
+		if (!related.length) {
+			return '';
+		}
+		return related.slice(0, 4).map((item) => {
+			if (item && typeof item === 'object') {
+				const title = item.title || item.post_title || item.name || item.url || '';
+				const id = item.post_id || item.id || '';
+				return [id ? '#' + String(id) : '', title].filter(Boolean).join(' ');
+			}
+			return String(item || '');
+		}).filter(Boolean).join(' · ');
+	}
+
+	function renderContentOpportunitySuggestions(container, payload) {
+		const opportunities = hostedAiContentOpportunities(payload);
+		if (!opportunities.length) {
+			return false;
+		}
+
+		const result = asObject(payload && payload.result);
+		const section = createSection('Content opportunities');
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Opportunities', opportunities.length);
+		appendMeta(meta, 'Sample', result.snapshot_summary || payload.snapshot_summary || '');
+		section.appendChild(meta);
+
+		const list = el('div', 'npcink-toolbox__batch-list');
+		opportunities.slice(0, 5).forEach((item, index) => {
+			const opportunity = item && typeof item === 'object' ? item : { title: String(item || '') };
+			const title = opportunity.title || opportunity.opportunity || opportunity.summary || (t('Opportunity ') + String(index + 1));
+			const rationale = opportunity.rationale || opportunity.reason || opportunity.why || opportunity.description || '';
+			const related = contentOpportunityRelatedText(opportunity.related_content || opportunity.related_posts || opportunity.posts || opportunity.urls);
+			const assumptions = asArray(opportunity.assumptions_to_verify || opportunity.assumptions || opportunity.verify);
+			const row = el('div', 'npcink-toolbox__batch-row');
+			const body = el('span', 'npcink-toolbox__batch-row-body');
+			body.appendChild(el('strong', '', title));
+			if (rationale) {
+				body.appendChild(el('small', '', truncate(rationale, 220)));
+			}
+			if (opportunity.suggested_action || opportunity.next_action) {
+				body.appendChild(el('small', 'npcink-toolbox__batch-status', t('Suggested action: ') + String(opportunity.suggested_action || opportunity.next_action)));
+			}
+			if (opportunity.suggested_next_tool || opportunity.next_tool) {
+				body.appendChild(el('small', '', t('Next tool: ') + String(opportunity.suggested_next_tool || opportunity.next_tool)));
+			}
+			if (opportunity.priority) {
+				body.appendChild(el('small', '', t('Priority: ') + String(opportunity.priority)));
+			}
+			if (related) {
+				body.appendChild(el('small', '', t('Related content: ') + related));
+			}
+			if (assumptions.length) {
+				body.appendChild(el('small', '', t('Verify: ') + assumptions.slice(0, 3).join(' · ')));
+			}
+			row.appendChild(body);
+			list.appendChild(row);
+		});
+		section.appendChild(list);
+		container.appendChild(section);
+		return true;
+	}
+
 	function renderHostedAiSiteHelper(form, payload) {
 		const intent = String(payload.intent || '');
 		const titleByIntent = {
 			media_alt_suggestions: 'Review image ALT suggestions',
-			content_snapshot_suggestions: 'Content snapshot suggestions'
+			content_snapshot_suggestions: 'Content opportunities'
 		};
 		const summaryByIntent = {
 			media_alt_suggestions: 'Check each suggested ALT before submitting selected rows for Core review. Toolbox will not change media ALT here.',
-			content_snapshot_suggestions: 'Use these as content opportunities from a bounded sample, not as a full site audit.'
+			content_snapshot_suggestions: 'Review opportunities from a bounded sample. This is not a full site audit and does not change content.'
 		};
 		const result = renderShell(
 			form,
@@ -2105,7 +2186,8 @@
 
 		renderMediaAltCaptionReviewSet(result, payload.media_alt_caption_review_set, form, payload);
 
-		if (payload.output_text && intent !== 'media_alt_suggestions') {
+		const renderedOpportunities = intent === 'content_snapshot_suggestions' ? renderContentOpportunitySuggestions(result, payload) : false;
+		if (payload.output_text && intent !== 'media_alt_suggestions' && !renderedOpportunities) {
 			const pre = el('pre', 'npcink-toolbox__result-raw');
 			pre.textContent = String(payload.output_text);
 			result.appendChild(pre);

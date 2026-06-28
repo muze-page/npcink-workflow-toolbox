@@ -330,12 +330,14 @@ Toolbox UI contract from a connected Cloud Addon or host runtime that can
 actually execute the request.
 
 `/ai/site-helpers` is the hosted AI contract for narrow site-helper suggestions:
-bounded content snapshots, editor/sidebar current-article image metadata, or a
-future explicitly selected media review set. The standalone admin tool exposes
-only content snapshot checks; single-article media ALT/caption review belongs in
-the editor sidebar, and batch media review needs a selected review-set surface.
-The route returns a `hosted_ai_site_helper` artifact and must not become a
-crawler, scoring engine, batch media updater, proposal creator, or local queue.
+bounded content opportunity samples, editor/sidebar current-article image
+metadata, or a future explicitly selected media review set. The standalone
+admin tool exposes only content opportunity checks over a small mix of recent
+content, older content, missing-featured-image content, and top taxonomy terms;
+single-article media ALT/caption review belongs in the editor sidebar, and
+batch media review needs a selected review-set surface. The route returns a
+`hosted_ai_site_helper` artifact and must not become a crawler, scoring engine,
+batch media updater, proposal creator, or local queue.
 When the post editor needs ALT suggestions, `/editor/content-support` passes a
 bounded `current_article_media_metadata_only` snapshot of images already used
 by the current draft into the same hosted helper runtime; it does not trigger
