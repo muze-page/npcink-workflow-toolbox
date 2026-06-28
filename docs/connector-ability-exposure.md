@@ -35,7 +35,6 @@ External AI callers should discover and call Toolbox abilities such as:
 - `npcink-toolbox/cloud-web-search`
 - `npcink-toolbox/get-site-knowledge-status`
 - `npcink-toolbox/request-site-knowledge-sync`
-- `npcink-toolbox/build-article-assistant`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`

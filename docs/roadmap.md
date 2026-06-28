@@ -160,8 +160,9 @@ Candidate buttons:
 - complete media alt and caption suggestions for site-level media review;
 - build FAQ suggestions;
 - check source coverage for the current editor or one explicit operator review.
-- generate article outline with references only as an Article Assistant
-  fallback after the operator chooses a writing-support route.
+- generate article outline with references only through bounded editor support
+  or reviewed-draft handoff surfaces, not through a restored Article Assistant
+  product entry.
 - rerank source, image, and vector candidates with Jina Reranker.
 - improve Cloud image-source ranking with abstract-query rewriting,
   site-context vector rerank, candidate dedupe, quality/watermark filters,

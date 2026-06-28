@@ -662,11 +662,17 @@ msgstr "在已有已审阅草稿、已选图片或编辑器选择后使用。"
 msgid "Reviewed Draft Handoff"
 msgstr "已审阅草稿交接"
 
+msgid "Reviewed Draft Core Handoff"
+msgstr "已审阅草稿 Core 交接"
+
 msgid "Prepare a Core-ready article_write_plan only after a human-reviewed draft exists. Toolbox does not submit or approve the proposal."
 msgstr "仅在已有人工审阅草稿后准备 Core 就绪的 article_write_plan。Toolbox 不提交或审批提案。"
 
 msgid "Use only after a human-reviewed draft exists; prepare a Core-ready article_write_plan without submitting or approving it."
 msgstr "仅在已有人工审阅草稿后使用；准备 Core 就绪的 article_write_plan，但不提交或批准。"
+
+msgid "Use only when a human-reviewed draft already exists. It prepares a Core review plan and never writes or submits the article."
+msgstr "仅在已有人工审阅草稿后使用。它只准备 Core 审核计划，不会写入或提交文章。"
 
 msgid "Media"
 msgstr "媒体"
@@ -2120,11 +2126,20 @@ msgstr "建议媒体 ALT"
 msgid "Content Snapshot Suggestions"
 msgstr "内容快照建议"
 
+msgid "Site Content Opportunity Check"
+msgstr "站点内容机会检查"
+
 msgid "Review a bounded public content snapshot and return a few content opportunities, not a full site audit."
 msgstr "审阅有限的公开内容快照，并返回少量内容机会，而不是完整站点审计。"
 
+msgid "Sample public content and find opportunities to update, expand, or improve. It does not generate articles or change content."
+msgstr "抽样查看公开内容，找出可以更新、扩展或改进的机会。不会生成文章，也不会修改内容。"
+
 msgid "Suggest content opportunities"
 msgstr "建议内容机会"
+
+msgid "Check content opportunities"
+msgstr "检查内容机会"
 
 msgid "Hosted AI site helper"
 msgstr "托管 AI 站点助手"
@@ -5639,17 +5654,26 @@ msgstr "图片处理"
 msgid "Content Preparation"
 msgstr "内容准备"
 
+msgid "Content Review"
+msgstr "内容检查"
+
 msgid "Image handling"
 msgstr "图片处理"
 
 msgid "Content preparation"
 msgstr "内容准备"
 
+msgid "Content review"
+msgstr "内容检查"
+
 msgid "Image Text Checks"
 msgstr "图片文字检查"
 
 msgid "Content Checks"
 msgstr "内容检查"
+
+msgid "Site Content Checks"
+msgstr "站点内容检查"
 
 msgid "Preparation Bundles"
 msgstr "准备材料包"
@@ -5666,20 +5690,38 @@ msgstr "审阅 ALT 和说明文字建议，不写入媒体元数据。"
 msgid "Review public content opportunities without running a full site audit."
 msgstr "审阅公开内容机会，不运行完整站点审计。"
 
+msgid "Find update or improvement opportunities from a bounded public-content sample."
+msgstr "从有限的公开内容样本中找出可更新或改进的机会。"
+
 msgid "Prepare research, images, knowledge, outline, and handoff context."
 msgstr "准备研究、图片、知识、大纲和交接上下文。"
 
 msgid "Review Handoffs"
 msgstr "审核交接"
 
+msgid "Draft Handoff"
+msgstr "草稿交接"
+
+msgid "Prepare Core review plans only after a reviewed draft exists."
+msgstr "仅在已有已审阅草稿后准备 Core 审核计划。"
+
 msgid "Prepare research, image, site knowledge, outline, and handoff context when the editor sidebar is not enough. Nothing writes the article body."
 msgstr "当编辑器侧边栏不够用时，准备研究、图片、站点知识、大纲和交接上下文。不会写入文章正文。"
+
+msgid "Check public content opportunities or prepare a reviewed draft for Core handoff. Article writing stays with the editor."
+msgstr "检查公开内容机会，或把已审阅草稿准备为 Core 交接。文章正文仍由编辑负责。"
 
 msgid "Preparation only"
 msgstr "仅准备材料"
 
+msgid "Review and handoff only"
+msgstr "仅检查与交接"
+
 msgid "Use these for planning and reviewed context. Final WordPress writes still go through Core approval."
 msgstr "这些工具只用于规划和已审阅上下文。最终 WordPress 写入仍需经过 Core 审批。"
+
+msgid "Use these after you know what to review or already have a reviewed draft. Nothing writes the article body."
+msgstr "仅在明确要检查什么，或已有已审阅草稿后使用。不会写入文章正文。"
 
 msgid "Review handoffs"
 msgstr "审核交接"
@@ -5689,6 +5731,9 @@ msgstr "仅在已有审阅输入且需要 Core-ready 交接时使用。"
 
 msgid "Start with existing media-library images. Content preparation and reviewed draft handoffs live in their own tab."
 msgstr "从媒体库中的已有图片开始。内容准备和已审阅草稿交接放在单独的标签页中。"
+
+msgid "Use the media library for one image, or use this page for selected image batches. Content review and draft handoffs live in their own tab."
+msgstr "单张图片请从媒体库进入；批量处理所选图片时使用本页。内容检查和草稿交接在单独标签页中。"
 
 msgid "Image tasks"
 msgstr "图片任务"

@@ -1,15 +1,15 @@
-# Article Assistant Workbench
+# Retired Article Assistant Workbench
 
-Article Assistant is the local, single-article workbench for composing existing
-Toolbox and Abilities outputs into one reviewable `article_draft_v1` artifact.
-It is not a cloud writing product, batch publishing surface, workflow runtime,
-or second approval plane.
+Article Assistant was the local, single-article workbench for composing
+existing Toolbox and Abilities outputs into one reviewable `article_draft_v1`
+artifact. It is now retired from the operator-facing Toolbox admin surface and
+from the public Toolbox Ability catalog.
 
-It is also not the default Toolbox product surface. Default Toolbox workflows
-should support the work around a human-written article: taxonomy/tag choices,
-internal links, image candidates, SEO/AEO/GEO suggestions, media metadata, and
-publish/readiness checks. Article Assistant is a fallback for broad article
-requests or for reviewed local draft handoff.
+The legacy REST route remains only as a compatibility path for older callers.
+New workflows should use the smaller surfaces around a human-written article:
+taxonomy/tag choices, internal links, image candidates, SEO/AEO/GEO
+suggestions, media metadata, publish/readiness checks, or the reviewed draft
+handoff route when a human-reviewed draft already exists.
 
 ## Surface Budget
 
@@ -17,9 +17,9 @@ This workbench is intentionally small. Its job is to arrange existing Toolbox
 and Abilities outputs into a reviewable local artifact, then optionally produce
 one Core-ready draft proposal when the operator supplies reviewed draft text.
 
-The accepted surface is Article Assistant Workbench. Do not present it as an
-article generator, autonomous writer, Cloud writing feature, or bulk publishing
-tool.
+Do not present this legacy workbench as an article generator, autonomous writer,
+Cloud writing feature, bulk publishing tool, default Toolbox product surface,
+operator-facing admin tool, or public Toolbox Ability.
 
 The current budget is:
 
@@ -35,7 +35,8 @@ The current budget is:
 ## Contract
 
 - REST route: `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
-- Ability id: `npcink-toolbox/build-article-assistant`
+- Ability id: none. The former `npcink-toolbox/build-article-assistant`
+  Ability is retired.
 - Artifact type: `article_assistant_workbench`
 - Composition role: `article_assistant_workbench`
 - Recipe id: `article_draft_v1`
@@ -79,11 +80,11 @@ The workbench returns:
 
 ## Boundaries
 
-Article Assistant may call provider-backed Toolbox abilities for evidence,
-image-source candidates, and vector context. It must not call or provide a cloud
-writer. It must not submit Core proposals, approve proposals, execute proposals,
-publish content, update SEO metadata, import media, or enqueue background
-writing jobs.
+The legacy route may call provider-backed Toolbox methods for evidence,
+image-source candidates, and vector context. It must not call or provide a
+cloud writer. It must not submit Core proposals, approve proposals, execute
+proposals, publish content, update SEO metadata, import media, or enqueue
+background writing jobs.
 
 Cloud Addon can still provide hosted runtime for separately governed provider
 or knowledge tasks, but it does not own this local control plane and must not
@@ -116,8 +117,9 @@ WordPress post is created during proposal intake. By default the script purges
 the Core proposal/audit rows it created; set
 `NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_PURGE=0` to inspect them after a run.
 
-For normal editorial operations, prefer the smaller support buttons first:
+For normal editorial operations, use the smaller support buttons:
 taxonomy/tag recommendations, internal-link candidates, image candidates,
 content discoverability suggestions, media metadata, and publish/readiness
-preflight. Use Article Assistant only when those support artifacts need to be
-assembled around one reviewed draft.
+preflight. For reviewed draft creation handoff, use the reviewed draft handoff
+route and `npcink-toolbox/build-article-write-plan` instead of restoring Article
+Assistant as a product entry.

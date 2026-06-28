@@ -59,8 +59,9 @@ semantics.
 6. Prioritize work around the article body: taxonomy/tag candidates,
    internal-link candidates, image candidates, SEO/AEO/GEO briefs, media
    metadata plans, and publish/readiness checks.
-7. Keep article text creation with human editors; expose Article Assistant only
-   as a fallback workbench for reviewed local draft artifacts.
+7. Keep article text creation with human editors; keep the retired Article
+   Assistant route as compatibility only, not as an operator-facing or public
+   Ability surface.
 8. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.

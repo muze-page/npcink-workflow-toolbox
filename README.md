@@ -105,7 +105,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
 - [OpenClaw Batch Media Optimization Handoff](docs/openclaw-batch-media-optimization-handoff.md)
 - [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
-- [Article Assistant Workbench](docs/article-assistant-workbench.md)
+- [Retired Article Assistant Workbench](docs/article-assistant-workbench.md)
 - [Media Optimization V1](docs/media-optimization-v1.md)
 - [Batch Automation Governance Plan](docs/batch-automation-governance-plan.md)
 - [Media ALT/Caption Review Set](docs/media-alt-caption-review-set.md)
@@ -240,7 +240,6 @@ When the WordPress Abilities API is available, Toolbox registers:
 - `npcink-toolbox/cloud-web-search`
 - `npcink-toolbox/get-site-knowledge-status`
 - `npcink-toolbox/request-site-knowledge-sync`
-- `npcink-toolbox/build-article-assistant`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
@@ -252,11 +251,12 @@ When the WordPress Abilities API is available, Toolbox registers:
 - `npcink-toolbox/build-content-discoverability-brief`
 - `npcink-toolbox/build-ai-article-writing-pack`
 
-The legacy `/vector-search`, `/flows/article-brief`, and `/flows/media-brief`
-REST routes remain compatibility surfaces, but they are no longer registered as
-public Toolbox abilities. New AI callers should use
-`npcink-toolbox/search-site-knowledge`, `npcink-toolbox/build-article-assistant`,
-or editor/media-specific routes instead of those legacy ability ids.
+The legacy `/vector-search`, `/flows/article-brief`, `/flows/article-assistant`,
+and `/flows/media-brief` REST routes remain compatibility surfaces, but they are
+no longer registered as public Toolbox abilities. New AI callers should use
+`npcink-toolbox/search-site-knowledge`, `npcink-toolbox/build-article-write-plan`,
+content-support routes, or editor/media-specific routes instead of those legacy
+ability ids.
 
 When `npcink-abilities-toolkit` is active, Toolbox uses its public registration
 helpers so the tools can be discovered by existing Npcink consumers.
@@ -297,15 +297,13 @@ into one suggestion-only pack. It is a convenience fallback for broad prompts,
 not the default SEO/AEO/GEO, taxonomy, link, image, or publish-readiness
 surface.
 
-The Article Assistant flow and `npcink-toolbox/build-article-assistant`
-ability compose one local `article_draft_v1` workbench artifact from topic,
-evidence candidates, image-source candidates, site context, operator notes, and
-an optional reviewed draft. It does not run a cloud writer or workflow runtime.
-Only when the operator supplies a reviewed draft and risk checks pass does the
-artifact include an `article_write_plan` for Core proposal intake.
-This is a local Article Assistant Workbench, not an article generator or Cloud
-writing feature. Keep it to one article, reviewed artifacts, and one optional
-Core-ready draft proposal.
+The legacy Article Assistant REST flow can still compose one local
+`article_draft_v1` workbench artifact from topic, evidence candidates,
+image-source candidates, site context, operator notes, and an optional reviewed
+draft. It is route-only compatibility, not an operator-facing tool and not a
+public Toolbox ability. New reviewed draft handoffs should use
+`npcink-toolbox/build-article-write-plan`; normal editorial work should stay in
+the editor content-support sidebar.
 
 Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw
 flows. They should reuse the same ability ids, plan artifact shapes, Adapter
@@ -322,8 +320,8 @@ button; it must not create a separate batch writer.
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
-The admin **Workflows** surface includes a **Reviewed Draft Handoff**
-fallback panel that renders the plan artifacts, risk report, final
+The admin **Content Review** surface includes a **Reviewed Draft Core Handoff**
+panel that renders the plan artifacts, risk report, final
 `npcink-abilities-toolkit/create-draft` action, and Core handoff route for operator review.
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
@@ -469,13 +467,13 @@ and publish-readiness support because those actions need the current article con
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
-The admin Content Preparation surface keeps only the bounded content snapshot
-helper. Media ALT/caption helper contracts remain available to editor-sidebar
-flows and future batch review sets, where the operator has either current
-article context or an explicit selected review set. In all cases, Toolbox
-samples only the supplied public-site or media metadata, Cloud produces
-reviewable suggestions, and no media library, post, SEO, proposal, crawler, or
-queue state is changed locally.
+The admin Content Review surface keeps only the bounded site content
+opportunity check plus reviewed draft Core handoff. Media ALT/caption helper
+contracts remain available to editor-sidebar flows and future batch review
+sets, where the operator has either current article context or an explicit
+selected review set. In all cases, Toolbox samples only the supplied public-site
+or media metadata, Cloud produces reviewable suggestions, and no media library,
+post, SEO, proposal, crawler, or queue state is changed locally.
 Publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal-link candidates, and image candidates belong in the editor sidebar.
 Internal-link candidate assembly is delegated to

@@ -487,7 +487,7 @@ final class Admin_Page {
 				<button type="button" class="npcink-toolbox__tab is-active" data-toolbox-tab-target="start" aria-selected="true"><?php esc_html_e( 'Overview', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="context" aria-selected="false"><?php esc_html_e( 'Site Profile', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="tools" aria-selected="false"><?php esc_html_e( 'Image Handling', 'npcink-toolbox' ); ?></button>
-				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="content-preparation" aria-selected="false"><?php esc_html_e( 'Content Preparation', 'npcink-toolbox' ); ?></button>
+				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="content-preparation" aria-selected="false"><?php esc_html_e( 'Content Review', 'npcink-toolbox' ); ?></button>
 				<button type="button" class="npcink-toolbox__tab" data-toolbox-tab-target="advanced" aria-selected="false"><?php esc_html_e( 'Advanced', 'npcink-toolbox' ); ?></button>
 			</nav>
 
@@ -507,7 +507,7 @@ final class Admin_Page {
 				<?php $this->render_tool_cards( $cloud_ready, 'image' ); ?>
 			</section>
 
-			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="content-preparation" aria-label="<?php esc_attr_e( 'Content preparation', 'npcink-toolbox' ); ?>" hidden>
+			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="content-preparation" aria-label="<?php esc_attr_e( 'Content review', 'npcink-toolbox' ); ?>" hidden>
 				<?php $this->render_tool_cards( $cloud_ready, 'content-preparation' ); ?>
 			</section>
 
@@ -3020,7 +3020,6 @@ final class Admin_Page {
 											<label>
 												<span><?php esc_html_e( 'Check type', 'npcink-toolbox' ); ?></span>
 												<select name="scenario">
-													<option value="article_assistant"><?php esc_html_e( 'Article Assistant', 'npcink-toolbox' ); ?></option>
 													<option value="discoverability"><?php esc_html_e( 'Discoverability', 'npcink-toolbox' ); ?></option>
 													<option value="publish_preflight"><?php esc_html_e( 'Publish preflight', 'npcink-toolbox' ); ?></option>
 												</select>
@@ -3395,35 +3394,25 @@ final class Admin_Page {
 			),
 			array(
 				'surface'     => 'content-preparation',
-				'group'       => __( 'Content Checks', 'npcink-toolbox' ),
+				'group'       => __( 'Site Content Checks', 'npcink-toolbox' ),
 				'group_id'    => 'content-checks',
 				'id'          => 'ai-content-snapshot-suggestions',
 				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Content Snapshot Suggestions', 'npcink-toolbox' ),
-				'description' => __( 'Review a bounded public content snapshot and return a few content opportunities, not a full site audit.', 'npcink-toolbox' ),
+				'title'       => __( 'Site Content Opportunity Check', 'npcink-toolbox' ),
+				'description' => __( 'Sample public content and find opportunities to update, expand, or improve. It does not generate articles or change content.', 'npcink-toolbox' ),
 				'intent'      => 'content_snapshot_suggestions',
-				'button'      => __( 'Suggest content opportunities', 'npcink-toolbox' ),
+				'button'      => __( 'Check content opportunities', 'npcink-toolbox' ),
 				'custom'      => 'hosted_ai_site_helper',
 			),
 			array(
 				'surface'     => 'content-preparation',
-				'group'       => __( 'Governed Handoffs', 'npcink-toolbox' ),
+				'group'       => __( 'Draft Handoff', 'npcink-toolbox' ),
 				'group_id'    => 'governed-handoffs',
 				'id'          => 'article-plan',
 				'endpoint'    => 'flows/article-plan',
-				'title'       => __( 'Reviewed Draft Handoff', 'npcink-toolbox' ),
-				'description' => __( 'Use only after a human-reviewed draft exists; prepare a Core-ready article_write_plan without submitting or approving it.', 'npcink-toolbox' ),
+				'title'       => __( 'Reviewed Draft Core Handoff', 'npcink-toolbox' ),
+				'description' => __( 'Use only when a human-reviewed draft already exists. It prepares a Core review plan and never writes or submits the article.', 'npcink-toolbox' ),
 				'custom'      => 'article_plan',
-			),
-				array(
-					'surface'     => 'content-preparation',
-					'group'       => __( 'Preparation Bundles', 'npcink-toolbox' ),
-				'group_id'    => 'fallback-bundles',
-				'id'          => 'article-assistant',
-				'endpoint'    => 'flows/article-assistant',
-				'title'       => __( 'Article Assistant Fallback', 'npcink-toolbox' ),
-				'description' => __( 'Advanced fallback workbench for existing support artifacts and an optional reviewed draft; it does not write the article body.', 'npcink-toolbox' ),
-				'custom'      => 'article_assistant',
 			),
 		);
 
@@ -3449,16 +3438,12 @@ final class Admin_Page {
 				'description' => __( 'Review selected image ALT suggestions before submitting them for Core review.', 'npcink-toolbox' ),
 			),
 			'content-checks'    => array(
-				'title'       => __( 'Content Checks', 'npcink-toolbox' ),
-				'description' => __( 'Review public content opportunities without running a full site audit.', 'npcink-toolbox' ),
-			),
-			'fallback-bundles'  => array(
-				'title'       => __( 'Preparation Bundles', 'npcink-toolbox' ),
-				'description' => __( 'Prepare research, images, knowledge, outline, and handoff context.', 'npcink-toolbox' ),
+				'title'       => __( 'Site Content Checks', 'npcink-toolbox' ),
+				'description' => __( 'Find update or improvement opportunities from a bounded public-content sample.', 'npcink-toolbox' ),
 			),
 			'governed-handoffs' => array(
-				'title'       => __( 'Review Handoffs', 'npcink-toolbox' ),
-				'description' => __( 'Use after reviewed draft, selected image, or editor choices exist.', 'npcink-toolbox' ),
+				'title'       => __( 'Draft Handoff', 'npcink-toolbox' ),
+				'description' => __( 'Prepare Core review plans only after a reviewed draft exists.', 'npcink-toolbox' ),
 			),
 		);
 		$group_counts = array();
@@ -3471,13 +3456,13 @@ final class Admin_Page {
 		}
 
 		$surface_header = 'content-preparation' === $surface ? array(
-			'title'             => __( 'Content Preparation', 'npcink-toolbox' ),
-			'description'       => __( 'Prepare research, image, site knowledge, outline, and handoff context when the editor sidebar is not enough. Nothing writes the article body.', 'npcink-toolbox' ),
-			'scope_title'       => __( 'Preparation only', 'npcink-toolbox' ),
-			'scope_description' => __( 'Use these for planning and reviewed context. Final WordPress writes still go through Core approval.', 'npcink-toolbox' ),
+			'title'             => __( 'Content Review', 'npcink-toolbox' ),
+			'description'       => __( 'Check public content opportunities or prepare a reviewed draft for Core handoff. Article writing stays with the editor.', 'npcink-toolbox' ),
+			'scope_title'       => __( 'Review and handoff only', 'npcink-toolbox' ),
+			'scope_description' => __( 'Use these after you know what to review or already have a reviewed draft. Nothing writes the article body.', 'npcink-toolbox' ),
 		) : array(
 			'title'             => __( 'Image Handling', 'npcink-toolbox' ),
-				'description'       => __( 'Use the media library for one image, or use this page for selected image batches. Content preparation and reviewed draft handoffs live in their own tab.', 'npcink-toolbox' ),
+				'description'       => __( 'Use the media library for one image, or use this page for selected image batches. Content review and draft handoffs live in their own tab.', 'npcink-toolbox' ),
 			'scope_title'       => __( 'Image tasks', 'npcink-toolbox' ),
 			'scope_description' => __( 'Batch work starts from selected media-library images or a bounded sample. Nothing is written automatically.', 'npcink-toolbox' ),
 		);
@@ -3589,16 +3574,6 @@ final class Admin_Page {
 							);
 							continue;
 						}
-					if ( 'article_assistant' === (string) ( $tool['custom'] ?? '' ) ) {
-						$this->render_article_assistant_tool(
-							(string) $tool['endpoint'],
-							(string) $tool['title'],
-							(string) $tool['description'],
-							(string) $tool['id'],
-							0 === $index
-						);
-						continue;
-					}
 					if ( 'article_plan' === (string) ( $tool['custom'] ?? '' ) ) {
 						$this->render_article_plan_tool(
 							(string) $tool['endpoint'],
@@ -4079,89 +4054,6 @@ final class Admin_Page {
 			<?php $this->render_media_derivative_crop_controls(); ?>
 			<?php $this->render_media_derivative_watermark_controls( $toolbox_policy ); ?>
 			<button type="button" class="button button-primary" data-toolbox-run-media-derivative><?php esc_html_e( 'Generate preview', 'npcink-toolbox' ); ?></button>
-			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-		</form>
-		<?php
-	}
-
-	private function render_article_assistant_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
-		?>
-		<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
-			<h2><?php echo esc_html( $title ); ?></h2>
-			<p><?php echo esc_html( $description ); ?></p>
-			<div class="npcink-toolbox__example">
-				<strong><?php esc_html_e( 'Local workbench', 'npcink-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'This composes a planning artifact only. It does not run a cloud writer, submit a proposal, approve a proposal, or write WordPress content.', 'npcink-toolbox' ); ?></span>
-			</div>
-			<label>
-				<span><?php esc_html_e( 'Topic', 'npcink-toolbox' ); ?></span>
-				<input type="text" name="topic" placeholder="<?php esc_attr_e( 'Article topic', 'npcink-toolbox' ); ?>" />
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Working title', 'npcink-toolbox' ); ?></span>
-				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Optional title override', 'npcink-toolbox' ); ?>" />
-			</label>
-			<div class="npcink-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Audience', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="target_audience" placeholder="<?php esc_attr_e( 'Target reader', 'npcink-toolbox' ); ?>" />
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Angle', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="angle" placeholder="<?php esc_attr_e( 'Point of view or structure', 'npcink-toolbox' ); ?>" />
-				</label>
-			</div>
-			<div class="npcink-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Language', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="language" value="zh-CN" />
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Target words', 'npcink-toolbox' ); ?></span>
-					<input type="number" min="500" max="5000" step="50" name="target_word_count" value="1200" />
-				</label>
-			</div>
-			<label>
-				<span><?php esc_html_e( 'Article goal', 'npcink-toolbox' ); ?></span>
-				<textarea name="article_goal" rows="2" placeholder="<?php esc_attr_e( 'What should the article help the reader do?', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<div class="npcink-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Must include', 'npcink-toolbox' ); ?></span>
-					<textarea name="must_include" rows="3" placeholder="<?php esc_attr_e( 'One required point per line', 'npcink-toolbox' ); ?>"></textarea>
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Must avoid', 'npcink-toolbox' ); ?></span>
-					<textarea name="must_avoid" rows="3" placeholder="<?php esc_attr_e( 'One forbidden or sensitive point per line', 'npcink-toolbox' ); ?>"></textarea>
-				</label>
-			</div>
-			<label>
-				<span><?php esc_html_e( 'Reference URLs', 'npcink-toolbox' ); ?></span>
-				<textarea name="reference_urls" rows="3" placeholder="<?php esc_attr_e( 'One source URL per line', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Draft notes', 'npcink-toolbox' ); ?></span>
-				<textarea name="draft_notes" rows="4" placeholder="<?php esc_attr_e( 'Operator notes, facts, outline fragments, or constraints.', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Reviewed draft body', 'npcink-toolbox' ); ?></span>
-				<textarea name="reviewed_draft_markdown" rows="7" placeholder="<?php esc_attr_e( 'Optional. When present and risk checks pass, Toolbox also returns an article_write_plan for Core intake.', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<div class="npcink-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Source policy', 'npcink-toolbox' ); ?></span>
-					<select name="source_policy">
-						<option value="strict_sources"><?php esc_html_e( 'Strict sources', 'npcink-toolbox' ); ?></option>
-						<option value="review_required"><?php esc_html_e( 'Review required', 'npcink-toolbox' ); ?></option>
-						<option value="operator_notes_only"><?php esc_html_e( 'Operator notes only', 'npcink-toolbox' ); ?></option>
-					</select>
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Tone', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="tone" placeholder="<?php esc_attr_e( 'Optional tone hint', 'npcink-toolbox' ); ?>" />
-				</label>
-			</div>
-			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build assistant artifact', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

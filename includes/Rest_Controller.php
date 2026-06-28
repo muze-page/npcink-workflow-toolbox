@@ -373,7 +373,7 @@ final class Rest_Controller {
 				array(
 					'topic'    => $topic,
 					'title'    => sanitize_text_field( (string) ( $request->get_param( 'title' ) ?: $topic ) ),
-					'scenario' => sanitize_key( (string) ( $request->get_param( 'scenario' ) ?: 'article_assistant' ) ),
+					'scenario' => sanitize_key( (string) ( $request->get_param( 'scenario' ) ?: 'discoverability' ) ),
 				)
 			)
 		);

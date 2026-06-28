@@ -159,7 +159,6 @@ Current ability ids:
 - `npcink-toolbox/cloud-web-search`
 - `npcink-toolbox/get-site-knowledge-status`
 - `npcink-toolbox/request-site-knowledge-sync`
-- `npcink-toolbox/build-article-assistant`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
@@ -174,7 +173,9 @@ Current ability ids:
 - `npcink-toolbox/build-ai-article-writing-pack`
 
 These are read/suggestion tools. They must not imply final WordPress write
-approval, media import approval, or indexing lifecycle ownership.
+approval, media import approval, or indexing lifecycle ownership. The legacy
+`/flows/article-assistant` REST route remains route-only compatibility and is
+not registered as a public Toolbox ability.
 `npcink-toolbox/build-article-write-plan` assembles a Core-ready
 `article_write_plan` for a reviewed draft and leaves proposal creation,
 approval, preflight, audit, and final execution outside Toolbox.
@@ -521,7 +522,7 @@ Profile, and safe mode, followed by common site/image next steps plus one
 folded advanced directory. Single-post article support stays in the post editor
 sidebar and is not rendered as an Overview work block. The visible top-level
 admin tabs after Overview are **Site Profile**, **Image Handling**,
-**Content Preparation**, and **Advanced**. **Full-site Insights** remains a
+**Content Review**, and **Advanced**. **Full-site Insights** remains a
 secondary deep-link panel and is the Overview page's recommended site-check
 action; it builds a local
 `site_ops_insight_pack.v1` from bounded public content, approved comment signal
@@ -553,10 +554,11 @@ single-article image text helper; article-specific image text needs current
 editor context in the editor sidebar. The separate **Batch Image ALT** group
 builds a small selected media-library review set and can prepare a Core handoff
 draft without creating a proposal or writing media metadata. The separate
-**Content Preparation** tab owns content snapshot checks and reviewed handoffs.
+**Content Review** tab owns site content opportunity checks and reviewed draft handoffs.
 The old Article Planning Bundle is not an operator-facing admin tool;
 `/flows/article-brief` remains available only as a compatibility REST route for
-OpenClaw or external AI callers.
+OpenClaw or external AI callers, and the old `tool=article-assistant` URL falls
+back to the reviewed draft Core handoff.
 Batch entry points use `tab=image&tool=bulk-alt` and
 `tab=image&tool=batch-optimize`; deprecated `tool=optimize` and legacy
 `toolbox_tool=media-derivative` URLs remain accepted only as compatibility

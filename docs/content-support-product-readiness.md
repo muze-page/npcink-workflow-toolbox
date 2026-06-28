@@ -14,9 +14,9 @@ Toolbox may recommend, preview, and package reviewed handoffs. Toolbox must not
 approve Core proposals, execute final WordPress writes, create a second media
 registry, or become a prompt/model control plane.
 
-Human editors own the article text. Article Assistant remains a fallback
-workbench for reviewed local artifacts, not the default editor button that
-promises to write the article body.
+Human editors own the article text. Article Assistant is retired from the
+operator-facing and public Ability surface; the legacy route remains only as a
+compatibility path for older callers.
 
 ## Feedback Observation Loop
 
@@ -64,7 +64,7 @@ truth, audit truth, or final WordPress write owner.
 | Image candidates and media optimization | Editor Content Support exposes `image_candidates`; Toolbox owns image-source UX and Cloud/provider requests, then delegates review artifact projection to `npcink-abilities-toolkit/build-image-candidate-review-artifact`. Toolbox admin owns the fixed `media_optimization_v1` flow through Media Library image actions and Batch Optimize Images, with media derivative preview and Core proposal handoff. | Accepted for current phase. Crop override controls, preview-only Cloud Checks, and Core media proposal proof are implemented. Third-party plugins can reuse the Toolkit `image_candidate_review.v1` artifact before adoption planning. | Image-source candidates remain candidates; media derivative adoption remains one reviewed Core proposal, not direct media writes. |
 | Publish preflight and SEO handoff | Editor Content Support exposes `publish_preflight`, returns `pre_publish_review.v1`, and packages `seo_meta_handoff_preview.v1` for `npcink-abilities-toolkit/set-post-seo-meta`. | Accepted for current phase. Browser validation created a pending Core SEO proposal from the editor, and Core review now surfaces `field_patch` values before raw JSON. | Toolbox creates only a pending proposal. Approval, preflight, audit, and execution authorization stay in Core/Adapter/Abilities. |
 | Operator feedback loop | Editor Content Support, image candidates, and Site Knowledge review surfaces can send fixed-label, metadata-only `cloud_agent_feedback.v1` events through the shared `/agent-feedback` route. Explicit editor feedback is hidden behind issue-report entries; useful behavior is captured from successful result actions. | Accepted as a narrow observation loop. Feedback is for Cloud eval and quality rollup only. The default editor view should not show a large always-visible rating panel. | Feedback does not mutate prompts, routers, profiles, proposals, audit truth, media, SEO fields, posts, or WordPress content. |
-| Article body generation | Article Assistant Workbench exists for broad fallback packaging and reviewed local draft artifacts. | Intentionally not the primary product. Do not promote this as a default article generator. | No Cloud article generation, no autonomous writer, no one-click long-form writing promise. |
+| Article body generation | The retired Article Assistant route remains compatibility-only for older workbench callers. | Do not promote it as a product entry or public Ability. Use editor support or reviewed-draft handoff instead. | No Cloud article generation, no autonomous writer, no one-click long-form writing promise. |
 
 ## Verification Evidence
 

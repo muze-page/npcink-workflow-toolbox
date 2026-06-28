@@ -192,21 +192,6 @@ final class Abilities {
 					'cloud_contract'      => 'site_knowledge_sync.v1',
 				)
 			),
-			'npcink-toolbox/build-article-assistant'            => $this->definition(
-				__( 'Build Article Assistant Workbench', 'npcink-toolbox' ),
-				__( 'Build one local article_draft_v1 workbench artifact from topic, evidence, site context, draft notes, and reviewed draft input without writing WordPress content.', 'npcink-toolbox' ),
-				array( 'topic' ),
-				array( $this, 'build_article_assistant' ),
-				'cap.toolbox.workflow_suggest',
-				array(
-					'data_classification' => 'planning_artifact',
-					'composition_role'    => 'article_assistant_workbench',
-					'local_recipe_id'     => 'article_draft_v1',
-					'ability_recipe_ref'  => 'npcink-abilities-toolkit/recipes/article-draft',
-					'provider_execution'  => 'server_side_toolbox',
-					'write_posture'       => 'core_proposal_handoff',
-				)
-			),
 			'npcink-toolbox/build-article-write-plan'           => $this->definition(
 				__( 'Build Article Write Plan', 'npcink-toolbox' ),
 				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'npcink-toolbox' ),
@@ -436,10 +421,6 @@ final class Abilities {
 
 	public function request_site_knowledge_sync( $input = array() ) {
 		return $this->client->request_site_knowledge_sync( is_array( $input ) ? $input : array() );
-	}
-
-	public function build_article_assistant( $input = array() ) {
-		return $this->client->build_article_assistant( is_array( $input ) ? $input : array() );
 	}
 
 	public function build_article_write_plan( $input = array() ) {

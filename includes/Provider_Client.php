@@ -2172,30 +2172,19 @@ final class Provider_Client {
 			);
 		}
 
-		$scenario = sanitize_key( (string) ( $input['scenario'] ?? 'article_assistant' ) );
-		if ( ! in_array( $scenario, array( 'article_assistant', 'discoverability', 'publish_preflight' ), true ) ) {
-			$scenario = 'article_assistant';
+		$scenario = sanitize_key( (string) ( $input['scenario'] ?? 'discoverability' ) );
+		if ( ! in_array( $scenario, array( 'discoverability', 'publish_preflight' ), true ) ) {
+			$scenario = 'discoverability';
 		}
 
-		if ( 'article_assistant' === $scenario ) {
-			$artifact = $this->build_article_assistant(
-				array(
-					'topic'         => $topic,
-					'title'         => sanitize_text_field( (string) ( $input['title'] ?? $topic ) ),
-					'source_policy' => 'strict_sources',
-					'draft_notes'   => sanitize_textarea_field( (string) ( $input['draft_notes'] ?? '' ) ),
-				)
-			);
-		} else {
-			$artifact = $this->build_content_discoverability_brief(
-				array(
-					'topic'                  => $topic,
-					'title'                  => sanitize_text_field( (string) ( $input['title'] ?? $topic ) ),
-					'external_search_intent' => 'publish_preflight' === $scenario ? 'fact_check' : 'writing_context',
-					'include_external_search' => true,
-				)
-			);
-		}
+		$artifact = $this->build_content_discoverability_brief(
+			array(
+				'topic'                  => $topic,
+				'title'                  => sanitize_text_field( (string) ( $input['title'] ?? $topic ) ),
+				'external_search_intent' => 'publish_preflight' === $scenario ? 'fact_check' : 'writing_context',
+				'include_external_search' => true,
+			)
+		);
 
 		if ( is_wp_error( $artifact ) ) {
 			return $artifact;
@@ -2383,7 +2372,8 @@ final class Provider_Client {
 			'article_risk_report'    => $risk_report,
 			'article_write_plan'     => is_wp_error( $write_plan ) ? array( 'error' => $write_plan->get_error_message() ) : $write_plan,
 			'handoff'                => array(
-				'assistant_ability_id'   => 'npcink-toolbox/build-article-assistant',
+				'assistant_route'        => '/wp-json/npcink-toolbox/v1/flows/article-assistant',
+				'assistant_surface'      => 'legacy_route_only',
 				'write_plan_ability_id'  => 'npcink-toolbox/build-article-write-plan',
 				'recipe_id'              => 'article_draft_v1',
 				'recipe_ref'             => 'npcink-abilities-toolkit/recipes/article-draft',

@@ -20,7 +20,7 @@ compact AI service / site profile / safe mode rows, and common task entries
 before folding setup, diagnostics, fallback previews, and lower-frequency
 workbench links into an **Advanced and troubleshooting** disclosure. The visible
 top-level tabs are **Overview**, **Site Profile**, **Image Handling**,
-**Content Preparation**, and **Advanced**.
+**Content Review**, and **Advanced**.
 
 The former broad content-support admin area is split into focused work
 surfaces. **Image Handling** defaults to image tools, with **Batch Optimize
@@ -30,10 +30,9 @@ selected-image workbenches. The former single-article image text helper is
 removed from the backend because it needs current editor context. A separate
 **Batch Image Text Review** tool now builds a small selected media-library
 review set and can prepare a Core handoff draft without creating proposals or
-writing media metadata. **Content Preparation** owns content snapshot checks and
-article preparation bundles; reviewed handoffs sit in a compact **Review
-Handoffs** group tab so they remain available without looking like the daily
-writing path.
+writing media metadata. **Content Review** owns site content opportunity checks
+and reviewed draft handoff; the retired article assistant URL falls back to the
+reviewed draft handoff instead of restoring a daily writing path.
 Deprecated `tab=image&tool=optimize` and
 `toolbox_tab=tools&toolbox_tool=media-derivative` links now canonicalize to
 Batch Optimize Images.
@@ -107,8 +106,8 @@ The following gates passed after the changes:
 Browser verification during the earlier consolidation pass confirmed:
 
 - Image Handling opens by default to Image Tools and Batch Optimize Images.
-- Content Preparation contains article preparation bundles, and reviewed
-  handoff tools are reached from the compact Review Handoffs group tab.
+- Content Review contains the site content opportunity check and reviewed draft
+  Core handoff.
 - Site Knowledge returned `200` after Cloud quota was updated.
 - Content Library Setup status rendered as ready with no console warning or
   error.
