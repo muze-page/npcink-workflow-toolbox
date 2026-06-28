@@ -27,7 +27,9 @@ The first version provides:
   candidate artifact path, and Toolbox may prepare a Core-governed article
   audio adoption plan with lightweight source-content freshness evidence, but
   does not adopt, import, regenerate, or write audio itself;
-- a content snapshot helper for bounded public-content opportunities; media
+- a content opportunity helper that samples recent, older, missing-image, and
+  taxonomy-backed public content to find bounded update, linking, expansion,
+  or image opportunities; media
   ALT/caption helper contracts stay available for editor-sidebar use and future
   batch review sets, but the standalone admin tool is not exposed;
 - a **Full-site Insights** tab that builds a local

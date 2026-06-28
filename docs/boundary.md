@@ -343,10 +343,13 @@ and the result is suggestion-only. This route must not claim full-site
 crawling, site-health scoring, analytics/indexing coverage, image-pixel
 inspection, media-library batch updates, local queues, proposal creation,
 approval, or WordPress writes.
-The backend admin surface exposes content snapshot checks and selected media
-ALT/caption review sets. Current article media ALT support belongs in the
-editor sidebar; backend batch media ALT support must stay on the explicit
-selected review-set surface and must not become a whole-library update path.
+The backend admin surface exposes content opportunity checks and selected media
+ALT/caption review sets. Content opportunity checks use bounded public samples
+for reviewable update, linking, expansion, or image suggestions only; they are
+not full-site audits, content generators, local crawlers, or write plans.
+Current article media ALT support belongs in the editor sidebar; backend batch
+media ALT support must stay on the explicit selected review-set surface and
+must not become a whole-library update path.
 When the editor sidebar needs image ALT support, it may pass only the current
 article's featured image and image-block metadata through `/editor/content-support`;
 that narrow snapshot must not become a media-library scan, batch update path,
