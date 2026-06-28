@@ -289,12 +289,12 @@
 			description: __('Review SEO, AEO, GEO, and proposal-field suggestions for the current draft.', 'npcink-toolbox'),
 			group: 'pre_publish',
 		},
-		{
-			intent: 'image_alt_suggestions',
-			label: __('Image ALT suggestions', 'npcink-toolbox'),
-			description: __('Suggest ALT and caption notes for images already used by this draft.', 'npcink-toolbox'),
-			group: 'pre_publish',
-		},
+			{
+				intent: 'image_alt_suggestions',
+				label: __('Check this article images', 'npcink-toolbox'),
+				description: __('Review ALT and caption suggestions for images already used by this article.', 'npcink-toolbox'),
+				group: 'pre_publish',
+			},
 		{
 			intent: 'comment_reply_suggestion',
 			label: __('Comment reply suggestions', 'npcink-toolbox'),
@@ -1708,7 +1708,7 @@
 			article_outline: __('Outline suggestions', 'npcink-toolbox'),
 			polish_notes: __('Paragraph check', 'npcink-toolbox'),
 			discoverability: __('Discoverability suggestions', 'npcink-toolbox'),
-			image_alt_suggestions: __('Image ALT suggestions', 'npcink-toolbox'),
+				image_alt_suggestions: __('Article image text check', 'npcink-toolbox'),
 			comment_reply_suggestion: __('Comment reply suggestions', 'npcink-toolbox'),
 			categories: __('Categories', 'npcink-toolbox'),
 			tags: __('Tags', 'npcink-toolbox'),
@@ -1838,9 +1838,9 @@
 		if (value === 'discoverability') {
 			return __('Discoverability suggestions', 'npcink-toolbox');
 		}
-		if (value === 'image_alt_suggestions') {
-			return __('Image ALT suggestions', 'npcink-toolbox');
-		}
+			if (value === 'image_alt_suggestions') {
+				return __('Article image text check', 'npcink-toolbox');
+			}
 		if (value === 'comment_reply_suggestion') {
 			return __('Comment reply suggestions', 'npcink-toolbox');
 		}
@@ -4214,7 +4214,7 @@
 		return createElement(
 			'section',
 			{ className: 'npcink-toolbox-editor-support__discoverability-media' },
-			createElement('h4', null, __('Image ALT and caption check', 'npcink-toolbox')),
+				createElement('h4', null, __('Article image text check', 'npcink-toolbox')),
 			mediaSummary.total ? createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__discoverability-media-counts' },
@@ -4223,7 +4223,7 @@
 				createElement('span', null, sprintf(__('%d weak ALT', 'npcink-toolbox'), mediaSummary.weakAlt)),
 				createElement('span', null, sprintf(__('%d missing captions', 'npcink-toolbox'), mediaSummary.missingCaption))
 			) : createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('No images are currently used by this draft.', 'npcink-toolbox')),
-			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Generate review-only ALT and caption suggestions for images already used by this draft. Toolbox will not write media metadata.', 'npcink-toolbox')),
+				createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Generate review-only ALT and caption suggestions for images already used by this article. Toolbox will not write media metadata.', 'npcink-toolbox')),
 			createElement(
 				Button,
 				{
@@ -4236,7 +4236,7 @@
 						resultIntent: 'discoverability',
 					}),
 				},
-				isRunning ? __('Generating ALT suggestions', 'npcink-toolbox') : __('Generate ALT and caption suggestions', 'npcink-toolbox')
+					isRunning ? __('Checking article images', 'npcink-toolbox') : __('Check article image text', 'npcink-toolbox')
 			),
 			suggestionItems.length ? createElement(
 				'div',
@@ -5693,7 +5693,7 @@
 
 				if (sections.image_alt_suggestions && !showImageAltInsideDiscoverability) {
 					if (metadataHandoffControls && metadataHandoffControls.intent !== 'image_alt_suggestions') {
-						blocks.push(createElement('h4', { key: 'image-alt-suggestions-title' }, __('Image ALT suggestions', 'npcink-toolbox')));
+							blocks.push(createElement('h4', { key: 'image-alt-suggestions-title' }, __('Article image text suggestions', 'npcink-toolbox')));
 					}
 					blocks.push(renderItems(imageAltSuggestionItems(sections.image_alt_suggestions), __('No image ALT suggestions returned.', 'npcink-toolbox')));
 					blocks.push(renderHostedAiDiagnostics(sections.image_alt_suggestions));

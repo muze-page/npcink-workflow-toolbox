@@ -14,31 +14,53 @@ Abilities.
 
 ## What Changed
 
-The admin page now starts from a compact **Start** tab. It summarizes Cloud
-runtime readiness, Site Context, Site Knowledge ownership, and final-write
-posture, then shows the primary operator entries before folding setup,
-diagnostics, fallback previews, and lower-frequency workbench links into an
-advanced directory.
+The admin page now starts from a compact **Overview** tab for ordinary site
+owners. It shows one plain-language recommended action (**Check my site**),
+compact AI service / site profile / safe mode rows, and common task entries
+before folding setup, diagnostics, fallback previews, and lower-frequency
+workbench links into an **Advanced and troubleshooting** disclosure. The visible
+top-level tabs are **Overview**, **Site Profile**, **Image Handling**,
+**Content Preparation**, and **Advanced**.
 
-The former broad content-support admin area is now **Workflows**. It defaults to
-**Media**, with **Optimize Existing Image** as the first visible tool. Site
-Helpers remain available for low-frequency AI checks. Reviewed handoffs and
-fallback article bundles are folded under an advanced/fallback disclosure so
-they do not look like the daily writing path.
+The former broad content-support admin area is split into focused work
+surfaces. **Image Handling** defaults to image tools, with **Optimize Existing
+Image** as the first visible tool. The former single-article image text helper
+is removed from the backend because it needs current editor context. A separate
+**Batch Image Text Review** tool now builds a small selected media-library
+review set and can prepare a Core handoff draft without creating proposals or
+writing media metadata. **Content Preparation** owns content snapshot checks and
+article preparation bundles; reviewed handoffs sit in a compact **Review
+Handoffs** group tab so they remain available without looking like the daily
+writing path.
+New Optimize Existing Image links use `tab=image&tool=optimize`; the older
+`toolbox_tab=tools&toolbox_tool=media-derivative` deep link remains a
+compatibility alias only.
 
 High-frequency article support stays in the post editor sidebar. Admin
 Workflows no longer expose publish preflight, summary/category/tag support,
 internal-link candidates, or image candidates as backend article buttons.
 
-**Cloud Checks** keeps the stable `cloud-checks` deep-link id, but it now
-presents search, image, Site Knowledge search verification, and Nightly
-Inspection runtime detail as troubleshooting surfaces. Content Operations
+**Full-site Insights** is now the Overview page's primary site-check action
+instead of a visible top-level tab. It keeps the stable `operations-insights`
+deep-link panel for report URLs, nonce-protected scan links, and Cloud analysis
+review detail.
+
+**AI Service Checks** keeps the stable `cloud-checks` deep-link id as a
+secondary diagnostics panel instead of a visible top-level tab. It now defaults
+to one basic read-only service check for ordinary operators. Search, image,
+content library, and scheduled review diagnostics stay folded under detailed
+service checks and open automatically for old deep links. Content Operations
 coverage and Agent feedback quality summaries link out to Cloud Addon
 Monitoring instead of rendering as Toolbox panels. Site Knowledge status and
-refresh controls stay in the Site Knowledge tab. Nightly Inspection local
-fallback settings, Pro Cloud Runtime quota/detail, and Cloud run recovery stay
-here instead of competing with the Start page's primary
-operator entries.
+refresh controls stay in the secondary **Content Library Setup** panel reached
+from Advanced. Nightly Inspection local fallback settings, Pro Cloud Runtime
+quota/detail, and Cloud run recovery stay in detailed checks instead of
+competing with the Start page's primary operator entries.
+
+Site Profile now defaults to the four-field site brief: positioning, audience,
+voice, and primary keywords. SEO, AEO, GEO, claim boundaries, and the read-only
+ability payload preview remain available under one folded advanced guidance
+area.
 
 Site Knowledge status now distinguishes the Cloud index state from automatic
 public-change delivery health. When Cloud Addon exposes the Site Knowledge
@@ -80,13 +102,14 @@ The following gates passed after the changes:
 - `composer test:all`
 - `git diff --check`
 
-Browser verification during the session confirmed:
+Browser verification during the earlier consolidation pass confirmed:
 
-- Workflows opened by default to Media and Optimize Existing Image.
-- Advanced/fallback Workflows stayed collapsed by default and deep-linked tools
-  opened the disclosure correctly.
+- Image Handling opens by default to Image Tools and Optimize Existing Image.
+- Content Preparation contains article preparation bundles, and reviewed
+  handoff tools are reached from the compact Review Handoffs group tab.
 - Site Knowledge returned `200` after Cloud quota was updated.
-- Site Knowledge status rendered as ready with no console warning or error.
+- Content Library Setup status rendered as ready with no console warning or
+  error.
 
 The final browser session was no longer logged in, so the last localization and
 attached-panel adjustments were verified through static contracts and the full

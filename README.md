@@ -27,8 +27,9 @@ The first version provides:
   candidate artifact path, and Toolbox may prepare a Core-governed article
   audio adoption plan with lightweight source-content freshness evidence, but
   does not adopt, import, regenerate, or write audio itself;
-- an **AI Site Helpers** entry group for lightweight media ALT suggestions and
-  bounded public-content snapshot opportunities;
+- a content snapshot helper for bounded public-content opportunities; media
+  ALT/caption helper contracts stay available for editor-sidebar use and future
+  batch review sets, but the standalone admin tool is not exposed;
 - a **Full-site Insights** tab that builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
@@ -150,6 +151,7 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/nightly-inspection-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`
+- `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
@@ -351,6 +353,13 @@ payload and can be submitted through Adapter as one pending Core review
 proposal; Toolbox does not approve, execute, or mutate SEO fields.
 See [Editor Progressive Recommendations Closeout](docs/editor-progressive-recommendations-closeout.md)
 for the local prefetch contract, quality rules, and verification record.
+Current-article image ALT/caption review belongs in the editor sidebar, where
+the post context and used images are available. The backend Image Handling tab
+only exposes a selected media-library review set for recent images with weak
+ALT or caption metadata. Accepted items can be converted into a
+`media_alt_caption_core_handoff_plan.v1` through
+`/wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`; that route
+creates no Core proposal, approval, execution, media upload, or metadata write.
 Accepted excerpt, existing category, and existing tag choices can be
 converted into a dry-run `content_metadata_apply_plan` through
 `/wp-json/npcink-toolbox/v1/flows/content-metadata-apply-plan`; the plan uses
@@ -445,22 +454,25 @@ and publish-readiness support because those actions need the current article con
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
-The separate AI Site Helpers group uses the same hosted AI posture for media
-ALT suggestions and bounded content snapshot opportunities. Toolbox samples a
-small amount of public-site or media metadata, Cloud produces reviewable
-suggestions, and no media library, post, SEO, proposal, crawler, or queue state
-is changed locally.
+The admin Content Preparation surface keeps only the bounded content snapshot
+helper. Media ALT/caption helper contracts remain available to editor-sidebar
+flows and future batch review sets, where the operator has either current
+article context or an explicit selected review set. In all cases, Toolbox
+samples only the supplied public-site or media metadata, Cloud produces
+reviewable suggestions, and no media library, post, SEO, proposal, crawler, or
+queue state is changed locally.
 Publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal-link candidates, and image candidates belong in the editor sidebar.
 Internal-link candidate assembly is delegated to
 `npcink-abilities-toolkit/resolve-internal-link-targets`; Toolbox only passes
 editor context plus optional Cloud Site Knowledge evidence and renders the
 review/copy/open surface.
-The admin Workflows tab defaults to media work, with **Optimize Existing Image**
-as the first visible tool. Site helpers remain a secondary low-frequency group.
-Governed handoffs and the combined Article Planning Bundle live under the
-folded advanced/fallback area so they read as reviewed-input handoffs or backup
-packages, not as the primary support workflow.
+The admin **Image Handling** tab defaults to media work, with **Optimize
+Existing Image** as the first visible tool. New operator-facing links use
+`tab=image&tool=optimize`; legacy
+`toolbox_tab=tools&toolbox_tool=media-derivative` URLs remain accepted for
+compatibility. Site helpers remain secondary low-frequency checks, while
+content preparation and reviewed handoffs live in their own admin surface.
 
 `media_optimization_v1` names the existing **Optimize Existing Image** surface
 as a fixed governed workflow, not a new workflow runtime or persistent run
@@ -615,7 +627,7 @@ while Content Operations coverage and Agent quality summaries live in Cloud
 Addon Monitoring.
 including text or image/logo watermark overrides for that run. Core proposal
 submission, batch proposal submission, and URL repair handoffs remain in
-**Workflows -> Optimize Existing Image**.
+**Image Handling -> Optimize Existing Image**.
 
 Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include redacted raw provider payloads for debugging.

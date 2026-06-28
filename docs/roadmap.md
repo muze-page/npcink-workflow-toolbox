@@ -95,6 +95,9 @@ Target features:
 - batch review-set planning for media optimization, with explicit eligibility
   summaries, blocked reasons, selected previews, and selected Core proposal
   submissions;
+- selected media ALT/caption review-set planning for recent weak metadata
+  images, with operator selection and a Core handoff draft only; Toolbox does
+  not create the proposal, approve, execute, or write media metadata;
 - OpenClaw/Adapter selected-batch execution proof before any Toolbox batch
   "replace original image" button is treated as product-ready;
 - article write plan artifact for one reviewed human draft as a fallback

@@ -70,12 +70,16 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
-Cloud Checks keep the stable `cloud-checks` deep-link id while opening
-directly into verification tools for Cloud-managed search, image-source
-candidates, preview-only media derivatives, Site Knowledge search, and Nightly
-Inspection runtime detail. The tabs may show compact readiness labels, but each
-panel should prioritize the Toolbox ability reachability check or recovery task
-instead of repeating provider ownership detail.
+AI Service Checks keep the stable `cloud-checks` deep-link id as a secondary
+diagnostics panel rather than a visible top-level admin tab. Start links to it
+from the folded advanced directory. The default view is one basic read-only
+service check for ordinary operators; detailed checks for Cloud-managed search,
+image-source candidates, preview-only media derivatives, content library
+search, and scheduled review recovery stay folded for troubleshooting. Legacy
+deep links may open the detailed area directly. The tabs may show compact
+readiness labels, but each panel should prioritize the Toolbox ability
+reachability check or recovery task instead of repeating provider ownership
+detail.
 Search checks use Cloud auto execution only; provider
 selection, Jina Reader toggles, routing diagnostics, Cloud API key verification,
 entitlement, billing, quota, and request logs belong in Cloud Addon or Cloud
@@ -86,16 +90,22 @@ batch proposal, and URL repair handoffs stay in Workflows. Marketplace,
 provider routing, vector provider settings, and vector lifecycle controls do
 not belong in Toolbox.
 
-The admin page should default to Start: readiness, site-level and media next
-actions, and one folded advanced directory. It should not render a single-post
-article-support work block. Article-specific jobs use the editor Content
-Support sidebar:
+The admin page should default to Overview: one recommended site-level action,
+compact readiness rows for AI service, Site Profile, and safe mode, site-level
+and media next actions, and one folded advanced directory. The visible
+top-level tabs are Overview, Site Profile, Image Handling, Content Preparation,
+and Advanced; Full-site Insights, Site Knowledge, and Cloud Checks remain
+secondary deep-link panels. Overview should not render a single-post
+article-support work block.
+Article-specific jobs use the editor Content Support sidebar:
 publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal links, and image candidates. Related existing-post review is folded
 into publish preflight duplicate-risk checks and internal-link candidates, so
 `writing_support` remains route-compatible but is not a default editor button.
-The Full-site Insights tab is the site-level analysis surface. It builds a
-manual local `site_ops_insight_pack.v1` from bounded public content,
+Full-site Insights is the site-level analysis surface and the Overview page's
+recommended next action. It is no longer a visible top-level tab, but the
+stable `operations-insights` deep link still opens its secondary panel. It
+builds a manual local `site_ops_insight_pack.v1` from bounded public content,
 approved-comment signal counts, media metadata, taxonomy summaries, Site
 Context readiness, and Cloud availability, then presents the current run as
 coverage metrics, lightweight charts, deterministic local summary, content,
@@ -107,12 +117,21 @@ send it or create local runtime state. When Cloud is ready, an administrator
 can explicitly run Cloud analysis and review the suggestion-only
 `site_ops_cloud_analysis_result.v1` without Toolbox creating a local queue,
 local run table, Core proposal, or WordPress write.
-The admin Workflows tab defaults to Media, with Optimize Existing Image as the
-first visible tool, and keeps Site Helpers as a secondary low-frequency group.
-Governed Handoffs and Fallback Bundles sit under the folded advanced/fallback
-area so the combined Article Planning Bundle remains a backup package, not the
-primary workflow. The lower-level `taxonomy_tags` intent remains available to
-the route but is not a separate default button in the editor UI.
+The admin Image Handling tab defaults to Image Tools, with Optimize Existing
+Image as the first visible tool. It does not expose the former single-article
+Image Text Checks tool; current-article ALT/caption review belongs in the
+editor sidebar. Batch Image Text Review is a separate selected media-library
+review-set surface that can prepare a Core handoff draft without scanning the
+whole library, creating proposals, approving, executing, or writing media
+metadata.
+The separate Content Preparation tab contains content snapshot checks and
+preparation bundles, including the combined Article Planning Bundle, while
+reviewed handoffs sit in a compact Review Handoffs group tab. The Optimize
+Existing Image public deep link uses the operator-facing
+`tab=image&tool=optimize` pair; legacy
+`toolbox_tab=tools&toolbox_tool=media-derivative` URLs stay compatible. The
+lower-level `taxonomy_tags` intent remains available to the route but is not a
+separate default button in the editor UI.
 
 ## Content Discoverability Context
 
@@ -455,6 +474,7 @@ The first-version route matrix is exact:
 - `POST /flows/site-knowledge-review-plan`
 - `POST /flows/nightly-inspection-review-plan`
 - `POST /flows/content-metadata-apply-plan`
+- `POST /flows/media-alt-caption-review-plan`
 - `POST /flows/media-brief`
 - `POST /editor/content-support`
 - `POST /media-derivative-handoff`

@@ -54,6 +54,7 @@ final class Rest_Controller {
 		$this->post( '/flows/site-knowledge-review-plan', 'site_knowledge_review_plan' );
 		$this->post( '/flows/nightly-inspection-review-plan', 'nightly_inspection_review_plan' );
 		$this->post( '/flows/content-metadata-apply-plan', 'content_metadata_apply_plan' );
+		$this->post( '/flows/media-alt-caption-review-plan', 'media_alt_caption_review_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
@@ -131,6 +132,7 @@ final class Rest_Controller {
 			'/flows/site-knowledge-review-plan'            => 'cap.toolbox.workflow_suggest',
 			'/flows/nightly-inspection-review-plan'        => 'cap.toolbox.workflow_suggest',
 			'/flows/content-metadata-apply-plan'           => 'cap.toolbox.workflow_suggest',
+			'/flows/media-alt-caption-review-plan'         => 'cap.toolbox.workflow_suggest',
 			'/flows/media-brief'                           => 'cap.toolbox.workflow_suggest',
 			'/editor/content-support'                      => 'cap.toolbox.workflow_suggest',
 			'/media-derivative-handoff'                    => 'cap.toolbox.workflow_suggest',
@@ -755,12 +757,17 @@ final class Rest_Controller {
 		return rest_ensure_response( $this->client->build_nightly_inspection_review_plan( is_array( $params ) ? $params : array() ) );
 	}
 
-	public function content_metadata_apply_plan( WP_REST_Request $request ) {
-		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
-		return rest_ensure_response( $this->client->build_content_metadata_apply_plan( is_array( $params ) ? $params : array() ) );
-	}
+		public function content_metadata_apply_plan( WP_REST_Request $request ) {
+			$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+			return rest_ensure_response( $this->client->build_content_metadata_apply_plan( is_array( $params ) ? $params : array() ) );
+		}
 
-	public function media_brief( WP_REST_Request $request ) {
+		public function media_alt_caption_review_plan( WP_REST_Request $request ) {
+			$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
+			return rest_ensure_response( $this->client->build_media_alt_caption_review_plan( is_array( $params ) ? $params : array() ) );
+		}
+
+		public function media_brief( WP_REST_Request $request ) {
 		$post_id = absint( $request->get_param( 'post_id' ) );
 		if ( 0 === $post_id ) {
 			return new WP_Error(
