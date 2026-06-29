@@ -103,3 +103,21 @@ default Npcink workflow coverage, route-only compatibility, and Core handoff
 boundary. It is not a generic Abilities Explorer, provider picker, request log,
 or connector approval surface, and it must not create proposals, queues,
 provider calls, or WordPress writes.
+
+## 2026-06-29 Closeout
+
+This rule was implemented and merged through PR #33. The closeout record is
+[AI Plugin Overlap Closeout - 2026-06-29](ai-plugin-overlap-closeout-2026-06-29.md).
+
+The practical result is:
+
+- duplicated generic AI entries are demoted from default visible Toolbox UI;
+- compatible REST and rendering paths remain where current workflows still rely
+  on them;
+- Npcink-owned workflows remain visible as default entries;
+- the Overview page shows read-only capability health instead of a generic AI
+  administration surface;
+- low-frequency setup, diagnostics, review, and handoff entries stay behind the
+  single grouped Advanced directory instead of being duplicated on Overview;
+- merge commit `f7fd8c798ea9329b1883ad3101bc4e2c0b8c7055` passed the default
+  `composer test:all` gate after merge.
