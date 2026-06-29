@@ -128,7 +128,7 @@ Toolbox 只负责把能力接入编辑器 fixed-flow，并保持审查边界。
 
 浏览器后台点击级 smoke 已完成，记录在：
 
-- `docs/content-operations-ui-smoke-2026-06-21.md`
+- `docs/archive/2026-06/content-operations-ui-smoke-2026-06-21.md`
 
 结果：
 

@@ -126,6 +126,9 @@ path before creating commits for a PR. Do not use GitHub's Git Data API for
 normal branch publishing; it is only an emergency fallback and can create commit
 objects that do not match the local commit SHA.
 
+For the detailed GitHub CLI/Git CLI publication path and timeout diagnostics,
+use the [GitHub Publishing Runbook](github-publishing-runbook.md).
+
 ## Publication Status Gate
 
 Local commit cleanup is not the same as publishing. Before calling a milestone
@@ -574,7 +577,7 @@ test:all` because it performs real local media replacements and requires
 Adapter, Core, Abilities, Cloud Addon, and Cloud runtime availability.
 
 Before adding another media or batch surface, run the
-[Media Optimization Operator Trial](media-optimization-operator-trial.md). The
+[Media Optimization Operator Trial](archive/2026-06/media-optimization-operator-trial.md). The
 trial records 5 to 10 low-risk real attachments, checks that selected batch
 work stays at or below the UI cap of 10 candidates, and verifies that operators
 understand preview, Core review, execution, partial failure recovery, and

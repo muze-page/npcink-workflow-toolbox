@@ -11,7 +11,7 @@ Adapter recipe, and Core proposal handoff. It is not a new workflow runtime.
 The current V1 has passed release smokes and one real-attachment operator trial:
 one single-image execution, one selected batch review set, governed execution,
 and governed restore. See
-[Media Optimization Operator Trial Results - 2026-06-18](media-optimization-operator-trial-results-2026-06-18.md).
+[Media Optimization Operator Trial Results - 2026-06-18](archive/2026-06/media-optimization-operator-trial-results-2026-06-18.md).
 
 ## Position
 

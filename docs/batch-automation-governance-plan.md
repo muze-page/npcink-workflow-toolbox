@@ -177,7 +177,7 @@ implementing it. Do not add it inside Toolbox or Adapter by default.
    single operator-triggered review artifact.
 
 Before starting item 6, complete the
-[Media Optimization Operator Trial](media-optimization-operator-trial.md). The
+[Media Optimization Operator Trial](archive/2026-06/media-optimization-operator-trial.md). The
 trial must prove that real operators understand preview, Core review,
 Adapter/Core/Abilities execution, partial failure recovery, and governed
 restore before Toolbox adds another batch surface.

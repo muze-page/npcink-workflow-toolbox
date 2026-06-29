@@ -154,7 +154,7 @@ Recommended next slice:
 - run a short editorial trial on 1-2 real human-written posts;
 - record accept/edit/reject outcomes for local taxonomy, media, and preflight
   recommendations;
-- use [Editor Progressive Recommendations Trial](editor-progressive-recommendations-trial.md)
+- use [Editor Progressive Recommendations Trial](../../editor-progressive-recommendations-trial.md)
   as the trial log and triage boundary;
 - only then decide whether to add richer ranking signals or a slow second-stage
   research package.

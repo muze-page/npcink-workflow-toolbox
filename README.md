@@ -85,61 +85,49 @@ publish-readiness checks. Human editors own the article text. Article
 Assistant exists only as a fallback workbench for reviewed local draft
 artifacts.
 
-Project goals, ownership, and future-session instructions are documented in:
+Project goals, ownership, and future-session instructions are documented in
+the [documentation index](docs/README.md). Start with:
 
 - [Product Positioning](docs/product-positioning.md)
 - [Boundary](docs/boundary.md)
-- [AI Plugin Overlap Boundary](docs/ai-plugin-overlap-boundary.md)
-- [AI Plugin Overlap Closeout](docs/ai-plugin-overlap-closeout-2026-06-29.md)
-- [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md)
 - [Architecture](docs/architecture.md)
-- [Feature Ownership And Plugin Boundary](docs/feature-ownership-and-plugin-boundary.md)
 - [Roadmap](docs/roadmap.md)
-- [Admin Surface Consolidation Summary](docs/admin-surface-consolidation-summary.md)
-- [Content Support Product Readiness](docs/content-support-product-readiness.md)
-- [Content Support Release And Trial Closeout](docs/content-support-release-trial-closeout.md)
-- [Content Support Toolkit Migration History](docs/content-support-toolkit-migration-history-2026-06-21.md)
-- [Content Metadata Apply Plan Decision Envelope Closeout](docs/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md)
-- [Site Knowledge Cloud Addon Bridge Closeout](docs/site-knowledge-cloud-addon-bridge-closeout-2026-06-21.md)
-- [Cross-Repo Release And Run Baseline](docs/cross-repo-release-run-baseline-2026-06-21.md)
-- [AI Development Quality Workflow](docs/ai-development-quality-workflow.md)
-- [GitHub Quality Guardrails Closeout](docs/github-quality-guardrails-closeout-2026-06-26.md)
-- [AI Change Envelope Template](docs/ai-change-envelope-template.md)
-- [Toolbox 0.1.1 Stage Closeout](docs/toolbox-0.1.1-stage-closeout-2026-06-22.md)
-- [WordPress.org Release Readiness Closeout](docs/wordpress-org-release-readiness-closeout-2026-06-29.md)
-- [Admin Operator UX Cleanup Summary](docs/admin-operator-ux-cleanup-summary-2026-06-29.md)
-- [Content Support Writing Checkup History](docs/content-support-writing-checkup-history.md)
-- [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md)
-- [Editor AI Image Recommendation Summary](docs/editor-ai-image-recommendation-summary.md)
-- [AI Content Composition Abilities](docs/ai-content-composition-abilities.md)
-- [Local Automation Runtime Module](modules/local-automation-runtime/README.md)
-- [Connector Ability Exposure](docs/connector-ability-exposure.md)
-- [Content Discoverability Context](docs/content-discoverability-context.md)
-- [Scoped Permissions First Version](docs/scoped-permissions-first-version.md)
-- [Security And Performance Release Gate](docs/security-performance-release-gate.md)
-- [Security And Performance Closeout](docs/security-performance-closeout-2026-06-21.md)
-- [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md)
-- [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md)
-- [OpenClaw Batch Media Optimization Handoff](docs/openclaw-batch-media-optimization-handoff.md)
-- [Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md)
-- [Retired Article Assistant Workbench](docs/article-assistant-workbench.md)
-- [Media Optimization V1](docs/media-optimization-v1.md)
-- [Batch Automation Governance Plan](docs/batch-automation-governance-plan.md)
-- [Media ALT/Caption Review Set](docs/media-alt-caption-review-set.md)
-- [Media ALT/Caption Toolkit Validation Plan](docs/media-alt-caption-toolkit-validation-plan.md)
-- [Media ALT/Caption Operator Trial](docs/media-alt-caption-operator-trial-2026-06-21.md)
-- [Media Optimization Stage Summary](docs/media-optimization-stage-summary.md)
-- [Media Optimization Release Checklist](docs/media-optimization-release-checklist.md)
-- [Media Optimization Operator Trial](docs/media-optimization-operator-trial.md)
-- [Site Ops Cloud Analysis Contract](docs/site-ops-cloud-analysis-contract.md)
-- [Full-site Insights Operator Loop](docs/full-site-insights-operator-loop.md)
-- [Full-site Insights Stage Closeout](docs/full-site-insights-stage-closeout-2026-06-24.md)
 - [Development Workflow](docs/development-workflow.md)
-- [ADR-001: Build Toolbox As A Product Surface](docs/decisions/ADR-001-toolbox-as-product-surface.md)
-- [ADR-002: Expose Content Context Through Abilities](docs/decisions/ADR-002-content-context-via-abilities.md)
-- [ADR-003: Local Admin Consent Requires A Separate Write Boundary](docs/decisions/ADR-003-local-admin-consent-boundary.md)
-- [ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md)
-- [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](docs/decisions/ADR-005-wp-cron-cloud-batch-orchestration.md)
+- [First Version Reference](docs/first-version-reference.md)
+- [WordPress.org Submission](docs/wordpress-org-submission.md)
+- [Architecture Decision Records](docs/decisions/)
+
+The documentation index also tracks key detail records that static contracts
+expect to stay discoverable from the root README:
+[Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md),
+[AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
+[Content Support Product Readiness](docs/content-support-product-readiness.md),
+[Content Support Release And Trial Closeout](docs/archive/2026-06/content-support-release-trial-closeout.md),
+[Content Support Toolkit Migration History](docs/archive/2026-06/content-support-toolkit-migration-history-2026-06-21.md),
+[Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),
+[Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md),
+[Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md),
+[Local Automation Runtime Module](modules/local-automation-runtime/README.md),
+[ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md), and
+[ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](docs/decisions/ADR-005-wp-cron-cloud-batch-orchestration.md).
+Media and hardening detail records remain indexed at
+[Media Optimization Release Checklist](docs/media-optimization-release-checklist.md),
+[Media Optimization Stage Summary](docs/media-optimization-stage-summary.md),
+[Media Optimization Operator Trial](docs/archive/2026-06/media-optimization-operator-trial.md),
+[Media ALT/Caption Review Set](docs/media-alt-caption-review-set.md),
+[Media ALT/Caption Toolkit Validation Plan](docs/media-alt-caption-toolkit-validation-plan.md),
+[Media ALT/Caption Operator Trial](docs/archive/2026-06/media-alt-caption-operator-trial-2026-06-21.md),
+[Scoped Permissions First Version](docs/scoped-permissions-first-version.md), and
+[Security And Performance Release Gate](docs/security-performance-release-gate.md).
+Workflow and composition contracts remain indexed at
+[Full-site Insights Operator Loop](docs/full-site-insights-operator-loop.md),
+[AI Content Composition Abilities](docs/ai-content-composition-abilities.md),
+[Connector Ability Exposure](docs/connector-ability-exposure.md),
+[Content Discoverability Context](docs/content-discoverability-context.md),
+[OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md),
+[OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md),
+[Content Assistant Surface Lessons](docs/content-assistant-surface-lessons.md), and
+[Article Assistant Workbench](docs/article-assistant-workbench.md).
 
 ## REST Routes
 
@@ -384,7 +372,7 @@ category, tag, internal-link, image, duplicate-risk, and SEO handoff checks.
 SEO metadata is prepared as a single-post `seo_meta_handoff_preview.v1`
 payload and can be submitted through Adapter as one pending Core review
 proposal; Toolbox does not approve, execute, or mutate SEO fields.
-See [Editor Progressive Recommendations Closeout](docs/editor-progressive-recommendations-closeout.md)
+See [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md)
 for the local prefetch contract, quality rules, and verification record.
 Current-article image ALT/caption review belongs in the editor sidebar, where
 the post context and used images are available. The backend Image Handling tab

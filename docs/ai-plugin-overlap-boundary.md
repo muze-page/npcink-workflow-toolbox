@@ -107,7 +107,7 @@ provider calls, or WordPress writes.
 ## 2026-06-29 Closeout
 
 This rule was implemented and merged through PR #33. The closeout record is
-[AI Plugin Overlap Closeout - 2026-06-29](ai-plugin-overlap-closeout-2026-06-29.md).
+[AI Plugin Overlap Closeout - 2026-06-29](archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md).
 
 The practical result is:
 

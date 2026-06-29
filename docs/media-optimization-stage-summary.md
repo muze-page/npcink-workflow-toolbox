@@ -38,7 +38,7 @@ The selected batch path is covered separately by
 `composer smoke:media-derivative-batch-execute`; it proves selected review-set
 execution only, not unattended whole-library automation.
 The first real-attachment validation is recorded in
-[Media Optimization Operator Trial Results - 2026-06-18](media-optimization-operator-trial-results-2026-06-18.md).
+[Media Optimization Operator Trial Results - 2026-06-18](archive/2026-06/media-optimization-operator-trial-results-2026-06-18.md).
 
 ## Ownership Boundary
 
@@ -112,7 +112,7 @@ this V1. Future work should maintain the existing contract and fix defects only.
 Do not add video transcoding, global search-replace, complex media registry
 features, unattended whole-library replacement, or more image operations by
 default. The
-[Media Optimization Operator Trial](media-optimization-operator-trial.md) has
+[Media Optimization Operator Trial](archive/2026-06/media-optimization-operator-trial.md) has
 accepted the fixed flow for the current low-risk scope:
 
 - Do users know to generate preview before submitting Core review?

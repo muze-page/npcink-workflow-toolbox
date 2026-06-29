@@ -10,7 +10,7 @@ real local WordPress media library, return selected and blocked items, and keep
 the whole flow review-only.
 
 The trial is not a migration approval. It is one evidence point for the
-[Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md).
+[Media ALT/Caption Toolkit Validation Plan](../../media-alt-caption-toolkit-validation-plan.md).
 
 ## Trial Command
 
