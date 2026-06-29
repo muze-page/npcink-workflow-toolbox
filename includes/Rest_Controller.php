@@ -841,7 +841,7 @@ final class Rest_Controller {
 				if ( '' === $selected_review_text ) {
 					return new WP_Error(
 						'npcink_toolbox_missing_editor_selection',
-						__( 'Select paragraph text before running a paragraph check.', 'npcink-workflow-toolbox' ),
+						__( 'Select paragraph text before running paragraph review.', 'npcink-workflow-toolbox' ),
 						array( 'status' => 400 )
 					);
 				}

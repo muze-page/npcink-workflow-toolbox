@@ -1648,7 +1648,7 @@
 			publish_preflight: __('Publish preflight', 'npcink-workflow-toolbox'),
 			title_suggestions: __('Title suggestions', 'npcink-workflow-toolbox'),
 			article_outline: __('Outline suggestions', 'npcink-workflow-toolbox'),
-			polish_notes: __('Paragraph check', 'npcink-workflow-toolbox'),
+			polish_notes: __('Paragraph review', 'npcink-workflow-toolbox'),
 			discoverability: __('Discoverability suggestions', 'npcink-workflow-toolbox'),
 				image_alt_suggestions: __('Article image text check', 'npcink-workflow-toolbox'),
 			comment_reply_suggestion: __('Comment reply suggestions', 'npcink-workflow-toolbox'),
@@ -1775,7 +1775,7 @@
 			return __('Outline suggestions', 'npcink-workflow-toolbox');
 		}
 		if (value === 'polish_notes') {
-			return __('Check selected paragraph', 'npcink-workflow-toolbox');
+			return __('Review selected paragraph', 'npcink-workflow-toolbox');
 		}
 		if (value === 'discoverability') {
 			return __('Discoverability suggestions', 'npcink-workflow-toolbox');
@@ -1827,7 +1827,7 @@
 			return __('Use the outline as planning notes; it does not write the article body.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'polish_notes') {
-			return __('Review clarity, fact gaps, and tone notes for the selected paragraph. It will not replace text.', 'npcink-workflow-toolbox');
+			return __('Review clarity, fact boundaries, and tone for the selected paragraph. It will not rewrite text.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'discoverability') {
 			return __('Turn SEO, AEO, GEO, and proposal-field suggestions into reviewable optimization tasks and Core handoff candidates.', 'npcink-workflow-toolbox');
@@ -3065,7 +3065,7 @@
 		}
 		const fallbackReason = String(section.fallback_reason || '');
 		if (fallbackReason === 'local_paragraph_check_after_hosted_ai_empty') {
-			return __('Hosted AI reached the runtime but returned no paragraph-check text, so Toolbox showed the local no-rewrite fallback.', 'npcink-workflow-toolbox');
+			return __('Hosted AI reached the runtime but returned no paragraph-review text, so Toolbox showed the local no-rewrite fallback.', 'npcink-workflow-toolbox');
 		}
 		if (String(section.cloud_status || '').toLowerCase() === 'omitted') {
 			return __('Cloud marked this runtime response as omitted. Review storage mode, provider call count, and replay status below before rerunning.', 'npcink-workflow-toolbox');
@@ -3530,7 +3530,7 @@
 		const nested = section && section.result && typeof section.result === 'object' ? nestedHostedOutputObject(section.result) : {};
 		const nestedText = readableItemText(nested, '');
 		return nestedText ? [{
-			name: __('Paragraph check note', 'npcink-workflow-toolbox'),
+			name: __('Paragraph review note', 'npcink-workflow-toolbox'),
 			detail: nestedText,
 			action_policy: 'operator_review_only_no_insert',
 		}].concat(localItems) : localItems;
@@ -5625,8 +5625,8 @@
 		}
 
 			if (sections.polish_notes) {
-				blocks.push(createElement('h4', { key: 'polish-notes-title' }, __('Paragraph check', 'npcink-workflow-toolbox')));
-				blocks.push(renderItems(paragraphCheckItems(sections.polish_notes), __('No paragraph check notes returned.', 'npcink-workflow-toolbox')));
+				blocks.push(createElement('h4', { key: 'polish-notes-title' }, __('Paragraph review', 'npcink-workflow-toolbox')));
+				blocks.push(renderItems(paragraphCheckItems(sections.polish_notes), __('No paragraph review notes returned.', 'npcink-workflow-toolbox')));
 				blocks.push(renderHostedAiDiagnostics(sections.polish_notes));
 			}
 
@@ -5921,7 +5921,7 @@
 							setContextualResult(true);
 							setActiveFlowIntent('polish_notes');
 							setResult(null);
-							setError(__('Select paragraph text before running a paragraph check.', 'npcink-workflow-toolbox'));
+							setError(__('Select paragraph text before running paragraph review.', 'npcink-workflow-toolbox'));
 							return;
 						}
 						const reviewContext = {
@@ -7699,8 +7699,8 @@
 									{
 										className: 'npcink-toolbox-editor-support__block-toolbar-button',
 										icon: paragraphReviewIcon,
-										label: __('Check selected paragraph', 'npcink-workflow-toolbox'),
-										title: __('Check selected paragraph', 'npcink-workflow-toolbox'),
+										label: __('Review selected paragraph', 'npcink-workflow-toolbox'),
+										title: __('Review selected paragraph', 'npcink-workflow-toolbox'),
 										showTooltip: true,
 										disabled,
 										onClick: () => {

@@ -213,7 +213,7 @@ considered.
 AI runtime. It returns review-only content-support suggestions and must not
 create proposals, approve proposals, publish content, or write WordPress data.
 Its default user-facing intents are local article checkup, title/summary
-suggestions, compact outline support, selection-only paragraph checks, and
+suggestions, compact outline support, selection-only paragraph review, and
 summary/category/tag review support. Article checkup is a full-draft diagnostic
 surface for sentence density, fact-gap, tone, structure, semantic consistency,
 and format issues; it must point to review locations and editing direction

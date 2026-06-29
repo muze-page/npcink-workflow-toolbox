@@ -177,7 +177,7 @@ Local-only ranking can use:
 
 - current draft title, excerpt, and body text;
 - selected text only for intents that explicitly operate on a selected
-  paragraph, such as paragraph checks or paragraph image workflows;
+  paragraph, such as paragraph review or paragraph image workflows;
 - existing WordPress categories and tags;
 - exact or token overlap between draft text and term name, slug, or
   description;

@@ -267,7 +267,7 @@ Post editor content support:
 - Supported intents are `writing_support`, `publish_preflight`,
   `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
-  `image_candidates`, selection-only paragraph checks via `polish_notes`, and
+  `image_candidates`, selection-only paragraph review via `polish_notes`, and
   `discoverability`.
 - The editor UI shows primary buttons for `publish_preflight`,
   `summary_suggestions`, `category_suggestions`, `tag_suggestions`,

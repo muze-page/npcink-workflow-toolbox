@@ -23,7 +23,7 @@ Status: MVP architecture.
 | `modules/local-automation-runtime/` | Bundled module for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview plus one Phase 2 disabled-by-default Basic WP-Cron dry-run hook for the Local Fallback Preview. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
-| `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph checks. |
+| `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph review. |
 | `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
 Feature ownership and plugin split decisions should follow
@@ -377,7 +377,7 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
 `writing_support`, local full-draft diagnostics via `article_checkup`,
-`title_suggestions`, `article_outline`, selection-only paragraph checks via
+`title_suggestions`, `article_outline`, selection-only paragraph review via
 `polish_notes`, `publish_preflight`, `discoverability`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
 `taxonomy_tags`, `internal_links`, `image_candidates`, or
@@ -395,7 +395,7 @@ preflight duplicate-risk checks and internal-link candidates; `writing_support`
 also remains a supported route intent for compatibility but is not a default
 editor button. Article checkup is a local suggestion-only diagnostic that points
 to sentence-density, fact-gap, tone, structure, and format review items without
-rewriting or inserting text. Paragraph checks live in the selected-block
+rewriting or inserting text. Paragraph review lives in the selected-block
 toolbar.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
@@ -652,8 +652,8 @@ that can be set as the current post featured image through the
 Local Admin Consent route with Core audit. External URLs, generated URLs,
 media import, metadata writes, and multi-image operations still use governed
 handoff paths.
-The selected-block toolbar exposes selection-only paragraph check and paragraph
-image shortcuts. The paragraph check returns clarity, fact-gap, tone, and
+The selected-block toolbar exposes selection-only paragraph review and paragraph
+image shortcuts. Paragraph review returns clarity, fact-boundary, tone, and
 editing-direction notes without replacement copy. The image shortcut opens the
 same modal as an image-icon paragraph image suggestion shortcut. In that mode
 the selected paragraph or block is the primary image context and the default

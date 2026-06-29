@@ -455,10 +455,11 @@ actions are submitted to Core as one `plan_to_proposal_batch` through
 `npcink-toolbox/build-article-media-batch-write-plan`; they do not use Local
 Admin Consent and do not write posts or media during proposal intake.
 The selected-block toolbar also exposes compact paragraph actions: a paragraph
-check button that returns clarity, fact-gap, and tone notes without replacement
-copy, plus an image-icon paragraph image suggestion button. The image entry uses
-the selected paragraph or block as the primary context and defaults to a
-media-import plan for later placement, while the sidebar image-source entry
+review button that returns clarity, fact-boundary, and tone notes without
+replacement copy, plus an image-icon paragraph image suggestion button. The
+image entry uses the selected paragraph or block as the primary context and
+defaults to a media-import plan for later placement, while the sidebar
+image-source entry
 remains the article-level featured-image recommendation path.
 The same image-source picker contract can be reused by future image fields,
 including settings screens. Those callers may pass a manual query and optional
