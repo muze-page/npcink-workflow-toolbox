@@ -48,8 +48,18 @@ final class Editor_Content_Support {
 				'nonce'          => wp_create_nonce( 'wp_rest' ),
 				'adminUrl'       => esc_url_raw( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=tools' ) ),
 				'coreAdminUrl'   => esc_url_raw( admin_url( 'admin.php?page=npcink-governance-core' ) ),
+				'showRuntimeDiagnostics' => $this->show_runtime_diagnostics(),
 			)
 		);
+	}
+
+	private function show_runtime_diagnostics(): bool {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			return true;
+		}
+
+		$settings = get_option( Plugin::OPTION_NAME, array() );
+		return is_array( $settings ) && ! empty( $settings['include_raw_responses'] );
 	}
 
 	private function asset_version( string $relative_path ): string {
