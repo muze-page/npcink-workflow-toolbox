@@ -3142,6 +3142,9 @@
 	}
 
 	function renderHostedAiDiagnostics(section, options) {
+		if (!config.showRuntimeDiagnostics) {
+			return null;
+		}
 		const items = hostedAiDiagnosticItems(section);
 		if (!items.length) {
 			return null;
