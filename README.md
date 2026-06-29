@@ -3,8 +3,11 @@
 Npcink Workflow Toolbox turns proven AI-assisted WordPress operations into
 fixed, review-only buttons for site operators, including Cloud-managed web
 search, Cloud-managed image-source candidates, Cloud-managed site knowledge,
-and governed handoff flows. It remains the `npcink-toolbox` plugin technically,
-including its slug, REST namespace, text domain, ability ids, and option names.
+and governed handoff flows. The WordPress.org release slug is
+`npcink-workflow-toolbox`. The first-version runtime contracts keep the
+existing `npcink-toolbox` REST namespace, ability ids, option names, and hook
+names for compatibility with Core, Adapter, Cloud, and existing site
+integrations.
 
 It is intentionally separate from:
 

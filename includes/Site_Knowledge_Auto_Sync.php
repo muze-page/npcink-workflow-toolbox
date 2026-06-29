@@ -69,7 +69,7 @@ final class Site_Knowledge_Auto_Sync {
 			'scheduler_truth'         => false,
 			'workflow_truth'          => false,
 			'wordpress_write_included' => false,
-			'message'                 => __( 'Install and verify Cloud Addon to enable automatic Site Knowledge public-change delivery. Manual Site Knowledge sync remains available from Toolbox.', 'npcink-toolbox' ),
+			'message'                 => __( 'Install and verify Cloud Addon to enable automatic Site Knowledge public-change delivery. Manual Site Knowledge sync remains available from Toolbox.', 'npcink-workflow-toolbox' ),
 		);
 	}
 
@@ -101,8 +101,8 @@ final class Site_Knowledge_Auto_Sync {
 		$message = (string) ( $snapshot['message'] ?? '' );
 		if ( '' === trim( $message ) ) {
 			$message = $enabled
-				? __( 'Site Knowledge public-change delivery is owned by Cloud Addon. Toolbox is showing bridge health only.', 'npcink-toolbox' )
-				: __( 'Verify Cloud Addon to enable automatic Site Knowledge public-change delivery. Toolbox legacy auto-sync is retired.', 'npcink-toolbox' );
+				? __( 'Site Knowledge public-change delivery is owned by Cloud Addon. Toolbox is showing bridge health only.', 'npcink-workflow-toolbox' )
+				: __( 'Verify Cloud Addon to enable automatic Site Knowledge public-change delivery. Toolbox legacy auto-sync is retired.', 'npcink-workflow-toolbox' );
 		}
 
 		return array_merge(

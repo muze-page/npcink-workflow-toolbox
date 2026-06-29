@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Domain: npcink-toolbox\n"
+"X-Domain: npcink-workflow-toolbox\n"
 "X-Generator: Codex\n"
 
 msgid "Npcink Workflow Toolbox"

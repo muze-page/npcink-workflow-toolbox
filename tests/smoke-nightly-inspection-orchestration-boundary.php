@@ -64,7 +64,7 @@ foreach ( array( "'cloud_role'            => 'runtime_detail'", "'cloud_schedule
 	$assert_contains( $provider, $required_provider_text, 'Provider client keeps Cloud Batch as runtime/detail bridge.' );
 }
 
-$production_files = array( $root . '/npcink-toolbox.php' );
+$production_files = array( $root . '/npcink-workflow-toolbox.php' );
 foreach ( array( 'includes', 'assets', 'modules/local-automation-runtime/src' ) as $relative_dir ) {
 	$directory = new RecursiveDirectoryIterator( $root . '/' . $relative_dir, FilesystemIterator::SKIP_DOTS );
 	$iterator  = new RecursiveIteratorIterator( $directory );

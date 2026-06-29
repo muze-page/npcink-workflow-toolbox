@@ -5,7 +5,7 @@ Status: prepared for the Npcink Workflow Toolbox 0.1.1 WordPress.org plugin subm
 ## Plugin Details
 
 - Plugin name: Npcink Workflow Toolbox
-- Suggested slug: npcink-toolbox
+- Suggested slug: npcink-workflow-toolbox
 - Version: 0.1.1
 - Requires at least: 6.9
 - Tested up to: 7.0

@@ -7,7 +7,7 @@ WP_CLI_PHP="${WP_CLI_PHP:-}"
 SOCKET="${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}"
 
 CLOUD_PLUGIN="${NPCINK_CLOUD_ADDON_PLUGIN:-npcink-cloud-addon}"
-TOOLBOX_PLUGIN="${NPCINK_TOOLBOX_PLUGIN:-npcink-toolbox}"
+TOOLBOX_PLUGIN="${NPCINK_TOOLBOX_PLUGIN:-npcink-workflow-toolbox}"
 CLOUD_WAS_ACTIVE=0
 TOOLBOX_WAS_ACTIVE=0
 
@@ -42,6 +42,10 @@ restore_plugins() {
 }
 
 trap restore_plugins EXIT INT TERM
+
+if ! wp_cli plugin is-installed "$TOOLBOX_PLUGIN" >/dev/null 2>&1 && wp_cli plugin is-installed npcink-toolbox >/dev/null 2>&1; then
+	TOOLBOX_PLUGIN="npcink-toolbox"
+fi
 
 if wp_cli plugin is-active "$CLOUD_PLUGIN" >/dev/null 2>&1; then
 	CLOUD_WAS_ACTIVE=1

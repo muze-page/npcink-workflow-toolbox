@@ -102,7 +102,7 @@ The following gates passed after the changes:
 - `node --check assets/admin.js`
 - `php -l includes/Admin_Page.php`
 - `php -l tests/run.php`
-- `msgfmt languages/npcink-toolbox-zh_CN.po -o languages/npcink-toolbox-zh_CN.mo`
+- `msgfmt languages/npcink-workflow-toolbox-zh_CN.po -o languages/npcink-workflow-toolbox-zh_CN.mo`
 - `composer test:all`
 - `git diff --check`
 

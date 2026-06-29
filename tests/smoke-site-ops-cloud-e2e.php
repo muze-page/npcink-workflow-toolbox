@@ -104,9 +104,9 @@ $assert( 1 <= (int) ( $result['cloud_request_summary']['finding_count'] ?? 0 ), 
 
 if ( defined( 'NPCINK_TOOLBOX_DIR' ) && function_exists( 'load_textdomain' ) ) {
 	if ( function_exists( 'unload_textdomain' ) ) {
-		unload_textdomain( 'npcink-toolbox', true );
+		unload_textdomain( 'npcink-workflow-toolbox', true );
 	}
-	load_textdomain( 'npcink-toolbox', NPCINK_TOOLBOX_DIR . 'languages/npcink-toolbox-zh_CN.mo' );
+	load_textdomain( 'npcink-workflow-toolbox', NPCINK_TOOLBOX_DIR . 'languages/npcink-workflow-toolbox-zh_CN.mo' );
 }
 
 $admin_page    = new \Npcink_Toolbox\Admin_Page( $settings );

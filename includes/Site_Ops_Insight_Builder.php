@@ -107,18 +107,18 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'stale_content_backlog',
-			__( 'Old content needs a refresh queue', 'npcink-toolbox' ),
+			__( 'Old content needs a refresh queue', 'npcink-workflow-toolbox' ),
 			'content_freshness',
 			min( 95, 55 + count( $stale_posts ) * 5 + $with_comments * 5 ),
 			$with_comments > 0 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: stale item count, 2: stale item count with comments. */
-				__( '%1$d sampled public posts or pages have not been modified for 180+ days; %2$d still have approved comments.', 'npcink-toolbox' ),
+				__( '%1$d sampled public posts or pages have not been modified for 180+ days; %2$d still have approved comments.', 'npcink-workflow-toolbox' ),
 				count( $stale_posts ),
 				$with_comments
 			),
-			__( 'Older but still active content can reduce reader trust and search freshness.', 'npcink-toolbox' ),
-			__( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-toolbox' ),
+			__( 'Older but still active content can reduce reader trust and search freshness.', 'npcink-workflow-toolbox' ),
+			__( 'Review the oldest active items first, then prepare refresh notes or a Core-governed update plan.', 'npcink-workflow-toolbox' ),
 			'core_handoff_candidate',
 			array_slice( $this->object_refs( $stale_posts ), 0, 5 )
 		);
@@ -148,18 +148,18 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'content_depth_and_linking_gap',
-			__( 'Some content lacks depth or internal paths', 'npcink-toolbox' ),
+			__( 'Some content lacks depth or internal paths', 'npcink-workflow-toolbox' ),
 			'content_quality',
 			min( 90, 45 + count( $thin_posts ) * 6 + count( $no_internal_links ) * 4 ),
 			count( $thin_posts ) + count( $no_internal_links ) >= 5 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: thin item count, 2: missing internal link count. */
-				__( '%1$d sampled items are short; %2$d have no recorded internal links.', 'npcink-toolbox' ),
+				__( '%1$d sampled items are short; %2$d have no recorded internal links.', 'npcink-workflow-toolbox' ),
 				count( $thin_posts ),
 				count( $no_internal_links )
 			),
-			__( 'Thin pages and missing internal paths make it harder for readers and AI systems to understand the site map.', 'npcink-toolbox' ),
-			__( 'Prioritize internal-link review and content-depth review before creating new articles on the same topics.', 'npcink-toolbox' ),
+			__( 'Thin pages and missing internal paths make it harder for readers and AI systems to understand the site map.', 'npcink-workflow-toolbox' ),
+			__( 'Prioritize internal-link review and content-depth review before creating new articles on the same topics.', 'npcink-workflow-toolbox' ),
 			'manual_review_only',
 			array_slice( $this->object_refs( array_merge( $thin_posts, $no_internal_links ) ), 0, 5 )
 		);
@@ -189,18 +189,18 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'metadata_review_backlog',
-			__( 'Metadata review backlog is visible', 'npcink-toolbox' ),
+			__( 'Metadata review backlog is visible', 'npcink-workflow-toolbox' ),
 			'metadata',
 			min( 88, 44 + count( $missing_meta ) * 5 + count( $missing_terms ) * 4 ),
 			count( $missing_meta ) + count( $missing_terms ) >= 5 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: missing meta count, 2: missing taxonomy count. */
-				__( '%1$d sampled items need excerpt or meta-description review; %2$d need category or tag review.', 'npcink-toolbox' ),
+				__( '%1$d sampled items need excerpt or meta-description review; %2$d need category or tag review.', 'npcink-workflow-toolbox' ),
 				count( $missing_meta ),
 				count( $missing_terms )
 			),
-			__( 'Weak metadata reduces snippet quality and makes suggestion workflows less grounded.', 'npcink-toolbox' ),
-			__( 'Use editor metadata suggestions for individual posts, then hand accepted values to Core proposals.', 'npcink-toolbox' ),
+			__( 'Weak metadata reduces snippet quality and makes suggestion workflows less grounded.', 'npcink-workflow-toolbox' ),
+			__( 'Use editor metadata suggestions for individual posts, then hand accepted values to Core proposals.', 'npcink-workflow-toolbox' ),
 			'core_handoff_candidate',
 			array_slice( $this->object_refs( array_merge( $missing_meta, $missing_terms ) ), 0, 5 )
 		);
@@ -220,19 +220,19 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'comment_signal_review',
-			__( 'Comments contain support and follow-up signals', 'npcink-toolbox' ),
+			__( 'Comments contain support and follow-up signals', 'npcink-workflow-toolbox' ),
 			'comments',
 			min( 86, 40 + $questions * 7 + $long * 4 + min( 20, $pending ) ),
 			$questions >= 3 || $pending >= 10 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: question-like comments, 2: long comments, 3: pending comments. */
-				__( 'The approved comment sample includes %1$d question-like comments and %2$d longer comments; %3$d comments are pending moderation.', 'npcink-toolbox' ),
+				__( 'The approved comment sample includes %1$d question-like comments and %2$d longer comments; %3$d comments are pending moderation.', 'npcink-workflow-toolbox' ),
 				$questions,
 				$long,
 				$pending
 			),
-			__( 'Comment patterns can reveal missing FAQ, troubleshooting, or follow-up content needs.', 'npcink-toolbox' ),
-			__( 'Review high-signal public comments manually; convert repeated needs into FAQ or article-refresh notes.', 'npcink-toolbox' ),
+			__( 'Comment patterns can reveal missing FAQ, troubleshooting, or follow-up content needs.', 'npcink-workflow-toolbox' ),
+			__( 'Review high-signal public comments manually; convert repeated needs into FAQ or article-refresh notes.', 'npcink-workflow-toolbox' ),
 			'manual_review_only',
 			array()
 		);
@@ -269,19 +269,19 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'media_metadata_debt',
-			__( 'Media metadata needs review', 'npcink-toolbox' ),
+			__( 'Media metadata needs review', 'npcink-workflow-toolbox' ),
 			'media',
 			min( 90, 42 + count( $missing_alt ) * 6 + count( $missing_captions ) * 3 + $post_missing_alt * 3 ),
 			count( $missing_alt ) + $post_missing_alt >= 5 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: missing attachment alt count, 2: missing caption count, 3: referenced image alt gaps. */
-				__( '%1$d sampled attachments lack ALT text, %2$d lack captions, and sampled posts reference %3$d image ALT gaps.', 'npcink-toolbox' ),
+				__( '%1$d sampled attachments lack ALT text, %2$d lack captions, and sampled posts reference %3$d image ALT gaps.', 'npcink-workflow-toolbox' ),
 				count( $missing_alt ),
 				count( $missing_captions ),
 				$post_missing_alt
 			),
-			__( 'Image metadata affects accessibility, editorial reuse, and media search quality.', 'npcink-toolbox' ),
-			__( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-toolbox' ),
+			__( 'Image metadata affects accessibility, editorial reuse, and media search quality.', 'npcink-workflow-toolbox' ),
+			__( 'Start with a media ALT/caption review set; do not update media metadata until a governed path is selected.', 'npcink-workflow-toolbox' ),
 			'core_handoff_candidate',
 			array_slice( $this->object_refs( $missing_alt ), 0, 5 )
 		);
@@ -302,18 +302,18 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'taxonomy_structure_drift',
-			__( 'Taxonomy structure may need cleanup', 'npcink-toolbox' ),
+			__( 'Taxonomy structure may need cleanup', 'npcink-workflow-toolbox' ),
 			'taxonomy',
 			min( 82, 38 + $empty * 5 + $low * 3 ),
 			$empty + $low >= 8 ? 'high' : 'medium',
 			sprintf(
 				/* translators: 1: empty term count, 2: low-use term count. */
-				__( '%1$d category/tag terms are empty and %2$d are used once in the sampled taxonomy summary.', 'npcink-toolbox' ),
+				__( '%1$d category/tag terms are empty and %2$d are used once in the sampled taxonomy summary.', 'npcink-workflow-toolbox' ),
 				$empty,
 				$low
 			),
-			__( 'Sparse vocabulary can fragment content discovery and weaken recommendation quality.', 'npcink-toolbox' ),
-			__( 'Review taxonomy consolidation separately; do not create, merge, or assign terms from this panel.', 'npcink-toolbox' ),
+			__( 'Sparse vocabulary can fragment content discovery and weaken recommendation quality.', 'npcink-workflow-toolbox' ),
+			__( 'Review taxonomy consolidation separately; do not create, merge, or assign terms from this panel.', 'npcink-workflow-toolbox' ),
 			'manual_review_only',
 			array()
 		);
@@ -330,13 +330,13 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'site_context_incomplete',
-			__( 'Site Context needs a stronger brief', 'npcink-toolbox' ),
+			__( 'Site Context needs a stronger brief', 'npcink-workflow-toolbox' ),
 			'site_context',
 			72,
 			'medium',
-			__( 'The compact site positioning, audience, voice, or keyword context is incomplete.', 'npcink-toolbox' ),
-			__( 'Weak site context makes downstream SEO/AEO/GEO and content support suggestions less consistent.', 'npcink-toolbox' ),
-			__( 'Fill the Site Context brief before relying on repeated AI recommendations.', 'npcink-toolbox' ),
+			__( 'The compact site positioning, audience, voice, or keyword context is incomplete.', 'npcink-workflow-toolbox' ),
+			__( 'Weak site context makes downstream SEO/AEO/GEO and content support suggestions less consistent.', 'npcink-workflow-toolbox' ),
+			__( 'Fill the Site Context brief before relying on repeated AI recommendations.', 'npcink-workflow-toolbox' ),
 			'manual_review_only',
 			array()
 		);
@@ -353,13 +353,13 @@ final class Site_Ops_Insight_Builder {
 
 		$findings[] = $this->finding(
 			'site_knowledge_cloud_unavailable',
-			__( 'Cloud Site Knowledge is not available', 'npcink-toolbox' ),
+			__( 'Cloud Site Knowledge is not available', 'npcink-workflow-toolbox' ),
 			'site_knowledge',
 			68,
 			'medium',
-			__( 'The local insight pack can run, but semantic Site Knowledge and Cloud analysis are unavailable.', 'npcink-toolbox' ),
-			__( 'Without Cloud, recommendations stay local and cannot use semantic related-content evidence.', 'npcink-toolbox' ),
-			__( 'Connect or verify Cloud Addon before expecting deeper semantic analysis.', 'npcink-toolbox' ),
+			__( 'The local insight pack can run, but semantic Site Knowledge and Cloud analysis are unavailable.', 'npcink-workflow-toolbox' ),
+			__( 'Without Cloud, recommendations stay local and cannot use semantic related-content evidence.', 'npcink-workflow-toolbox' ),
+			__( 'Connect or verify Cloud Addon before expecting deeper semantic analysis.', 'npcink-workflow-toolbox' ),
 			'blocked_until_cloud_ready',
 			array()
 		);

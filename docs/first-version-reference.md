@@ -421,9 +421,9 @@ Do not write local admin passwords into repository files.
 Useful smoke commands:
 
 ```bash
-wp --path="$WP_PATH" plugin activate npcink-toolbox
+wp --path="$WP_PATH" plugin activate npcink-workflow-toolbox
 
-wp --path="$WP_PATH" plugin status npcink-toolbox
+wp --path="$WP_PATH" plugin status npcink-workflow-toolbox
 
 wp --path="$WP_PATH" eval 'wp_set_current_user( 1 ); do_action( "rest_api_init" ); $request = new WP_REST_Request( "GET", "/npcink-toolbox/v1/status" ); $response = rest_do_request( $request ); echo "status=" . $response->get_status() . "\n";'
 ```
@@ -438,7 +438,7 @@ find "$HOME/Library/Application Support/Local/run" -path '*/mysql/mysqld.sock' -
 WP_CLI_MYSQL_SOCKET="/path/to/Local/run/site-id/mysql/mysqld.sock"
 php -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" \
     -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" \
-    "$(command -v wp)" --path="$WP_PATH" plugin status npcink-toolbox
+    "$(command -v wp)" --path="$WP_PATH" plugin status npcink-workflow-toolbox
 ```
 
 If the global `wp` becomes unavailable, the fallback is a temporary WP-CLI phar

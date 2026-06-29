@@ -78,7 +78,7 @@ final class Provider_Client {
 		if ( '' === $prompt ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_ai_image_prompt',
-				__( 'Review and enter an image generation prompt before calling Cloud.', 'npcink-toolbox' ),
+				__( 'Review and enter an image generation prompt before calling Cloud.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -99,7 +99,7 @@ final class Provider_Client {
 		if ( 'b64_json' === $response_format ) {
 			return new WP_Error(
 				'npcink_toolbox_ai_image_response_format_unsupported',
-				__( 'Toolbox currently requires URL-based AI image candidates so Core can review and import the selected image.', 'npcink-toolbox' ),
+				__( 'Toolbox currently requires URL-based AI image candidates so Core can review and import the selected image.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -159,7 +159,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_ai_image_generation_runtime_payload',
-				__( 'The AI image generation runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The AI image generation runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -177,7 +177,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_ai_image_generation_cloud_unavailable',
-				__( 'Connect Npcink Cloud before generating AI image candidates.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before generating AI image candidates.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -197,7 +197,7 @@ final class Provider_Client {
 		if ( ! in_array( $intent, array( 'article_narration', 'article_audio_summary' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_audio_generation_intent',
-				__( 'A supported audio generation intent is required.', 'npcink-toolbox' ),
+				__( 'A supported audio generation intent is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -215,7 +215,7 @@ final class Provider_Client {
 		if ( '' === $text ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_audio_generation_text',
-				__( 'Narration text or summary script is required before calling Cloud audio generation.', 'npcink-toolbox' ),
+				__( 'Narration text or summary script is required before calling Cloud audio generation.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -269,7 +269,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_audio_generation_runtime_payload',
-				__( 'The audio generation runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The audio generation runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -287,7 +287,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_audio_generation_cloud_unavailable',
-				__( 'Connect Npcink Cloud before generating article audio.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before generating article audio.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -320,7 +320,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'send_agent_feedback_event' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_agent_feedback_cloud_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before sending Agent feedback.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before sending Agent feedback.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -359,7 +359,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_site_ops_cloud_analysis_runtime_payload',
-				__( 'The Operations Insights Cloud runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The Operations Insights Cloud runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -376,7 +376,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_ops_cloud_analysis_unavailable',
-				__( 'Connect Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -406,7 +406,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'get_agent_feedback_summary' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_agent_feedback_summary_cloud_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before reading Agent feedback summary.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before reading Agent feedback summary.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -437,7 +437,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before submitting Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before submitting Pro Nightly Inspection batches.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -471,7 +471,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'get_recent_nightly_inspection_runs' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_recent_runs_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before reading recent Nightly Inspection runs.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before reading recent Nightly Inspection runs.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -489,7 +489,7 @@ final class Provider_Client {
 		if ( '' === $run_id ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_run_id_required',
-				__( 'A Cloud run_id is required.', 'npcink-toolbox' ),
+				__( 'A Cloud run_id is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -506,7 +506,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'get_run' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_status_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch status.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch status.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -524,7 +524,7 @@ final class Provider_Client {
 		if ( '' === $run_id ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_run_id_required',
-				__( 'A Cloud run_id is required.', 'npcink-toolbox' ),
+				__( 'A Cloud run_id is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -541,7 +541,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'get_run_result' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_result_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch results.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before reading Cloud Batch results.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -559,7 +559,7 @@ final class Provider_Client {
 		if ( '' === $run_id ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_run_id_required',
-				__( 'A Cloud run_id is required.', 'npcink-toolbox' ),
+				__( 'A Cloud run_id is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -581,7 +581,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'retry_run' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_retry_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before retrying Pro Nightly Inspection runs.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before retrying Pro Nightly Inspection runs.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -612,7 +612,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'get_current_entitlement' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_entitlement_unavailable',
-				__( 'Connect an updated Npcink Cloud Addon before reading Pro Cloud Runtime entitlement.', 'npcink-toolbox' ),
+				__( 'Connect an updated Npcink Cloud Addon before reading Pro Cloud Runtime entitlement.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -633,7 +633,7 @@ final class Provider_Client {
 		if ( array() === $items ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_empty',
-				__( 'The Nightly Inspection snapshot did not include any content items for Cloud analysis.', 'npcink-toolbox' ),
+				__( 'The Nightly Inspection snapshot did not include any content items for Cloud analysis.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -678,7 +678,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_nightly_inspection_cloud_batch_runtime_payload',
-				__( 'The Nightly Inspection Cloud batch runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The Nightly Inspection Cloud batch runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -1373,7 +1373,7 @@ final class Provider_Client {
 		if ( null === $result ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_ai_image_runtime',
-				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter.', 'npcink-toolbox' ),
+				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1382,7 +1382,7 @@ final class Provider_Client {
 		if ( array() === $candidates ) {
 			return new WP_Error(
 				'npcink_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-toolbox' ),
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -1395,7 +1395,7 @@ final class Provider_Client {
 
 			$candidate['warnings'] = array_merge(
 				$this->sanitize_string_list( $candidate['warnings'] ?? array() ),
-				array( __( 'Generated through the legacy filter seam; verify provider metadata before adoption.', 'npcink-toolbox' ) )
+				array( __( 'Generated through the legacy filter seam; verify provider metadata before adoption.', 'npcink-workflow-toolbox' ) )
 			);
 			$normalized = $this->normalize_ai_generated_image_candidate( $candidate, $query, $prompt, $media_context );
 			if ( '' !== (string) ( $normalized['regular_url'] ?? '' ) ) {
@@ -1406,7 +1406,7 @@ final class Provider_Client {
 		if ( array() === $images ) {
 			return new WP_Error(
 				'npcink_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-toolbox' ),
+				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -1675,7 +1675,7 @@ final class Provider_Client {
 		);
 		$warnings = $this->sanitize_string_list( $candidate['warnings'] ?? array() );
 		if ( 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' ) ) {
-			$warnings[] = __( 'This AI-generated image URL appears temporary. Adopt it promptly or regenerate before Core approval.', 'npcink-toolbox' );
+			$warnings[] = __( 'This AI-generated image URL appears temporary. Adopt it promptly or regenerate before Core approval.', 'npcink-workflow-toolbox' );
 		}
 		$risk_flags = $this->sanitize_string_list( $candidate['risk_flags'] ?? array() );
 		if ( 'temporary_provider_url' === (string) ( $asset_persistence['status'] ?? '' ) ) {
@@ -1700,7 +1700,7 @@ final class Provider_Client {
 			'source_url'                    => esc_url_raw( (string) ( $candidate['source_url'] ?? $candidate['html_url'] ?? '' ) ),
 			'photographer'                  => '',
 			'photographer_url'              => '',
-			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'npcink-toolbox' ) ) ),
+			'attribution'                   => sanitize_text_field( (string) ( $candidate['attribution'] ?? __( 'AI-generated image candidate.', 'npcink-workflow-toolbox' ) ) ),
 			'prompt'                        => $prompt,
 			'model'                         => $model,
 			'generation_prompt'             => $prompt,
@@ -1782,7 +1782,7 @@ final class Provider_Client {
 	private function ai_image_media_title_from_subject( string $subject ): string {
 		$subject = trim( sanitize_text_field( $subject ) );
 		if ( '' === $subject ) {
-			return __( 'AI-generated editorial image candidate', 'npcink-toolbox' );
+			return __( 'AI-generated editorial image candidate', 'npcink-workflow-toolbox' );
 		}
 		return $this->trim_ai_image_media_text( $subject, 120 );
 	}
@@ -1790,14 +1790,14 @@ final class Provider_Client {
 	private function ai_image_media_alt_from_subject( string $subject ): string {
 		$subject = trim( sanitize_text_field( $subject ) );
 		if ( '' === $subject ) {
-			return __( 'Original editorial image candidate for the article.', 'npcink-toolbox' );
+			return __( 'Original editorial image candidate for the article.', 'npcink-workflow-toolbox' );
 		}
 		if ( $this->contains_cjk( $subject ) ) {
 			return sprintf( '《%s》的原创编辑配图', $subject );
 		}
 		return sprintf(
 			/* translators: %s: article title or topic. */
-			__( 'Original editorial image for "%s".', 'npcink-toolbox' ),
+			__( 'Original editorial image for "%s".', 'npcink-workflow-toolbox' ),
 			$subject
 		);
 	}
@@ -1805,14 +1805,14 @@ final class Provider_Client {
 	private function ai_image_media_description_from_subject( string $subject ): string {
 		$subject = trim( sanitize_text_field( $subject ) );
 		if ( '' === $subject ) {
-			return __( 'AI-generated image candidate. Review it before importing or setting it as featured media.', 'npcink-toolbox' );
+			return __( 'AI-generated image candidate. Review it before importing or setting it as featured media.', 'npcink-workflow-toolbox' );
 		}
 		if ( $this->contains_cjk( $subject ) ) {
 			return sprintf( 'AI 生成的文章配图候选，用于《%s》。导入或设为特色图前需要人工审查。', $subject );
 		}
 		return sprintf(
 			/* translators: %s: article title or topic. */
-			__( 'AI-generated image candidate for "%s". Review it before importing or setting it as featured media.', 'npcink-toolbox' ),
+			__( 'AI-generated image candidate for "%s". Review it before importing or setting it as featured media.', 'npcink-workflow-toolbox' ),
 			$subject
 		);
 	}
@@ -1894,7 +1894,7 @@ final class Provider_Client {
 		if ( '' === trim( $input ) ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_vector_input',
-				__( 'A query or vector field is required for vector search.', 'npcink-toolbox' ),
+				__( 'A query or vector field is required for vector search.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1904,7 +1904,7 @@ final class Provider_Client {
 				'provider'          => 'cloud_site_knowledge',
 				'provider_mode'     => 'cloud_managed',
 				'status'            => 'cloud_managed',
-				'message'           => __( 'Low-level vector provider configuration has moved to Npcink Cloud. Use search-site-knowledge for Cloud-managed semantic site context.', 'npcink-toolbox' ),
+				'message'           => __( 'Low-level vector provider configuration has moved to Npcink Cloud. Use search-site-knowledge for Cloud-managed semantic site context.', 'npcink-workflow-toolbox' ),
 				'target_ability_id' => 'npcink-toolbox/search-site-knowledge',
 				'results'           => array(),
 				'requested_input'   => array(
@@ -1922,7 +1922,7 @@ final class Provider_Client {
 		if ( '' === $query ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_site_knowledge_query',
-				__( 'A query is required for site knowledge search.', 'npcink-toolbox' ),
+				__( 'A query is required for site knowledge search.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2029,7 +2029,7 @@ final class Provider_Client {
 			'active_sources' => array(),
 			'results'        => array(),
 			'status'         => 'cloud_managed',
-			'message'        => __( 'External web search is provided by Npcink Cloud. Toolbox no longer stores local web search provider configuration.', 'npcink-toolbox' ),
+			'message'        => __( 'External web search is provided by Npcink Cloud. Toolbox no longer stores local web search provider configuration.', 'npcink-workflow-toolbox' ),
 		);
 	}
 
@@ -2062,7 +2062,7 @@ final class Provider_Client {
 		if ( '' === $query ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_web_search_query',
-				__( 'A query is required for Cloud web search testing.', 'npcink-toolbox' ),
+				__( 'A query is required for Cloud web search testing.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2130,7 +2130,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_web_search_runtime_payload',
-				__( 'The web search runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The web search runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -2147,7 +2147,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_web_search_cloud_unavailable',
-				__( 'Connect Npcink Cloud before testing managed web search.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before testing managed web search.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2167,7 +2167,7 @@ final class Provider_Client {
 		if ( '' === $topic ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_web_search_diagnostic_topic',
-				__( 'A topic is required for the Cloud web search workflow diagnostic.', 'npcink-toolbox' ),
+				__( 'A topic is required for the Cloud web search workflow diagnostic.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2254,7 +2254,7 @@ final class Provider_Client {
 		if ( '' === $topic ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_article_assistant_topic',
-				__( 'A topic is required to build an article assistant workbench.', 'npcink-toolbox' ),
+				__( 'A topic is required to build an article assistant workbench.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2395,7 +2395,7 @@ final class Provider_Client {
 		if ( '' === $title || '' === $content ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_article_plan_input',
-				__( 'A title and content_markdown are required to build an article write plan.', 'npcink-toolbox' ),
+				__( 'A title and content_markdown are required to build an article write plan.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2486,7 +2486,7 @@ final class Provider_Client {
 					'requires_approval' => true,
 					'commit_execution'  => false,
 					'proposal_ready'    => $ready_for_proposal,
-					'reason'            => __( 'Create a reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
+					'reason'            => __( 'Create a reviewed AI-assisted article draft through Core governance.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'handoff'                => array(
@@ -2505,7 +2505,7 @@ final class Provider_Client {
 		if ( count( $articles ) < 2 || count( $articles ) > 5 ) {
 			return new WP_Error(
 				'npcink_toolbox_article_batch_size_invalid',
-				__( 'Article batch write plans require 2 to 5 reviewed draft articles.', 'npcink-toolbox' ),
+				__( 'Article batch write plans require 2 to 5 reviewed draft articles.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2528,7 +2528,7 @@ final class Provider_Client {
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
 					'npcink_toolbox_article_batch_item_invalid',
-					__( 'Every article batch item requires title and content_markdown.', 'npcink-toolbox' ),
+					__( 'Every article batch item requires title and content_markdown.', 'npcink-workflow-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -2579,7 +2579,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
+				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-workflow-toolbox' ),
 			);
 			$preview[] = array(
 				'action_id' => $action_id,
@@ -2633,7 +2633,7 @@ final class Provider_Client {
 		if ( count( $articles ) < 1 || count( $articles ) > 5 ) {
 			return new WP_Error(
 				'npcink_toolbox_article_media_batch_size_invalid',
-				__( 'Article media batch write plans require 1 to 5 reviewed draft articles.', 'npcink-toolbox' ),
+				__( 'Article media batch write plans require 1 to 5 reviewed draft articles.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2659,7 +2659,7 @@ final class Provider_Client {
 			if ( '' === $title || '' === $content ) {
 				return new WP_Error(
 					'npcink_toolbox_article_media_batch_item_invalid',
-					__( 'Every article media batch item requires title and content_markdown.', 'npcink-toolbox' ),
+					__( 'Every article media batch item requires title and content_markdown.', 'npcink-workflow-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -2685,7 +2685,7 @@ final class Provider_Client {
 			if ( '' === $image_url ) {
 				return new WP_Error(
 					'npcink_toolbox_article_media_url_missing',
-					__( 'Every article media batch item requires a selected image URL.', 'npcink-toolbox' ),
+					__( 'Every article media batch item requires a selected image URL.', 'npcink-workflow-toolbox' ),
 					array(
 						'status' => 400,
 						'index'  => $index,
@@ -2760,7 +2760,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-toolbox' ),
+				'reason'            => __( 'Create one reviewed AI-assisted article draft through Core governance.', 'npcink-workflow-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $upload_id,
@@ -2788,7 +2788,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Upload the reviewed image-source candidate into the media library after Core approval.', 'npcink-toolbox' ),
+				'reason'            => __( 'Upload the reviewed image-source candidate into the media library after Core approval.', 'npcink-workflow-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $metadata_id,
@@ -2812,7 +2812,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Apply reviewed image attribution and accessibility metadata after upload.', 'npcink-toolbox' ),
+				'reason'            => __( 'Apply reviewed image attribution and accessibility metadata after upload.', 'npcink-workflow-toolbox' ),
 			);
 			$write_actions[] = array(
 				'action_id'         => $featured_id,
@@ -2830,7 +2830,7 @@ final class Provider_Client {
 				'requires_approval' => true,
 				'commit_execution'  => false,
 				'proposal_ready'    => $ready_for_proposal,
-				'reason'            => __( 'Set the uploaded, reviewed media item as the draft featured image after Core approval.', 'npcink-toolbox' ),
+				'reason'            => __( 'Set the uploaded, reviewed media item as the draft featured image after Core approval.', 'npcink-workflow-toolbox' ),
 			);
 
 			$media_workflow[] = array(
@@ -2897,7 +2897,7 @@ final class Provider_Client {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_toolkit_unavailable',
-				__( 'The Toolkit image candidate adoption-plan ability is not currently available.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate adoption-plan ability is not currently available.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2908,7 +2908,7 @@ final class Provider_Client {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_toolkit_plan_unavailable',
-				__( 'The Toolkit image candidate adoption-plan ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate adoption-plan ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2920,7 +2920,7 @@ final class Provider_Client {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_toolkit_plan_invalid',
-				__( 'The Toolkit image candidate adoption-plan ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate adoption-plan ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -2929,7 +2929,7 @@ final class Provider_Client {
 		if ( empty( $data['artifact_type'] ) || 'image_candidate_adoption_plan' !== (string) $data['artifact_type'] ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_toolkit_plan_invalid_artifact',
-				__( 'The Toolkit image candidate adoption-plan ability did not return the expected artifact.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate adoption-plan ability did not return the expected artifact.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -2942,7 +2942,7 @@ final class Provider_Client {
 		if ( $post_id <= 0 ) {
 			return new WP_Error(
 				'npcink_toolbox_article_audio_post_required',
-				__( 'A post_id is required before preparing an article audio adoption plan.', 'npcink-toolbox' ),
+				__( 'A post_id is required before preparing an article audio adoption plan.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2952,7 +2952,7 @@ final class Provider_Client {
 		if ( '' === $audio_url ) {
 			return new WP_Error(
 				'npcink_toolbox_article_audio_url_required',
-				__( 'Select an audio candidate with a playable URL before preparing Core review.', 'npcink-toolbox' ),
+				__( 'Select an audio candidate with a playable URL before preparing Core review.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2962,9 +2962,9 @@ final class Provider_Client {
 			$candidate_type = 'article_narration';
 		}
 
-		$title = sanitize_text_field( (string) ( $candidate['name'] ?? ( $candidate['title'] ?? ( 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-toolbox' ) : __( 'Article narration', 'npcink-toolbox' ) ) ) ) );
+		$title = sanitize_text_field( (string) ( $candidate['name'] ?? ( $candidate['title'] ?? ( 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-workflow-toolbox' ) : __( 'Article narration', 'npcink-workflow-toolbox' ) ) ) ) );
 		if ( '' === $title ) {
-			$title = 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-toolbox' ) : __( 'Article narration', 'npcink-toolbox' );
+			$title = 'article_audio_summary' === $candidate_type ? __( 'Audio summary', 'npcink-workflow-toolbox' ) : __( 'Article narration', 'npcink-workflow-toolbox' );
 		}
 
 		$format = sanitize_key( (string) ( $candidate['format'] ?? ( $input['format'] ?? 'mp3' ) ) );
@@ -3141,7 +3141,7 @@ final class Provider_Client {
 					'requires_approval' => true,
 					'commit_execution'  => false,
 					'proposal_ready'    => $proposal_ready,
-					'reason'            => __( 'Adopting generated article audio imports the reviewed audio into the local media library when requested and writes playback metadata through Core governance before Adapter execution.', 'npcink-toolbox' ),
+					'reason'            => __( 'Adopting generated article audio imports the reviewed audio into the local media library when requested and writes playback metadata through Core governance before Adapter execution.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'blocked_actions'          => array(
@@ -3185,7 +3185,7 @@ final class Provider_Client {
 		if ( empty( $evidence_refs ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_knowledge_review_evidence_required',
-				__( 'Site Knowledge review plans require evidence_refs from the Cloud handoff.', 'npcink-toolbox' ),
+				__( 'Site Knowledge review plans require evidence_refs from the Cloud handoff.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3198,10 +3198,10 @@ final class Provider_Client {
 		$title_hint      = sanitize_text_field( (string) ( $proposal_input['title_hint'] ?? ( $input['title_hint'] ?? '' ) ) );
 		$content_hint    = sanitize_textarea_field( (string) ( $proposal_input['content_hint'] ?? ( $input['content_hint'] ?? '' ) ) );
 		if ( '' === trim( $title_hint ) ) {
-			$title_hint = __( 'Site Knowledge review draft requires a human title', 'npcink-toolbox' );
+			$title_hint = __( 'Site Knowledge review draft requires a human title', 'npcink-workflow-toolbox' );
 		}
 		if ( '' === trim( $content_hint ) ) {
-			$content_hint = __( 'Human draft content is required before this Site Knowledge review proposal can proceed.', 'npcink-toolbox' );
+			$content_hint = __( 'Human draft content is required before this Site Knowledge review proposal can proceed.', 'npcink-workflow-toolbox' );
 		}
 		$agent_id        = sanitize_key( (string) ( $handoff['agent_id'] ?? ( $proposal_input['agent_id'] ?? 'site_knowledge_suggestion_agent' ) ) );
 		$agent_version   = sanitize_text_field( (string) ( $handoff['agent_version'] ?? ( $proposal_input['agent_version'] ?? '' ) ) );
@@ -3253,7 +3253,7 @@ final class Provider_Client {
 				array(
 					'code'   => 'human_draft_required',
 					'fields' => array( 'title', 'content' ),
-					'reason' => __( 'Site Knowledge evidence can justify a review proposal, but a human must decide the final draft title and content before commit preflight.', 'npcink-toolbox' ),
+					'reason' => __( 'Site Knowledge evidence can justify a review proposal, but a human must decide the final draft title and content before commit preflight.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'write_actions'          => array(
@@ -3279,7 +3279,7 @@ final class Provider_Client {
 					'commit_execution'  => false,
 					'proposal_ready'    => false,
 					'requires_input'    => array( 'title', 'content' ),
-					'reason'            => __( 'Create a blocked Core review proposal from evidence-backed Site Knowledge suggestions; human draft input is required before execution can be considered.', 'npcink-toolbox' ),
+					'reason'            => __( 'Create a blocked Core review proposal from evidence-backed Site Knowledge suggestions; human draft input is required before execution can be considered.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'handoff'                => array(
@@ -3299,7 +3299,7 @@ final class Provider_Client {
 		if ( empty( $selected_items ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_review_items_required',
-				__( 'Select at least one Morning Brief review item before creating a Core proposal.', 'npcink-toolbox' ),
+				__( 'Select at least one Morning Brief review item before creating a Core proposal.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3342,7 +3342,7 @@ final class Provider_Client {
 
 			$evidence_refs[] = array(
 				'action_id'               => $action_id,
-				'title'                   => $this->bounded_text( sanitize_text_field( (string) ( $item['title'] ?? __( 'Morning Brief review item', 'npcink-toolbox' ) ) ), 160 ),
+				'title'                   => $this->bounded_text( sanitize_text_field( (string) ( $item['title'] ?? __( 'Morning Brief review item', 'npcink-workflow-toolbox' ) ) ), 160 ),
 				'object_type'             => $object_type,
 				'object_id'               => $object_id,
 				'post_id'                 => absint( $item['post_id'] ?? ( 'post' === $object_type ? $object_id : 0 ) ),
@@ -3433,7 +3433,7 @@ final class Provider_Client {
 					'commit_execution'  => false,
 					'proposal_ready'    => false,
 					'requires_input'    => array( 'title', 'content' ),
-					'reason'            => __( 'Morning Brief found reviewable content quality signals. Human draft title and content are required before execution can be considered.', 'npcink-toolbox' ),
+					'reason'            => __( 'Morning Brief found reviewable content quality signals. Human draft title and content are required before execution can be considered.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'handoff'                => array(
@@ -3454,7 +3454,7 @@ final class Provider_Client {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_content_metadata_toolkit_unavailable',
-				__( 'Npcink Abilities Toolkit is required to build a content metadata apply plan.', 'npcink-toolbox' ),
+				__( 'Npcink Abilities Toolkit is required to build a content metadata apply plan.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -3465,7 +3465,7 @@ final class Provider_Client {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_content_metadata_toolkit_plan_unavailable',
-				__( 'The Toolkit content metadata apply-plan ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit content metadata apply-plan ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -3477,7 +3477,7 @@ final class Provider_Client {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_content_metadata_toolkit_plan_invalid',
-				__( 'The Toolkit content metadata apply-plan ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit content metadata apply-plan ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -3486,7 +3486,7 @@ final class Provider_Client {
 		if ( empty( $data['artifact_type'] ) || 'content_metadata_apply_plan' !== (string) $data['artifact_type'] ) {
 			return new WP_Error(
 				'npcink_toolbox_content_metadata_toolkit_plan_invalid_artifact',
-				__( 'The Toolkit content metadata apply-plan ability did not return the expected artifact.', 'npcink-toolbox' ),
+				__( 'The Toolkit content metadata apply-plan ability did not return the expected artifact.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -3862,7 +3862,7 @@ final class Provider_Client {
 		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'summary_suggestions', 'summary_terms_optimization', 'audio_summary_script' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_intent',
-				__( 'A supported hosted AI content-support intent is required.', 'npcink-toolbox' ),
+				__( 'A supported hosted AI content-support intent is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3885,7 +3885,7 @@ final class Provider_Client {
 		if ( '' === trim( $title . $excerpt . $content ) && 0 === $post_id ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_hosted_ai_context',
-				__( 'A title, brief, draft text, or post ID is required for hosted AI content support.', 'npcink-toolbox' ),
+				__( 'A title, brief, draft text, or post ID is required for hosted AI content support.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3957,7 +3957,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_runtime_payload',
-				__( 'The hosted AI runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The hosted AI runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -3975,7 +3975,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_hosted_ai_cloud_unavailable',
-				__( 'Connect Npcink Cloud before using hosted AI tools.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before using hosted AI tools.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -4242,7 +4242,7 @@ final class Provider_Client {
 		if ( ! in_array( $intent, array( 'media_alt_suggestions', 'content_snapshot_suggestions' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_site_helper_intent',
-				__( 'A supported AI site-helper intent is required.', 'npcink-toolbox' ),
+				__( 'A supported AI site-helper intent is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -4324,7 +4324,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_site_helper_runtime_payload',
-				__( 'The AI site-helper runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The AI site-helper runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -4346,7 +4346,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_hosted_ai_site_helper_cloud_unavailable',
-				__( 'Connect Npcink Cloud before using AI site helpers.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before using AI site helpers.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -4505,7 +4505,7 @@ final class Provider_Client {
 		if ( $attachment_id <= 0 ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_attachment_id',
-				__( 'An attachment_id is required to build a media derivative handoff.', 'npcink-toolbox' ),
+				__( 'An attachment_id is required to build a media derivative handoff.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -4529,7 +4529,7 @@ final class Provider_Client {
 		$warnings = array();
 		$watermark_mode = sanitize_key( (string) ( $input['watermark_mode'] ?? $input['watermark_type'] ?? 'core' ) );
 		if ( ! empty( $toolbox_policy['watermark_enabled'] ) && empty( $toolbox_policy['watermark_configured'] ) && ! in_array( $watermark_mode, array( 'off', 'text' ), true ) ) {
-			$warnings[] = __( 'Toolbox watermark policy is enabled but no logo attachment is configured.', 'npcink-toolbox' );
+			$warnings[] = __( 'Toolbox watermark policy is enabled but no logo attachment is configured.', 'npcink-workflow-toolbox' );
 		}
 
 		return array(
@@ -4687,7 +4687,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_site_knowledge_runtime_payload',
-				__( 'The site knowledge runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The site knowledge runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -4704,7 +4704,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_knowledge_cloud_unavailable',
-				__( 'Connect Npcink Cloud before using site knowledge abilities.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before using site knowledge abilities.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -4783,7 +4783,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_image_source_runtime_payload',
-				__( 'The image-source runtime payload was not valid.', 'npcink-toolbox' ),
+				__( 'The image-source runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -4801,7 +4801,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_source_cloud_unavailable',
-				__( 'Connect Npcink Cloud before searching managed image-source candidates. Reviewed image URLs can still be adopted from the editor image sidebar.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before searching managed image-source candidates. Reviewed image URLs can still be adopted from the editor image sidebar.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -5036,7 +5036,7 @@ final class Provider_Client {
 				'selection_reason'       => sanitize_textarea_field( (string) ( $item['selection_reason'] ?? $item['suggested_use'] ?? $item['snippet'] ?? '' ) ),
 				'source'                 => sanitize_key( (string) ( $item['source'] ?? 'zhihu_hot_list' ) ),
 				'score'                  => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
-				'suggested_use'          => sanitize_textarea_field( (string) ( $item['suggested_use'] ?? __( 'Topic selection and manual research queue.', 'npcink-toolbox' ) ) ),
+				'suggested_use'          => sanitize_textarea_field( (string) ( $item['suggested_use'] ?? __( 'Topic selection and manual research queue.', 'npcink-workflow-toolbox' ) ) ),
 				'next_action'            => sanitize_key( (string) ( $item['next_action'] ?? 'manual_topic_selection_then_focused_research' ) ),
 				'evidence_refs'          => $url ? array( $url ) : array(),
 				'write_posture'          => 'suggestion_only',
@@ -5239,7 +5239,7 @@ final class Provider_Client {
 			}
 			$items[] = array(
 				'id'               => sanitize_key( (string) ( $audio['id'] ?? 'audio_' . ( $index + 1 ) ) ),
-				'name'             => sanitize_text_field( (string) ( $audio['name'] ?? ( 'article_audio_summary' === (string) ( $input['intent'] ?? '' ) ? __( 'Audio summary candidate', 'npcink-toolbox' ) : __( 'Narration candidate', 'npcink-toolbox' ) ) ) ),
+				'name'             => sanitize_text_field( (string) ( $audio['name'] ?? ( 'article_audio_summary' === (string) ( $input['intent'] ?? '' ) ? __( 'Audio summary candidate', 'npcink-workflow-toolbox' ) : __( 'Narration candidate', 'npcink-workflow-toolbox' ) ) ) ),
 				'url'              => $url,
 				'b64_json'         => $b64,
 				'format'           => sanitize_key( (string) ( $audio['format'] ?? ( $input['format'] ?? 'mp3' ) ) ),
@@ -7244,7 +7244,7 @@ final class Provider_Client {
 		if ( ! in_array( $outcome, $allowed_outcomes, true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_agent_feedback_outcome_invalid',
-				__( 'Choose a supported Agent feedback outcome.', 'npcink-toolbox' ),
+				__( 'Choose a supported Agent feedback outcome.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -7420,12 +7420,12 @@ final class Provider_Client {
 		$handoff_type   = sanitize_key( (string) ( $agent_handoff['handoff_type'] ?? 'suggestion_only' ) );
 		$next_action    = is_array( $proposal_input ) ? sanitize_key( (string) ( $proposal_input['local_next_action'] ?? '' ) ) : '';
 		$next_steps     = array(
-			__( 'Review returned site knowledge evidence before creating any local proposal.', 'npcink-toolbox' ),
+			__( 'Review returned site knowledge evidence before creating any local proposal.', 'npcink-workflow-toolbox' ),
 		);
 
 		if ( 'proposal_input' === $handoff_type ) {
-			$next_steps[] = __( 'Use this as a Core proposal candidate only after operator review.', 'npcink-toolbox' );
-			$next_steps[] = __( 'Keep final approval, preflight, audit, and WordPress writes in Core.', 'npcink-toolbox' );
+			$next_steps[] = __( 'Use this as a Core proposal candidate only after operator review.', 'npcink-workflow-toolbox' );
+			$next_steps[] = __( 'Keep final approval, preflight, audit, and WordPress writes in Core.', 'npcink-workflow-toolbox' );
 		}
 
 		return array_merge(
@@ -7534,14 +7534,14 @@ final class Provider_Client {
 				'progress'          => array(
 					'status'              => 'running',
 					'stage'               => 'queued',
-					'message'             => __( 'Cloud indexing is already running for this site.', 'npcink-toolbox' ),
+					'message'             => __( 'Cloud indexing is already running for this site.', 'npcink-workflow-toolbox' ),
 					'processed_documents' => 0,
 					'total_documents'     => 0,
 					'indexed_chunks'      => 0,
 					'failed_documents'    => 0,
 					'percent'             => 0,
 				),
-				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'npcink-toolbox' ),
+				'message'           => __( 'A Cloud run is already active for this site. Refresh status before starting another sync.', 'npcink-workflow-toolbox' ),
 				'handoff'           => array(
 					'cloud_runtime'          => 'npcink_cloud_addon',
 					'final_writes'           => 'core_proposal_required',
@@ -7792,7 +7792,7 @@ final class Provider_Client {
 		if ( ! is_array( $data ) ) {
 			return new WP_Error(
 				'npcink_toolbox_provider_invalid_json',
-				__( 'The provider returned an invalid JSON response.', 'npcink-toolbox' ),
+				__( 'The provider returned an invalid JSON response.', 'npcink-workflow-toolbox' ),
 				array(
 					'status'          => 502,
 					'provider_status' => $status,
@@ -7801,7 +7801,7 @@ final class Provider_Client {
 		}
 
 		if ( 200 > $status || 299 < $status ) {
-			$message = sanitize_text_field( (string) ( $data['error']['message'] ?? $data['message'] ?? __( 'The provider request failed.', 'npcink-toolbox' ) ) );
+			$message = sanitize_text_field( (string) ( $data['error']['message'] ?? $data['message'] ?? __( 'The provider request failed.', 'npcink-workflow-toolbox' ) ) );
 			return new WP_Error(
 				'npcink_toolbox_provider_error',
 				$message,
@@ -7840,7 +7840,7 @@ final class Provider_Client {
 		if ( 200 > $status || 299 < $status ) {
 			return new WP_Error(
 				'npcink_toolbox_provider_error',
-				__( 'The provider text request failed.', 'npcink-toolbox' ),
+				__( 'The provider text request failed.', 'npcink-workflow-toolbox' ),
 				array(
 					'status'          => $status,
 					'provider_status' => $status,
@@ -7980,32 +7980,32 @@ final class Provider_Client {
 		$sections = array(
 			array(
 				'section'         => 'direct_answer',
-				'heading_hint'    => __( 'Direct answer', 'npcink-toolbox' ),
-				'purpose'         => __( 'State the useful answer or thesis with only supported facts.', 'npcink-toolbox' ),
+				'heading_hint'    => __( 'Direct answer', 'npcink-workflow-toolbox' ),
+				'purpose'         => __( 'State the useful answer or thesis with only supported facts.', 'npcink-workflow-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'context',
-				'heading_hint'    => __( 'Context', 'npcink-toolbox' ),
-				'purpose'         => __( 'Explain why the topic matters to the target reader.', 'npcink-toolbox' ),
+				'heading_hint'    => __( 'Context', 'npcink-workflow-toolbox' ),
+				'purpose'         => __( 'Explain why the topic matters to the target reader.', 'npcink-workflow-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'main_body',
-				'heading_hint'    => __( 'Practical breakdown', 'npcink-toolbox' ),
-				'purpose'         => __( 'Organize steps, examples, comparisons, or tradeoffs that the evidence supports.', 'npcink-toolbox' ),
+				'heading_hint'    => __( 'Practical breakdown', 'npcink-workflow-toolbox' ),
+				'purpose'         => __( 'Organize steps, examples, comparisons, or tradeoffs that the evidence supports.', 'npcink-workflow-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'geo_summary',
-				'heading_hint'    => __( 'AI-readable summary', 'npcink-toolbox' ),
-				'purpose'         => __( 'Summarize the grounded conclusion without ranking or outcome guarantees.', 'npcink-toolbox' ),
+				'heading_hint'    => __( 'AI-readable summary', 'npcink-workflow-toolbox' ),
+				'purpose'         => __( 'Summarize the grounded conclusion without ranking or outcome guarantees.', 'npcink-workflow-toolbox' ),
 				'evidence_needed' => true,
 			),
 			array(
 				'section'         => 'conclusion',
-				'heading_hint'    => __( 'Next step', 'npcink-toolbox' ),
-				'purpose'         => __( 'Close with a practical next step for the reader.', 'npcink-toolbox' ),
+				'heading_hint'    => __( 'Next step', 'npcink-workflow-toolbox' ),
+				'purpose'         => __( 'Close with a practical next step for the reader.', 'npcink-workflow-toolbox' ),
 				'evidence_needed' => false,
 			),
 		);
@@ -8186,7 +8186,7 @@ final class Provider_Client {
 			if ( empty( $images ) || ! is_array( $images[0] ?? null ) ) {
 				return new WP_Error(
 					'npcink_toolbox_article_media_candidate_missing',
-					__( 'Image-source search did not return a usable candidate for an article media batch item.', 'npcink-toolbox' ),
+					__( 'Image-source search did not return a usable candidate for an article media batch item.', 'npcink-workflow-toolbox' ),
 					array( 'status' => 502 )
 				);
 			}
@@ -8196,7 +8196,7 @@ final class Provider_Client {
 		if ( empty( $candidate ) ) {
 			return new WP_Error(
 				'npcink_toolbox_article_media_candidate_required',
-				__( 'Every article media batch item requires image_candidate, featured_image, image_url, or search_images=true.', 'npcink-toolbox' ),
+				__( 'Every article media batch item requires image_candidate, featured_image, image_url, or search_images=true.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -8375,7 +8375,7 @@ final class Provider_Client {
 			if ( ! $post ) {
 				return new WP_Error(
 					'npcink_toolbox_post_not_found',
-					__( 'The requested post was not found.', 'npcink-toolbox' ),
+					__( 'The requested post was not found.', 'npcink-workflow-toolbox' ),
 					array( 'status' => 404 )
 				);
 			}
@@ -8400,7 +8400,7 @@ final class Provider_Client {
 		if ( '' === $title && '' === $topic ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_discoverability_source',
-				__( 'A post_id, topic, or title is required to build a content discoverability brief.', 'npcink-toolbox' ),
+				__( 'A post_id, topic, or title is required to build a content discoverability brief.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -8426,17 +8426,17 @@ final class Provider_Client {
 
 	private function content_discoverability_field_instruction( string $field ): string {
 		$instructions = array(
-			'seo_title'             => __( 'Suggest a concise search title based on the source topic and primary keywords. Avoid clickbait and unsupported claims.', 'npcink-toolbox' ),
-			'seo_description'       => __( 'Suggest a meta description that summarizes the reader problem, topic, and value using verified source facts only.', 'npcink-toolbox' ),
-			'slug'                  => __( 'Suggest a short, readable URL slug from the title or topic.', 'npcink-toolbox' ),
-			'excerpt'               => __( 'Suggest an editorial excerpt grounded in the supplied content.', 'npcink-toolbox' ),
-			'faq'                   => __( 'Suggest FAQ question and answer pairs only when the context allows FAQ generation and the source supports the answers.', 'npcink-toolbox' ),
-			'answer_summary'        => __( 'Suggest a direct one-sentence AEO answer summary grounded in the supplied source.', 'npcink-toolbox' ),
-			'geo_summary'           => __( 'Suggest a standalone GEO summary that is easy for AI systems to quote without adding unsupported facts.', 'npcink-toolbox' ),
-			'structured_data_hints' => __( 'Suggest schema hints only when the source supports them; do not claim schema has been applied.', 'npcink-toolbox' ),
+			'seo_title'             => __( 'Suggest a concise search title based on the source topic and primary keywords. Avoid clickbait and unsupported claims.', 'npcink-workflow-toolbox' ),
+			'seo_description'       => __( 'Suggest a meta description that summarizes the reader problem, topic, and value using verified source facts only.', 'npcink-workflow-toolbox' ),
+			'slug'                  => __( 'Suggest a short, readable URL slug from the title or topic.', 'npcink-workflow-toolbox' ),
+			'excerpt'               => __( 'Suggest an editorial excerpt grounded in the supplied content.', 'npcink-workflow-toolbox' ),
+			'faq'                   => __( 'Suggest FAQ question and answer pairs only when the context allows FAQ generation and the source supports the answers.', 'npcink-workflow-toolbox' ),
+			'answer_summary'        => __( 'Suggest a direct one-sentence AEO answer summary grounded in the supplied source.', 'npcink-workflow-toolbox' ),
+			'geo_summary'           => __( 'Suggest a standalone GEO summary that is easy for AI systems to quote without adding unsupported facts.', 'npcink-workflow-toolbox' ),
+			'structured_data_hints' => __( 'Suggest schema hints only when the source supports them; do not claim schema has been applied.', 'npcink-workflow-toolbox' ),
 		);
 
-		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'npcink-toolbox' );
+		return $instructions[ $field ] ?? __( 'Suggest a reviewable content improvement grounded in the supplied source.', 'npcink-workflow-toolbox' );
 	}
 
 	private function content_discoverability_field_group( string $field ): string {
@@ -8485,18 +8485,18 @@ final class Provider_Client {
 				array(
 					'question' => sprintf(
 						/* translators: %s: topic. */
-						__( 'What should readers know about %s?', 'npcink-toolbox' ),
+						__( 'What should readers know about %s?', 'npcink-workflow-toolbox' ),
 						$topic
 					),
-					'answer_guidance' => __( 'Answer only with facts supported by the supplied source and site context.', 'npcink-toolbox' ),
+					'answer_guidance' => __( 'Answer only with facts supported by the supplied source and site context.', 'npcink-workflow-toolbox' ),
 				),
 				array(
 					'question' => sprintf(
 						/* translators: %s: topic. */
-						__( 'How does %s affect the target audience?', 'npcink-toolbox' ),
+						__( 'How does %s affect the target audience?', 'npcink-workflow-toolbox' ),
 						$topic
 					),
-					'answer_guidance' => __( 'Connect the answer to target audience needs without inventing outcomes or guarantees.', 'npcink-toolbox' ),
+					'answer_guidance' => __( 'Connect the answer to target audience needs without inventing outcomes or guarantees.', 'npcink-workflow-toolbox' ),
 				),
 			);
 		}

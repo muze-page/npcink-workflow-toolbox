@@ -34,7 +34,7 @@ final class Editor_Content_Support {
 		);
 		wp_set_script_translations(
 			'npcink-toolbox-editor-content-support',
-			'npcink-toolbox',
+			'npcink-workflow-toolbox',
 			NPCINK_TOOLBOX_DIR . 'languages'
 		);
 

@@ -32,7 +32,7 @@ final class Dashboard_Widget {
 
 		wp_add_dashboard_widget(
 			self::HOT_TOPIC_WIDGET_ID,
-			__( '知乎热榜', 'npcink-toolbox' ),
+			__( '知乎热榜', 'npcink-workflow-toolbox' ),
 			array( $this, 'render_hot_topic_pool' ),
 			null,
 			null,
@@ -49,10 +49,10 @@ final class Dashboard_Widget {
 		$pool  = $this->hot_topic_pool->get();
 		$items = is_array( $pool['items'] ?? null ) ? $pool['items'] : array();
 
-		echo '<p class="description">' . esc_html__( '今日热榜标题速览。这里不做选题处理，只帮助快速判断外部热点。', 'npcink-toolbox' ) . '</p>';
+		echo '<p class="description">' . esc_html__( '今日热榜标题速览。这里不做选题处理，只帮助快速判断外部热点。', 'npcink-workflow-toolbox' ) . '</p>';
 
 		if ( array() === $items ) {
-			$message = sanitize_text_field( (string) ( $pool['message'] ?? __( '暂时没有可用的热点选题。', 'npcink-toolbox' ) ) );
+			$message = sanitize_text_field( (string) ( $pool['message'] ?? __( '暂时没有可用的热点选题。', 'npcink-workflow-toolbox' ) ) );
 			echo '<p>' . esc_html( $message ) . '</p>';
 		} else {
 			$this->render_hot_topic_titles( $items );
@@ -75,9 +75,9 @@ final class Dashboard_Widget {
 			echo '<span class="description" style="font-weight:600;">#' . esc_html( (string) $rank ) . '</span>';
 			echo '<span style="color:#1d2327;font-weight:600;line-height:1.45;word-break:break-word;">' . esc_html( $title ) . '</span>';
 			if ( '' !== $url ) {
-				echo '<a class="button button-small" target="_blank" rel="noopener noreferrer" href="' . esc_url( $url ) . '" style="justify-self:end;">' . esc_html__( '查看', 'npcink-toolbox' ) . '</a>';
+				echo '<a class="button button-small" target="_blank" rel="noopener noreferrer" href="' . esc_url( $url ) . '" style="justify-self:end;">' . esc_html__( '查看', 'npcink-workflow-toolbox' ) . '</a>';
 			} else {
-				echo '<span class="description" style="justify-self:end;">' . esc_html__( '无来源', 'npcink-toolbox' ) . '</span>';
+				echo '<span class="description" style="justify-self:end;">' . esc_html__( '无来源', 'npcink-workflow-toolbox' ) . '</span>';
 			}
 			echo '</div>';
 		}
@@ -88,18 +88,18 @@ final class Dashboard_Widget {
 		$parts = array();
 		if ( isset( $pool['fetched_at'] ) ) {
 			/* translators: %s: hot-topic pool fetch time. */
-			$parts[] = sprintf( __( '更新时间：%s', 'npcink-toolbox' ), sanitize_text_field( (string) $pool['fetched_at'] ) );
+			$parts[] = sprintf( __( '更新时间：%s', 'npcink-workflow-toolbox' ), sanitize_text_field( (string) $pool['fetched_at'] ) );
 		}
 		if ( isset( $pool['cache_status'] ) ) {
 			$cache_status = 'stale' === sanitize_key( (string) $pool['cache_status'] )
-				? __( '本地备份', 'npcink-toolbox' )
-				: __( '本地', 'npcink-toolbox' );
+				? __( '本地备份', 'npcink-workflow-toolbox' )
+				: __( '本地', 'npcink-workflow-toolbox' );
 			/* translators: %s: user-facing cache status. */
-			$parts[] = sprintf( __( '缓存：%s', 'npcink-toolbox' ), $cache_status );
+			$parts[] = sprintf( __( '缓存：%s', 'npcink-workflow-toolbox' ), $cache_status );
 		}
 		if ( isset( $pool['result_count'] ) ) {
 			/* translators: %d: number of hot-topic candidates. */
-			$parts[] = sprintf( __( '数量：%d', 'npcink-toolbox' ), absint( $pool['result_count'] ) );
+			$parts[] = sprintf( __( '数量：%d', 'npcink-workflow-toolbox' ), absint( $pool['result_count'] ) );
 		}
 
 		if ( array() !== $parts ) {

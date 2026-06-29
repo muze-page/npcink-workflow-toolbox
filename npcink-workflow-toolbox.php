@@ -7,7 +7,7 @@
  * Requires PHP: 8.0
  * Author: Npcink
  * License: GPL-2.0-or-later
- * Text Domain: npcink-toolbox
+ * Text Domain: npcink-workflow-toolbox
  * Domain Path: /languages
  *
  * @package Npcink_Toolbox

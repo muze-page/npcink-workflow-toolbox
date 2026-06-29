@@ -6,7 +6,7 @@ Status: MVP architecture.
 
 | Component | Responsibility |
 | --- | --- |
-| `npcink-toolbox.php` | Plugin header and bootstrap. |
+| `npcink-workflow-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
 | `Settings` | Option defaults, sanitization, non-search connector secret lookup, and content context export. |
 | `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Full-site Insights Cloud analysis runtime calls, and fixed-flow planning actions. |

@@ -111,7 +111,7 @@ composer validate --no-check-publish
 WordPress activation smoke, when a local site and WP-CLI are available:
 
 ```bash
-wp --path="/path/to/wordpress" plugin activate npcink-toolbox
+wp --path="/path/to/wordpress" plugin activate npcink-workflow-toolbox
 ```
 
 Before finishing a code session, run the narrowest useful gate and report

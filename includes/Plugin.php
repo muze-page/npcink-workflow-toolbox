@@ -83,7 +83,7 @@ final class Plugin {
 			sprintf(
 				'<a href="%1$s">%2$s</a>',
 				esc_url( $this->plugin_settings_url() ),
-				esc_html__( 'Settings', 'npcink-toolbox' )
+				esc_html__( 'Settings', 'npcink-workflow-toolbox' )
 			)
 		);
 

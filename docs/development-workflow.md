@@ -154,7 +154,7 @@ command -v wp
 wp --info
 
 WP_PATH="/path/to/wordpress"
-wp --path="$WP_PATH" plugin activate npcink-toolbox
+wp --path="$WP_PATH" plugin activate npcink-workflow-toolbox
 ```
 
 On this workstation the preferred global WP-CLI is `/opt/homebrew/bin/wp`.
@@ -173,7 +173,7 @@ find "$HOME/Library/Application Support/Local/run" -path '*/mysql/mysqld.sock' -
 WP_CLI_MYSQL_SOCKET="/path/to/Local/run/site-id/mysql/mysqld.sock"
 php -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" \
     -d pdo_mysql.default_socket="$WP_CLI_MYSQL_SOCKET" \
-    "$(command -v wp)" --path="$WP_PATH" plugin status npcink-toolbox
+    "$(command -v wp)" --path="$WP_PATH" plugin status npcink-workflow-toolbox
 ```
 
 Then verify:

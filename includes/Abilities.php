@@ -28,8 +28,8 @@ final class Abilities {
 			npcink_abilities_toolkit_register_category(
 				'npcink-toolbox',
 				array(
-					'label'       => __( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
-					'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
+					'label'       => __( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
+					'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-workflow-toolbox' ),
 				)
 			);
 		}
@@ -53,8 +53,8 @@ final class Abilities {
 		wp_register_ability_category(
 			'npcink-toolbox',
 			array(
-				'label'       => __( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
-				'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
+				'label'       => __( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
+				'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-workflow-toolbox' ),
 			)
 		);
 	}
@@ -91,8 +91,8 @@ final class Abilities {
 	private function definitions(): array {
 		return array(
 			'npcink-toolbox/search-image-source'                => $this->definition(
-				__( 'Search Image Source', 'npcink-toolbox' ),
-				__( 'Search configured image source candidates without importing media.', 'npcink-toolbox' ),
+				__( 'Search Image Source', 'npcink-workflow-toolbox' ),
+				__( 'Search configured image source candidates without importing media.', 'npcink-workflow-toolbox' ),
 				array( 'query' ),
 				array( $this, 'search_image_source' ),
 				'cap.toolbox.image_source',
@@ -101,8 +101,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/generate-image'                     => $this->definition(
-				__( 'Generate Image Candidate', 'npcink-toolbox' ),
-				__( 'Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media.', 'npcink-toolbox' ),
+				__( 'Generate Image Candidate', 'npcink-workflow-toolbox' ),
+				__( 'Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media.', 'npcink-workflow-toolbox' ),
 				array( 'prompt' ),
 				array( $this, 'generate_image_candidate' ),
 				'cap.toolbox.image_source',
@@ -113,8 +113,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/search-site-knowledge'              => $this->definition(
-				__( 'Search Site Knowledge', 'npcink-toolbox' ),
-				__( 'Search Cloud-managed site knowledge for semantic search, related content, writing context, internal links, or refresh suggestions without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Search Site Knowledge', 'npcink-workflow-toolbox' ),
+				__( 'Search Cloud-managed site knowledge for semantic search, related content, writing context, internal links, or refresh suggestions without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'query' ),
 				array( $this, 'search_site_knowledge' ),
 				'cap.toolbox.knowledge.search',
@@ -126,8 +126,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/cloud-web-search'                  => $this->definition(
-				__( 'Cloud Web Search', 'npcink-toolbox' ),
-				__( 'Run Cloud-managed web search or Zhihu hot-topic atoms for external evidence and topic selection without exposing local provider keys or writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Cloud Web Search', 'npcink-workflow-toolbox' ),
+				__( 'Run Cloud-managed web search or Zhihu hot-topic atoms for external evidence and topic selection without exposing local provider keys or writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'query' ),
 				array( $this, 'cloud_web_search' ),
 				'cap.toolbox.web_search',
@@ -142,33 +142,33 @@ final class Abilities {
 				array(
 					'query'        => array(
 						'type'        => 'string',
-						'description' => __( 'Search query or research question.', 'npcink-toolbox' ),
+						'description' => __( 'Search query or research question.', 'npcink-workflow-toolbox' ),
 					),
 					'intent'       => array(
 						'type'        => 'string',
-						'description' => __( 'Search intent hint such as article_background, fact_check, competitor_research, pricing_snapshot, product_comparison, or general_research.', 'npcink-toolbox' ),
+						'description' => __( 'Search intent hint such as article_background, fact_check, competitor_research, pricing_snapshot, product_comparison, or general_research.', 'npcink-workflow-toolbox' ),
 					),
 					'managed_source' => array(
 						'type'        => 'string',
-						'description' => __( 'Optional Cloud-managed source lane such as zhihu_hot_topics for a cached topic pool, zhihu_research, zhihu_global_search, zhida_simple, zhida_deep, or zhida_deepsearch.', 'npcink-toolbox' ),
+						'description' => __( 'Optional Cloud-managed source lane such as zhihu_hot_topics for a cached topic pool, zhihu_research, zhihu_global_search, zhida_simple, zhida_deep, or zhida_deepsearch.', 'npcink-workflow-toolbox' ),
 					),
 					'max_results'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 8,
-						'description' => __( 'Maximum result count requested from Cloud.', 'npcink-toolbox' ),
+						'description' => __( 'Maximum result count requested from Cloud.', 'npcink-workflow-toolbox' ),
 					),
 					'recency_days' => array(
 						'type'        => 'integer',
 						'minimum'     => 0,
 						'maximum'     => 3650,
-						'description' => __( 'Optional freshness window in days.', 'npcink-toolbox' ),
+						'description' => __( 'Optional freshness window in days.', 'npcink-workflow-toolbox' ),
 					),
 				)
 			),
 			'npcink-toolbox/get-site-knowledge-status'          => $this->definition(
-				__( 'Get Site Knowledge Status', 'npcink-toolbox' ),
-				__( 'Read Cloud-managed site knowledge coverage and sync status without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Get Site Knowledge Status', 'npcink-workflow-toolbox' ),
+				__( 'Read Cloud-managed site knowledge coverage and sync status without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'get_site_knowledge_status' ),
 				'cap.toolbox.knowledge.read',
@@ -180,8 +180,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/request-site-knowledge-sync'        => $this->definition(
-				__( 'Request Site Knowledge Sync', 'npcink-toolbox' ),
-				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Request Site Knowledge Sync', 'npcink-workflow-toolbox' ),
+				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'request_site_knowledge_sync' ),
 				'cap.toolbox.knowledge.sync',
@@ -193,8 +193,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-article-write-plan'           => $this->definition(
-				__( 'Build Article Write Plan', 'npcink-toolbox' ),
-				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Article Write Plan', 'npcink-workflow-toolbox' ),
+				__( 'Build a Core-ready article_write_plan for a reviewed draft without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'title', 'content_markdown' ),
 				array( $this, 'build_article_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -208,8 +208,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-article-batch-write-plan'     => $this->definition(
-				__( 'Build Article Batch Write Plan', 'npcink-toolbox' ),
-				__( 'Build a Core-ready article_batch_write_plan for 2 to 5 reviewed drafts without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Article Batch Write Plan', 'npcink-workflow-toolbox' ),
+				__( 'Build a Core-ready article_batch_write_plan for 2 to 5 reviewed drafts without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'articles' ),
 				array( $this, 'build_article_batch_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -223,8 +223,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-article-media-batch-write-plan' => $this->definition(
-				__( 'Build Article Media Batch Write Plan', 'npcink-toolbox' ),
-				__( 'Build a Core-ready article_media_batch_write_plan for reviewed drafts plus selected image-source candidates without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Article Media Batch Write Plan', 'npcink-workflow-toolbox' ),
+				__( 'Build a Core-ready article_media_batch_write_plan for reviewed drafts plus selected image-source candidates without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'articles' ),
 				array( $this, 'build_article_media_batch_write_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -238,8 +238,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-site-knowledge-review-plan' => $this->definition(
-				__( 'Build Site Knowledge Review Plan', 'npcink-toolbox' ),
-				__( 'Build a Core review proposal plan from a Cloud Site Knowledge agent handoff without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Site Knowledge Review Plan', 'npcink-workflow-toolbox' ),
+				__( 'Build a Core review proposal plan from a Cloud Site Knowledge agent handoff without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'proposal_input' ),
 				array( $this, 'build_site_knowledge_review_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -253,8 +253,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-nightly-inspection-review-plan' => $this->definition(
-				__( 'Build Nightly Inspection Review Plan', 'npcink-toolbox' ),
-				__( 'Build a blocked Core review proposal plan from selected Nightly Morning Brief items without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Nightly Inspection Review Plan', 'npcink-workflow-toolbox' ),
+				__( 'Build a blocked Core review proposal plan from selected Nightly Morning Brief items without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'selected_items' ),
 				array( $this, 'build_nightly_inspection_review_plan' ),
 				'cap.toolbox.workflow_suggest',
@@ -268,8 +268,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-media-derivative-handoff'     => $this->definition(
-				__( 'Build Media Derivative Handoff', 'npcink-toolbox' ),
-				__( 'Build a one-run Core/Abilities media derivative handoff from Toolbox defaults without writing WordPress media.', 'npcink-toolbox' ),
+				__( 'Build Media Derivative Handoff', 'npcink-workflow-toolbox' ),
+				__( 'Build a one-run Core/Abilities media derivative handoff from Toolbox defaults without writing WordPress media.', 'npcink-workflow-toolbox' ),
 				array( 'attachment_id' ),
 				array( $this, 'build_media_derivative_handoff' ),
 				'cap.toolbox.workflow_suggest',
@@ -281,8 +281,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/get-content-discoverability-context' => $this->definition(
-				__( 'Get Content Discoverability Context', 'npcink-toolbox' ),
-				__( 'Return the operator-maintained SEO, AEO, and GEO context for third-party AI callers without exposing provider secrets or writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Get Content Discoverability Context', 'npcink-workflow-toolbox' ),
+				__( 'Return the operator-maintained SEO, AEO, and GEO context for third-party AI callers without exposing provider secrets or writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'get_content_discoverability_context' ),
 				'cap.toolbox.context.read',
@@ -294,8 +294,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/validate-content-discoverability-context' => $this->definition(
-				__( 'Validate Content Discoverability Context', 'npcink-toolbox' ),
-				__( 'Check whether the operator-maintained SEO, AEO, and GEO context has enough fields for third-party AI suggestion workflows.', 'npcink-toolbox' ),
+				__( 'Validate Content Discoverability Context', 'npcink-workflow-toolbox' ),
+				__( 'Check whether the operator-maintained SEO, AEO, and GEO context has enough fields for third-party AI suggestion workflows.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'validate_content_discoverability_context' ),
 				'cap.toolbox.context.read',
@@ -307,8 +307,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-content-discoverability-brief' => $this->definition(
-				__( 'Build Discoverability Suggestions', 'npcink-toolbox' ),
-				__( 'Build suggestion-only SEO, AEO, and GEO guidance from operator context and supplied post or topic input without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build Discoverability Suggestions', 'npcink-workflow-toolbox' ),
+				__( 'Build suggestion-only SEO, AEO, and GEO guidance from operator context and supplied post or topic input without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'build_content_discoverability_brief' ),
 				'cap.toolbox.workflow_suggest',
@@ -320,8 +320,8 @@ final class Abilities {
 				)
 			),
 			'npcink-toolbox/build-ai-article-writing-pack' => $this->definition(
-				__( 'Build AI Article Writing Pack', 'npcink-toolbox' ),
-				__( 'Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content.', 'npcink-toolbox' ),
+				__( 'Build AI Article Writing Pack', 'npcink-workflow-toolbox' ),
+				__( 'Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'build_ai_article_writing_pack' ),
 				'cap.toolbox.workflow_suggest',

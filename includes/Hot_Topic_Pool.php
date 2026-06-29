@@ -78,7 +78,7 @@ final class Hot_Topic_Pool {
 			return $value;
 		}
 
-		return __( '热榜趋势信号，需人工判断是否适合本站受众。', 'npcink-toolbox' );
+		return __( '热榜趋势信号，需人工判断是否适合本站受众。', 'npcink-workflow-toolbox' );
 	}
 
 	public function item_title( array $item, int $fallback_rank ): string {
@@ -89,7 +89,7 @@ final class Hot_Topic_Pool {
 
 		return sprintf(
 			/* translators: %d: hot topic rank number. */
-			__( '热榜选题 %d', 'npcink-toolbox' ),
+			__( '热榜选题 %d', 'npcink-workflow-toolbox' ),
 			$fallback_rank
 		);
 	}

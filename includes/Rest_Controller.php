@@ -314,7 +314,7 @@ final class Rest_Controller {
 		if ( '' === $query && '' === $vector ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_vector_input',
-				__( 'A query or vector field is required for vector search.', 'npcink-toolbox' ),
+				__( 'A query or vector field is required for vector search.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -445,7 +445,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before submitting Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before submitting Pro Nightly Inspection batches.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -473,7 +473,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -489,7 +489,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before reading recent Pro Nightly Inspection runs.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before reading recent Pro Nightly Inspection runs.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -505,7 +505,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_entitlement_unavailable',
-				__( 'Connect Npcink Cloud before reading Pro Cloud Runtime entitlement.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before reading Pro Cloud Runtime entitlement.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -517,7 +517,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before reading Pro Nightly Inspection batches.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -537,7 +537,7 @@ final class Rest_Controller {
 		if ( ! $this->settings->cloud_runtime_available() ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_cloud_batch_unavailable',
-				__( 'Connect Npcink Cloud before retrying Pro Nightly Inspection runs.', 'npcink-toolbox' ),
+				__( 'Connect Npcink Cloud before retrying Pro Nightly Inspection runs.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -610,7 +610,7 @@ final class Rest_Controller {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_admin_required',
-				__( 'Local admin consent requires an administrator session.', 'npcink-toolbox' ),
+				__( 'Local admin consent requires an administrator session.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -620,7 +620,7 @@ final class Rest_Controller {
 		if ( $post_id <= 0 || $attachment_id <= 0 ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_target_required',
-				__( 'A post_id and existing attachment_id are required.', 'npcink-toolbox' ),
+				__( 'A post_id and existing attachment_id are required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -630,7 +630,7 @@ final class Rest_Controller {
 		if ( ! $post || ! $attachment || 'attachment' !== get_post_type( $attachment ) ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_target_not_found',
-				__( 'The target post or media attachment was not found.', 'npcink-toolbox' ),
+				__( 'The target post or media attachment was not found.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -638,7 +638,7 @@ final class Rest_Controller {
 		if ( ! current_user_can( 'edit_post', $post_id ) || ! current_user_can( 'edit_post', $attachment_id ) ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_permission_denied',
-				__( 'You do not have permission to update this featured image.', 'npcink-toolbox' ),
+				__( 'You do not have permission to update this featured image.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -646,7 +646,7 @@ final class Rest_Controller {
 		if ( function_exists( 'wp_attachment_is_image' ) && ! wp_attachment_is_image( $attachment_id ) ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_attachment_not_image',
-				__( 'Local admin consent can set only existing image attachments as featured images.', 'npcink-toolbox' ),
+				__( 'Local admin consent can set only existing image attachments as featured images.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -665,7 +665,7 @@ final class Rest_Controller {
 		if ( Operation_Classifier::LOCAL_ADMIN_CONSENT !== (string) ( $classification['classification'] ?? '' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_classification_rejected',
-				__( 'This featured image action is not eligible for local admin consent.', 'npcink-toolbox' ),
+				__( 'This featured image action is not eligible for local admin consent.', 'npcink-workflow-toolbox' ),
 				array(
 					'status'         => 422,
 					'classification' => $classification,
@@ -696,7 +696,7 @@ final class Rest_Controller {
 
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_write_failed',
-				__( 'WordPress did not accept the featured image update.', 'npcink-toolbox' ),
+				__( 'WordPress did not accept the featured image update.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -719,7 +719,7 @@ final class Rest_Controller {
 
 			return new WP_Error(
 				'npcink_toolbox_local_featured_image_completion_audit_failed',
-				__( 'The featured image update could not be fully audited and was rolled back.', 'npcink-toolbox' ),
+				__( 'The featured image update could not be fully audited and was rolled back.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -772,7 +772,7 @@ final class Rest_Controller {
 		if ( 0 === $post_id ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_post_id',
-				__( 'A post_id is required for the media brief flow.', 'npcink-toolbox' ),
+				__( 'A post_id is required for the media brief flow.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -781,7 +781,7 @@ final class Rest_Controller {
 		if ( ! $post ) {
 			return new WP_Error(
 				'npcink_toolbox_post_not_found',
-				__( 'The requested post was not found.', 'npcink-toolbox' ),
+				__( 'The requested post was not found.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -814,7 +814,7 @@ final class Rest_Controller {
 		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'article_narration', 'article_audio_summary', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
-				__( 'A supported editor content-support intent is required.', 'npcink-toolbox' ),
+				__( 'A supported editor content-support intent is required.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -841,7 +841,7 @@ final class Rest_Controller {
 				if ( '' === $selected_review_text ) {
 					return new WP_Error(
 						'npcink_toolbox_missing_editor_selection',
-						__( 'Select paragraph text before running a paragraph check.', 'npcink-toolbox' ),
+						__( 'Select paragraph text before running a paragraph check.', 'npcink-workflow-toolbox' ),
 						array( 'status' => 400 )
 					);
 				}
@@ -854,7 +854,7 @@ final class Rest_Controller {
 		if ( '' === $query && ! in_array( $intent, array( 'progressive_recommendations', 'zhihu_hot_topics' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_missing_editor_context',
-				__( 'A title, excerpt, or post content is required for editor content support.', 'npcink-toolbox' ),
+				__( 'A title, excerpt, or post content is required for editor content support.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -1082,7 +1082,7 @@ final class Rest_Controller {
 			'post_id'                => $post_id,
 			'attachment_id'          => $attachment_id,
 			'before_attachment_id'   => $before_attachment_id,
-			'ai_suggestion_summary'  => '' !== $title ? $title : __( 'Set one reviewed existing media image as the featured image.', 'npcink-toolbox' ),
+			'ai_suggestion_summary'  => '' !== $title ? $title : __( 'Set one reviewed existing media image as the featured image.', 'npcink-workflow-toolbox' ),
 			'image_source'           => $source,
 			'image_url'              => $image_url,
 			'preview_completeness'   => Operation_Classifier::PREVIEW_EXACT_FINAL,
@@ -1105,7 +1105,7 @@ final class Rest_Controller {
 		if ( null === $result ) {
 			return new WP_Error(
 				'npcink_toolbox_local_consent_core_audit_unavailable',
-				__( 'Governance Core local consent audit is unavailable.', 'npcink-toolbox' ),
+				__( 'Governance Core local consent audit is unavailable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -1148,7 +1148,7 @@ final class Rest_Controller {
 				'npcink_toolbox_missing_' . sanitize_key( $key ),
 				sprintf(
 					/* translators: %s: field name. */
-					__( '%s is required.', 'npcink-toolbox' ),
+					__( '%s is required.', 'npcink-workflow-toolbox' ),
 					$key
 				),
 				array( 'status' => 400 )
@@ -1371,7 +1371,7 @@ final class Rest_Controller {
 			return array(
 				'artifact_type'          => 'current_article_image_alt_suggestions.v1',
 				'status'                 => 'empty',
-				'message'                => __( 'No current article images were found. Add a featured image or image block before requesting ALT suggestions.', 'npcink-toolbox' ),
+				'message'                => __( 'No current article images were found. Add a featured image or image block before requesting ALT suggestions.', 'npcink-workflow-toolbox' ),
 				'write_posture'          => 'suggestion_only',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
@@ -1395,7 +1395,7 @@ final class Rest_Controller {
 			$this->client->run_hosted_ai_site_helper(
 				array(
 					'intent'         => 'media_alt_suggestions',
-					'focus'          => __( 'Suggest ALT and caption notes only for images already used by the current article.', 'npcink-toolbox' ),
+					'focus'          => __( 'Suggest ALT and caption notes only for images already used by the current article.', 'npcink-workflow-toolbox' ),
 					'media_snapshot' => $media_snapshot,
 					'source_policy'  => 'current_article_media_metadata_only',
 				)
@@ -1433,7 +1433,7 @@ final class Rest_Controller {
 				$base,
 				array(
 					'status'  => 'needs_comment_context',
-					'message' => __( 'Select or provide a comment before requesting reply suggestions.', 'npcink-toolbox' ),
+					'message' => __( 'Select or provide a comment before requesting reply suggestions.', 'npcink-workflow-toolbox' ),
 					'items'   => array(),
 				)
 			);
@@ -1485,7 +1485,7 @@ final class Rest_Controller {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_comment_reply_toolkit_unavailable',
-				__( 'Npcink Abilities Toolkit is required to build comment reply suggestions.', 'npcink-toolbox' ),
+				__( 'Npcink Abilities Toolkit is required to build comment reply suggestions.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -1496,7 +1496,7 @@ final class Rest_Controller {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_comment_reply_toolkit_unavailable',
-				__( 'The Toolkit comment reply suggestion ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit comment reply suggestion ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -1508,7 +1508,7 @@ final class Rest_Controller {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_comment_reply_toolkit_invalid_response',
-				__( 'The Toolkit comment reply suggestion ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit comment reply suggestion ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -1521,9 +1521,9 @@ final class Rest_Controller {
 		if ( empty( $options ) && '' !== trim( (string) ( $data['reply_suggestion'] ?? '' ) ) ) {
 			$options[] = array(
 				'id'         => 'toolkit_reply_suggestion',
-				'label'      => __( 'Reply suggestion', 'npcink-toolbox' ),
+				'label'      => __( 'Reply suggestion', 'npcink-workflow-toolbox' ),
 				'reply_text' => (string) $data['reply_suggestion'],
-				'reason'     => __( 'Generated by the Toolkit comment reply suggestion ability.', 'npcink-toolbox' ),
+				'reason'     => __( 'Generated by the Toolkit comment reply suggestion ability.', 'npcink-workflow-toolbox' ),
 			);
 		}
 
@@ -1538,7 +1538,7 @@ final class Rest_Controller {
 			}
 			$items[] = array(
 				'id'            => sanitize_key( (string) ( $option['id'] ?? 'toolkit_reply_' . ( $index + 1 ) ) ),
-				'label'         => sanitize_text_field( (string) ( $option['label'] ?? __( 'Reply suggestion', 'npcink-toolbox' ) ) ),
+				'label'         => sanitize_text_field( (string) ( $option['label'] ?? __( 'Reply suggestion', 'npcink-workflow-toolbox' ) ) ),
 				'reply_text'    => $reply_text,
 				'reason'        => sanitize_textarea_field( (string) ( $option['reason'] ?? '' ) ),
 				'status'        => sanitize_key( (string) ( $option['status'] ?? 'review_required' ) ),
@@ -1775,9 +1775,9 @@ final class Rest_Controller {
 		}
 
 		$labels = array(
-			'selected_text' => __( 'Selected text or supplied snippet', 'npcink-toolbox' ),
-			'full_article'  => __( 'Full article context', 'npcink-toolbox' ),
-			'topic_only'    => __( 'Topic or short brief', 'npcink-toolbox' ),
+			'selected_text' => __( 'Selected text or supplied snippet', 'npcink-workflow-toolbox' ),
+			'full_article'  => __( 'Full article context', 'npcink-workflow-toolbox' ),
+			'topic_only'    => __( 'Topic or short brief', 'npcink-workflow-toolbox' ),
 		);
 
 		$fields = array();
@@ -1789,10 +1789,10 @@ final class Rest_Controller {
 
 		return array(
 			'id'                     => $scope,
-			'label'                  => $labels[ $scope ] ?? __( 'Current context', 'npcink-toolbox' ),
+			'label'                  => $labels[ $scope ] ?? __( 'Current context', 'npcink-workflow-toolbox' ),
 			'source_fields'          => $fields,
 			'operator_selected_mode' => sanitize_key( (string) ( $context['context_scope'] ?? 'auto' ) ),
-			'detail'                 => __( 'This scope controls ranking context only. Toolbox still returns suggestions and does not write WordPress data.', 'npcink-toolbox' ),
+			'detail'                 => __( 'This scope controls ranking context only. Toolbox still returns suggestions and does not write WordPress data.', 'npcink-workflow-toolbox' ),
 		);
 	}
 
@@ -2222,7 +2222,7 @@ final class Rest_Controller {
 					'match_signals'                => array( 'existing_taxonomy_vocabulary', 'local_taxonomy_profile' ),
 					'related_context'              => array(),
 					'evidence_refs'                => array(),
-					'reason'                       => __( 'Existing WordPress term from the local site taxonomy profile. Review against the current draft before applying.', 'npcink-toolbox' ),
+					'reason'                       => __( 'Existing WordPress term from the local site taxonomy profile. Review against the current draft before applying.', 'npcink-workflow-toolbox' ),
 				);
 			}
 		}
@@ -2266,8 +2266,8 @@ final class Rest_Controller {
 			$item['score'] = $score;
 			$item['recency_rank'] = count( $items );
 			$item['reason'] = $score > 0
-				? __( 'Existing media matched weighted title, excerpt, selected text, or draft terms.', 'npcink-toolbox' )
-				: __( 'Recent existing media candidate from the local library. Review visual fit before adoption.', 'npcink-toolbox' );
+				? __( 'Existing media matched weighted title, excerpt, selected text, or draft terms.', 'npcink-workflow-toolbox' )
+				: __( 'Recent existing media candidate from the local library. Review visual fit before adoption.', 'npcink-workflow-toolbox' );
 			$items[]       = $item;
 		}
 		usort(
@@ -2296,7 +2296,7 @@ final class Rest_Controller {
 				array(
 					'id'                   => 'media_library_' . $attachment_id,
 					'kind'                 => 'image',
-					'label'                => $match_score > 0 ? ( 0 === $index ? __( 'Existing media candidate', 'npcink-toolbox' ) : __( 'Media library option', 'npcink-toolbox' ) ) : __( 'Recent media review item', 'npcink-toolbox' ),
+					'label'                => $match_score > 0 ? ( 0 === $index ? __( 'Existing media candidate', 'npcink-workflow-toolbox' ) : __( 'Media library option', 'npcink-workflow-toolbox' ) ) : __( 'Recent media review item', 'npcink-workflow-toolbox' ),
 					'value'                => (string) ( $item['title'] ?? ( $item['url'] ?? '' ) ),
 					'reason'               => (string) ( $item['reason'] ?? '' ),
 					'confidence'           => $quality_score / 100,
@@ -2306,8 +2306,8 @@ final class Rest_Controller {
 					'quality_score'        => $quality_score,
 					'quality_issues'       => array(
 						$match_score > 0
-							? __( 'Existing media still requires operator visual review before use.', 'npcink-toolbox' )
-							: __( 'Recent media has no strong text match; treat it as a review-only local reference.', 'npcink-toolbox' ),
+							? __( 'Existing media still requires operator visual review before use.', 'npcink-workflow-toolbox' )
+							: __( 'Recent media has no strong text match; treat it as a review-only local reference.', 'npcink-workflow-toolbox' ),
 					),
 					'evidence_refs'        => array( 'attachment:' . $attachment_id ),
 					'source_candidate_ref' => 'attachment:' . $attachment_id,
@@ -2379,9 +2379,9 @@ final class Rest_Controller {
 				array(
 					'id'             => 'preflight_' . $id,
 					'kind'           => 'preflight',
-					'label'          => sanitize_text_field( (string) ( $item['label'] ?? __( 'Preflight review', 'npcink-toolbox' ) ) ),
+					'label'          => sanitize_text_field( (string) ( $item['label'] ?? __( 'Preflight review', 'npcink-workflow-toolbox' ) ) ),
 					'value'          => sanitize_text_field( (string) ( $item['detail'] ?? '' ) ),
-					'reason'         => __( 'Local pre-publish check found a review item before any Cloud enhancement or Core proposal handoff.', 'npcink-toolbox' ),
+					'reason'         => __( 'Local pre-publish check found a review item before any Cloud enhancement or Core proposal handoff.', 'npcink-workflow-toolbox' ),
 					'confidence'     => 0.9,
 					'target_field'   => $targets[ $id ] ?? $id,
 					'action_policy'  => 'operator_review_only_no_write',
@@ -2518,7 +2518,7 @@ final class Rest_Controller {
 			$review_artifact = is_array( $data ) ? $data : $this->empty_toolkit_image_candidate_review_artifact(
 				new WP_Error(
 					'npcink_toolbox_image_candidate_review_toolkit_invalid_artifact',
-					__( 'The Toolkit image candidate review ability returned an invalid artifact.', 'npcink-toolbox' ),
+					__( 'The Toolkit image candidate review ability returned an invalid artifact.', 'npcink-workflow-toolbox' ),
 					array( 'status' => 500 )
 				)
 			);
@@ -2548,7 +2548,7 @@ final class Rest_Controller {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_review_toolkit_unavailable',
-				__( 'Npcink Abilities Toolkit is required to build image candidate review artifacts.', 'npcink-toolbox' ),
+				__( 'Npcink Abilities Toolkit is required to build image candidate review artifacts.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2559,7 +2559,7 @@ final class Rest_Controller {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_review_toolkit_unavailable',
-				__( 'The Toolkit image candidate review ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate review ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -2571,7 +2571,7 @@ final class Rest_Controller {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_candidate_review_toolkit_invalid_response',
-				__( 'The Toolkit image candidate review ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit image candidate review ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -2675,16 +2675,16 @@ final class Rest_Controller {
 			'handoff_preview'        => $handoff_preview,
 			'content_metadata_delta' => $metadata_delta,
 			'risk_notes'             => array(
-				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-toolbox' ),
-				__( 'Prefer existing categories and tags; defer new vocabulary to a later taxonomy governance workflow.', 'npcink-toolbox' ),
-				__( 'Use related Site Knowledge results to avoid duplicate coverage and taxonomy drift.', 'npcink-toolbox' ),
+				__( 'Reject summaries that add facts not present in the draft, site context, or cited evidence.', 'npcink-workflow-toolbox' ),
+				__( 'Prefer existing categories and tags; defer new vocabulary to a later taxonomy governance workflow.', 'npcink-workflow-toolbox' ),
+				__( 'Use related Site Knowledge results to avoid duplicate coverage and taxonomy drift.', 'npcink-workflow-toolbox' ),
 			),
 			'handoff'                => array(
 				'final_writes'           => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 				'next_steps'             => array(
-					__( 'Review the summary, category, and tag candidates in the editor.', 'npcink-toolbox' ),
-					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-toolbox' ),
+					__( 'Review the summary, category, and tag candidates in the editor.', 'npcink-workflow-toolbox' ),
+					__( 'Prepare a Core proposal only after an operator chooses accepted metadata changes.', 'npcink-workflow-toolbox' ),
 				),
 			),
 		);
@@ -2714,7 +2714,7 @@ final class Rest_Controller {
 			'final_write_path'       => 'core_proposal_required',
 			'direct_wordpress_write' => false,
 			'issue_record'           => array(
-				'user_expression'    => '' !== trim( $query ) ? $query : __( 'Improve summary, category, and tag discoverability for the current draft.', 'npcink-toolbox' ),
+				'user_expression'    => '' !== trim( $query ) ? $query : __( 'Improve summary, category, and tag discoverability for the current draft.', 'npcink-workflow-toolbox' ),
 				'target_post'        => array(
 					'id'             => absint( $context['post_id'] ?? 0 ),
 					'type'           => sanitize_key( (string) ( $context['post_type'] ?? 'post' ) ),
@@ -2730,21 +2730,21 @@ final class Rest_Controller {
 				'summary_quality'   => $this->editor_summary_quality( $context ),
 				'taxonomy_quality'  => $this->editor_taxonomy_quality( $context, $categories, $tags, $proposed_new_terms ),
 				'hypotheses'        => array(
-					__( 'A clearer excerpt can improve archive, social, and answer-summary presentation without rewriting the article body.', 'npcink-toolbox' ),
-					__( 'Existing WordPress terms should be reused; new vocabulary belongs in a later taxonomy governance workflow.', 'npcink-toolbox' ),
-					__( 'Related Site Knowledge evidence can reveal duplicate coverage and proven term patterns.', 'npcink-toolbox' ),
+					__( 'A clearer excerpt can improve archive, social, and answer-summary presentation without rewriting the article body.', 'npcink-workflow-toolbox' ),
+					__( 'Existing WordPress terms should be reused; new vocabulary belongs in a later taxonomy governance workflow.', 'npcink-workflow-toolbox' ),
+					__( 'Related Site Knowledge evidence can reveal duplicate coverage and proven term patterns.', 'npcink-workflow-toolbox' ),
 				),
 				'warnings'          => array(
-					__( 'Do not accept summaries that add unsupported claims.', 'npcink-toolbox' ),
-					__( 'Do not use the editor recommendation loop to create categories or tags.', 'npcink-toolbox' ),
-					__( 'Do not treat related-content evidence as indexing or RAG lifecycle ownership inside Toolbox.', 'npcink-toolbox' ),
+					__( 'Do not accept summaries that add unsupported claims.', 'npcink-workflow-toolbox' ),
+					__( 'Do not use the editor recommendation loop to create categories or tags.', 'npcink-workflow-toolbox' ),
+					__( 'Do not treat related-content evidence as indexing or RAG lifecycle ownership inside Toolbox.', 'npcink-workflow-toolbox' ),
 				),
 				'evidence_strength' => empty( $evidence_refs ) ? 'draft_only' : 'draft_plus_tool_context',
 			),
 			'delta'                  => array(
 				'excerpt'             => array(
 					'recommended'   => sanitize_text_field( (string) ( $excerpt_item['value'] ?? '' ) ),
-					'reason'        => sanitize_text_field( (string) ( $excerpt_item['reason'] ?? __( 'Use the short summary candidate only after operator review.', 'npcink-toolbox' ) ) ),
+					'reason'        => sanitize_text_field( (string) ( $excerpt_item['reason'] ?? __( 'Use the short summary candidate only after operator review.', 'npcink-workflow-toolbox' ) ) ),
 					'evidence_refs' => $this->editor_content_metadata_evidence_ids( $evidence_refs ),
 				),
 				'categories'          => $this->editor_content_metadata_term_delta_items( array_slice( $categories, 0, 5 ), $evidence_refs ),
@@ -2753,7 +2753,7 @@ final class Rest_Controller {
 			),
 			'authorization'          => array(
 				'classification'          => sanitize_key( (string) ( $authorization['classification'] ?? Operation_Classifier::SUGGESTION_ONLY ) ),
-				'reason'                  => __( 'This Content Metadata Delta only recommends excerpt and existing-term changes. Accepted writes must use the Core handoff preview and reusable WordPress abilities.', 'npcink-toolbox' ),
+				'reason'                  => __( 'This Content Metadata Delta only recommends excerpt and existing-term changes. Accepted writes must use the Core handoff preview and reusable WordPress abilities.', 'npcink-workflow-toolbox' ),
 				'reasons'                 => array_values( array_map( 'sanitize_key', (array) ( $authorization['reasons'] ?? array() ) ) ),
 				'required_evidence'       => array_values(
 					array_unique(
@@ -2768,7 +2768,7 @@ final class Rest_Controller {
 					)
 				),
 				'policy_version'          => sanitize_text_field( (string) ( $authorization['policy_version'] ?? 'operation-classification-v1' ) ),
-				'local_admin_consent_note' => __( 'A later local-admin-consent path requires a present administrator, one post, exact preview, and activity evidence before any direct local apply can be considered.', 'npcink-toolbox' ),
+				'local_admin_consent_note' => __( 'A later local-admin-consent path requires a present administrator, one post, exact preview, and activity evidence before any direct local apply can be considered.', 'npcink-workflow-toolbox' ),
 				'handoff_preview_ref'      => sanitize_text_field( (string) ( $handoff_preview['artifact_type'] ?? 'summary_terms_handoff_preview.v1' ) ),
 			),
 			'outcome_contract'       => array(
@@ -2963,7 +2963,7 @@ final class Rest_Controller {
 			return $this->empty_toolkit_internal_link_candidates(
 				new WP_Error(
 					'npcink_toolbox_internal_link_toolkit_invalid_artifact',
-					__( 'The Toolkit internal-link ability returned an invalid artifact.', 'npcink-toolbox' ),
+					__( 'The Toolkit internal-link ability returned an invalid artifact.', 'npcink-workflow-toolbox' ),
 					array( 'status' => 500 )
 				),
 				$source_knowledge
@@ -3035,7 +3035,7 @@ final class Rest_Controller {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_internal_link_toolkit_unavailable',
-				__( 'Npcink Abilities Toolkit is required to build internal-link candidates.', 'npcink-toolbox' ),
+				__( 'Npcink Abilities Toolkit is required to build internal-link candidates.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -3046,7 +3046,7 @@ final class Rest_Controller {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_internal_link_toolkit_unavailable',
-				__( 'The Toolkit internal-link ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit internal-link ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -3058,7 +3058,7 @@ final class Rest_Controller {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_internal_link_toolkit_invalid_response',
-				__( 'The Toolkit internal-link ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit internal-link ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -3118,17 +3118,17 @@ final class Rest_Controller {
 			} else {
 				$quality_score = max( 0, min( 90, (int) round( $score ) ) );
 			}
-			$quality_issues = array( __( '人工确认目标文章与当前段落或全文语义相关后再插入。', 'npcink-toolbox' ) );
+			$quality_issues = array( __( '人工确认目标文章与当前段落或全文语义相关后再插入。', 'npcink-workflow-toolbox' ) );
 			if ( '' === $url ) {
 				$quality_score   = min( $quality_score, 55 );
-				$quality_issues[] = __( '缺少目标 URL，插入前需要人工补充或确认。', 'npcink-toolbox' );
+				$quality_issues[] = __( '缺少目标 URL，插入前需要人工补充或确认。', 'npcink-workflow-toolbox' );
 			}
 
 			$candidates[] = $this->editor_recommendation_candidate(
 				array(
 					'id'                   => 'internal_link_' . ( $index + 1 ),
 					'kind'                 => 'internal_link',
-					'label'                => '' !== $title ? $title : __( 'Internal link candidate', 'npcink-toolbox' ),
+					'label'                => '' !== $title ? $title : __( 'Internal link candidate', 'npcink-workflow-toolbox' ),
 					'value'                => '' !== $anchor ? $anchor : $url,
 					'reason'               => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
 					'confidence'           => $has_score && $score > 0 && $score <= 1 ? $score : null,
@@ -3371,7 +3371,7 @@ final class Rest_Controller {
 			}
 			$location = sprintf(
 				/* translators: %d: paragraph number. */
-				__( 'Paragraph %d', 'npcink-toolbox' ),
+				__( 'Paragraph %d', 'npcink-workflow-toolbox' ),
 				$index + 1
 			);
 
@@ -3382,8 +3382,8 @@ final class Rest_Controller {
 					'warning',
 					$location,
 					$paragraph,
-					__( 'Paragraph is dense and may be hard to scan.', 'npcink-toolbox' ),
-					__( 'Consider splitting the paragraph by claim, condition, or conclusion. Keep the editor responsible for the final wording.', 'npcink-toolbox' )
+					__( 'Paragraph is dense and may be hard to scan.', 'npcink-workflow-toolbox' ),
+					__( 'Consider splitting the paragraph by claim, condition, or conclusion. Keep the editor responsible for the final wording.', 'npcink-workflow-toolbox' )
 				);
 			}
 
@@ -3394,8 +3394,8 @@ final class Rest_Controller {
 					'warning',
 					$location,
 					$paragraph,
-					__( 'One sentence carries too many clauses.', 'npcink-toolbox' ),
-					__( 'Review whether the sentence should be broken into shorter factual steps before publishing.', 'npcink-toolbox' )
+					__( 'One sentence carries too many clauses.', 'npcink-workflow-toolbox' ),
+					__( 'Review whether the sentence should be broken into shorter factual steps before publishing.', 'npcink-workflow-toolbox' )
 				);
 			}
 
@@ -3406,8 +3406,8 @@ final class Rest_Controller {
 					'warning',
 					$location,
 					$paragraph,
-					__( 'The paragraph contains a metric, comparison, performance, or scope claim.', 'npcink-toolbox' ),
-					__( 'Verify the source, test condition, comparison object, and applicable scope. Do not let Toolbox turn one observed result into a universal fact.', 'npcink-toolbox' )
+					__( 'The paragraph contains a metric, comparison, performance, or scope claim.', 'npcink-workflow-toolbox' ),
+					__( 'Verify the source, test condition, comparison object, and applicable scope. Do not let Toolbox turn one observed result into a universal fact.', 'npcink-workflow-toolbox' )
 				);
 			}
 
@@ -3418,8 +3418,8 @@ final class Rest_Controller {
 					'info',
 					$location,
 					$paragraph,
-					__( 'Tone may read stronger than the supporting evidence.', 'npcink-toolbox' ),
-					__( 'Review whether the claim should be softened or tied to a specific condition.', 'npcink-toolbox' )
+					__( 'Tone may read stronger than the supporting evidence.', 'npcink-workflow-toolbox' ),
+					__( 'Review whether the claim should be softened or tied to a specific condition.', 'npcink-workflow-toolbox' )
 				);
 			}
 
@@ -3435,10 +3435,10 @@ final class Rest_Controller {
 				'missing_title',
 				'structure',
 				'error',
-				__( 'Title', 'npcink-toolbox' ),
+				__( 'Title', 'npcink-workflow-toolbox' ),
 				'',
-				__( 'The article title is missing.', 'npcink-toolbox' ),
-				__( 'Add a human-reviewed title before running title or metadata handoff actions.', 'npcink-toolbox' )
+				__( 'The article title is missing.', 'npcink-workflow-toolbox' ),
+				__( 'Add a human-reviewed title before running title or metadata handoff actions.', 'npcink-workflow-toolbox' )
 			);
 		}
 		if ( '' === $excerpt && ( $word_count >= 120 || $text_length >= 360 ) ) {
@@ -3446,10 +3446,10 @@ final class Rest_Controller {
 				'missing_excerpt',
 				'structure',
 				'warning',
-				__( 'Excerpt', 'npcink-toolbox' ),
+				__( 'Excerpt', 'npcink-workflow-toolbox' ),
 				'',
-				__( 'The article has enough body content but no excerpt.', 'npcink-toolbox' ),
-				__( 'Review whether a summary suggestion should be generated, then accept it manually before saving.', 'npcink-toolbox' )
+				__( 'The article has enough body content but no excerpt.', 'npcink-workflow-toolbox' ),
+				__( 'Review whether a summary suggestion should be generated, then accept it manually before saving.', 'npcink-workflow-toolbox' )
 			);
 		}
 		if ( count( $paragraphs ) >= 5 && ! $this->editor_article_checkup_has_heading_signal( $text ) ) {
@@ -3457,10 +3457,10 @@ final class Rest_Controller {
 				'missing_heading_structure',
 				'structure',
 				'info',
-				__( 'Full article', 'npcink-toolbox' ),
+				__( 'Full article', 'npcink-workflow-toolbox' ),
 				'',
-				__( 'The draft is long enough to need scan-friendly structure, but no obvious heading signal was found.', 'npcink-toolbox' ),
-				__( 'Review whether section headings, lists, or clearer paragraph grouping would help readers scan the article.', 'npcink-toolbox' )
+				__( 'The draft is long enough to need scan-friendly structure, but no obvious heading signal was found.', 'npcink-workflow-toolbox' ),
+				__( 'Review whether section headings, lists, or clearer paragraph grouping would help readers scan the article.', 'npcink-workflow-toolbox' )
 			);
 		}
 
@@ -3481,10 +3481,10 @@ final class Rest_Controller {
 				'no_blocking_local_issue',
 				'clarity',
 				'info',
-				__( 'Full article', 'npcink-toolbox' ),
+				__( 'Full article', 'npcink-workflow-toolbox' ),
 				'',
-				__( 'No high-confidence local article issues were found.', 'npcink-toolbox' ),
-				__( 'This is a local heuristic check only. Run focused title, summary, taxonomy, internal-link, image, or publish preflight actions when needed.', 'npcink-toolbox' )
+				__( 'No high-confidence local article issues were found.', 'npcink-workflow-toolbox' ),
+				__( 'This is a local heuristic check only. Run focused title, summary, taxonomy, internal-link, image, or publish preflight actions when needed.', 'npcink-workflow-toolbox' )
 			);
 		}
 
@@ -3532,13 +3532,13 @@ final class Rest_Controller {
 		$signals = array();
 
 		if ( $this->editor_text_has_heading_label_glue( $paragraph ) ) {
-			$signals[] = __( '标题式标签直接黏在正文前', 'npcink-toolbox' );
+			$signals[] = __( '标题式标签直接黏在正文前', 'npcink-workflow-toolbox' );
 		}
 		if ( $this->editor_text_has_phrase_cluster_glue( $paragraph ) ) {
-			$signals[] = __( '短语组之间缺少分隔', 'npcink-toolbox' );
+			$signals[] = __( '短语组之间缺少分隔', 'npcink-workflow-toolbox' );
 		}
 		if ( $this->editor_text_has_alnum_cjk_glue( $paragraph ) ) {
-			$signals[] = __( '字母、数字或方案标签与中文黏连', 'npcink-toolbox' );
+			$signals[] = __( '字母、数字或方案标签与中文黏连', 'npcink-workflow-toolbox' );
 		}
 
 		if ( empty( $signals ) ) {
@@ -3552,10 +3552,10 @@ final class Rest_Controller {
 				'warning',
 				$location,
 				$paragraph,
-				__( '标题标签、短语组或方案标签可能与正文黏连。', 'npcink-toolbox' ),
+				__( '标题标签、短语组或方案标签可能与正文黏连。', 'npcink-workflow-toolbox' ),
 				sprintf(
 					/* translators: %s: comma-separated structural glue signals. */
-					__( '请检查这些分隔问题：%s。发布前可改为小标题、标点、项目符号或表格行。', 'npcink-toolbox' ),
+					__( '请检查这些分隔问题：%s。发布前可改为小标题、标点、项目符号或表格行。', 'npcink-workflow-toolbox' ),
 					implode( ', ', $signals )
 				)
 			),
@@ -3575,7 +3575,7 @@ final class Rest_Controller {
 			}
 			$location = sprintf(
 				/* translators: %d: paragraph number. */
-				__( 'Paragraph %d', 'npcink-toolbox' ),
+				__( 'Paragraph %d', 'npcink-workflow-toolbox' ),
 				$index + 1
 			);
 			$items[] = $this->editor_article_checkup_issue(
@@ -3584,8 +3584,8 @@ final class Rest_Controller {
 				'info',
 				$location,
 				$paragraph,
-				__( 'The paragraph looks like an inline numbered or option list.', 'npcink-toolbox' ),
-				__( 'Review whether these points should become bullets, table rows, or separate paragraphs. Keep this as layout guidance only; do not auto-rewrite the article.', 'npcink-toolbox' )
+				__( 'The paragraph looks like an inline numbered or option list.', 'npcink-workflow-toolbox' ),
+				__( 'Review whether these points should become bullets, table rows, or separate paragraphs. Keep this as layout guidance only; do not auto-rewrite the article.', 'npcink-workflow-toolbox' )
 			);
 			if ( count( $items ) >= 3 ) {
 				break;
@@ -3681,10 +3681,10 @@ final class Rest_Controller {
 				'semantic_aeo_answer_order',
 				'semantic_consistency',
 				'warning',
-				__( 'Full article', 'npcink-toolbox' ),
+				__( 'Full article', 'npcink-workflow-toolbox' ),
 				$window,
-				__( 'The AEO section may reverse answer-first guidance.', 'npcink-toolbox' ),
-				__( 'Confirm whether the cannot-answer-first wording is intentional. For answer-oriented content, manually verify the direct answer, conditions, steps, and limits before publishing.', 'npcink-toolbox' )
+				__( 'The AEO section may reverse answer-first guidance.', 'npcink-workflow-toolbox' ),
+				__( 'Confirm whether the cannot-answer-first wording is intentional. For answer-oriented content, manually verify the direct answer, conditions, steps, and limits before publishing.', 'npcink-workflow-toolbox' )
 			);
 			return $items;
 		}
@@ -3714,14 +3714,14 @@ final class Rest_Controller {
 						'semantic_term_tension_' . strtolower( $term ),
 						'semantic_consistency',
 						'warning',
-						__( 'Full article', 'npcink-toolbox' ),
+						__( 'Full article', 'npcink-workflow-toolbox' ),
 						$negative . ' ' . $positive,
 						sprintf(
 							/* translators: %s: term. */
-							__( 'The draft uses both limiting and enabling language around %s.', 'npcink-toolbox' ),
+							__( 'The draft uses both limiting and enabling language around %s.', 'npcink-workflow-toolbox' ),
 							$term
 						),
-						__( 'Confirm whether the contrast is intentional, stage-specific, or a real contradiction before publishing. Keep any final wording change manual.', 'npcink-toolbox' )
+						__( 'Confirm whether the contrast is intentional, stage-specific, or a real contradiction before publishing. Keep any final wording change manual.', 'npcink-workflow-toolbox' )
 					);
 					break;
 				}
@@ -3745,10 +3745,10 @@ final class Rest_Controller {
 					'semantic_generation_boundary_' . ( $index + 1 ),
 					'semantic_consistency',
 					'warning',
-					__( 'Full article', 'npcink-toolbox' ),
+					__( 'Full article', 'npcink-workflow-toolbox' ),
 					$other_sentence . ' ' . $sentence,
-					__( 'The draft mixes review-boundary wording with free-generation or replacement wording.', 'npcink-toolbox' ),
-					__( 'Check whether the free-generation phrase is a counterexample or the actual recommendation. Do not turn this into an automatic rewrite.', 'npcink-toolbox' )
+					__( 'The draft mixes review-boundary wording with free-generation or replacement wording.', 'npcink-workflow-toolbox' ),
+					__( 'Check whether the free-generation phrase is a counterexample or the actual recommendation. Do not turn this into an automatic rewrite.', 'npcink-workflow-toolbox' )
 				);
 				return $items;
 			}
@@ -3908,25 +3908,25 @@ final class Rest_Controller {
 		$section['output_json']            = $output;
 		$section['items']                  = array(
 			array(
-				'name'          => __( 'Clarity check', 'npcink-toolbox' ),
+				'name'          => __( 'Clarity check', 'npcink-workflow-toolbox' ),
 				'detail'        => $output['clarity_check'],
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:paragraph' ),
 			),
 			array(
-				'name'          => __( 'Fact gaps', 'npcink-toolbox' ),
+				'name'          => __( 'Fact gaps', 'npcink-workflow-toolbox' ),
 				'detail'        => $output['fact_gaps'],
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:paragraph' ),
 			),
 			array(
-				'name'          => __( 'Tone consistency', 'npcink-toolbox' ),
+				'name'          => __( 'Tone consistency', 'npcink-workflow-toolbox' ),
 				'detail'        => $output['tone_consistency'],
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:paragraph' ),
 			),
 			array(
-				'name'          => __( 'Editing suggestions', 'npcink-toolbox' ),
+				'name'          => __( 'Editing suggestions', 'npcink-workflow-toolbox' ),
 				'detail'        => $output['editing_suggestions'],
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:paragraph' ),
@@ -3968,27 +3968,27 @@ final class Rest_Controller {
 
 		if ( ! empty( $signals['has_structural_glue'] ) ) {
 			$items[] = array(
-				'name'          => __( 'Local structure cross-check', 'npcink-toolbox' ),
+				'name'          => __( 'Local structure cross-check', 'npcink-workflow-toolbox' ),
 				'detail'        => (string) ( $output['clarity_check'] ?? '' ),
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:local_overlay' ),
 			);
 			$items[] = array(
-				'name'          => __( 'Local fact-boundary check', 'npcink-toolbox' ),
+				'name'          => __( 'Local fact-boundary check', 'npcink-workflow-toolbox' ),
 				'detail'        => (string) ( $output['fact_gaps'] ?? '' ),
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:local_overlay' ),
 			);
 		} elseif ( ! empty( $signals['has_metric_claim'] ) || ! empty( $signals['has_comparison_claim'] ) || ! empty( $signals['long_or_dense'] ) ) {
 			$items[] = array(
-				'name'          => __( 'Local fact-boundary check', 'npcink-toolbox' ),
+				'name'          => __( 'Local fact-boundary check', 'npcink-workflow-toolbox' ),
 				'detail'        => (string) ( $output['fact_gaps'] ?? '' ),
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:local_overlay' ),
 			);
 		} elseif ( ! empty( $signals['has_scope_claim'] ) || ! empty( $signals['has_causal_transition'] ) ) {
 			$items[] = array(
-				'name'          => __( 'Local scope check', 'npcink-toolbox' ),
+				'name'          => __( 'Local scope check', 'npcink-workflow-toolbox' ),
 				'detail'        => (string) ( $output['tone_consistency'] ?? '' ),
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:local_overlay' ),
@@ -3997,7 +3997,7 @@ final class Rest_Controller {
 
 		if ( ! empty( $items ) ) {
 			$items[] = array(
-				'name'          => __( 'Local editing guardrail', 'npcink-toolbox' ),
+				'name'          => __( 'Local editing guardrail', 'npcink-workflow-toolbox' ),
 				'detail'        => (string) ( $output['editing_suggestions'] ?? '' ),
 				'action_policy' => 'operator_review_only_no_insert',
 				'evidence_refs' => array( 'current_selection:local_overlay' ),
@@ -4039,47 +4039,47 @@ final class Rest_Controller {
 		$signals = $this->editor_paragraph_check_signal_profile( $text, $length, (int) $punctuation_count );
 
 		if ( $signals['has_structural_glue'] ) {
-			$clarity = __( '选中段落疑似存在标题词、选项标签或短语串与正文黏连的问题，建议先检查分隔、标点、列表或小标题结构。', 'npcink-toolbox' );
+			$clarity = __( '选中段落疑似存在标题词、选项标签或短语串与正文黏连的问题，建议先检查分隔、标点、列表或小标题结构。', 'npcink-workflow-toolbox' );
 		} elseif ( $signals['long_or_dense'] && $signals['has_metric_claim'] ) {
-			$clarity = __( '段落信息量偏高，建议人工检查测试条件、对比结论和适用边界是否需要拆开呈现，避免读者把多个结论混在一起。', 'npcink-toolbox' );
+			$clarity = __( '段落信息量偏高，建议人工检查测试条件、对比结论和适用边界是否需要拆开呈现，避免读者把多个结论混在一起。', 'npcink-workflow-toolbox' );
 		} elseif ( $signals['long_or_dense'] ) {
-			$clarity = __( '段落信息量偏高，建议人工检查主语、原因、结论和适用边界是否需要拆开呈现，避免读者把多个判断混在一起。', 'npcink-toolbox' );
+			$clarity = __( '段落信息量偏高，建议人工检查主语、原因、结论和适用边界是否需要拆开呈现，避免读者把多个判断混在一起。', 'npcink-workflow-toolbox' );
 		} else {
-			$clarity = __( '段落结构基本清楚；重点检查判断对象、原因和适用边界是否已经在上下文中交代。', 'npcink-toolbox' );
+			$clarity = __( '段落结构基本清楚；重点检查判断对象、原因和适用边界是否已经在上下文中交代。', 'npcink-workflow-toolbox' );
 		}
 
 		$fact_gaps = $signals['has_structural_glue']
-			? __( '结构黏连会影响读者判断事实边界；发布前需要确认每个标签、维度、方案、ID 或问答对应的正文是否清楚分开。', 'npcink-toolbox' )
+			? __( '结构黏连会影响读者判断事实边界；发布前需要确认每个标签、维度、方案、ID 或问答对应的正文是否清楚分开。', 'npcink-workflow-toolbox' )
 			: ( $signals['has_performance_claim']
-				? __( '包含测试、数量、速度或耗时类结论；发布前需要确认测试条件、数据规模、对比对象和结论来源，避免把单次测试写成通用事实。', 'npcink-toolbox' )
+				? __( '包含测试、数量、速度或耗时类结论；发布前需要确认测试条件、数据规模、对比对象和结论来源，避免把单次测试写成通用事实。', 'npcink-workflow-toolbox' )
 				: ( $signals['has_metric_claim']
-					? __( '包含数字、ID、数量或范围类表述；发布前需要确认这些数字对应的对象、条件和来源，避免把局部证据写成通用事实。', 'npcink-toolbox' )
+					? __( '包含数字、ID、数量或范围类表述；发布前需要确认这些数字对应的对象、条件和来源，避免把局部证据写成通用事实。', 'npcink-workflow-toolbox' )
 					: ( $signals['has_comparison_claim']
-						? __( '包含比较性判断；发布前需要确认比较对象、比较条件和依据是否在上下文中明确。', 'npcink-toolbox' )
-						: __( '未发现明显数字或比较结论；仍需人工确认段落中的判断是否有上下文依据。', 'npcink-toolbox' ) ) ) );
+						? __( '包含比较性判断；发布前需要确认比较对象、比较条件和依据是否在上下文中明确。', 'npcink-workflow-toolbox' )
+						: __( '未发现明显数字或比较结论；仍需人工确认段落中的判断是否有上下文依据。', 'npcink-workflow-toolbox' ) ) ) );
 
 		$tone = $signals['has_scope_claim']
-			? __( '语气整体偏说明性；涉及“适合/因此/场景”等判断时，建议保持审慎，不要超过已验证范围。', 'npcink-toolbox' )
+			? __( '语气整体偏说明性；涉及“适合/因此/场景”等判断时，建议保持审慎，不要超过已验证范围。', 'npcink-workflow-toolbox' )
 			: ( $signals['has_causal_transition']
-				? __( '语气整体偏推论式；建议确认原因和结论之间的关系是否足够明确。', 'npcink-toolbox' )
-				: __( '语气整体中性；保持事实说明，并避免加入选中段落没有承载的新判断。', 'npcink-toolbox' ) );
+				? __( '语气整体偏推论式；建议确认原因和结论之间的关系是否足够明确。', 'npcink-workflow-toolbox' )
+				: __( '语气整体中性；保持事实说明，并避免加入选中段落没有承载的新判断。', 'npcink-workflow-toolbox' ) );
 
-		$editing_parts = array( __( '不要直接替换正文。', 'npcink-toolbox' ) );
+		$editing_parts = array( __( '不要直接替换正文。', 'npcink-workflow-toolbox' ) );
 		if ( $signals['has_structural_glue'] ) {
-			$editing_parts[] = __( '优先拆开标题词、选项标签、短语串和正文说明。', 'npcink-toolbox' );
+			$editing_parts[] = __( '优先拆开标题词、选项标签、短语串和正文说明。', 'npcink-workflow-toolbox' );
 		} elseif ( $signals['has_performance_claim'] ) {
-			$editing_parts[] = __( '优先核对测试条件、性能口径和对比对象。', 'npcink-toolbox' );
+			$editing_parts[] = __( '优先核对测试条件、性能口径和对比对象。', 'npcink-workflow-toolbox' );
 		} elseif ( $signals['has_metric_claim'] ) {
-			$editing_parts[] = __( '优先核对数字、ID、数量口径和对应对象。', 'npcink-toolbox' );
+			$editing_parts[] = __( '优先核对数字、ID、数量口径和对应对象。', 'npcink-workflow-toolbox' );
 		} elseif ( $signals['has_comparison_claim'] ) {
-			$editing_parts[] = __( '优先核对比较对象和比较条件。', 'npcink-toolbox' );
+			$editing_parts[] = __( '优先核对比较对象和比较条件。', 'npcink-workflow-toolbox' );
 		} else {
-			$editing_parts[] = __( '优先核对该段判断是否有上下文依据。', 'npcink-toolbox' );
+			$editing_parts[] = __( '优先核对该段判断是否有上下文依据。', 'npcink-workflow-toolbox' );
 		}
 		if ( $signals['has_scope_claim'] ) {
-			$editing_parts[] = __( '必要时缩小适用范围，或把原因和边界分开审阅。', 'npcink-toolbox' );
+			$editing_parts[] = __( '必要时缩小适用范围，或把原因和边界分开审阅。', 'npcink-workflow-toolbox' );
 		} else {
-			$editing_parts[] = __( '必要时补充限定条件，或把原因和结论分开审阅。', 'npcink-toolbox' );
+			$editing_parts[] = __( '必要时补充限定条件，或把原因和结论分开审阅。', 'npcink-workflow-toolbox' );
 		}
 		$editing = implode( '', $editing_parts );
 
@@ -4089,8 +4089,8 @@ final class Rest_Controller {
 			'tone_consistency'    => $tone,
 			'editing_suggestions' => $editing,
 			'assumptions_to_verify' => $hosted_ai_empty
-				? __( '托管 AI 本次未返回建议，以上为本地兜底检查；仍以人工编辑和原始测试记录为准。', 'npcink-toolbox' )
-				: __( '本地复核只检查结构、事实口径和语气风险；托管 AI 建议仍需人工审阅。', 'npcink-toolbox' ),
+				? __( '托管 AI 本次未返回建议，以上为本地兜底检查；仍以人工编辑和原始测试记录为准。', 'npcink-workflow-toolbox' )
+				: __( '本地复核只检查结构、事实口径和语气风险；托管 AI 建议仍需人工审阅。', 'npcink-workflow-toolbox' ),
 			'signal_profile'      => $signals,
 		);
 	}
@@ -4167,9 +4167,9 @@ final class Rest_Controller {
 				array(
 					'id'             => 0 === $index ? 'ai_recommended_title' : 'ai_title_option_' . ( $index + 1 ),
 					'kind'           => 'title',
-					'label'          => 0 === $index ? __( 'AI recommended title', 'npcink-toolbox' ) : __( 'AI title option', 'npcink-toolbox' ),
+					'label'          => 0 === $index ? __( 'AI recommended title', 'npcink-workflow-toolbox' ) : __( 'AI title option', 'npcink-workflow-toolbox' ),
 					'value'          => (string) ( $candidate['value'] ?? '' ),
-					'reason'         => '' !== (string) ( $candidate['reason'] ?? '' ) ? (string) $candidate['reason'] : __( 'Generated by hosted AI from the current title, excerpt, and draft context. Review before applying.', 'npcink-toolbox' ),
+					'reason'         => '' !== (string) ( $candidate['reason'] ?? '' ) ? (string) $candidate['reason'] : __( 'Generated by hosted AI from the current title, excerpt, and draft context. Review before applying.', 'npcink-workflow-toolbox' ),
 					'target_field'   => 'post_title',
 					'action_policy'  => 'editor_apply_preview_save_required',
 					'quality_status' => (string) ( $candidate['quality']['status'] ?? 'review' ),
@@ -4250,27 +4250,27 @@ final class Rest_Controller {
 
 		if ( $length < 6 ) {
 			$score   -= 18;
-			$issues[] = __( '标题过短，可能缺少具体对象。', 'npcink-toolbox' );
+			$issues[] = __( '标题过短，可能缺少具体对象。', 'npcink-workflow-toolbox' );
 		}
 		if ( $length > 80 ) {
 			$score   -= 28;
-			$issues[] = __( '标题超过 80 个字符，可能不适合编辑器标题字段。', 'npcink-toolbox' );
+			$issues[] = __( '标题超过 80 个字符，可能不适合编辑器标题字段。', 'npcink-workflow-toolbox' );
 		}
 		if ( '' !== $current_title && strtolower( $value ) === strtolower( $current_title ) ) {
 			$score   -= 14;
-			$issues[] = __( '标题与当前标题完全相同。', 'npcink-toolbox' );
+			$issues[] = __( '标题与当前标题完全相同。', 'npcink-workflow-toolbox' );
 		}
 		if ( 1 === preg_match( '/(?:草稿|本文|这篇文章|该文章|this\s+(?:article|post|draft)|标题建议|title suggestion)/iu', $value ) ) {
 			$score   -= 35;
-			$issues[] = __( '包含文章自指或编辑提示词。', 'npcink-toolbox' );
+			$issues[] = __( '包含文章自指或编辑提示词。', 'npcink-workflow-toolbox' );
 		}
 		if ( false !== strpos( $value, '```' ) || false !== strpos( $value, '{' ) || false !== strpos( $value, '}' ) ) {
 			$score   -= 40;
-			$issues[] = __( '包含格式或 JSON 泄漏。', 'npcink-toolbox' );
+			$issues[] = __( '包含格式或 JSON 泄漏。', 'npcink-workflow-toolbox' );
 		}
 		if ( 1 === preg_match( '/(?:必看|震惊|最强|最好|终极|保证|100%|排名第一)/u', $value ) ) {
 			$score   -= 18;
-			$issues[] = __( '标题可能过度营销或包含高风险承诺。', 'npcink-toolbox' );
+			$issues[] = __( '标题可能过度营销或包含高风险承诺。', 'npcink-workflow-toolbox' );
 		}
 
 		$status = 'good';
@@ -4282,7 +4282,7 @@ final class Rest_Controller {
 		}
 
 		if ( empty( $issues ) ) {
-			$issues[] = __( '通过长度、自指套话和基础标题质量检查。', 'npcink-toolbox' );
+			$issues[] = __( '通过长度、自指套话和基础标题质量检查。', 'npcink-workflow-toolbox' );
 		}
 
 		return array(
@@ -4297,7 +4297,7 @@ final class Rest_Controller {
 			'contract'               => 'recommendation_candidate.v1',
 			'id'                     => sanitize_key( (string) ( $args['id'] ?? 'candidate' ) ),
 			'kind'                   => sanitize_key( (string) ( $args['kind'] ?? 'generic' ) ),
-			'label'                  => sanitize_text_field( (string) ( $args['label'] ?? __( 'Recommendation candidate', 'npcink-toolbox' ) ) ),
+			'label'                  => sanitize_text_field( (string) ( $args['label'] ?? __( 'Recommendation candidate', 'npcink-workflow-toolbox' ) ) ),
 			'value'                  => sanitize_text_field( (string) ( $args['value'] ?? '' ) ),
 			'reason'                 => sanitize_text_field( (string) ( $args['reason'] ?? '' ) ),
 			'confidence'             => is_numeric( $args['confidence'] ?? null ) ? max( 0, min( 1, (float) $args['confidence'] ) ) : null,
@@ -4323,11 +4323,11 @@ final class Rest_Controller {
 		foreach ( $items as $item ) {
 			$issues = is_array( $item['quality_issues'] ?? null ) ? $item['quality_issues'] : array();
 			$notes[] = array(
-				'name'   => (string) ( $item['label'] ?? __( 'Recommendation candidate', 'npcink-toolbox' ) ),
+				'name'   => (string) ( $item['label'] ?? __( 'Recommendation candidate', 'npcink-workflow-toolbox' ) ),
 				'status' => sanitize_key( (string) ( $item['quality_status'] ?? 'review' ) ),
 				'detail' => sprintf(
 					/* translators: 1: quality score, 2: quality notes. */
-					__( 'Quality score %1$d. %2$s', 'npcink-toolbox' ),
+					__( 'Quality score %1$d. %2$s', 'npcink-workflow-toolbox' ),
 					absint( $item['quality_score'] ?? 0 ),
 					implode( ' ', array_map( 'sanitize_text_field', $issues ) )
 				),
@@ -4422,7 +4422,7 @@ final class Rest_Controller {
 				array(
 					'id'             => ( 'category' === $taxonomy ? 'category_' : 'tag_' ) . $term_id,
 					'kind'           => 'category' === $taxonomy ? 'category' : 'tag',
-					'label'          => 'category' === $taxonomy ? __( 'Existing category', 'npcink-toolbox' ) : __( 'Existing tag', 'npcink-toolbox' ),
+					'label'          => 'category' === $taxonomy ? __( 'Existing category', 'npcink-workflow-toolbox' ) : __( 'Existing tag', 'npcink-workflow-toolbox' ),
 					'value'          => $name,
 					'reason'         => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
 					'confidence'     => $quality['confidence'],
@@ -4446,31 +4446,31 @@ final class Rest_Controller {
 		$quality_score    = max( 0, min( 100, 45 + (int) round( $score * 10 ) ) );
 		$quality_issues   = array();
 		if ( in_array( 'current_draft_match', $match_signals, true ) ) {
-			$quality_issues[] = __( '匹配当前草稿中的标题、摘要或正文词。', 'npcink-toolbox' );
+			$quality_issues[] = __( '匹配当前草稿中的标题、摘要或正文词。', 'npcink-workflow-toolbox' );
 		}
 		if ( in_array( 'title_term_name_match', $match_signals, true ) ) {
-			$quality_issues[] = __( '词条名称在标题中完整出现，优先级更高。', 'npcink-toolbox' );
+			$quality_issues[] = __( '词条名称在标题中完整出现，优先级更高。', 'npcink-workflow-toolbox' );
 		}
 		if ( in_array( 'slug_alias_match', $match_signals, true ) ) {
-			$quality_issues[] = __( '词条 slug 或别名与当前编辑上下文匹配。', 'npcink-toolbox' );
+			$quality_issues[] = __( '词条 slug 或别名与当前编辑上下文匹配。', 'npcink-workflow-toolbox' );
 		}
 		if ( in_array( 'related_site_knowledge_term', $match_signals, true ) ) {
-			$quality_issues[] = __( '历史相关文章使用过该词汇，可作为站内词库证据。', 'npcink-toolbox' );
+			$quality_issues[] = __( '历史相关文章使用过该词汇，可作为站内词库证据。', 'npcink-workflow-toolbox' );
 		}
 		if ( in_array( 'description_only_match', $match_signals, true ) ) {
 			$quality_score -= 20;
-			$quality_issues[] = __( '仅描述字段匹配，避免把弱说明文字当作强分类依据。', 'npcink-toolbox' );
+			$quality_issues[] = __( '仅描述字段匹配，避免把弱说明文字当作强分类依据。', 'npcink-workflow-toolbox' );
 		}
 		if ( in_array( 'low_specificity_match', $match_signals, true ) ) {
 			$quality_score -= 15;
-			$quality_issues[] = __( '只有一个较弱 token 匹配，需人工确认是否为标题党或泛化词。', 'npcink-toolbox' );
+			$quality_issues[] = __( '只有一个较弱 token 匹配，需人工确认是否为标题党或泛化词。', 'npcink-workflow-toolbox' );
 		}
 		if ( empty( $quality_issues ) ) {
-			$quality_issues[] = __( '仅作为现有 WordPress 词条候选，采用人工审查。', 'npcink-toolbox' );
+			$quality_issues[] = __( '仅作为现有 WordPress 词条候选，采用人工审查。', 'npcink-workflow-toolbox' );
 		}
 		if ( 0 === absint( $related_context['source_count'] ?? 0 ) && ! in_array( 'current_draft_match', $match_signals, true ) ) {
 			$quality_score -= 15;
-			$quality_issues[] = __( '缺少当前草稿或历史文章的强匹配证据。', 'npcink-toolbox' );
+			$quality_issues[] = __( '缺少当前草稿或历史文章的强匹配证据。', 'npcink-workflow-toolbox' );
 		}
 
 		$status = 'good';
@@ -4708,7 +4708,7 @@ final class Rest_Controller {
 				'no_term_assignment_without_core_policy_review',
 			),
 			'items'                  => array(),
-			'empty_message'          => __( 'New taxonomy creation is deferred. Use existing categories and tags in this stage.', 'npcink-toolbox' ),
+			'empty_message'          => __( 'New taxonomy creation is deferred. Use existing categories and tags in this stage.', 'npcink-workflow-toolbox' ),
 		);
 	}
 
@@ -4740,7 +4740,7 @@ final class Rest_Controller {
 		return array(
 			array(
 				'id'                    => 'generate_apply_summary',
-				'name'                  => __( 'Generate and apply summary', 'npcink-toolbox' ),
+				'name'                  => __( 'Generate and apply summary', 'npcink-workflow-toolbox' ),
 				'status'                => 'core_auto_approval_eligible',
 				'target_operation'      => 'update_post_excerpt',
 				'available_fields'      => $summary_layer_ids,
@@ -4754,11 +4754,11 @@ final class Rest_Controller {
 						'current_user_can_edit_target_post',
 					),
 				),
-				'reason'                => __( 'Core may auto-approve a selected summary when it is derived from the supplied draft context and the editor can edit the target post.', 'npcink-toolbox' ),
+				'reason'                => __( 'Core may auto-approve a selected summary when it is derived from the supplied draft context and the editor can edit the target post.', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'                    => 'recommend_apply_tags',
-				'name'                  => __( 'Recommend and apply tags', 'npcink-toolbox' ),
+				'name'                  => __( 'Recommend and apply tags', 'npcink-workflow-toolbox' ),
 				'status'                => empty( $tag_ids ) ? 'no_existing_tag_candidate' : 'core_auto_approval_eligible',
 				'target_operation'      => 'assign_existing_post_tags',
 				'available_fields'      => $tag_ids,
@@ -4772,11 +4772,11 @@ final class Rest_Controller {
 						'current_user_can_edit_target_post',
 					),
 				),
-				'reason'                => __( 'Existing tag assignments can be proposed for Core auto-approval because Toolbox returns WordPress term ids and does not create taxonomy state.', 'npcink-toolbox' ),
+				'reason'                => __( 'Existing tag assignments can be proposed for Core auto-approval because Toolbox returns WordPress term ids and does not create taxonomy state.', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'                    => 'recommend_categories',
-				'name'                  => __( 'Recommend categories', 'npcink-toolbox' ),
+				'name'                  => __( 'Recommend categories', 'npcink-workflow-toolbox' ),
 				'status'                => empty( $category_ids ) ? 'no_existing_category_candidate' : 'recommendation_only',
 				'target_operation'      => 'recommend_existing_categories',
 				'available_fields'      => $category_ids,
@@ -4790,7 +4790,7 @@ final class Rest_Controller {
 						'category_change_policy_allows_auto_assignment',
 					),
 				),
-				'reason'                => __( 'Categories affect site structure, so Toolbox recommends existing categories by default and leaves any assignment policy to Core.', 'npcink-toolbox' ),
+				'reason'                => __( 'Categories affect site structure, so Toolbox recommends existing categories by default and leaves any assignment policy to Core.', 'npcink-workflow-toolbox' ),
 			),
 		);
 	}
@@ -4831,9 +4831,9 @@ final class Rest_Controller {
 				'no_seo_meta_write_in_toolbox',
 			),
 			'next_steps'             => array(
-				__( 'Use Generate and apply summary when Core policy can auto-approve the selected summary layer.', 'npcink-toolbox' ),
-				__( 'Use Recommend and apply tags for existing tag ids returned by Toolbox.', 'npcink-toolbox' ),
-				__( 'Use Recommend categories as review-first guidance unless Core explicitly allows category auto-assignment.', 'npcink-toolbox' ),
+				__( 'Use Generate and apply summary when Core policy can auto-approve the selected summary layer.', 'npcink-workflow-toolbox' ),
+				__( 'Use Recommend and apply tags for existing tag ids returned by Toolbox.', 'npcink-workflow-toolbox' ),
+				__( 'Use Recommend categories as review-first guidance unless Core explicitly allows category auto-assignment.', 'npcink-workflow-toolbox' ),
 			),
 		);
 	}
@@ -4854,28 +4854,28 @@ final class Rest_Controller {
 			'items'                   => array(
 				array(
 					'id'            => 'short_summary',
-					'label'         => __( 'Short summary', 'npcink-toolbox' ),
+					'label'         => __( 'Short summary', 'npcink-workflow-toolbox' ),
 					'limit'         => '160_chars',
 					'value'         => sanitize_text_field( wp_html_excerpt( $base, 160, '' ) ),
-					'reason'        => __( 'Use as an excerpt-style candidate after checking related Site Knowledge evidence for duplicate coverage and term fit.', 'npcink-toolbox' ),
+					'reason'        => __( 'Use as an excerpt-style candidate after checking related Site Knowledge evidence for duplicate coverage and term fit.', 'npcink-workflow-toolbox' ),
 					'context_use'   => 'draft_grounded_related_context_checked',
 					'evidence_refs' => $summary_evidence_refs,
 				),
 				array(
 					'id'            => 'standard_summary',
-					'label'         => __( 'Standard summary', 'npcink-toolbox' ),
+					'label'         => __( 'Standard summary', 'npcink-workflow-toolbox' ),
 					'limit'         => '2_3_sentences',
 					'value'         => sanitize_text_field( wp_trim_words( $base, 45, '' ) ),
-					'reason'        => __( 'Use for editor review where a slightly fuller article summary is useful, while keeping related content as context evidence rather than new factual material.', 'npcink-toolbox' ),
+					'reason'        => __( 'Use for editor review where a slightly fuller article summary is useful, while keeping related content as context evidence rather than new factual material.', 'npcink-workflow-toolbox' ),
 					'context_use'   => 'draft_grounded_related_context_checked',
 					'evidence_refs' => $summary_evidence_refs,
 				),
 				array(
 					'id'            => 'seo_meta_description',
-					'label'         => __( 'SEO meta description', 'npcink-toolbox' ),
+					'label'         => __( 'SEO meta description', 'npcink-workflow-toolbox' ),
 					'limit'         => '155_chars',
 					'value'         => sanitize_text_field( wp_html_excerpt( $base, 155, '' ) ),
-					'reason'        => __( 'Use only as a Core-governed SEO/meta proposal candidate after comparing the article with related public content.', 'npcink-toolbox' ),
+					'reason'        => __( 'Use only as a Core-governed SEO/meta proposal candidate after comparing the article with related public content.', 'npcink-workflow-toolbox' ),
 					'context_use'   => 'draft_grounded_related_context_checked',
 					'evidence_refs' => $summary_evidence_refs,
 				),
@@ -4961,10 +4961,10 @@ final class Rest_Controller {
 				'contract'       => 'recommendation_candidate.v1',
 				'id'             => $is_first ? 'ai_recommended_excerpt' : ( 1 === $index ? 'ai_alternate_excerpt' : 'ai_third_excerpt' ),
 				'kind'           => 'excerpt',
-				'label'          => $is_first ? __( 'AI recommended excerpt', 'npcink-toolbox' ) : __( 'AI alternate excerpt', 'npcink-toolbox' ),
+				'label'          => $is_first ? __( 'AI recommended excerpt', 'npcink-workflow-toolbox' ) : __( 'AI alternate excerpt', 'npcink-workflow-toolbox' ),
 				'limit'         => '50_160_zh_chars',
 				'value'          => sanitize_text_field( (string) ( $candidate['value'] ?? '' ) ),
-				'reason'         => '' !== (string) ( $candidate['reason'] ?? '' ) ? (string) $candidate['reason'] : __( 'Generated by hosted AI from the current title, excerpt, and draft body. Review before applying.', 'npcink-toolbox' ),
+				'reason'         => '' !== (string) ( $candidate['reason'] ?? '' ) ? (string) $candidate['reason'] : __( 'Generated by hosted AI from the current title, excerpt, and draft body. Review before applying.', 'npcink-workflow-toolbox' ),
 				'context_use'    => 'draft_grounded_ai_summary',
 				'quality_status' => sanitize_key( (string) ( $candidate['quality']['status'] ?? 'review' ) ),
 				'quality_score'  => absint( $candidate['quality']['score'] ?? 0 ),
@@ -5008,27 +5008,27 @@ final class Rest_Controller {
 
 		if ( $length < 70 ) {
 			$score   -= 6;
-			$issues[] = __( '摘要偏短，可能没有覆盖足够信息。', 'npcink-toolbox' );
+			$issues[] = __( '摘要偏短，可能没有覆盖足够信息。', 'npcink-workflow-toolbox' );
 		}
 		if ( 1 === preg_match( '/(?:草稿|本文|这篇文章|该文章|本文说明|本文介绍|这篇草稿|this\s+(?:article|post|draft))/iu', $value ) ) {
 			$score   -= 35;
-			$issues[] = __( '包含草稿或文章自指套话。', 'npcink-toolbox' );
+			$issues[] = __( '包含草稿或文章自指套话。', 'npcink-workflow-toolbox' );
 		}
 		if ( 1 === preg_match( '/^(?:面向|适合|需要|想要|对于)/u', $value ) ) {
 			$score   -= 4;
-			$issues[] = __( '开头较模板化。', 'npcink-toolbox' );
+			$issues[] = __( '开头较模板化。', 'npcink-workflow-toolbox' );
 		}
 
 		$core_subject = $this->editor_ai_summary_coverage_text( $coverage['core_subject'] ?? '' );
 		if ( $this->editor_ai_summary_coverage_group_missing( $source, $value, $core_subject ) ) {
 			$score   -= 18;
-			$issues[] = __( '可能缺少核心对象。', 'npcink-toolbox' );
+			$issues[] = __( '可能缺少核心对象。', 'npcink-workflow-toolbox' );
 		}
 
 		$title_positioning = $this->editor_ai_summary_coverage_text( $coverage['title_positioning'] ?? '' );
 		if ( $this->editor_ai_summary_coverage_group_missing( $source, $value, $title_positioning ) ) {
 			$score   -= 10;
-			$issues[] = __( '可能遗漏标题中的关键定位。', 'npcink-toolbox' );
+			$issues[] = __( '可能遗漏标题中的关键定位。', 'npcink-workflow-toolbox' );
 		}
 
 		$missing_groups = 0;
@@ -5053,7 +5053,7 @@ final class Rest_Controller {
 		}
 		if ( $missing_groups > 0 ) {
 			$score   -= min( 24, $missing_groups * 8 );
-			$issues[] = __( '可能遗漏一个或多个必须覆盖点。', 'npcink-toolbox' );
+			$issues[] = __( '可能遗漏一个或多个必须覆盖点。', 'npcink-workflow-toolbox' );
 		}
 
 		$term_segments          = $this->editor_ai_summary_source_named_term_segments( $source );
@@ -5075,7 +5075,7 @@ final class Rest_Controller {
 		}
 		if ( $available_term_segments >= 2 && $covered_term_segments < 2 ) {
 			$score   -= 32;
-			$issues[] = __( '可能只覆盖了正文局部工具、方法或流程分支。', 'npcink-toolbox' );
+			$issues[] = __( '可能只覆盖了正文局部工具、方法或流程分支。', 'npcink-workflow-toolbox' );
 		}
 		$all_named_terms = array_values( array_unique( $all_named_terms ) );
 		if ( count( $all_named_terms ) >= 3 && count( $all_named_terms ) <= 5 ) {
@@ -5089,7 +5089,7 @@ final class Rest_Controller {
 				$score   -= min( 36, count( $missing_named_terms ) * 18 );
 				$issues[] = sprintf(
 					/* translators: %s: comma-separated missing named terms. */
-					__( '可能遗漏关键工具或方法：%s。', 'npcink-toolbox' ),
+					__( '可能遗漏关键工具或方法：%s。', 'npcink-workflow-toolbox' ),
 					implode( ', ', array_slice( $missing_named_terms, 0, 5 ) )
 				);
 			}
@@ -5104,7 +5104,7 @@ final class Rest_Controller {
 		}
 
 		if ( empty( $issues ) ) {
-			$issues[] = __( '通过长度、自指套话和覆盖检查。', 'npcink-toolbox' );
+			$issues[] = __( '通过长度、自指套话和覆盖检查。', 'npcink-workflow-toolbox' );
 		}
 
 		return array(
@@ -5119,11 +5119,11 @@ final class Rest_Controller {
 		foreach ( $items as $item ) {
 			$issues = is_array( $item['quality_issues'] ?? null ) ? $item['quality_issues'] : array();
 			$notes[] = array(
-				'name'   => (string) ( $item['label'] ?? __( 'Summary candidate', 'npcink-toolbox' ) ),
+				'name'   => (string) ( $item['label'] ?? __( 'Summary candidate', 'npcink-workflow-toolbox' ) ),
 				'status' => sanitize_key( (string) ( $item['quality_status'] ?? 'review' ) ),
 				'detail' => sprintf(
 					/* translators: 1: quality score, 2: quality notes. */
-					__( 'Quality score %1$d. %2$s', 'npcink-toolbox' ),
+					__( 'Quality score %1$d. %2$s', 'npcink-workflow-toolbox' ),
 					absint( $item['quality_score'] ?? 0 ),
 					implode( ' ', array_map( 'sanitize_text_field', $issues ) )
 				),
@@ -5410,34 +5410,34 @@ final class Rest_Controller {
 			'proposed_new_terms'     => 'deferred_taxonomy_governance',
 			'ranking_signals'        => array(
 				array(
-					'name'   => __( 'Draft query overlap', 'npcink-toolbox' ),
+					'name'   => __( 'Draft query overlap', 'npcink-workflow-toolbox' ),
 					'weight' => 'high',
-					'detail' => __( 'Match against title, excerpt, selected text, and draft body tokens.', 'npcink-toolbox' ),
+					'detail' => __( 'Match against title, excerpt, selected text, and draft body tokens.', 'npcink-workflow-toolbox' ),
 				),
 				array(
-					'name'   => __( 'Existing taxonomy vocabulary', 'npcink-toolbox' ),
+					'name'   => __( 'Existing taxonomy vocabulary', 'npcink-workflow-toolbox' ),
 					'weight' => 'high',
-					'detail' => __( 'Prefer existing WordPress categories and tags; defer new vocabulary creation to taxonomy governance.', 'npcink-toolbox' ),
+					'detail' => __( 'Prefer existing WordPress categories and tags; defer new vocabulary creation to taxonomy governance.', 'npcink-workflow-toolbox' ),
 				),
 				array(
-					'name'   => __( 'Site Knowledge similarity', 'npcink-toolbox' ),
+					'name'   => __( 'Site Knowledge similarity', 'npcink-workflow-toolbox' ),
 					'weight' => 'medium',
-					'detail' => __( 'Use related public content to avoid duplicate coverage and borrow proven term patterns.', 'npcink-toolbox' ),
+					'detail' => __( 'Use related public content to avoid duplicate coverage and borrow proven term patterns.', 'npcink-workflow-toolbox' ),
 				),
 				array(
-					'name'   => __( 'Discoverability context', 'npcink-toolbox' ),
+					'name'   => __( 'Discoverability context', 'npcink-workflow-toolbox' ),
 					'weight' => 'medium',
-					'detail' => __( 'Check saved SEO/AEO/GEO guidance and Cloud web-search evidence before recommending metadata.', 'npcink-toolbox' ),
+					'detail' => __( 'Check saved SEO/AEO/GEO guidance and Cloud web-search evidence before recommending metadata.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'dedupe_policy'          => array(
-				__( 'Normalize candidate labels by case, punctuation, and whitespace before review.', 'npcink-toolbox' ),
-				__( 'Treat near-synonyms, plural/singular variants, and translated duplicates as taxonomy-drift risks.', 'npcink-toolbox' ),
-				__( 'Keep broad categories stable and use tags for narrower topic facets.', 'npcink-toolbox' ),
+				__( 'Normalize candidate labels by case, punctuation, and whitespace before review.', 'npcink-workflow-toolbox' ),
+				__( 'Treat near-synonyms, plural/singular variants, and translated duplicates as taxonomy-drift risks.', 'npcink-workflow-toolbox' ),
+				__( 'Keep broad categories stable and use tags for narrower topic facets.', 'npcink-workflow-toolbox' ),
 			),
 			'evidence_requirements'  => array(
-				__( 'Each accepted category or tag should have a reason tied to draft text, existing taxonomy, Site Knowledge, or search evidence.', 'npcink-toolbox' ),
-				__( 'Fresh external search is useful for factual or current topics, but it should not override the supplied article draft.', 'npcink-toolbox' ),
+				__( 'Each accepted category or tag should have a reason tied to draft text, existing taxonomy, Site Knowledge, or search evidence.', 'npcink-workflow-toolbox' ),
+				__( 'Fresh external search is useful for factual or current topics, but it should not override the supplied article draft.', 'npcink-workflow-toolbox' ),
 			),
 		);
 	}
@@ -5450,23 +5450,23 @@ final class Rest_Controller {
 			'items'                  => array(
 				array(
 					'name'   => 'accepted_suggestion_rate',
-					'detail' => __( 'Track how many summary, category, and tag suggestions an editor accepts after review.', 'npcink-toolbox' ),
+					'detail' => __( 'Track how many summary, category, and tag suggestions an editor accepts after review.', 'npcink-workflow-toolbox' ),
 				),
 				array(
 					'name'   => 'summary_edit_distance',
-					'detail' => __( 'Compare AI/fallback summaries with the final reviewed summary to detect overbroad or weak suggestions.', 'npcink-toolbox' ),
+					'detail' => __( 'Compare AI/fallback summaries with the final reviewed summary to detect overbroad or weak suggestions.', 'npcink-workflow-toolbox' ),
 				),
 				array(
 					'name'   => 'taxonomy_gap_deferral_rate',
-					'detail' => __( 'Track cases where no existing term fits so a later taxonomy governance workflow can review them.', 'npcink-toolbox' ),
+					'detail' => __( 'Track cases where no existing term fits so a later taxonomy governance workflow can review them.', 'npcink-workflow-toolbox' ),
 				),
 				array(
 					'name'   => 'duplicate_topic_review',
-					'detail' => __( 'Use related Site Knowledge results to flag whether the article overlaps existing public content.', 'npcink-toolbox' ),
+					'detail' => __( 'Use related Site Knowledge results to flag whether the article overlaps existing public content.', 'npcink-workflow-toolbox' ),
 				),
 				array(
 					'name'   => 'evidence_coverage',
-					'detail' => __( 'Check whether accepted suggestions cite draft, taxonomy, Site Knowledge, or search evidence.', 'npcink-toolbox' ),
+					'detail' => __( 'Check whether accepted suggestions cite draft, taxonomy, Site Knowledge, or search evidence.', 'npcink-workflow-toolbox' ),
 				),
 			),
 		);
@@ -5508,7 +5508,7 @@ final class Rest_Controller {
 			return $this->empty_toolkit_taxonomy_term_candidates(
 				new WP_Error(
 					'npcink_toolbox_taxonomy_toolkit_invalid_artifact',
-					__( 'The Toolkit taxonomy suggestion ability returned an invalid artifact.', 'npcink-toolbox' ),
+					__( 'The Toolkit taxonomy suggestion ability returned an invalid artifact.', 'npcink-workflow-toolbox' ),
 					array( 'status' => 500 )
 				),
 				$related_term_evidence
@@ -5526,7 +5526,7 @@ final class Rest_Controller {
 		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_taxonomy_toolkit_unavailable',
-				__( 'Npcink Abilities Toolkit is required to build taxonomy suggestions.', 'npcink-toolbox' ),
+				__( 'Npcink Abilities Toolkit is required to build taxonomy suggestions.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -5537,7 +5537,7 @@ final class Rest_Controller {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error(
 				'npcink_toolbox_taxonomy_toolkit_unavailable',
-				__( 'The Toolkit taxonomy suggestion ability is not currently callable.', 'npcink-toolbox' ),
+				__( 'The Toolkit taxonomy suggestion ability is not currently callable.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -5549,7 +5549,7 @@ final class Rest_Controller {
 		if ( ! is_array( $result ) ) {
 			return new WP_Error(
 				'npcink_toolbox_taxonomy_toolkit_invalid_response',
-				__( 'The Toolkit taxonomy suggestion ability returned an invalid response.', 'npcink-toolbox' ),
+				__( 'The Toolkit taxonomy suggestion ability returned an invalid response.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -5693,8 +5693,8 @@ final class Rest_Controller {
 			'adapter_route'          => '/wp-json/npcink-openclaw-adapter/v1/proposals',
 			'proposal_payload_template' => array(
 				'ability_id' => 'npcink-abilities-toolkit/set-post-seo-meta',
-				'title'      => __( 'Review SEO meta for the current post', 'npcink-toolbox' ),
-				'summary'    => __( 'Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.', 'npcink-toolbox' ),
+				'title'      => __( 'Review SEO meta for the current post', 'npcink-workflow-toolbox' ),
+				'summary'    => __( 'Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.', 'npcink-workflow-toolbox' ),
 				'input'      => array(
 					'post_id'         => $post_id,
 					'seo_title'       => $seo_title,
@@ -5722,18 +5722,18 @@ final class Rest_Controller {
 			),
 			'items'                  => array(
 				array(
-					'name'   => __( 'SEO title candidate', 'npcink-toolbox' ),
+					'name'   => __( 'SEO title candidate', 'npcink-workflow-toolbox' ),
 					'value'  => $seo_title,
 					'status' => '' !== $seo_title ? 'review_required' : 'missing',
 				),
 				array(
-					'name'   => __( 'SEO description candidate', 'npcink-toolbox' ),
+					'name'   => __( 'SEO description candidate', 'npcink-workflow-toolbox' ),
 					'value'  => $seo_description,
 					'status' => '' !== $seo_description ? 'review_required' : 'missing',
 				),
 				array(
-					'name'   => __( 'Core handoff', 'npcink-toolbox' ),
-					'detail' => __( 'Submit only after the editor confirms the title and description do not add unsupported claims.', 'npcink-toolbox' ),
+					'name'   => __( 'Core handoff', 'npcink-workflow-toolbox' ),
+					'detail' => __( 'Submit only after the editor confirms the title and description do not add unsupported claims.', 'npcink-workflow-toolbox' ),
 					'status' => 'core_proposal_required',
 				),
 			),
@@ -5757,43 +5757,43 @@ final class Rest_Controller {
 			$this->editor_pre_publish_review_item(
 				'summary',
 				'' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? 'ok' : 'warning',
-				'' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present for archives and sharing contexts.', 'npcink-toolbox' ) : __( 'Run summary suggestions before publishing if the excerpt is empty.', 'npcink-toolbox' ),
+				'' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present for archives and sharing contexts.', 'npcink-workflow-toolbox' ) : __( 'Run summary suggestions before publishing if the excerpt is empty.', 'npcink-workflow-toolbox' ),
 				'summary_suggestions'
 			),
 			$this->editor_pre_publish_review_item(
 				'categories',
 				! empty( $context['category_ids'] ) ? 'ok' : 'warning',
-				! empty( $context['category_ids'] ) ? __( 'At least one category is selected.', 'npcink-toolbox' ) : __( 'Review category suggestions before publishing.', 'npcink-toolbox' ),
+				! empty( $context['category_ids'] ) ? __( 'At least one category is selected.', 'npcink-workflow-toolbox' ) : __( 'Review category suggestions before publishing.', 'npcink-workflow-toolbox' ),
 				'category_suggestions'
 			),
 			$this->editor_pre_publish_review_item(
 				'tags',
 				! empty( $context['tag_ids'] ) ? 'ok' : 'warning',
-				! empty( $context['tag_ids'] ) ? __( 'At least one tag is selected.', 'npcink-toolbox' ) : __( 'Review existing tag suggestions before creating any new vocabulary.', 'npcink-toolbox' ),
+				! empty( $context['tag_ids'] ) ? __( 'At least one tag is selected.', 'npcink-workflow-toolbox' ) : __( 'Review existing tag suggestions before creating any new vocabulary.', 'npcink-workflow-toolbox' ),
 				'tag_suggestions'
 			),
 			$this->editor_pre_publish_review_item(
 				'featured_image',
 				! empty( $context['featured_media'] ) ? 'ok' : 'warning',
-				! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-toolbox' ) : __( 'Review image candidates or select an existing media attachment.', 'npcink-toolbox' ),
+				! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-workflow-toolbox' ) : __( 'Review image candidates or select an existing media attachment.', 'npcink-workflow-toolbox' ),
 				'image_candidates'
 			),
 			$this->editor_pre_publish_review_item(
 				'internal_links',
 				'review',
-				__( 'Run internal link candidates and insert only the links a human editor accepts.', 'npcink-toolbox' ),
+				__( 'Run internal link candidates and insert only the links a human editor accepts.', 'npcink-workflow-toolbox' ),
 				'internal_links'
 			),
 			$this->editor_pre_publish_review_item(
 				'seo_meta',
 				! empty( $seo_handoff['proposal_ready'] ) ? 'review' : 'warning',
-				! empty( $seo_handoff['proposal_ready'] ) ? __( 'SEO title and description candidates are ready for Core-governed review.', 'npcink-toolbox' ) : __( 'SEO handoff needs a post id, title, and description candidate.', 'npcink-toolbox' ),
+				! empty( $seo_handoff['proposal_ready'] ) ? __( 'SEO title and description candidates are ready for Core-governed review.', 'npcink-workflow-toolbox' ) : __( 'SEO handoff needs a post id, title, and description candidate.', 'npcink-workflow-toolbox' ),
 				'seo_meta_single_post_handoff'
 			),
 			$this->editor_pre_publish_review_item(
 				'duplicate_risk',
 				empty( $duplicate_items ) ? 'ok' : 'review',
-				empty( $duplicate_items ) ? __( 'No duplicate-risk candidates were returned by Site Knowledge.', 'npcink-toolbox' ) : __( 'Related public content was found; compare overlap before publishing.', 'npcink-toolbox' ),
+				empty( $duplicate_items ) ? __( 'No duplicate-risk candidates were returned by Site Knowledge.', 'npcink-workflow-toolbox' ) : __( 'Related public content was found; compare overlap before publishing.', 'npcink-workflow-toolbox' ),
 				'duplicate_check'
 			),
 		);
@@ -5836,26 +5836,26 @@ final class Rest_Controller {
 			array(
 				'id'     => 'title',
 				'status' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? 'ok' : 'warning',
-				'label'  => __( 'Title', 'npcink-toolbox' ),
-				'detail' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? __( 'Title is present.', 'npcink-toolbox' ) : __( 'Add a specific title before publishing.', 'npcink-toolbox' ),
+				'label'  => __( 'Title', 'npcink-workflow-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['title'] ?? '' ) ) ? __( 'Title is present.', 'npcink-workflow-toolbox' ) : __( 'Add a specific title before publishing.', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'     => 'excerpt',
 				'status' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? 'ok' : 'warning',
-				'label'  => __( 'Excerpt', 'npcink-toolbox' ),
-				'detail' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present.', 'npcink-toolbox' ) : __( 'Add an excerpt or meta description candidate.', 'npcink-toolbox' ),
+				'label'  => __( 'Excerpt', 'npcink-workflow-toolbox' ),
+				'detail' => '' !== trim( (string) ( $context['excerpt'] ?? '' ) ) ? __( 'Excerpt is present.', 'npcink-workflow-toolbox' ) : __( 'Add an excerpt or meta description candidate.', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'     => 'terms',
 				'status' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? 'ok' : 'warning',
-				'label'  => __( 'Terms', 'npcink-toolbox' ),
-				'detail' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? __( 'At least one category or tag is selected.', 'npcink-toolbox' ) : __( 'Review category and tag candidates before publishing.', 'npcink-toolbox' ),
+				'label'  => __( 'Terms', 'npcink-workflow-toolbox' ),
+				'detail' => ! empty( $context['category_ids'] ) || ! empty( $context['tag_ids'] ) ? __( 'At least one category or tag is selected.', 'npcink-workflow-toolbox' ) : __( 'Review category and tag candidates before publishing.', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'     => 'featured_media',
 				'status' => ! empty( $context['featured_media'] ) ? 'ok' : 'warning',
-				'label'  => __( 'Featured image', 'npcink-toolbox' ),
-				'detail' => ! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-toolbox' ) : __( 'Review image candidates or select a featured image.', 'npcink-toolbox' ),
+				'label'  => __( 'Featured image', 'npcink-workflow-toolbox' ),
+				'detail' => ! empty( $context['featured_media'] ) ? __( 'Featured image is selected.', 'npcink-workflow-toolbox' ) : __( 'Review image candidates or select a featured image.', 'npcink-workflow-toolbox' ),
 			),
 		);
 
@@ -5892,7 +5892,7 @@ final class Rest_Controller {
 			'npcink_toolbox_disabled',
 			sprintf(
 				/* translators: %s: feature label. */
-				__( 'Enable %s in Npcink Workflow Toolbox settings before running this tool.', 'npcink-toolbox' ),
+				__( 'Enable %s in Npcink Workflow Toolbox settings before running this tool.', 'npcink-workflow-toolbox' ),
 				$label
 			),
 			array( 'status' => 403 )

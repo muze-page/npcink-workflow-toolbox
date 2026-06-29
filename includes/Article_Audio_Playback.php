@@ -206,7 +206,7 @@ final class Article_Audio_Playback {
 		?>
 		<section class="npcink-toolbox-article-audio" aria-label="<?php echo esc_attr( $label ); ?>" data-npcink-audio-freshness="<?php echo esc_attr( $freshness_status ); ?>">
 			<div class="npcink-toolbox-article-audio__summary">
-				<span class="npcink-toolbox-article-audio__eyebrow"><?php echo esc_html__( 'Audio', 'npcink-toolbox' ); ?></span>
+				<span class="npcink-toolbox-article-audio__eyebrow"><?php echo esc_html__( 'Audio', 'npcink-workflow-toolbox' ); ?></span>
 				<strong class="npcink-toolbox-article-audio__title"><?php echo esc_html( $title ); ?></strong>
 				<?php if ( '' !== $duration ) : ?>
 					<span class="npcink-toolbox-article-audio__duration"><?php echo esc_html( $duration ); ?></span>
@@ -214,7 +214,7 @@ final class Article_Audio_Playback {
 			</div>
 			<audio class="npcink-toolbox-article-audio__player" controls preload="none">
 				<source src="<?php echo esc_url( (string) $audio['url'] ); ?>"<?php echo '' !== $audio['mime_type'] ? ' type="' . esc_attr( (string) $audio['mime_type'] ) . '"' : ''; ?> />
-				<?php esc_html_e( 'Your browser does not support audio playback.', 'npcink-toolbox' ); ?>
+				<?php esc_html_e( 'Your browser does not support audio playback.', 'npcink-workflow-toolbox' ); ?>
 			</audio>
 			<?php if ( $show_freshness_notice ) : ?>
 				<p class="npcink-toolbox-article-audio__freshness">
@@ -283,16 +283,16 @@ final class Article_Audio_Playback {
 
 	private function freshness_label( string $status ): string {
 		if ( 'minor_drift' === $status ) {
-			return __( 'Article audio may be slightly out of date after minor edits. Review before regenerating.', 'npcink-toolbox' );
+			return __( 'Article audio may be slightly out of date after minor edits. Review before regenerating.', 'npcink-workflow-toolbox' );
 		}
 		if ( 'review_recommended' === $status ) {
-			return __( 'Article audio needs review because the article changed after generation.', 'npcink-toolbox' );
+			return __( 'Article audio needs review because the article changed after generation.', 'npcink-workflow-toolbox' );
 		}
 		if ( 'stale' === $status ) {
-			return __( 'Article audio is likely stale. Regenerate after reviewing the article changes.', 'npcink-toolbox' );
+			return __( 'Article audio is likely stale. Regenerate after reviewing the article changes.', 'npcink-workflow-toolbox' );
 		}
 
-		return __( 'Article audio freshness is unknown.', 'npcink-toolbox' );
+		return __( 'Article audio freshness is unknown.', 'npcink-workflow-toolbox' );
 	}
 
 	private function normalized_content_text( string $content ): string {
@@ -322,14 +322,14 @@ final class Article_Audio_Playback {
 
 	private function label_for_kind( string $kind ): string {
 		if ( 'summary' === $kind || 'audio_summary' === $kind ) {
-			return __( 'Audio summary', 'npcink-toolbox' );
+			return __( 'Audio summary', 'npcink-workflow-toolbox' );
 		}
 
 		if ( 'narration' === $kind || 'article_narration' === $kind ) {
-			return __( 'Article narration', 'npcink-toolbox' );
+			return __( 'Article narration', 'npcink-workflow-toolbox' );
 		}
 
-		return __( 'Article audio', 'npcink-toolbox' );
+		return __( 'Article audio', 'npcink-workflow-toolbox' );
 	}
 
 	private function format_duration( float $seconds ): string {

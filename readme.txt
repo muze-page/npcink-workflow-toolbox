@@ -65,7 +65,7 @@ closed.
 
 == Installation ==
 
-1. Upload the `npcink-toolbox` folder to `/wp-content/plugins/`, or install it
+1. Upload the `npcink-workflow-toolbox` folder to `/wp-content/plugins/`, or install it
    through the WordPress plugin installer.
 2. Activate **Npcink Workflow Toolbox** in WordPress.
 3. Open **Npcink -> Toolbox** when a Npcink menu is available, or **Tools ->

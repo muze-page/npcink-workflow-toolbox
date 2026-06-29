@@ -7,7 +7,7 @@
 	const NIGHTLY_CLOUD_RECENT_KEY = 'npcinkToolboxNightlyCloudRecentRun.v1';
 
 	function t(text) {
-		return __(String(text), 'npcink-toolbox');
+		return __(String(text), 'npcink-workflow-toolbox');
 	}
 
 	function serialize(form) {
@@ -285,7 +285,7 @@
 
 	function toolboxAdminUrl(params) {
 		const url = new URL(window.location.href);
-		url.searchParams.set('page', 'npcink-toolbox');
+		url.searchParams.set('page', 'npcink-workflow-toolbox');
 		Object.keys(params || {}).forEach((key) => {
 			const value = params[key];
 			if (value === null || value === undefined || value === '') {
