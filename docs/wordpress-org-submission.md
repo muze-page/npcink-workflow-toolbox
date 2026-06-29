@@ -44,7 +44,7 @@ Npcink Cloud service documents:
 
 ## Directory Assets
 
-Source files are kept in `sj/`. WordPress.org-ready PNGs are prepared in `wporg-assets/`.
+Source files are kept in `wporg-assets/source/`. WordPress.org-ready PNGs are prepared in `wporg-assets/`.
 
 Upload or copy these files to the WordPress.org plugin SVN top-level `assets/` directory:
 
