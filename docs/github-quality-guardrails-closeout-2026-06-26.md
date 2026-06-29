@@ -95,7 +95,7 @@ The local HTTP setting was applied only to the six active repositories:
 git -C /Users/muze/gitee/npcink-abilities-toolkit config http.version HTTP/1.1
 git -C /Users/muze/gitee/npcink-governance-core config http.version HTTP/1.1
 git -C /Users/muze/gitee/npcink-ai-client-adapter config http.version HTTP/1.1
-git -C /Users/muze/gitee/npcink-toolbox config http.version HTTP/1.1
+git -C /Users/muze/gitee/npcink-workflow-toolbox config http.version HTTP/1.1
 git -C /Users/muze/gitee/npcink-ai-cloud config http.version HTTP/1.1
 git -C /Users/muze/gitee/npcink-cloud-addon config http.version HTTP/1.1
 ```

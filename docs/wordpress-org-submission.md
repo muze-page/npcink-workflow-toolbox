@@ -12,7 +12,7 @@ Status: prepared for the Npcink Workflow Toolbox 0.1.1 WordPress.org plugin subm
 - Requires PHP: 8.0
 - License: GPLv2 or later
 - Tags: ai, seo, editorial-workflow, media, content
-- Development URL: https://github.com/muze-page/npcink-toolbox
+- Development URL: https://github.com/muze-page/npcink-workflow-toolbox
 
 ## Short Description
 

@@ -472,7 +472,7 @@ Cloud API and runtime worker are running:
 cd /Users/muze/gitee/npcink-ai-cloud
 docker compose -f docker-compose.dev.yml --profile runtime up -d worker
 
-cd /Users/muze/gitee/npcink-toolbox
+cd /Users/muze/gitee/npcink-workflow-toolbox
 composer smoke:site-ops-cloud-e2e
 composer smoke:nightly-inspection-cloud-e2e
 ```

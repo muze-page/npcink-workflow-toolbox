@@ -118,7 +118,7 @@ Real local WordPress plus Cloud worker proof:
 cd /Users/muze/gitee/npcink-ai-cloud
 docker compose -f docker-compose.dev.yml --profile runtime up -d worker
 
-cd /Users/muze/gitee/npcink-toolbox
+cd /Users/muze/gitee/npcink-workflow-toolbox
 composer smoke:nightly-inspection-cloud-e2e
 ```
 
