@@ -512,6 +512,21 @@ msgstr "待核实假设"
 msgid "Paragraph review note"
 msgstr "段落审阅说明"
 
+msgid "Review note"
+msgstr "审阅说明"
+
+msgid "Structure check"
+msgstr "结构检查"
+
+msgid "Fact-boundary check"
+msgstr "事实边界检查"
+
+msgid "Scope check"
+msgstr "适用范围检查"
+
+msgid "Editing guardrail"
+msgstr "编辑边界"
+
 msgid "Content Support groups"
 msgstr "内容支持分组"
 
