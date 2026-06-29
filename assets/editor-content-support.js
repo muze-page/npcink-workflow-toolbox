@@ -218,103 +218,45 @@
 
 	const flows = [
 		{
-			intent: 'article_checkup',
-			label: __('Article checkup', 'npcink-workflow-toolbox'),
-			description: __('Check the full draft for sentence, fact-gap, tone, and structure issues without rewriting it.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'title_suggestions',
-			label: __('Title suggestions', 'npcink-workflow-toolbox'),
-			description: __('Generate reviewable title options from the current draft context.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'summary_suggestions',
-			label: __('AI generate summary', 'npcink-workflow-toolbox'),
-			description: __('Generate reviewed excerpt candidates from the current draft with hosted AI.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'article_narration',
-			label: __('Article narration', 'npcink-workflow-toolbox'),
-			description: __('Generate a review-only audio narration candidate from the current article text.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'article_audio_summary',
-			label: __('Audio summary', 'npcink-workflow-toolbox'),
-			description: __('Create a short listening summary script, then generate an audio candidate through Cloud.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'tag_suggestions',
-			label: __('Tag suggestions', 'npcink-workflow-toolbox'),
-			description: __('Find matching existing tags without creating new vocabulary.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'category_suggestions',
-			label: __('Category suggestions', 'npcink-workflow-toolbox'),
-			description: __('Find matching existing categories without running the full metadata workflow.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
-		},
-		{
-			intent: 'image_candidates',
-			label: __('AI recommended featured image', 'npcink-workflow-toolbox'),
-			description: __('Recommend or generate a featured image from the current article context.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
+			intent: 'publish_preflight',
+			label: __('Publish preflight', 'npcink-workflow-toolbox'),
+			description: __('Check missing fields and compare related existing posts for duplicate-risk before publishing.', 'npcink-workflow-toolbox'),
+			group: 'review_handoff',
 		},
 		{
 			intent: 'internal_links',
 			label: __('Find internal links', 'npcink-workflow-toolbox'),
 			description: __('Find related existing posts to cite manually after the draft direction is clear.', 'npcink-workflow-toolbox'),
-			group: 'common_recommendations',
+			group: 'review_handoff',
 		},
 		{
-			intent: 'article_outline',
-			label: __('Outline suggestions', 'npcink-workflow-toolbox'),
-			description: __('Build a compact outline that an editor can expand manually.', 'npcink-workflow-toolbox'),
-			group: 'writing_assist',
+			intent: 'image_candidates',
+			label: __('AI recommended featured image', 'npcink-workflow-toolbox'),
+			description: __('Recommend or generate a featured image from the current article context.', 'npcink-workflow-toolbox'),
+			group: 'review_handoff',
 		},
 		{
-			intent: 'publish_preflight',
-			label: __('Publish preflight', 'npcink-workflow-toolbox'),
-			description: __('Check missing fields and compare related existing posts for duplicate-risk before publishing.', 'npcink-workflow-toolbox'),
-			group: 'pre_publish',
+			intent: 'article_narration',
+			label: __('Article narration', 'npcink-workflow-toolbox'),
+			description: __('Generate a review-only audio narration candidate from the current article text.', 'npcink-workflow-toolbox'),
+			group: 'audio_candidates',
 		},
 		{
-			intent: 'discoverability',
-			label: __('Discoverability suggestions', 'npcink-workflow-toolbox'),
-			description: __('Review SEO, AEO, GEO, and proposal-field suggestions for the current draft.', 'npcink-workflow-toolbox'),
-			group: 'pre_publish',
-		},
-			{
-				intent: 'image_alt_suggestions',
-				label: __('Check this article images', 'npcink-workflow-toolbox'),
-				description: __('Review ALT and caption suggestions for images already used by this article.', 'npcink-workflow-toolbox'),
-				group: 'pre_publish',
-			},
-		{
-			intent: 'comment_reply_suggestion',
-			label: __('Comment reply suggestions', 'npcink-workflow-toolbox'),
-			description: __('Draft review-only reply options from a selected or supplied comment and the current article context.', 'npcink-workflow-toolbox'),
-			group: 'pre_publish',
+			intent: 'article_audio_summary',
+			label: __('Audio summary', 'npcink-workflow-toolbox'),
+			description: __('Create a short listening summary script, then generate an audio candidate through Cloud.', 'npcink-workflow-toolbox'),
+			group: 'audio_candidates',
 		},
 	];
 
 	const flowGroups = [
 		{
-			id: 'common_recommendations',
-			label: __('Common recommendations', 'npcink-workflow-toolbox'),
+			id: 'review_handoff',
+			label: __('Review and handoff', 'npcink-workflow-toolbox'),
 		},
 		{
-			id: 'writing_assist',
-			label: __('Writing assist', 'npcink-workflow-toolbox'),
-		},
-		{
-			id: 'pre_publish',
-			label: __('Pre-publish package', 'npcink-workflow-toolbox'),
+			id: 'audio_candidates',
+			label: __('Article audio candidates', 'npcink-workflow-toolbox'),
 		},
 	];
 

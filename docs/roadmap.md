@@ -48,17 +48,18 @@ Target features:
   Cloud is ready, an administrator may explicitly run Cloud analysis for a
   suggestion-only `site_ops_cloud_analysis_result.v1`, without Toolbox owning a
   local queue, run table, scheduler truth, Core proposal, or WordPress write.
-- Post editor Content Support panel for fixed flows: local article checkup,
-  title suggestions, outline support, discoverability suggestions, publish
-  preflight, summary suggestions, category suggestions, tag suggestions,
-  internal-link candidates, image candidates, and current article image ALT
-  suggestions. Article checkup should diagnose full-draft sentence-density,
-  fact-gap, tone, structure, and format issues without rewriting text. Selection-only
-  paragraph checks belong in the selected-block toolbar beside paragraph image
-  suggestions, not as an article-level sidebar button. Related existing-post
-  review belongs inside publish preflight duplicate-risk checks and internal-link
-  candidates rather than a separate writing-preparation button. Image candidates
-  may include a secondary saved-post media brief action for image planning.
+- Post editor Content Support panel for default Npcink review and handoff
+  buttons: publish preflight, internal-link candidates, image candidates, and
+  article audio candidates. Generic AI-plugin-style intents such as local
+  article checkup, title suggestions, outline support, discoverability,
+  summary suggestions, category suggestions, tag suggestions, current article
+  image ALT suggestions, and comment-reply suggestions remain compatible
+  route/result paths, not default visible buttons. Selection-only paragraph
+  checks belong in the selected-block toolbar beside paragraph image
+  suggestions. Related existing-post review belongs inside publish preflight
+  duplicate-risk checks and internal-link candidates rather than a separate
+  writing-preparation button. Image candidates may include a secondary
+  saved-post media brief action for image planning.
 - Frontend single-post article audio playback for already adopted narration or
   audio-summary metadata. This is a playback entry only; generation, adoption,
   proposal review, media import, regeneration, and writes stay in the governed

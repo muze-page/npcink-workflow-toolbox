@@ -382,18 +382,20 @@ support flows. It accepts current draft context plus one intent:
 `taxonomy_tags`, `internal_links`, `image_candidates`, or
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
-recommendations appear first: article checkup, title suggestions, summary
-suggestions, tag suggestions, category suggestions, image candidates, and
-internal links.
-Related existing-post review is folded into publish preflight duplicate-risk
-checks and internal-link candidates; `writing_support` remains a supported route
-intent for compatibility but is not a default editor button. Article checkup is
-a local suggestion-only diagnostic that points to sentence-density, fact-gap,
-tone, structure, and format review items without rewriting or inserting text.
-Outline actions sit
-in a writing-assist group, while paragraph checks live in the selected-block
-toolbar. Publish preflight, discoverability,
-and current-article image ALT suggestions sit in the pre-publish package group.
+default buttons are now Npcink review and handoff actions: publish preflight,
+internal-link candidates, image candidates, and article audio candidates.
+Generic AI-plugin-style generation and diagnosis intents such as
+`article_checkup`, `title_suggestions`, `summary_suggestions`,
+`category_suggestions`, `tag_suggestions`, `article_outline`,
+`discoverability`, `image_alt_suggestions`, and `comment_reply_suggestion`
+remain supported by compatible route/result-rendering code, but they are not
+default visible buttons. Related existing-post review is folded into publish
+preflight duplicate-risk checks and internal-link candidates; `writing_support`
+also remains a supported route intent for compatibility but is not a default
+editor button. Article checkup is a local suggestion-only diagnostic that points
+to sentence-density, fact-gap, tone, structure, and format review items without
+rewriting or inserting text. Paragraph checks live in the selected-block
+toolbar.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
@@ -572,9 +574,11 @@ Batch entry points use `tab=image&tool=bulk-alt` and
 `tab=image&tool=batch-optimize`; deprecated `tool=optimize` and legacy
 `toolbox_tool=media-derivative` URLs remain accepted only as compatibility
 aliases that canonicalize to Batch Optimize Images.
-Publish preflight, summary suggestions, category suggestions, tag suggestions,
-internal-link candidates, and image candidates stay in the post editor panel,
-not as backend buttons.
+Publish preflight, internal-link candidates, image candidates, and article audio
+candidates stay as default post editor buttons. Summary suggestions, category
+suggestions, tag suggestions, article checkup, discoverability, current-article
+ALT checks, outline, and comment-reply support stay route-compatible but are not
+default editor buttons.
 
 Toolbox also renders additive `operator_feedback` payloads from governed
 handoff failures, including reasons, revision fields, next steps, retry state,
@@ -593,14 +597,15 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
-- split summary suggestions, category suggestions, and tag suggestions with
-  scoped inputs, existing-term evidence, proposed new-term review notes, and
-  preview-only Core handoff guidance for summary application, tag assignment,
-  category recommendation, and new-tag proposal actions;
-- taxonomy/tag candidates from existing WordPress terms;
 - internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
   optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.
+- article audio candidates that can prepare a Core-governed audio adoption
+  plan.
+
+Generic title, summary, taxonomy/tag, outline, article-checkup,
+discoverability, current-article ALT, and comment-reply result views remain in
+the editor code as compatible support paths, not as default buttons.
 
 The editor panel reads the current draft title, excerpt, content, terms, status,
 and featured image id. It never assigns terms, automatically inserts links,

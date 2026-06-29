@@ -5705,6 +5705,12 @@ msgstr "仅准备材料"
 msgid "Review and handoff only"
 msgstr "仅检查与交接"
 
+msgid "Review and handoff"
+msgstr "审阅与交接"
+
+msgid "Article audio candidates"
+msgstr "文章音频候选"
+
 msgid "Use these for planning and reviewed context. Final WordPress writes still go through Core approval."
 msgstr "这些工具只用于规划和已审阅上下文。最终 WordPress 写入仍需经过 Core 审批。"
 
@@ -5755,6 +5761,12 @@ msgstr "图片文字审阅"
 
 msgid "Batch Image Text Review"
 msgstr "批量图片文字审阅"
+
+msgid "Batch ALT Review Handoff"
+msgstr "批量 ALT 审阅交接"
+
+msgid "Build a selected media review set for missing ALT text, then hand accepted rows to Core review."
+msgstr "为缺失 ALT 文本的媒体构建选定审阅集，然后将接受的行交给 Core 审核。"
 
 msgid "Build a small review set from recent media-library images with weak ALT or caption metadata, then choose items for Core handoff."
 msgstr "从近期媒体库中 ALT 或说明文字较弱的图片构建小型审阅集，然后选择要交给 Core 的项目。"

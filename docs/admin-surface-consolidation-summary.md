@@ -43,6 +43,12 @@ Batch Optimize Images.
 High-frequency article support stays in the post editor sidebar. Admin
 Workflows no longer expose publish preflight, summary/category/tag support,
 internal-link candidates, or image candidates as backend article buttons.
+After comparing the local generic AI plugin Settings page, the editor sidebar
+also demotes generic AI generation and diagnosis entries from the default
+button list. Title, summary, taxonomy/tag, outline, article-checkup,
+discoverability, current-article ALT, and comment-reply paths remain compatible
+capabilities, while default visible buttons stay focused on Npcink review and
+handoff work.
 
 **Full-site Insights** is now the Overview page's primary site-check action
 instead of a visible top-level tab. It keeps the stable `operations-insights`

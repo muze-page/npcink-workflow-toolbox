@@ -23,10 +23,11 @@ The first version provides:
 - a Npcink admin page at **Npcink -> Workflow Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Workflow Toolbox** fallback for standalone
   installs;
-- a post editor **Npcink Content Support** sidebar for title suggestions,
-  article checkup, outline support, summary suggestions, taxonomy/tag,
-  internal-link, image, and publish readiness support around human-written
-  articles, plus
+- a post editor **Npcink Content Support** sidebar whose default buttons focus
+  on Npcink review and handoff flows: publish preflight, internal-link
+  candidates, image candidates, and article audio candidates. Generic title,
+  summary, taxonomy/tag, outline, article-checkup, and current-article ALT
+  support remains available through compatible route/rendering paths, plus
   selected-paragraph toolbar checks that do not replace body text;
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
@@ -85,6 +86,7 @@ Project goals, ownership, and future-session instructions are documented in:
 
 - [Product Positioning](docs/product-positioning.md)
 - [Boundary](docs/boundary.md)
+- [AI Plugin Overlap Boundary](docs/ai-plugin-overlap-boundary.md)
 - [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md)
 - [Architecture](docs/architecture.md)
 - [Feature Ownership And Plugin Boundary](docs/feature-ownership-and-plugin-boundary.md)
@@ -340,16 +342,19 @@ composition, but they are not exposed as a backend operator tool while there is
 no active external-draft import workflow.
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
-opened from the editor top toolbar. Its visible buttons run fixed flows for
-article checkup, title suggestions, outline support, publish preflight,
-discoverability suggestions, summary suggestions, category suggestions, tag
-suggestions, internal-link candidates, image-source candidates, and
-current-article image ALT suggestions from the current draft context. Related
+opened from the editor top toolbar. Its visible buttons run fixed Npcink flows
+for publish preflight, internal-link candidates, image-source candidates, and
+article audio candidates from the current draft context. Generic title,
+summary, category, tag, outline, article-checkup, discoverability,
+current-article ALT, and comment-reply support remains available through
+compatible REST/result-rendering paths, but those entries are not default
+buttons when a generic AI plugin already owns similar experiments. Related
 existing-post review is handled through publish preflight duplicate-risk checks
-and Toolkit-backed internal-link candidates rather than a separate visible button. The sidebar
-article checkup is a local full-draft diagnostic surface for sentence density,
-fact-gap, tone, and structure review; it points to paragraphs and editing
-direction, but does not rewrite, insert, or replace article text. The sidebar
+and Toolkit-backed internal-link candidates rather than a separate visible
+button. The route-only article checkup remains a local full-draft diagnostic
+surface for sentence density, fact-gap, tone, and structure review; it points to
+paragraphs and editing direction, but does not rewrite, insert, or replace
+article text. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
@@ -480,10 +485,13 @@ minutes and show those Cloud signals, but it must not own provider routing,
 image indexing, media-library writes, settings writes, or long-term adoption
 history.
 
-The post editor **Npcink Content Support** sidebar owns high-frequency writing
-preparation, title suggestions, outline support, summary, discoverability,
-taxonomy/tag, internal-link, image, current-article image ALT,
-and publish-readiness support because those actions need the current article context. The admin
+The post editor **Npcink Content Support** sidebar owns high-frequency Npcink
+review and handoff actions because those actions need the current article
+context: publish preflight, internal-link candidates, image candidates, and
+article audio candidates. Generic writing, metadata, article-checkup,
+discoverability, comment, and current-article ALT capabilities stay available
+as compatible route-only or result-rendering paths rather than default visible
+buttons. The admin
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
@@ -497,8 +505,11 @@ or an explicit selected review set. In all cases, Toolbox samples only the
 supplied public-site or media metadata, Cloud produces reviewable suggestions,
 and no media library, post, SEO, proposal, crawler, or queue state is changed
 locally.
-Publish preflight, summary suggestions, category suggestions, tag suggestions,
-internal-link candidates, and image candidates belong in the editor sidebar.
+Publish preflight, internal-link candidates, image candidates, and article
+audio candidates are the default editor sidebar buttons. Summary suggestions,
+category suggestions, tag suggestions, article checkup, discoverability, and
+current-article ALT checks stay route-compatible but are demoted from the
+default button list to avoid duplicating generic AI plugin features.
 Internal-link candidate assembly is delegated to
 `npcink-abilities-toolkit/resolve-internal-link-targets`; Toolbox only passes
 editor context plus optional Cloud Site Knowledge evidence and renders the

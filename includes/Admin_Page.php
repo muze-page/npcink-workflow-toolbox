@@ -3381,10 +3381,10 @@ final class Admin_Page {
 				'group_id'    => 'image-text-review',
 				'id'          => 'media-alt-caption-review',
 				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Batch Fill Missing ALT', 'npcink-workflow-toolbox' ),
-				'description' => __( 'Find images that need ALT text, review suggestions, then submit selected rows for review.', 'npcink-workflow-toolbox' ),
+				'title'       => __( 'Batch ALT Review Handoff', 'npcink-workflow-toolbox' ),
+				'description' => __( 'Build a selected media review set for missing ALT text, then hand accepted rows to Core review.', 'npcink-workflow-toolbox' ),
 				'intent'      => 'media_alt_suggestions',
-				'button'      => __( 'Scan and generate suggestions', 'npcink-workflow-toolbox' ),
+				'button'      => __( 'Build review set', 'npcink-workflow-toolbox' ),
 				'custom'      => 'media_alt_caption_review',
 			),
 		);
