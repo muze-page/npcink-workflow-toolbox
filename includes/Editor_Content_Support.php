@@ -54,10 +54,6 @@ final class Editor_Content_Support {
 	}
 
 	private function show_runtime_diagnostics(): bool {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			return true;
-		}
-
 		$settings = get_option( Plugin::OPTION_NAME, array() );
 		return is_array( $settings ) && ! empty( $settings['include_raw_responses'] );
 	}
