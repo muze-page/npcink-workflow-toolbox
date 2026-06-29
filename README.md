@@ -91,6 +91,7 @@ Project goals, ownership, and future-session instructions are documented in:
 - [Boundary](docs/boundary.md)
 - [AI Plugin Overlap Boundary](docs/ai-plugin-overlap-boundary.md)
 - [AI Plugin Overlap Closeout](docs/ai-plugin-overlap-closeout-2026-06-29.md)
+- [Admin Advanced Overlap PR #34 Closeout](docs/admin-advanced-overlap-pr34-closeout-2026-06-29.md)
 - [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md)
 - [Architecture](docs/architecture.md)
 - [Feature Ownership And Plugin Boundary](docs/feature-ownership-and-plugin-boundary.md)
