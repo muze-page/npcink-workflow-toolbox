@@ -28,6 +28,7 @@ require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Knowledge_Auto_Sync.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Ops_Snapshot_Collector.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Ops_Insight_Builder.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Site_Ops_Cloud_Request_Builder.php';
+require_once NPCINK_TOOLBOX_DIR . 'includes/Ability_Surface_Metadata.php';
 require_once NPCINK_TOOLBOX_DIR . 'includes/Rest_Controller.php';
 require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/Contract/Replay_Validator.php';
 require_once NPCINK_TOOLBOX_DIR . 'modules/local-automation-runtime/src/NightlyInspection/Rule_Scorer.php';

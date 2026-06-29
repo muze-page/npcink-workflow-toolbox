@@ -149,6 +149,13 @@ Open decision:
 
 Goal: add repeatable operator flows without creating a workflow runtime.
 
+The productized button layer now includes read-only ability surface metadata and
+the Overview **Npcink capability health** summary. This keeps default entries,
+route-only compatibility, runtime owner, handoff path, and overlap policy
+visible to operators and maintainers without becoming a generic Abilities
+Explorer, provider picker, request log, connector approval surface, second
+registry, or runtime. It is not a generic Abilities Explorer.
+
 Candidate buttons:
 
 - recommend taxonomy and tags;

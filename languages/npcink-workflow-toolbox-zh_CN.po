@@ -6151,3 +6151,54 @@ msgstr "可选审核 SEO 标题"
 
 msgid "Optional review SEO description"
 msgstr "可选审核 SEO 描述"
+
+msgid "Npcink capability health summary"
+msgstr "Npcink 能力健康状态摘要"
+
+msgid "Npcink capability health"
+msgstr "Npcink 能力健康状态"
+
+msgid "Read-only workflow status. This is not a generic Abilities Explorer, provider picker, request log, or connector approval surface."
+msgstr "只读工作流状态。这里不是通用 Abilities Explorer、Provider 选择器、请求日志或连接器审批界面。"
+
+msgid "Article Audio Candidates"
+msgstr "文章音频候选"
+
+msgid "Category and tag suggestions"
+msgstr "分类和标签建议"
+
+msgid "Current-article ALT suggestions"
+msgstr "当前文章 ALT 建议"
+
+msgid "Comment reply suggestions"
+msgstr "评论回复建议"
+
+msgid "Local suggestion context for SEO, AEO, GEO, claims, audience, and tone."
+msgstr "用于 SEO、AEO、GEO、声明、受众和语气的本地建议上下文。"
+
+msgid "Search, image, Site Knowledge, hosted AI, and AI image checks use Cloud or a host runtime seam."
+msgstr "搜索、图片、Site Knowledge、托管 AI 和 AI 图片检查使用 Cloud 或宿主运行时边界。"
+
+msgid "Default entries"
+msgstr "默认入口"
+
+msgid "Npcink workflows"
+msgstr "Npcink 工作流"
+
+msgid "Editor defaults stay on preflight, internal links, image candidates, article audio, and governed handoff work."
+msgstr "编辑器默认入口保持为发布预检、内链、图片候选、文章音频和受治理交接工作。"
+
+msgid "Route-only compatibility"
+msgstr "仅路由兼容"
+
+msgid "%d hidden entries"
+msgstr "%d 个隐藏入口"
+
+msgid "Generic AI overlap stays callable for compatibility but is not restored as default Toolbox UI."
+msgstr "通用 AI 重叠能力为兼容性保持可调用，但不会恢复为 Toolbox 默认界面。"
+
+msgid "Core handoff boundary"
+msgstr "Core 交接边界"
+
+msgid "Write-like outcomes remain Core/Adapter/Abilities handoffs; this summary creates no proposals and writes nothing."
+msgstr "类似写入的结果仍然交给 Core/Adapter/Abilities；此摘要不会创建提案，也不会写入任何内容。"

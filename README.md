@@ -22,7 +22,10 @@ The first version provides:
 
 - a Npcink admin page at **Npcink -> Workflow Toolbox** when a Npcink host menu
   exists, with a **Tools -> Npcink Workflow Toolbox** fallback for standalone
-  installs;
+  installs. Its Overview includes a read-only **Npcink capability health**
+  summary for local workflow readiness and route-only compatibility; it is not
+  a generic Abilities Explorer, provider picker, request log, or connector
+  approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
   on Npcink review and handoff flows: publish preflight, internal-link
   candidates, image candidates, and article audio candidates. Generic title,

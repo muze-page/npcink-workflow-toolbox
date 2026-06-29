@@ -87,3 +87,19 @@ Toolbox should learn the useful engineering pattern, not the product ownership:
 Do not adopt the generic provider/model picker, AI request log, connector
 approval UI, generic Abilities Explorer, or direct-write AI feature ownership
 inside Toolbox.
+
+## Local Implementation Pattern
+
+Toolbox implements the adopted pattern with `Ability_Surface_Metadata`, a local
+read-only projection rather than a registry. Each entry records surface,
+`default_visible`, `write_posture`, `runtime_owner`, `handoff_path`, and
+`overlap_policy`. Npcink-owned workflow entries stay visible by default; generic
+AI-plugin overlap entries stay as route-only compatibility when existing
+workflows still rely on their REST or rendering contracts.
+
+The Overview **Npcink capability health** panel summarizes that projection for
+operators. It can show site profile readiness, Cloud runtime availability,
+default Npcink workflow coverage, route-only compatibility, and Core handoff
+boundary. It is not a generic Abilities Explorer, provider picker, request log,
+or connector approval surface, and it must not create proposals, queues,
+provider calls, or WordPress writes.

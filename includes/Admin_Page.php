@@ -565,6 +565,8 @@ final class Admin_Page {
 				</div>
 			</section>
 
+			<?php $this->render_npcink_capability_health_summary( $content_context, $cloud_ready ); ?>
+
 			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
 				<div>
 					<h3><?php esc_html_e( 'Common tasks', 'npcink-workflow-toolbox' ); ?></h3>
@@ -607,6 +609,37 @@ final class Admin_Page {
 				</div>
 			</details>
 		</div>
+		<?php
+	}
+
+	private function render_npcink_capability_health_summary( array $content_context, bool $cloud_ready ): void {
+		$rows = Ability_Surface_Metadata::health_summary(
+			array(
+				'cloud_ready'        => $cloud_ready,
+				'site_profile_ready' => $this->content_context_ready( $content_context ),
+			)
+		);
+		?>
+		<section class="npcink-toolbox__ability-health" aria-label="<?php esc_attr_e( 'Npcink capability health summary', 'npcink-workflow-toolbox' ); ?>">
+			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
+				<div>
+					<h3><?php esc_html_e( 'Npcink capability health', 'npcink-workflow-toolbox' ); ?></h3>
+					<p><?php esc_html_e( 'Read-only workflow status. This is not a generic Abilities Explorer, provider picker, request log, or connector approval surface.', 'npcink-workflow-toolbox' ); ?></p>
+				</div>
+			</div>
+			<div class="npcink-toolbox__start-status-list">
+				<?php
+				foreach ( $rows as $row ) {
+					$this->render_start_status_row(
+						(string) ( $row['label'] ?? '' ),
+						(string) ( $row['status'] ?? 'neutral' ),
+						(string) ( $row['status_text'] ?? '' ),
+						(string) ( $row['description'] ?? '' )
+					);
+				}
+				?>
+			</div>
+		</section>
 		<?php
 	}
 

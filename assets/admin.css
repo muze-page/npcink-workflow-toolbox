@@ -116,6 +116,10 @@
 	border-radius: 6px;
 }
 
+.npcink-toolbox__ability-health {
+	margin-top: 18px;
+}
+
 .npcink-toolbox__start-status-row {
 	display: grid;
 	grid-template-columns: minmax(130px, 0.7fr) minmax(0, 1fr);

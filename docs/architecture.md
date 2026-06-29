@@ -12,6 +12,7 @@ Status: MVP architecture.
 | `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Full-site Insights Cloud analysis runtime calls, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
+| `Ability_Surface_Metadata` | Read-only local projection of Toolbox-owned workflow defaults, route-only compatibility entries, runtime ownership, handoff posture, and overlap policy. It is not an ability registry, workflow registry, provider picker, request log, or approval store. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Article_Audio_Playback` | Frontend single-post playback entry for already adopted article audio metadata. It reads protected post meta or a host-projected approved audio packet and does not generate, adopt, or write audio. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
@@ -527,10 +528,15 @@ site-level opportunities.
 The admin page defaults to an **Overview** surface for ordinary site owners,
 with one recommended next action, compact status rows for AI service, Site
 Profile, and safe mode, followed by common site/image next steps plus one
-folded advanced directory. Single-post article support stays in the post editor
-sidebar and is not rendered as an Overview work block. The visible top-level
-admin tabs after Overview are **Site Profile**, **Image Handling**, and
-**Advanced**. **Full-site Insights** remains a
+folded advanced directory. It also shows **Npcink capability health**, a
+read-only summary from `Ability_Surface_Metadata` for site profile readiness,
+Cloud runtime availability, default Npcink workflow entries, route-only
+compatibility, and Core handoff boundary. This summary is not a generic Abilities Explorer,
+provider picker, request log, or connector approval surface. It does not create
+proposals or writes. Single-post article
+support stays in the post editor sidebar and is not rendered as an Overview
+work block. The visible top-level admin tabs after Overview are **Site
+Profile**, **Image Handling**, and **Advanced**. **Full-site Insights** remains a
 secondary deep-link panel and is the Overview page's recommended site-check
 action; it builds a local
 `site_ops_insight_pack.v1` from bounded public content, approved comment signal
