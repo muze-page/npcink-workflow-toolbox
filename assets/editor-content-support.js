@@ -1116,6 +1116,27 @@
 		);
 	}
 
+	function renderParagraphReviewItems(items, emptyLabel) {
+		if (!Array.isArray(items) || !items.length) {
+			return createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, emptyLabel || __('No paragraph review notes returned.', 'npcink-workflow-toolbox'));
+		}
+
+		return createElement(
+			'ul',
+			{ className: 'npcink-toolbox-editor-support__list npcink-toolbox-editor-support__list--review' },
+			items.slice(0, 6).map((item, index) => {
+				const title = readableItemText(item.name || item.title || item.label, __('Review note', 'npcink-workflow-toolbox'));
+				const detail = readableItemText(item.detail || item.reason || item.value || item.summary || '', '');
+				return createElement(
+					'li',
+					{ key: String(index) + '-' + String(title) },
+					createElement('strong', null, title),
+					detail ? createElement('span', null, detail) : null
+				);
+			})
+		);
+	}
+
 	function extractImageItems(section) {
 		if (!section || typeof section !== 'object') {
 			return [];
@@ -3499,15 +3520,55 @@
 			: (output && output.local_review_overlay && typeof output.local_review_overlay === 'object' ? output.local_review_overlay : {});
 		const sourceItems = Array.isArray(overlay.items) ? overlay.items : [];
 		return sourceItems.map((item) => ({
-			name: readableItemText(item.name || item.title || __('Local review signal', 'npcink-workflow-toolbox'), __('Local review signal', 'npcink-workflow-toolbox')),
+			name: paragraphReviewItemLabel(item.name || item.title || ''),
 			detail: readableItemText(item.detail || item.issue || item.edit_direction || '', ''),
 			action_policy: item.action_policy || 'operator_review_only_no_insert',
 		})).filter((item) => item.detail);
 	}
 
+	function paragraphReviewItemLabel(value) {
+		const label = String(value || '').trim();
+		if (label === 'Local structure cross-check') {
+			return __('Structure check', 'npcink-workflow-toolbox');
+		}
+		if (label === 'Local fact-boundary check') {
+			return __('Fact-boundary check', 'npcink-workflow-toolbox');
+		}
+		if (label === 'Local scope check') {
+			return __('Scope check', 'npcink-workflow-toolbox');
+		}
+		if (label === 'Local editing guardrail') {
+			return __('Editing guardrail', 'npcink-workflow-toolbox');
+		}
+		return readableItemText(label || __('Review note', 'npcink-workflow-toolbox'), __('Review note', 'npcink-workflow-toolbox'));
+	}
+
+	function paragraphReviewVisibleOutput(output) {
+		if (!output || typeof output !== 'object' || Array.isArray(output)) {
+			return {};
+		}
+		const hiddenKeys = [
+			'artifact_type',
+			'source',
+			'write_posture',
+			'action_policy',
+			'status',
+			'provider_execution',
+			'signal_profile',
+			'local_review_overlay',
+		];
+		return Object.keys(output).reduce((visible, key) => {
+			if (hiddenKeys.indexOf(key) < 0) {
+				visible[key] = output[key];
+			}
+			return visible;
+		}, {});
+	}
+
 	function paragraphCheckItems(section) {
-		const output = hostedOutputObject(section);
-		const localItems = localParagraphOverlayItems(section, output);
+		const rawOutput = hostedOutputObject(section);
+		const output = paragraphReviewVisibleOutput(rawOutput);
+		const localItems = localParagraphOverlayItems(section, rawOutput);
 		const fields = [
 			['clarity_check', __('Clarity check', 'npcink-workflow-toolbox')],
 			['fact_gaps', __('Fact gaps', 'npcink-workflow-toolbox')],
@@ -3523,7 +3584,10 @@
 		if (items.length) {
 			return items.concat(localItems);
 		}
-		const generic = hostedWritingSupportItems(section);
+		if (localItems.length) {
+			return localItems;
+		}
+		const generic = hostedWritingSupportItems(Object.assign({}, section, { output_json: output }));
 		if (generic.length) {
 			return generic.concat(localItems);
 		}
@@ -5626,8 +5690,8 @@
 
 			if (sections.polish_notes) {
 				blocks.push(createElement('h4', { key: 'polish-notes-title' }, __('Paragraph review', 'npcink-workflow-toolbox')));
-				blocks.push(renderItems(paragraphCheckItems(sections.polish_notes), __('No paragraph review notes returned.', 'npcink-workflow-toolbox')));
-				blocks.push(renderHostedAiDiagnostics(sections.polish_notes));
+				blocks.push(renderParagraphReviewItems(paragraphCheckItems(sections.polish_notes), __('No paragraph review notes returned.', 'npcink-workflow-toolbox')));
+				blocks.push(renderHostedAiDiagnostics(sections.polish_notes, { defaultOpen: false }));
 			}
 
 				const hasPreflightReview = Boolean(sections.pre_publish_review);
