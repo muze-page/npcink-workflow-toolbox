@@ -70,12 +70,15 @@ Provider raw payloads are excluded by default. Enable
 The first version is single-site global configuration. Do not add multisite or
 per-user isolation without a new decision.
 
-AI Service Checks keep the stable `cloud-checks` deep-link id as a secondary
-diagnostics panel rather than a visible top-level admin tab. Start links to it
-from the folded advanced directory. The default view is one basic read-only
-service check for ordinary operators; detailed checks for Cloud-managed search,
-image-source candidates, preview-only media derivatives, content library
-search, and scheduled review recovery stay folded for troubleshooting. Legacy
+Connection Diagnostics keeps the stable `cloud-checks` deep-link id as a
+secondary diagnostics panel rather than a visible top-level admin tab. Advanced
+links to it from the Diagnostics group inside the single low-frequency advanced
+directory. That directory groups secondary entries as Setup, Diagnostics,
+Review, and Planning/Handoff instead of duplicating them on Overview. The
+default view is one basic read-only connection check for ordinary operators;
+detailed checks for Cloud-managed search, image-source candidates, preview-only
+media derivatives, content library search, and scheduled review recovery stay
+folded for troubleshooting. Legacy
 deep links may open the detailed area directly. The tabs may show compact
 readiness labels, but each panel should prioritize the Toolbox ability
 reachability check or recovery task instead of repeating provider ownership

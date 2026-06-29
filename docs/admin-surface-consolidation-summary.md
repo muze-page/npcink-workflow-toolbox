@@ -17,10 +17,9 @@ Abilities.
 The admin page now starts from a compact **Overview** tab for ordinary site
 owners. It shows one plain-language recommended action (**Check my site**),
 compact AI service / site profile / safe mode rows, and common task entries
-before folding setup, diagnostics, fallback previews, and lower-frequency
-workbench links into an **Advanced and troubleshooting** disclosure. The visible
-top-level tabs are **Overview**, **Site Profile**, **Image Handling**,
-and **Advanced**.
+before sending setup, diagnostics, fallback previews, and lower-frequency
+workbench links to the single **Advanced** directory. The visible top-level tabs
+are **Overview**, **Site Profile**, **Image Handling**, and **Advanced**.
 
 The former broad content-support admin area is split into focused work
 surfaces. **Image Handling** defaults to image tools, with **Batch Optimize
@@ -55,15 +54,18 @@ instead of a visible top-level tab. It keeps the stable `operations-insights`
 deep-link panel for report URLs, nonce-protected scan links, and Cloud analysis
 review detail.
 
-**AI Service Checks** keeps the stable `cloud-checks` deep-link id as a
+**Connection Diagnostics** keeps the stable `cloud-checks` deep-link id as a
 secondary diagnostics panel instead of a visible top-level tab. It now defaults
-to one basic read-only service check for ordinary operators. Search, image,
+to one basic read-only connection check for ordinary operators. Search, image,
 content library, and scheduled review diagnostics stay folded under detailed
-service checks and open automatically for old deep links. Content Operations
+diagnostics and open automatically for old deep links. Content Operations
 coverage and Agent feedback quality summaries link out to Cloud Addon
 Monitoring instead of rendering as Toolbox panels. Site Knowledge status and
 refresh controls stay in the secondary **Content Library Setup** panel reached
-from Advanced. Nightly Inspection local fallback settings, Pro Cloud Runtime
+from Advanced. The Advanced page is now the single low-frequency directory and
+groups entries as Setup, Diagnostics, Review, and Planning/Handoff instead of
+duplicating secondary links on Overview. Nightly Inspection local fallback
+settings, Pro Cloud Runtime
 quota/detail, and Cloud run recovery stay in detailed checks instead of
 competing with the Start page's primary operator entries.
 

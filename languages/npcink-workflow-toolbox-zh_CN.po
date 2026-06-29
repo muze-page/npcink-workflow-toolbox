@@ -4937,17 +4937,17 @@ msgstr "例如：Npcink 要读清楚；标题前后语速稳一点。"
 msgid "Example: keep it around two minutes for readers deciding whether to read the full article."
 msgstr "例如：控制在两分钟左右，给正在判断是否阅读全文的读者听。"
 
-msgid "Basic AI service check"
-msgstr "基础 AI 服务检查"
+msgid "Basic connection check"
+msgstr "基础连接检查"
 
 msgid "Start here when AI tools seem unavailable. This sends one read-only test request."
 msgstr "当 AI 工具看起来不可用时，先从这里开始。它只发送一次只读测试请求。"
 
-msgid "Run basic AI service check"
-msgstr "运行基础 AI 服务检查"
+msgid "Run basic connection check"
+msgstr "运行基础连接检查"
 
-msgid "Detailed service checks"
-msgstr "详细服务检查"
+msgid "Detailed diagnostics"
+msgstr "详细诊断"
 
 msgid "Search, image suggestions, content library, and scheduled review checks for troubleshooting."
 msgstr "用于排查搜索、图片建议、内容库和定期站点检查。"
@@ -5114,14 +5114,8 @@ msgstr "保持基础站点描述、受众、语气和关键词清晰。"
 msgid "Open advanced tools"
 msgstr "打开高级工具"
 
-msgid "Find diagnostics, content library setup, and low-frequency workbench entries."
-msgstr "查找诊断、内容库设置和低频工作台入口。"
-
-msgid "Advanced and troubleshooting"
-msgstr "高级与故障排查"
-
-msgid "Setup, service checks, fallback previews, and lower-frequency workbench entries."
-msgstr "设置、服务检查、备用预览和低频工作台入口。"
+msgid "Open the single directory for setup, diagnostics, and lower-frequency entries."
+msgstr "打开设置、诊断和低频入口的统一目录。"
 
 msgid "Fill the basic site brief AI needs for consistent suggestions. SEO, AEO, GEO, and claim rules stay folded under advanced guidance."
 msgstr "填写 AI 生成稳定建议所需的基础站点简介。SEO、AEO、GEO 和声明规则会折叠在高级指导中。"
@@ -5192,6 +5186,27 @@ msgstr "高级工具箱目录"
 msgid "Advanced Toolbox entries"
 msgstr "高级工具箱入口"
 
+msgid "Setup"
+msgstr "设置"
+
+msgid "Prepare reference context before running review tools."
+msgstr "运行复核工具前先准备参考上下文。"
+
+msgid "Diagnostics"
+msgstr "诊断"
+
+msgid "Check Cloud-backed reachability without changing WordPress."
+msgstr "检查 Cloud 支撑的连通性，不更改 WordPress。"
+
+msgid "Open read-only findings and current site evidence."
+msgstr "打开只读问题和当前站点证据。"
+
+msgid "Planning and handoff"
+msgstr "规划与移交"
+
+msgid "Preview scheduled-review artifacts before any governed follow-up."
+msgstr "在任何受治理的后续操作前预览定期复核工件。"
+
 msgid "After the library is ready, article suggestions can find related public content without showing index settings to daily users."
 msgstr "内容库准备好后，文章建议可以查找相关公开内容，而不用把索引设置暴露给日常用户。"
 
@@ -5204,14 +5219,14 @@ msgstr "连接服务前，AI 搜索、图片建议、内容库搜索和托管检
 msgid "AI image generation governance"
 msgstr "AI 生图治理"
 
-msgid "AI service check groups"
-msgstr "AI 服务检查分组"
+msgid "Connection diagnostic groups"
+msgstr "连接诊断分组"
 
-msgid "AI service checks"
-msgstr "AI 服务检查"
+msgid "Connection diagnostics"
+msgstr "连接诊断"
 
-msgid "AI Service Checks"
-msgstr "AI 服务检查"
+msgid "Connection Diagnostics"
+msgstr "连接诊断"
 
 msgid "AI service is not connected."
 msgstr "AI 服务尚未连接。"

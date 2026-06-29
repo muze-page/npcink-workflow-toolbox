@@ -553,10 +553,13 @@ administrator may explicitly run Cloud analysis and render the suggestion-only
 Cloud batch owner, local queue, Core proposal creator, or WordPress write path.
 Nightly Inspection fallback
 preview settings, Pro Cloud Runtime checks, and run recovery live under folded
-detailed checks inside the secondary **AI Service Checks** deep-link panel, not
+detailed checks inside the secondary **Connection Diagnostics** deep-link panel, not
 the visible top-level tabs or default Overview view. Site Knowledge status and
 refresh controls live in the secondary **Content Library Setup** panel reached
-from Advanced, not as a default top-level tab.
+from the Advanced Setup group, not as a default top-level tab. Advanced is the
+single low-frequency directory and groups secondary links as Setup,
+Diagnostics, Review, and Planning/Handoff instead of duplicating them on
+Overview.
 
 The admin **Image Handling** tab groups image-first buttons by operator job and
 defaults to **Image Optimization**, with **Batch Optimize Images** as the first
@@ -686,13 +689,14 @@ replacement callbacks before Toolbox presents it as a fixed best-practice
 button. Toolbox may render review sets, selected previews, proposal submission,
 and returned execution outcomes; it must not own the batch execution semantics.
 
-AI Service Checks default to one basic read-only service test inside the
-secondary `cloud-checks` panel. Detailed checks use compact folded tabs for
-Cloud-managed search, image-source, preview-only media derivative, content
-library search, and scheduled review recovery. Each panel opens directly into
-the relevant Toolbox ability reachability check instead of repeating provider
-ownership detail. Search checks use Cloud auto execution only; provider
-selection, Jina Reader toggles, routing diagnostics, Cloud API key
+Connection Diagnostics default to one basic read-only connection test inside
+the secondary `cloud-checks` panel reached from the Advanced Diagnostics group.
+Detailed checks use compact folded tabs for Cloud-managed search, image-source,
+preview-only media derivative, content library search, and scheduled review
+recovery. Each panel opens directly into the relevant Toolbox ability
+reachability check instead of repeating provider ownership detail. Search checks
+use Cloud auto execution only; provider selection, Jina Reader toggles, routing
+diagnostics, Cloud API key
 verification, entitlement, quota, billing, and request logs belong in Cloud
 Addon or Cloud service-plane surfaces. Image derivative checks may generate
 short-lived Cloud previews only, including bounded aspect-ratio crop overrides

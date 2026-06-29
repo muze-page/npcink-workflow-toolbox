@@ -318,6 +318,33 @@
 	max-width: 980px;
 }
 
+.npcink-toolbox__advanced-group {
+	display: grid;
+	gap: 8px;
+	align-content: start;
+	padding-top: 10px;
+	border-top: 1px solid #dcdcde;
+}
+
+.npcink-toolbox__advanced-group-heading {
+	display: grid;
+	gap: 3px;
+}
+
+.npcink-toolbox__advanced-group-heading h3 {
+	margin: 0;
+	color: #1d2327;
+	font-size: 13px;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__advanced-group-heading p {
+	margin: 0;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
 .npcink-toolbox__site-knowledge {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
