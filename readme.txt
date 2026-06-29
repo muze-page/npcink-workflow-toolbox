@@ -1,4 +1,4 @@
-=== Npcink Toolbox ===
+=== Npcink Workflow Toolbox ===
 Contributors: npcink
 Tags: ai, seo, editorial-workflow, media, content
 Requires at least: 6.9
@@ -8,12 +8,12 @@ Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Review-only WordPress content support: fixed editorial buttons, image candidates, media ALT review, site knowledge, and governed handoff plans.
+Fixed AI workflow buttons for WordPress operators, with review-only suggestions and governed handoff plans.
 
 == Description ==
 
-Npcink Toolbox helps WordPress editors and site administrators prepare
-reviewable content-support work around human-written articles.
+Npcink Workflow Toolbox helps WordPress operators turn proven AI-assisted
+content and site-operations practices into fixed, review-only buttons.
 
 The plugin provides a WordPress admin surface and post-editor panel for:
 
@@ -44,7 +44,7 @@ Toolbox.
 
 = Good Fit =
 
-Npcink Toolbox is useful when:
+Npcink Workflow Toolbox is useful when:
 
 * editors want AI-assisted content checks without one-click publishing;
 * administrators need fixed buttons for repeatable review workflows;
@@ -56,19 +56,20 @@ Npcink Toolbox is useful when:
 
 = Not A Good Fit =
 
-Npcink Toolbox is not a standalone article generator, SEO autopilot, media import
-bot, indexing system, or workflow scheduler. Cloud-backed features require a
-connected Npcink Cloud Addon or compatible host runtime. Without that runtime,
-the plugin still shows local settings, context forms, and review-only local
-planning surfaces, but Cloud-managed searches and AI runtime actions fail closed.
+Npcink Workflow Toolbox is not a standalone article generator, SEO autopilot,
+media import bot, indexing system, or workflow scheduler. Cloud-backed features
+require a connected Npcink Cloud Addon or compatible host runtime. Without that
+runtime, the plugin still shows local settings, context forms, and review-only
+local planning surfaces, but Cloud-managed searches and AI runtime actions fail
+closed.
 
 == Installation ==
 
 1. Upload the `npcink-toolbox` folder to `/wp-content/plugins/`, or install it
    through the WordPress plugin installer.
-2. Activate **Npcink Toolbox** in WordPress.
+2. Activate **Npcink Workflow Toolbox** in WordPress.
 3. Open **Npcink -> Toolbox** when a Npcink menu is available, or **Tools ->
-   Npcink Toolbox** for standalone installs.
+   Npcink Workflow Toolbox** for standalone installs.
 4. Fill the Site Context fields with non-secret positioning, audience, brand
    voice, keyword, and SEO/AEO/GEO guidance.
 5. Connect the required Npcink Cloud Addon or host runtime before using
@@ -77,9 +78,10 @@ planning surfaces, but Cloud-managed searches and AI runtime actions fail closed
 
 == External Services ==
 
-Npcink Toolbox can contact external services only after an administrator uses a
-feature that requires the connected service or configures the related runtime.
-The plugin does not load third-party JavaScript or CSS from those services.
+Npcink Workflow Toolbox can contact external services only after an
+administrator uses a feature that requires the connected service or configures
+the related runtime. The plugin does not load third-party JavaScript or CSS from
+those services.
 
 = Npcink Cloud runtime =
 
@@ -87,11 +89,11 @@ Used for Cloud-managed web search, image-source candidates, site knowledge
 search/sync/status, hosted AI content-support suggestions, reviewed AI image
 candidates, and Pro Cloud Runtime inspection details.
 
-Npcink Toolbox is designed to work with Npcink Cloud, the official Npcink hosted
-runtime service. The plugin does not include or hard-code a Cloud service
-endpoint. A site administrator connects to Npcink Cloud through a companion
-connector such as Npcink Cloud Addon, or a host may provide an equivalent
-runtime through documented filters.
+Npcink Workflow Toolbox is designed to work with the official Npcink hosted
+runtime service, Npcink Cloud. The plugin does not include or hard-code a Cloud
+service endpoint. A site administrator connects to Npcink Cloud through a
+companion connector such as Npcink Cloud Addon, or a host may provide an
+equivalent runtime through documented filters.
 
 Npcink Cloud is responsible for account/key issuance, service terms, privacy
 policy, data retention, hosted runtime execution, and any provider subprocessors
@@ -144,7 +146,7 @@ Privacy: https://www.pexels.com/privacy-policy/
 
 == Privacy ==
 
-Npcink Toolbox stores two local WordPress options:
+Npcink Workflow Toolbox stores two local WordPress options:
 
 * `npcink_toolbox_settings` for feature flags and local settings;
 * `npcink_toolbox_content_context` for non-secret site guidance.

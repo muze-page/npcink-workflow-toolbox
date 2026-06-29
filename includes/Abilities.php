@@ -28,7 +28,7 @@ final class Abilities {
 			npcink_abilities_toolkit_register_category(
 				'npcink-toolbox',
 				array(
-					'label'       => __( 'Npcink Toolbox', 'npcink-toolbox' ),
+					'label'       => __( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
 					'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
 				)
 			);
@@ -53,7 +53,7 @@ final class Abilities {
 		wp_register_ability_category(
 			'npcink-toolbox',
 			array(
-				'label'       => __( 'Npcink Toolbox', 'npcink-toolbox' ),
+				'label'       => __( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
 				'description' => __( 'External research, image, knowledge, and fixed-flow tools.', 'npcink-toolbox' ),
 			)
 		);

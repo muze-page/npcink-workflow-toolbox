@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Npcink Toolbox
- * Description: Review-only WordPress content support for image candidates, site knowledge, SEO/AEO/GEO guidance, and governed handoff plans.
+ * Plugin Name: Npcink Workflow Toolbox
+ * Description: Fixed AI workflow buttons for WordPress operators, with review-only suggestions and governed handoff plans.
  * Version: 0.1.1
  * Requires at least: 6.9
  * Requires PHP: 8.0

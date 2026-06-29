@@ -103,7 +103,7 @@ function toolbox_assert( bool $condition, string $message ): void {
 }
 
 $main = file_get_contents( $root . '/npcink-toolbox.php' );
-toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Toolbox' ), 'Plugin header is present.' );
+toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Workflow Toolbox' ), 'Plugin header is present.' );
 toolbox_assert( false !== strpos( $main, 'Text Domain: npcink-toolbox' ) && false !== strpos( $main, 'Domain Path: /languages' ), 'Plugin header declares the Toolbox text domain and languages path.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Article_Audio_Playback.php' ), 'Plugin bootstrap loads the frontend article audio playback entrypoint.' );
@@ -967,7 +967,7 @@ toolbox_assert( false !== $core_handoff_receipt_ui_smoke && false !== strpos( $c
 toolbox_assert( false !== strpos( $core_handoff_receipt_ui_smoke, 'This loads the real admin JavaScript in a small DOM and mocks REST responses' ) && false !== strpos( $core_handoff_receipt_ui_smoke, 'without creating' ), 'Core handoff receipt UI smoke documents that it does not create real WordPress, Adapter, or Core records.' );
 
 $zh_cn_po = file_get_contents( $root . '/languages/npcink-toolbox-zh_CN.po' );
-toolbox_assert( false !== $zh_cn_po && false !== strpos( $zh_cn_po, 'Language: zh_CN' ) && false !== strpos( $zh_cn_po, 'msgid "Npcink Toolbox"' ) && false !== strpos( $zh_cn_po, 'msgstr "Npcink Toolbox"' ) && false !== strpos( $zh_cn_po, 'msgid "Settings"' ) && false !== strpos( $zh_cn_po, 'msgstr "设置"' ), 'Bundled zh_CN translation preserves the Npcink Toolbox brand and translates the plugin Settings shortcut.' );
+toolbox_assert( false !== $zh_cn_po && false !== strpos( $zh_cn_po, 'Language: zh_CN' ) && false !== strpos( $zh_cn_po, 'msgid "Npcink Workflow Toolbox"' ) && false !== strpos( $zh_cn_po, 'msgstr "Npcink Workflow Toolbox"' ) && false !== strpos( $zh_cn_po, 'msgid "Settings"' ) && false !== strpos( $zh_cn_po, 'msgstr "设置"' ), 'Bundled zh_CN translation preserves the Npcink Workflow Toolbox brand and translates the plugin Settings shortcut.' );
 preg_match_all( '/(?:__|esc_html__|esc_attr__|esc_html_e|esc_attr_e|_x|esc_html_x|esc_attr_x)\(\s*(["\'])((?:\\\\.|(?!\1).)*)\1\s*,\s*(["\'])npcink-toolbox\3/s', $admin_page, $admin_page_translation_matches );
 $missing_admin_page_translations = array();
 foreach ( array_unique( $admin_page_translation_matches[2] ?? array() ) as $admin_page_msgid ) {

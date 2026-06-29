@@ -1,10 +1,10 @@
 # WordPress.org Submission Pack
 
-Status: prepared for the Npcink Toolbox 0.1.1 WordPress.org plugin submission.
+Status: prepared for the Npcink Workflow Toolbox 0.1.1 WordPress.org plugin submission.
 
 ## Plugin Details
 
-- Plugin name: Npcink Toolbox
+- Plugin name: Npcink Workflow Toolbox
 - Suggested slug: npcink-toolbox
 - Version: 0.1.1
 - Requires at least: 6.9
@@ -16,11 +16,11 @@ Status: prepared for the Npcink Toolbox 0.1.1 WordPress.org plugin submission.
 
 ## Short Description
 
-Review-only WordPress content support: fixed editorial buttons, image candidates, media ALT review, site knowledge, and governed handoff plans.
+Fixed AI workflow buttons for WordPress operators, with review-only suggestions and governed handoff plans.
 
 ## Reviewer Note
 
-Npcink Toolbox is a review-only WordPress operator surface for AI-assisted content and site-operations workflows. It returns suggestions, candidates, previews, and governed handoff plans. It does not publish posts, approve proposals, import media, create terms, update SEO metadata, mutate media metadata, or run a local workflow queue as part of the default content-support flow.
+Npcink Workflow Toolbox is a review-only WordPress operator surface for fixed AI-assisted content and site-operations workflows. It returns suggestions, candidates, previews, and governed handoff plans. It does not publish posts, approve proposals, import media, create terms, update SEO metadata, mutate media metadata, or run a local workflow queue as part of the default content-support flow.
 
 Cloud-backed features require a connected Npcink Cloud Addon or compatible host runtime. Npcink Cloud is the official Npcink hosted runtime service. The plugin does not include or hard-code a Cloud service endpoint; administrators connect the runtime through a companion connector or host-provided filters.
 

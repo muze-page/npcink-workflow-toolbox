@@ -2,15 +2,15 @@
 
 Status: active for the first Toolbox build.
 
-Npcink Toolbox is the WordPress operator-facing AI tool surface: it gives
-site owners and editors buttons for Cloud-managed web search, Cloud-managed
-image-source candidates, Cloud-managed site knowledge abilities, and repeatable
-AI-assisted content-support workflows.
+Npcink Workflow Toolbox is the WordPress operator-facing AI workflow surface:
+it gives site owners and editors fixed buttons for Cloud-managed web search,
+Cloud-managed image-source candidates, Cloud-managed site knowledge abilities,
+and repeatable AI-assisted content-support workflows.
 
 ## One-Sentence Positioning
 
-Npcink Toolbox turns WordPress content-support abilities into safe,
-click-driven operator tools around human-written articles.
+Npcink Workflow Toolbox turns proven AI-assisted WordPress operations and
+content-support abilities into fixed, review-only buttons for site operators.
 
 ## Relationship To OpenClaw
 
@@ -72,7 +72,7 @@ semantics.
 
 ## Non-Goals
 
-Npcink Toolbox does not own:
+Npcink Workflow Toolbox does not own:
 
 - Core proposal records, approvals, audit logs, or app-key governance;
 - reusable WordPress ability packages owned by `npcink-abilities-toolkit`;

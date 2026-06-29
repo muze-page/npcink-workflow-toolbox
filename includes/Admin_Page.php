@@ -29,7 +29,7 @@ final class Admin_Page {
 		if ( $this->has_npcink_parent_menu() ) {
 			$this->hook_suffix = add_submenu_page(
 				self::PARENT_MENU_SLUG,
-				__( 'Npcink Toolbox', 'npcink-toolbox' ),
+				__( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
 				__( 'Toolbox', 'npcink-toolbox' ),
 				'manage_options',
 				self::MENU_SLUG,
@@ -40,8 +40,8 @@ final class Admin_Page {
 		}
 
 		$this->hook_suffix = add_management_page(
-			__( 'Npcink Toolbox', 'npcink-toolbox' ),
-			__( 'Npcink Toolbox', 'npcink-toolbox' ),
+			__( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
+			__( 'Npcink Workflow Toolbox', 'npcink-toolbox' ),
 			'manage_options',
 			self::MENU_SLUG,
 			array( $this, 'render' )
@@ -475,7 +475,7 @@ final class Admin_Page {
 		$site_ops_preview = $this->site_ops_insights_preview_from_request( $content_context, $cloud_ready );
 		?>
 		<div class="wrap npcink-toolbox">
-			<h1><?php esc_html_e( 'Npcink Toolbox', 'npcink-toolbox' ); ?></h1>
+			<h1><?php esc_html_e( 'Npcink Workflow Toolbox', 'npcink-toolbox' ); ?></h1>
 			<p class="npcink-toolbox__scope"><?php esc_html_e( 'Check your site, improve images, and prepare safe AI suggestions without changing WordPress automatically.', 'npcink-toolbox' ); ?></p>
 			<?php
 			if ( ! $cloud_ready ) {

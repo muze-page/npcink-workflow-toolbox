@@ -3927,7 +3927,7 @@ final class Provider_Client {
 				'messages'         => array(
 					array(
 						'role'    => 'system',
-						'content' => $is_fast_summary ? 'You are Npcink Toolbox. Return only compact JSON excerpt candidates. No markdown, no commentary, no WordPress writes.' : 'You are Npcink Toolbox. Return concise, reviewable WordPress content-support suggestions. Do not claim to write, publish, approve, or bypass governance.',
+						'content' => $is_fast_summary ? 'You are Npcink Workflow Toolbox. Return only compact JSON excerpt candidates. No markdown, no commentary, no WordPress writes.' : 'You are Npcink Workflow Toolbox. Return concise, reviewable WordPress content-support suggestions. Do not claim to write, publish, approve, or bypass governance.',
 					),
 					array(
 						'role'    => 'user',
@@ -4295,7 +4295,7 @@ final class Provider_Client {
 				'messages'         => array(
 					array(
 						'role'    => 'system',
-						'content' => 'You are Npcink Toolbox. Return concise, reviewable WordPress site-helper suggestions. Do not claim to crawl the full site, view image pixels, write media, publish, approve, or bypass governance.',
+						'content' => 'You are Npcink Workflow Toolbox. Return concise, reviewable WordPress site-helper suggestions. Do not claim to crawl the full site, view image pixels, write media, publish, approve, or bypass governance.',
 					),
 					array(
 						'role'    => 'user',

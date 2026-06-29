@@ -5892,7 +5892,7 @@ final class Rest_Controller {
 			'npcink_toolbox_disabled',
 			sprintf(
 				/* translators: %s: feature label. */
-				__( 'Enable %s in Npcink Toolbox settings before running this tool.', 'npcink-toolbox' ),
+				__( 'Enable %s in Npcink Workflow Toolbox settings before running this tool.', 'npcink-toolbox' ),
 				$label
 			),
 			array( 'status' => 403 )
