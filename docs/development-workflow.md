@@ -126,6 +126,9 @@ path before creating commits for a PR. Do not use GitHub's Git Data API for
 normal branch publishing; it is only an emergency fallback and can create commit
 objects that do not match the local commit SHA.
 
+For the detailed GitHub CLI/Git CLI publication path and timeout diagnostics,
+use the [GitHub Publishing Runbook](github-publishing-runbook.md).
+
 ## Publication Status Gate
 
 Local commit cleanup is not the same as publishing. Before calling a milestone

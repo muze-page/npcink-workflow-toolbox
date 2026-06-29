@@ -18,6 +18,7 @@ Start from the active documents below before changing code.
 - [Development Workflow](development-workflow.md)
 - [AI Development Quality Workflow](ai-development-quality-workflow.md)
 - [AI Change Envelope Template](ai-change-envelope-template.md)
+- [GitHub Publishing Runbook](github-publishing-runbook.md)
 - [Security And Performance Release Gate](security-performance-release-gate.md)
 - [WordPress.org Release Gate](wordpress-org-release-gate.md)
 - [WordPress.org Submission](wordpress-org-submission.md)
