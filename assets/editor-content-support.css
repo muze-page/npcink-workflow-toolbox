@@ -423,6 +423,25 @@
 	color: #646970;
 }
 
+.npcink-toolbox-editor-support__review-points {
+	display: grid;
+	gap: 4px;
+	margin: 6px 0 0;
+	padding: 0 0 0 16px;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+	list-style: disc;
+}
+
+.npcink-toolbox-editor-support__review-points li {
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+}
+
 .npcink-toolbox-editor-support__article-checkup-groups {
 	display: grid;
 	gap: 10px;

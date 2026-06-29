@@ -1127,11 +1127,20 @@
 			items.slice(0, 6).map((item, index) => {
 				const title = readableItemText(item.name || item.title || item.label, __('Review note', 'npcink-workflow-toolbox'));
 				const detail = readableItemText(item.detail || item.reason || item.value || item.summary || '', '');
+				const detailPoints = Array.isArray(item.detail_points)
+					? item.detail_points.map((point) => readableItemText(point, '')).filter(Boolean).slice(0, 5)
+					: [];
 				return createElement(
 					'li',
 					{ key: String(index) + '-' + String(title) },
 					createElement('strong', null, title),
-					detail ? createElement('span', null, detail) : null
+					detailPoints.length
+						? createElement(
+							'ul',
+							{ className: 'npcink-toolbox-editor-support__review-points' },
+							detailPoints.map((point, pointIndex) => createElement('li', { key: String(pointIndex) + '-' + point }, point))
+						)
+						: (detail ? createElement('span', null, detail) : null)
 				);
 			})
 		);
@@ -3568,6 +3577,71 @@
 		}, {});
 	}
 
+	function paragraphReviewRawText(section) {
+		if (!section || typeof section !== 'object') {
+			return '';
+		}
+		const result = section.result && typeof section.result === 'object' ? section.result : {};
+		return readableItemText(section.output_text || section.text || result.output_text || result.text || result.content || (result.message && result.message.content) || '', '');
+	}
+
+	function paragraphReviewMarkdownLabel(key) {
+		const normalized = String(key || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+		if (normalized === 'clarity_check') {
+			return __('Clarity check', 'npcink-workflow-toolbox');
+		}
+		if (normalized === 'fact_gaps') {
+			return __('Fact gaps', 'npcink-workflow-toolbox');
+		}
+		if (normalized === 'tone_consistency') {
+			return __('Tone consistency', 'npcink-workflow-toolbox');
+		}
+		if (normalized === 'editing_suggestions') {
+			return __('Editing suggestions', 'npcink-workflow-toolbox');
+		}
+		if (normalized === 'assumptions_to_verify') {
+			return __('Assumptions to verify', 'npcink-workflow-toolbox');
+		}
+		return formatMetaLabel(normalized || key);
+	}
+
+	function paragraphReviewMarkdownPoints(detail) {
+		const cleaned = String(detail || '')
+			.replace(/\s+/g, ' ')
+			.replace(/^[-:\s]+/, '')
+			.trim();
+		if (!cleaned) {
+			return [];
+		}
+		const points = cleaned
+			.split(/\s+-\s+/)
+			.map((point) => point.replace(/^[-:\s]+/, '').trim())
+			.filter(Boolean);
+		return (points.length > 1 ? points : [cleaned]).slice(0, 5);
+	}
+
+	function paragraphReviewMarkdownItems(section) {
+		const text = paragraphReviewRawText(section);
+		if (!text || text.indexOf('###') < 0) {
+			return [];
+		}
+		const items = [];
+		const headingPattern = /###\s*([A-Za-z0-9_-]+)\s*-?\s*([\s\S]*?)(?=\s*###\s*[A-Za-z0-9_-]+\s*-?|\s*$)/g;
+		let match = headingPattern.exec(text);
+		while (match && items.length < 6) {
+			const points = paragraphReviewMarkdownPoints(match[2] || '');
+			if (points.length) {
+				items.push({
+					name: paragraphReviewMarkdownLabel(match[1]),
+					detail_points: points,
+					action_policy: 'operator_review_only_no_insert',
+				});
+			}
+			match = headingPattern.exec(text);
+		}
+		return items;
+	}
+
 	function paragraphCheckItems(section) {
 		const rawOutput = hostedOutputObject(section);
 		const output = paragraphReviewVisibleOutput(rawOutput);
@@ -3586,6 +3660,10 @@
 		})).filter((item) => item.detail);
 		if (items.length) {
 			return items.concat(localItems);
+		}
+		const markdownItems = paragraphReviewMarkdownItems(section);
+		if (markdownItems.length) {
+			return markdownItems.concat(localItems);
 		}
 		if (localItems.length) {
 			return localItems;
