@@ -659,21 +659,6 @@ msgstr "在编辑已审阅选择后生成 Core 就绪计划。"
 msgid "Use after reviewed draft, selected image, or editor choices exist."
 msgstr "在已有已审阅草稿、已选图片或编辑器选择后使用。"
 
-msgid "Reviewed Draft Handoff"
-msgstr "已审阅草稿交接"
-
-msgid "Reviewed Draft Core Handoff"
-msgstr "已审阅草稿 Core 交接"
-
-msgid "Prepare a Core-ready article_write_plan only after a human-reviewed draft exists. Toolbox does not submit or approve the proposal."
-msgstr "仅在已有人工审阅草稿后准备 Core 就绪的 article_write_plan。Toolbox 不提交或审批提案。"
-
-msgid "Use only after a human-reviewed draft exists; prepare a Core-ready article_write_plan without submitting or approving it."
-msgstr "仅在已有人工审阅草稿后使用；准备 Core 就绪的 article_write_plan，但不提交或批准。"
-
-msgid "Use only when a human-reviewed draft already exists. It prepares a Core review plan and never writes or submits the article."
-msgstr "仅在已有人工审阅草稿后使用。它只准备 Core 审核计划，不会写入或提交文章。"
-
 msgid "Media"
 msgstr "媒体"
 
@@ -5702,17 +5687,17 @@ msgstr "准备研究、图片、知识、大纲和交接上下文。"
 msgid "Review Handoffs"
 msgstr "审核交接"
 
-msgid "Draft Handoff"
-msgstr "草稿交接"
-
-msgid "Prepare Core review plans only after a reviewed draft exists."
-msgstr "仅在已有已审阅草稿后准备 Core 审核计划。"
-
 msgid "Prepare research, image, site knowledge, outline, and handoff context when the editor sidebar is not enough. Nothing writes the article body."
 msgstr "当编辑器侧边栏不够用时，准备研究、图片、站点知识、大纲和交接上下文。不会写入文章正文。"
 
-msgid "Check public content opportunities or prepare a reviewed draft for Core handoff. Article writing stays with the editor."
-msgstr "检查公开内容机会，或把已审阅草稿准备为 Core 交接。文章正文仍由编辑负责。"
+msgid "Find practical update, linking, expansion, or image opportunities from public content samples. Article writing stays with the editor."
+msgstr "从公开内容样本中找出可更新、补充内链、扩展或增加图片的实际机会。文章写作仍在编辑器中完成。"
+
+msgid "Opportunity checks only"
+msgstr "仅检查内容机会"
+
+msgid "This page returns reviewable suggestions only. Reviewed draft import remains available through REST and Abilities when a real import workflow exists."
+msgstr "此页面只返回可审阅建议。已审阅草稿导入在有真实导入流程时仍可通过 REST 和 Abilities 使用。"
 
 msgid "Preparation only"
 msgstr "仅准备材料"
@@ -5732,20 +5717,14 @@ msgstr "审核交接"
 msgid "Use only after reviewed inputs exist and a Core-ready handoff is needed."
 msgstr "仅在已有审阅输入且需要 Core-ready 交接时使用。"
 
-msgid "Start with existing media-library images. Content preparation and reviewed draft handoffs live in their own tab."
-msgstr "从媒体库中的已有图片开始。内容准备和已审阅草稿交接放在单独的标签页中。"
-
-msgid "Use the media library for one image, or use this page for selected image batches. Content review and draft handoffs live in their own tab."
-msgstr "单张图片请从媒体库进入；批量处理所选图片时使用本页。内容检查和草稿交接在单独标签页中。"
+msgid "Use the media library for one image, or use this page for selected image batches. Content review lives in its own tab."
+msgstr "单张图片请从媒体库进入；批量处理所选图片时使用本页。内容检查在单独标签页中。"
 
 msgid "Image tasks"
 msgstr "图片任务"
 
 msgid "Optimize existing images, plan bounded media support, or review image text suggestions. Nothing is changed automatically."
 msgstr "优化已有图片、规划有限媒体支持，或审阅图片文字建议。不会自动更改任何内容。"
-
-msgid "Work with existing media-library images. Content preparation and reviewed draft handoffs live in their own tab."
-msgstr "处理媒体库中的已有图片。内容准备和已审阅草稿交接放在单独标签页中。"
 
 msgid "Optimize existing images or prepare reviewed ALT suggestions. Nothing is written automatically."
 msgstr "优化已有图片，或准备已审阅的 ALT 建议。不会自动写入任何内容。"
@@ -5918,9 +5897,6 @@ msgstr "批量图片优化"
 msgid "Use selected media-library images or a bounded sample."
 msgstr "使用所选媒体库图片或有限样本。"
 
-msgid "Use the media library for one image, or use this page for selected image batches. Content preparation and reviewed draft handoffs live in their own tab."
-msgstr "单张图片请从媒体库进入；批量处理所选图片时使用本页。内容准备和已审阅草稿交接在单独标签页中。"
-
 msgid "Batch work starts from selected media-library images or a bounded sample. Nothing is written automatically."
 msgstr "批量任务从所选媒体库图片或有限样本开始。不会自动写入任何内容。"
 
@@ -6040,21 +6016,6 @@ msgstr "批量补全缺失 ALT"
 
 msgid "Find images that need ALT text, review suggestions, then submit selected rows for review."
 msgstr "查找需要 ALT 文本的图片，审阅建议，然后将选中行提交审核。"
-
-msgid "Submit Reviewed Draft for Review"
-msgstr "提交已审阅草稿审核"
-
-msgid "Use only when a human-reviewed draft already exists. It prepares a review plan and never writes or submits the article."
-msgstr "仅在已有人工审阅草稿后使用。它只准备审核计划，不会写入或提交文章。"
-
-msgid "Low-frequency handoff after a draft is already reviewed."
-msgstr "低频使用；仅在草稿已审阅后交接。"
-
-msgid "Check public content opportunities first. Reviewed-draft handoff is a secondary path; article writing stays with the editor."
-msgstr "优先检查公开内容机会。已审阅草稿交接是次级路径；文章写作仍在编辑器中完成。"
-
-msgid "Default checks find opportunities. Handoff tools only prepare review materials and never write the article body."
-msgstr "默认检查用于发现机会。交接工具只准备审核材料，不会写入文章正文。"
 
 msgid "Review selected image ALT suggestions before submitting them for review."
 msgstr "提交审核前，先审阅选中的图片 ALT 建议。"

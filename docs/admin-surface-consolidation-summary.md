@@ -30,9 +30,11 @@ selected-image workbenches. The former single-article image text helper is
 removed from the backend because it needs current editor context. A separate
 **Batch Image Text Review** tool now builds a small selected media-library
 review set and can prepare a Core handoff draft without creating proposals or
-writing media metadata. **Content Review** owns site content opportunity checks
-and reviewed draft handoff; the retired article assistant URL falls back to the
-reviewed draft handoff instead of restoring a daily writing path.
+writing media metadata. **Content Review** owns site content opportunity checks;
+the reviewed draft handoff is no longer a backend tool and remains available
+only through REST/Abilities for future import workflows. The retired article
+assistant and article-plan URLs fall back to the content opportunity check
+instead of restoring a daily writing path.
 Deprecated `tab=image&tool=optimize` and
 `toolbox_tab=tools&toolbox_tool=media-derivative` links now canonicalize to
 Batch Optimize Images.
@@ -106,8 +108,8 @@ The following gates passed after the changes:
 Browser verification during the earlier consolidation pass confirmed:
 
 - Image Handling opens by default to Image Tools and Batch Optimize Images.
-- Content Review contains the site content opportunity check and reviewed draft
-  Core handoff.
+- Content Review contains the site content opportunity check only; reviewed
+  draft write plans remain route/Ability-only.
 - Site Knowledge returned `200` after Cloud quota was updated.
 - Content Library Setup status rendered as ready with no console warning or
   error.

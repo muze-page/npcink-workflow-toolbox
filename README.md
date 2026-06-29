@@ -303,9 +303,9 @@ The legacy Article Assistant REST flow can still compose one local
 `article_draft_v1` workbench artifact from topic, evidence candidates,
 image-source candidates, site context, operator notes, and an optional reviewed
 draft. It is route-only compatibility, not an operator-facing tool and not a
-public Toolbox ability. New reviewed draft handoffs should use
-`npcink-toolbox/build-article-write-plan`; normal editorial work should stay in
-the editor content-support sidebar.
+public Toolbox ability. Reviewed draft write-plan handoffs should use
+`npcink-toolbox/build-article-write-plan` through REST or Abilities; normal
+editorial work should stay in the editor content-support sidebar.
 
 Toolbox fixed buttons are the operator-click surface for repeatable OpenClaw
 flows. They should reuse the same ability ids, plan artifact shapes, Adapter
@@ -323,8 +323,10 @@ The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
 The admin **Content Review** surface keeps site content opportunity checks as
-the default path and exposes **Submit Reviewed Draft for Review** as a
-secondary handoff for drafts that have already been reviewed by a person.
+the default path. The reviewed-draft write-plan route and Ability stay
+available for machine clients, future Cloud bulk import, and explicit API
+composition, but they are not exposed as a backend operator tool while there is
+no active external-draft import workflow.
 
 The post editor also exposes **Npcink Content Support** as a plugin sidebar
 opened from the editor top toolbar. Its visible buttons run fixed flows for
@@ -470,12 +472,14 @@ and publish-readiness support because those actions need the current article con
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
 The admin Content Review surface keeps only the bounded site content
-opportunity check plus reviewed draft Core handoff. Media ALT/caption helper
-contracts remain available to editor-sidebar flows and future batch review
-sets, where the operator has either current article context or an explicit
-selected review set. In all cases, Toolbox samples only the supplied public-site
-or media metadata, Cloud produces reviewable suggestions, and no media library,
-post, SEO, proposal, crawler, or queue state is changed locally.
+opportunity check. Reviewed draft write-plan contracts remain available only
+through REST and Abilities for future bulk import or machine-client composition.
+Media ALT/caption helper contracts remain available to editor-sidebar flows and
+future batch review sets, where the operator has either current article context
+or an explicit selected review set. In all cases, Toolbox samples only the
+supplied public-site or media metadata, Cloud produces reviewable suggestions,
+and no media library, post, SEO, proposal, crawler, or queue state is changed
+locally.
 Publish preflight, summary suggestions, category suggestions, tag suggestions,
 internal-link candidates, and image candidates belong in the editor sidebar.
 Internal-link candidate assembly is delegated to

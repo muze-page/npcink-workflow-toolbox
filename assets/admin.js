@@ -6614,8 +6614,8 @@
 				requestedTool = 'ai-content-snapshot-suggestions';
 				canonicalizeToolUrl = true;
 			}
-			if (rawRequestedTool === 'article-assistant') {
-				requestedTool = 'article-plan';
+			if (rawRequestedTool === 'article-assistant' || rawRequestedTool === 'article-plan') {
+				requestedTool = 'ai-content-snapshot-suggestions';
 				canonicalizeToolUrl = true;
 			}
 

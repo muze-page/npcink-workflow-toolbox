@@ -131,9 +131,11 @@ Article-level featured-image recommendation and media brief planning belong in t
 Image ALT is a separate selected media-library review-set surface that can
 prepare a Core handoff draft without scanning the whole library, creating
 proposals, approving, executing, or writing media metadata.
-The separate Content Review tab contains site content opportunity checks and
-reviewed draft handoffs. The old article-brief and article-assistant URLs remain
-compatibility paths, not operator-facing admin tools or public Abilities. Batch media entry points use
+The separate Content Review tab contains site content opportunity checks.
+Reviewed draft write plans remain route/Ability-only for future import
+workflows and machine clients. The old article-brief, article-assistant, and
+article-plan URLs remain compatibility paths that fall back to the content
+opportunity check, not operator-facing admin tools. Batch media entry points use
 `tab=image&tool=bulk-alt` and `tab=image&tool=batch-optimize`;
 deprecated `tool=optimize` and legacy `toolbox_tool=media-derivative` URLs
 canonicalize to Batch Optimize Images. The

@@ -512,11 +512,12 @@ Content Assistant product-surface discipline:
 4. keep provider raw responses and complete payloads inside collapsed result
    disclosures.
 
-The **Reviewed Draft Handoff** fallback tool has a dedicated panel for reviewed
-draft title, draft body, SEO hints, and risk level. Its result renderer shows
-`article_write_plan` workflow artifacts, the risk report, the final
-`npcink-abilities-toolkit/create-draft` action, and the Core from-plan handoff route. It does
-not submit the plan to Core or approve execution.
+The reviewed-draft write-plan flow remains available through REST and the
+`npcink-toolbox/build-article-write-plan` Ability for machine clients, future
+Cloud bulk import, and explicit API composition. It is no longer exposed as a
+backend admin tool because there is no active external-draft import workflow;
+the ordinary operator path is the editor sidebar plus content opportunity
+checks.
 
 The admin page defaults to an **Overview** surface for ordinary site owners,
 with one recommended next action, compact status rows for AI service, Site
@@ -556,11 +557,12 @@ single-article image text helper; article-specific image text needs current
 editor context in the editor sidebar. The separate **Batch Image ALT** group
 builds a small selected media-library review set and can prepare a Core handoff
 draft without creating a proposal or writing media metadata. The separate
-**Content Review** tab owns site content opportunity checks and reviewed draft handoffs.
+**Content Review** tab owns site content opportunity checks.
 The old Article Planning Bundle is not an operator-facing admin tool;
 `/flows/article-brief` remains available only as a compatibility REST route for
-OpenClaw or external AI callers, and the old `tool=article-assistant` URL falls
-back to the reviewed draft Core handoff.
+OpenClaw or external AI callers. The old `tool=article-assistant` and
+`tool=article-plan` URLs fall back to the content opportunity check instead of
+restoring draft-side backend tools.
 Batch entry points use `tab=image&tool=bulk-alt` and
 `tab=image&tool=batch-optimize`; deprecated `tool=optimize` and legacy
 `toolbox_tool=media-derivative` URLs remain accepted only as compatibility

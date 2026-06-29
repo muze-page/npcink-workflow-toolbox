@@ -3404,16 +3404,6 @@ final class Admin_Page {
 				'button'      => __( 'Find content opportunities', 'npcink-toolbox' ),
 				'custom'      => 'hosted_ai_site_helper',
 			),
-			array(
-					'surface'     => 'content-preparation',
-					'group'       => __( 'Draft Handoff', 'npcink-toolbox' ),
-					'group_id'    => 'governed-handoffs',
-					'id'          => 'article-plan',
-					'endpoint'    => 'flows/article-plan',
-					'title'       => __( 'Submit Reviewed Draft for Review', 'npcink-toolbox' ),
-					'description' => __( 'Use only when a human-reviewed draft already exists. It prepares a review plan and never writes or submits the article.', 'npcink-toolbox' ),
-					'custom'      => 'article_plan',
-				),
 		);
 
 		$tools = array_values(
@@ -3441,11 +3431,6 @@ final class Admin_Page {
 					'title'       => __( 'Content Opportunity Checks', 'npcink-toolbox' ),
 					'description' => __( 'Find practical update, linking, expansion, or image opportunities from a bounded public-content sample.', 'npcink-toolbox' ),
 				),
-				'governed-handoffs' => array(
-					'title'       => __( 'Reviewed Draft Handoff', 'npcink-toolbox' ),
-					'description' => __( 'Low-frequency handoff after a draft is already reviewed.', 'npcink-toolbox' ),
-					'secondary'   => true,
-				),
 			);
 		$group_counts = array();
 		foreach ( $tools as $tool ) {
@@ -3456,14 +3441,14 @@ final class Admin_Page {
 			$group_counts[ $group_id ] = (int) ( $group_counts[ $group_id ] ?? 0 ) + 1;
 		}
 
-			$surface_header = 'content-preparation' === $surface ? array(
-				'title'             => __( 'Content Review', 'npcink-toolbox' ),
-				'description'       => __( 'Check public content opportunities first. Reviewed-draft handoff is a secondary path; article writing stays with the editor.', 'npcink-toolbox' ),
-				'scope_title'       => __( 'Review and handoff only', 'npcink-toolbox' ),
-				'scope_description' => __( 'Default checks find opportunities. Handoff tools only prepare review materials and never write the article body.', 'npcink-toolbox' ),
-			) : array(
-				'title'             => __( 'Image Handling', 'npcink-toolbox' ),
-				'description'       => __( 'Use the media library for one image, or use this page for selected image batches. Content review and draft handoffs live in their own tab.', 'npcink-toolbox' ),
+		$surface_header = 'content-preparation' === $surface ? array(
+			'title'             => __( 'Content Review', 'npcink-toolbox' ),
+			'description'       => __( 'Find practical update, linking, expansion, or image opportunities from public content samples. Article writing stays with the editor.', 'npcink-toolbox' ),
+			'scope_title'       => __( 'Opportunity checks only', 'npcink-toolbox' ),
+			'scope_description' => __( 'This page returns reviewable suggestions only. Reviewed draft import remains available through REST and Abilities when a real import workflow exists.', 'npcink-toolbox' ),
+		) : array(
+			'title'             => __( 'Image Handling', 'npcink-toolbox' ),
+			'description'       => __( 'Use the media library for one image, or use this page for selected image batches. Content review lives in its own tab.', 'npcink-toolbox' ),
 			'scope_title'       => __( 'Image tasks', 'npcink-toolbox' ),
 			'scope_description' => __( 'Batch work starts from selected media-library images or a bounded sample. Nothing is written automatically.', 'npcink-toolbox' ),
 		);
@@ -3543,30 +3528,30 @@ final class Admin_Page {
 			<div class="npcink-toolbox__tool-panels">
 				<?php
 				foreach ( $tools as $index => $tool ) {
-					if ( 'content_support_flow' === (string) ( $tool['custom'] ?? '' ) ) {
-						$this->render_content_support_flow_tool(
-							(string) $tool['endpoint'],
-							(string) $tool['title'],
-							(string) $tool['description'],
-							(string) $tool['id'],
-							(string) $tool['intent'],
-							(string) $tool['button'],
-							'hosted_ai' === (string) ( $tool['powered_by'] ?? '' ),
-							0 === $index,
-							$cloud_ready
-						);
-						continue;
-					}
+						if ( 'content_support_flow' === (string) ( $tool['custom'] ?? '' ) ) {
+							$this->render_content_support_flow_tool(
+								(string) $tool['endpoint'],
+								(string) $tool['title'],
+								(string) $tool['description'],
+								(string) $tool['id'],
+								(string) $tool['intent'],
+								(string) $tool['button'],
+								'hosted_ai' === (string) ( $tool['powered_by'] ?? '' ),
+								0 === $index,
+								$cloud_ready
+							);
+							continue;
+						}
 						if ( 'hosted_ai_site_helper' === (string) ( $tool['custom'] ?? '' ) ) {
 							$this->render_hosted_ai_site_helper_tool(
-							(string) $tool['endpoint'],
-							(string) $tool['title'],
-							(string) $tool['description'],
-							(string) $tool['id'],
-							(string) $tool['intent'],
-							(string) $tool['button'],
-							0 === $index,
-							$cloud_ready
+								(string) $tool['endpoint'],
+								(string) $tool['title'],
+								(string) $tool['description'],
+								(string) $tool['id'],
+								(string) $tool['intent'],
+								(string) $tool['button'],
+								0 === $index,
+								$cloud_ready
 							);
 							continue;
 						}
@@ -3582,26 +3567,16 @@ final class Admin_Page {
 							);
 							continue;
 						}
-					if ( 'article_plan' === (string) ( $tool['custom'] ?? '' ) ) {
-						$this->render_article_plan_tool(
-							(string) $tool['endpoint'],
-							(string) $tool['title'],
-							(string) $tool['description'],
-							(string) $tool['id'],
-							0 === $index
-						);
-						continue;
-					}
-					if ( 'media_derivative_batch' === (string) ( $tool['custom'] ?? '' ) ) {
-						$this->render_media_derivative_batch_tool(
-							(string) $tool['endpoint'],
-							(string) $tool['title'],
-							(string) $tool['description'],
-							(string) $tool['id'],
-							0 === $index
-						);
-						continue;
-					}
+						if ( 'media_derivative_batch' === (string) ( $tool['custom'] ?? '' ) ) {
+							$this->render_media_derivative_batch_tool(
+								(string) $tool['endpoint'],
+								(string) $tool['title'],
+								(string) $tool['description'],
+								(string) $tool['id'],
+								0 === $index
+							);
+							continue;
+						}
 					$this->render_text_tool(
 						(string) $tool['endpoint'],
 						(string) $tool['title'],
@@ -4166,51 +4141,6 @@ final class Admin_Page {
 			</div>
 			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_batch_controls( $toolbox_policy ); ?>
-			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
-		</form>
-		<?php
-	}
-
-	private function render_article_plan_tool( string $endpoint, string $title, string $description, string $tool_id, bool $active = false ): void {
-		?>
-			<form class="npcink-toolbox__card" data-toolbox-endpoint="<?php echo esc_attr( $endpoint ); ?>" data-toolbox-tool-panel="<?php echo esc_attr( $tool_id ); ?>" <?php echo $active ? '' : 'hidden'; ?>>
-				<h2><?php echo esc_html( $title ); ?></h2>
-				<p><?php echo esc_html( $description ); ?></p>
-				<div class="npcink-toolbox__example">
-					<strong><?php esc_html_e( 'Review handoff', 'npcink-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Review the returned plan, then send it to the review system. Final publishing still requires approval outside Toolbox.', 'npcink-toolbox' ); ?></span>
-				</div>
-			<label>
-				<span><?php esc_html_e( 'Reviewed draft title', 'npcink-toolbox' ); ?></span>
-				<input type="text" name="title" placeholder="<?php esc_attr_e( 'Working article title', 'npcink-toolbox' ); ?>" />
-			</label>
-			<label>
-				<span><?php esc_html_e( 'Reviewed draft body', 'npcink-toolbox' ); ?></span>
-				<textarea name="content_markdown" rows="8" placeholder="<?php esc_attr_e( 'Paste the reviewed draft body. This creates a plan only, not a post.', 'npcink-toolbox' ); ?>"></textarea>
-			</label>
-			<div class="npcink-toolbox__split">
-				<label>
-					<span><?php esc_html_e( 'Topic', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="topic" placeholder="<?php esc_attr_e( 'Optional topic label', 'npcink-toolbox' ); ?>" />
-				</label>
-				<label>
-					<span><?php esc_html_e( 'Risk level', 'npcink-toolbox' ); ?></span>
-					<select name="risk_level">
-						<option value="low"><?php esc_html_e( 'Low', 'npcink-toolbox' ); ?></option>
-						<option value="medium"><?php esc_html_e( 'Medium', 'npcink-toolbox' ); ?></option>
-						<option value="high"><?php esc_html_e( 'High', 'npcink-toolbox' ); ?></option>
-					</select>
-				</label>
-			</div>
-				<label>
-					<span><?php esc_html_e( 'SEO title', 'npcink-toolbox' ); ?></span>
-					<input type="text" name="seo_title" placeholder="<?php esc_attr_e( 'Optional review SEO title', 'npcink-toolbox' ); ?>" />
-				</label>
-				<label>
-					<span><?php esc_html_e( 'SEO description', 'npcink-toolbox' ); ?></span>
-					<textarea name="seo_description" rows="2" placeholder="<?php esc_attr_e( 'Optional review SEO description', 'npcink-toolbox' ); ?>"></textarea>
-				</label>
-			<button type="submit" class="button button-primary"><?php esc_html_e( 'Build plan', 'npcink-toolbox' ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php

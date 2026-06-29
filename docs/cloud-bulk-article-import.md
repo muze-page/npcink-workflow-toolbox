@@ -24,8 +24,11 @@ Toolbox must not:
 
 ## Replacement
 
-The Reviewed Draft Handoff fallback panel may remain, but it should be
-understood as local `article_draft_v1` recipe UX:
+The backend Reviewed Draft Handoff panel is removed while there is no active
+external-draft import workflow. The underlying route and Ability remain
+available for explicit API composition and any future reviewed bulk-import
+contract. In the current product, that contract is still local
+`article_draft_v1` recipe UX:
 
 ```text
 local Ability recipe
