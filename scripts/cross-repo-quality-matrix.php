@@ -31,8 +31,8 @@ $repos = array(
 		'gate_notes' => 'Adapter route, recipe, and execution-profile contracts.',
 	),
 	array(
-		'name'       => 'npcink-toolbox',
-		'paths'      => array( 'npcink-toolbox' ),
+		'name'       => 'npcink-workflow-toolbox',
+		'paths'      => array( 'npcink-workflow-toolbox' ),
 		'gate'       => 'composer test:all',
 		'gate_notes' => 'Toolbox product-surface static contracts and local smoke gates.',
 	),

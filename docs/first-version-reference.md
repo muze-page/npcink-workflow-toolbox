@@ -391,7 +391,7 @@ Verified local site path:
 Verified plugin symlink:
 
 ```bash
-/Users/muze/Local Sites/npcink/app/public/wp-content/plugins/npcink-toolbox -> /Users/muze/gitee/npcink-toolbox
+/Users/muze/Local Sites/npcink/app/public/wp-content/plugins/npcink-workflow-toolbox -> /Users/muze/gitee/npcink-workflow-toolbox
 ```
 
 Global WP-CLI is installed on this workstation and should be preferred for
