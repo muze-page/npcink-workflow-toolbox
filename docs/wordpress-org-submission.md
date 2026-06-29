@@ -2,6 +2,9 @@
 
 Status: prepared for the Npcink Workflow Toolbox 0.1.1 WordPress.org plugin submission.
 
+The current release-readiness closeout is recorded in
+[`WordPress.org Release Readiness Closeout - 2026-06-29`](wordpress-org-release-readiness-closeout-2026-06-29.md).
+
 ## Plugin Details
 
 - Plugin name: Npcink Workflow Toolbox
@@ -61,6 +64,14 @@ composer package:release
 ```
 
 For a mixed worktree, generate the release package from a clean worktree or release tag so unrelated local edits do not enter the zip.
+
+The accepted submission package path is:
+
+```text
+/Users/muze/gitee/npcink-workflow-toolbox/build/npcink-workflow-toolbox.zip
+```
+
+The package root must be `npcink-workflow-toolbox/`.
 
 ## Validation Commands
 

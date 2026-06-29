@@ -100,6 +100,8 @@ Project goals, ownership, and future-session instructions are documented in:
 - [GitHub Quality Guardrails Closeout](docs/github-quality-guardrails-closeout-2026-06-26.md)
 - [AI Change Envelope Template](docs/ai-change-envelope-template.md)
 - [Toolbox 0.1.1 Stage Closeout](docs/toolbox-0.1.1-stage-closeout-2026-06-22.md)
+- [WordPress.org Release Readiness Closeout](docs/wordpress-org-release-readiness-closeout-2026-06-29.md)
+- [Admin Operator UX Cleanup Summary](docs/admin-operator-ux-cleanup-summary-2026-06-29.md)
 - [Content Support Writing Checkup History](docs/content-support-writing-checkup-history.md)
 - [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md)
 - [Editor AI Image Recommendation Summary](docs/editor-ai-image-recommendation-summary.md)
