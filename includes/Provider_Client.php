@@ -5848,22 +5848,32 @@ final class Provider_Client {
 				'older_content',
 				'older public content that may need refresh or consolidation'
 			);
-			$append_posts(
-				get_posts(
-					array_merge(
-						$query_defaults,
-						array(
-							'orderby'    => 'modified',
-							'order'      => 'DESC',
-							'meta_query' => array(
-								array(
-									'key'     => '_thumbnail_id',
-									'compare' => 'NOT EXISTS',
-								),
+			$missing_featured_image_posts = function_exists( 'has_post_thumbnail' )
+				? array_slice(
+					array_values(
+						array_filter(
+							get_posts(
+								array_merge(
+									$query_defaults,
+									array(
+										'posts_per_page' => 18,
+										'orderby'        => 'modified',
+										'order'          => 'DESC',
+									)
+								)
 							),
+							static function ( $post ): bool {
+								$post_id = is_object( $post ) ? absint( $post->ID ?? 0 ) : 0;
+								return 0 < $post_id && ! has_post_thumbnail( $post_id );
+							}
 						)
-					)
-				),
+					),
+					0,
+					6
+				)
+				: array();
+			$append_posts(
+				$missing_featured_image_posts,
 				'missing_featured_image',
 				'public content without a featured image candidate'
 			);
