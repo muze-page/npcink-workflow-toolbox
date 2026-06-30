@@ -230,9 +230,11 @@ local WP-Cron path remains a WordPress-side fallback preview and onboarding aid,
 not a second Pro scheduler.
 Cloud Addon Runtime Runs can read recent/status/result detail and request
 Cloud-owned retry for known Nightly Inspection runs. Toolbox may retain
-compatibility REST bridges for existing callers, but its visible Scheduled
-Review panel links to Cloud Addon instead of presenting a second run-recovery
-workspace. Any local display of `pro_cloud_runtime` detail is not billing truth.
+compatibility REST bridges for existing callers, but runtime entitlement,
+quota, batch limit, retention, recent/status/result, and retry detail belong in
+Cloud Addon Runtime Runs. The visible Scheduled Review panel links to Cloud
+Addon instead of presenting a second run-recovery workspace. Any local display
+of `pro_cloud_runtime` detail is not billing truth.
 Action Scheduler is reserved as a future local fallback/substrate candidate only
 if a confirmed local-batch requirement justifies the added plugin complexity.
 ADR-005 freezes this current split: WP-Cron is the local fallback preview or

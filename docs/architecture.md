@@ -706,9 +706,10 @@ task-owned product panels: Content Library Usage for read-only Site Knowledge
 status/result consumption, Site Check for manual site checks and the ordinary
 site-maintenance entry, Scheduled Review for Nightly/Morning Brief preview and
 local fallback settings, and Image Handling for selected-media review/handoff
-flows. Cloud Runtime Runs in Cloud Addon owns Nightly Inspection recent/status/
-result/retry detail. Cloud runtime routes may remain bounded call sites for
-compatibility, but standalone diagnostics do not live in Toolbox.
+flows. Cloud Runtime Runs in Cloud Addon owns Nightly Inspection runtime
+entitlement, quota, batch limit, retention, recent/status/result, and retry
+detail. Cloud runtime routes may remain bounded call sites for compatibility,
+but standalone diagnostics do not live in Toolbox.
 Nightly Inspection / Morning Brief controls stay in the separate
 `morning-brief` secondary panel, not in local diagnostics or a second
 site-check product.

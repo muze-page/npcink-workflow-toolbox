@@ -160,12 +160,14 @@ upload/import, SEO mutation, content indexing, or re-indexing without a new
 boundary decision. Write-like outcomes must be prepared as suggestions or Core
 proposal handoffs, not executed by Toolbox.
 
-Nightly Inspection recent-run and retry routes are Cloud detail bridges only.
-`/cloud-batch/recent` reads Cloud-owned run cards for display and recovery.
-`/cloud-batch/{run_id}/retry` asks Cloud to queue a retry with a fresh
-idempotency key and a new bounded local snapshot. Neither route stores a
-server-side Toolbox run history, claims retry ownership, creates Core
-proposals, or writes WordPress data.
+Nightly Inspection Cloud runtime routes are compatibility bridges for existing
+callers only. Runtime entitlement, quota, batch limit, retention, recent run,
+status, result, and retry detail belong in Cloud Addon Runtime Runs, not in a
+Toolbox recovery workspace. `/cloud-batch/recent` may read Cloud-owned run cards
+for legacy callers, and `/cloud-batch/{run_id}/retry` may ask Cloud to queue a
+retry with a fresh idempotency key and a new bounded local snapshot. Neither
+route stores a server-side Toolbox run history, claims retry ownership, creates
+Core proposals, or writes WordPress data.
 
 `local_admin_consent` is now implemented only for one narrow proof:
 `/local-admin-consent/featured-image` may set one existing WordPress image
@@ -573,9 +575,10 @@ the primary operator-facing site-maintenance entry.
 Local fallback settings should stay folded behind an advanced disclosure.
 Toolbox may retain compatibility routes for existing Nightly Inspection Cloud
 callers, but the visible recovery workspace should link operators to Cloud
-Addon. Cloud remains runtime/detail owner and Toolbox must not become a local
-billing ledger, entitlement engine, retry queue, scheduler truth, local run
-history, Core
+Addon. Runtime entitlement, quota, batch limit, retention, recent/status/result,
+and retry detail must stay in Cloud Addon Runtime Runs. Cloud remains
+runtime/detail owner and Toolbox must not become a local billing ledger,
+entitlement engine, retry queue, scheduler truth, local run history, Core
 proposal creator, or WordPress write owner.
 
 The connector surface must not become provider billing, quota, key-rotation,
