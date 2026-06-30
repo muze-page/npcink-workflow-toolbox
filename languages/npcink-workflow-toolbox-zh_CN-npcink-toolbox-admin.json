@@ -231,9 +231,9 @@
       "Attached source": ["已附加来源"],
       "Article planning bundle": ["文章规划包"],
       "Fallback planning bundle only. Review sources, candidates, and handoff notes before creating a Core proposal.": ["仅为降级规划包。创建 Core 提案前，请审阅来源、候选和交接说明。"],
-      "Open Cloud search check": ["打开 Cloud 搜索检查"],
+      "Open Cloud Addon diagnostics": ["打开 Cloud Addon 诊断"],
       "External search": ["外部搜索"],
-      "Live Cloud web search verification belongs in Cloud Checks. Use this bundle for combined fallback planning and handoff context.": ["实时 Cloud 网页搜索验证属于 Cloud Checks。此包用于组合式降级规划和交接上下文。"],
+      "Live Cloud web search diagnostics belong in Cloud Addon. Use this bundle for combined fallback planning and handoff context.": ["实时 Cloud 网页搜索诊断属于 Cloud Addon。此包用于组合式降级规划和交接上下文。"],
       "Quality feedback is aggregate Cloud eval data only. Approval, preflight, media import, and final WordPress writes remain local.": ["质量反馈仅为 Cloud 聚合评估数据。审批、预检、媒体导入和最终 WordPress 写入仍保留在本地。"],
 
       "Article optimization suggestions": ["文章优化建议"],

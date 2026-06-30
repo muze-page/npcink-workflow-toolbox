@@ -36,7 +36,7 @@ surface.
 Toolbox keeps the operator-facing Npcink workflow surface:
 
 - Site Profile and suggestion-only SEO/AEO/GEO context;
-- Full-site Insights;
+- Site Check;
 - Site Knowledge setup, search, and Cloud bridge health;
 - Cloud web search and evidence checks;
 - image-source candidates and explicit AI-image candidate checks;

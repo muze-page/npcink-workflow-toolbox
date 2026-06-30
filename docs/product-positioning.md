@@ -65,9 +65,10 @@ semantics.
 8. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.
-9. Surface full-site insights that turn content, approved comment, media,
-   taxonomy, context, and runtime signals into a prioritized review-only site
-   analysis report.
+9. Surface a Site Check button that turns content, approved comment, media,
+   taxonomy, context, and runtime signals into a prioritized review-only
+   decision queue for manual handling, existing fixed workflows, or optional
+   Cloud detail.
 10. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals

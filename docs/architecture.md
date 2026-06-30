@@ -9,15 +9,15 @@ Status: MVP architecture.
 | `npcink-workflow-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
 | `Settings` | Option defaults, sanitization, non-search connector secret lookup, and content context export. |
-| `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Full-site Insights Cloud analysis runtime calls, and fixed-flow planning actions. |
+| `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Site Check Cloud detail runtime calls, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
 | `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
 | `Ability_Surface_Metadata` | Read-only local projection of Toolbox-owned workflow defaults, route-only compatibility entries, runtime ownership, handoff posture, and overlap policy. It is not an ability registry, workflow registry, provider picker, request log, or approval store. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Article_Audio_Playback` | Frontend single-post playback entry for already adopted article audio metadata. It reads protected post meta or a host-projected approved audio packet and does not generate, adopt, or write audio. |
 | `Abilities` | WordPress Abilities API exposure for Toolbox actions. |
-| `Site_Ops_Snapshot_Collector` | Bounded read-only collector for Full-site Insights: public posts/pages, approved-comment signals, media metadata, taxonomy summaries, and site info. |
-| `Site_Ops_Insight_Builder` | Deterministic `site_ops_insight_pack.v1` builder that ranks local full-site analysis findings without Cloud calls, persistence, proposals, or WordPress writes. |
+| `Site_Ops_Snapshot_Collector` | Bounded read-only collector for Site Check: public posts/pages, approved-comment signals, media metadata, taxonomy summaries, and site info. |
+| `Site_Ops_Insight_Builder` | Deterministic `site_ops_insight_pack.v1` builder that ranks local site-check findings for manual handling, existing fixed workflows, or optional Cloud detail without Cloud calls, persistence, proposals, or WordPress writes. |
 | `Site_Ops_Cloud_Request_Builder` | Contract-only `site_ops_cloud_analysis_request.v1` builder for Cloud runtime/detail analysis; it does not call Cloud, create local runtime state, schedule work, persist runs, create proposals, or write WordPress data. |
 | `Site_Knowledge_Auto_Sync` | Compatibility status projection for the Cloud Addon Site Knowledge change bridge plus retired legacy state cleanup. It does not own public content-change hooks, queues, retries, or refresh hints. |
 | `modules/local-automation-runtime/` | Bundled module for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview plus one Phase 2 disabled-by-default Basic WP-Cron dry-run hook for the Local Fallback Preview. |
@@ -334,7 +334,7 @@ actually execute the request.
 bounded content opportunity samples, editor/sidebar current-article image
 metadata, or an explicitly selected media review set. The content opportunity
 intent remains route-only/internal; operator-facing site opportunity review
-belongs in Full-site Insights, not a standalone backend tool. Single-article
+belongs in Site Check, not a standalone backend tool. Single-article
 media ALT/caption review belongs in the editor sidebar, and batch media review
 needs a selected review-set surface. The route returns a
 `hosted_ai_site_helper` artifact and must not become a crawler, scoring engine,
@@ -522,7 +522,7 @@ The reviewed-draft write-plan flow remains available through REST and the
 `npcink-toolbox/build-article-write-plan` Ability for machine clients, future
 Cloud bulk import, and explicit API composition. It is no longer exposed as a
 backend admin tool because there is no active external-draft import workflow;
-the ordinary operator path is the editor sidebar plus Full-site Insights for
+the ordinary operator path is the editor sidebar plus Site Check for
 site-level opportunities.
 
 The admin page defaults to an **Overview** surface for ordinary site owners,
@@ -537,33 +537,37 @@ provider picker, request log, or connector approval surface. It does not create
 proposals or writes. Single-post article
 support stays in the post editor sidebar and is not rendered as an Overview
 work block. The visible top-level admin tabs after Overview are **Site
-Profile**, **Image Handling**, and **Advanced**. **Full-site Insights** remains a
+Profile**, **Image Handling**, and **Advanced**. **Site Check** remains a
 secondary deep-link panel and is the Overview page's recommended site-check
 action; it builds a local
 `site_ops_insight_pack.v1` from bounded public content, approved comment signal
 counts, media metadata, taxonomy summaries, Site Context readiness, and Cloud
-availability, then presents it as a current-run full-site analysis report with
-coverage metrics, lightweight charts, deterministic local summary, content,
-media, comments, structure, findings, Cloud analysis, and advanced data views,
-including site content opportunity findings.
+availability, then presents it as a current-run decision queue for manual
+handling, existing fixed workflows, and optional Cloud detail. Coverage metrics,
+lightweight charts, deterministic local summary, content, media, comments,
+structure, findings, Cloud detail, and advanced data views are supporting
+detail, including site content opportunity findings.
 It can also prepare a copyable
 `site_ops_cloud_analysis_request.v1` for Cloud runtime/detail analysis. The
 local preview does not auto-send the request; when Cloud is ready, the
-administrator may explicitly run Cloud analysis and render the suggestion-only
+administrator may explicitly run Cloud detail and render the suggestion-only
 `site_ops_cloud_analysis_result.v1`. It is a manual review surface, not a
 Cloud batch owner, local queue, Core proposal creator, or WordPress write path.
-Nightly Inspection fallback preview settings, Pro Cloud Runtime checks, and
-run recovery keep the compatible `cloud-checks` deep link but are presented as
-**Scheduled Review / Morning Brief** when opened through the Nightly Inspection
-entry. That visible task framing keeps Morning Brief preview and Cloud run
-recovery separate from ordinary connection diagnostics while preserving old
-URLs. These controls do not belong in the visible top-level tabs or default
-Overview view, and Full-site Insights remains the ordinary manual site-check
-report. Site Knowledge status and refresh controls live in the secondary
-**Site Content Index** panel reached from the Advanced Setup group, not as a
-default top-level tab. Advanced is the single low-frequency directory and
-groups secondary links as Setup, Diagnostics, Review, and Planning/Handoff
-instead of duplicating them on Overview.
+Nightly Inspection fallback preview settings live in the low-frequency
+secondary **Scheduled Review** panel reached from Site Check and the Advanced
+directory. Cloud run status, result reads, recent runs, and recovery live in
+Cloud Addon Runtime Runs. They do not live inside Cloud Checks. That keeps
+recurring inspection preview and Cloud run recovery separate from ordinary
+connection diagnostics and from the everyday Site Check decision queue. These
+controls do not belong in the visible top-level tabs or default Overview view,
+and Site Check remains the ordinary manual
+site-maintenance entry. Site Knowledge
+connection, refresh, indexing, and deep delivery detail live in
+`npcink-cloud-addon`; Toolbox keeps only a secondary **Content Library Usage**
+panel for read-only status and best-practice result consumption. Advanced is the
+single low-frequency directory and groups secondary links as Setup,
+Review, and Planning/Handoff instead of duplicating them on
+Overview.
 
 The admin **Image Handling** tab groups image-first buttons by operator job and
 defaults to **Image Optimization**, with **Batch Optimize Images** as the first
@@ -577,11 +581,11 @@ editor context in the editor sidebar. The separate **Batch Image ALT** group
 builds a small selected media-library review set and can prepare a Core handoff
 draft without creating a proposal or writing media metadata. The separate
 standalone content opportunity admin tool is retired; site-level opportunities
-are reviewed through Full-site Insights.
+are reviewed through Site Check.
 The old Article Planning Bundle is not an operator-facing admin tool;
 `/flows/article-brief` remains available only as a compatibility REST route for
 OpenClaw or external AI callers. The old `tool=article-assistant` and
-`tool=article-plan` URLs fall back to Full-site Insights instead of restoring
+`tool=article-plan` URLs fall back to Site Check instead of restoring
 draft-side backend tools.
 Batch entry points use `tab=image&tool=bulk-alt` and
 `tab=image&tool=batch-optimize`; deprecated `tool=optimize` and legacy
@@ -693,30 +697,21 @@ replacement callbacks before Toolbox presents it as a fixed best-practice
 button. Toolbox may render review sets, selected previews, proposal submission,
 and returned execution outcomes; it must not own the batch execution semantics.
 
-Troubleshooting Checks default to one basic read-only connection test inside
-the secondary `cloud-checks` panel reached from the Advanced Diagnostics group.
-Detailed checks use compact folded tabs for Cloud-managed search, image-source,
-preview-only media derivative, and site content index search. The compatible
-Nightly Inspection deep link still uses the `cloud-checks` panel id, but its
-visible page header and first card must say Scheduled Review / Morning Brief so
-operators understand it is the low-frequency scheduled-review preview and
-Cloud run recovery path, not a duplicate manual Full-site Insights report or a
-generic connection test. Each panel opens directly into the relevant Toolbox
-ability reachability check or recovery task instead of repeating provider
-ownership detail. Search checks use Cloud auto execution only; provider
-selection, Jina Reader toggles, routing diagnostics, Cloud API key
-verification, entitlement, quota, billing, and request logs belong in Cloud
-Addon or Cloud service-plane surfaces. Image derivative checks may generate
-short-lived Cloud previews only, including bounded aspect-ratio crop overrides
-and one-run text or image/logo watermark overrides that match the
-Adapter/OpenClaw media derivative request shape; Core
-proposal submission, batch proposal submission, and URL repair handoffs stay in
-Workflows. The Site Knowledge check is read-only search verification and links
-back to the Site Knowledge tab for index status and refresh operations. The
-surface is not a billing, quota, request-log, marketplace, provider-routing,
-key-rotation, vector-provider, vector-lifecycle, content-operations coverage,
-or Agent quality summary surface. Toolbox links those read-only summaries to
-Cloud Addon Monitoring.
+Toolbox no longer renders a Cloud Checks or Troubleshooting Checks secondary
+panel. Cloud connection checks, hosted runtime health, provider/search/image
+diagnostics, key verification, entitlement, quota, billing, request logs,
+content-operations coverage, and Agent quality summaries belong in
+`npcink-cloud-addon` or Cloud service-plane surfaces. Toolbox keeps only
+task-owned product panels: Content Library Usage for read-only Site Knowledge
+status/result consumption, Site Check for manual site checks and the ordinary
+site-maintenance entry, Scheduled Review for Nightly/Morning Brief preview and
+local fallback settings, and Image Handling for selected-media review/handoff
+flows. Cloud Runtime Runs in Cloud Addon owns Nightly Inspection recent/status/
+result/retry detail. Cloud runtime routes may remain bounded call sites for
+compatibility, but standalone diagnostics do not live in Toolbox.
+Nightly Inspection / Morning Brief controls stay in the separate
+`morning-brief` secondary panel, not in local diagnostics or a second
+site-check product.
 
 ## Dependency Direction
 

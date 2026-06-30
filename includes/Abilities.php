@@ -181,7 +181,7 @@ final class Abilities {
 			),
 			'npcink-toolbox/request-site-knowledge-sync'        => $this->definition(
 				__( 'Request Site Knowledge Sync', 'npcink-workflow-toolbox' ),
-				__( 'Request a Cloud-managed site knowledge sync or rebuild from bounded public WordPress content without writing WordPress content.', 'npcink-workflow-toolbox' ),
+				__( 'Request a Cloud-managed public Site Knowledge refresh from bounded public WordPress content without writing WordPress content or managing index lifecycle.', 'npcink-workflow-toolbox' ),
 				array(),
 				array( $this, 'request_site_knowledge_sync' ),
 				'cap.toolbox.knowledge.sync',
@@ -254,7 +254,7 @@ final class Abilities {
 			),
 			'npcink-toolbox/build-nightly-inspection-review-plan' => $this->definition(
 				__( 'Build Nightly Inspection Review Plan', 'npcink-workflow-toolbox' ),
-				__( 'Build a blocked Core review proposal plan from selected Nightly Morning Brief items without writing WordPress content.', 'npcink-workflow-toolbox' ),
+				__( 'Build a blocked Core review proposal plan from selected scheduled review items without writing WordPress content.', 'npcink-workflow-toolbox' ),
 				array( 'selected_items' ),
 				array( $this, 'build_nightly_inspection_review_plan' ),
 				'cap.toolbox.workflow_suggest',

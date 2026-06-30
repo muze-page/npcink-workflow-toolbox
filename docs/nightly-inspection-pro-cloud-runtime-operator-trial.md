@@ -20,8 +20,7 @@ The trial verifies the current closeout questions:
 - Toolbox admin surface: local WordPress admin, `npcink-toolbox`.
 - Cloud stack: local Cloud dev stack with API, worker, callback worker,
   ops worker, Postgres, Redis, proxy, and frontend running.
-- Entry path: `Run Cloud inspection` from the Toolbox Cloud Checks Nightly
-  Inspection panel.
+- Entry path: `Run Cloud inspection` from the Toolbox Morning Brief panel.
 - Payload mode: `metadata_only`.
 - Write boundary: review-only result merge; no Core proposal creation and no
   WordPress write.

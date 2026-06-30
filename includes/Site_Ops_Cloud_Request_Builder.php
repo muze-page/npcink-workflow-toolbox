@@ -1,6 +1,6 @@
 <?php
 /**
- * Builds the future Cloud analysis request for Site Ops Insights.
+ * Builds the optional Cloud detail request for Site Check.
  *
  * @package Npcink_Toolbox
  */
@@ -14,7 +14,7 @@ final class Site_Ops_Cloud_Request_Builder {
 	public const RESULT_CONTRACT_VERSION = 'site_ops_cloud_analysis_result.v1';
 
 	/**
-	 * Builds a bounded, privacy-minimized request packet for future Cloud analysis.
+	 * Builds a bounded, privacy-minimized request packet for optional Cloud detail.
 	 *
 	 * @param array<string,mixed> $snapshot Local Site Ops snapshot.
 	 * @param array<string,mixed> $insight_pack Local Site Ops insight pack.

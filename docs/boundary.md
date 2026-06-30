@@ -110,7 +110,9 @@ WordPress write owner, second ability registry, or local control plane.
 Automatic public content-change delivery belongs to Cloud Addon when its Site
 Knowledge bridge is installed and verified. Toolbox must not keep a legacy
 standalone fallback queue; it may only show bridge health, clear retired local
-auto-sync state, and keep explicit manual sync/search surfaces.
+auto-sync state, and keep explicit manual refresh/search surfaces. Toolbox
+must reject local Site Knowledge `rebuild` and `delete` sync modes; those
+operations belong in Cloud Site Knowledge.
 
 ## REST Route Boundary
 
@@ -300,31 +302,35 @@ the current article context and selected or operator-supplied comment text, but
 does not publish replies, approve comments, mutate comment status, or own
 comment workflow governance.
 
-## Full-site Insights Boundary
+## Site Check Boundary
 
-The **Full-site Insights** tab is the operator-facing site analysis surface.
-It builds one administrator-requested local `site_ops_insight_pack.v1` preview.
-The underlying contract keeps the Site Ops name for compatibility, but the
-product surface is broader than operations: it may read bounded public
-posts/pages, approved comment signal counts, media metadata, category/tag
-summaries, Site Context readiness, and Cloud availability. It must not return
-comment author emails, IP addresses, user agents, or full comment text.
+The **Site Check** panel is the operator-facing decision router for the fixed
+Toolbox button surface. It builds one administrator-requested local
+`site_ops_insight_pack.v1` preview. The underlying contract keeps the Site Ops
+name for compatibility, but the product surface is a site-check action, not a
+general analytics workspace: it may read bounded public posts/pages, approved
+comment signal counts, media metadata, category/tag summaries, Site Context
+readiness, and Cloud availability. It must not return comment author emails, IP
+addresses, user agents, or full comment text.
 
-The output is a read-only full-site analysis report: current-run coverage
-metrics, lightweight charts, deterministic local summary, content findings,
-media findings, comment findings, structure findings, evidence summaries,
-impact, recommended actions, blocked items, and handoff candidates. It is not a
-site automation runner. The local preview does not call
+The output is a read-only site-check report: a current-run priority queue,
+treatment paths, evidence summaries, impact, recommended actions, safe
+first-action links, blocked items, and handoff candidates that route the
+operator to manual handling, existing fixed workflows, or optional Cloud
+detail. Coverage metrics, lightweight charts, deterministic local summary,
+content findings, media findings, comment findings, and structure findings are
+supporting detail, not a separate analytics product. It is not a site automation runner. The local preview does not call
 Cloud, schedule jobs, persist run state, create Core proposals, submit Adapter
 actions, mutate comments, update media, write SEO fields, create taxonomy
-terms, or publish content. Explicit Cloud analysis may add semantic,
+terms, or publish content. First-action links may open existing WordPress
+admin objects or detail panels only; they must not execute changes. Explicit Cloud detail may add semantic,
 cross-run, trend, AI-summary, and external-data detail, but Cloud remains
 runtime detail and must not become a second WordPress write owner, approval
 store, or control plane.
 
 Toolbox may prepare a copyable `site_ops_cloud_analysis_request.v1` from the
-local pack. When Cloud is ready and an administrator explicitly clicks **Run
-Cloud analysis**, Toolbox may send that request through the Cloud runtime seam.
+local pack. When Cloud is ready and an administrator explicitly clicks **Use
+Cloud detail**, Toolbox may send that request through the Cloud runtime seam.
 It may include aggregate post/page, media, taxonomy, and approved-comment
 signal counts plus local finding summaries. It must not include full comment
 text, comment author email, comment IP address, user agent, provider secrets,
@@ -346,7 +352,7 @@ approval, or WordPress writes.
 The backend admin surface exposes selected media ALT/caption review sets. The
 `content_snapshot_suggestions` intent remains route-only/internal for bounded
 public samples, while operator-facing site opportunity review belongs in
-Full-site Insights. Those samples may support reviewable update, linking,
+Site Check. Those samples may support reviewable update, linking,
 expansion, or image suggestions only; they are not full-site audits, content
 generators, local crawlers, or write plans.
 Current article media ALT support belongs in the editor sidebar; backend batch
@@ -521,56 +527,56 @@ show Cloud-returned status, and search Cloud-managed site knowledge. Toolbox
 must not store vector provider keys, provider endpoints, collection names,
 embedding model settings, or vector database lifecycle controls.
 
-## Troubleshooting Checks Surface
+## Cloud Diagnostics Ownership
 
-The Toolbox **Cloud Checks** surface is now presented to ordinary site owners
-as **Troubleshooting Checks**. It remains a secondary deep-link support-check
-panel, not a visible top-level admin tab. The Advanced directory is the single
-low-frequency directory and groups links by operator job: Setup, Diagnostics,
-Review, and Planning/Handoff. It may link to Troubleshooting Checks from the
-Diagnostics group, and legacy `toolbox_tab=cloud-checks` URLs should continue
-to open that panel. Inside that panel, the default operator view should be one
-basic read-only connection check. Detailed Cloud-managed checks should stay
-inside a support diagnostics disclosure, and deep links to specific checks may open
-that disclosure automatically. The detailed tabs should open directly into the
-useful verification tool instead of repeating ownership prose or provider
-catalogs.
+Toolbox does not own a Cloud Checks or Troubleshooting Checks product surface.
+Cloud connection checks, hosted runtime health, provider/search/image-source
+diagnostics, entitlement, quota, request logs, key verification, and service
+monitoring belong in `npcink-cloud-addon` or Cloud service-plane surfaces.
 
-The verification surface may identify whether a Cloud-backed action is
-reachable from Toolbox, but it should keep provider ownership detail in Cloud
-or in documentation.
+Toolbox may show Cloud availability as read-only readiness state inside a
+specific product workflow and may disable Cloud-only submits when the Cloud
+Addon transport is unavailable. It must not render a local Cloud diagnostics
+console, provider catalog, support-check workspace, or compatibility copy of
+Cloud Addon Monitoring.
 
-When Cloud Addon transport is missing or unverified, Cloud Checks should show a
-blocked state and disable Cloud-only submits instead of waiting for a failed
-runtime request. Content Context and governed handoff planning may remain
-available because they are local suggestion/planning surfaces.
+Toolbox product surfaces stay task-owned:
 
-Cloud web search checks must use the Cloud-managed auto route. Toolbox must not
-expose provider selection, Jina Reader toggles, provider routing diagnostics,
-quota, billing, request logs, entitlement, or key verification controls here.
-Cloud Addon owns the WordPress-side connection and authorization check; Cloud
-service-plane surfaces own provider/runtime diagnostics.
+- **Content Library Usage** owns read-only Site Knowledge status/result
+  consumption and review handoff context. Cloud Addon owns connector state,
+  refresh, indexing, and delivery detail.
+- **Site Check** owns the everyday site-maintenance entry: manual read-only site
+  checks, explicit Cloud detail requests, and the operator-facing path to
+  low-frequency scheduled review.
+- **Scheduled Review** owns the Nightly/Morning Brief implementation details:
+  scheduled-review preview and local fallback settings. Cloud Addon owns
+  Nightly Inspection run status, result reads, and recovery.
+- **Image Handling** owns selected-media review and governed handoff flows.
 
-Content Operations coverage and Agent feedback quality summaries belong in
-Cloud Addon Monitoring or the Cloud service-plane read surface. Toolbox may
-link operators there, but it must not render those summaries as local Cloud
-Checks panels or treat quality rollups as local proposal, approval, workflow,
-or write truth.
+Cloud web search, image-source, and site-knowledge runtime routes may remain as
+bounded call sites for those product workflows, but their standalone diagnostic
+UI belongs outside Toolbox. Standalone diagnostics do not live in Toolbox.
 
-Cloud Checks may include a preview-only media derivative check under Image. It
-may select a local attachment, resolve a local uploads URL, apply one-run
-format/size/quality overrides, and show the short-lived Cloud preview artifact.
-It must not submit Core proposals, run batch proposal submission, repair URLs,
-replace media files, update attachment metadata, or treat preview artifacts as
-WordPress media writes. Those handoff actions stay in Content Support and Core
-governance.
+## Scheduled Review Surface
 
-The Cloud Checks Nightly Inspection panel may show read-only Pro Cloud
-Runtime quota detail by reading Cloud `pro_cloud_runtime` entitlement through
-the Cloud Addon seam. That display may disable new Cloud Batch submissions when
-Cloud reports exhausted `nightly_site_inspection_runs`, but it must not become
-a local billing ledger, entitlement engine, retry queue, scheduler truth, or
-WordPress write owner.
+The **Scheduled Review** surface is a low-frequency secondary panel reached
+from Site Check and the Advanced directory. It owns the Nightly/Morning Brief
+preview entry and local fallback preview settings. Cloud run status, result
+reads, recent runs, and retry requests belong in the Cloud Addon Runtime Runs
+tab. Scheduled Review must not live inside Cloud Checks and must not be
+presented as an ordinary connection diagnostic or as a second site-check
+product.
+
+The default Scheduled Review view should show one primary action: preview the
+scheduled review. Site Check remains the ordinary manual site-check report and
+the primary operator-facing site-maintenance entry.
+Local fallback settings should stay folded behind an advanced disclosure.
+Toolbox may retain compatibility routes for existing Nightly Inspection Cloud
+callers, but the visible recovery workspace should link operators to Cloud
+Addon. Cloud remains runtime/detail owner and Toolbox must not become a local
+billing ledger, entitlement engine, retry queue, scheduler truth, local run
+history, Core
+proposal creator, or WordPress write owner.
 
 The connector surface must not become provider billing, quota, key-rotation,
 request-log, marketplace, provider-routing, vector-provider, or vector

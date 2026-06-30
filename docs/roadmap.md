@@ -38,14 +38,15 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
-- Full-site Insights tab for a manual local `site_ops_insight_pack.v1` that
-  presents a current-run site analysis report across content,
-  approved-comment, media, taxonomy, Site Context, and Cloud readiness findings
-  with coverage metrics, lightweight charts, deterministic local summary, and
-  dimension views, without Cloud calls, persistence, Core proposals,
-  scheduling, or WordPress writes. It may also prepare
+- Site Check button for a manual local `site_ops_insight_pack.v1` that presents
+  a current-run priority queue across content, approved-comment, media,
+  taxonomy, Site Context, and Cloud readiness findings, then routes the operator
+  to manual handling, existing fixed workflows, or optional Cloud detail.
+  Coverage metrics, lightweight charts, deterministic local summary, and
+  dimension views remain supporting detail, without Cloud calls, persistence,
+  Core proposals, scheduling, or WordPress writes. It may also prepare
   `site_ops_cloud_analysis_request.v1` as a Cloud runtime/detail contract. When
-  Cloud is ready, an administrator may explicitly run Cloud analysis for a
+  Cloud is ready, an administrator may explicitly run Cloud detail for a
   suggestion-only `site_ops_cloud_analysis_result.v1`, without Toolbox owning a
   local queue, run table, scheduler truth, Core proposal, or WordPress write.
 - Post editor Content Support panel for default Npcink review and handoff
@@ -127,8 +128,8 @@ Target features:
 
 - Cloud-managed site knowledge Abilities for search, status, and sync;
 - Cloud implementation of `site_ops_cloud_analysis_result.v1` for heavier
-  Full-site Insights AI summary, semantic ranking, trend explanation, and
-  operator next-action detail, using the Toolbox-prepared
+  Site Check AI summary, semantic ranking, trend explanation, and operator
+  next-action detail, using the Toolbox-prepared
   `site_ops_cloud_analysis_request.v1`;
 - site-content indexing plan;
 - Cloud operator vector provider configuration and migration paths;

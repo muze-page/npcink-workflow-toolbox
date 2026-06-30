@@ -47,6 +47,7 @@ Start from the active documents below before changing code.
 - [Recommendation Eval](recommendation-eval.md)
 - [Summary Eval](summary-eval.md)
 - [Site Ops Cloud Analysis Contract](site-ops-cloud-analysis-contract.md)
+- [Site Knowledge Vector Operations Contract](site-knowledge-vector-operations-contract.md)
 
 ## Media And Site Operations
 
@@ -55,7 +56,8 @@ Start from the active documents below before changing code.
 - [Media Optimization Release Checklist](media-optimization-release-checklist.md)
 - [Media ALT/Caption Review Set](media-alt-caption-review-set.md)
 - [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md)
-- [Full-site Insights Operator Loop](full-site-insights-operator-loop.md)
+- [Site Check Operator Loop](full-site-insights-operator-loop.md)
+- [Site Check Decision Entry Closeout](site-check-decision-entry-closeout-2026-06-30.md)
 - [Batch Automation Governance Plan](batch-automation-governance-plan.md)
 - [Nightly Inspection Cross-Repo Handoff Checklist](nightly-inspection-cross-repo-handoff-checklist.md)
 - [Nightly Inspection Pro Cloud Runtime Acceptance](nightly-inspection-pro-cloud-runtime-acceptance.md)
@@ -66,6 +68,8 @@ Start from the active documents below before changing code.
 ## Boundary Notes And Deprecated Surfaces
 
 - [Article Assistant Workbench](article-assistant-workbench.md)
+- [Cloud Diagnostics Transition Summary](cloud-diagnostics-transition-summary.md)
+- [Site Knowledge UI Migration Closeout](archive/2026-06/site-knowledge-ui-migration-closeout-2026-06-30.md)
 - [Cloud Bulk Article Import](cloud-bulk-article-import.md)
 - [Content Assistant Surface Lessons](content-assistant-surface-lessons.md)
 - [OpenClaw Content Discoverability Handoff](openclaw-content-discoverability-handoff.md)

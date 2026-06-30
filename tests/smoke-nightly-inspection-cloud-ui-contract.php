@@ -1,6 +1,6 @@
 <?php
 /**
- * Static UI contract smoke for the Pro Nightly Inspection Cloud Runtime panel.
+ * Static UI contract smoke for Nightly Inspection Cloud Runtime compatibility.
  *
  * @package Npcink_Toolbox
  */
@@ -33,7 +33,7 @@ foreach (
 		'Automatic status check',
 		'Cloud remains the run-state owner',
 		'function autoReadNightlyCloudBatchResult',
-		'automatically merged into the local review-only Morning Brief preview',
+		'automatically merged into the local review-only scheduled review preview',
 		'Automatic checks ended before Cloud reached a terminal state',
 		'Cloud accepted the run, but the automatic status/result follow-up did not complete',
 		'Cloud result is not ready yet',
@@ -54,9 +54,9 @@ foreach (
 		'Cloud run detail',
 		'Core handoff',
 		'Core intake package',
-		'Morning Brief review queue',
+		'Scheduled review queue',
 		'Score breakdown',
-		'Morning Brief feedback',
+		'Scheduled review feedback',
 		'data-toolbox-nightly-agent-feedback',
 		'wrong_priority',
 		'already_handled',
@@ -76,7 +76,22 @@ foreach (
 		'nightlyCloudSucceeded',
 	) as $required_js_text
 ) {
-	$assert_contains( $admin_js, $required_js_text, 'Pro Cloud Runtime UI keeps the submit/status/result flow observable.' );
+	$assert_contains( $admin_js, $required_js_text, 'Nightly Inspection Cloud Runtime compatibility code keeps the submit/status/result flow observable for existing callers.' );
+}
+
+foreach (
+	array(
+		'cloud_addon_runtime_runs_url',
+		"'tab'  => 'runtime_runs'",
+		'Cloud run status and recovery',
+		'Recent runs, status reads, result reads, and Cloud-owned retry requests now live in Cloud Addon.',
+		'Toolbox keeps only the scheduled review preview and local fallback settings here.',
+		'Open Cloud run recovery',
+		'Low-frequency inspection preview stays here; Cloud run status and recovery live in Cloud Addon.',
+		'Inspect recent runs, read results, and request Cloud-owned retry in Cloud Addon.',
+	) as $required_admin_text
+) {
+	$assert_contains( $admin_page, $required_admin_text, 'Scheduled Review admin panel routes Cloud run detail and recovery to Cloud Addon Runtime Runs.' );
 }
 
 foreach (
@@ -86,18 +101,14 @@ foreach (
 		'data-toolbox-nightly-cloud-recent',
 		'Load Cloud recent',
 		'data-toolbox-nightly-cloud-advanced',
-		'Advanced details',
 		'data-toolbox-nightly-cloud-retry',
-		'Cloud remains the run-state owner and retry processor',
 		'data-toolbox-nightly-cloud-recent-run',
 		'data-toolbox-nightly-cloud-run-summary',
-		'data-toolbox-nightly-local-brief',
 		'Cloud owns entitlement, usage, queue, retry, and retention detail',
-		'Cloud remains the run-state owner',
 		'no local job queue or write path is created',
-	) as $required_admin_text
+	) as $forbidden_admin_text
 ) {
-	$assert_contains( $admin_page, $required_admin_text, 'Pro Cloud Runtime admin panel keeps review-only boundary copy and data hooks.' );
+	$assert_not_contains( $admin_page, $forbidden_admin_text, 'Scheduled Review admin panel must not expose local Cloud run submit/recent/retry controls.' );
 }
 
 foreach (
@@ -109,7 +120,7 @@ foreach (
 		'wp_update_post(',
 	) as $forbidden_js_text
 ) {
-	$assert_not_contains( $admin_js, $forbidden_js_text, 'Pro Cloud Runtime UI must not create local execution or write ownership.' );
+	$assert_not_contains( $admin_js, $forbidden_js_text, 'Nightly Inspection Cloud Runtime compatibility code must not create local execution or write ownership.' );
 }
 
-echo "Nightly inspection Cloud Runtime UI contract: ok\n";
+echo "Nightly inspection Cloud Runtime compatibility contract: ok\n";

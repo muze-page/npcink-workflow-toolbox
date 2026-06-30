@@ -132,9 +132,13 @@ Cloud-managed site knowledge is exposed through three high-level abilities:
   context, internal links, refresh suggestions, image context, FAQ candidates,
   content gap analysis, and publish preflight duplicate checks;
 - `get-site-knowledge-status` for Cloud index coverage and freshness status;
-- `request-site-knowledge-sync` for bounded Cloud sync or rebuild requests from
+- `request-site-knowledge-sync` for bounded Cloud refresh requests from
   public WordPress content, including published posts/pages and bounded
   approved comments attached to those public entries.
+
+Toolbox and Cloud Addon must reject `rebuild`, `delete`, collection lifecycle,
+embedding-provider, and stale-index policy operations. Those operations belong
+only in Cloud Site Knowledge operator surfaces.
 
 These abilities are general-purpose. Article drafting, admin search,
 recommendations, internal-link tooling, and refresh workflows should call the

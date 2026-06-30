@@ -381,14 +381,18 @@ final class Rest_Controller {
 
 	public function site_knowledge_sync( WP_REST_Request $request ) {
 		$sync_mode = sanitize_key( (string) ( $request->get_param( 'sync_mode' ) ?: 'refresh' ) );
-		if ( ! in_array( $sync_mode, array( 'refresh', 'rebuild', 'delete' ), true ) ) {
-			$sync_mode = 'refresh';
+		if ( 'refresh' !== $sync_mode ) {
+			return new WP_Error(
+				'npcink_toolbox_site_knowledge_sync_mode_not_allowed',
+				__( 'Toolbox only forwards public Site Knowledge refresh requests. Rebuild, delete, and collection lifecycle operations belong in Cloud Site Knowledge.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
 		}
 
 		return rest_ensure_response(
 			$this->client->request_site_knowledge_sync(
 				array(
-					'sync_mode' => $sync_mode,
+					'sync_mode' => 'refresh',
 					'post_ids'  => $this->csv_absint_list( (string) $request->get_param( 'post_ids' ) ),
 					'max_posts' => max( 1, min( 50, (int) ( $request->get_param( 'max_posts' ) ?: 20 ) ) ),
 				)

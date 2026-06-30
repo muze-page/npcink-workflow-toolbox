@@ -357,7 +357,7 @@ final class Site_Ops_Insight_Builder {
 			'site_knowledge',
 			68,
 			'medium',
-			__( 'The local insight pack can run, but semantic Site Knowledge and Cloud analysis are unavailable.', 'npcink-workflow-toolbox' ),
+			__( 'The local site check can run, but semantic Site Knowledge and Cloud detail are unavailable.', 'npcink-workflow-toolbox' ),
 			__( 'Without Cloud, recommendations stay local and cannot use semantic related-content evidence.', 'npcink-workflow-toolbox' ),
 			__( 'Connect or verify Cloud Addon before expecting deeper semantic analysis.', 'npcink-workflow-toolbox' ),
 			'blocked_until_cloud_ready',

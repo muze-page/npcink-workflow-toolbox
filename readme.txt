@@ -30,7 +30,7 @@ The plugin provides a WordPress admin surface and post-editor panel for:
   ALT/caption review sets, and media planning handoff packets;
 * Cloud-managed site knowledge search, status, and sync requests when a
   compatible host runtime is connected;
-* review-only Morning Brief and Cloud runtime inspection panels.
+* review-only Scheduled Review previews, with Cloud runtime inspection and recovery routed to Cloud Addon.
 
 Toolbox returns suggestions, candidates, previews, and planning artifacts. It
 does not publish posts, approve proposals, import media, create terms, update SEO
@@ -87,7 +87,7 @@ those services.
 
 Used for Cloud-managed web search, image-source candidates, site knowledge
 search/sync/status, hosted AI content-support suggestions, reviewed AI image
-candidates, and Pro Cloud Runtime inspection details.
+candidates, and Cloud Addon Runtime Runs inspection details.
 
 Npcink Workflow Toolbox is designed to work with the official Npcink hosted
 runtime service, Npcink Cloud. The plugin does not include or hard-code a Cloud
@@ -219,8 +219,7 @@ outside Toolbox.
   image candidate, current-article image ALT, and publish-readiness support.
 * Added Site Context fields for non-secret SEO/AEO/GEO guidance.
 * Added Cloud-managed search, image-source, site knowledge, hosted AI, and
-  Pro Cloud Runtime integration surfaces that fail closed without a connected
-  runtime.
+  Cloud Addon runtime-detail links that fail closed without a connected runtime.
 * Added governed handoff plans for article, media, image candidate, site
   knowledge, and metadata review workflows.
 * Added WordPress Abilities API registrations for suggestion and planning

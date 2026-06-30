@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Optional browser smoke for the Full-site Insights admin UI.
+ * Optional browser smoke for the Site Check admin UI.
  *
  * This opens a real local WordPress admin page, generates the local report,
  * checks the summary-first panels, switches sub-tabs, and captures a screenshot.
- * It does not run Cloud analysis, create Core proposals, or write WordPress data.
+ * It does not run Cloud detail, create Core proposals, or write WordPress data.
  */
 
 import { randomBytes } from 'node:crypto';
@@ -125,7 +125,7 @@ async function openToolboxPage(page, baseUrl) {
 	}
 	const title = await page.title().catch(() => '');
 	const body = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
-	fail(`Could not find the Full-site Insights admin panel. Last URL: ${page.url()}. Last page title: ${title}. Body: ${body.slice(0, 500)}`);
+	fail(`Could not find the Site Check admin panel. Last URL: ${page.url()}. Last page title: ${title}. Body: ${body.slice(0, 500)}`);
 }
 
 async function captureDiagnostics(page, requests, error) {
@@ -134,12 +134,12 @@ async function captureDiagnostics(page, requests, error) {
 	const screenshotPath = `${artifactDir}/site-ops-insights-browser-failure.png`;
 	await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => {});
 	const pageText = await page.locator('body').innerText({ timeout: 2000 }).catch(() => '');
-	console.error(`FAIL: Full-site Insights browser smoke diagnostic screenshot: ${screenshotPath}`);
-	console.error(`FAIL: Full-site Insights browser smoke current URL: ${page.url()}`);
-	console.error(`FAIL: Full-site Insights browser smoke page title: ${await page.title().catch(() => '')}`);
-	console.error(`FAIL: Full-site Insights browser smoke wp-admin/wp-json requests: ${requests.length}`);
-	console.error(`FAIL: Full-site Insights browser smoke visible text sample: ${pageText.replace(/\s+/g, ' ').trim().slice(0, 1200)}`);
-	console.error(`FAIL: Full-site Insights browser smoke error: ${error && error.message ? error.message : String(error || 'unknown error')}`);
+	console.error(`FAIL: Site Check browser smoke diagnostic screenshot: ${screenshotPath}`);
+	console.error(`FAIL: Site Check browser smoke current URL: ${page.url()}`);
+	console.error(`FAIL: Site Check browser smoke page title: ${await page.title().catch(() => '')}`);
+	console.error(`FAIL: Site Check browser smoke wp-admin/wp-json requests: ${requests.length}`);
+	console.error(`FAIL: Site Check browser smoke visible text sample: ${pageText.replace(/\s+/g, ' ').trim().slice(0, 1200)}`);
+	console.error(`FAIL: Site Check browser smoke error: ${error && error.message ? error.message : String(error || 'unknown error')}`);
 }
 
 async function openOpsTab(page, target) {
@@ -232,14 +232,17 @@ try {
 		const overviewRawText = await page.locator('[data-toolbox-ops-panel="overview"]').textContent();
 		assert(/Site action brief|站点待办摘要/.test(overviewText), 'Overview starts with a site action brief.');
 		assert(/Do first|先做这些/.test(overviewText) && /Defer for now|暂时不做/.test(overviewText), 'Site action brief separates first tasks from deferred scope.');
-		assert(/AI assist|AI 辅助/.test(overviewText) && /Ask AI to summarize deeper|让 AI 深度总结/.test(overviewText), 'Site action brief makes optional AI assist visible without auto-running it.');
+		assert(/AI assist|AI 辅助/.test(overviewText) && /Use Cloud detail|使用 Cloud 详情/.test(overviewText), 'Site action brief makes optional Cloud detail visible without auto-running it.');
 		assert(/Close the loop|形成闭环/.test(overviewText), 'Site action brief tells the operator how to close the loop.');
-		assert(/Choose a treatment path|选择处理路径/.test(overviewText), 'Overview shows a treatment path panel near the top decisions.');
-		assert(/Handle manually|手动处理/.test(overviewText) && /Send to review workflow|进入审核流程/.test(overviewText) && /Watch for now|暂时观察/.test(overviewText), 'Treatment path panel separates manual, review-workflow, and observe paths.');
+		const pathPanel = page.locator('[data-toolbox-ops-panel="overview"] .npcink-toolbox__ops-path-panel');
+		assert(await pathPanel.count() === 1 && await pathPanel.isVisible(), 'Overview shows a treatment path panel near the top decisions.');
+		const pathPanelText = await pathPanel.innerText();
+		assert(/Handle manually|手动处理/.test(pathPanelText) && /Send to review workflow|进入审核流程/.test(pathPanelText) && /Watch for now|暂时观察/.test(pathPanelText), 'Treatment path panel separates manual, review-workflow, and observe paths.');
 		assert(/does not create tasks, proposals, queues, or WordPress changes|不会创建任务、提案、队列或 WordPress 更改/.test(overviewText), 'Treatment path panel keeps no-task, no-proposal, no-queue, and no-write boundary visible.');
 		assert(/Handle these first|优先处理这些问题|先处理/.test(overviewText), 'Overview tells the operator where to start.');
 		assert(/Why it matters|为什么重要|为何重要/.test(overviewText) && /Affected examples|受影响示例/.test(overviewText), 'Decision queue explains why each issue matters and who is affected.');
 		assert(/First safe action|第一步安全操作|先做什么/.test(overviewText) && /Handling|处理方式/.test(overviewText), 'Decision queue explains the first safe action and handling path.');
+		assert(await page.locator('[data-toolbox-ops-panel="overview"] .npcink-toolbox__ops-next-actions .button').count() > 0, 'Decision queue exposes safe first-action buttons instead of text-only recommendations.');
 		assert(/High priority|高优先级|Medium priority|中优先级/.test(overviewText), 'Decision queue shows priority as a readable label.');
 		assert(/View review candidate|查看审核候选/.test(overviewText), 'Review-workflow cards expose a folded handoff candidate preview.');
 		assert(/View handling rules and limits|查看处理规则与限制/.test(overviewText), 'Decision queue keeps detailed handling boundaries behind a plain-language disclosure.');
@@ -266,9 +269,9 @@ try {
 
 		await openOpsTab(page, 'cloud');
 		const cloudText = await page.locator('[data-toolbox-ops-panel="cloud"]').innerText();
-		assert(/Cloud analysis has not run|Cloud analysis result|Cloud 分析|云端分析/.test(cloudText), 'Cloud tab renders review-only status without automatic execution.');
-		assert(/Ask AI to summarize deeper|让 AI 深度总结/.test(cloudText), 'Cloud tab owns the optional deeper AI summary action.');
-		assert(forbiddenRequests(requests).length === 0, 'Full-site Insights browser smoke does not call Cloud analysis, Core proposals, or execute routes.');
+		assert(/Cloud detail has not run|Cloud detail result|Cloud 详情|云端详情/.test(cloudText), 'Cloud tab renders review-only status without automatic execution.');
+		assert(/Use Cloud detail|使用 Cloud 详情/.test(cloudText), 'Cloud tab owns the optional deeper AI detail action.');
+		assert(forbiddenRequests(requests).length === 0, 'Site Check browser smoke does not call Cloud detail, Core proposals, or execute routes.');
 
 		await openOpsTab(page, 'overview');
 		await page.evaluate(() => {
@@ -295,4 +298,4 @@ try {
 	await browser.close();
 }
 
-pass(`Full-site Insights browser smoke completed at ${baseUrl}.`);
+pass(`Site Check browser smoke completed at ${baseUrl}.`);

@@ -17,7 +17,7 @@ final class Ability_Surface_Metadata {
 			'image_candidates'         => self::definition( __( 'Image Candidates', 'npcink-workflow-toolbox' ), 'editor_default_button', true, 'cloud_runtime_via_addon', 'image_candidate_adoption_plan', 'npcink_owned_default' ),
 			'article_audio_candidates' => self::definition( __( 'Article Audio Candidates', 'npcink-workflow-toolbox' ), 'editor_default_button', true, 'cloud_runtime_via_addon', 'article_audio_adoption_plan', 'npcink_owned_default' ),
 			'site_profile'             => self::definition( __( 'Site Profile', 'npcink-workflow-toolbox' ), 'admin_profile', true, 'local_wordpress_option', 'read_only_context', 'npcink_owned_default' ),
-			'full_site_insights'       => self::definition( __( 'Full-site Insights', 'npcink-workflow-toolbox' ), 'admin_overview', true, 'local_snapshot_optional_cloud_analysis', 'site_ops_cloud_analysis_request', 'npcink_owned_default' ),
+			'full_site_insights'       => self::definition( __( 'Site Check', 'npcink-workflow-toolbox' ), 'admin_overview', true, 'local_snapshot_optional_cloud_detail', 'site_ops_cloud_analysis_request', 'npcink_owned_default' ),
 			'site_knowledge'           => self::definition( __( 'Site Knowledge', 'npcink-workflow-toolbox' ), 'advanced_setup', true, 'cloud_runtime_via_addon', 'search_or_sync_request', 'npcink_owned_default' ),
 			'cloud_web_search'         => self::definition( __( 'Cloud Web Search', 'npcink-workflow-toolbox' ), 'advanced_check', true, 'cloud_runtime_via_addon', 'evidence_only', 'npcink_owned_default' ),
 			'batch_alt_review_handoff' => self::definition( __( 'Batch ALT Review Handoff', 'npcink-workflow-toolbox' ), 'admin_image_handling', true, 'cloud_runtime_via_addon', 'media_alt_caption_review_plan', 'npcink_owned_default' ),

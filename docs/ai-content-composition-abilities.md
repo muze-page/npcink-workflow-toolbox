@@ -171,7 +171,7 @@ tab remains the management, testing, and cross-article surface.
 | `npcink-toolbox/validate-content-discoverability-context` | `context_preflight` | Readiness checks before drafting. |
 | `npcink-toolbox/search-site-knowledge` | `site_knowledge_context` | Cloud-managed site search, related content, writing context, internal links, refresh suggestions, or image context. |
 | `npcink-toolbox/get-site-knowledge-status` | `site_knowledge_status` | Cloud-managed site knowledge coverage and freshness status. |
-| `npcink-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content sync or rebuild request for Cloud-managed site knowledge. |
+| `npcink-toolbox/request-site-knowledge-sync` | `site_knowledge_sync_request` | Bounded public-content refresh request for Cloud-managed site knowledge. |
 | `npcink-toolbox/search-image-source` | `image_source_candidates` | External image-source candidates with attribution metadata. |
 | `npcink-toolbox/generate-image` | `image_source_candidates` | Reviewed-prompt Cloud AI image candidates from an image-source handoff. |
 | `npcink-toolbox/build-content-discoverability-brief` | `seo_aeo_geo_brief` | Suggestion-only SEO/AEO/GEO instructions and proposal template. |

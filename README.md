@@ -40,25 +40,35 @@ The first version provides:
 - a route-only content opportunity helper intent that samples recent, older,
   missing-image, and taxonomy-backed public content for bounded update,
   linking, expansion, or image opportunities; operator-facing site opportunity
-  review lives in **Full-site Insights**; media
+  review lives in **Site Check**; media
   ALT/caption helper contracts stay available for editor-sidebar use and future
   batch review sets, but the standalone admin tool is not exposed;
-- a **Full-site Insights** tab that builds a local
+- a **Site Check** secondary panel that acts as the fixed-button toolbox's
+  read-only decision router. It builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
-  Cloud availability into a read-only site analysis report with coverage
-  metrics, charts, local deterministic summary, dimension views, findings, and
-  evidence, without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
+  Cloud availability into a priority queue for manual review, existing Toolbox
+  fixed workflows, or optional Cloud detail. Supporting coverage metrics,
+  charts, dimension views, findings, and evidence stay secondary. The local
+  check runs without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
   `site_ops_cloud_analysis_request.v1` contract. When Cloud is connected and
-  the administrator explicitly clicks **Run Cloud analysis**, Toolbox may send
+  the administrator explicitly clicks **Use Cloud detail**, Toolbox may send
   that request to Cloud runtime for a suggestion-only
   `site_ops_cloud_analysis_result.v1`, without local queues, local run tables,
   Core proposal creation, or WordPress writes;
-- a Start panel **Preview Morning Brief** entry that reads bounded local
-  public-content evidence and renders a dry-run Nightly Site Inspection preview
-  without cron, Cloud calls, Core proposals, persistence, or WordPress writes;
+- a low-frequency **Scheduled Review** entry, reached from Site Check and the
+  Advanced directory, for scheduled-review preview and local fallback state.
+  Cloud run status, result reads, and recovery live in the Cloud Addon Runtime
+  Runs tab. Its primary entry reads bounded local public-content
+  evidence and renders a dry-run Nightly Site Inspection preview without cron,
+  Cloud calls, Core proposals, persistence, or WordPress writes. **Site Check**
+  remains the ordinary manual site-check report and the only default site
+  maintenance entry operators need to understand;
+- no local Cloud Checks or Troubleshooting Checks panel. Cloud connection,
+  hosted runtime, search, image-source, quota, entitlement, and service health
+  diagnostics belong in `npcink-cloud-addon` or Cloud service-plane surfaces;
 - a disabled-by-default **Local Fallback Preview** WP-Cron setting that can
-  overwrite one latest dry-run Morning Brief preview for operator review when
+  overwrite one latest dry-run scheduled review preview for operator review when
   Cloud is unavailable or not yet connected, without Cloud calls, Core
   proposals, Action Scheduler, custom tables, leases, retries, dead letters, or
   WordPress content writes;
@@ -100,6 +110,7 @@ the [documentation index](docs/README.md). Start with:
 The documentation index also tracks key detail records that static contracts
 expect to stay discoverable from the root README:
 [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md),
+[Cloud Diagnostics Transition Summary](docs/cloud-diagnostics-transition-summary.md),
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
 [Content Support Product Readiness](docs/content-support-product-readiness.md),
 [Content Support Release And Trial Closeout](docs/archive/2026-06/content-support-release-trial-closeout.md),
@@ -120,9 +131,10 @@ Media and hardening detail records remain indexed at
 [Scoped Permissions First Version](docs/scoped-permissions-first-version.md), and
 [Security And Performance Release Gate](docs/security-performance-release-gate.md).
 Workflow and composition contracts remain indexed at
-[Full-site Insights Operator Loop](docs/full-site-insights-operator-loop.md),
+[Site Check Operator Loop](docs/full-site-insights-operator-loop.md),
 [AI Content Composition Abilities](docs/ai-content-composition-abilities.md),
 [Connector Ability Exposure](docs/connector-ability-exposure.md),
+[Site Knowledge Vector Operations Contract](docs/site-knowledge-vector-operations-contract.md),
 [Content Discoverability Context](docs/content-discoverability-context.md),
 [OpenClaw Content Discoverability Handoff](docs/openclaw-content-discoverability-handoff.md),
 [OpenClaw SEO/GEO/AEO Acceptance Summary](docs/openclaw-seo-geo-aeo-acceptance-summary.md),
@@ -216,9 +228,11 @@ the primary commercial path for reliable scoring, entitlement, usage metering,
 queue-backed execution, retry, observability, and result retention, while the
 local WP-Cron path remains a WordPress-side fallback preview and onboarding aid,
 not a second Pro scheduler.
-The Pro Cloud Runtime panel can refresh `pro_cloud_runtime` quota detail from
-Cloud and disable new submissions when Cloud reports exhausted
-`nightly_site_inspection_runs`; this local display is not billing truth.
+Cloud Addon Runtime Runs can read recent/status/result detail and request
+Cloud-owned retry for known Nightly Inspection runs. Toolbox may retain
+compatibility REST bridges for existing callers, but its visible Scheduled
+Review panel links to Cloud Addon instead of presenting a second run-recovery
+workspace. Any local display of `pro_cloud_runtime` detail is not billing truth.
 Action Scheduler is reserved as a future local fallback/substrate candidate only
 if a confirmed local-batch requirement justifies the added plugin complexity.
 ADR-005 freezes this current split: WP-Cron is the local fallback preview or
@@ -325,8 +339,8 @@ button; it must not create a separate batch writer.
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
-The **Full-site Insights** surface is the operator-facing path for site content
-opportunities. The bounded content snapshot helper remains available through
+The **Site Check** surface is the operator-facing path for site content
+opportunity triage. The bounded content snapshot helper remains available through
 `/ai/site-helpers` for route/internal composition, while the reviewed-draft
 write-plan route and Ability stay
 available for machine clients, future Cloud bulk import, and explicit API
@@ -488,7 +502,7 @@ buttons. The admin
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
-Full-site Insights owns site-level content opportunity review. The bounded
+Site Check owns site-level content opportunity triage. The bounded
 `content_snapshot_suggestions` helper remains route-only for hosted AI
 composition, and reviewed draft write-plan contracts remain available only
 through REST and Abilities for future bulk import or machine-client composition.
@@ -656,33 +670,24 @@ it owns the public content-change bridge for Site Knowledge. Toolbox then shows
 that bridge health in the Site Knowledge status response and does not register
 its legacy local auto-sync hooks. Standalone installs without the Cloud Addon
 bridge show an install-and-verify requirement instead of running a Toolbox-owned
-fallback queue. Manual Site Knowledge sync remains available from Toolbox, but
-automatic public-change delivery belongs to Cloud Addon. Toolbox does not store
-provider credentials, run embeddings locally, own the index lifecycle, or write
-WordPress content.
+fallback queue. Manual Site Knowledge sync remains as a compatibility REST and
+Ability contract for existing callers, but the operator-facing connection,
+refresh, indexing, and detailed delivery status live in Cloud Addon. Toolbox
+does not store provider credentials, run embeddings locally, own the index
+lifecycle, or write WordPress content.
 
-The admin **Site Knowledge** tab lets operators start or refresh the
-Cloud-managed index and inspect coverage without configuring vector provider
-keys in Toolbox. Cloud owns embedding, vector storage, and detailed run health;
-Toolbox only starts explicit sync requests, displays returned status, and
-surfaces Cloud Addon bridge health when automatic public-change delivery is
-available.
-The **Cloud Checks -> Site Knowledge** panel is a read-only verification surface
-for Cloud-managed site knowledge search; status and refresh operations stay in
-Site Knowledge. It does not expose provider keys, embedding settings,
-collection names, or vector database configuration.
-The **Cloud Checks -> Search** panel uses Cloud auto execution for a bounded
-Toolbox reachability check; provider selection, Jina Reader toggles, routing
-diagnostics, entitlement, quota, billing, and request logs belong in Cloud
-Addon or Cloud service-plane surfaces.
-The **Cloud Checks -> Image** panel checks Cloud image-source candidates and can
-generate a short-lived derivative preview for one existing media-library image,
-while Content Operations coverage and Agent quality summaries live in Cloud
-Addon Monitoring.
-including text or image/logo watermark overrides for that run. Single-image
-Core proposal submission and URL repair handoffs remain in the one-image review
-flow; batch proposal submission remains in **Image Handling -> Batch Optimize
-Images**.
+The secondary **Content Library Usage** panel is read-only from a daily
+operator perspective. It displays coverage/status returned by Cloud-managed
+Site Knowledge and points setup or refresh work to Cloud Addon. Toolbox keeps
+the best-practice flows that consume those results, such as internal-link
+candidates, duplicate checks, publish preflight context, and governed review
+handoff preparation.
+Standalone Cloud diagnostics are not exposed in Toolbox. Cloud Addon owns the
+WordPress-side Cloud connection, hosted runtime status, search/image-source
+diagnostics, entitlement, quota, billing, request logs, and service health
+detail. Toolbox keeps Cloud-backed calls inside explicit product workflows, and
+single-image Core proposal submission, URL repair handoffs, and batch proposal
+submission remain in **Image Handling**.
 
 Provider responses return normalized fields by default. Set **Include provider
 raw responses** to include redacted raw provider payloads for debugging.

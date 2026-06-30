@@ -5,7 +5,7 @@ Date: 2026-06-11
 ## Context
 
 The Toolbox admin page was confusing because high-frequency article work,
-fallback bundles, Cloud checks, Site Knowledge status, and media operations all
+fallback bundles, Cloud diagnostics, Site Knowledge status, and media operations all
 competed for attention on the same surface. The work in this pass keeps Toolbox
 as an operator-facing product surface while preserving the existing boundary:
 Toolbox prepares suggestions, plans, checks, and handoff artifacts; final
@@ -29,11 +29,11 @@ selected-image workbenches. The former single-article image text helper is
 removed from the backend because it needs current editor context. A separate
 **Batch Image Text Review** tool now builds a small selected media-library
 review set and can prepare a Core handoff draft without creating proposals or
-writing media metadata. Full-site Insights owns site content opportunity
-review; the standalone Content Review tab and content opportunity tool are
+writing media metadata. Site Check owns site content opportunity triage; the
+standalone Content Review tab and content opportunity tool are
 retired. The reviewed draft handoff is no longer a backend tool and remains
 available only through REST/Abilities for future import workflows. The retired
-article assistant and article-plan URLs fall back to Full-site Insights instead
+article assistant and article-plan URLs fall back to Site Check instead
 of restoring a daily writing path.
 Deprecated `tab=image&tool=optimize` and
 `toolbox_tab=tools&toolbox_tool=media-derivative` links now canonicalize to
@@ -49,25 +49,21 @@ discoverability, current-article ALT, and comment-reply paths remain compatible
 capabilities, while default visible buttons stay focused on Npcink review and
 handoff work.
 
-**Full-site Insights** is now the Overview page's primary site-check action
-instead of a visible top-level tab. It keeps the stable `operations-insights`
-deep-link panel for report URLs, nonce-protected scan links, and Cloud analysis
-review detail.
+**Site Check** is now the Overview page's primary site-check action instead of
+a visible top-level tab. It keeps the stable `operations-insights` deep-link
+panel for report URLs, nonce-protected scan links, and Cloud detail review.
 
-**Connection Diagnostics** keeps the stable `cloud-checks` deep-link id as a
-secondary diagnostics panel instead of a visible top-level tab. It now defaults
-to one basic read-only connection check for ordinary operators. Search, image,
-content library, and scheduled review diagnostics stay folded under detailed
-diagnostics and open automatically for old deep links. Content Operations
-coverage and Agent feedback quality summaries link out to Cloud Addon
-Monitoring instead of rendering as Toolbox panels. Site Knowledge status and
-refresh controls stay in the secondary **Content Library Setup** panel reached
-from Advanced. The Advanced page is now the single low-frequency directory and
-groups entries as Setup, Diagnostics, Review, and Planning/Handoff instead of
-duplicating secondary links on Overview. Nightly Inspection local fallback
-settings, Pro Cloud Runtime
-quota/detail, and Cloud run recovery stay in detailed checks instead of
-competing with the Start page's primary operator entries.
+Cloud diagnostics no longer render as a Toolbox panel. Cloud connection,
+hosted runtime, search/image-source, entitlement, quota, and service health
+checks belong in Cloud Addon or Cloud service-plane surfaces. Site Knowledge
+connection, refresh, indexing, and delivery detail belong in Cloud Addon; the
+secondary **Content Library Usage** panel remains a compatibility/read-only
+usage surface and is not linked from Advanced. The Advanced page is now the
+single low-frequency directory and groups entries as Review and
+Planning/Handoff instead of duplicating secondary links on Overview. Nightly
+Inspection local fallback settings stay in the dedicated Morning Brief panel;
+Cloud run status, result reads, and recovery now open in Cloud Addon Runtime
+Runs instead of competing with the Start page's primary operator entries.
 
 Site Profile now defaults to the four-field site brief: positioning, audience,
 voice, and primary keywords. SEO, AEO, GEO, claim boundaries, and the read-only
@@ -117,10 +113,10 @@ The following gates passed after the changes:
 Browser verification during the earlier consolidation pass confirmed:
 
 - Image Handling opens by default to Image Tools and Batch Optimize Images.
-- Full-site Insights owns site content opportunity review; reviewed draft write
+- Site Check owns site content opportunity triage; reviewed draft write
   plans remain route/Ability-only.
 - Site Knowledge returned `200` after Cloud quota was updated.
-- Content Library Setup status rendered as ready with no console warning or
+- Content Library Usage status rendered as ready with no console warning or
   error.
 
 The final browser session was no longer logged in, so the last localization and

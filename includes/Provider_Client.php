@@ -359,7 +359,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_site_ops_cloud_analysis_runtime_payload',
-				__( 'The Operations Insights Cloud runtime payload was not valid.', 'npcink-workflow-toolbox' ),
+					__( 'The Site Check Cloud runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -376,7 +376,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_ops_cloud_analysis_unavailable',
-				__( 'Connect Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-workflow-toolbox' ),
+					__( 'Connect Npcink Cloud before running Cloud Site Check detail.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -1957,8 +1957,9 @@ final class Provider_Client {
 			'intent'           => $intent,
 			'current_post_id'  => absint( $input['current_post_id'] ?? 0 ),
 			'max_results'      => max( 1, min( 20, absint( $input['max_results'] ?? 8 ) ) ),
-			'filters'          => is_array( $filters ) ? $filters : array(),
-			'write_posture'    => 'suggestion_only',
+			'filters'                => is_array( $filters ) ? $filters : array(),
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
@@ -1973,9 +1974,10 @@ final class Provider_Client {
 
 	public function get_site_knowledge_status( array $input ) {
 		$payload = array(
-			'contract_version' => 'site_knowledge_status.v1',
-			'include_coverage' => ! empty( $input['include_coverage'] ),
-			'write_posture'    => 'suggestion_only',
+			'contract_version'       => 'site_knowledge_status.v1',
+			'include_coverage'       => ! empty( $input['include_coverage'] ),
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
 		);
 
 		return $this->execute_site_knowledge_cloud_request(
@@ -1990,27 +1992,30 @@ final class Provider_Client {
 
 	public function request_site_knowledge_sync( array $input ) {
 		$sync_mode = sanitize_key( (string) ( $input['sync_mode'] ?? 'refresh' ) );
-		if ( ! in_array( $sync_mode, array( 'refresh', 'rebuild', 'delete' ), true ) ) {
-			$sync_mode = 'refresh';
+		if ( 'refresh' !== $sync_mode ) {
+			return new WP_Error(
+				'npcink_toolbox_site_knowledge_sync_mode_not_allowed',
+				__( 'Toolbox only forwards public Site Knowledge refresh requests. Rebuild, delete, and collection lifecycle operations belong in Cloud Site Knowledge.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
 		}
 
 		$payload = array(
-			'contract_version' => 'site_knowledge_sync.v1',
-			'sync_mode'        => $sync_mode,
-			'post_ids'         => $this->sanitize_absint_list( $input['post_ids'] ?? array() ),
-			'max_posts'        => max( 1, min( 50, absint( $input['max_posts'] ?? 20 ) ) ),
-			'documents'        => array(),
-			'payload_limits'   => array(
+			'contract_version'       => 'site_knowledge_sync.v1',
+			'sync_mode'              => 'refresh',
+			'post_ids'               => $this->sanitize_absint_list( $input['post_ids'] ?? array() ),
+			'max_posts'              => max( 1, min( 50, absint( $input['max_posts'] ?? 20 ) ) ),
+			'documents'              => array(),
+			'payload_limits'         => array(
 				'content_excerpt_chars' => self::SITE_KNOWLEDGE_CONTENT_CHARS,
 				'max_payload_bytes'     => self::SITE_KNOWLEDGE_SYNC_MAX_BYTES,
 				'max_comment_documents' => 100,
 			),
-			'write_posture'    => 'suggestion_only',
+			'write_posture'          => 'suggestion_only',
+			'direct_wordpress_write' => false,
 		);
 
-		if ( 'delete' !== $sync_mode ) {
-			$payload['documents'] = $this->collect_site_knowledge_documents( $payload['post_ids'], $payload['max_posts'] );
-		}
+		$payload['documents'] = $this->collect_site_knowledge_documents( $payload['post_ids'], $payload['max_posts'] );
 
 		return $this->execute_site_knowledge_cloud_request(
 			'npcink-cloud/site-knowledge-sync',
@@ -3299,7 +3304,7 @@ final class Provider_Client {
 		if ( empty( $selected_items ) ) {
 			return new WP_Error(
 				'npcink_toolbox_nightly_inspection_review_items_required',
-				__( 'Select at least one Morning Brief review item before creating a Core proposal.', 'npcink-workflow-toolbox' ),
+				__( 'Select at least one scheduled review item before creating a Core proposal.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -3342,7 +3347,7 @@ final class Provider_Client {
 
 			$evidence_refs[] = array(
 				'action_id'               => $action_id,
-				'title'                   => $this->bounded_text( sanitize_text_field( (string) ( $item['title'] ?? __( 'Morning Brief review item', 'npcink-workflow-toolbox' ) ) ), 160 ),
+				'title'                   => $this->bounded_text( sanitize_text_field( (string) ( $item['title'] ?? __( 'Scheduled review item', 'npcink-workflow-toolbox' ) ) ), 160 ),
 				'object_type'             => $object_type,
 				'object_id'               => $object_id,
 				'post_id'                 => absint( $item['post_id'] ?? ( 'post' === $object_type ? $object_id : 0 ) ),
@@ -3433,7 +3438,7 @@ final class Provider_Client {
 					'commit_execution'  => false,
 					'proposal_ready'    => false,
 					'requires_input'    => array( 'title', 'content' ),
-					'reason'            => __( 'Morning Brief found reviewable content quality signals. Human draft title and content are required before execution can be considered.', 'npcink-workflow-toolbox' ),
+					'reason'            => __( 'Scheduled review found reviewable content quality signals. Human draft title and content are required before execution can be considered.', 'npcink-workflow-toolbox' ),
 				),
 			),
 			'handoff'                => array(
