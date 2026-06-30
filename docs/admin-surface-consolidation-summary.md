@@ -29,11 +29,11 @@ selected-image workbenches. The former single-article image text helper is
 removed from the backend because it needs current editor context. A separate
 **Batch Image Text Review** tool now builds a small selected media-library
 review set and can prepare a Core handoff draft without creating proposals or
-writing media metadata. Full-site Insights owns site content opportunity
-review; the standalone Content Review tab and content opportunity tool are
+writing media metadata. Site Check owns site content opportunity triage; the
+standalone Content Review tab and content opportunity tool are
 retired. The reviewed draft handoff is no longer a backend tool and remains
 available only through REST/Abilities for future import workflows. The retired
-article assistant and article-plan URLs fall back to Full-site Insights instead
+article assistant and article-plan URLs fall back to Site Check instead
 of restoring a daily writing path.
 Deprecated `tab=image&tool=optimize` and
 `toolbox_tab=tools&toolbox_tool=media-derivative` links now canonicalize to
@@ -49,10 +49,9 @@ discoverability, current-article ALT, and comment-reply paths remain compatible
 capabilities, while default visible buttons stay focused on Npcink review and
 handoff work.
 
-**Full-site Insights** is now the Overview page's primary site-check action
-instead of a visible top-level tab. It keeps the stable `operations-insights`
-deep-link panel for report URLs, nonce-protected scan links, and Cloud analysis
-review detail.
+**Site Check** is now the Overview page's primary site-check action instead of
+a visible top-level tab. It keeps the stable `operations-insights` deep-link
+panel for report URLs, nonce-protected scan links, and Cloud detail review.
 
 Cloud diagnostics no longer render as a Toolbox panel. Cloud connection,
 hosted runtime, search/image-source, entitlement, quota, and service health
@@ -114,7 +113,7 @@ The following gates passed after the changes:
 Browser verification during the earlier consolidation pass confirmed:
 
 - Image Handling opens by default to Image Tools and Batch Optimize Images.
-- Full-site Insights owns site content opportunity review; reviewed draft write
+- Site Check owns site content opportunity triage; reviewed draft write
   plans remain route/Ability-only.
 - Site Knowledge returned `200` after Cloud quota was updated.
 - Content Library Usage status rendered as ready with no console warning or

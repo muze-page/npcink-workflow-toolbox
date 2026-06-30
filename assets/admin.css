@@ -514,6 +514,12 @@
 	border-radius: 6px;
 }
 
+.npcink-toolbox__panel[data-toolbox-tab-panel='operations-insights'] .npcink-toolbox__ops-status-row,
+.npcink-toolbox__panel[data-toolbox-tab-panel='operations-insights'] .npcink-toolbox__ops-loop-disclosure,
+.npcink-toolbox__panel[data-toolbox-tab-panel='operations-insights'] .npcink-toolbox__card {
+	max-width: 1120px;
+}
+
 .npcink-toolbox__ops-status-main,
 .npcink-toolbox__ops-status-actions {
 	display: flex;
@@ -615,12 +621,18 @@
 
 .npcink-toolbox__ops-loop-disclosure {
 	margin: 8px 0 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
 }
 
 .npcink-toolbox__ops-loop-disclosure summary {
-	display: inline-flex;
+	display: flex;
+	gap: 8px;
 	align-items: center;
+	justify-content: space-between;
 	min-height: 28px;
+	padding: 8px 12px;
 	color: #50575e;
 	cursor: pointer;
 	font-size: 13px;
@@ -628,12 +640,38 @@
 	line-height: 1.35;
 }
 
+.npcink-toolbox__ops-loop-disclosure summary::after {
+	content: "+";
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: #646970;
+	font-weight: 700;
+}
+
 .npcink-toolbox__ops-loop-disclosure summary:hover {
+	background: #f6f7f7;
 	color: #135e96;
+}
+
+.npcink-toolbox__ops-loop-disclosure[open] {
+	padding-bottom: 10px;
 }
 
 .npcink-toolbox__ops-loop-disclosure[open] summary {
 	margin-bottom: 8px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.npcink-toolbox__ops-loop-disclosure[open] summary::after {
+	content: "-";
+}
+
+.npcink-toolbox__ops-loop-disclosure > .npcink-toolbox__ops-detail-grid {
+	margin-right: 12px;
+	margin-left: 12px;
 }
 
 .npcink-toolbox__ops-summary-bar {
@@ -669,6 +707,12 @@
 .npcink-toolbox__ops-summary-bar span {
 	color: #50575e;
 	line-height: 1.4;
+}
+
+.npcink-toolbox__ops-summary-bar small {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.35;
 }
 
 .npcink-toolbox__ops-scan-details {
@@ -849,6 +893,10 @@
 	display: block;
 	color: #1d2327;
 	font-weight: 700;
+}
+
+.npcink-toolbox__ops-operator-brief-grid .npcink-toolbox__ops-next-actions {
+	margin-top: 4px;
 }
 
 .npcink-toolbox__ops-operator-brief-grid .button {
@@ -1100,6 +1148,21 @@
 	color: #1d2327;
 }
 
+.npcink-toolbox__ops-next-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+}
+
+.npcink-toolbox__ops-next-actions--decision {
+	padding-top: 2px;
+}
+
+.npcink-toolbox__ops-next-actions--row {
+	padding-top: 2px;
+}
+
 .npcink-toolbox__ops-evidence-summary {
 	display: block;
 	margin-bottom: 6px;
@@ -1303,6 +1366,7 @@
 	font-size: 12px;
 	font-weight: 700;
 	line-height: 1.35;
+	text-align: right;
 }
 
 .npcink-toolbox__ops-action-line {

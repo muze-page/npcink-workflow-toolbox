@@ -302,31 +302,35 @@ the current article context and selected or operator-supplied comment text, but
 does not publish replies, approve comments, mutate comment status, or own
 comment workflow governance.
 
-## Full-site Insights Boundary
+## Site Check Boundary
 
-The **Full-site Insights** tab is the operator-facing site analysis surface.
-It builds one administrator-requested local `site_ops_insight_pack.v1` preview.
-The underlying contract keeps the Site Ops name for compatibility, but the
-product surface is broader than operations: it may read bounded public
-posts/pages, approved comment signal counts, media metadata, category/tag
-summaries, Site Context readiness, and Cloud availability. It must not return
-comment author emails, IP addresses, user agents, or full comment text.
+The **Site Check** panel is the operator-facing decision router for the fixed
+Toolbox button surface. It builds one administrator-requested local
+`site_ops_insight_pack.v1` preview. The underlying contract keeps the Site Ops
+name for compatibility, but the product surface is a site-check action, not a
+general analytics workspace: it may read bounded public posts/pages, approved
+comment signal counts, media metadata, category/tag summaries, Site Context
+readiness, and Cloud availability. It must not return comment author emails, IP
+addresses, user agents, or full comment text.
 
-The output is a read-only full-site analysis report: current-run coverage
-metrics, lightweight charts, deterministic local summary, content findings,
-media findings, comment findings, structure findings, evidence summaries,
-impact, recommended actions, blocked items, and handoff candidates. It is not a
-site automation runner. The local preview does not call
+The output is a read-only site-check report: a current-run priority queue,
+treatment paths, evidence summaries, impact, recommended actions, safe
+first-action links, blocked items, and handoff candidates that route the
+operator to manual handling, existing fixed workflows, or optional Cloud
+detail. Coverage metrics, lightweight charts, deterministic local summary,
+content findings, media findings, comment findings, and structure findings are
+supporting detail, not a separate analytics product. It is not a site automation runner. The local preview does not call
 Cloud, schedule jobs, persist run state, create Core proposals, submit Adapter
 actions, mutate comments, update media, write SEO fields, create taxonomy
-terms, or publish content. Explicit Cloud analysis may add semantic,
+terms, or publish content. First-action links may open existing WordPress
+admin objects or detail panels only; they must not execute changes. Explicit Cloud detail may add semantic,
 cross-run, trend, AI-summary, and external-data detail, but Cloud remains
 runtime detail and must not become a second WordPress write owner, approval
 store, or control plane.
 
 Toolbox may prepare a copyable `site_ops_cloud_analysis_request.v1` from the
-local pack. When Cloud is ready and an administrator explicitly clicks **Run
-Cloud analysis**, Toolbox may send that request through the Cloud runtime seam.
+local pack. When Cloud is ready and an administrator explicitly clicks **Use
+Cloud detail**, Toolbox may send that request through the Cloud runtime seam.
 It may include aggregate post/page, media, taxonomy, and approved-comment
 signal counts plus local finding summaries. It must not include full comment
 text, comment author email, comment IP address, user agent, provider secrets,
@@ -348,7 +352,7 @@ approval, or WordPress writes.
 The backend admin surface exposes selected media ALT/caption review sets. The
 `content_snapshot_suggestions` intent remains route-only/internal for bounded
 public samples, while operator-facing site opportunity review belongs in
-Full-site Insights. Those samples may support reviewable update, linking,
+Site Check. Those samples may support reviewable update, linking,
 expansion, or image suggestions only; they are not full-site audits, content
 generators, local crawlers, or write plans.
 Current article media ALT support belongs in the editor sidebar; backend batch
@@ -541,8 +545,8 @@ Toolbox product surfaces stay task-owned:
 - **Content Library Usage** owns read-only Site Knowledge status/result
   consumption and review handoff context. Cloud Addon owns connector state,
   refresh, indexing, and delivery detail.
-- **Full-site Insights** owns manual read-only site reports and explicit Cloud
-  analysis requests.
+- **Site Check** owns manual read-only site checks and explicit Cloud detail
+  requests.
 - **Morning Brief** owns scheduled-review preview, local fallback settings, and
   bounded Cloud run recovery.
 - **Image Handling** owns selected-media review and governed handoff flows.
@@ -560,7 +564,7 @@ explicit Cloud run recovery controls. It must not live inside Cloud Checks and
 must not be presented as an ordinary connection diagnostic.
 
 The default Morning Brief view should show one primary action: preview the
-Morning Brief. Full-site Insights remains the ordinary manual site-check report.
+Morning Brief. Site Check remains the ordinary manual site-check report.
 Local fallback settings and Cloud run ID recovery controls should stay folded
 behind an advanced disclosure. The surface may read Cloud entitlement, submit a
 bounded Cloud inspection, read recent runs, read results, and request retries

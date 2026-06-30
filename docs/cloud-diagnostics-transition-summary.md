@@ -32,8 +32,8 @@ Toolbox keeps only task-owned product surfaces:
 - Content Library Usage for read-only Site Knowledge status, result
   consumption, search checks, and governed review handoff context. Connection,
   refresh, indexing, and detailed delivery diagnostics live in Cloud Addon.
-- Full-site Insights for manual read-only site analysis and explicit Cloud
-  analysis requests.
+- Site Check for manual read-only site checks and explicit Cloud detail
+  requests.
 - Morning Brief for scheduled-review preview, local fallback settings, Cloud
   entitlement display, and bounded Cloud run recovery.
 - Image Handling for selected-media review, derivative preview, and governed
@@ -96,7 +96,7 @@ not standalone diagnostics:
 
 - Site Knowledge product panel and manual sync/search/status routes.
 - Morning Brief panel and Nightly Inspection Cloud Batch routes.
-- Full-site Insights and explicit Cloud analysis request flow.
+- Site Check and explicit Cloud detail request flow.
 - Image Handling and media derivative handoff controls.
 - REST routes and Abilities used by actual product workflows.
 

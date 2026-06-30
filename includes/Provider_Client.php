@@ -359,7 +359,7 @@ final class Provider_Client {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_site_ops_cloud_analysis_runtime_payload',
-				__( 'The Operations Insights Cloud runtime payload was not valid.', 'npcink-workflow-toolbox' ),
+					__( 'The Site Check Cloud runtime payload was not valid.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -376,7 +376,7 @@ final class Provider_Client {
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_ops_cloud_analysis_unavailable',
-				__( 'Connect Npcink Cloud before running Cloud Operations Insights analysis.', 'npcink-workflow-toolbox' ),
+					__( 'Connect Npcink Cloud before running Cloud Site Check detail.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 503 )
 			);
 		}

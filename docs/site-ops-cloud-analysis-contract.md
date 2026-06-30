@@ -2,11 +2,12 @@
 
 Status: contract-first handoff plus narrow Toolbox-to-Cloud runtime bridge.
 
-Full-site Insights remains a Toolbox local operator surface backed by the
-existing Site Ops contracts. The local plugin collects bounded public WordPress
-evidence and builds `site_ops_insight_pack.v1`. For heavier analysis, Toolbox may prepare
+Site Check remains a Toolbox local operator surface backed by the existing Site
+Ops contracts. The local plugin collects bounded public WordPress evidence and
+builds `site_ops_insight_pack.v1` as a fixed-workflow decision router. For
+heavier explanation or semantic ranking, Toolbox may prepare
 `site_ops_cloud_analysis_request.v1`. When a Cloud runtime implementation is
-connected and the administrator explicitly clicks **Run Cloud analysis**,
+connected and the administrator explicitly clicks **Use Cloud detail**,
 Toolbox may submit the request to Cloud and render the returned
 `site_ops_cloud_analysis_result.v1`.
 

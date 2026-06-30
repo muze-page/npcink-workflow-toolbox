@@ -40,17 +40,19 @@ The first version provides:
 - a route-only content opportunity helper intent that samples recent, older,
   missing-image, and taxonomy-backed public content for bounded update,
   linking, expansion, or image opportunities; operator-facing site opportunity
-  review lives in **Full-site Insights**; media
+  review lives in **Site Check**; media
   ALT/caption helper contracts stay available for editor-sidebar use and future
   batch review sets, but the standalone admin tool is not exposed;
-- a **Full-site Insights** tab that builds a local
+- a **Site Check** secondary panel that acts as the fixed-button toolbox's
+  read-only decision router. It builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
-  Cloud availability into a read-only site analysis report with coverage
-  metrics, charts, local deterministic summary, dimension views, findings, and
-  evidence, without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
+  Cloud availability into a priority queue for manual review, existing Toolbox
+  fixed workflows, or optional Cloud detail. Supporting coverage metrics,
+  charts, dimension views, findings, and evidence stay secondary. The local
+  check runs without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
   `site_ops_cloud_analysis_request.v1` contract. When Cloud is connected and
-  the administrator explicitly clicks **Run Cloud analysis**, Toolbox may send
+  the administrator explicitly clicks **Use Cloud detail**, Toolbox may send
   that request to Cloud runtime for a suggestion-only
   `site_ops_cloud_analysis_result.v1`, without local queues, local run tables,
   Core proposal creation, or WordPress writes;
@@ -58,7 +60,7 @@ The first version provides:
   local fallback state, and Cloud run recovery. Its primary entry reads bounded
   local public-content evidence and renders a dry-run Nightly Site Inspection
   preview without cron, Cloud calls, Core proposals, persistence, or WordPress
-  writes. **Full-site Insights** remains the ordinary manual site-check report;
+  writes. **Site Check** remains the ordinary manual site-check report;
 - no local Cloud Checks or Troubleshooting Checks panel. Cloud connection,
   hosted runtime, search, image-source, quota, entitlement, and service health
   diagnostics belong in `npcink-cloud-addon` or Cloud service-plane surfaces;
@@ -126,7 +128,7 @@ Media and hardening detail records remain indexed at
 [Scoped Permissions First Version](docs/scoped-permissions-first-version.md), and
 [Security And Performance Release Gate](docs/security-performance-release-gate.md).
 Workflow and composition contracts remain indexed at
-[Full-site Insights Operator Loop](docs/full-site-insights-operator-loop.md),
+[Site Check Operator Loop](docs/full-site-insights-operator-loop.md),
 [AI Content Composition Abilities](docs/ai-content-composition-abilities.md),
 [Connector Ability Exposure](docs/connector-ability-exposure.md),
 [Site Knowledge Vector Operations Contract](docs/site-knowledge-vector-operations-contract.md),
@@ -332,8 +334,8 @@ button; it must not create a separate batch writer.
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
-The **Full-site Insights** surface is the operator-facing path for site content
-opportunities. The bounded content snapshot helper remains available through
+The **Site Check** surface is the operator-facing path for site content
+opportunity triage. The bounded content snapshot helper remains available through
 `/ai/site-helpers` for route/internal composition, while the reviewed-draft
 write-plan route and Ability stay
 available for machine clients, future Cloud bulk import, and explicit API
@@ -495,7 +497,7 @@ buttons. The admin
 **Workflows** tab stays focused on site helpers, fallback
 bundles, governed handoffs, and media planning rather than draft-side writing
 buttons.
-Full-site Insights owns site-level content opportunity review. The bounded
+Site Check owns site-level content opportunity triage. The bounded
 `content_snapshot_suggestions` helper remains route-only for hosted AI
 composition, and reviewed draft write-plan contracts remain available only
 through REST and Abilities for future bulk import or machine-client composition.
