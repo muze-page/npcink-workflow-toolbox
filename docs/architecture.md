@@ -554,8 +554,10 @@ administrator may explicitly run Cloud detail and render the suggestion-only
 `site_ops_cloud_analysis_result.v1`. It is a manual review surface, not a
 Cloud batch owner, local queue, Core proposal creator, or WordPress write path.
 Nightly Inspection fallback preview settings live in the low-frequency
-secondary **Scheduled Review** panel reached from the combined Site Check and
-Scheduled Review entry in Site Check and the Advanced directory. Cloud run
+secondary **Scheduled Review** panel reached from the folded Site Check and
+Scheduled Review section inside Site Check. Advanced exposes one combined Site
+Check and Scheduled Review row that opens Site Check first; it does not list
+Site Check detail and Scheduled Review preview as parallel choices. Cloud run
 status, result reads, recent runs, and recovery live in Cloud Addon Runtime
 Runs. They do not live inside Cloud Checks. That keeps recurring inspection
 preview and Cloud run recovery separate from ordinary connection diagnostics
@@ -566,9 +568,9 @@ manual site-maintenance entry. Site Knowledge
 connection, refresh, indexing, and deep delivery detail live in
 `npcink-cloud-addon`; Toolbox keeps only a secondary **Content Library Usage**
 panel for read-only status and best-practice result consumption. Advanced is the
-single low-frequency directory and now exposes Site Check details, scheduled
-review preview, and Cloud run recovery as one combined review entry instead of
-duplicating them on Overview.
+single low-frequency directory and now exposes one combined Site Check and
+Scheduled Review row instead of duplicating Site Check detail, scheduled review
+preview, and Cloud run recovery as parallel choices on Overview or Advanced.
 
 The admin **Image Handling** tab groups image-first buttons by operator job and
 defaults to **Image Optimization**, with **Batch Optimize Images** as the first
@@ -708,7 +710,8 @@ status/result consumption, Site Check for manual site checks and the ordinary
 site-maintenance entry, Scheduled Review for Nightly/Morning Brief preview and
 optional local fallback settings, and Image Handling for selected-media
 review/handoff flows. Site Check and Scheduled Review share one combined review
-entry in Site Check and Advanced; Cloud Runtime Runs in Cloud Addon owns
+entry: Advanced opens Site Check, and Site Check's folded detail section exposes
+scheduled preview and Cloud recovery. Cloud Runtime Runs in Cloud Addon owns
 Nightly Inspection runtime
 entitlement, quota, batch limit, retention, recent/status/result, and retry
 detail. Cloud runtime routes may remain bounded call sites for compatibility,

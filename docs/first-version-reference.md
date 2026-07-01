@@ -115,12 +115,14 @@ send it or create local runtime state. When Cloud is ready, an administrator
 can explicitly run Cloud detail and review the suggestion-only
 `site_ops_cloud_analysis_result.v1` without Toolbox creating a local queue,
 local run table, Core proposal, or WordPress write.
-The low-frequency Scheduled Review path is reached from the combined Site Check
-and Scheduled Review entry in Site Check and the Advanced directory. It uses the
-existing `morning-brief` deep link for Nightly/Morning Brief preview and folded
-optional local fallback settings, but it is not presented as a second
-site-check product. Its Cloud run recovery action links to Cloud Addon Runtime
-Runs instead of rendering run recovery controls locally.
+The low-frequency Scheduled Review path is reached from the folded Site Check
+and Scheduled Review section inside Site Check. Advanced exposes one combined
+Site Check and Scheduled Review row that opens Site Check first instead of
+listing Site Check detail and Scheduled Review preview as parallel choices. It
+uses the existing `morning-brief` deep link for Nightly/Morning Brief preview
+and folded optional local fallback settings, but it is not presented as a
+second site-check product. Its Cloud run recovery action links to Cloud Addon
+Runtime Runs instead of rendering run recovery controls locally.
 The admin Image Handling tab defaults to Image Optimization, with
 Batch Optimize Images as the first visible workbench. Single-image actions
 start from the WordPress media-library attachment details panel or image row

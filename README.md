@@ -57,10 +57,11 @@ The first version provides:
   `site_ops_cloud_analysis_result.v1`, without local queues, local run tables,
   Core proposal creation, or WordPress writes;
 - a combined **Site Check and Scheduled Review** entry, reached from Site Check
-  and the Advanced directory, for current site evidence, low-frequency
-  scheduled-review preview, and a link to Cloud-owned run recovery. Cloud run
-  status, result reads, and recovery live in the Cloud Addon Runtime Runs tab.
-  Its scheduled-review preview reads bounded local public-content evidence and
+  and as a single Advanced directory row. The Advanced row opens Site Check
+  first; its folded detail section exposes low-frequency scheduled-review
+  preview and a link to Cloud-owned run recovery. Cloud run status, result
+  reads, and recovery live in the Cloud Addon Runtime Runs tab. The
+  scheduled-review preview reads bounded local public-content evidence and
   renders a dry-run Nightly Site Inspection preview without cron, Cloud calls,
   Core proposals, persistence, or WordPress writes. **Site Check** remains the
   ordinary manual site-check report and the only default site maintenance entry

@@ -5726,6 +5726,15 @@ msgstr "站点检查与定期巡检入口"
 msgid "Use one review entry for current site evidence, recurring previews, and Cloud run recovery."
 msgstr "当前站点证据、定期预览和 Cloud 运行恢复统一放在一个复核入口。"
 
+msgid "Open one review entry for the current site report, scheduled preview, and Cloud run recovery."
+msgstr "当前站点报告、定期预览和 Cloud 运行恢复统一从一个复核入口打开。"
+
+msgid "Open site check and scheduled review"
+msgstr "打开站点检查与定期巡检"
+
+msgid "Review the current site report first. Preview scheduled review or open Cloud run recovery from the folded section when needed."
+msgstr "先查看当前站点报告；需要时再从折叠区预览定期巡检或打开 Cloud 运行恢复。"
+
 msgid "Use Site Check for daily decisions"
 msgstr "日常决策使用站点检查"
 
@@ -5755,6 +5764,9 @@ msgstr "两条路径都仅供审阅。WordPress 更改仍需要受治理的 Core
 
 msgid "Open low-frequency controls"
 msgstr "打开低频控制项"
+
+msgid "Open related controls"
+msgstr "打开相关控制项"
 
 msgid "The scheduled review preview link expired. Reload the page and try again."
 msgstr "定期巡检预览链接已过期。请刷新页面后重试。"

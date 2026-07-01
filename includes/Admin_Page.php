@@ -664,19 +664,11 @@ final class Admin_Page {
 			<div class="npcink-toolbox__advanced-group">
 				<div class="npcink-toolbox__advanced-group-heading">
 					<h3><?php esc_html_e( 'Site check and scheduled review', 'npcink-workflow-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'Use one review entry for current site evidence, recurring previews, and Cloud run recovery.', 'npcink-workflow-toolbox' ); ?></p>
+					<p><?php esc_html_e( 'Open one review entry for the current site report, scheduled preview, and Cloud run recovery.', 'npcink-workflow-toolbox' ); ?></p>
 				</div>
 				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=operations-insights' ) ); ?>">
-					<strong><?php esc_html_e( 'Site check details', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Open the detailed read-only report for the current site check.', 'npcink-workflow-toolbox' ); ?></span>
-				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>">
-					<strong><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Preview automatic inspection results. Nothing is changed.', 'npcink-workflow-toolbox' ); ?></span>
-				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->cloud_addon_runtime_runs_url() ); ?>">
-					<strong><?php esc_html_e( 'Open Cloud run recovery', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Inspect recent runs, read results, and request Cloud-owned retry in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></span>
+					<strong><?php esc_html_e( 'Open site check and scheduled review', 'npcink-workflow-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Review the current site report first. Preview scheduled review or open Cloud run recovery from the folded section when needed.', 'npcink-workflow-toolbox' ); ?></span>
 				</a>
 			</div>
 		</section>
@@ -874,8 +866,11 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Both paths are review-only. WordPress changes still require the governed Core flow.', 'npcink-workflow-toolbox' ); ?></span>
 				</div>
 				<div>
-					<strong><?php esc_html_e( 'Open low-frequency controls', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><a class="button button-small" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></a></span>
+					<strong><?php esc_html_e( 'Open related controls', 'npcink-workflow-toolbox' ); ?></strong>
+					<span class="npcink-toolbox__inline-actions">
+						<a class="button button-small" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></a>
+						<a class="button button-small" href="<?php echo esc_url( $this->cloud_addon_runtime_runs_url() ); ?>"><?php esc_html_e( 'Open Cloud run recovery', 'npcink-workflow-toolbox' ); ?></a>
+					</span>
 				</div>
 			</section>
 		</details>

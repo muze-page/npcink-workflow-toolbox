@@ -84,13 +84,16 @@ foreach (
 		'cloud_addon_runtime_runs_url',
 		"'tab'  => 'runtime_runs'",
 		'Site check and scheduled review',
-		'Use one review entry for current site evidence, recurring previews, and Cloud run recovery.',
+		'Open one review entry for the current site report, scheduled preview, and Cloud run recovery.',
+		'Open site check and scheduled review',
+		'Review the current site report first. Preview scheduled review or open Cloud run recovery from the folded section when needed.',
+		'Open related controls',
 		'Preview scheduled review',
 		'Advanced: optional local fallback preview',
 		'WP-Cron fallback settings stay here because they control local WordPress dry-run preview only.',
 		'Local fallback preview (optional)',
 		'Open Cloud run recovery',
-		'Inspect recent runs, read results, and request Cloud-owned retry in Cloud Addon.',
+		'Recent runs, result reads, and Cloud-owned retry requests live in Cloud Addon Runtime Runs.',
 	) as $required_admin_text
 ) {
 	$assert_contains( $admin_page, $required_admin_text, 'Scheduled Review admin panel routes Cloud run detail and recovery to Cloud Addon Runtime Runs.' );
