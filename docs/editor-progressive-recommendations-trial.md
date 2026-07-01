@@ -37,8 +37,8 @@ composer smoke:editor-progressive-recommendations
 
 For local browser review, open the WordPress editor, open the Npcink Content
 Support sidebar, confirm the automatic local progressive request completes
-without showing a default success card, then open `Local suggestions` and use
-View suggestions and Refresh without triggering a focused Cloud-backed tool.
+without showing a default success card or default `Local suggestions` button,
+and confirm it does not trigger a focused Cloud-backed tool.
 
 ## Outcome Vocabulary
 

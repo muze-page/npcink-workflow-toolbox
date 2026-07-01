@@ -50,18 +50,19 @@ must still behave like a single-action tool.
 
 ## First-Stage Closed Loops
 
-The first editor stage is six focused tools plus a publish preflight package:
+The first editor stage keeps five default fixed buttons and supporting route
+paths:
 
 - the editor prefetches `progressive_recommendations` from local WordPress
   context after the editor opens or the draft stabilizes. This is a Layer 0
   helper: existing taxonomy, recent local media candidates, and local preflight
   checks only. It does not call Cloud, generate images, run deep search, or
-  create a workflow run;
-- title and summary suggestions accept one operator instruction, regenerate
-  candidates, and may fill the current unsaved editor title or excerpt field;
-- category and tag suggestions accept one operator instruction, regenerate
-  existing-term-only candidates, and expose selected existing terms as a Core
-  review handoff through `content_metadata_apply_plan`;
+  create a workflow run. The sidebar keeps it hidden unless it needs operator
+  attention;
+- title, summary, category, and tag suggestions accept one operator instruction,
+  regenerate candidates, and may feed editor fields or Core review handoff
+  previews, but they are route-compatible support flows rather than default
+  visible buttons;
 - image recommendations use the current article or selected paragraph plus the
   operator image preference text, then continue through `image_candidate.v1`
   review and the existing media adoption path;
@@ -70,6 +71,8 @@ The first editor stage is six focused tools plus a publish preflight package:
   show target, anchor, and placement hints, then offer copy-link and open-target
   actions; they do not create backend post-content patches or mutate the current
   draft;
+- article narration and audio summary generate review-only listening candidates
+  whose adoption stays on the Core-governed article-audio handoff path;
 - publish preflight aggregates readiness issues and routes operators back to
   the focused tools. It is a closing checklist, not a replacement editing
   workspace.
@@ -160,9 +163,10 @@ The progressive path is intentionally split by latency:
   Ranking is weighted toward the title first, then excerpt and selected text,
   then body text, so a short but specific draft can still produce useful local
   candidates. The reviewable default list is capped at eight candidates.
-- Focused fast tools: title, summary, category, tag, image, and internal-link
-  buttons remain explicit operator actions. Summary defaults to `fast_brief`;
-  image-source lookup uses `fast_first`; neither path performs final writes.
+- Focused fast tools: image and internal-link buttons remain explicit default
+  operator actions; title, summary, category, tag, and outline helpers stay
+  callable support paths. Summary defaults to `fast_brief`; image-source lookup
+  uses `fast_first`; neither path performs final writes.
 - Slow/enhanced work: full-context summary reruns, image generation, deep search,
   duplicate checks, and proposal handoffs stay explicit second-stage actions.
 

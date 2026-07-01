@@ -92,10 +92,11 @@ Site Profile, and Image Handling; Site Knowledge and Morning Brief remain
 secondary deep-link panels. Overview should not render a single-post
 article-support work block.
 Article-specific jobs use the editor Content Support sidebar:
-publish preflight, summary suggestions, category suggestions, tag suggestions,
-internal links, and image candidates. Related existing-post review is folded
-into publish preflight duplicate-risk checks and internal-link candidates, so
-`writing_support` remains route-compatible but is not a default editor button.
+publish preflight, internal links, image candidates, article narration, and
+article audio summary. Summary, category, tag, outline, discoverability,
+article-checkup, current-article ALT, and related existing-post helpers remain
+compatible route or rendering paths, so `writing_support` remains
+route-compatible but is not a default editor button.
 Site Check is the site-level decision surface, the Overview page's
 recommended next action, and the ordinary site-maintenance entry for operators.
 It is a direct Site Check tab, and the stable `operations-insights` deep link

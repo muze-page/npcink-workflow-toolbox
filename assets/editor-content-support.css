@@ -165,22 +165,12 @@
 }
 
 .npcink-toolbox-editor-support__intro-row {
-	display: flex;
-	gap: 8px;
-	align-items: flex-start;
-	justify-content: space-between;
+	display: block;
 	margin: 0 0 12px;
 }
 
 .npcink-toolbox-editor-support__intro-row .npcink-toolbox-editor-support__intro {
-	flex: 1 1 auto;
 	margin: 0;
-}
-
-.npcink-toolbox-editor-support__intro-row .components-button {
-	flex: 0 0 auto;
-	min-height: 28px;
-	padding: 0 6px;
 }
 
 .npcink-toolbox-editor-support__progressive {

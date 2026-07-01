@@ -5998,7 +5998,6 @@
 				const [progressiveResult, setProgressiveResult] = useState(null);
 				const [progressiveStatus, setProgressiveStatus] = useState(null);
 			const [progressiveLoadedKey, setProgressiveLoadedKey] = useState('');
-			const [progressivePanelOpen, setProgressivePanelOpen] = useState(false);
 			const [paragraphReviewContext, setParagraphReviewContext] = useState(null);
 			const progressiveKey = progressiveRecommendationKey(postContext);
 			const progressiveMountedRef = useRef(false);
@@ -6023,10 +6022,6 @@
 				}, progressiveRecommendationDelay(postContext));
 				return () => window.clearTimeout(timer);
 			}, [progressiveKey, progressiveLoadedKey]);
-
-			useEffect(() => {
-				setProgressivePanelOpen(false);
-			}, [progressiveKey]);
 
 			useEffect(() => {
 				const images = extractImageCandidates(imageResult);
@@ -6156,13 +6151,6 @@
 					return;
 				}
 				runFlow(intent);
-			}
-
-			function openProgressivePanel() {
-				setProgressivePanelOpen(true);
-				if (!progressiveResult && (!progressiveStatus || progressiveStatus.status !== 'loading')) {
-					runProgressivePrefetch(progressiveRecommendationKey(postContext), true);
-				}
 			}
 
 				async function runFlow(intent, options) {
@@ -7726,24 +7714,14 @@
 						renderProgressiveRecommendationPanel(
 							progressiveResult,
 							progressiveStatus,
-							progressivePanelOpen,
+							false,
 							openProgressiveRecommendation,
 							() => runProgressivePrefetch(progressiveRecommendationKey(postContext), true)
 						),
 						createElement(
 							'div',
 							{ className: 'npcink-toolbox-editor-support__intro-row' },
-							createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-workflow-toolbox')),
-							createElement(
-								Button,
-								{
-									type: 'button',
-									variant: 'tertiary',
-									isBusy: progressiveStatus && progressiveStatus.status === 'loading',
-									onClick: openProgressivePanel,
-								},
-								__('Local suggestions', 'npcink-workflow-toolbox')
-							)
+							createElement('p', { className: 'npcink-toolbox-editor-support__intro' }, __('Run fixed support flows around the current draft. Article text stays with the editor.', 'npcink-workflow-toolbox'))
 						),
 						flowGroups.map((group) => createElement(
 							'section',
