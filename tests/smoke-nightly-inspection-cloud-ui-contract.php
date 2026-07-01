@@ -83,11 +83,13 @@ foreach (
 	array(
 		'cloud_addon_runtime_runs_url',
 		"'tab'  => 'runtime_runs'",
-		'Cloud run status and recovery',
-		'Recent runs, status reads, result reads, and Cloud-owned retry requests now live in Cloud Addon.',
-		'Toolbox keeps only the scheduled review preview and local fallback settings here.',
+		'Site check and scheduled review',
+		'Use one review entry for current site evidence, recurring previews, and Cloud run recovery.',
+		'Preview scheduled review',
+		'Advanced: optional local fallback preview',
+		'WP-Cron fallback settings stay here because they control local WordPress dry-run preview only.',
+		'Local fallback preview (optional)',
 		'Open Cloud run recovery',
-		'Low-frequency inspection preview stays here; Cloud run status and recovery live in Cloud Addon.',
 		'Inspect recent runs, read results, and request Cloud-owned retry in Cloud Addon.',
 	) as $required_admin_text
 ) {
@@ -104,6 +106,11 @@ foreach (
 		'data-toolbox-nightly-cloud-retry',
 		'data-toolbox-nightly-cloud-recent-run',
 		'data-toolbox-nightly-cloud-run-summary',
+		'Cloud run status and recovery',
+		'Recent runs, status reads, result reads, and Cloud-owned retry requests now live in Cloud Addon.',
+		'Toolbox keeps only the scheduled review preview and local fallback settings here.',
+		'Low-frequency inspection preview stays here; Cloud run status and recovery live in Cloud Addon.',
+		'Advanced: local fallback and Cloud run link',
 		'Cloud owns entitlement, usage, queue, retry, and retention detail',
 		'no local job queue or write path is created',
 	) as $forbidden_admin_text

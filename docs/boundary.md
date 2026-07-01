@@ -551,8 +551,8 @@ Toolbox product surfaces stay task-owned:
   checks, explicit Cloud detail requests, and the operator-facing path to
   low-frequency scheduled review.
 - **Scheduled Review** owns the Nightly/Morning Brief implementation details:
-  scheduled-review preview and local fallback settings. Cloud Addon owns
-  Nightly Inspection run status, result reads, and recovery.
+  scheduled-review preview and optional local fallback settings. Cloud Addon
+  owns Nightly Inspection run status, result reads, and recovery.
 - **Image Handling** owns selected-media review and governed handoff flows.
 
 Cloud web search, image-source, and site-knowledge runtime routes may remain as
@@ -562,17 +562,20 @@ UI belongs outside Toolbox. Standalone diagnostics do not live in Toolbox.
 ## Scheduled Review Surface
 
 The **Scheduled Review** surface is a low-frequency secondary panel reached
-from Site Check and the Advanced directory. It owns the Nightly/Morning Brief
-preview entry and local fallback preview settings. Cloud run status, result
-reads, recent runs, and retry requests belong in the Cloud Addon Runtime Runs
-tab. Scheduled Review must not live inside Cloud Checks and must not be
-presented as an ordinary connection diagnostic or as a second site-check
-product.
+from the combined Site Check and Scheduled Review entry in Site Check and the
+Advanced directory. It owns the Nightly/Morning Brief preview entry and
+optional local fallback preview settings. Cloud run status, result reads,
+recent runs, and retry requests belong in the Cloud Addon Runtime Runs tab.
+Scheduled Review must not live inside Cloud Checks and must not be presented as
+an ordinary connection diagnostic or as a second site-check product.
 
 The default Scheduled Review view should show one primary action: preview the
 scheduled review. Site Check remains the ordinary manual site-check report and
 the primary operator-facing site-maintenance entry.
-Local fallback settings should stay folded behind an advanced disclosure.
+Local fallback settings should stay folded behind an advanced disclosure inside
+Toolbox because they control only the WordPress-side WP-Cron dry-run fallback.
+They should not migrate to Cloud Addon, where operators manage Cloud runtime
+state, retention, and recovery instead.
 Toolbox may retain compatibility routes for existing Nightly Inspection Cloud
 callers, but the visible recovery workspace should link operators to Cloud
 Addon. Runtime entitlement, quota, batch limit, retention, recent/status/result,

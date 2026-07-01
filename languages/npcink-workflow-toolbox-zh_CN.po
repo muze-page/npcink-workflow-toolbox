@@ -5414,6 +5414,9 @@ msgstr "符合条件的媒体样本"
 msgid "Enable local WP-Cron fallback preview"
 msgstr "启用本地 WP-Cron 备用预览"
 
+msgid "Enable optional local WP-Cron fallback preview"
+msgstr "启用可选本地 WP-Cron 备用预览"
+
 msgid "Enable Pro Cloud Runtime controls"
 msgstr "启用 Pro Cloud Runtime 控制项"
 
@@ -5461,6 +5464,9 @@ msgstr "加载最近 Cloud 运行"
 
 msgid "Local Fallback Preview"
 msgstr "本地备用预览"
+
+msgid "Local fallback preview (optional)"
+msgstr "本地备用预览（可选）"
 
 msgid "Logo attachment ID"
 msgstr "Logo 附件 ID"
@@ -5597,6 +5603,9 @@ msgstr "已审阅的更改仍留在图片流程中"
 msgid "Save fallback preview"
 msgstr "保存备用预览"
 
+msgid "Save local fallback"
+msgstr "保存本地备用"
+
 msgid "Save media optimization defaults"
 msgstr "保存媒体优化默认值"
 
@@ -5708,6 +5717,15 @@ msgstr "定期巡检和 Cloud 恢复"
 msgid "Scheduled review entry"
 msgstr "定期巡检入口"
 
+msgid "Site check and scheduled review"
+msgstr "站点检查与定期巡检"
+
+msgid "Site check and scheduled review entry"
+msgstr "站点检查与定期巡检入口"
+
+msgid "Use one review entry for current site evidence, recurring previews, and Cloud run recovery."
+msgstr "当前站点证据、定期预览和 Cloud 运行恢复统一放在一个复核入口。"
+
 msgid "Use Site Check for daily decisions"
 msgstr "日常决策使用站点检查"
 
@@ -5756,6 +5774,9 @@ msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run
 msgid "WP-Cron is the WordPress-side fallback for one latest dry-run scheduled review preview. Cloud run status, result retention, and recovery live in Cloud Addon."
 msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run 定期巡检预览。Cloud 运行状态、结果保留和恢复放在 Cloud Addon。"
 
+msgid "Optional WordPress-side WP-Cron dry-run fallback. Use it only when Cloud is unavailable or during trials; it is not the Cloud scheduled inspection."
+msgstr "这是 WordPress 侧可选的 WP-Cron dry-run 备用方案。仅在 Cloud 不可用或试用阶段使用；它不是 Cloud 定期巡检。"
+
 msgid "Latest scheduled dry-run preview: %1$s, %2$d review items."
 msgstr "最新定期 dry-run 预览：%1$s，%2$d 个审阅项。"
 
@@ -5767,6 +5788,9 @@ msgstr "这个低频区域用于自动巡检预览、本地备用状态和 Cloud
 
 msgid "Use this low-frequency area for automatic inspection previews and local fallback state. Cloud run status and recovery live in Cloud Addon."
 msgstr "这个低频区域用于自动巡检预览和本地备用状态。Cloud 运行状态和恢复放在 Cloud Addon。"
+
+msgid "Use this low-frequency area for automatic inspection previews and optional local fallback state. Cloud run recovery opens in Cloud Addon."
+msgstr "这个低频区域用于自动巡检预览和可选本地备用状态。Cloud 运行恢复在 Cloud Addon 打开。"
 
 msgid "This is for recurring inspection previews and Cloud run recovery. Daily site maintenance starts with Site Check."
 msgstr "这里用于周期巡检预览和 Cloud 运行恢复。日常站点维护从站点检查开始。"
@@ -5783,8 +5807,14 @@ msgstr "高级：本地备用、Cloud 运行和恢复"
 msgid "Advanced: local fallback and Cloud run link"
 msgstr "高级：本地备用和 Cloud 运行入口"
 
+msgid "Advanced: optional local fallback preview"
+msgstr "高级：可选本地备用预览"
+
 msgid "Local fallback preview settings stay here; Cloud run detail opens in Cloud Addon."
 msgstr "本地备用预览设置保留在这里；Cloud 运行详情在 Cloud Addon 打开。"
+
+msgid "WP-Cron fallback settings stay here because they control local WordPress dry-run preview only."
+msgstr "WP-Cron 备用设置保留在这里，因为它们只控制本地 WordPress dry-run 预览。"
 
 msgid "Cloud run status and recovery"
 msgstr "Cloud 运行状态和恢复"

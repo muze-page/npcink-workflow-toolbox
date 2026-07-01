@@ -56,22 +56,24 @@ The first version provides:
   that request to Cloud runtime for a suggestion-only
   `site_ops_cloud_analysis_result.v1`, without local queues, local run tables,
   Core proposal creation, or WordPress writes;
-- a low-frequency **Scheduled Review** entry, reached from Site Check and the
-  Advanced directory, for scheduled-review preview and local fallback state.
-  Cloud run status, result reads, and recovery live in the Cloud Addon Runtime
-  Runs tab. Its primary entry reads bounded local public-content
-  evidence and renders a dry-run Nightly Site Inspection preview without cron,
-  Cloud calls, Core proposals, persistence, or WordPress writes. **Site Check**
-  remains the ordinary manual site-check report and the only default site
-  maintenance entry operators need to understand;
+- a combined **Site Check and Scheduled Review** entry, reached from Site Check
+  and the Advanced directory, for current site evidence, low-frequency
+  scheduled-review preview, and a link to Cloud-owned run recovery. Cloud run
+  status, result reads, and recovery live in the Cloud Addon Runtime Runs tab.
+  Its scheduled-review preview reads bounded local public-content evidence and
+  renders a dry-run Nightly Site Inspection preview without cron, Cloud calls,
+  Core proposals, persistence, or WordPress writes. **Site Check** remains the
+  ordinary manual site-check report and the only default site maintenance entry
+  operators need to understand;
 - no local Cloud Checks or Troubleshooting Checks panel. Cloud connection,
   hosted runtime, search, image-source, quota, entitlement, and service health
   diagnostics belong in `npcink-cloud-addon` or Cloud service-plane surfaces;
-- a disabled-by-default **Local Fallback Preview** WP-Cron setting that can
-  overwrite one latest dry-run scheduled review preview for operator review when
-  Cloud is unavailable or not yet connected, without Cloud calls, Core
-  proposals, Action Scheduler, custom tables, leases, retries, dead letters, or
-  WordPress content writes;
+- a disabled-by-default **Local Fallback Preview (optional)** WP-Cron setting,
+  folded behind the Scheduled Review advanced disclosure, that can overwrite
+  one latest dry-run scheduled-review preview for operator review when Cloud is
+  unavailable or during trials. It is not the Cloud scheduled inspection and it
+  runs without Cloud calls, Core proposals, Action Scheduler, custom tables,
+  leases, retries, dead letters, or WordPress content writes;
 - Cloud-managed web search status, plus read-only Cloud-managed image-source
   and vector availability;
 - an operator-filled content discoverability context for SEO, AEO, and GEO
@@ -232,9 +234,9 @@ Cloud Addon Runtime Runs can read recent/status/result detail and request
 Cloud-owned retry for known Nightly Inspection runs. Toolbox may retain
 compatibility REST bridges for existing callers, but runtime entitlement,
 quota, batch limit, retention, recent/status/result, and retry detail belong in
-Cloud Addon Runtime Runs. The visible Scheduled Review panel links to Cloud
-Addon instead of presenting a second run-recovery workspace. Any local display
-of `pro_cloud_runtime` detail is not billing truth.
+Cloud Addon Runtime Runs. The visible Site Check and Scheduled Review entry
+links to Cloud Addon instead of presenting a second run-recovery workspace. Any
+local display of `pro_cloud_runtime` detail is not billing truth.
 Action Scheduler is reserved as a future local fallback/substrate candidate only
 if a confirmed local-batch requirement justifies the added plugin complexity.
 ADR-005 freezes this current split: WP-Cron is the local fallback preview or
