@@ -6401,6 +6401,9 @@
 		if (tab === 'content' || tab === 'content-preparation') {
 			return 'operations-insights';
 		}
+		if (tab === 'morning-brief' || tab === 'scheduled-review' || tab === 'scheduled_review') {
+			return 'operations-insights';
+		}
 		return tab;
 	}
 
@@ -6446,6 +6449,7 @@
 			tool: publicToolForToolboxTool(target),
 			toolbox_tab: null,
 			toolbox_tool: null,
+			site_check_tab: null,
 		};
 	}
 
@@ -6523,7 +6527,44 @@
 			tool: null,
 			toolbox_tab: null,
 			toolbox_tool: null,
+			site_check_tab: target === 'operations-insights' ? activeSiteCheckTab() : null,
 		});
+	}
+
+	function activeSiteCheckTab() {
+		const workspace = document.querySelector('[data-toolbox-site-check-tabs]');
+		if (!workspace) {
+			return null;
+		}
+		const target = activeTarget(workspace, '[data-toolbox-site-check-target]', 'data-toolbox-site-check-target');
+		return target && target !== 'current-check' ? target : null;
+	}
+
+	function activateSiteCheckTab(target, updateUrl) {
+		const workspace = document.querySelector('[data-toolbox-site-check-tabs]');
+		if (!workspace || !hasTarget(workspace, '[data-toolbox-site-check-panel]', 'data-toolbox-site-check-panel', target)) {
+			return false;
+		}
+
+		activateTarget(
+			workspace,
+			'[data-toolbox-site-check-target]',
+			'[data-toolbox-site-check-panel]',
+			'data-toolbox-site-check-target',
+			'data-toolbox-site-check-panel',
+			target
+		);
+
+		if (updateUrl) {
+			updateToolboxUrl({
+				tab: 'operations-insights',
+				tool: null,
+				toolbox_tab: null,
+				toolbox_tool: null,
+				site_check_tab: target === 'current-check' ? null : target,
+			});
+		}
+		return true;
 	}
 
 	function activateTopTab(target, updateUrl) {
@@ -6600,6 +6641,7 @@
 		const rawRequestedTab = params.get('tab') || params.get('toolbox_tab') || '';
 		const rawRequestedTool = params.get('tool') || params.get('toolbox_tool') || '';
 		const requestedTab = toolboxTabFromPublicTab(rawRequestedTab);
+		const requestedSiteCheckTab = params.get('site_check_tab') || (rawRequestedTab === 'morning-brief' ? 'scheduled-review' : '') || (params.get('nightly_inspection_preview') === '1' ? 'scheduled-review' : '');
 		let requestedTool = toolboxToolFromPublicTool(rawRequestedTool);
 		let tab = requestedTab;
 		let canonicalizeToolUrl = false;
@@ -6635,6 +6677,18 @@
 		if (tab) {
 			activateTopTab(tab, false);
 		}
+		if (tab === 'operations-insights') {
+			activateSiteCheckTab(requestedSiteCheckTab === 'scheduled-review' ? 'scheduled-review' : 'current-check', false);
+			if (rawRequestedTab === 'morning-brief') {
+				updateToolboxUrl({
+					tab: 'operations-insights',
+					tool: null,
+					toolbox_tab: null,
+					toolbox_tool: null,
+					site_check_tab: 'scheduled-review',
+				});
+			}
+		}
 		if (tab === 'tools' && requestedTool) {
 			activateToolPanel(requestedTool, false, toolWorkspaceForTab(tab) || requestedToolWorkspace);
 			if (canonicalizeToolUrl) {
@@ -6647,6 +6701,7 @@
 				tool: null,
 				toolbox_tab: 'operations-insights',
 				toolbox_tool: null,
+				site_check_tab: null,
 			});
 		}
 	}
@@ -6852,6 +6907,23 @@
 					'data-toolbox-ops-panel',
 					button.getAttribute('data-toolbox-ops-target')
 				);
+			});
+		});
+	}
+
+	function initSiteCheckTabs() {
+		document.querySelectorAll('[data-toolbox-site-check-tabs]').forEach((workspace) => {
+			workspace.addEventListener('click', (event) => {
+				if (!(event.target instanceof Element)) {
+					return;
+				}
+
+				const button = event.target.closest('[data-toolbox-site-check-target]');
+				if (!button || !workspace.contains(button)) {
+					return;
+				}
+
+				activateSiteCheckTab(button.getAttribute('data-toolbox-site-check-target'), true);
 			});
 		});
 	}
@@ -7122,6 +7194,7 @@
 	initToolSwitcher();
 	initContextSectionSwitcher();
 	initContextGroupSwitcher();
+	initSiteCheckTabs();
 	initOperationsInsightsTabs();
 	initContextDrafts();
 	initWebSearchPresets();

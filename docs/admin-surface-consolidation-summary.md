@@ -62,10 +62,11 @@ usage surface and is not linked from Site Check. Site Check is now the direct
 top-level review tab; the former Advanced route may remain only as a
 compatibility alias into Site Check instead of showing Site Check detail,
 Scheduled Review preview, and Cloud run recovery as parallel choices.
-Nightly Inspection optional local fallback settings stay folded in the
-dedicated Scheduled Review panel; Cloud run status, result reads, and recovery
-open in Cloud Addon Runtime Runs instead of competing with the Start page's
-primary operator entries.
+Nightly Inspection optional local fallback settings stay folded inside the
+Site Check **Scheduled Review** sub tab, while **Current Check** owns the
+manual site report. Cloud run status, result reads, and recovery open in Cloud
+Addon Runtime Runs instead of competing with the Start page's primary operator
+entries.
 
 Site Profile now defaults to the four-field site brief: positioning, audience,
 voice, and primary keywords. SEO, AEO, GEO, claim boundaries, and the read-only

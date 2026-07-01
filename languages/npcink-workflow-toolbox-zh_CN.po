@@ -3671,6 +3671,12 @@ msgstr "站点检查"
 msgid "Site check"
 msgstr "站点检查"
 
+msgid "Site Check sections"
+msgstr "站点检查分区"
+
+msgid "Current check"
+msgstr "当前检查"
+
 msgid "Use these entry points for full-site analysis, site knowledge, and media review; diagnostics and fallback controls stay folded below."
 msgstr "使用这些入口处理全站分析、站点知识和媒体复核；诊断和回退控制保持折叠。"
 
@@ -5113,6 +5119,9 @@ msgstr "这个低频区域用于定期检查预览。站点检查仍是普通手
 
 msgid "Open Site Check"
 msgstr "打开站点检查"
+
+msgid "Open current check"
+msgstr "打开当前检查"
 
 msgid "Advanced: fallback and Cloud recovery"
 msgstr "高级：本地备用和 Cloud 恢复"

@@ -474,6 +474,7 @@ final class Admin_Page {
 		$nightly_preview = $this->nightly_inspection_preview_from_request();
 		$site_ops_preview = $this->site_ops_insights_preview_from_request( $content_context, $cloud_ready );
 		$active_tab      = $this->requested_toolbox_tab();
+		$active_site_check_tab = $this->requested_site_check_tab();
 		?>
 		<div class="wrap npcink-toolbox">
 			<h1><?php esc_html_e( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ); ?></h1>
@@ -500,7 +501,7 @@ final class Admin_Page {
 			</section>
 
 			<section class="npcink-toolbox__panel npcink-toolbox__panel--secondary" data-toolbox-tab-panel="operations-insights" aria-label="<?php esc_attr_e( 'Site check', 'npcink-workflow-toolbox' ); ?>"<?php echo 'operations-insights' === $active_tab ? '' : ' hidden'; ?>>
-				<?php $this->render_operations_insights_panel( $site_ops_preview, $content_context, $cloud_ready ); ?>
+				<?php $this->render_operations_insights_panel( $site_ops_preview, $content_context, $cloud_ready, $settings, $nightly_preview, $active_site_check_tab ); ?>
 			</section>
 
 			<section class="npcink-toolbox__panel" data-toolbox-tab-panel="tools" aria-label="<?php esc_attr_e( 'Image handling', 'npcink-workflow-toolbox' ); ?>"<?php echo 'tools' === $active_tab ? '' : ' hidden'; ?>>
@@ -511,9 +512,6 @@ final class Admin_Page {
 				<?php $this->render_site_knowledge_panel( $cloud_ready ); ?>
 			</section>
 
-			<section class="npcink-toolbox__panel npcink-toolbox__panel--secondary" data-toolbox-tab-panel="morning-brief" aria-label="<?php esc_attr_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?>"<?php echo 'morning-brief' === $active_tab ? '' : ' hidden'; ?>>
-				<?php $this->render_morning_brief_panel( $settings, $cloud_ready, $nightly_preview ); ?>
-			</section>
 		</div>
 		<?php
 	}
@@ -533,6 +531,9 @@ final class Admin_Page {
 		if ( 'advanced' === $requested || 'site-check' === $requested || 'site_check' === $requested ) {
 			$requested = 'operations-insights';
 		}
+		if ( 'morning-brief' === $requested || 'scheduled-review' === $requested || 'scheduled_review' === $requested ) {
+			$requested = 'operations-insights';
+		}
 
 		$allowed = array(
 			'start'               => true,
@@ -540,9 +541,25 @@ final class Admin_Page {
 			'tools'               => true,
 			'operations-insights' => true,
 			'site-knowledge'      => true,
-			'morning-brief'       => true,
 		);
 		return isset( $allowed[ $requested ] ) ? $requested : 'start';
+	}
+
+	private function requested_site_check_tab(): string {
+		$requested = filter_input( INPUT_GET, 'site_check_tab', FILTER_UNSAFE_RAW );
+		$requested = sanitize_key( is_scalar( $requested ) ? (string) $requested : '' );
+		$toolbox_tab = filter_input( INPUT_GET, 'toolbox_tab', FILTER_UNSAFE_RAW );
+		if ( null === $toolbox_tab || false === $toolbox_tab || '' === $toolbox_tab ) {
+			$toolbox_tab = filter_input( INPUT_GET, 'tab', FILTER_UNSAFE_RAW );
+		}
+		$toolbox_tab = sanitize_key( is_scalar( $toolbox_tab ) ? (string) $toolbox_tab : '' );
+		$nightly_preview = filter_input( INPUT_GET, 'nightly_inspection_preview', FILTER_UNSAFE_RAW );
+
+		if ( 'scheduled-review' === $requested || 'scheduled_review' === $requested || 'morning-brief' === $toolbox_tab || 'scheduled-review' === $toolbox_tab || '1' === ( is_scalar( $nightly_preview ) ? (string) $nightly_preview : '' ) ) {
+			return 'scheduled-review';
+		}
+
+		return 'current-check';
 	}
 
 	private function render_start_panel( array $content_context, bool $cloud_ready ): void {
@@ -677,6 +694,7 @@ final class Admin_Page {
 				array(
 					'page'                      => self::MENU_SLUG,
 					'toolbox_tab'               => 'operations-insights',
+					'site_check_tab'            => 'current-check',
 					'site_ops_insights_preview' => '1',
 				),
 				admin_url( 'admin.php' )
@@ -691,6 +709,7 @@ final class Admin_Page {
 				array(
 					'page'                       => self::MENU_SLUG,
 					'toolbox_tab'                => 'operations-insights',
+					'site_check_tab'             => 'current-check',
 					'site_ops_insights_preview'  => '1',
 					'site_ops_cloud_analysis'    => '1',
 				),
@@ -767,8 +786,9 @@ final class Admin_Page {
 	/**
 	 * @param array<string,mixed>|null $preview Preview payload.
 	 * @param array<string,mixed>      $content_context Content context.
+	 * @param array<string,mixed>      $settings Settings.
 	 */
-	private function render_operations_insights_panel( ?array $preview, array $content_context, bool $cloud_ready ): void {
+	private function render_operations_insights_panel( ?array $preview, array $content_context, bool $cloud_ready, array $settings, ?array $nightly_preview, string $active_site_check_tab ): void {
 		$context_ready = $this->content_context_ready( $content_context );
 		$pack          = isset( $preview['pack'] ) && is_array( $preview['pack'] ) ? $preview['pack'] : array();
 		$cloud_request = isset( $preview['cloud_request'] ) && is_array( $preview['cloud_request'] ) ? $preview['cloud_request'] : array();
@@ -783,75 +803,53 @@ final class Admin_Page {
 			<p><?php esc_html_e( 'Run one read-only check that routes current site issues to the right fixed workflow, manual review, or optional Cloud detail. It does not create Core proposals or WordPress writes.', 'npcink-workflow-toolbox' ); ?></p>
 		</div>
 
-		<section class="npcink-toolbox__ops-status-row" aria-label="<?php esc_attr_e( 'Site Check readiness', 'npcink-workflow-toolbox' ); ?>">
-			<div class="npcink-toolbox__ops-status-main">
-				<span><strong><?php esc_html_e( 'Local data', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( null === $preview ? __( 'Ready to scan', 'npcink-workflow-toolbox' ) : __( 'Scanned', 'npcink-workflow-toolbox' ) ); ?></span>
-				<span><strong><?php esc_html_e( 'Site Context', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( $context_ready ? __( 'Ready', 'npcink-workflow-toolbox' ) : __( 'Needs brief', 'npcink-workflow-toolbox' ) ); ?></span>
-				<span><strong><?php esc_html_e( 'Cloud', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( $cloud_ready ? __( 'Ready on request', 'npcink-workflow-toolbox' ) : __( 'Optional', 'npcink-workflow-toolbox' ) ); ?></span>
-				<span><strong><?php esc_html_e( 'Writes', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'Disabled', 'npcink-workflow-toolbox' ); ?></span>
-			</div>
-			<div class="npcink-toolbox__ops-status-actions">
-				<?php if ( null === $preview || isset( $preview['error'] ) ) : ?>
-					<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate site check', 'npcink-workflow-toolbox' ); ?></a>
-				<?php else : ?>
-					<span><?php esc_html_e( 'Current snapshot is ready.', 'npcink-workflow-toolbox' ); ?></span>
-					<a class="button button-small" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Rescan', 'npcink-workflow-toolbox' ); ?></a>
-				<?php endif; ?>
-			</div>
-		</section>
+		<div class="npcink-toolbox__ops-workspace" data-toolbox-site-check-tabs>
+			<nav class="npcink-toolbox__ops-tabs" aria-label="<?php esc_attr_e( 'Site Check sections', 'npcink-workflow-toolbox' ); ?>">
+				<button type="button" class="npcink-toolbox__ops-tab<?php echo 'current-check' === $active_site_check_tab ? ' is-active' : ''; ?>" data-toolbox-site-check-target="current-check" aria-selected="<?php echo 'current-check' === $active_site_check_tab ? 'true' : 'false'; ?>"><?php esc_html_e( 'Current check', 'npcink-workflow-toolbox' ); ?></button>
+				<button type="button" class="npcink-toolbox__ops-tab<?php echo 'scheduled-review' === $active_site_check_tab ? ' is-active' : ''; ?>" data-toolbox-site-check-target="scheduled-review" aria-selected="<?php echo 'scheduled-review' === $active_site_check_tab ? 'true' : 'false'; ?>"><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></button>
+			</nav>
 
-		<details class="npcink-toolbox__ops-loop-disclosure"<?php echo null === $preview ? ' open' : ''; ?>>
-			<summary><?php esc_html_e( 'How to use Site Check', 'npcink-workflow-toolbox' ); ?></summary>
-			<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Site Check operator loop', 'npcink-workflow-toolbox' ); ?>">
-				<div>
-					<strong><?php esc_html_e( '1. Scan local data', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Build a current snapshot from public content, approved comment signals, media metadata, taxonomy, Site Context, and Cloud readiness.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( '2. Pick the next fixed workflow', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Use the brief and treatment paths to decide whether the next step is manual review, an existing Toolbox workflow, or Cloud detail.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( '3. Add Cloud detail only when useful', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Cloud may add AI summary, semantic ranking, trend explanation, and closure detail; Toolbox still treats it as review guidance only.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( '4. Choose the follow-up path', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Handle simple items manually, or turn eligible items into reviewed handoff plans outside this report.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-			</section>
-		</details>
+			<section class="npcink-toolbox__ops-panel" data-toolbox-site-check-panel="current-check"<?php echo 'current-check' === $active_site_check_tab ? '' : ' hidden'; ?>>
+				<section class="npcink-toolbox__ops-status-row" aria-label="<?php esc_attr_e( 'Site Check readiness', 'npcink-workflow-toolbox' ); ?>">
+					<div class="npcink-toolbox__ops-status-main">
+						<span><strong><?php esc_html_e( 'Local data', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( null === $preview ? __( 'Ready to scan', 'npcink-workflow-toolbox' ) : __( 'Scanned', 'npcink-workflow-toolbox' ) ); ?></span>
+						<span><strong><?php esc_html_e( 'Site Context', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( $context_ready ? __( 'Ready', 'npcink-workflow-toolbox' ) : __( 'Needs brief', 'npcink-workflow-toolbox' ) ); ?></span>
+						<span><strong><?php esc_html_e( 'Cloud', 'npcink-workflow-toolbox' ); ?></strong><?php echo esc_html( $cloud_ready ? __( 'Ready on request', 'npcink-workflow-toolbox' ) : __( 'Optional', 'npcink-workflow-toolbox' ) ); ?></span>
+						<span><strong><?php esc_html_e( 'Writes', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'Disabled', 'npcink-workflow-toolbox' ); ?></span>
+					</div>
+					<div class="npcink-toolbox__ops-status-actions">
+						<?php if ( null === $preview || isset( $preview['error'] ) ) : ?>
+							<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Generate site check', 'npcink-workflow-toolbox' ); ?></a>
+						<?php else : ?>
+							<span><?php esc_html_e( 'Current snapshot is ready.', 'npcink-workflow-toolbox' ); ?></span>
+							<a class="button button-small" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Rescan', 'npcink-workflow-toolbox' ); ?></a>
+						<?php endif; ?>
+					</div>
+				</section>
 
-		<details class="npcink-toolbox__ops-loop-disclosure">
-			<summary><?php esc_html_e( 'Site check and scheduled review', 'npcink-workflow-toolbox' ); ?></summary>
-			<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Site check and scheduled review entry', 'npcink-workflow-toolbox' ); ?>">
-				<div>
-					<strong><?php esc_html_e( 'Use Site Check for daily decisions', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Generate a site check whenever an operator needs the current priority queue.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( 'Use scheduled review for recurring previews', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Open it only to preview recurring inspection output or adjust the local fallback preview.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( 'Use Cloud Addon for run recovery', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Recent runs, result reads, and Cloud-owned retry requests live in Cloud Addon Runtime Runs.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( 'No automatic changes', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Both paths are review-only. WordPress changes still require the governed Core flow.', 'npcink-workflow-toolbox' ); ?></span>
-				</div>
-				<div>
-					<strong><?php esc_html_e( 'Open related controls', 'npcink-workflow-toolbox' ); ?></strong>
-					<span class="npcink-toolbox__inline-actions">
-						<a class="button button-small" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></a>
-						<a class="button button-small" href="<?php echo esc_url( $this->cloud_addon_runtime_runs_url() ); ?>"><?php esc_html_e( 'Open Cloud run recovery', 'npcink-workflow-toolbox' ); ?></a>
-					</span>
-				</div>
-			</section>
-		</details>
+				<details class="npcink-toolbox__ops-loop-disclosure"<?php echo null === $preview ? ' open' : ''; ?>>
+					<summary><?php esc_html_e( 'How to use Site Check', 'npcink-workflow-toolbox' ); ?></summary>
+					<section class="npcink-toolbox__ops-detail-grid" aria-label="<?php esc_attr_e( 'Site Check operator loop', 'npcink-workflow-toolbox' ); ?>">
+						<div>
+							<strong><?php esc_html_e( '1. Scan local data', 'npcink-workflow-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Build a current snapshot from public content, approved comment signals, media metadata, taxonomy, Site Context, and Cloud readiness.', 'npcink-workflow-toolbox' ); ?></span>
+						</div>
+						<div>
+							<strong><?php esc_html_e( '2. Pick the next fixed workflow', 'npcink-workflow-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Use the brief and treatment paths to decide whether the next step is manual review, an existing Toolbox workflow, or Cloud detail.', 'npcink-workflow-toolbox' ); ?></span>
+						</div>
+						<div>
+							<strong><?php esc_html_e( '3. Add Cloud detail only when useful', 'npcink-workflow-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Cloud may add AI summary, semantic ranking, trend explanation, and closure detail; Toolbox still treats it as review guidance only.', 'npcink-workflow-toolbox' ); ?></span>
+						</div>
+						<div>
+							<strong><?php esc_html_e( '4. Choose the follow-up path', 'npcink-workflow-toolbox' ); ?></strong>
+							<span><?php esc_html_e( 'Handle simple items manually, or turn eligible items into reviewed handoff plans outside this report.', 'npcink-workflow-toolbox' ); ?></span>
+						</div>
+					</section>
+				</details>
 
-		<section class="npcink-toolbox__card" data-toolbox-site-ops-insights>
+				<section class="npcink-toolbox__card" data-toolbox-site-ops-insights>
 			<?php if ( null === $preview ) : ?>
 				<div class="npcink-toolbox__section-heading">
 					<div>
@@ -961,6 +959,12 @@ final class Admin_Page {
 				</div>
 			<?php endif; ?>
 		</section>
+			</section>
+
+			<section class="npcink-toolbox__ops-panel" data-toolbox-site-check-panel="scheduled-review"<?php echo 'scheduled-review' === $active_site_check_tab ? '' : ' hidden'; ?>>
+				<?php $this->render_morning_brief_panel( $settings, $cloud_ready, $nightly_preview, true ); ?>
+			</section>
+		</div>
 		<?php
 	}
 
@@ -2548,7 +2552,8 @@ final class Admin_Page {
 			add_query_arg(
 				array(
 					'page'                       => self::MENU_SLUG,
-					'toolbox_tab'                => 'morning-brief',
+					'toolbox_tab'                => 'operations-insights',
+					'site_check_tab'             => 'scheduled-review',
 					'nightly_inspection_preview' => '1',
 				),
 				admin_url( 'admin.php' )
@@ -2936,12 +2941,14 @@ final class Admin_Page {
 			<?php
 	}
 
-	private function render_morning_brief_panel( array $settings, bool $cloud_ready, ?array $nightly_preview ): void {
+	private function render_morning_brief_panel( array $settings, bool $cloud_ready, ?array $nightly_preview, bool $embedded = false ): void {
 		?>
-		<div class="npcink-toolbox__panel-header">
-			<h2><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></h2>
-			<p><?php esc_html_e( 'Use this low-frequency area for automatic inspection previews and optional local fallback state. Cloud run recovery opens in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
-		</div>
+		<?php if ( ! $embedded ) : ?>
+			<div class="npcink-toolbox__panel-header">
+				<h2><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></h2>
+				<p><?php esc_html_e( 'Use this low-frequency area for automatic inspection previews and optional local fallback state. Cloud run recovery opens in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
+			</div>
+		<?php endif; ?>
 		<?php
 		if ( ! $cloud_ready ) {
 			$this->render_cloud_runtime_notice();
@@ -2953,10 +2960,13 @@ final class Admin_Page {
 					<div>
 						<h3><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></h3>
 						<p><?php esc_html_e( 'This is for recurring inspection previews. Daily site maintenance starts with Site Check; Cloud run recovery opens in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
+						<p><?php esc_html_e( 'Recent runs, result reads, and Cloud-owned retry requests live in Cloud Addon Runtime Runs.', 'npcink-workflow-toolbox' ); ?></p>
 					</div>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></a>
-						<a class="button" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Open Site Check', 'npcink-workflow-toolbox' ); ?></a>
+						<?php if ( ! $embedded ) : ?>
+							<a class="button" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Open current check', 'npcink-workflow-toolbox' ); ?></a>
+						<?php endif; ?>
 						<a class="button" href="<?php echo esc_url( $this->cloud_addon_runtime_runs_url() ); ?>"><?php esc_html_e( 'Open Cloud run recovery', 'npcink-workflow-toolbox' ); ?></a>
 					</div>
 				</div>

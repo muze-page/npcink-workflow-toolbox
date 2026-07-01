@@ -554,16 +554,16 @@ administrator may explicitly run Cloud detail and render the suggestion-only
 `site_ops_cloud_analysis_result.v1`. It is a manual review surface, not a
 Cloud batch owner, local queue, Core proposal creator, or WordPress write path.
 Nightly Inspection fallback preview settings live in the low-frequency
-secondary **Scheduled Review** panel reached from the folded Site Check and
-Scheduled Review section inside Site Check. The former Advanced directory is
-not rendered as a separate top-level tab; `toolbox_tab=advanced` remains a
-compatibility alias into Site Check. Cloud run status, result reads, recent
-runs, and recovery live in Cloud Addon Runtime Runs. They do not live inside
-Cloud Checks. That keeps recurring inspection preview and Cloud run recovery
-separate from ordinary connection diagnostics while giving operators one direct
-Site Check entry instead of separate Site Check and Scheduled Review
-destinations. These controls do not belong in the default Overview view, and
-Site Check remains the ordinary manual site-maintenance entry. Site Knowledge
+**Scheduled Review** sub tab inside Site Check, beside the **Current Check**
+manual report. The former Advanced directory is not rendered as a separate top-level tab; `toolbox_tab=advanced` remains a compatibility alias into Site Check.
+`toolbox_tab=morning-brief` remains a compatibility alias that opens Site
+Check's Scheduled Review sub tab. Cloud run status, result reads, recent runs,
+and recovery live in Cloud Addon Runtime Runs. They do not live inside Cloud
+Checks. That keeps recurring inspection preview and Cloud run recovery separate
+from ordinary connection diagnostics while giving operators one direct Site
+Check entry with two clearly named modes. These controls do not belong in the
+default Overview view, and Site Check remains the ordinary manual
+site-maintenance entry. Site Knowledge
 connection, refresh, indexing, and deep delivery detail live in
 `npcink-cloud-addon`; Toolbox keeps only a secondary **Content Library Usage**
 panel for read-only status and best-practice result consumption.
@@ -702,19 +702,20 @@ diagnostics, key verification, entitlement, quota, billing, request logs,
 content-operations coverage, and Agent quality summaries belong in
 `npcink-cloud-addon` or Cloud service-plane surfaces. Toolbox keeps only
 task-owned product panels: Content Library Usage for read-only Site Knowledge
-status/result consumption, Site Check for manual site checks and the ordinary
-site-maintenance entry, Scheduled Review for Nightly/Morning Brief preview and
-optional local fallback settings, and Image Handling for selected-media
-review/handoff flows. Site Check and Scheduled Review share the direct Site
-Check tab: Site Check's folded detail section exposes scheduled preview and
-Cloud recovery, while `toolbox_tab=advanced` may remain only as a compatibility
-alias into the same tab. Cloud Runtime Runs in Cloud Addon owns
+status/result consumption, Site Check for manual site checks, the ordinary
+site-maintenance entry, and Nightly/Morning Brief preview, plus Image Handling
+for selected-media review/handoff flows. The direct Site Check tab has two
+internal sections: **Current Check** contains the manual report, while
+**Scheduled Review** exposes scheduled preview, optional local fallback settings,
+and Cloud recovery links. `toolbox_tab=advanced`
+and `toolbox_tab=morning-brief` may remain only as compatibility aliases into
+the same tab. Cloud Runtime Runs in Cloud Addon owns
 Nightly Inspection runtime
 entitlement, quota, batch limit, retention, recent/status/result, and retry
 detail. Cloud runtime routes may remain bounded call sites for compatibility,
 but standalone diagnostics do not live in Toolbox.
-Nightly Inspection / Morning Brief controls stay in the separate
-`morning-brief` secondary panel, not in local diagnostics or a second
+Nightly Inspection / Morning Brief controls stay in the Site Check
+`scheduled-review` sub tab, not in local diagnostics or a second
 site-check product.
 
 ## Dependency Direction
