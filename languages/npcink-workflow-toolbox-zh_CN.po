@@ -21,7 +21,7 @@ msgid "Settings"
 msgstr "设置"
 
 msgid "Toolbox"
-msgstr "工具箱"
+msgstr "流程工具箱"
 
 msgid "Operator-facing AI tools for Cloud-managed web search, Cloud-managed image-source candidates, Qdrant vector search, and repeatable content workflows."
 msgstr "面向运营者的 AI 工具，用于云端托管网页搜索、云端托管图片来源候选、Qdrant 向量搜索和可重复的内容工作流。"
@@ -39,7 +39,7 @@ msgid "Use hosted AI for reviewable content-support suggestions, then hand final
 msgstr "使用托管 AI 生成可审阅的内容支持建议，最终 WordPress 写入仍交由 Core 提案审批。"
 
 msgid "Toolbox sections"
-msgstr "工具箱分区"
+msgstr "流程工具箱分区"
 
 msgid "Content Context"
 msgstr "内容上下文"
@@ -2991,7 +2991,7 @@ msgid "Open Cloud Addon Monitoring"
 msgstr "打开 Cloud Addon Monitoring"
 
 msgid "Toolbox start"
-msgstr "Toolbox 开始页"
+msgstr "流程工具箱开始页"
 
 msgid "Check readiness, then open the right operator surface for the current task."
 msgstr "先检查就绪状态，再进入当前任务对应的操作界面。"
@@ -5289,10 +5289,10 @@ msgid "Advanced details"
 msgstr "高级详情"
 
 msgid "Advanced Toolbox directory"
-msgstr "高级工具箱目录"
+msgstr "高级流程工具箱目录"
 
 msgid "Advanced Toolbox entries"
-msgstr "高级工具箱入口"
+msgstr "高级流程工具箱入口"
 
 msgid "Setup"
 msgstr "设置"
@@ -5571,7 +5571,7 @@ msgid "Recent media library sample (advanced)"
 msgstr "最近媒体库样本（高级）"
 
 msgid "Recommended Toolbox action"
-msgstr "推荐的 Toolbox 操作"
+msgstr "推荐的流程工具箱操作"
 
 msgid "Refresh Cloud quota"
 msgstr "刷新 Cloud 配额"
@@ -5667,7 +5667,7 @@ msgid "Scheduled review download failed"
 msgstr "定期巡检下载失败"
 
 msgid "Toolbox defaults"
-msgstr "Toolbox 默认值"
+msgstr "流程工具箱默认值"
 
 msgid "Toolbox sends the latest public posts and pages. Approved comments are included only when the hosted service enables comment indexing."
 msgstr "Toolbox 会发送最新公开文章和页面。只有托管服务启用评论索引时，才会包含已批准评论。"
@@ -5703,7 +5703,7 @@ msgid "Use this as decision support only. No WordPress data changes here."
 msgstr "仅将其作为决策支持。这里不会更改 WordPress 数据。"
 
 msgid "Use Toolbox default"
-msgstr "使用 Toolbox 默认值"
+msgstr "使用流程工具箱默认值"
 
 msgid "Use Toolbox watermark defaults unless this run needs a specific override. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Toolbox logo source for this run."
 msgstr "除非本次运行需要特定覆盖，否则使用 Toolbox 水印默认值。文本水印覆盖不需要 logo 附件；图片/logo 覆盖会使用本次运行配置的 Toolbox logo 来源。"

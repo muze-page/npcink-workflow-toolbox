@@ -9,7 +9,7 @@
         "lang": "zh_CN",
         "plural-forms": "nplurals=1; plural=0;"
       },
-      "Toolbox": ["工具箱"],
+      "Toolbox": ["流程工具箱"],
       "Request failed.": ["请求失败。"],
       "Code: ": ["代码："],
       "Cloud runtime profile expects text input but received an empty value. Check the Cloud route/profile input mapping.": ["Cloud 运行时配置需要文本输入，但收到了空值。请检查 Cloud 路由或 profile 的输入映射。"],
