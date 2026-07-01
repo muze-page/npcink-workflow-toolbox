@@ -30,6 +30,7 @@ Start from the active documents below before changing code.
 - [Admin Surface Consolidation Summary](admin-surface-consolidation-summary.md)
 - [AI Plugin Overlap Boundary](ai-plugin-overlap-boundary.md)
 - [Content Support Product Readiness](content-support-product-readiness.md)
+- [Fixed Button Surface](fixed-button-surface.md)
 - [Content Support Writing Checkup History](content-support-writing-checkup-history.md)
 - [Editor Progressive Recommendations Trial](editor-progressive-recommendations-trial.md)
 - [Editor AI Image Recommendation Summary](editor-ai-image-recommendation-summary.md)
@@ -58,6 +59,7 @@ Start from the active documents below before changing code.
 - [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md)
 - [Site Check Operator Loop](full-site-insights-operator-loop.md)
 - [Site Check Decision Entry Closeout](site-check-decision-entry-closeout-2026-06-30.md)
+- [Site Check Scheduled Review Cloud Addon Closeout](site-check-scheduled-review-cloud-addon-closeout-2026-07-01.md)
 - [Batch Automation Governance Plan](batch-automation-governance-plan.md)
 - [Nightly Inspection Cross-Repo Handoff Checklist](nightly-inspection-cross-repo-handoff-checklist.md)
 - [Nightly Inspection Pro Cloud Runtime Acceptance](nightly-inspection-pro-cloud-runtime-acceptance.md)
@@ -68,6 +70,7 @@ Start from the active documents below before changing code.
 ## Boundary Notes And Deprecated Surfaces
 
 - [Article Assistant Workbench](article-assistant-workbench.md)
+- [Boundary Exceptions Registry](boundary-exceptions.md)
 - [Cloud Diagnostics Transition Summary](cloud-diagnostics-transition-summary.md)
 - [Site Knowledge UI Migration Closeout](archive/2026-06/site-knowledge-ui-migration-closeout-2026-06-30.md)
 - [Cloud Bulk Article Import](cloud-bulk-article-import.md)

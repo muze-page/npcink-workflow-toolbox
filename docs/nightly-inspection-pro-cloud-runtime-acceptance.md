@@ -52,22 +52,20 @@ The product shape is Cloud-first, not cloud-only:
   sanitized review queue in the merged Morning Brief so the operator can see
   what to review first. This is Cloud result detail only; it is not a local
   queue, worker, lease, retry, or scheduling surface.
-- The operator may explicitly select Morning Brief review items and submit one
-  blocked Core review proposal through Adapter/Core `from-plan` intake. The
-  generated `nightly_site_inspection_review_plan` keeps `proposal_ready=false`
-  and requires human title/content input before approval, preflight, or final
-  execution can proceed.
+- Toolbox no longer renders Morning Brief Core proposal selection from the
+  compatibility detail. Cloud Addon owns run history and recovery, and any
+  proposal follow-up should be started from the Cloud Addon/Core review path,
+  not from the Toolbox Scheduled Review subtab.
 - The panel keeps a browser-local `Recent run` entry so an operator can reload
   the last visible run ID, check Cloud status, or read Cloud result without
   creating a server-side run table.
 - Raw Cloud payloads and merged Morning Brief payload detail stay collapsed
   under advanced details; the main result surface shows status, merge state,
   quota, and next action only.
-- The main result surface shows `Cloud run detail` for read-only run state and
-  `Core handoff` for review direction. Merged results use `Review in Core` as
-  the next-step entry. Toolbox may submit a proposal only after the operator
-  selects specific review items; it does not approve, preflight, execute, or
-  write content.
+- The compatibility result surface may show `Cloud run detail` for read-only
+  run state and `Cloud follow-up` for direction. Merged results point operators
+  to Cloud Addon for recovery/follow-up; Toolbox does not create proposals,
+  approve, preflight, execute, or write content from this detail.
 - Partial-success results must show retry guidance and failed-action context
   without turning Toolbox into a retry queue or repair console.
 - When quota is exhausted, new runs are disabled while existing run IDs can
@@ -80,13 +78,12 @@ without opening raw payloads:
 
 - Did the Cloud inspection finish? `Cloud run detail` and the run summary must
   show run state, worker phase, and whether Cloud is still processing.
-- What is most worth reviewing? `Core handoff` must summarize matched local
-  priorities, Cloud review items, or the bounded Cloud `priority_queue` before
-  showing raw payload details.
-- Where should approval and write work happen? The next-step action must be
-  `Review in Core`, and the copy must state that Toolbox only creates selected,
-  blocked review proposals while Core/Adapter own approval, preflight,
-  execution, and final write boundaries.
+- What is most worth reviewing? The bounded Cloud `priority_queue` and issue
+  groups must be readable without opening raw payload details.
+- Where should recovery and proposal work happen? The next-step copy must point
+  operators to Cloud Addon/Core follow-up and state that Toolbox does not run
+  recovery, create proposals, approve, preflight, execute, or write content from
+  this compatibility detail.
 
 ## Explicit Non-Goals
 
@@ -143,9 +140,8 @@ Expected visible result:
 - a `Recent run` entry can reload the last browser-local run ID and refresh
   status/result from Cloud;
 - low-frequency manual status/result controls are in `Advanced details`;
-- merged results expose a `Review in Core` link as the next-step entry, but
-- only selected Morning Brief items can create one blocked Core review proposal;
-  no Core proposal is created automatically.
+- merged results expose Cloud Addon/Core follow-up direction, but no Core
+  proposal is created from the Toolbox Scheduled Review compatibility detail.
 
 ## Boundary Check
 

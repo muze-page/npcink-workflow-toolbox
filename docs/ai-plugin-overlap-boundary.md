@@ -117,7 +117,8 @@ The practical result is:
 - Npcink-owned workflows remain visible as default entries;
 - the Overview page shows read-only capability health instead of a generic AI
   administration surface;
-- low-frequency setup, diagnostics, review, and handoff entries stay behind the
-  single grouped Advanced directory instead of being duplicated on Overview;
+- low-frequency setup, diagnostics, review, and handoff details stay behind
+  task-owned folded sections such as Site Check scheduled-review controls and
+  Overview System status instead of being duplicated on Overview;
 - merge commit `f7fd8c798ea9329b1883ad3101bc4e2c0b8c7055` passed the default
   `composer test:all` gate after merge.

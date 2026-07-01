@@ -87,9 +87,8 @@ Toolbox.
 
 The admin page should default to Overview: one recommended site-level action,
 compact readiness rows for AI service, Site Profile, and safe mode, site-level
-and media next actions, and one folded advanced directory. The visible
-top-level tabs are Overview, Site Profile, Image Handling,
-and Advanced; Site Check, Site Knowledge, and Morning Brief remain
+and media next actions. The visible top-level tabs are Overview, Site Check,
+Site Profile, and Image Handling; Site Knowledge and Morning Brief remain
 secondary deep-link panels. Overview should not render a single-post
 article-support work block.
 Article-specific jobs use the editor Content Support sidebar:
@@ -99,8 +98,8 @@ into publish preflight duplicate-risk checks and internal-link candidates, so
 `writing_support` remains route-compatible but is not a default editor button.
 Site Check is the site-level decision surface, the Overview page's
 recommended next action, and the ordinary site-maintenance entry for operators.
-It is no longer a visible top-level tab, but the
-stable `operations-insights` deep link still opens its secondary panel. It
+It is a direct Site Check tab, and the stable `operations-insights` deep link
+still opens the same panel. It
 builds a manual local `site_ops_insight_pack.v1` from bounded public content,
 approved-comment signal counts, media metadata, taxonomy summaries, Site
 Context readiness, and Cloud availability, then presents the current run as a
@@ -115,11 +114,16 @@ send it or create local runtime state. When Cloud is ready, an administrator
 can explicitly run Cloud detail and review the suggestion-only
 `site_ops_cloud_analysis_result.v1` without Toolbox creating a local queue,
 local run table, Core proposal, or WordPress write.
-The low-frequency Scheduled Review entry is reached from Site Check and the
-Advanced directory. It uses the existing `morning-brief` deep link for
-Nightly/Morning Brief preview and local fallback settings, but it is not
-presented as a second site-check product. Its Cloud run recovery action links to
-Cloud Addon Runtime Runs instead of rendering run recovery controls locally.
+The low-frequency Scheduled Review path is the **Scheduled Review** sub tab
+inside Site Check. **Current Check** contains the ordinary manual report.
+`toolbox_tab=advanced` may remain only as a compatibility alias into the
+direct Site Check tab instead of rendering a separate directory or listing Site
+Check detail and Scheduled Review preview as parallel choices.
+`toolbox_tab=morning-brief` may remain only as a compatibility alias that opens
+the Scheduled Review sub tab. Scheduled Review uses the Nightly/Morning Brief
+preview and folded optional local fallback settings, but it is not presented as
+a second site-check product. Its Cloud run recovery action links to Cloud Addon
+Runtime Runs instead of rendering run recovery controls locally.
 The admin Image Handling tab defaults to Image Optimization, with
 Batch Optimize Images as the first visible workbench. Single-image actions
 start from the WordPress media-library attachment details panel or image row
@@ -270,11 +274,11 @@ Post editor content support:
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
   `image_candidates`, selection-only paragraph review via `polish_notes`, and
   `discoverability`.
-- The editor UI shows primary buttons for `publish_preflight`,
-  `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
-  `internal_links`, and `image_candidates`; `writing_support`,
-  `summary_terms_optimization`, and `taxonomy_tags` remain supported route
-  intents but are not separate default buttons.
+- The editor UI shows default buttons for `publish_preflight`,
+  `internal_links`, `image_candidates`, `article_narration`, and
+  `article_audio_summary`; writing, summary, taxonomy/tag, outline,
+  discoverability, article-checkup, and current-article ALT helpers remain
+  supported route or rendering paths but are not default buttons.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
 - The selected-block toolbar may trigger `polish_notes` for the current

@@ -5203,22 +5203,6 @@
 		return payload && payload.result && typeof payload.result === 'object' ? payload.result : {};
 	}
 
-	function nightlyCloudCoreIntakePackage(payload) {
-		const cloudResult = nightlyCloudResultPayload(payload);
-		const merged = payload && payload.merged_morning_brief && typeof payload.merged_morning_brief === 'object' ? payload.merged_morning_brief : {};
-		const runtime = merged.cloud_runtime && typeof merged.cloud_runtime === 'object' ? merged.cloud_runtime : {};
-		if (cloudResult.core_intake_package && typeof cloudResult.core_intake_package === 'object') {
-			return cloudResult.core_intake_package;
-		}
-		if (runtime.core_intake_package && typeof runtime.core_intake_package === 'object') {
-			return runtime.core_intake_package;
-		}
-		if (payload && payload.core_intake_package && typeof payload.core_intake_package === 'object') {
-			return payload.core_intake_package;
-		}
-		return {};
-	}
-
 	function nightlyCloudMorningBriefV2(payload) {
 		const cloudResult = nightlyCloudResultPayload(payload);
 		return cloudResult.morning_brief && typeof cloudResult.morning_brief === 'object' ? cloudResult.morning_brief : {};
@@ -5311,265 +5295,6 @@
 		container.appendChild(feedback);
 	}
 
-	function nightlyCloudSelectedReviewItems(section) {
-		return Array.from(section.querySelectorAll('[data-toolbox-nightly-core-review-item]'))
-			.filter((checkbox) => checkbox instanceof HTMLInputElement && checkbox.checked)
-			.map((checkbox) => {
-				const row = checkbox.closest('.npcink-toolbox__result-item');
-				return row && row.__npcinkNightlyReviewItem ? row.__npcinkNightlyReviewItem : null;
-			})
-			.filter(Boolean);
-	}
-
-	function nightlyCloudSelectedReviewItemIds(items) {
-		return items
-			.map((item, index) => String((item && item.action_id) || 'morning_brief_review_' + String(index + 1)).trim())
-			.filter(Boolean)
-			.slice(0, 10);
-	}
-
-	function nightlyCloudStableHash(value) {
-		const source = String(value || '');
-		let hash = 5381;
-		for (let index = 0; index < source.length; index += 1) {
-			hash = ((hash << 5) + hash) ^ source.charCodeAt(index);
-		}
-		return (hash >>> 0).toString(16).padStart(8, '0');
-	}
-
-	function nightlyCloudCompletedDraftFields(section) {
-		const title = section.querySelector('[data-toolbox-nightly-complete-title]');
-		const content = section.querySelector('[data-toolbox-nightly-complete-content]');
-		return {
-			title: title instanceof HTMLInputElement ? title.value.trim() : '',
-			content: content instanceof HTMLTextAreaElement ? content.value.trim() : ''
-		};
-	}
-
-	function updateNightlyCloudCoreReviewAction(section) {
-		const selected = nightlyCloudSelectedReviewItems(section).length;
-		const count = section.querySelector('[data-toolbox-nightly-core-review-count]');
-		const button = section.querySelector('[data-toolbox-nightly-core-review-submit]');
-		const completedButton = section.querySelector('[data-toolbox-nightly-complete-submit]');
-		if (count) {
-			count.textContent = String(selected);
-		}
-		if (button instanceof HTMLButtonElement) {
-			button.disabled = selected < 1 || !config.adapterRestUrl;
-		}
-		if (completedButton instanceof HTMLButtonElement) {
-			completedButton.disabled = selected < 1 || !config.adapterRestUrl;
-		}
-	}
-
-	function nightlyCloudCompletedDraftProposalPayload(payload, selectedItems, fields) {
-		const cloudResult = nightlyCloudResultPayload(payload);
-		const runId = nightlyCloudRunIdFromPayload(payload) || String(cloudResult.run_id || '');
-		const coreIntakePackage = nightlyCloudCoreIntakePackage(payload);
-		const selectedIds = nightlyCloudSelectedReviewItemIds(selectedItems);
-		const evidenceRefs = selectedItems.map((item, index) => ({
-			action_id: selectedIds[index] || '',
-			title: String((item && item.title) || 'Scheduled review item').slice(0, 180),
-			object_type: String((item && item.object_type) || '').slice(0, 64),
-			object_id: String((item && item.object_id) || '').slice(0, 128),
-			score: Number.isFinite(Number(item && item.score)) ? Number(item.score) : null,
-			severity: String((item && item.severity) || '').slice(0, 64),
-			reason_codes: Array.isArray(item && item.reason_codes) ? item.reason_codes.map((reason) => String(reason || '')).filter(Boolean).slice(0, 12) : [],
-			recommended_next_action: String((item && item.recommended_next_action) || 'operator_review').slice(0, 128),
-			evidence_summary: String((item && item.evidence_summary) || '').slice(0, 600),
-			suggested_use: 'morning_brief_review_evidence'
-		}));
-		const idempotencyBasis = [runId || 'nightly-inspection', selectedIds.join(','), fields.title].join('|');
-		return {
-			ability_id: 'npcink-abilities-toolkit/create-draft',
-			title: 'Create draft from scheduled review',
-			summary: 'Review a completed draft prepared from selected Nightly Intelligence evidence. Core approval and execution remain local.',
-			input: {
-				title: fields.title,
-				content: fields.content,
-				content_format: 'html',
-				status: 'draft',
-				meta: {
-					nightly_inspection_cloud_run_id: runId,
-					nightly_inspection_selected_review_item_ids: selectedIds.join(','),
-					nightly_inspection_selected_review_item_count: selectedIds.length,
-					nightly_inspection_evidence_ref_count: evidenceRefs.length,
-					nightly_inspection_source_surface: 'toolbox_morning_brief_completed_draft'
-				},
-				dry_run: true,
-				commit: false,
-				idempotency_key: 'nightly-inspection-complete-draft-' + nightlyCloudStableHash(idempotencyBasis)
-			},
-			preview: {
-				proposal_ready: true,
-				needs_input: [],
-				blocked_items: [],
-				nightly_inspection_review: {
-					contract_version: 'nightly_site_inspection_completed_draft_handoff.v1',
-					source_surface: 'toolbox_morning_brief_completed_draft',
-					source_status: 'operator_completed_input',
-					cloud_run_id: runId,
-					selected_review_item_ids: selectedIds,
-					selected_review_items: selectedItems,
-					evidence_refs: evidenceRefs,
-					evidence_ref_count: evidenceRefs.length,
-					core_intake_package: coreIntakePackage,
-					proposal_ready: true,
-					completed_draft_submitted: true,
-					completed_draft: {
-						title_length: fields.title.length,
-						content_length: fields.content.length,
-						content_format: 'html',
-						submitted_from: 'toolbox_morning_brief'
-					},
-					operator_next_action: 'review_completed_draft_in_core',
-					needs_input_resolution_owner: 'toolbox_morning_brief_operator',
-					resubmission_required: false,
-					core_amendment_supported: false,
-					final_write_path: 'core_proposal_required',
-					direct_wordpress_write: false,
-					cloud_scheduler_truth: false
-				}
-			},
-			caller: {
-				surface: 'toolbox_nightly_inspection_morning_brief',
-				external_thread_id: 'toolbox-nightly-inspection-completed-draft',
-				source: 'cloud_nightly_inspection'
-			}
-		};
-	}
-
-	async function submitNightlyCloudCoreReviewProposal(root, payload, section, statusNode, button) {
-		const selectedItems = nightlyCloudSelectedReviewItems(section);
-		const originalText = button ? button.textContent : '';
-		if (!selectedItems.length) {
-			statusNode.className = 'npcink-toolbox__result-notice is-warning';
-			statusNode.textContent = 'Select at least one scheduled review item before creating a Core proposal.';
-			return;
-		}
-		if (!config.adapterRestUrl) {
-			statusNode.className = 'npcink-toolbox__result-notice is-error';
-			statusNode.textContent = 'Npcink Adapter REST URL is unavailable. Core proposal submission is not available from this site.';
-			return;
-		}
-
-		if (button) {
-			button.disabled = true;
-			button.textContent = 'Submitting Core review...';
-		}
-		statusNode.className = 'npcink-toolbox__result-notice is-pending';
-		statusNode.textContent = 'Building Nightly Inspection review plan...';
-
-		try {
-			const cloudResult = nightlyCloudResultPayload(payload);
-			const plan = await postJson(config.restUrl, 'flows/nightly-inspection-review-plan', {
-				cloud_run_id: nightlyCloudRunIdFromPayload(payload) || String(cloudResult.run_id || ''),
-				agent_version: String(cloudResult.agent_version || 'nightly_site_inspection_cloud_runtime.v1'),
-				selected_items: selectedItems,
-				core_intake_package: nightlyCloudCoreIntakePackage(payload)
-			});
-			statusNode.textContent = 'Submitting selected scheduled review items to Core proposal intake...';
-			const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
-				plan_ability_id: 'npcink-toolbox/build-nightly-inspection-review-plan',
-				plan,
-				plan_input: {
-					source: 'nightly_site_inspection_morning_brief',
-					cloud_run_id: nightlyCloudRunIdFromPayload(payload) || String(cloudResult.run_id || ''),
-					selected_count: selectedItems.length
-				},
-				caller: {
-					surface: 'toolbox_nightly_inspection_morning_brief',
-					external_thread_id: 'toolbox-nightly-inspection-review',
-					source: 'cloud_nightly_inspection'
-				}
-			});
-			renderProposalCreated(root, proposalFromPlanResponse(bridge), {
-				title: 'Nightly Inspection review proposal submitted',
-				summary: 'Core created a blocked review proposal from selected scheduled review evidence. Human title and content input are required before approval, preflight, or execution can proceed.',
-				rawTitle: 'Core Nightly Inspection review response',
-				receiptContext: {
-					handoffType: 'nightly_inspection_review_plan',
-					sourceItemId: 'morning_brief_selected_review_items',
-					sourceLabel: 'Scheduled review selected items',
-					targetAbilityId: 'npcink-abilities-toolkit/create-draft',
-				},
-			});
-		} catch (error) {
-			renderCoreHandoffStatusError(statusNode, error, 'Could not submit selected scheduled review items to Core.', {
-				handoffType: 'nightly_inspection_review_plan',
-				sourceItemId: 'morning_brief_selected_review_items',
-				sourceLabel: 'Scheduled review selected items',
-				targetAbilityId: 'npcink-abilities-toolkit/create-draft',
-			}, 'Core review submission error');
-		} finally {
-			if (button) {
-				button.disabled = false;
-				button.textContent = originalText;
-				updateNightlyCloudCoreReviewAction(section);
-			}
-		}
-	}
-
-	async function submitNightlyCloudCompletedDraftProposal(root, payload, section, statusNode, button) {
-		const selectedItems = nightlyCloudSelectedReviewItems(section);
-		const fields = nightlyCloudCompletedDraftFields(section);
-		const originalText = button ? button.textContent : '';
-		if (!selectedItems.length) {
-			statusNode.className = 'npcink-toolbox__result-notice is-warning';
-			statusNode.textContent = 'Select at least one scheduled review item before creating a completed Core proposal.';
-			return;
-		}
-		if (!fields.title || !fields.content) {
-			statusNode.className = 'npcink-toolbox__result-notice is-warning';
-			statusNode.textContent = 'Add a draft title and draft content before creating the completed Core proposal.';
-			return;
-		}
-		if (!config.adapterRestUrl) {
-			statusNode.className = 'npcink-toolbox__result-notice is-error';
-			statusNode.textContent = 'Npcink Adapter REST URL is unavailable. Core proposal submission is not available from this site.';
-			return;
-		}
-
-		if (button) {
-			button.disabled = true;
-			button.textContent = 'Submitting completed draft...';
-		}
-		statusNode.className = 'npcink-toolbox__result-notice is-pending';
-		statusNode.textContent = 'Submitting completed scheduled review draft to Core proposal intake...';
-
-		try {
-			const proposal = await postJson(
-				config.adapterRestUrl,
-				'proposals',
-				nightlyCloudCompletedDraftProposalPayload(payload, selectedItems, fields)
-			);
-			renderProposalCreated(root, proposalFromPlanResponse(proposal), {
-				title: 'Nightly Inspection draft proposal submitted',
-				summary: 'Core created a complete draft proposal from selected scheduled review evidence. Review, approval, preflight, and execution remain in Core/Adapter.',
-				rawTitle: 'Core Nightly Inspection completed draft response',
-				receiptContext: {
-					handoffType: 'nightly_inspection_completed_draft',
-					sourceItemId: 'morning_brief_completed_draft',
-					sourceLabel: 'Scheduled review completed draft',
-					targetAbilityId: 'npcink-abilities-toolkit/create-draft',
-				},
-			});
-		} catch (error) {
-			renderCoreHandoffStatusError(statusNode, error, 'Could not submit the completed scheduled review draft to Core.', {
-				handoffType: 'nightly_inspection_completed_draft',
-				sourceItemId: 'morning_brief_completed_draft',
-				sourceLabel: 'Scheduled review completed draft',
-				targetAbilityId: 'npcink-abilities-toolkit/create-draft',
-			}, 'Completed draft submission error');
-		} finally {
-			if (button) {
-				button.disabled = false;
-				button.textContent = originalText;
-				updateNightlyCloudCoreReviewAction(section);
-			}
-		}
-	}
-
 	function renderNightlyCloudMorningBrief(result, payload) {
 		const brief = nightlyCloudMorningBriefV2(payload);
 		const priorityQueue = Array.isArray(brief.priority_queue) ? brief.priority_queue : [];
@@ -5606,24 +5331,13 @@
 
 		if (priorityQueue.length) {
 			const list = el('div', 'npcink-toolbox__result-list');
-			priorityQueue.slice(0, 5).forEach((item, index) => {
+			priorityQueue.slice(0, 5).forEach((item) => {
 				const row = el('article', 'npcink-toolbox__result-item');
-				row.__npcinkNightlyReviewItem = item;
-				const heading = el('label', 'npcink-toolbox__batch-row');
-				const checkbox = document.createElement('input');
-				checkbox.type = 'checkbox';
-				checkbox.setAttribute('data-toolbox-nightly-core-review-item', String(item.action_id || index + 1));
-				checkbox.addEventListener('change', () => updateNightlyCloudCoreReviewAction(section));
-				heading.appendChild(checkbox);
-				const headingText = el('span', 'npcink-toolbox__batch-row-body');
-				headingText.appendChild(el('strong', '', [
+				row.appendChild(el('h4', '', [
 					item.title || 'Review item',
 					item.object_type ? formatLabel(item.object_type) : '',
 					item.object_id ? '#' + item.object_id : ''
 				].filter(Boolean).join(' ')));
-				headingText.appendChild(el('small', '', 'Select for Core review handoff'));
-				heading.appendChild(headingText);
-				row.appendChild(heading);
 				if (item.evidence_summary) {
 					row.appendChild(el('p', '', item.evidence_summary));
 				}
@@ -5640,59 +5354,7 @@
 				list.appendChild(row);
 			});
 			section.appendChild(list);
-
-			const handoff = el('div', 'npcink-toolbox__result-feedback');
-			handoff.setAttribute('data-toolbox-nightly-core-review-handoff', 'true');
-			handoff.appendChild(el('h4', '', 'Core proposal handoff'));
-			handoff.appendChild(el('p', '', 'Selected items can become a blocked Core review proposal, or a complete draft proposal after you add the draft title and content. Toolbox does not approve, preflight, execute, or write content.'));
-			const coreIntakePackage = nightlyCloudCoreIntakePackage(payload);
-			if (coreIntakePackage.contract_version) {
-				const intakeMeta = el('div', 'npcink-toolbox__result-meta');
-				appendMeta(intakeMeta, 'Core intake package', coreIntakePackage.contract_version);
-				appendMeta(intakeMeta, 'Target route', coreIntakePackage.target_route);
-				appendMeta(intakeMeta, 'Receipt owner', coreIntakePackage.receipt_expectation && coreIntakePackage.receipt_expectation.receipt_owner);
-				handoff.appendChild(intakeMeta);
-			}
-			const completedDraft = el('div', 'npcink-toolbox__result-item');
-			completedDraft.appendChild(el('h4', '', 'Completed draft input'));
-			const titleLabel = el('label', 'npcink-toolbox__field');
-			titleLabel.appendChild(el('span', '', 'Draft title'));
-			const titleInput = document.createElement('input');
-			titleInput.type = 'text';
-			titleInput.setAttribute('data-toolbox-nightly-complete-title', 'true');
-			titleInput.placeholder = 'Reviewed draft title';
-			titleLabel.appendChild(titleInput);
-			completedDraft.appendChild(titleLabel);
-			const contentLabel = el('label', 'npcink-toolbox__field');
-			contentLabel.appendChild(el('span', '', 'Draft content'));
-			const contentInput = document.createElement('textarea');
-			contentInput.rows = 6;
-			contentInput.setAttribute('data-toolbox-nightly-complete-content', 'true');
-			contentInput.placeholder = 'Reviewed draft content for Core proposal review';
-			contentLabel.appendChild(contentInput);
-			completedDraft.appendChild(contentLabel);
-			completedDraft.appendChild(el('p', '', 'Use this only after the selected scheduled review evidence has been turned into reviewed draft text. Core remains the approval and execution surface.'));
-			handoff.appendChild(completedDraft);
-			const actions = el('div', 'npcink-toolbox__result-actions');
-			const submit = el('button', 'button button-primary', 'Submit selected to Core review');
-			submit.type = 'button';
-			submit.setAttribute('data-toolbox-nightly-core-review-submit', 'true');
-			const completedSubmit = el('button', 'button', 'Submit completed draft to Core');
-			completedSubmit.type = 'button';
-			completedSubmit.setAttribute('data-toolbox-nightly-complete-submit', 'true');
-			const status = el('div', 'npcink-toolbox__result-notice is-pending', 'Selected: ');
-			const count = el('strong', '', '0');
-			count.setAttribute('data-toolbox-nightly-core-review-count', 'true');
-			status.appendChild(count);
-			status.appendChild(document.createTextNode('. Core proposal creation requires Adapter/Core availability.'));
-			submit.addEventListener('click', () => submitNightlyCloudCoreReviewProposal(result.closest('form') || result, payload, section, status, submit));
-			completedSubmit.addEventListener('click', () => submitNightlyCloudCompletedDraftProposal(result.closest('form') || result, payload, section, status, completedSubmit));
-			actions.appendChild(submit);
-			actions.appendChild(completedSubmit);
-			handoff.appendChild(actions);
-			handoff.appendChild(status);
-			section.appendChild(handoff);
-			updateNightlyCloudCoreReviewAction(section);
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'This is read-only Cloud result detail. Runtime history, recovery, and proposal follow-up belong in Cloud Addon and Core.'));
 		}
 		result.appendChild(section);
 	}
@@ -5777,7 +5439,7 @@
 		}
 		return {
 			label: 'No review items',
-			description: 'No Core handoff is ready from this inspection result.'
+			description: 'No follow-up is ready from this inspection result.'
 		};
 	}
 
@@ -5839,21 +5501,14 @@
 		strip.appendChild(nightlyCloudSummaryItem(
 			'Next step',
 			hasMerged ? 'ok' : 'warning',
-			hasMerged ? 'Review in Core' : 'Load result first',
-			'Toolbox prepares review context only; it does not create proposals or write content.'
+			hasMerged ? 'Open Cloud Addon' : 'Load result first',
+			'Toolbox shows compatibility detail only; recovery and proposal follow-up are not run from this page.'
 		));
 
-		const section = createSection('Core handoff');
+		const section = createSection('Cloud follow-up');
 		section.appendChild(strip);
 		if (hasMerged) {
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Review the merged scheduled review locally, then open Core for proposal work. Final approval and WordPress writes stay in Core.'));
-			const actions = el('div', 'npcink-toolbox__result-actions');
-			if (config.coreAdminUrl) {
-				actions.appendChild(createLink(config.coreAdminUrl, 'Review in Core'));
-			}
-			if (actions.childNodes.length) {
-				section.appendChild(actions);
-			}
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Open Cloud Addon Runtime Runs for run history, recovery, and any Cloud-owned follow-up. Final approval and WordPress writes stay outside this compatibility detail.'));
 		}
 		result.appendChild(section);
 	}
@@ -6401,6 +6056,9 @@
 		if (tab === 'content' || tab === 'content-preparation') {
 			return 'operations-insights';
 		}
+		if (tab === 'morning-brief' || tab === 'scheduled-review' || tab === 'scheduled_review') {
+			return 'operations-insights';
+		}
 		return tab;
 	}
 
@@ -6446,6 +6104,7 @@
 			tool: publicToolForToolboxTool(target),
 			toolbox_tab: null,
 			toolbox_tool: null,
+			site_check_tab: null,
 		};
 	}
 
@@ -6523,7 +6182,44 @@
 			tool: null,
 			toolbox_tab: null,
 			toolbox_tool: null,
+			site_check_tab: target === 'operations-insights' ? activeSiteCheckTab() : null,
 		});
+	}
+
+	function activeSiteCheckTab() {
+		const workspace = document.querySelector('[data-toolbox-site-check-tabs]');
+		if (!workspace) {
+			return null;
+		}
+		const target = activeTarget(workspace, '[data-toolbox-site-check-target]', 'data-toolbox-site-check-target');
+		return target && target !== 'current-check' ? target : null;
+	}
+
+	function activateSiteCheckTab(target, updateUrl) {
+		const workspace = document.querySelector('[data-toolbox-site-check-tabs]');
+		if (!workspace || !hasTarget(workspace, '[data-toolbox-site-check-panel]', 'data-toolbox-site-check-panel', target)) {
+			return false;
+		}
+
+		activateTarget(
+			workspace,
+			'[data-toolbox-site-check-target]',
+			'[data-toolbox-site-check-panel]',
+			'data-toolbox-site-check-target',
+			'data-toolbox-site-check-panel',
+			target
+		);
+
+		if (updateUrl) {
+			updateToolboxUrl({
+				tab: 'operations-insights',
+				tool: null,
+				toolbox_tab: null,
+				toolbox_tool: null,
+				site_check_tab: target === 'current-check' ? null : target,
+			});
+		}
+		return true;
 	}
 
 	function activateTopTab(target, updateUrl) {
@@ -6600,6 +6296,7 @@
 		const rawRequestedTab = params.get('tab') || params.get('toolbox_tab') || '';
 		const rawRequestedTool = params.get('tool') || params.get('toolbox_tool') || '';
 		const requestedTab = toolboxTabFromPublicTab(rawRequestedTab);
+		const requestedSiteCheckTab = params.get('site_check_tab') || (rawRequestedTab === 'morning-brief' ? 'scheduled-review' : '') || (params.get('nightly_inspection_preview') === '1' ? 'scheduled-review' : '');
 		let requestedTool = toolboxToolFromPublicTool(rawRequestedTool);
 		let tab = requestedTab;
 		let canonicalizeToolUrl = false;
@@ -6635,6 +6332,18 @@
 		if (tab) {
 			activateTopTab(tab, false);
 		}
+		if (tab === 'operations-insights') {
+			activateSiteCheckTab(requestedSiteCheckTab === 'scheduled-review' ? 'scheduled-review' : 'current-check', false);
+			if (rawRequestedTab === 'morning-brief') {
+				updateToolboxUrl({
+					tab: 'operations-insights',
+					tool: null,
+					toolbox_tab: null,
+					toolbox_tool: null,
+					site_check_tab: 'scheduled-review',
+				});
+			}
+		}
 		if (tab === 'tools' && requestedTool) {
 			activateToolPanel(requestedTool, false, toolWorkspaceForTab(tab) || requestedToolWorkspace);
 			if (canonicalizeToolUrl) {
@@ -6647,6 +6356,7 @@
 				tool: null,
 				toolbox_tab: 'operations-insights',
 				toolbox_tool: null,
+				site_check_tab: null,
 			});
 		}
 	}
@@ -6852,6 +6562,23 @@
 					'data-toolbox-ops-panel',
 					button.getAttribute('data-toolbox-ops-target')
 				);
+			});
+		});
+	}
+
+	function initSiteCheckTabs() {
+		document.querySelectorAll('[data-toolbox-site-check-tabs]').forEach((workspace) => {
+			workspace.addEventListener('click', (event) => {
+				if (!(event.target instanceof Element)) {
+					return;
+				}
+
+				const button = event.target.closest('[data-toolbox-site-check-target]');
+				if (!button || !workspace.contains(button)) {
+					return;
+				}
+
+				activateSiteCheckTab(button.getAttribute('data-toolbox-site-check-target'), true);
 			});
 		});
 	}
@@ -7122,6 +6849,7 @@
 	initToolSwitcher();
 	initContextSectionSwitcher();
 	initContextGroupSwitcher();
+	initSiteCheckTabs();
 	initOperationsInsightsTabs();
 	initContextDrafts();
 	initWebSearchPresets();

@@ -57,10 +57,10 @@ Quota movement matched the two real Cloud inspection submissions.
 - Visible result sections:
   - `Cloud run detail`
   - `Cloud review details`
-  - `Core handoff`
-- Next step: `Review in Core`.
-- Boundary copy confirmed: Toolbox prepares review context only and does not
-  create proposals or write content.
+  - `Cloud follow-up`
+- Next step: open Cloud Addon/Core follow-up.
+- Boundary copy confirmed: Toolbox shows compatibility detail only and does not
+  run recovery, create proposals, or write content.
 
 ### Run 2
 
@@ -73,9 +73,10 @@ Quota movement matched the two real Cloud inspection submissions.
 - Visible result sections:
   - `Cloud run detail`
   - `Cloud review details`
-  - `Core handoff`
-- Next step: `Review in Core`.
-- Boundary copy confirmed: final approval and WordPress writes stay in Core.
+  - `Cloud follow-up`
+- Next step: open Cloud Addon/Core follow-up.
+- Boundary copy confirmed: recovery and proposal follow-up do not run from
+  Toolbox Scheduled Review.
 
 ## Findings
 
