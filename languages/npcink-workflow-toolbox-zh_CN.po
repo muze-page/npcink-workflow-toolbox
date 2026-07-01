@@ -5387,8 +5387,8 @@ msgstr "内容库设置"
 msgid "Content Library Setup"
 msgstr "内容库设置"
 
-msgid "Copy or download dry-run JSON"
-msgstr "复制或下载 dry-run JSON"
+msgid "Advanced: download dry-run JSON"
+msgstr "高级：下载 dry-run JSON"
 
 msgid "Could not build the local Morning Brief preview."
 msgstr "无法生成本地 Morning Brief 预览。"
@@ -5416,6 +5416,9 @@ msgstr "默认水印类型"
 
 msgid "Download dry-run JSON"
 msgstr "下载 dry-run JSON"
+
+msgid "Download the replay payload only for support or debugging. It is not embedded in this page, saved automatically, or used to create scheduled work."
+msgstr "仅在支持或排查时下载 replay 载荷。它不会嵌入此页面、自动保存，也不会用于创建定时工作。"
 
 msgid "Eligible media sample"
 msgstr "符合条件的媒体样本"
@@ -5510,8 +5513,8 @@ msgstr "不裁剪"
 msgid "No priority review items were found in this bounded preview."
 msgstr "这个有边界的预览中没有发现优先审阅项。"
 
-msgid "Generated %d preview review items. This only proves the scheduled review can read local content; use Current check for ordinary site maintenance."
-msgstr "已生成 %d 个预览审阅项。这只用于确认定期巡检可以读取本地内容；日常站点维护请使用当前检查。"
+msgid "Generated %d preview signals. This only confirms scheduled review can read local content; use Current check for ordinary site maintenance."
+msgstr "已生成 %d 个预览信号。这只用于确认定期巡检可以读取本地内容；日常站点维护请使用当前检查。"
 
 msgid "Oldest modified public posts and pages."
 msgstr "最早修改的公开文章和页面。"
@@ -5537,8 +5540,11 @@ msgstr "文章"
 msgid "Post/page scan limit"
 msgstr "文章/页面扫描上限"
 
-msgid "Preview-only action candidates."
-msgstr "仅预览的操作候选。"
+msgid "Preview signals"
+msgstr "预览信号"
+
+msgid "Read-only hints; not tasks."
+msgstr "只读线索，不是任务。"
 
 msgid "Preview first, review the result, then hand off only the accepted change. Article-specific writing support stays in the editor sidebar."
 msgstr "先预览并审阅结果，然后只交接已接受的更改。单篇文章写作支持仍在编辑器侧边栏中。"
@@ -5585,8 +5591,8 @@ msgstr "审阅交接"
 msgid "Review images already used by one article and return ALT/caption ideas without changing media metadata."
 msgstr "审阅某篇文章已使用的图片，并返回 ALT/说明文字建议，不更改媒体元数据。"
 
-msgid "Review items"
-msgstr "审阅项"
+msgid "Scheduled review status"
+msgstr "定期巡检状态"
 
 msgid "Review set size"
 msgstr "审阅集大小"
@@ -5645,8 +5651,20 @@ msgstr "只有内容库返回带证据引用的提案输入后，交接才会出
 msgid "The Morning Brief preview link expired. Reload the page and try again."
 msgstr "Morning Brief 预览链接已过期。请刷新页面后重试。"
 
-msgid "This is the read-only replay payload produced by the manual preview. It is not saved automatically and does not create scheduled work."
-msgstr "这是手动预览生成的只读 replay 载荷。它不会自动保存，也不会创建定时工作。"
+msgid "Low-frequency scheduled-review preview only. Daily site maintenance starts with Current check."
+msgstr "仅用于低频定期巡检预览。日常站点维护从当前检查开始。"
+
+msgid "Use this only to preview whether the scheduled review can read local content. Cloud run history and recovery open in Cloud Addon."
+msgstr "这里只用于预览定期巡检是否能读取本地内容。Cloud 运行历史和恢复请在 Cloud Addon 打开。"
+
+msgid "You do not have permission to download this scheduled review preview."
+msgstr "您没有权限下载此定期巡检预览。"
+
+msgid "Permission denied"
+msgstr "权限不足"
+
+msgid "Scheduled review download failed"
+msgstr "定期巡检下载失败"
 
 msgid "Toolbox defaults"
 msgstr "Toolbox 默认值"
@@ -5696,89 +5714,8 @@ msgstr "当 AI 返回有证据支持的审阅输入时，Toolbox 可以准备一
 msgid "Where this helps"
 msgstr "适用场景"
 
-msgid "WP-Cron is the WordPress-side fallback for one latest dry-run Morning Brief preview. The Pro Cloud Runtime remains the primary execution path for reliable scoring, entitlement, status, and result retention."
-msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run Morning Brief 预览。Pro Cloud Runtime 仍是可靠评分、权益、状态和结果保留的主要执行路径。"
-
-msgid "Low-frequency inspection and Cloud run recovery stay here, away from the everyday Site Check."
-msgstr "低频巡检和 Cloud 运行恢复留在这里，避免和日常站点检查混在一起。"
-
-msgid "Low-frequency inspection preview stays here; Cloud run status and recovery live in Cloud Addon."
-msgstr "低频巡检预览保留在这里；Cloud 运行状态和恢复放在 Cloud Addon。"
-
-msgid "View scheduled review"
-msgstr "查看定期巡检"
-
-msgid "Preview automatic inspection results, Cloud run status, and recovery controls. Nothing is changed."
-msgstr "预览自动巡检结果、Cloud 运行状态和恢复控制项。不会更改任何内容。"
-
-msgid "Preview automatic inspection results. Nothing is changed."
-msgstr "预览自动巡检结果。不会更改任何内容。"
-
 msgid "Open Cloud run recovery"
 msgstr "打开 Cloud 运行恢复"
-
-msgid "Inspect recent runs, read results, and request Cloud-owned retry in Cloud Addon."
-msgstr "在 Cloud Addon 中查看近期运行、读取结果，并请求 Cloud 侧重试。"
-
-msgid "Scheduled review and Cloud runs"
-msgstr "定期巡检和 Cloud 运行"
-
-msgid "Scheduled review and Cloud recovery"
-msgstr "定期巡检和 Cloud 恢复"
-
-msgid "Scheduled review entry"
-msgstr "定期巡检入口"
-
-msgid "Site check and scheduled review"
-msgstr "站点检查与定期巡检"
-
-msgid "Site check and scheduled review entry"
-msgstr "站点检查与定期巡检入口"
-
-msgid "Use one review entry for current site evidence, recurring previews, and Cloud run recovery."
-msgstr "当前站点证据、定期预览和 Cloud 运行恢复统一放在一个复核入口。"
-
-msgid "Open one review entry for the current site report, scheduled preview, and Cloud run recovery."
-msgstr "当前站点报告、定期预览和 Cloud 运行恢复统一从一个复核入口打开。"
-
-msgid "Open site check and scheduled review"
-msgstr "打开站点检查与定期巡检"
-
-msgid "Review the current site report first. Preview scheduled review or open Cloud run recovery from the folded section when needed."
-msgstr "先查看当前站点报告；需要时再从折叠区预览定期巡检或打开 Cloud 运行恢复。"
-
-msgid "Use Site Check for daily decisions"
-msgstr "日常决策使用站点检查"
-
-msgid "Generate a site check whenever an operator needs the current priority queue."
-msgstr "运营人员需要当前优先处理队列时，生成一次站点检查。"
-
-msgid "Use scheduled review for automation recovery"
-msgstr "自动化恢复使用定期巡检"
-
-msgid "Use scheduled review for recurring previews"
-msgstr "周期预览使用定期巡检"
-
-msgid "Open it only to preview recurring inspection output, inspect Cloud run status, or recover a known run."
-msgstr "仅在需要预览周期巡检输出、检查 Cloud 运行状态，或恢复已知运行时打开。"
-
-msgid "Open it only to preview recurring inspection output or adjust the local fallback preview."
-msgstr "仅在需要预览周期巡检输出，或调整本地备用预览时打开。"
-
-msgid "Use Cloud Addon for run recovery"
-msgstr "运行恢复请使用 Cloud Addon"
-
-msgid "Recent runs, result reads, and Cloud-owned retry requests live in Cloud Addon Runtime Runs."
-msgstr "近期运行、结果读取和 Cloud 侧重试请求位于 Cloud Addon 的 Runtime Runs。"
-
-msgid "Both paths are review-only. WordPress changes still require the governed Core flow."
-msgstr "两条路径都仅供审阅。WordPress 更改仍需要受治理的 Core 流程。"
-
-msgid "Open low-frequency controls"
-msgstr "打开低频控制项"
-
-msgid "Open related controls"
-msgstr "打开相关控制项"
 
 msgid "The scheduled review preview link expired. Reload the page and try again."
 msgstr "定期巡检预览链接已过期。请刷新页面后重试。"
@@ -5792,59 +5729,20 @@ msgstr "定期巡检预览"
 msgid "Scheduled review preview summary"
 msgstr "定期巡检预览摘要"
 
-msgid "WP-Cron is the WordPress-side fallback for one latest dry-run scheduled review preview. The Pro Cloud Runtime remains the primary execution path for reliable scoring, entitlement, status, and result retention."
-msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run 定期巡检预览。Pro Cloud Runtime 仍是可靠评分、权益、状态和结果保留的主要执行路径。"
-
-msgid "WP-Cron is the WordPress-side fallback for one latest dry-run scheduled review preview. Cloud run status, result retention, and recovery live in Cloud Addon."
-msgstr "WP-Cron 是 WordPress 侧备用方案，用于保留一份最新 dry-run 定期巡检预览。Cloud 运行状态、结果保留和恢复放在 Cloud Addon。"
-
 msgid "Optional WordPress-side WP-Cron dry-run fallback. Use it only when Cloud is unavailable or during trials; it is not the Cloud scheduled inspection."
 msgstr "这是 WordPress 侧可选的 WP-Cron dry-run 备用方案。仅在 Cloud 不可用或试用阶段使用；它不是 Cloud 定期巡检。"
 
 msgid "Latest scheduled dry-run preview: %1$s, %2$d review items."
 msgstr "最新定期 dry-run 预览：%1$s，%2$d 个审阅项。"
 
-msgid "Run a Cloud-scored scheduled inspection and merge review-only findings into the local preview. Cloud owns entitlement, usage, queue, retry, and retention detail; no local job queue or write path is created."
-msgstr "运行由 Cloud 评分的定期巡检，并把仅供审阅的发现合并进本地预览。Cloud 负责权益、用量、队列、重试和保留详情；本地不会创建任务队列或写入路径。"
-
-msgid "Use this low-frequency area for automatic inspection previews, local fallback state, and Cloud run recovery. Start with Site Check for ordinary manual decisions."
-msgstr "这个低频区域用于自动巡检预览、本地备用状态和 Cloud 运行恢复。普通人工决策请从站点检查开始。"
-
-msgid "Use this low-frequency area for automatic inspection previews and local fallback state. Cloud run status and recovery live in Cloud Addon."
-msgstr "这个低频区域用于自动巡检预览和本地备用状态。Cloud 运行状态和恢复放在 Cloud Addon。"
-
-msgid "Use this low-frequency area for automatic inspection previews and optional local fallback state. Cloud run recovery opens in Cloud Addon."
-msgstr "这个低频区域用于自动巡检预览和可选本地备用状态。Cloud 运行恢复在 Cloud Addon 打开。"
-
-msgid "This is for recurring inspection previews and Cloud run recovery. Daily site maintenance starts with Site Check."
-msgstr "这里用于周期巡检预览和 Cloud 运行恢复。日常站点维护从站点检查开始。"
-
-msgid "This is for recurring inspection previews. Daily site maintenance starts with Site Check; Cloud run recovery opens in Cloud Addon."
-msgstr "这里用于周期巡检预览。日常站点维护从站点检查开始；Cloud 运行恢复在 Cloud Addon 打开。"
-
 msgid "Preview scheduled review"
 msgstr "预览定期巡检"
-
-msgid "Advanced: fallback, Cloud runs, and recovery"
-msgstr "高级：本地备用、Cloud 运行和恢复"
-
-msgid "Advanced: local fallback and Cloud run link"
-msgstr "高级：本地备用和 Cloud 运行入口"
 
 msgid "Advanced: optional local fallback preview"
 msgstr "高级：可选本地备用预览"
 
-msgid "Local fallback preview settings stay here; Cloud run detail opens in Cloud Addon."
-msgstr "本地备用预览设置保留在这里；Cloud 运行详情在 Cloud Addon 打开。"
-
 msgid "WP-Cron fallback settings stay here because they control local WordPress dry-run preview only."
 msgstr "WP-Cron 备用设置保留在这里，因为它们只控制本地 WordPress dry-run 预览。"
-
-msgid "Cloud run status and recovery"
-msgstr "Cloud 运行状态和恢复"
-
-msgid "Recent runs, status reads, result reads, and Cloud-owned retry requests now live in Cloud Addon. Toolbox keeps only the scheduled review preview and local fallback settings here."
-msgstr "近期运行、状态读取、结果读取和 Cloud 侧重试请求现在放在 Cloud Addon。Toolbox 这里只保留定期巡检预览和本地备用设置。"
 
 msgid "全网搜"
 msgstr "全网搜"

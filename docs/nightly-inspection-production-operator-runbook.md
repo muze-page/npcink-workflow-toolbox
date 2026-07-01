@@ -11,8 +11,8 @@ truth out of WordPress/Core:
 1. WordPress/Toolbox submits a bounded local snapshot.
 2. Cloud owns queue-backed run state, result retention, recent run cards,
    retry, quota, and diagnostics.
-3. Toolbox displays Morning Brief review context only.
-4. Operators explicitly select review items before Core proposal handoff.
+3. Toolbox displays Scheduled Review preview/context only.
+4. Cloud Addon owns run history, recovery, and Cloud-owned follow-up.
 5. Core/Adapter own proposal approval, preflight, execution, audit, and final
    WordPress writes.
 
@@ -25,10 +25,10 @@ A healthy run has all of these signals:
 - status reaches terminal `succeeded`.
 - result read returns `cloud_batch_runtime_result.v1`.
 - Toolbox returns `nightly_site_inspection_cloud_batch_merge.v1`.
-- Morning Brief shows `Cloud run detail`, `Cloud review details`, and
-  `Core handoff`.
-- `Review in Core` is the next step, but no Core proposal is created until the
-  operator selects specific Morning Brief review items.
+- Compatibility detail shows `Cloud run detail`, `Cloud review details`, and
+  `Cloud follow-up`.
+- Cloud Addon/Core follow-up is the next step; no Core proposal is created from
+  the Toolbox Scheduled Review subtab.
 - `direct_wordpress_write=false` and `cloud_scheduler_truth=false` remain true
   across submit, status, result, recent, and retry surfaces.
 
@@ -78,7 +78,7 @@ Not allowed:
 - server-side Toolbox run history;
 - local scheduler truth;
 - local retry processing;
-- Core proposal creation without selected review items;
+- Core proposal creation from Toolbox Scheduled Review;
 - WordPress writes.
 
 ## Trial Record Template
@@ -100,7 +100,7 @@ Patch actions:
 Merged priorities:
 Core proposal created automatically: no
 WordPress write occurred: no
-Operator-selected Core handoff tested:
+Cloud Addon/Core follow-up checked:
 Notes:
 ```
 
@@ -157,6 +157,6 @@ Notes:
 - Core proposal created automatically: no.
 - WordPress write occurred: no.
 
-Next production-prep trial should use the admin panel to verify `Load Cloud
-recent`, partial-success copy, `Retry run`, and selected-item Core proposal
-handoff from the operator surface.
+Next production-prep trial should use Cloud Addon to verify recent runs,
+partial-success copy, retry, and proposal follow-up while Toolbox Scheduled
+Review remains a local preview/compatibility detail.

@@ -19,7 +19,7 @@ callback layer.
 
 | Repo | Owns | Must not own |
 | --- | --- | --- |
-| `npcink-toolbox` | Operator UI, bounded snapshot submission, quota/status/result display, review-only Morning Brief merge, and operator-triggered Core handoff payloads. | Cloud worker state, scheduler truth, local job tables, retry leases, dead letters, automatic Core proposals, approval, preflight, or WordPress writes. |
+| `npcink-toolbox` | Operator UI, bounded snapshot submission compatibility, quota/status/result display compatibility, review-only Scheduled Review preview, and local current-check reporting. | Cloud worker state, scheduler truth, local job tables, retry leases, dead letters, automatic Core proposals, proposal follow-up UI, approval, preflight, or WordPress writes. |
 | `npcink-ai-cloud` | Cloud Batch Runtime execution, run/action state, worker execution, retry/dead-letter detail, entitlement, usage, quota, retention, and diagnostics. | WordPress schedule truth, Core approval truth, WordPress write authority, or a second ability/workflow registry. |
 | `npcink-cloud-addon` | Signed transport, Cloud credentials, runtime/run/result/stats/entitlement reads. | Local control plane, proposal store, write governance, or Toolbox product UI. |
 | `npcink-governance-core` | Proposal intake, approval/rejection, commit preflight, audit, policy checks, and review status. | Cloud runtime execution or WordPress ability callbacks. |
@@ -33,9 +33,10 @@ Use this packet when continuing the Cloud Batch Runtime work in another session:
 - Cloud should own the difficult runtime parts: queue-backed execution,
   long-running analysis, retry/dead-letter detail, entitlement and quota
   enforcement, result retention, observability, and diagnostics.
-- Toolbox should stay the local WordPress control and review surface: bounded
-  snapshot submit, local enable/disable or trigger settings, status/result
-  display, review-only merge, and operator-triggered Core handoff.
+- Toolbox should stay the local WordPress preview surface: bounded snapshot
+  submit compatibility, local fallback preview settings, status/result display
+  compatibility, and review-only local reports. Cloud Addon/Core should own
+  run recovery and proposal follow-up.
 - Cloud must not become WordPress schedule truth, Core approval truth, a second
   ability registry, a second workflow registry, or a WordPress write owner.
 - Cloud run submission must originate from a local bounded intent or local
@@ -59,13 +60,13 @@ handoff.
 The intended Pro path is:
 
 ```text
-Toolbox bounded local snapshot
+Toolbox bounded local snapshot compatibility
 -> Cloud Addon signed transport
 -> Cloud Batch Runtime accepted run
 -> Cloud status/result detail
--> Toolbox review-only Morning Brief merge
--> operator clicks Review in Core
--> Core creates a pending review proposal
+-> Toolbox read-only compatibility detail
+-> Cloud Addon/Core follow-up
+-> Core creates a pending review proposal outside Toolbox Scheduled Review
 -> later Core approval/preflight
 -> Adapter allowlisted execution
 -> Abilities final WordPress callback
@@ -103,14 +104,13 @@ reviewable operator summary without raw-payload inspection:
 - quota or usage detail when available;
 - `trace_id` or correlation evidence.
 
-Toolbox may merge these fields into the Morning Brief as review context. The
-merge must keep `direct_wordpress_content_write=false` and
-`core_proposal_created=false`.
+Toolbox may render these fields as compatibility detail. The display must keep
+`direct_wordpress_content_write=false` and `core_proposal_created=false`.
 
-## Toolbox Handoff Payload To Core
+## Proposal Follow-Up Boundary
 
-When an operator explicitly chooses `Review in Core`, Toolbox should build a
-bounded handoff packet from the merged Cloud result:
+Proposal follow-up should start from Cloud Addon/Core, not from the Toolbox
+Scheduled Review subtab. Any future proposal packet should remain bounded:
 
 - source `run_id` and Cloud correlation evidence;
 - source artifact type and contract version;
@@ -122,9 +122,9 @@ bounded handoff packet from the merged Cloud result:
   until Core accepts it;
 - no provider secrets, no raw credentials, and no hidden write authorization.
 
-The handoff should create at most a pending Core review proposal. Toolbox must
-not approve, preflight, execute, or auto-create proposals from background
-status/result reads.
+The handoff should create at most a pending Core review proposal outside
+Toolbox Scheduled Review. Toolbox must not approve, preflight, execute, or
+auto-create proposals from background status/result reads.
 
 ## Coordination Order
 
@@ -132,7 +132,7 @@ status/result reads.
    behavior in its own branch.
 2. Toolbox verifies it can read status/result and render the result as
    review-only.
-3. Toolbox and Core agree on the `Review in Core` handoff payload shape.
+3. Cloud Addon/Core agree on the proposal follow-up payload shape.
 4. Core accepts the handoff as a pending proposal and keeps not-ready or
    evidence-poor packets fail-closed.
 5. Adapter verifies any later execution path requires Core approval,
@@ -166,11 +166,12 @@ composer smoke:nightly-inspection-cloud-e2e
 Cross-repo acceptance requires:
 
 - Cloud run reaches a terminal status or exposes clear retry/recovery guidance;
-- Toolbox shows Cloud run detail, review summary, and Core handoff direction;
+- Toolbox shows Cloud run detail, review summary, and Cloud Addon/Core follow-up direction;
 - no server-side Toolbox run table is created;
 - no Action Scheduler path is introduced;
 - no automatic Core proposal is created by submit/status/result reads;
-- any Core handoff is operator-triggered and creates only a pending proposal;
+- any Core proposal follow-up starts outside Toolbox Scheduled Review and
+  creates only a pending proposal;
 - final writes remain behind Core approval, Core preflight, Adapter execution
   profile allowlist, and Abilities callbacks.
 

@@ -2562,6 +2562,52 @@ final class Admin_Page {
 		);
 	}
 
+	private function scheduled_review_dry_run_download_url(): string {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'action' => 'npcink_toolbox_download_scheduled_review_dry_run',
+				),
+				admin_url( 'admin-post.php' )
+			),
+			'npcink_toolbox_download_scheduled_review_dry_run'
+		);
+	}
+
+	public function download_scheduled_review_dry_run(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die(
+				esc_html__( 'You do not have permission to download this scheduled review preview.', 'npcink-workflow-toolbox' ),
+				esc_html__( 'Permission denied', 'npcink-workflow-toolbox' ),
+				array( 'response' => 403 )
+			);
+		}
+
+		check_admin_referer( 'npcink_toolbox_download_scheduled_review_dry_run' );
+
+		try {
+			$collector = new Snapshot_Collector();
+			$planner   = new Manual_Dry_Run_Planner();
+			$replay    = $planner->plan( $collector->collect() );
+		} catch ( \Throwable $throwable ) {
+			wp_die(
+				esc_html__( 'Could not build the local scheduled review preview.', 'npcink-workflow-toolbox' ),
+				esc_html__( 'Scheduled review download failed', 'npcink-workflow-toolbox' ),
+				array( 'response' => 500 )
+			);
+		}
+
+		if ( ! headers_sent() ) {
+			$charset = (string) get_option( 'blog_charset', 'UTF-8' );
+			header( 'Content-Type: application/json; charset=' . ( '' !== $charset ? $charset : 'UTF-8' ) );
+			header( 'Content-Disposition: attachment; filename="scheduled-review-dry-run.json"' );
+			header( 'X-Content-Type-Options: nosniff' );
+		}
+
+		echo (string) wp_json_encode( $replay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		exit;
+	}
+
 	/**
 	 * @return array<string,mixed>|null
 	 */
@@ -2615,8 +2661,7 @@ final class Admin_Page {
 		}
 
 		$replay   = isset( $preview['replay'] ) && is_array( $preview['replay'] ) ? $preview['replay'] : array();
-		$json     = (string) wp_json_encode( $replay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-		$download = 'data:application/json;charset=utf-8,' . rawurlencode( $json );
+		$download = $this->scheduled_review_dry_run_download_url();
 		$brief    = isset( $replay['preview']['morning_brief'] ) && is_array( $replay['preview']['morning_brief'] ) ? $replay['preview']['morning_brief'] : array();
 		$summary  = isset( $brief['summary'] ) && is_array( $brief['summary'] ) ? $brief['summary'] : array();
 		$review_item_count = (int) ( $summary['actions_total'] ?? 0 );
@@ -2633,7 +2678,7 @@ final class Admin_Page {
 				<?php
 				$this->render_start_status_item( __( 'Scanned posts', 'npcink-workflow-toolbox' ), 'neutral', (string) (int) ( $summary['scanned_posts'] ?? 0 ), __( 'Oldest modified public posts and pages.', 'npcink-workflow-toolbox' ) );
 				$this->render_start_status_item( __( 'Scanned media', 'npcink-workflow-toolbox' ), 'neutral', (string) (int) ( $summary['scanned_media'] ?? 0 ), __( 'Recent image attachments.', 'npcink-workflow-toolbox' ) );
-				$this->render_start_status_item( __( 'Review items', 'npcink-workflow-toolbox' ), (int) ( $summary['actions_total'] ?? 0 ) > 0 ? 'warning' : 'ok', (string) (int) ( $summary['actions_total'] ?? 0 ), __( 'Preview-only action candidates.', 'npcink-workflow-toolbox' ) );
+				$this->render_start_status_item( __( 'Preview signals', 'npcink-workflow-toolbox' ), (int) ( $summary['actions_total'] ?? 0 ) > 0 ? 'warning' : 'ok', (string) (int) ( $summary['actions_total'] ?? 0 ), __( 'Read-only hints; not tasks.', 'npcink-workflow-toolbox' ) );
 				$this->render_start_status_item( __( 'Execution', 'npcink-workflow-toolbox' ), 'ok', __( 'Disabled', 'npcink-workflow-toolbox' ), __( 'No cron, worker, Cloud call, Core proposal, or write.', 'npcink-workflow-toolbox' ) );
 				?>
 			</div>
@@ -2643,18 +2688,17 @@ final class Admin_Page {
 				<div class="npcink-toolbox__result-notice">
 					<?php
 					printf(
-						/* translators: %d: number of preview review items. */
-						esc_html__( 'Generated %d preview review items. This only proves the scheduled review can read local content; use Current check for ordinary site maintenance.', 'npcink-workflow-toolbox' ),
+						/* translators: %d: number of preview signals. */
+						esc_html__( 'Generated %d preview signals. This only confirms scheduled review can read local content; use Current check for ordinary site maintenance.', 'npcink-workflow-toolbox' ),
 						$review_item_count
 					);
 					?>
 				</div>
 			<?php endif; ?>
 			<details class="npcink-toolbox__result-details">
-				<summary><?php esc_html_e( 'Copy or download dry-run JSON', 'npcink-workflow-toolbox' ); ?></summary>
-				<p class="description"><?php esc_html_e( 'This is the read-only replay payload produced by the manual preview. It is not saved automatically and does not create scheduled work.', 'npcink-workflow-toolbox' ); ?></p>
-				<p><a class="button" href="<?php echo esc_url( $download, array( 'data' ) ); ?>" download="nightly-site-inspection-dry-run.json"><?php esc_html_e( 'Download dry-run JSON', 'npcink-workflow-toolbox' ); ?></a></p>
-				<textarea class="large-text code" rows="12" readonly><?php echo esc_textarea( $json ); ?></textarea>
+				<summary><?php esc_html_e( 'Advanced: download dry-run JSON', 'npcink-workflow-toolbox' ); ?></summary>
+				<p class="description"><?php esc_html_e( 'Download the replay payload only for support or debugging. It is not embedded in this page, saved automatically, or used to create scheduled work.', 'npcink-workflow-toolbox' ); ?></p>
+				<p><a class="button" href="<?php echo esc_url( $download ); ?>"><?php esc_html_e( 'Download dry-run JSON', 'npcink-workflow-toolbox' ); ?></a></p>
 			</details>
 		</section>
 		<?php
@@ -2930,7 +2974,7 @@ final class Admin_Page {
 		<?php if ( ! $embedded ) : ?>
 			<div class="npcink-toolbox__panel-header">
 				<h2><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></h2>
-				<p><?php esc_html_e( 'Use this low-frequency area for automatic inspection previews and optional local fallback state. Cloud run recovery opens in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
+				<p><?php esc_html_e( 'Low-frequency scheduled-review preview only. Daily site maintenance starts with Current check.', 'npcink-workflow-toolbox' ); ?></p>
 			</div>
 		<?php endif; ?>
 		<?php
@@ -2942,9 +2986,8 @@ final class Admin_Page {
 			<section class="npcink-toolbox__card">
 				<div class="npcink-toolbox__section-heading">
 					<div>
-						<h3><?php esc_html_e( 'Scheduled review', 'npcink-workflow-toolbox' ); ?></h3>
-						<p><?php esc_html_e( 'This is for recurring inspection previews. Daily site maintenance starts with Site Check; Cloud run recovery opens in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
-						<p><?php esc_html_e( 'Recent runs, result reads, and Cloud-owned retry requests live in Cloud Addon Runtime Runs.', 'npcink-workflow-toolbox' ); ?></p>
+						<h3><?php esc_html_e( 'Scheduled review status', 'npcink-workflow-toolbox' ); ?></h3>
+						<p><?php esc_html_e( 'Use this only to preview whether the scheduled review can read local content. Cloud run history and recovery open in Cloud Addon.', 'npcink-workflow-toolbox' ); ?></p>
 					</div>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( $this->nightly_inspection_preview_url() ); ?>"><?php esc_html_e( 'Preview scheduled review', 'npcink-workflow-toolbox' ); ?></a>

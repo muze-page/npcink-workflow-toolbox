@@ -18,8 +18,8 @@ The review target is:
 - submit one bounded local Nightly Site Inspection snapshot to Cloud;
 - read Cloud entitlement, recent-run cards, status, retry, and result detail
   back into Toolbox;
-- merge Cloud scoring into the local Morning Brief preview for review;
-- show a clear Core handoff when proposal or write work is needed;
+- merge Cloud scoring into the local Scheduled Review compatibility detail;
+- point recovery and proposal follow-up to Cloud Addon/Core when needed;
 - preserve the local fallback preview and Core write-governance boundaries.
 
 ## Suggested Review Stack
@@ -148,9 +148,9 @@ Expected manual result:
 - a Pro run can be submitted;
 - retry of a known terminal run queues a new Cloud run with a fresh
   idempotency key;
-- a succeeded run displays `Cloud run detail`, `Cloud review details`, and
-  `Core handoff`;
-- result detail shows `Review in Core`;
+- a succeeded compatibility detail displays `Cloud run detail`, `Cloud review
+  details`, and `Cloud follow-up`;
+- result detail points recovery and proposal follow-up to Cloud Addon/Core;
 - zero snapshot item counts are not shown as misleading `Items0` text;
 - browser console has no warnings or errors.
 
@@ -169,8 +169,8 @@ Summary:
   Nightly Site Inspection.
 - Merge Cloud scoring into the local Morning Brief preview as review-only
   context.
-- Add an operator-focused admin flow with recent-run recovery, Cloud run detail,
-  and Core handoff.
+- Add an operator-focused compatibility flow with recent-run recovery, Cloud run
+  detail, and Cloud Addon/Core follow-up.
 - Document the Cloud-first product boundary and keep Action Scheduler, local
   queues, Core proposal creation, and WordPress writes out of Toolbox.
 - Add source-only and local smoke coverage while keeping real Cloud E2E outside
