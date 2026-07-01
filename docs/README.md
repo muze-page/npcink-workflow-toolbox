@@ -69,6 +69,7 @@ Start from the active documents below before changing code.
 ## Boundary Notes And Deprecated Surfaces
 
 - [Article Assistant Workbench](article-assistant-workbench.md)
+- [Boundary Exceptions Registry](boundary-exceptions.md)
 - [Cloud Diagnostics Transition Summary](cloud-diagnostics-transition-summary.md)
 - [Site Knowledge UI Migration Closeout](archive/2026-06/site-knowledge-ui-migration-closeout-2026-06-30.md)
 - [Cloud Bulk Article Import](cloud-bulk-article-import.md)

@@ -122,6 +122,7 @@ expect to stay discoverable from the root README:
 [Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),
 [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md),
 [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md),
+[Boundary Exceptions Registry](docs/boundary-exceptions.md),
 [Local Automation Runtime Module](modules/local-automation-runtime/README.md),
 [ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md), and
 [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](docs/decisions/ADR-005-wp-cron-cloud-batch-orchestration.md).
