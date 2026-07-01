@@ -274,11 +274,11 @@ Post editor content support:
   `summary_terms_optimization`, `taxonomy_tags`, `internal_links`,
   `image_candidates`, selection-only paragraph review via `polish_notes`, and
   `discoverability`.
-- The editor UI shows primary buttons for `publish_preflight`,
-  `summary_suggestions`, `category_suggestions`, `tag_suggestions`,
-  `internal_links`, and `image_candidates`; `writing_support`,
-  `summary_terms_optimization`, and `taxonomy_tags` remain supported route
-  intents but are not separate default buttons.
+- The editor UI shows default buttons for `publish_preflight`,
+  `internal_links`, `image_candidates`, `article_narration`, and
+  `article_audio_summary`; writing, summary, taxonomy/tag, outline,
+  discoverability, article-checkup, and current-article ALT helpers remain
+  supported route or rendering paths but are not default buttons.
 - Returned artifacts are `editor_content_support_flow` suggestions. They do not
   assign terms, insert links, import media, publish content, or write SEO fields.
 - The selected-block toolbar may trigger `polish_notes` for the current

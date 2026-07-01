@@ -564,7 +564,6 @@ final class Admin_Page {
 
 	private function render_start_panel( array $content_context, bool $cloud_ready ): void {
 		$context_ready = $this->content_context_ready( $content_context );
-		$profile_action = $context_ready ? __( 'Review site profile', 'npcink-workflow-toolbox' ) : __( 'Complete site profile', 'npcink-workflow-toolbox' );
 		?>
 		<div class="npcink-toolbox__panel-header">
 			<h2><?php esc_html_e( 'Overview', 'npcink-workflow-toolbox' ); ?></h2>
@@ -579,7 +578,6 @@ final class Admin_Page {
 					<p><?php esc_html_e( 'Generate one read-only report with content, image, and setup suggestions. Nothing is changed automatically.', 'npcink-workflow-toolbox' ); ?></p>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Start site check', 'npcink-workflow-toolbox' ); ?></a>
-							<a class="button" href="<?php echo esc_url( $this->media_library_url() ); ?>"><?php esc_html_e( 'Choose image in media library', 'npcink-workflow-toolbox' ); ?></a>
 					</div>
 				</div>
 				<div class="npcink-toolbox__start-status-list">
@@ -606,26 +604,6 @@ final class Admin_Page {
 				</div>
 			</section>
 
-			<div class="npcink-toolbox__section-heading npcink-toolbox__section-heading--compact">
-				<div>
-					<h3><?php esc_html_e( 'Common tasks', 'npcink-workflow-toolbox' ); ?></h3>
-					<p><?php esc_html_e( 'Use these when you already know what you want to do next.', 'npcink-workflow-toolbox' ); ?></p>
-				</div>
-			</div>
-			<section class="npcink-toolbox__start-actions npcink-toolbox__start-actions--secondary" aria-label="<?php esc_attr_e( 'Next actions', 'npcink-workflow-toolbox' ); ?>">
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( $this->media_library_url() ); ?>">
-					<strong><?php esc_html_e( 'Choose an image from Media Library', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Open an image attachment, then use Npcink AI to generate an optimization preview.', 'npcink-workflow-toolbox' ); ?></span>
-				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=context' ) ); ?>">
-					<strong><?php echo esc_html( $profile_action ); ?></strong>
-					<span><?php esc_html_e( 'Keep the basic site description, audience, tone, and keywords clear.', 'npcink-workflow-toolbox' ); ?></span>
-				</a>
-				<a class="npcink-toolbox__action-row" href="<?php echo esc_url( admin_url( 'admin.php?page=npcink-toolbox&toolbox_tab=operations-insights' ) ); ?>">
-					<strong><?php esc_html_e( 'Site Check', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Review the site report first; scheduled review and Cloud recovery controls are folded there.', 'npcink-workflow-toolbox' ); ?></span>
-				</a>
-			</section>
 			<details class="npcink-toolbox__start-advanced">
 				<summary>
 					<span><?php esc_html_e( 'System status', 'npcink-workflow-toolbox' ); ?></span>

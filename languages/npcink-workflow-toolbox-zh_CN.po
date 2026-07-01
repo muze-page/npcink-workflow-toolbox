@@ -6368,6 +6368,9 @@ msgstr "Npcink 工作流"
 msgid "Editor defaults stay on preflight, internal links, image candidates, article audio, and governed handoff work."
 msgstr "编辑器默认入口保持为发布预检、内链、图片候选、文章音频和受治理交接工作。"
 
+msgid "V1 defaults are Site Check, Publish Preflight, Internal Link Candidates, Image Candidates, and Article Audio Candidates."
+msgstr "V1 默认入口是站点检查、发布预检、内链候选、图片候选和文章音频候选。"
+
 msgid "Route-only compatibility"
 msgstr "仅路由兼容"
 
