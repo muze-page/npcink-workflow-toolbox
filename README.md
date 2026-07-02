@@ -47,8 +47,8 @@ The first version provides:
   read-only decision router. It builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
-  Cloud availability into a priority queue for manual review, existing Toolbox
-  fixed workflows, or optional Cloud detail. Supporting coverage metrics,
+  Cloud availability into a ranked review list for manual review, existing
+  Toolbox fixed workflows, or optional Cloud detail. Supporting coverage metrics,
   charts, dimension views, findings, and evidence stay secondary. The local
   check runs without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
   `site_ops_cloud_analysis_request.v1` contract. When Cloud is connected and
@@ -122,6 +122,7 @@ expect to stay discoverable from the root README:
 [Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),
 [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md),
 [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md),
+[Adversarial Boundary Review](docs/adversarial-boundary-review.md),
 [Boundary Exceptions Registry](docs/boundary-exceptions.md),
 [Fixed Button Surface](docs/fixed-button-surface.md),
 [Local Automation Runtime Module](modules/local-automation-runtime/README.md),

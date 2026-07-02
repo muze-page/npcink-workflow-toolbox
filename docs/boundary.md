@@ -315,7 +315,7 @@ comment signal counts, media metadata, category/tag summaries, Site Context
 readiness, and Cloud availability. It must not return comment author emails, IP
 addresses, user agents, or full comment text.
 
-The output is a read-only site-check report: a current-run priority queue,
+The output is a read-only site-check report: a current-run ranked review list,
 treatment paths, evidence summaries, impact, recommended actions, safe
 first-action links, blocked items, and handoff candidates that route the
 operator to manual handling, existing fixed workflows, or optional Cloud

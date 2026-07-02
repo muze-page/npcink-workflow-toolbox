@@ -104,7 +104,7 @@ still opens the same panel. It
 builds a manual local `site_ops_insight_pack.v1` from bounded public content,
 approved-comment signal counts, media metadata, taxonomy summaries, Site
 Context readiness, and Cloud availability, then presents the current run as a
-priority queue for manual handling, existing fixed workflows, or optional Cloud
+ranked review list for manual handling, existing fixed workflows, or optional Cloud
 detail. Coverage metrics, lightweight charts, deterministic local summary,
 content, media, comments, structure, findings, Cloud detail, and advanced data
 views remain supporting detail.

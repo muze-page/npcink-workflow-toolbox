@@ -49,9 +49,9 @@ semantics.
 ## Core Jobs
 
 1. Provide a visible admin product surface for external AI tools.
-2. Run configured external search, optional result reading, Cloud-managed
-   image-source requests, and Cloud-managed site knowledge operations from a
-   controlled WordPress UI.
+2. Run Cloud-managed external search request handoff, optional result reading,
+   Cloud-managed image-source requests, and Cloud-managed site knowledge
+   operations from a controlled WordPress UI.
 3. Convert repeated operator workflows into fixed buttons.
 4. Return planning artifacts, candidates, and handoff notes.
 5. Let operators fill non-secret SEO, AEO, and GEO content context for
@@ -67,7 +67,7 @@ semantics.
    Images surface rather than creating a duplicate runner.
 9. Surface a Site Check button that turns content, approved comment, media,
    taxonomy, context, and runtime signals into a prioritized review-only
-   decision queue for manual handling, existing fixed workflows, or optional
+   ranked decision list for manual handling, existing fixed workflows, or optional
    Cloud detail.
 10. Preserve Core and Abilities boundaries for final WordPress writes.
 
@@ -89,7 +89,7 @@ Npcink Workflow Toolbox does not own:
 | --- | --- |
 | `npcink-governance-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
 | `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
-| `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
+| `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, Cloud-managed external research handoff, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
 
 ## Design Rule

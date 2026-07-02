@@ -17,6 +17,9 @@ Read:
 - `docs/boundary.md`
 - `docs/architecture.md`
 - `docs/roadmap.md`
+- `docs/cross-repo-boundary-matrix.md`
+- `docs/boundary-exceptions.md`
+- `docs/adversarial-boundary-review.md`
 - `docs/decisions/ADR-001-toolbox-as-product-surface.md`
 - `docs/decisions/ADR-003-local-admin-consent-boundary.md`
 
@@ -343,6 +346,32 @@ article checkup, discoverability, publish preflight, SEO handoff preview, slug
 candidate visibility, and no WordPress mutation. It is intentionally outside
 `composer test:all` because it depends on a local WordPress site and the
 development-only eval-lab checkout.
+
+For a Workflow Toolbox adversarial boundary audit through eval-lab, run:
+
+```bash
+composer eval:workflow-toolbox:adversarial-boundary -- dry_run=true
+```
+
+Remove `dry_run=true` only when local provider profiles are configured in the
+development-only eval-lab checkout and a model-backed review is intentional.
+This proxies to task `workflow_toolbox_adversarial_boundary_audit`, reads the
+Toolbox positioning, boundary, architecture, roadmap, development workflow, and
+ADR-001 documents, and asks reviewer profiles to flag drift toward direct
+WordPress writes, second registries/stores, provider secret exposure,
+queue/runtime ownership, content indexing ownership, full-RAG claims,
+image-source/AI-generation confusion, or premature Jina runtime claims. The
+report is local development evidence under eval-lab `project-review/generated/`;
+it is not a Core audit record, approval decision, CI-required gate, or product
+runtime.
+
+For boundary-sensitive work, use
+[Adversarial Boundary Review](adversarial-boundary-review.md) as the triage
+ledger after model-backed review. Every finding must be classified as
+`accepted_fix`, `accepted_exception`, or `rejected_finding` before it becomes
+implementation work. Accepted exceptions must point to
+[Boundary Exceptions Registry](boundary-exceptions.md) and an ADR; accepted
+fixes must get a doc or test guard in the same scope.
 
 For the Site Knowledge review handoff UI, run:
 
