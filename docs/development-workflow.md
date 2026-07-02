@@ -479,6 +479,23 @@ detail, create Core proposals, call execute routes, store a local run, or
 write WordPress data. It is intentionally outside `composer test:all` because
 it depends on a running local WordPress site, a writable local WordPress root,
 Playwright, and a local browser.
+
+For the optional real Cloud-detail UI trial, run:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:site-ops-cloud-detail-browser
+```
+
+This opens the same local Site Check wp-admin panel, generates the local
+report, explicitly clicks the Cloud detail action, waits for the Cloud-backed
+server render, switches back to the Cloud tab after reload, and verifies the
+rendered Cloud result card, Cloud run id, local-governed Core/WordPress
+boundary copy, and absence of browser-side proposal or execute routes. It then
+switches to Scheduled Review, verifies the Cloud Addon runtime-runs recovery
+link, confirms local Nightly Cloud Batch controls are not exposed in Toolbox,
+clicks the scheduled review preview, and captures screenshots under
+`build/smoke/`. It is intentionally outside `composer test:all` because it
+requires a verified Cloud Addon connection and a running Cloud runtime.
 The manual planner smoke wraps the same preview in a
 `npcink_local_automation_runtime.v1` dry-run replay with
 `manual_dry_run_preview_only` actions and verifies it still creates no cron,
