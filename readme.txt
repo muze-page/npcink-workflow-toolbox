@@ -1,5 +1,5 @@
 === Npcink Workflow Toolbox ===
-Contributors: npcink
+Contributors: muze233, npcink
 Tags: ai, seo, editorial-workflow, media, content
 Requires at least: 6.9
 Requires PHP: 8.0

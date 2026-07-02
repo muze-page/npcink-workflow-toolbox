@@ -463,6 +463,12 @@ final class Admin_Page {
 		return array_values( array_unique( $normalized ) );
 	}
 
+	private function query_text_param( string $key ): string {
+		$value = filter_input( INPUT_GET, $key, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+		return is_scalar( $value ) ? trim( (string) $value ) : '';
+	}
+
 	public function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'npcink-workflow-toolbox' ) );
@@ -517,11 +523,11 @@ final class Admin_Page {
 	}
 
 	private function requested_toolbox_tab(): string {
-		$requested = filter_input( INPUT_GET, 'toolbox_tab', FILTER_UNSAFE_RAW );
-		if ( null === $requested || false === $requested || '' === $requested ) {
-			$requested = filter_input( INPUT_GET, 'tab', FILTER_UNSAFE_RAW );
+		$requested = $this->query_text_param( 'toolbox_tab' );
+		if ( '' === $requested ) {
+			$requested = $this->query_text_param( 'tab' );
 		}
-		$requested = sanitize_key( is_scalar( $requested ) ? (string) $requested : '' );
+		$requested = sanitize_key( $requested );
 		if ( 'image' === $requested ) {
 			$requested = 'tools';
 		}
@@ -546,16 +552,15 @@ final class Admin_Page {
 	}
 
 	private function requested_site_check_tab(): string {
-		$requested = filter_input( INPUT_GET, 'site_check_tab', FILTER_UNSAFE_RAW );
-		$requested = sanitize_key( is_scalar( $requested ) ? (string) $requested : '' );
-		$toolbox_tab = filter_input( INPUT_GET, 'toolbox_tab', FILTER_UNSAFE_RAW );
-		if ( null === $toolbox_tab || false === $toolbox_tab || '' === $toolbox_tab ) {
-			$toolbox_tab = filter_input( INPUT_GET, 'tab', FILTER_UNSAFE_RAW );
+		$requested   = sanitize_key( $this->query_text_param( 'site_check_tab' ) );
+		$toolbox_tab = $this->query_text_param( 'toolbox_tab' );
+		if ( '' === $toolbox_tab ) {
+			$toolbox_tab = $this->query_text_param( 'tab' );
 		}
-		$toolbox_tab = sanitize_key( is_scalar( $toolbox_tab ) ? (string) $toolbox_tab : '' );
-		$nightly_preview = filter_input( INPUT_GET, 'nightly_inspection_preview', FILTER_UNSAFE_RAW );
+		$toolbox_tab      = sanitize_key( $toolbox_tab );
+		$nightly_preview = $this->query_text_param( 'nightly_inspection_preview' );
 
-		if ( 'scheduled-review' === $requested || 'scheduled_review' === $requested || 'morning-brief' === $toolbox_tab || 'scheduled-review' === $toolbox_tab || '1' === ( is_scalar( $nightly_preview ) ? (string) $nightly_preview : '' ) ) {
+		if ( 'scheduled-review' === $requested || 'scheduled_review' === $requested || 'morning-brief' === $toolbox_tab || 'scheduled-review' === $toolbox_tab || '1' === $nightly_preview ) {
 			return 'scheduled-review';
 		}
 
@@ -702,13 +707,12 @@ final class Admin_Page {
 	 * @return array<string,mixed>|null
 	 */
 	private function site_ops_insights_preview_from_request( array $content_context, bool $cloud_ready ): ?array {
-		$requested = filter_input( INPUT_GET, 'site_ops_insights_preview', FILTER_UNSAFE_RAW );
-		if ( '1' !== ( is_scalar( $requested ) ? (string) $requested : '' ) ) {
+		$requested = $this->query_text_param( 'site_ops_insights_preview' );
+		if ( '1' !== $requested ) {
 			return null;
 		}
 
-		$nonce = filter_input( INPUT_GET, '_wpnonce', FILTER_UNSAFE_RAW );
-		$nonce = is_scalar( $nonce ) ? (string) $nonce : '';
+		$nonce = $this->query_text_param( '_wpnonce' );
 		if ( ! wp_verify_nonce( $nonce, 'npcink_toolbox_site_ops_insights_preview' ) ) {
 			return array(
 				'error' => __( 'The Site Check preview link expired. Reload the page and try again.', 'npcink-workflow-toolbox' ),
@@ -734,8 +738,8 @@ final class Admin_Page {
 				$runtime_context
 			);
 			$cloud_analysis   = null;
-			$cloud_requested  = filter_input( INPUT_GET, 'site_ops_cloud_analysis', FILTER_UNSAFE_RAW );
-			if ( '1' === ( is_scalar( $cloud_requested ) ? (string) $cloud_requested : '' ) ) {
+			$cloud_requested  = $this->query_text_param( 'site_ops_cloud_analysis' );
+			if ( '1' === $cloud_requested ) {
 				if ( ! $cloud_ready ) {
 					$cloud_analysis = new \WP_Error(
 						'npcink_toolbox_site_ops_cloud_not_ready',
@@ -2582,6 +2586,7 @@ final class Admin_Page {
 			header( 'X-Content-Type-Options: nosniff' );
 		}
 
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download response; HTML escaping would corrupt the file.
 		echo (string) wp_json_encode( $replay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		exit;
 	}
@@ -2590,13 +2595,12 @@ final class Admin_Page {
 	 * @return array<string,mixed>|null
 	 */
 	private function nightly_inspection_preview_from_request(): ?array {
-		$requested = filter_input( INPUT_GET, 'nightly_inspection_preview', FILTER_UNSAFE_RAW );
-		if ( '1' !== ( is_scalar( $requested ) ? (string) $requested : '' ) ) {
+		$requested = $this->query_text_param( 'nightly_inspection_preview' );
+		if ( '1' !== $requested ) {
 			return null;
 		}
 
-		$nonce = filter_input( INPUT_GET, '_wpnonce', FILTER_UNSAFE_RAW );
-		$nonce = is_scalar( $nonce ) ? (string) $nonce : '';
+		$nonce = $this->query_text_param( '_wpnonce' );
 		if ( ! wp_verify_nonce( $nonce, 'npcink_toolbox_nightly_inspection_preview' ) ) {
 			return array(
 				'error' => __( 'The scheduled review preview link expired. Reload the page and try again.', 'npcink-workflow-toolbox' ),
@@ -2668,7 +2672,7 @@ final class Admin_Page {
 					printf(
 						/* translators: %d: number of preview signals. */
 						esc_html__( 'Generated %d preview signals. This only confirms scheduled review can read local content; use Current check for ordinary site maintenance.', 'npcink-workflow-toolbox' ),
-						$review_item_count
+						absint( $review_item_count )
 					);
 					?>
 				</div>
