@@ -40,16 +40,16 @@
 
 .npcink-toolbox__tab:hover,
 .npcink-toolbox__tab:focus {
-	border-bottom-color: #72aee6;
+	border-bottom-color: #3858e9;
 	box-shadow: none;
-	color: #1d2327;
+	color: #3858e9;
 	outline-offset: -2px;
 }
 
 .npcink-toolbox__tab.npcink-ai-tab-active,
 .npcink-toolbox__tab.is-active {
-	border-bottom-color: #2271b1;
-	color: #1d2327;
+	border-bottom-color: #3858e9;
+	color: #3858e9;
 }
 
 .npcink-toolbox__panel {
