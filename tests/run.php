@@ -1653,6 +1653,40 @@ toolbox_assert( false !== strpos( $abilities, "'managed_source' => array(" ) && 
 toolbox_assert( false !== strpos( $rest, "'/flows/article-brief'" ) && false !== strpos( $rest, "'/flows/media-brief'" ) && false !== strpos( $rest, "'/vector-search'" ), 'Deprecated ability entries keep route compatibility without remaining in the Ability catalog.' );
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
+$auto_sync = file_get_contents( $root . '/includes/Site_Knowledge_Auto_Sync.php' );
+$cloud_bridge_table = json_decode( (string) file_get_contents( $root . '/docs/cloud-bridge-contract-table.json' ), true );
+toolbox_assert( is_array( $cloud_bridge_table ) && 'cloud_bridge_contract_table.v1' === (string) ( $cloud_bridge_table['schema_version'] ?? '' ), 'Cloud bridge contract table exposes the v1 schema.' );
+toolbox_assert( 'npcink-workflow-toolbox' === (string) ( $cloud_bridge_table['local_surface'] ?? '' ) && 'manage_options' === (string) ( $cloud_bridge_table['default_capability'] ?? '' ) && 'npcink_cloud_addon' === (string) ( $cloud_bridge_table['default_cloud_runtime'] ?? '' ), 'Cloud bridge contract table records local surface, capability, and default runtime.' );
+$cloud_bridge_rows = is_array( $cloud_bridge_table['bridges'] ?? null ) ? $cloud_bridge_table['bridges'] : array();
+toolbox_assert( ! empty( $cloud_bridge_rows ), 'Cloud bridge contract table contains bridge rows.' );
+$cloud_bridge_ids = array();
+$cloud_bridge_source = $client . $rest . $abilities . $auto_sync . $architecture_doc . $boundary_doc . $connector_exposure_doc;
+foreach ( $cloud_bridge_rows as $cloud_bridge_row ) {
+	$bridge_id = (string) ( $cloud_bridge_row['bridge_id'] ?? '' );
+	$cloud_bridge_ids[] = $bridge_id;
+	toolbox_assert( '' !== $bridge_id, 'Cloud bridge row records a bridge id.' );
+	toolbox_assert( ! empty( $cloud_bridge_row['local_entrypoints'] ) && is_array( $cloud_bridge_row['local_entrypoints'] ), 'Cloud bridge row records local entrypoints: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['source_owner'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['cloud_owner'] ?? '' ), 'Cloud bridge row records local and Cloud owners: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['execution_path'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['cloud_ability'] ?? '' ), 'Cloud bridge row records execution path and Cloud ability: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['contract_version'] ?? '' ) && ! empty( $cloud_bridge_row['result_contracts'] ) && is_array( $cloud_bridge_row['result_contracts'] ), 'Cloud bridge row records request and result contracts: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['execution_pattern'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['data_classification'] ?? '' ), 'Cloud bridge row records execution pattern and data classification: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['storage_mode'] ?? '' ) && array_key_exists( 'retention_ttl_seconds', $cloud_bridge_row ), 'Cloud bridge row records storage and retention posture: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['provider_secret_owner'] ?? '' ) && 'toolbox' !== (string) ( $cloud_bridge_row['provider_secret_owner'] ?? '' ), 'Cloud bridge row keeps provider secrets outside Toolbox: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['write_posture'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['final_write_path'] ?? '' ), 'Cloud bridge row records write posture and final write path: ' . $bridge_id );
+	toolbox_assert( array_key_exists( 'direct_wordpress_write', $cloud_bridge_row ) && false === (bool) $cloud_bridge_row['direct_wordpress_write'], 'Cloud bridge row forbids direct WordPress writes: ' . $bridge_id );
+	toolbox_assert( array_key_exists( 'toolbox_control_plane_owner', $cloud_bridge_row ) && false === (bool) $cloud_bridge_row['toolbox_control_plane_owner'], 'Cloud bridge row forbids Toolbox control-plane ownership: ' . $bridge_id );
+	toolbox_assert( ! empty( $cloud_bridge_row['toolbox_must_not_own'] ) && is_array( $cloud_bridge_row['toolbox_must_not_own'] ), 'Cloud bridge row records forbidden Toolbox ownership: ' . $bridge_id );
+	$source_markers = is_array( $cloud_bridge_row['source_markers'] ?? null ) ? $cloud_bridge_row['source_markers'] : array();
+	toolbox_assert( ! empty( $source_markers ), 'Cloud bridge row records source markers: ' . $bridge_id );
+	foreach ( $source_markers as $source_marker ) {
+		toolbox_assert( false !== strpos( $cloud_bridge_source, (string) $source_marker ), 'Cloud bridge source marker exists for ' . $bridge_id . ': ' . (string) $source_marker );
+	}
+}
+toolbox_assert( count( $cloud_bridge_ids ) === count( array_unique( $cloud_bridge_ids ) ), 'Cloud bridge contract table bridge ids are unique.' );
+foreach ( array( 'image-source-cloud-request', 'cloud-web-search', 'site-knowledge-sync-request', 'hosted-ai-content-support', 'nightly-inspection-cloud-batch', 'agent-feedback-cloud-eval', 'site-knowledge-change-bridge-health' ) as $required_cloud_bridge_id ) {
+	toolbox_assert( in_array( $required_cloud_bridge_id, $cloud_bridge_ids, true ), 'Cloud bridge contract table includes required bridge: ' . $required_cloud_bridge_id );
+}
+toolbox_assert( false !== strpos( $readme_route_doc, 'docs/cloud-bridge-contract-table.json' ) && false !== strpos( $architecture_doc, 'Cloud Bridge Contract Table' ) && false !== strpos( $connector_exposure_doc, 'Cloud Bridge Contract Table' ), 'Cloud bridge contract table is discoverable from README, architecture, and connector exposure docs.' );
 toolbox_assert( false !== strpos( $client, '$atomic_outputs = is_array' ) && false !== strpos( $client, "'atomic_outputs'       => \$atomic_outputs" ), 'Cloud web search response preserves Cloud atomic_outputs for OpenClaw atom contracts.' );
 $legacy_model_name = 'GPT-' . '5.5';
 $legacy_model_slug = 'gpt' . '55';
