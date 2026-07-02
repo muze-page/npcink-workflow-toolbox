@@ -580,6 +580,7 @@ toolbox_assert( false !== strpos( $composer, 'smoke:nightly-inspection-orchestra
 toolbox_assert( false !== strpos( $composer, 'smoke:site-ops-insights-builder' ) && false !== strpos( $composer, 'tests/smoke-site-ops-insights-builder.php' ) && false !== strpos( $composer, '@smoke:site-ops-insights-builder' ), 'Composer runs the Site Ops Insights builder smoke in the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:site-ops-cloud-request' ) && false !== strpos( $composer, 'tests/smoke-site-ops-cloud-request.php' ) && false !== strpos( $composer, '@smoke:site-ops-cloud-request' ), 'Composer runs the Site Ops Cloud request contract smoke in the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:site-ops-insights-browser' ) && false !== strpos( $composer, 'tests/smoke-site-ops-insights-browser.mjs' ) && false === strpos( $composer, '@smoke:site-ops-insights-browser' ), 'Composer exposes the optional Site Check browser smoke outside the default test gate.' );
+toolbox_assert( false !== strpos( $composer, 'smoke:site-ops-cloud-detail-browser' ) && false !== strpos( $composer, 'tests/smoke-site-ops-cloud-detail-browser.mjs' ) && false === strpos( $composer, '@smoke:site-ops-cloud-detail-browser' ), 'Composer exposes the optional real Site Check Cloud detail browser smoke outside the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:site-ops-cloud-e2e' ) && false !== strpos( $composer, 'tests/smoke-site-ops-cloud-e2e.php' ) && false === strpos( $composer, '@smoke:site-ops-cloud-e2e' ), 'Composer exposes the real Site Ops Cloud E2E smoke without adding it to the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:nightly-inspection-cloud-e2e' ) && false !== strpos( $composer, 'tests/smoke-nightly-inspection-cloud-e2e.php' ) && false === strpos( $composer, '@smoke:nightly-inspection-cloud-e2e' ), 'Composer exposes the real Nightly Inspection Cloud E2E smoke without adding it to the default test gate.' );
 toolbox_assert( false !== strpos( $composer, 'smoke:local-featured-image' ) && false !== strpos( $composer, 'tests/smoke-local-featured-image-consent.php' ), 'Composer exposes the Local Admin Consent featured image smoke script.' );
@@ -1398,44 +1399,51 @@ toolbox_assert( false === strpos( $admin_page, 'data-toolbox-tab-target="topic-p
 toolbox_assert( false === file_exists( $root . '/includes/Hot_Topics_Page.php' ) && false === strpos( $hot_topic_pool, 'npcink-hot-topics' ) && false === strpos( $admin_css, 'npcink-toolbox__topic-pool-row' ), 'Redundant Today Topics page, stale URL helper, and page-only topic-pool styles are removed.' );
 
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
-$allowed_rest_routes = array(
-	'/status',
-	'/image-candidates',
-	'/vector-search',
-	'/knowledge-search',
-	'/web-search/test',
-	'/web-search/diagnostics',
-	'/site-knowledge/search',
-	'/site-knowledge/sync',
-	'/site-knowledge/status',
-	'/agent-feedback',
-	'/agent-feedback/summary',
-	'/ai/content-support',
-	'/ai/site-helpers',
-	'/ai/image-generation',
-	'/flows/article-brief',
-	'/flows/article-assistant',
-	'/flows/article-plan',
-	'/flows/image-candidate-adoption-plan',
-	'/flows/article-audio-adoption-plan',
-	'/local-admin-consent/featured-image',
-	'/flows/site-knowledge-review-plan',
-	'/flows/nightly-inspection-review-plan',
-	'/flows/content-metadata-apply-plan',
-	'/flows/media-alt-caption-review-plan',
-	'/flows/media-brief',
-	'/editor/content-support',
-	'/media-derivative-handoff',
-	'/nightly-inspection/cloud-batch',
-	'/nightly-inspection/cloud-runtime-entitlement',
-	'/nightly-inspection/cloud-batch/recent',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/retry',
-);
+$route_boundary_table = json_decode( (string) file_get_contents( $root . '/docs/route-boundary-table.json' ), true );
+toolbox_assert( is_array( $route_boundary_table ) && 'route_boundary_table.v1' === (string) ( $route_boundary_table['schema_version'] ?? '' ), 'Route boundary table exposes the v1 schema.' );
+toolbox_assert( 'npcink-toolbox/v1' === (string) ( $route_boundary_table['namespace'] ?? '' ) && 'cap.toolbox.admin' === (string) ( $route_boundary_table['fallback_scope'] ?? '' ), 'Route boundary table records namespace and fallback scope.' );
+$route_boundary_rows = is_array( $route_boundary_table['routes'] ?? null ) ? $route_boundary_table['routes'] : array();
+toolbox_assert( ! empty( $route_boundary_rows ), 'Route boundary table contains route rows.' );
+$allowed_rest_routes       = array();
+$route_boundary_scopes     = array();
+$route_boundary_doc_routes = array();
+$route_boundary_methods    = array();
+foreach ( $route_boundary_rows as $route_boundary_row ) {
+	$route = (string) ( $route_boundary_row['route'] ?? '' );
+	$scope = (string) ( $route_boundary_row['scope'] ?? '' );
+	$documented_route = (string) ( $route_boundary_row['documented_route'] ?? '' );
+	$methods = is_array( $route_boundary_row['methods'] ?? null ) ? $route_boundary_row['methods'] : array();
+	$direct_write = (bool) ( $route_boundary_row['direct_wordpress_write'] ?? false );
+	toolbox_assert( '' !== $route && str_starts_with( $route, '/' ), 'Route boundary row has an absolute route.' );
+	toolbox_assert( '' !== $documented_route && str_starts_with( $documented_route, '/' ), 'Route boundary row has a documented route: ' . $route );
+	toolbox_assert( ! empty( $methods ), 'Route boundary row records methods: ' . $route );
+	toolbox_assert( str_starts_with( $scope, 'cap.toolbox.' ), 'Route boundary row records a Toolbox scope: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['owner'] ?? '' ), 'Route boundary row records an owner: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['write_posture'] ?? '' ), 'Route boundary row records write posture: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['boundary_note'] ?? '' ), 'Route boundary row records a boundary note: ' . $route );
+	if ( $direct_write ) {
+		toolbox_assert( 'ADR-003' === (string) ( $route_boundary_row['boundary_exception'] ?? '' ) && '/local-admin-consent/featured-image' === $route, 'Direct-write route is limited to the ADR-003 featured-image exception.' );
+	} else {
+		toolbox_assert( 'local_admin_consent_exception' !== (string) ( $route_boundary_row['write_posture'] ?? '' ), 'Non-write routes do not claim local admin consent posture: ' . $route );
+	}
+	$allowed_rest_routes[]                 = $route;
+	$route_boundary_scopes[ $route ]       = $scope;
+	$route_boundary_doc_routes[ $route ]   = $documented_route;
+	$route_boundary_methods[ $route ]      = array_values( array_unique( array_map( 'strtoupper', array_map( 'strval', $methods ) ) ) );
+}
 preg_match_all( "/\\\$this->post\\(\\s*'([^']+)'/", $rest, $post_route_matches );
 preg_match_all( "/\\\$this->get\\(\\s*'([^']+)'/", $rest, $get_route_matches );
 preg_match_all( "/register_rest_route\\(\\s*Plugin::REST_NAMESPACE\\s*,\\s*'([^']+)'/s", $rest, $direct_route_matches );
+$registered_route_methods = array();
+foreach ( $post_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'POST';
+}
+foreach ( $get_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'GET';
+}
+foreach ( $direct_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'GET';
+}
 $registered_rest_routes = array_values(
 	array_unique(
 		array_merge(
@@ -1448,11 +1456,25 @@ $registered_rest_routes = array_values(
 sort( $allowed_rest_routes );
 sort( $registered_rest_routes );
 toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route matrix exactly matches the first-version allowed routes.' );
+foreach ( $route_boundary_methods as $route => $expected_methods ) {
+	$registered_methods = array_values( array_unique( $registered_route_methods[ $route ] ?? array() ) );
+	sort( $expected_methods );
+	sort( $registered_methods );
+	toolbox_assert( $expected_methods === $registered_methods, 'Route boundary table methods match registered methods: ' . $route );
+}
+foreach ( $route_boundary_scopes as $route => $scope ) {
+	if ( false !== strpos( $route, '(?P<run_id>' ) ) {
+		toolbox_assert( 'cap.toolbox.nightly_inspection' === $scope && false !== strpos( $rest, "return 'cap.toolbox.nightly_inspection';" ), 'Dynamic Nightly route maps to the nightly inspection scope: ' . $route );
+		continue;
+	}
+	$route_literal = str_replace( "/local-admin-consent/featured-image", "/local-admin-consent' . '/featured-image", $route );
+	toolbox_assert( false !== strpos( $rest, "'{$route_literal}'" ) && false !== strpos( $rest, "=> '{$scope}'" ), 'REST scope map includes route scope from the boundary table: ' . $route );
+}
 $readme_route_doc       = (string) file_get_contents( $root . '/README.md' );
 $boundary_route_doc     = (string) file_get_contents( $root . '/docs/boundary.md' );
 $architecture_route_doc = (string) file_get_contents( $root . '/docs/architecture.md' );
 foreach ( $allowed_rest_routes as $allowed_rest_route ) {
-	$documented_route = str_replace( '(?P<run_id>[A-Za-z0-9._:-]+)', '{run_id}', $allowed_rest_route );
+	$documented_route = $route_boundary_doc_routes[ $allowed_rest_route ] ?? str_replace( '(?P<run_id>[A-Za-z0-9._:-]+)', '{run_id}', $allowed_rest_route );
 	toolbox_assert( false !== strpos( $readme_route_doc, '/wp-json/npcink-toolbox/v1' . $documented_route ), 'README documents REST route: ' . $documented_route );
 	toolbox_assert( false !== strpos( $boundary_route_doc, $documented_route ), 'Boundary docs document REST route: ' . $documented_route );
 	toolbox_assert( false !== strpos( $architecture_route_doc, '/wp-json/npcink-toolbox/v1' . $documented_route ), 'Architecture docs document REST route: ' . $documented_route );
@@ -1572,10 +1594,55 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'npcink-toolbox/search-image-source', 'npcink-toolbox/generate-image', 'npcink-toolbox/search-site-knowledge', 'npcink-toolbox/cloud-web-search', 'npcink-toolbox/get-site-knowledge-status', 'npcink-toolbox/request-site-knowledge-sync', 'npcink-toolbox/build-article-write-plan', 'npcink-toolbox/build-article-batch-write-plan', 'npcink-toolbox/build-article-media-batch-write-plan', 'npcink-toolbox/build-site-knowledge-review-plan', 'npcink-toolbox/build-nightly-inspection-review-plan', 'npcink-toolbox/build-media-derivative-handoff', 'npcink-toolbox/get-content-discoverability-context', 'npcink-toolbox/validate-content-discoverability-context', 'npcink-toolbox/build-content-discoverability-brief', 'npcink-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
+$connector_exposure_doc = (string) file_get_contents( $root . '/docs/connector-ability-exposure.md' );
+$ability_boundary_table = json_decode( (string) file_get_contents( $root . '/docs/ability-boundary-table.json' ), true );
+toolbox_assert( is_array( $ability_boundary_table ) && 'ability_boundary_table.v1' === (string) ( $ability_boundary_table['schema_version'] ?? '' ), 'Ability boundary table exposes the v1 schema.' );
+toolbox_assert( 'npcink-toolbox' === (string) ( $ability_boundary_table['category'] ?? '' ) && 'manage_options' === (string) ( $ability_boundary_table['default_capability'] ?? '' ) && 'core_proposal_required' === (string) ( $ability_boundary_table['default_final_write_path'] ?? '' ), 'Ability boundary table records category, default capability, and default final write path.' );
+$ability_boundary_rows = is_array( $ability_boundary_table['abilities'] ?? null ) ? $ability_boundary_table['abilities'] : array();
+toolbox_assert( ! empty( $ability_boundary_rows ), 'Ability boundary table contains ability rows.' );
+preg_match_all( "/'((?:npcink-toolbox\\/)[^']+)'\\s*=>\\s*\\\$this->definition\\(/", $abilities, $registered_ability_matches );
+$registered_ability_ids = array_values( array_unique( $registered_ability_matches[1] ?? array() ) );
+$allowed_ability_ids    = array();
+foreach ( $ability_boundary_rows as $ability_boundary_row ) {
+	$ability_id         = (string) ( $ability_boundary_row['ability_id'] ?? '' );
+	$required_scope     = (string) ( $ability_boundary_row['required_scope'] ?? '' );
+	$composition_role   = (string) ( $ability_boundary_row['composition_role'] ?? '' );
+	$write_posture      = (string) ( $ability_boundary_row['write_posture'] ?? '' );
+	$provider_execution = (string) ( $ability_boundary_row['provider_execution'] ?? '' );
+	$direct_write       = (bool) ( $ability_boundary_row['direct_wordpress_write'] ?? false );
+	toolbox_assert( str_starts_with( $ability_id, 'npcink-toolbox/' ), 'Ability boundary row has a Toolbox ability id.' );
+	toolbox_assert( str_starts_with( $required_scope, 'cap.toolbox.' ), 'Ability boundary row records a Toolbox scope: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['owner'] ?? '' ), 'Ability boundary row records an owner: ' . $ability_id );
+	toolbox_assert( '' !== $composition_role, 'Ability boundary row records a composition role: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['data_classification'] ?? '' ), 'Ability boundary row records data classification: ' . $ability_id );
+	toolbox_assert( '' !== $provider_execution, 'Ability boundary row records provider execution: ' . $ability_id );
+	toolbox_assert( '' !== $write_posture, 'Ability boundary row records write posture: ' . $ability_id );
+	toolbox_assert( 'core_proposal_required' === (string) ( $ability_boundary_row['final_write_path'] ?? '' ), 'Ability boundary row points final writes to Core proposals: ' . $ability_id );
+	toolbox_assert( array_key_exists( 'direct_wordpress_write', $ability_boundary_row ), 'Ability boundary row explicitly records direct write posture: ' . $ability_id );
+	toolbox_assert( false === $direct_write, 'Toolbox registered abilities must not direct-write WordPress: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['boundary_note'] ?? '' ), 'Ability boundary row records a boundary note: ' . $ability_id );
+	$ability_source_pattern = "/'" . preg_quote( $ability_id, '/' ) . "'\\s*=>\\s*\\\$this->definition\\((.*?)(?=\\n\\t\\t\\t'npcink-toolbox\\/|\\n\\t\\t\\);)/s";
+	toolbox_assert( 1 === preg_match( $ability_source_pattern, $abilities, $ability_source_match ), 'Ability boundary row maps to a registered source block: ' . $ability_id );
+	$ability_source = (string) ( $ability_source_match[1] ?? '' );
+	toolbox_assert( 1 === preg_match( "/array\\(\\s*\\\$this,\\s*'[^']+'\\s*\\),\\s*'" . preg_quote( $required_scope, '/' ) . "'/s", $ability_source ), 'Ability source registers expected required scope: ' . $ability_id );
+	toolbox_assert( 1 === preg_match( "/'composition_role'\\s*=>\\s*'" . preg_quote( $composition_role, '/' ) . "'/", $ability_source ), 'Ability source declares expected composition role: ' . $ability_id );
+	if ( 'server_side_toolbox' !== $provider_execution ) {
+		toolbox_assert( 1 === preg_match( "/'provider_execution'\\s*=>\\s*'" . preg_quote( $provider_execution, '/' ) . "'/", $ability_source ), 'Ability source declares expected provider execution: ' . $ability_id );
+	}
+	if ( 'suggestion_only' !== $write_posture ) {
+		toolbox_assert( 1 === preg_match( "/'write_posture'\\s*=>\\s*'" . preg_quote( $write_posture, '/' ) . "'/", $ability_source ), 'Ability source declares expected write posture: ' . $ability_id );
+	}
+	$allowed_ability_ids[] = $ability_id;
+}
+sort( $allowed_ability_ids );
+sort( $registered_ability_ids );
+toolbox_assert( $allowed_ability_ids === $registered_ability_ids, 'Ability boundary table exactly matches registered Toolbox wrapper abilities.' );
+toolbox_assert( false !== strpos( $abilities, "'show_in_rest'   => true" ) && false !== strpos( $abilities, "'readonly'       => true" ) && false !== strpos( $abilities, "'direct_wordpress_write'   => false" ), 'Ability defaults keep REST exposure read-only and disable direct writes.' );
+toolbox_assert( false !== strpos( $readme_route_doc, 'docs/ability-boundary-table.json' ) && false !== strpos( $architecture_doc, 'Ability Boundary Table' ) && false !== strpos( $connector_exposure_doc, 'Ability Boundary Table' ), 'Ability boundary table is discoverable from README, architecture, and connector exposure docs.' );
+foreach ( $allowed_ability_ids as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
-foreach ( array( 'npcink-toolbox/vector-search', 'npcink-toolbox/build-article-brief', 'npcink-toolbox/build-article-assistant', 'npcink-toolbox/build-media-brief', 'npcink-toolbox/build-media-alt-caption-review-plan' ) as $deprecated_ability_id ) {
+foreach ( $ability_boundary_table['excluded_ability_ids'] ?? array() as $deprecated_ability_id ) {
 	toolbox_assert( false === strpos( $abilities, $deprecated_ability_id ), "Deprecated or route-only ability {$deprecated_ability_id} is not registered." );
 }
 toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/build-content-metadata-apply-plan' ), 'Toolbox no longer registers the content metadata apply planner as a Toolbox ability.' );
@@ -1587,6 +1654,40 @@ toolbox_assert( false !== strpos( $abilities, "'managed_source' => array(" ) && 
 toolbox_assert( false !== strpos( $rest, "'/flows/article-brief'" ) && false !== strpos( $rest, "'/flows/media-brief'" ) && false !== strpos( $rest, "'/vector-search'" ), 'Deprecated ability entries keep route compatibility without remaining in the Ability catalog.' );
 
 $client = file_get_contents( $root . '/includes/Provider_Client.php' );
+$auto_sync = file_get_contents( $root . '/includes/Site_Knowledge_Auto_Sync.php' );
+$cloud_bridge_table = json_decode( (string) file_get_contents( $root . '/docs/cloud-bridge-contract-table.json' ), true );
+toolbox_assert( is_array( $cloud_bridge_table ) && 'cloud_bridge_contract_table.v1' === (string) ( $cloud_bridge_table['schema_version'] ?? '' ), 'Cloud bridge contract table exposes the v1 schema.' );
+toolbox_assert( 'npcink-workflow-toolbox' === (string) ( $cloud_bridge_table['local_surface'] ?? '' ) && 'manage_options' === (string) ( $cloud_bridge_table['default_capability'] ?? '' ) && 'npcink_cloud_addon' === (string) ( $cloud_bridge_table['default_cloud_runtime'] ?? '' ), 'Cloud bridge contract table records local surface, capability, and default runtime.' );
+$cloud_bridge_rows = is_array( $cloud_bridge_table['bridges'] ?? null ) ? $cloud_bridge_table['bridges'] : array();
+toolbox_assert( ! empty( $cloud_bridge_rows ), 'Cloud bridge contract table contains bridge rows.' );
+$cloud_bridge_ids = array();
+$cloud_bridge_source = $client . $rest . $abilities . $auto_sync . $architecture_doc . $boundary_doc . $connector_exposure_doc;
+foreach ( $cloud_bridge_rows as $cloud_bridge_row ) {
+	$bridge_id = (string) ( $cloud_bridge_row['bridge_id'] ?? '' );
+	$cloud_bridge_ids[] = $bridge_id;
+	toolbox_assert( '' !== $bridge_id, 'Cloud bridge row records a bridge id.' );
+	toolbox_assert( ! empty( $cloud_bridge_row['local_entrypoints'] ) && is_array( $cloud_bridge_row['local_entrypoints'] ), 'Cloud bridge row records local entrypoints: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['source_owner'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['cloud_owner'] ?? '' ), 'Cloud bridge row records local and Cloud owners: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['execution_path'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['cloud_ability'] ?? '' ), 'Cloud bridge row records execution path and Cloud ability: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['contract_version'] ?? '' ) && ! empty( $cloud_bridge_row['result_contracts'] ) && is_array( $cloud_bridge_row['result_contracts'] ), 'Cloud bridge row records request and result contracts: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['execution_pattern'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['data_classification'] ?? '' ), 'Cloud bridge row records execution pattern and data classification: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['storage_mode'] ?? '' ) && array_key_exists( 'retention_ttl_seconds', $cloud_bridge_row ), 'Cloud bridge row records storage and retention posture: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['provider_secret_owner'] ?? '' ) && 'toolbox' !== (string) ( $cloud_bridge_row['provider_secret_owner'] ?? '' ), 'Cloud bridge row keeps provider secrets outside Toolbox: ' . $bridge_id );
+	toolbox_assert( '' !== (string) ( $cloud_bridge_row['write_posture'] ?? '' ) && '' !== (string) ( $cloud_bridge_row['final_write_path'] ?? '' ), 'Cloud bridge row records write posture and final write path: ' . $bridge_id );
+	toolbox_assert( array_key_exists( 'direct_wordpress_write', $cloud_bridge_row ) && false === (bool) $cloud_bridge_row['direct_wordpress_write'], 'Cloud bridge row forbids direct WordPress writes: ' . $bridge_id );
+	toolbox_assert( array_key_exists( 'toolbox_control_plane_owner', $cloud_bridge_row ) && false === (bool) $cloud_bridge_row['toolbox_control_plane_owner'], 'Cloud bridge row forbids Toolbox control-plane ownership: ' . $bridge_id );
+	toolbox_assert( ! empty( $cloud_bridge_row['toolbox_must_not_own'] ) && is_array( $cloud_bridge_row['toolbox_must_not_own'] ), 'Cloud bridge row records forbidden Toolbox ownership: ' . $bridge_id );
+	$source_markers = is_array( $cloud_bridge_row['source_markers'] ?? null ) ? $cloud_bridge_row['source_markers'] : array();
+	toolbox_assert( ! empty( $source_markers ), 'Cloud bridge row records source markers: ' . $bridge_id );
+	foreach ( $source_markers as $source_marker ) {
+		toolbox_assert( false !== strpos( $cloud_bridge_source, (string) $source_marker ), 'Cloud bridge source marker exists for ' . $bridge_id . ': ' . (string) $source_marker );
+	}
+}
+toolbox_assert( count( $cloud_bridge_ids ) === count( array_unique( $cloud_bridge_ids ) ), 'Cloud bridge contract table bridge ids are unique.' );
+foreach ( array( 'image-source-cloud-request', 'cloud-web-search', 'site-knowledge-sync-request', 'hosted-ai-content-support', 'nightly-inspection-cloud-batch', 'agent-feedback-cloud-eval', 'site-knowledge-change-bridge-health' ) as $required_cloud_bridge_id ) {
+	toolbox_assert( in_array( $required_cloud_bridge_id, $cloud_bridge_ids, true ), 'Cloud bridge contract table includes required bridge: ' . $required_cloud_bridge_id );
+}
+toolbox_assert( false !== strpos( $readme_route_doc, 'docs/cloud-bridge-contract-table.json' ) && false !== strpos( $architecture_doc, 'Cloud Bridge Contract Table' ) && false !== strpos( $connector_exposure_doc, 'Cloud Bridge Contract Table' ), 'Cloud bridge contract table is discoverable from README, architecture, and connector exposure docs.' );
 toolbox_assert( false !== strpos( $client, '$atomic_outputs = is_array' ) && false !== strpos( $client, "'atomic_outputs'       => \$atomic_outputs" ), 'Cloud web search response preserves Cloud atomic_outputs for OpenClaw atom contracts.' );
 $legacy_model_name = 'GPT-' . '5.5';
 $legacy_model_slug = 'gpt' . '55';
@@ -2057,6 +2158,7 @@ toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:metadat
 toolbox_assert( false !== strpos( $development_workflow, 'composer test:editor-progressive-js' ) && false !== strpos( $development_workflow, 'composer smoke:editor-progressive-recommendations' ) && false !== strpos( $development_workflow, 'composer smoke:editor-progressive-local-matrix' ) && false !== strpos( $development_workflow, 'progressive_recommendations' ) && false !== strpos( $development_workflow, 'no stopword-only taxonomy evidence' ), 'Development workflow documents the editor progressive recommendations smoke commands.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:editor-progressive-browser' ) && false !== strpos( $development_workflow, 'running local WordPress site' ) && false !== strpos( $development_workflow, 'outside `composer test:all`' ), 'Development workflow documents the optional editor progressive browser smoke boundary.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:media-conversion-review-set-browser' ) && false !== strpos( $development_workflow, 'npcink_local_automation_media_conversion_review_set.v1' ) && false !== strpos( $development_workflow, 'does not call preview, Core proposal, or execute routes' ), 'Development workflow documents the optional media conversion review-set browser smoke boundary.' );
+toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:site-ops-cloud-detail-browser' ) && false !== strpos( $development_workflow, 'switches back to the Cloud tab after reload' ) && false !== strpos( $development_workflow, 'requires a verified Cloud Addon connection and a running Cloud runtime' ), 'Development workflow documents the optional real Site Check Cloud detail browser smoke boundary.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:editor-review-artifacts' ) && false !== strpos( $development_workflow, 'internal_link_candidates.v1' ) && false !== strpos( $development_workflow, 'pre_publish_review.v1' ), 'Development workflow documents the editor review artifacts smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:core-handoff-receipt-ui' ) && false !== strpos( $development_workflow, 'mocked REST' ) && false !== strpos( $development_workflow, 'does not create' ) && false !== strpos( $development_workflow, 'Adapter, or Core records' ), 'Development workflow documents the optional Core handoff receipt UI smoke command.' );
 toolbox_assert( false !== strpos( $development_workflow, 'composer smoke:site-knowledge-cloud-addon-bridge' ) && false !== strpos( $development_workflow, 'owner=cloud_addon' ) && false !== strpos( $development_workflow, 'original plugin activation state' ) && false !== strpos( $development_workflow, 'outside `composer test:all`' ), 'Development workflow documents the optional Site Knowledge Cloud Addon bridge smoke command.' );
@@ -2135,6 +2237,11 @@ $site_ops_browser_smoke = file_get_contents( $root . '/tests/smoke-site-ops-insi
 toolbox_assert( false !== $site_ops_browser_smoke && false !== strpos( $site_ops_browser_smoke, 'Site Check admin UI' ) && false !== strpos( $site_ops_browser_smoke, 'createLoginHelper' ) && false !== strpos( $site_ops_browser_smoke, 'wp_set_auth_cookie' ) && false !== strpos( $site_ops_browser_smoke, 'data-toolbox-site-ops-insights' ) && false !== strpos( $site_ops_browser_smoke, 'Local analysis summary' ) && false !== strpos( $site_ops_browser_smoke, 'Handle these first' ) && false !== strpos( $site_ops_browser_smoke, 'Decision queue explains why each issue matters and who is affected' ) && false !== strpos( $site_ops_browser_smoke, 'Screenshot captured' ), 'Site Check browser smoke verifies the real admin report path, login helper, action checklist, and screenshot capture.' );
 toolbox_assert( false !== strpos( $site_ops_browser_smoke, 'captureDiagnostics' ) && false !== strpos( $site_ops_browser_smoke, 'site-ops-insights-browser-failure.png' ) && false !== strpos( $site_ops_browser_smoke, 'visible text sample' ), 'Site Check browser smoke captures diagnostics when the live admin UI wait fails.' );
 toolbox_assert( false !== strpos( $site_ops_browser_smoke, 'forbiddenRequests' ) && false !== strpos( $site_ops_browser_smoke, 'site_ops_cloud_analysis=1|proposals|governance-core|approve-and-execute|media-derivative-runs' ), 'Site Check browser smoke blocks Cloud detail, Core proposal, and execute route drift.' );
+$site_ops_cloud_detail_browser_smoke = file_get_contents( $root . '/tests/smoke-site-ops-cloud-detail-browser.mjs' );
+toolbox_assert( false !== $site_ops_cloud_detail_browser_smoke && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'Site Check Cloud detail' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'createLoginHelper' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'wp_set_auth_cookie' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'loginHelper.cleanup' ), 'Site Check Cloud detail browser smoke uses a temporary local login helper and cleans it up.' );
+toolbox_assert( false !== strpos( $site_ops_cloud_detail_browser_smoke, '.npcink-toolbox__insight-cloud-result' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'hasRunId' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'cloudDetailActionCount === 0' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'errorNoticeCount === 0' ), 'Site Check Cloud detail browser smoke verifies the rendered Cloud result card, run id, and non-error state.' );
+toolbox_assert( false !== strpos( $site_ops_cloud_detail_browser_smoke, 'data-toolbox-nightly-cloud-batch' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'page=npcink-cloud-addon' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'tab=runtime_runs' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'Run Cloud inspection|Load Cloud recent|Retry run' ), 'Site Check Cloud detail browser smoke verifies Scheduled Review routes recovery to Cloud Addon and does not expose local Cloud run controls.' );
+toolbox_assert( false !== strpos( $site_ops_cloud_detail_browser_smoke, 'forbiddenWriteRequests' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'proposals|governance-core|approve-and-execute|media-derivative-runs' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'site-ops-cloud-detail-browser-failure.png' ), 'Site Check Cloud detail browser smoke blocks browser-side proposal/execute drift and captures diagnostics.' );
 $local_featured_smoke = file_get_contents( $root . '/tests/smoke-local-featured-image-consent.php' );
 toolbox_assert( false !== $local_featured_smoke && false !== strpos( $local_featured_smoke, '/npcink-toolbox/v1/local-admin-consent/featured-image' ) && false !== strpos( $local_featured_smoke, 'local_admin_consent_featured_image_result' ), 'Local featured image smoke calls the Local Admin Consent route.' );
 toolbox_assert( false !== strpos( $local_featured_smoke, 'local_admin_consent' ) && false !== strpos( $local_featured_smoke, 'proposal_created' ) && false !== strpos( $local_featured_smoke, 'audit_owner' ), 'Local featured image smoke verifies classification, no proposal, and Core audit ownership.' );

@@ -44,7 +44,9 @@ or automated acceptance gate.
 The remaining useful work should be separate from the current documentation
 cleanup:
 
-- add a dedicated `test:boundary-vocabulary` target for redline terms;
+- keep the dedicated `test:boundary-vocabulary` target focused on redline
+  terms and update it when new adversarial findings identify repeatable
+  wording drift;
 - build a machine-readable route boundary table from `docs/boundary.md`;
 - classify future provider-backed eval findings directly against this file
   before changing code.

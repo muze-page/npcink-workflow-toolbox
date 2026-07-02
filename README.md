@@ -130,6 +130,9 @@ expect to stay discoverable from the root README:
 [Adversarial Boundary Review](docs/adversarial-boundary-review.md),
 [Adversarial Boundary Findings Triage](docs/adversarial-boundary-findings-triage.md),
 [Boundary Exceptions Registry](docs/boundary-exceptions.md),
+[Route Boundary Table](docs/route-boundary-table.json),
+[Ability Boundary Table](docs/ability-boundary-table.json),
+[Cloud Bridge Contract Table](docs/cloud-bridge-contract-table.json),
 [Fixed Button Surface](docs/fixed-button-surface.md).
 
 ### Boundary Exceptions Only

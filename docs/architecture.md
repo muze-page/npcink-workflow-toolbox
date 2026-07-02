@@ -95,6 +95,12 @@ Core proposal creation, or WordPress write path.
 
 Current MVP provider flow:
 
+The machine-readable source of truth for Toolbox-to-Cloud and
+Toolbox-to-Cloud-Addon bridge ownership, contract versions, data
+classification, retention posture, and forbidden local control-plane ownership
+is [Cloud Bridge Contract Table](cloud-bridge-contract-table.json). The flow
+below is the human-readable summary and must stay aligned with that table.
+
 1. Admin user submits a tool form or REST request.
 2. `Rest_Controller` checks `manage_options`.
 3. `Provider_Client` calls Cloud image-source runtime, a host AI image
@@ -164,6 +170,12 @@ If `npcink-abilities-toolkit` is active, Toolbox uses its public helper function
 Otherwise, Toolbox falls back to native WordPress Abilities API registration.
 
 Current Toolbox wrapper ability ids:
+
+The machine-readable source of truth for ability scope, owner, write posture,
+provider execution, and excluded route-only or Toolkit-owned ability ids is
+[Ability Boundary Table](ability-boundary-table.json). The list below is the
+human-readable catalog and must stay aligned with that table and
+`Abilities::definitions()`.
 
 - `npcink-toolbox/search-image-source`
 - `npcink-toolbox/generate-image` - legacy id for hosted/generated image
