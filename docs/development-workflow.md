@@ -36,6 +36,17 @@ composer test:all
 
 This runs PHP syntax linting and static contract checks.
 
+For a focused redline vocabulary check, run:
+
+```bash
+composer test:boundary-vocabulary
+```
+
+This source-only gate keeps the highest-risk boundary terms discoverable:
+write-confirmation contracts, local vector/RAG ownership, old menu labels,
+local web-search ability wording, image-source versus generated-image wording,
+and premature Jina runtime claims.
+
 ## Metadata Gate
 
 Run when changing Composer metadata:
@@ -372,8 +383,8 @@ runtime.
 For boundary-sensitive work, use
 [Adversarial Boundary Review](adversarial-boundary-review.md) as the triage
 ledger after model-backed review. Every finding must be classified as
-`accepted_fix`, `accepted_exception`, or `rejected_finding` before it becomes
-implementation work. Accepted exceptions must point to
+`accepted_fix`, `accepted_exception`, `rejected_finding`, or `follow_up`
+before it becomes implementation work. Accepted exceptions must point to
 [Boundary Exceptions Registry](boundary-exceptions.md) and an ADR; accepted
 fixes must get a doc or test guard in the same scope.
 
