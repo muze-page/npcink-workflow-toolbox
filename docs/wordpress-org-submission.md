@@ -27,6 +27,18 @@ Npcink Workflow Toolbox is a review-only WordPress operator surface for fixed AI
 
 Cloud-backed features require a connected Npcink Cloud Addon or compatible host runtime. Npcink Cloud is the official Npcink hosted runtime service. The plugin does not include or hard-code a Cloud service endpoint; administrators connect the runtime through a companion connector or host-provided filters.
 
+## Name And Ownership Note
+
+The public name and slug intentionally use `Npcink` because this is the
+official Npcink Workflow Toolbox product surface. If WordPress.org asks for
+brand ownership clarification, reply with the official owner account or email
+evidence, or request transfer to the official owner account before continuing
+review. Do not rename the plugin in code unless the product owner decides this
+is no longer an official Npcink listing.
+
+The WordPress.org-facing `readme.txt` Contributors line must include the
+submitting account `muze233` before upload.
+
 ## External Services Disclosure
 
 The WordPress.org-facing `readme.txt` includes the external services disclosure for:
