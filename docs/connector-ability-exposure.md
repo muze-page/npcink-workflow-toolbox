@@ -171,6 +171,11 @@ rerank provider selection, or local indexing controls.
 
 ## Ability Metadata
 
+The machine-readable source of truth for registered Toolbox wrapper abilities,
+their scopes, owners, provider execution posture, write posture, and excluded
+route-only or Toolkit-owned ability ids is
+[Ability Boundary Table](ability-boundary-table.json).
+
 Toolbox ability metadata should make the boundary machine-readable:
 
 ```text

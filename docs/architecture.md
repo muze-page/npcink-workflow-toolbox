@@ -165,6 +165,12 @@ Otherwise, Toolbox falls back to native WordPress Abilities API registration.
 
 Current Toolbox wrapper ability ids:
 
+The machine-readable source of truth for ability scope, owner, write posture,
+provider execution, and excluded route-only or Toolkit-owned ability ids is
+[Ability Boundary Table](ability-boundary-table.json). The list below is the
+human-readable catalog and must stay aligned with that table and
+`Abilities::definitions()`.
+
 - `npcink-toolbox/search-image-source`
 - `npcink-toolbox/generate-image` - legacy id for hosted/generated image
   candidate normalization only; Cloud/host owns generation runtime, model
