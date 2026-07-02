@@ -150,16 +150,16 @@
 			allowGeneration: true,
 			allowImagePlan: true,
 			title: __('AI recommended featured image', 'npcink-workflow-toolbox'),
-			intro: __('Uses the current article title, excerpt, and body context to recommend or generate a featured image. Paragraph selection is ignored for this entry.', 'npcink-workflow-toolbox'),
+			intro: __('Uses the current article title, excerpt, and body context to recommend source images or request a host-generated featured image candidate. Paragraph selection is ignored for this entry.', 'npcink-workflow-toolbox'),
 			emptyTitle: __('Select a featured image candidate', 'npcink-workflow-toolbox'),
 			sourceModeLabel: __('Image source', 'npcink-workflow-toolbox'),
-			generateModeLabel: __('AI generated', 'npcink-workflow-toolbox'),
+			generateModeLabel: __('Hosted image', 'npcink-workflow-toolbox'),
 			searchPlaceholder: __('Enter a scene, or leave blank to use article context', 'npcink-workflow-toolbox'),
 			generatePlaceholder: __('Review or enter a featured image prompt', 'npcink-workflow-toolbox'),
 			searchButtonLabel: __('Refresh recommendations', 'npcink-workflow-toolbox'),
 			searchBusyLabel: __('Recommending', 'npcink-workflow-toolbox'),
 			autoButtonLabel: __('Use article context', 'npcink-workflow-toolbox'),
-			generateButtonLabel: __('Generate AI image', 'npcink-workflow-toolbox'),
+			generateButtonLabel: __('Request hosted image', 'npcink-workflow-toolbox'),
 			briefButtonLabel: __('Generate prompt', 'npcink-workflow-toolbox'),
 		},
 		paragraph: {
@@ -1555,11 +1555,11 @@
 			sourceModeLabel: source.source_mode_label || source.sourceModeLabel || preset.sourceModeLabel || __('Recommended image', 'npcink-workflow-toolbox'),
 			generateModeLabel: source.generate_mode_label || source.generateModeLabel || preset.generateModeLabel || __('Manual prompt', 'npcink-workflow-toolbox'),
 			searchPlaceholder: source.search_placeholder || source.searchPlaceholder || preset.searchPlaceholder || __('Search or describe image needs', 'npcink-workflow-toolbox'),
-			generatePlaceholder: source.generate_placeholder || source.generatePlaceholder || preset.generatePlaceholder || __('Review or enter an AI image prompt', 'npcink-workflow-toolbox'),
+			generatePlaceholder: source.generate_placeholder || source.generatePlaceholder || preset.generatePlaceholder || __('Review or enter a hosted image prompt', 'npcink-workflow-toolbox'),
 			searchButtonLabel: source.search_button_label || source.searchButtonLabel || preset.searchButtonLabel || __('Recommend images', 'npcink-workflow-toolbox'),
 			searchBusyLabel: source.search_busy_label || source.searchBusyLabel || preset.searchBusyLabel || __('Recommending', 'npcink-workflow-toolbox'),
 			autoButtonLabel: source.auto_button_label || source.autoButtonLabel || preset.autoButtonLabel || __('Search from article', 'npcink-workflow-toolbox'),
-			generateButtonLabel: source.generate_button_label || source.generateButtonLabel || preset.generateButtonLabel || __('Generate AI image', 'npcink-workflow-toolbox'),
+			generateButtonLabel: source.generate_button_label || source.generateButtonLabel || preset.generateButtonLabel || __('Request hosted image', 'npcink-workflow-toolbox'),
 			briefButtonLabel: normalizeImageBriefButtonLabel(source.brief_button_label || source.briefButtonLabel || preset.briefButtonLabel),
 			selectionEvent: source.selection_event || source.selectionEvent || IMAGE_SOURCE_PICKER_SELECTED_EVENT,
 			closeOnSelect: source.close_on_select !== undefined ? Boolean(source.close_on_select) : false,
@@ -1751,10 +1751,10 @@
 		if (!source || typeof source !== 'object') {
 			return '';
 		}
-		if (String(source.provider_mode || '').toLowerCase() === 'ai_generated') {
-			const parts = includeDetails ? imageResultProviderDetails(payload) : [];
-			return parts.length ? parts.join(' / ') : __('AI generated', 'npcink-workflow-toolbox');
-		}
+			if (String(source.provider_mode || '').toLowerCase() === 'ai_generated') {
+				const parts = includeDetails ? imageResultProviderDetails(payload) : [];
+				return parts.length ? parts.join(' / ') : __('Hosted image', 'npcink-workflow-toolbox');
+			}
 		return source.resolved_provider ? formatMetaLabel(source.resolved_provider) : '';
 	}
 
@@ -1777,11 +1777,11 @@
 			return '';
 		}
 		const sourceType = String(image.source_type || '').toLowerCase();
-		const provider = String(image.provider || '').toLowerCase();
-		if (sourceType === 'ai_generated' || provider === 'ai_generated') {
-			const parts = includeDetails ? imageCandidateProviderDetails(image, payload) : [];
-			return parts.length ? parts.join(' / ') : __('AI generated', 'npcink-workflow-toolbox');
-		}
+			const provider = String(image.provider || '').toLowerCase();
+			if (sourceType === 'ai_generated' || provider === 'ai_generated') {
+				const parts = includeDetails ? imageCandidateProviderDetails(image, payload) : [];
+				return parts.length ? parts.join(' / ') : __('Hosted image', 'npcink-workflow-toolbox');
+			}
 		return image.provider ? formatMetaLabel(image.provider) : '';
 	}
 
@@ -1964,7 +1964,7 @@
 		return [
 			basePrompt,
 			'',
-			'Regenerate this AI image candidate as a revised alternative.',
+				'Regenerate this host-generated image candidate as a revised alternative.',
 			instruction,
 			selectedContext ? 'Preserve semantic context: ' + truncateText(selectedContext, 240) : '',
 			'Keep composition: ' + (aspectRatio || '16:9') + '.',
@@ -6651,12 +6651,12 @@
 						setImageSearchMode('generate');
 						setImageResult(imageGenerationResult || null);
 						setImageQuery(prompt);
-						setImageGuidance(prompt ? __('Generated a prompt from the article context. Review it before creating an AI image candidate.', 'npcink-workflow-toolbox') : __('Generated prompt directions from the article context. Choose one direction before creating an AI image candidate.', 'npcink-workflow-toolbox'));
+						setImageGuidance(prompt ? __('Generated a prompt from the article context. Review it before requesting a host-generated image candidate.', 'npcink-workflow-toolbox') : __('Generated prompt directions from the article context. Choose one direction before requesting a host-generated image candidate.', 'npcink-workflow-toolbox'));
 					} else {
 						setImageResultForSearchMode('source', result);
 						setImageSearchMode('source');
 						setImageQuery(result && result.query ? String(result.query) : '');
-						setImageGuidance(__('Generated an article image plan from the saved post context. Review candidates before search, generation, import, or featured-image adoption.', 'npcink-workflow-toolbox'));
+						setImageGuidance(__('Generated an article image plan from the saved post context. Review candidates before source search, hosted-image request, import, or featured-image adoption.', 'npcink-workflow-toolbox'));
 					}
 			} catch (requestError) {
 				setImageError(requestError && requestError.message ? requestError.message : __('Image plan generation failed.', 'npcink-workflow-toolbox'));
@@ -6672,7 +6672,7 @@
 			const activePicker = normalizeImagePickerOptions(imagePicker || { mode: imageMode });
 			if (!activePicker.allowGeneration) {
 				setImageSearchMode('source');
-				setImageError(__('AI image generation is available from the featured image entry. Paragraph image suggestions use the selected paragraph to find source images.', 'npcink-workflow-toolbox'));
+				setImageError(__('Hosted image candidates are available from the featured image entry. Paragraph image suggestions use the selected paragraph to find source images.', 'npcink-workflow-toolbox'));
 				return;
 			}
 			const context = imagePickerRequestContext(postContext || {}, activePicker);
@@ -6680,21 +6680,21 @@
 			const preserveExistingCandidates = Boolean(override.preserveExistingCandidates);
 			const prompt = String(override.prompt || imageQuery || '').trim();
 			if (!prompt) {
-				setImageError(__('Enter an AI image prompt, or generate one from the article first.', 'npcink-workflow-toolbox'));
+				setImageError(__('Enter a hosted image prompt, or generate one from the article first.', 'npcink-workflow-toolbox'));
 				return;
 			}
-				setImageRunning('generate');
-				setImageError('');
-				setImageGuidance(override.guidance || '');
-				if (!preserveExistingCandidates) {
-					setImageResultForSearchMode('generate', null, true);
-					setSelectedImage(null);
-					setSelectedImageSeo(null);
-					setImagePreviewLightbox(null);
-					setImageAdoptionResult(null);
-					setImageAdoptionError('');
-					resetImageFeedbackState();
-				}
+			setImageRunning('generate');
+			setImageError('');
+			setImageGuidance(override.guidance || '');
+			if (!preserveExistingCandidates) {
+				setImageResultForSearchMode('generate', null, true);
+				setSelectedImage(null);
+				setSelectedImageSeo(null);
+				setImagePreviewLightbox(null);
+				setImageAdoptionResult(null);
+				setImageAdoptionError('');
+				resetImageFeedbackState();
+			}
 			try {
 				const candidateCount = Math.max(1, Math.min(4, parseInt(aiImageCandidateCount || '2', 10) || 2));
 				const result = await postJson('ai/image-generation', {
@@ -6730,14 +6730,14 @@
 							ability_name: 'npcink-cloud/generate-image',
 						},
 					},
-					});
-					if (result && (result.code || (result.data && result.data.cloud_error_code))) {
-						throw result;
-					}
-					setImageResultForSearchMode('generate', result);
-					setImageGuidance(__('Showing AI-generated image candidates. Review and adopt through Core before importing or setting featured media.', 'npcink-workflow-toolbox'));
+				});
+				if (result && (result.code || (result.data && result.data.cloud_error_code))) {
+					throw result;
+				}
+				setImageResultForSearchMode('generate', result);
+				setImageGuidance(__('Showing host-generated image candidates. Review and adopt through Core before importing or setting featured media.', 'npcink-workflow-toolbox'));
 			} catch (requestError) {
-				setImageError(formatImageErrorMessage(requestError, __('AI image generation failed.', 'npcink-workflow-toolbox')));
+				setImageError(formatImageErrorMessage(requestError, __('Hosted image candidate request failed.', 'npcink-workflow-toolbox')));
 			} finally {
 				setImageRunning('');
 			}
@@ -6754,19 +6754,19 @@
 			const currentPrompt = selectedImage.generation_prompt || selectedImage.prompt || imageQuery || '';
 			const prompt = aiImageRevisionPrompt(postContext, activePicker, selectedImage, currentPrompt, aiImageAspectRatio, revisionMode);
 			if (!prompt) {
-				setImageError(__('No AI image prompt is available to regenerate.', 'npcink-workflow-toolbox'));
+				setImageError(__('No hosted image prompt is available to request a revision.', 'npcink-workflow-toolbox'));
 				return;
 			}
 			setImageSearchMode('generate');
 			setImageQuery(prompt);
 			setImageRegenerationRunning(revisionMode);
-			setImageGuidance(__('Regenerating a revised AI image while preserving the selected paragraph meaning.', 'npcink-workflow-toolbox'));
+			setImageGuidance(__('Requesting a revised host-generated image candidate while preserving the selected paragraph meaning.', 'npcink-workflow-toolbox'));
 			try {
 				await runAiImageGeneration(null, {
 					prompt,
 					regenerationMode: revisionMode,
 					preserveExistingCandidates: true,
-					guidance: __('Regenerating a revised AI image while preserving the selected paragraph meaning.', 'npcink-workflow-toolbox'),
+					guidance: __('Requesting a revised host-generated image candidate while preserving the selected paragraph meaning.', 'npcink-workflow-toolbox'),
 				});
 			} finally {
 				setImageRegenerationRunning('');
@@ -7354,7 +7354,7 @@
 			const imagePromptId = 'npcink-toolbox-editor-support-image-prompt';
 			const canGenerateAiImage = activeSearchMode === 'generate' && Boolean(imageQueryText) && !Boolean(imageRunning);
 				const imageRunningLabel = imageRunning === 'generate'
-					? __('Generating AI image candidate...', 'npcink-workflow-toolbox')
+					? __('Requesting hosted image candidate...', 'npcink-workflow-toolbox')
 					: (imageRunning === 'brief' ? __('Generating image plan...', 'npcink-workflow-toolbox') : __('Loading cloud image candidates...', 'npcink-workflow-toolbox'));
 				const imageCompletionNotice = activeSearchMode === 'source' && imageCompletionRunning && images.length < IMAGE_CANDIDATE_TARGET_COUNT
 					? createElement('div', { className: 'npcink-toolbox-editor-support__running npcink-toolbox-editor-support__image-completion-running' }, createElement(Spinner, null), createElement('span', null, __('Loading more image candidates...', 'npcink-workflow-toolbox')))
@@ -7426,11 +7426,11 @@
 					{ className: 'npcink-toolbox-editor-support__image-prompt-panel' },
 					createElement(
 						'label',
-						{
-							className: 'npcink-toolbox-editor-support__image-prompt-label',
-							htmlFor: imagePromptId,
-						},
-						__('AI image prompt', 'npcink-workflow-toolbox')
+							{
+								className: 'npcink-toolbox-editor-support__image-prompt-label',
+								htmlFor: imagePromptId,
+							},
+							__('Hosted image prompt', 'npcink-workflow-toolbox')
 					),
 					createElement('textarea', {
 						id: imagePromptId,
@@ -7465,7 +7465,7 @@
 								isBusy: imageRunning === 'generate',
 								disabled: !canGenerateAiImage,
 							},
-							imageRunning === 'generate' ? __('Generating', 'npcink-workflow-toolbox') : (activePicker.generateButtonLabel || __('Generate AI image', 'npcink-workflow-toolbox'))
+							imageRunning === 'generate' ? __('Requesting', 'npcink-workflow-toolbox') : (activePicker.generateButtonLabel || __('Request hosted image', 'npcink-workflow-toolbox'))
 						)
 					),
 					!imageQueryText ? createElement('p', { className: 'npcink-toolbox-editor-support__image-prompt-required' }, __('Enter a prompt, or generate one from the article first.', 'npcink-workflow-toolbox')) : null,

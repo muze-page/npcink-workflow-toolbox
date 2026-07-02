@@ -365,11 +365,11 @@ article's featured image and image-block metadata through `/editor/content-suppo
 that narrow snapshot must not become a media-library scan, batch update path,
 or direct media metadata write.
 
-`/ai/image-generation` sends one reviewed-prompt image generation request
-through Cloud Addon runtime and returns candidate-only `image_candidate.v1`
-evidence. It must not import media, set featured images, own prompt/model
-routing, store provider credentials, approve proposals, or write WordPress
-data.
+	`/ai/image-generation` is a legacy-compatible route name for one
+	reviewed-prompt hosted image candidate request through Cloud Addon runtime. It
+	returns candidate-only `image_candidate.v1` evidence and must not import
+	media, set featured images, own prompt/model routing, store provider
+	credentials, approve proposals, or write WordPress data.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may
@@ -504,18 +504,19 @@ Unsplash responses must also preserve `download_location` for future import
 flows. Toolbox must not describe this as image generation, import media, set
 featured images, or turn image-source search into a provider routing control
 plane. In the post editor, the image-candidate modal may expose a secondary
-saved-post media brief action as image planning context for source search, AI
-generation, and media SEO review. That action remains suggestion-only and must
-not become a separate write surface, media import path, or featured-image
-setter.
+	saved-post media brief action as image planning context for source search,
+	hosted image candidate requests, and media SEO review. That action remains
+	suggestion-only and must not become a separate write surface, media import
+	path, or featured-image setter.
 
-AI-generated images are a separate explicit candidate mode, not a relabeling of
-Unsplash, Pixabay, or Pexels. Toolbox may normalize a caller-supplied generated
-image URL, call a host-provided
+Host-generated images are a separate explicit candidate mode, not a relabeling
+of Unsplash, Pixabay, or Pexels. Toolbox may normalize a caller-supplied
+generated image URL, call a host-provided
 `npcink_toolbox_ai_image_generation_request` runtime seam, or dispatch a
 reviewed `ai_generation_handoff` through the Cloud Addon runtime client to
 return suggestion-only candidates with `source_type=ai_generated`, prompt/model
-evidence, and human license review status. Toolbox must not own AI image model
+evidence, and human license review status. The compatibility route and ability
+names may still contain "image-generation"; Toolbox must not own AI image model
 routing, prompt management, provider credentials, billing, media import,
 featured-image setting, or approval truth.
 

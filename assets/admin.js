@@ -739,10 +739,10 @@
 			existing.remove();
 		}
 
-		const section = createSection('AI-generated image candidates');
+		const section = createSection('Host-generated image candidates');
 		section.setAttribute('data-toolbox-ai-generation-result', 'true');
 		const count = Array.isArray(payload.images) ? payload.images.length : 0;
-		section.appendChild(el('div', count ? 'npcink-toolbox__result-notice is-ok' : 'npcink-toolbox__result-notice is-warning', count ? 'Cloud returned AI-generated image candidates. Review the image and source status before adoption.' : 'Cloud did not return a usable image URL.'));
+		section.appendChild(el('div', count ? 'npcink-toolbox__result-notice is-ok' : 'npcink-toolbox__result-notice is-warning', count ? 'Cloud returned host-generated image candidates. Review the image and source status before adoption.' : 'Cloud did not return a usable image URL.'));
 		if (!count && payload.message) {
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', payload.message));
 		}
@@ -759,7 +759,7 @@
 		renderImageList(section, payload.images);
 		appendImageAgentFeedbackControls(section, payload, 'toolbox_ai_image_generation');
 		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Generated images are candidates only. Use editor image adoption and Core review before importing or inserting media.'));
-		section.appendChild(createRawDetails(payload, 'AI generation payload'));
+		section.appendChild(createRawDetails(payload, 'Hosted image candidate payload'));
 		container.appendChild(section);
 	}
 
@@ -769,8 +769,8 @@
 			return;
 		}
 
-		const section = createSection('AI image generation');
-		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Generate an original image only after reviewing the prompt. Cloud returns candidates; WordPress media writes stay local.'));
+		const section = createSection('Hosted image candidate');
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Request a host-generated image only after reviewing the prompt. Cloud returns candidates; WordPress media writes stay local.'));
 		const promptLabel = el('label', '');
 		promptLabel.appendChild(el('span', '', 'Reviewed prompt'));
 		const prompt = el('textarea', '');
@@ -809,7 +809,7 @@
 		section.appendChild(controls);
 
 		const actions = el('div', 'npcink-toolbox__result-actions');
-		const button = el('button', 'button button-primary', 'Generate AI image');
+		const button = el('button', 'button button-primary', 'Request hosted image');
 		button.type = 'button';
 		button.addEventListener('click', async () => {
 			const reviewedPrompt = String(prompt.value || '').trim();
@@ -834,7 +834,7 @@
 				});
 				appendAiGenerationResult(container, response);
 			} catch (error) {
-				appendAiGenerationResult(container, { images: [], message: formatErrorMessage(error, 'AI image generation failed.'), error });
+				appendAiGenerationResult(container, { images: [], message: formatErrorMessage(error, 'Hosted image candidate request failed.'), error });
 			} finally {
 				button.disabled = false;
 				button.textContent = originalText;
@@ -842,7 +842,7 @@
 		});
 		actions.appendChild(button);
 		section.appendChild(actions);
-		section.appendChild(createRawDetails(handoff, 'AI generation handoff'));
+		section.appendChild(createRawDetails(handoff, 'Hosted image candidate handoff'));
 		container.appendChild(section);
 	}
 
@@ -4205,7 +4205,7 @@
 			renderImageSourceCandidates(
 				form,
 				payload,
-				payload.provider_mode === 'ai_generated' ? 'AI-generated image candidates' : ''
+				payload.provider_mode === 'ai_generated' ? 'Host-generated image candidates' : ''
 			);
 			return;
 		}

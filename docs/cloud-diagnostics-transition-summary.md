@@ -23,9 +23,9 @@ Toolbox no longer owns a standalone Cloud Checks or Troubleshooting Checks
 surface.
 
 Cloud connection checks, hosted runtime health, search/image-source diagnostics,
-AI image generation readiness, Site Knowledge bridge checks, entitlement, quota,
-billing, request logs, and service health detail belong in `npcink-cloud-addon`
-or Cloud service-plane surfaces.
+hosted image candidate readiness, Site Knowledge bridge checks, entitlement,
+quota, billing, request logs, and service health detail belong in
+`npcink-cloud-addon` or Cloud service-plane surfaces.
 
 Toolbox keeps only task-owned product surfaces:
 
@@ -116,8 +116,8 @@ Recommended scope:
 - expose read-only entitlement, quota, usage, and billing detail or links;
 - show Platform Models, provider readiness, and hosted capability metadata only
   as status/detail, not as router truth;
-- check Cloud web search, image-source, AI image generation, and Site Knowledge
-  bridge capability only when a real Cloud API/contract exists;
+- check Cloud web search, image-source, hosted image candidate, and Site
+  Knowledge bridge capability only when a real Cloud API/contract exists;
 - keep raw payloads, request IDs, and deeper traces behind advanced disclosure;
 - avoid provider secret exposure and split-key UI fields;
 - avoid any second ability registry, workflow registry, approval store,

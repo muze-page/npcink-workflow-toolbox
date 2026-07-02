@@ -1109,8 +1109,8 @@ msgstr "来源类型"
 msgid "Stock image"
 msgstr "图库图片"
 
-msgid "AI generated"
-msgstr "AI 生成"
+msgid "Hosted image"
+msgstr "托管图片"
 
 msgid "Owned image"
 msgstr "自有图片"
@@ -1697,11 +1697,11 @@ msgstr "生成 AI 文章写作包"
 msgid "Build one suggestion-only article writing context pack from operator SEO, AEO, and GEO context without writing WordPress content."
 msgstr "根据运营者 SEO、AEO 和 GEO 上下文生成一个仅建议型文章写作上下文包，不写入 WordPress 内容。"
 
-msgid "No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter."
-msgstr "没有 AI 图片生成运行时处理此图片候选请求。请提供 generated_image_url，或注册 npcink_toolbox_ai_image_generation_request 过滤器。"
+msgid "No hosted image candidate runtime handled this request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter."
+msgstr "没有托管图片候选运行时处理此请求。请提供 generated_image_url，或注册 npcink_toolbox_ai_image_generation_request 过滤器。"
 
-msgid "The AI image generation runtime did not return an image URL candidate."
-msgstr "AI 图片生成运行时没有返回图片 URL 候选。"
+msgid "The hosted image candidate runtime did not return an image URL candidate."
+msgstr "托管图片候选运行时没有返回图片 URL 候选。"
 
 msgid "AI-generated image candidate."
 msgstr "AI 生成图片候选。"
@@ -2798,17 +2798,20 @@ msgstr "生成图片计划前请先保存草稿。"
 msgid "Generated an article image plan from the saved post context. Review candidates before search, generation, import, or featured-image adoption."
 msgstr "已根据已保存的文章上下文生成图片计划。搜索、生成、导入或设为特色图前，请先审阅候选项。"
 
-msgid "Generated a prompt from the article context. Review it before creating an AI image candidate."
-msgstr "已根据文章上下文生成提示词。创建 AI 图片候选前请先审阅。"
+msgid "Generated a prompt from the article context. Review it before requesting a host-generated image candidate."
+msgstr "已根据文章上下文生成提示词。请求托管生成图片候选前请先审阅。"
 
-msgid "Generated prompt directions from the article context. Choose one direction before creating an AI image candidate."
-msgstr "已根据文章上下文生成提示词方向。创建 AI 图片候选前请选择一个方向。"
+msgid "Generated prompt directions from the article context. Choose one direction before requesting a host-generated image candidate."
+msgstr "已根据文章上下文生成提示词方向。请求托管生成图片候选前请选择一个方向。"
 
 msgid "Image plan generation failed."
 msgstr "图片计划生成失败。"
 
 msgid "Generating image plan..."
 msgstr "正在生成图片计划..."
+
+msgid "Requesting hosted image candidate..."
+msgstr "正在请求托管图片候选..."
 
 msgid "Planning"
 msgstr "计划中"
@@ -2825,17 +2828,17 @@ msgstr "生成提示词"
 msgid "Enter a prompt, or generate one from the article first."
 msgstr "请先输入提示词，或根据文章生成提示词。"
 
-msgid "Enter an AI image prompt, or generate one from the article first."
-msgstr "请先输入 AI 生图提示词，或根据文章生成一个提示词。"
+msgid "Enter a hosted image prompt, or generate one from the article first."
+msgstr "请先输入托管图片提示词，或根据文章生成一个提示词。"
 
-msgid "AI image generation is available from the featured image entry. Paragraph image suggestions use the selected paragraph to find source images."
-msgstr "AI 生图仅在特色图入口可用。段落配图建议会使用选中段落查找来源图片。"
+msgid "Hosted image candidates are available from the featured image entry. Paragraph image suggestions use the selected paragraph to find source images."
+msgstr "托管图片候选仅在特色图入口可用。段落配图建议会使用选中段落查找来源图片。"
 
 msgid "Regenerate AI image"
 msgstr "重新生成 AI 图片"
 
-msgid "Keeps the selected paragraph meaning and creates a revised candidate through the existing AI image runtime."
-msgstr "保留当前图片语义，并通过现有 AI 生图运行时生成修订候选。"
+msgid "Keeps the selected paragraph meaning and requests a revised host-generated image candidate."
+msgstr "保留所选段落语义，并请求修订后的托管生成图片候选。"
 
 msgid "More specific"
 msgstr "更具体"
@@ -2846,11 +2849,11 @@ msgstr "更简洁"
 msgid "More editorial"
 msgstr "更有编辑感"
 
-msgid "No AI image prompt is available to regenerate."
-msgstr "没有可用于重新生成的 AI 生图提示词。"
+msgid "No hosted image prompt is available to request a revision."
+msgstr "没有可用于请求修订的托管图片提示词。"
 
-msgid "Regenerating a revised AI image while preserving the selected paragraph meaning."
-msgstr "正在保留当前语义并重新生成 AI 图片。"
+msgid "Requesting a revised host-generated image candidate while preserving the selected paragraph meaning."
+msgstr "正在保留当前语义并请求修订后的托管生成图片候选。"
 
 msgid "Image source suggestions"
 msgstr "图片来源建议"
@@ -2924,8 +2927,8 @@ msgstr "使用草稿"
 msgid "Search from article"
 msgstr "用文章内容搜索"
 
-msgid "Generate AI image"
-msgstr "AI 生成配图"
+msgid "Request hosted image"
+msgstr "请求托管图片"
 
 msgid "Quality"
 msgstr "质量"
@@ -6149,11 +6152,11 @@ msgstr "单张图片优化请从媒体库附件详情面板开始。需要处理
 msgid "Open Media Library"
 msgstr "打开媒体库"
 
-msgid "Generate Image Candidate"
-msgstr "生成图片候选"
+msgid "Request Hosted Image Candidate"
+msgstr "请求托管图片候选"
 
-msgid "Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media."
-msgstr "在运营者审阅提示词后生成一个 Cloud 托管的 AI 图片候选，不导入媒体。"
+msgid "Request a Cloud-hosted generated image candidate after operator prompt review, without importing media or owning the generation runtime."
+msgstr "在运营者审阅提示词后请求一个 Cloud 托管生成的图片候选，不导入媒体，也不拥有生成运行时。"
 
 msgid "Cloud Web Search"
 msgstr "Cloud 网页搜索"

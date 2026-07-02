@@ -146,10 +146,12 @@ vocabulary remains Core policy-gated strong review.
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source
 metadata in its candidate payloads; Unsplash candidates must also preserve
-download tracking metadata. AI-generated image candidates are a separate
+download tracking metadata. Host-generated image candidates are a separate
 explicit candidate mode: callers may provide reviewed generated image URLs, or
-a host may provide a bounded generation runtime seam. Toolbox must not own
-model routing, prompt management, provider billing, or media import.
+a host may provide a bounded generated-image runtime seam. The legacy
+route/ability ids may still say "image-generation" for compatibility, but
+Toolbox must not own model routing, prompt management, provider billing, or
+media import.
 
 Cloud-managed Site Knowledge is the vector surface. Toolbox may collect bounded
 public WordPress manifests for explicit sync requests, show returned status, and

@@ -35,7 +35,7 @@ Current runtime providers:
 | Image source candidates | Unsplash | Active provider; preserve attribution and `download_location`. |
 | Image source candidates | Pixabay | Active provider when configured; preserve attribution and source URL. |
 | Image source candidates | Pexels | Active provider when configured; preserve attribution and source URL. |
-| AI-generated image candidates | Caller URL or host filter | Explicit `ai_generated` mode; preserve prompt/model evidence and human license review status. |
+| Host-generated image candidates | Caller URL or host filter | Explicit `ai_generated` mode; preserve prompt/model evidence and human license review status. |
 | Site knowledge vector infrastructure | Npcink Cloud | Cloud-managed embedding, vector storage, indexing, rerank, status, and search. |
 
 ## Cloud-Managed Vector

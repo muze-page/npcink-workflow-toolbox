@@ -34,10 +34,10 @@
       "Core proposals": ["Core 提案"],
       "Core media optimization response": ["Core 媒体优化响应"],
       "Core plan-to-proposal response": ["Core 计划转提案响应"],
-      "AI-generated image candidates": ["AI 生成图片候选"],
+      "Host-generated image candidates": ["托管生成图片候选"],
       "AI generation payload": ["AI 生图载荷"],
-      "AI image generation failed.": ["AI 生图失败。"],
-      "Cloud returned AI-generated image candidates. Review the image and source status before adoption.": ["Cloud 返回了 AI 生成图片候选。采用前请审阅图片和来源状态。"],
+      "Hosted image candidate request failed.": ["托管图片候选请求失败。"],
+      "Cloud returned host-generated image candidates. Review the image and source status before adoption.": ["Cloud 返回了托管生成图片候选。采用前请审阅图片和来源状态。"],
       "Cloud did not return a usable image URL.": ["Cloud 没有返回可用的图片 URL。"],
       "Generated images are candidates only. Use editor image adoption and Core review before importing or inserting media.": ["生成图片仅为候选。导入或插入媒体前，请在编辑器侧栏采用图片并经过 Core 审阅。"],
 

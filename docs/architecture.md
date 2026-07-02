@@ -116,7 +116,7 @@ Current connector routes:
 | Unsplash | Image-source candidates | `/image-candidates` |
 | Pixabay | Image-source candidates | `/image-candidates` |
 | Pexels | Image-source candidates | `/image-candidates` |
-| Host AI image generation seam | AI-generated image candidates | `/image-candidates` with `provider=ai_generated` |
+| Host-generated image candidate seam | Host-generated image candidates | `/image-candidates` with `provider=ai_generated` |
 | Cloud Site Knowledge | Semantic site context | `/site-knowledge/*` and vector compatibility pointer |
 
 The legacy `/vector-search` route remains only as a compatibility pointer. It
@@ -129,7 +129,7 @@ Reserved provider slots:
 | --- | --- | --- |
 | External search | Npcink Cloud | Additional search providers are Cloud-owned by later contract. |
 | Image source | Unsplash, Pixabay, Pexels | Additional image-source providers by later contract. |
-| AI-generated image candidates | Caller-supplied generated URL or host filter | Durable AI image connector by later contract. |
+| Host-generated image candidates | Caller-supplied generated URL or host filter | Durable generated-image connector by later contract. |
 | Site knowledge vector infrastructure | Npcink Cloud | Cloud operator console by later contract. |
 
 ## Abilities Path
@@ -152,7 +152,7 @@ lower-level tools; the old article brief route is compatibility-only.
 If `npcink-abilities-toolkit` is active, Toolbox uses its public helper functions.
 Otherwise, Toolbox falls back to native WordPress Abilities API registration.
 
-Current ability ids:
+Current Toolbox wrapper ability ids:
 
 - `npcink-toolbox/search-image-source`
 - `npcink-toolbox/generate-image`
@@ -163,8 +163,6 @@ Current ability ids:
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
-- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
-- `npcink-abilities-toolkit/build-article-audio-adoption-plan`
 - `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-nightly-inspection-review-plan`
 - `npcink-toolbox/build-media-derivative-handoff`
@@ -172,6 +170,12 @@ Current ability ids:
 - `npcink-toolbox/validate-content-discoverability-context`
 - `npcink-toolbox/build-content-discoverability-brief`
 - `npcink-toolbox/build-ai-article-writing-pack`
+
+Toolkit planner targets referenced by Toolbox, but not registered as Toolbox
+wrapper abilities:
+
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-article-audio-adoption-plan`
 
 These are read/suggestion tools. They must not imply final WordPress write
 approval, media import approval, or indexing lifecycle ownership. The legacy

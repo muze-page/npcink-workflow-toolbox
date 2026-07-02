@@ -373,8 +373,9 @@ article text. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
-while Cloud title/summary generation, image-source search, image generation,
-deep search, and proposal handoffs remain explicit follow-up actions. The metadata buttons use
+while Cloud title/summary generation, image-source search, hosted image
+candidate requests, deep search, and proposal handoffs remain explicit
+follow-up actions. The metadata buttons use
 lighter draft/taxonomy fast paths and merge their results into one
 `article_discoverability_optimization.v1` review surface. The full
 `summary_terms_optimization` intent remains available as a compatibility and
@@ -457,8 +458,8 @@ Core-owned audit evidence before and after the write, and no Core proposal is
 created. External image URLs, media import, media metadata writes, and
 multi-action adoption still use the Adapter/Core/Abilities path.
 When Cloud includes an `ai_generation_handoff`, the Toolbox result can show a
-reviewed-prompt AI image generation action. The action calls the Cloud Addon
-runtime seam with `grok-imagine-image-quality`, returns AI-generated
+reviewed-prompt hosted image candidate request. The action calls the Cloud
+Addon runtime seam with `grok-imagine-image-quality`, returns host-generated
 `image_candidate.v1` candidates, and still requires the local adoption/Core
 review path before any media import or featured-image write.
 Toolbox builds the adoption plan with proposed media title, alt text,
@@ -606,8 +607,10 @@ image contexts. The label informs Cloud ranking and UI copy; it does not grant
 write authority.
 `ai_generated` remains explicit: callers may provide a reviewed generated image
 URL, or a host may handle `npcink_toolbox_ai_image_generation_request` and
-return generated-image candidates. Toolbox still does not own model routing,
-provider billing, media import, or final WordPress writes.
+return host-generated image candidates. The route and ability ids keep legacy
+"image-generation" names for compatibility only; Toolbox still does not own
+model routing, prompt management, provider billing, media import, or final
+WordPress writes.
 
 Every returned image candidate is normalized to `image_candidate.v1` while
 preserving legacy URL fields for existing callers. The normalized fields include

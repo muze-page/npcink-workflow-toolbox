@@ -97,8 +97,9 @@ must preserve provider name, source URL, photographer attribution, and Unsplash
 
 The same ability also accepts an explicit `ai_generated` candidate mode. In
 that mode a caller may provide a reviewed generated image URL, or a host may
-handle `npcink_toolbox_ai_image_generation_request` and return generated
-image candidates. Toolbox normalizes those candidates with
+handle `npcink_toolbox_ai_image_generation_request` and return host-generated
+image candidates. The route and ability ids keep legacy "image-generation"
+names for compatibility only. Toolbox normalizes those candidates with
 `source_type=ai_generated`, prompt/model evidence, and human license review
 status. Toolbox does not own model routing, prompt management, provider
 credentials, billing, media import, or featured-image writes.
@@ -148,6 +149,11 @@ runtime client or the `npcink_toolbox_site_knowledge_cloud_request` host
 filter. It does
 not store Cloud credentials, create a second ability registry, write WordPress
 content, or own Cloud vector collection lifecycle.
+
+Jina Reader and Jina Reranker are not local Toolbox runtime options. If Cloud
+later returns Jina-backed ranking or extraction evidence, Toolbox may display
+that evidence as result detail, but must not expose Jina keys, Reader toggles,
+rerank provider selection, or local indexing controls.
 
 ## Ability Metadata
 
