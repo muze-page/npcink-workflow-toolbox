@@ -178,6 +178,11 @@ route-only or Toolkit-owned ability ids is
 
 Toolbox ability metadata should make the boundary machine-readable:
 
+For Cloud and Cloud Addon bridge ownership, contract versions, data
+classification, retention posture, and forbidden local control-plane ownership,
+use the machine-readable
+[Cloud Bridge Contract Table](cloud-bridge-contract-table.json).
+
 ```text
 readonly: true
 show_in_rest: true

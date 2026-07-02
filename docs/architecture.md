@@ -95,6 +95,12 @@ Core proposal creation, or WordPress write path.
 
 Current MVP provider flow:
 
+The machine-readable source of truth for Toolbox-to-Cloud and
+Toolbox-to-Cloud-Addon bridge ownership, contract versions, data
+classification, retention posture, and forbidden local control-plane ownership
+is [Cloud Bridge Contract Table](cloud-bridge-contract-table.json). The flow
+below is the human-readable summary and must stay aligned with that table.
+
 1. Admin user submits a tool form or REST request.
 2. `Rest_Controller` checks `manage_options`.
 3. `Provider_Client` calls Cloud image-source runtime, a host AI image
