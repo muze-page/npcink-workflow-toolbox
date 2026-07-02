@@ -85,6 +85,8 @@ default checks should cover:
   require a new ADR and static contract.
 - Eval-lab remains a development-only proxy and is outside `composer test:all`.
 - Model-backed findings are triaged before becoming implementation work.
+- `composer test:boundary-vocabulary` keeps the highest-risk redline wording
+  scan-friendly for docs and source review.
 
 ## Completion Standard
 

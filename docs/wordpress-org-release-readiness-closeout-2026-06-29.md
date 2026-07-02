@@ -197,3 +197,15 @@ After the plugin is submitted:
    product-stage guide after submission: clean up backend operator surfaces,
    move single-item actions to editor/media-library contexts, and keep batch
    or advanced diagnostics in Toolbox admin.
+
+## 2026-07-02 Review Feedback Addendum
+
+WordPress.org pre-review feedback showed that this closeout's verification was
+incomplete for directory review purposes. Internal static contracts passed, but
+the package still had review-visible issues around submitter/brand identity,
+`FILTER_UNSAFE_RAW` request reads, and the `readme.txt` Contributors line.
+
+This closeout should be treated as superseded for upload decisions until the
+current branch records a fresh Plugin Check result and package checksum after
+the review-feedback fixes. Use `docs/wordpress-org-release-gate.md` as the
+active checklist for the resubmission gate.
