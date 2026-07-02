@@ -14,6 +14,15 @@ if [ ! -d "$eval_lab_path" ]; then
 	exit 1
 fi
 
+for eval_lab_arg in "$@"; do
+	case "$eval_lab_arg" in
+		files=*)
+			WORKFLOW_TOOLBOX_FILES="${eval_lab_arg#files=}"
+			export WORKFLOW_TOOLBOX_FILES
+			;;
+	esac
+done
+
 case "$1" in
 	task=*|--list|--help|-h|help|list|tasks)
 		exec composer --working-dir="$eval_lab_path" eval:task -- "$@"

@@ -159,7 +159,10 @@ call semantic site search. Automatic public content-change delivery belongs in
 Cloud Addon after its bridge is installed and verified; Toolbox no longer keeps
 a standalone legacy fallback queue. Embedding providers, vector database
 endpoints, collection names, dimensions, rerank, stale detection, and index
-lifecycle are Cloud operator responsibilities.
+lifecycle are Cloud operator responsibilities. Toolbox must not act as an
+active Jina Reader/Reranker runtime or expose Jina toggles before a separate
+Cloud-owned workflow contract exists; it may only display Cloud-returned
+ranking or extraction evidence as result detail.
 
 Cloud-managed site knowledge is the preferred high-level surface for semantic
 site search, related content, writing context, internal links, refresh

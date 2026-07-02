@@ -44,6 +44,18 @@ First-version write posture:
    adopted into local WordPress metadata; the playback surface is read-only and
    does not call Cloud, create proposals, import media, or write post meta.
 
+Hard blocks:
+
+- Toolbox must never implement `confirm_token`, `write_confirmed`, hidden
+  write confirmation, or a local approval-state store.
+- Toolbox must not add direct publish, media import, media metadata mutation,
+  SEO mutation, post-content mutation, or featured-image writes outside the
+  single Local Admin Consent featured-image exception recorded in the Boundary
+  Exceptions Registry and ADR-003.
+- Toolbox must not create a second ability registry, workflow registry,
+  approval store, queue, scheduler truth, run-recovery workspace, indexing
+  lifecycle owner, or provider-secret store.
+
 ## OpenClaw Button Surface Boundary
 
 Toolbox may turn repeatable OpenClaw flows into WordPress admin buttons. This is

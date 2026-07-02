@@ -103,9 +103,15 @@ Target features:
   not create the proposal, approve, execute, or write media metadata;
 - OpenClaw/Adapter selected-batch execution proof before any Toolbox batch
   "replace original image" button is treated as product-ready;
+- before any new batch review-set button becomes product-ready, run the
+  adversarial boundary review and record whether the button remains a
+  suggestion/Core-handoff surface or needs a new boundary decision;
 - article write plan artifact for one reviewed human draft as a fallback
   off-ramp;
-- set featured image proposal handoff;
+- set featured image proposal handoff for external/generated image candidates,
+  media import, multiple posts, or any metadata-bearing media adoption path;
+- keep the existing-attachment/current-post featured image shortcut limited to
+  the Local Admin Consent exception only;
 - update media metadata proposal handoff;
 - set SEO meta proposal handoff;
 - use content discoverability context when preparing SEO/AEO/GEO proposal
@@ -185,7 +191,10 @@ media ALT suggestions response with bounded eligibility, selected items,
 blocked reasons, retry guidance, and an explicit no-write posture. It defaults
 to current article used image metadata only; the recent media-library metadata
 sample remains an explicit advanced fallback. Every selected item requires
-human visual confirmation.
+human visual confirmation. It must pass the adversarial boundary review before
+it is exposed as a default fixed button, and any proposal creation, approval,
+execution, media metadata write, import, or replacement behavior stays outside
+Toolbox until a separate boundary decision exists.
 Before extracting any reusable logic to Toolkit, run the
 [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md).
 

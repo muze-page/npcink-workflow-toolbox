@@ -279,15 +279,18 @@ For the post-editor SEO apply loop, run:
 composer smoke:editor-seo-apply
 ```
 
-This creates a temporary draft, gets the `discoverability` SEO handoff preview,
-creates an executable `npcink-abilities-toolkit/set-post-seo-meta` Core
-proposal through Adapter `/proposals`, and calls Adapter
-`approve-and-execute`. If local Core policy allows execution, it verifies the
-SEO title and description meta were written by the Core-approved ability. If
-policy blocks automatic execution, it verifies the Core proposal remains
-reviewable and the temporary post SEO meta is unchanged. It is intentionally
-outside `composer test:all` because it depends on a running local WordPress site
-with Adapter, Core, and Abilities active.
+This creates a temporary draft and asks Toolbox only for the `discoverability`
+SEO handoff preview. The fixture then uses Adapter/Core/Abilities to create an
+executable `npcink-abilities-toolkit/set-post-seo-meta` Core proposal and call
+Adapter `approve-and-execute`. Toolbox does not approve, execute, or write SEO
+meta in this smoke; it proves only that a Toolbox suggestion/handoff can be
+carried into the governed Core/Adapter/Abilities path. If local Core policy
+allows execution, the smoke verifies the SEO title and description meta were
+written by the Core-approved ability. If policy blocks automatic execution, it
+verifies the Core proposal remains reviewable and the temporary post SEO meta
+is unchanged. It is intentionally outside `composer test:all` because it
+depends on a running local WordPress site with Adapter, Core, and Abilities
+active.
 
 For hosted AI no-result editor diagnostics, run:
 
