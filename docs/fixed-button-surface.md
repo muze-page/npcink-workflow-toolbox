@@ -9,6 +9,12 @@ Default buttons may collect bounded context, call suggestion tools, render
 candidates, and prepare governed handoff artifacts. They must not introduce a write executor, local queue, indexing lifecycle control, provider control plane,
 approval store, request log, or scheduler truth.
 
+This matrix is the product contract for default visible buttons.
+`Ability_Surface_Metadata` is only the read-only Workflow readiness projection
+used by the admin UI; it is not an exhaustive button catalog, ability registry,
+workflow registry, or route-compatibility registry. Do not add metadata entries
+only to mirror every route-compatible support path.
+
 ## V1 Default Buttons
 
 | Button | Surface | Input | Output artifact | Runtime | Handoff | Boundary |
