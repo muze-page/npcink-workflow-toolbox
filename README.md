@@ -128,11 +128,16 @@ expect to stay discoverable from the root README:
 [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md),
 [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md),
 [Adversarial Boundary Review](docs/adversarial-boundary-review.md),
+[Adversarial Boundary Findings Triage](docs/adversarial-boundary-findings-triage.md),
 [Boundary Exceptions Registry](docs/boundary-exceptions.md),
 [Fixed Button Surface](docs/fixed-button-surface.md).
 
+### Boundary Exceptions Only
+
 Accepted boundary exception records are indexed separately so they are not
-mistaken for default Toolbox runtime ownership:
+mistaken for default Toolbox runtime ownership. These records do not grant
+scheduler truth, queues, run tables, leases, retries, dead-letter processing,
+recovery workspaces, Cloud calls, Core proposal creation, or WordPress writes:
 [Local Automation Runtime Module](modules/local-automation-runtime/README.md),
 [ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md), and
 [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](docs/decisions/ADR-005-wp-cron-cloud-batch-orchestration.md).
@@ -172,7 +177,9 @@ registered.
 - `POST /wp-json/npcink-toolbox/v1/web-search/diagnostics`
 - `GET /wp-json/npcink-toolbox/v1/site-knowledge/status`
 - `POST /wp-json/npcink-toolbox/v1/site-knowledge/search`
-- `POST /wp-json/npcink-toolbox/v1/site-knowledge/sync`
+- `POST /wp-json/npcink-toolbox/v1/site-knowledge/sync` (refresh-only bounded
+  Cloud request; no rebuild/delete, indexing lifecycle, local queue, or
+  collection controls)
 - `POST /wp-json/npcink-toolbox/v1/agent-feedback`
 - `POST /wp-json/npcink-toolbox/v1/agent-feedback/summary`
 - `POST /wp-json/npcink-toolbox/v1/ai/content-support`

@@ -19,12 +19,17 @@ The boundary proof mechanism serves three jobs:
    lifecycle ownership, full-RAG claims, and image-source versus AI-generation
    confusion.
 3. Turn disputes into reviewable evidence: each model finding must be
-   classified as `accepted_fix`, `accepted_exception`, or `rejected_finding`
-   before implementation work proceeds.
+   classified as `accepted_fix`, `accepted_exception`, `rejected_finding`, or
+   `follow_up` before implementation work proceeds.
 
 Eval-lab output is local development evidence only. It is not a Core audit
 record, an approval decision, a release gate by itself, or product runtime
 state.
+
+Provider-backed finding classifications that outlive a single cleanup are
+recorded in
+[Adversarial Boundary Findings Triage](adversarial-boundary-findings-triage.md)
+before they become implementation work.
 
 ## Command
 
@@ -90,8 +95,7 @@ A boundary review cycle is complete only when:
 2. Provider-backed eval-lab review has either been run or intentionally skipped
    with the reason recorded.
 3. Every model finding is classified as `accepted_fix`,
-   `accepted_exception`, or `rejected_finding`.
+   `accepted_exception`, `rejected_finding`, or `follow_up`.
 4. All accepted fixes in the current scope have docs or tests attached.
 5. Existing exceptions still point to ADRs and static contracts.
 6. `composer test:all` passes after the scoped work.
-

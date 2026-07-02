@@ -20,6 +20,7 @@ Read:
 - `docs/cross-repo-boundary-matrix.md`
 - `docs/boundary-exceptions.md`
 - `docs/adversarial-boundary-review.md`
+- `docs/adversarial-boundary-findings-triage.md`
 - `docs/decisions/ADR-001-toolbox-as-product-surface.md`
 - `docs/decisions/ADR-003-local-admin-consent-boundary.md`
 
@@ -185,8 +186,8 @@ php -d mysqli.default_socket="$WP_CLI_MYSQL_SOCKET" \
 Then verify:
 
 - the plugin activates without fatal errors;
-- `Npcink -> Toolbox` loads when a Npcink parent menu exists;
-- `Tools -> Npcink Toolbox` loads when installed standalone without a
+- `Npcink -> Workflow Toolbox` loads when a Npcink parent menu exists;
+- `Tools -> Npcink Workflow Toolbox` loads when installed standalone without a
   Npcink parent menu;
 - settings save;
 - `/wp-json/npcink-toolbox/v1/status` returns the expected capability-gated

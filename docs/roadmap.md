@@ -67,9 +67,12 @@ Target features:
   path. Lightweight source-content freshness status may tell editors when
   adopted audio is current, lightly drifted, review-recommended, or stale.
 - Clear empty/error/loading states.
-- Reusable image-source picker with short-lived local result caching,
-  empty-state query rewrites, concise candidate cards, and selected-image
-  detail review for editor and settings surfaces.
+- Reusable image-source picker with non-durable, bounded, non-secret
+  transients/session memory for recent modal results, empty-state query
+  rewrites, concise candidate cards, and selected-image detail review for
+  editor and settings surfaces. It must not store provider keys,
+  billing/quota data, durable request logs, raw provider payloads beyond
+  existing debug-redaction rules, or custom tables.
 - Local WordPress activation smoke.
 
 Non-goals:

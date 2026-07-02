@@ -102,17 +102,19 @@ bounded suggestion workflows.
   candidates;
 - Cloud-managed site knowledge for semantic search, related content, writing
   context, internal-link candidates, refresh suggestions, or image context;
-- local vector context for style, related articles, internal links, or image
-  recommendation context;
+- Cloud-returned Site Knowledge/vector evidence exposed locally as
+  suggestion-only ability results for style, related articles, internal links,
+  or image recommendation context;
 - image-source candidates;
 - suggestion-only SEO/AEO/GEO briefs;
 - reviewed article write plans for Core handoff.
 
 Toolbox must not own the drafting model, workflow runtime, content indexing,
-media import, featured-image setting, SEO mutation, publishing, approval, or
-audit trail. The final output of a composition run is a draft candidate,
-research evidence pack, image recommendation, discoverability suggestion,
-support/reference pack, comparison notes, or Core-ready plan.
+local vector database, embeddings, RAG runtime, media import, featured-image
+setting, SEO mutation, publishing, approval, or audit trail. The final output of
+a composition run is a draft candidate, research evidence pack, image
+recommendation, discoverability suggestion, support/reference pack, comparison
+notes, or Core-ready plan.
 
 Cloud-managed site knowledge may run through the Cloud Addon runtime seam or a
 host-provided site knowledge filter. Toolbox remains the local Ability

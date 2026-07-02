@@ -25,8 +25,11 @@ approval, Core preflight, and Adapter handoff of host approval context.
 The only current Toolbox Local Admin Consent write path is
 `/local-admin-consent/featured-image`: one existing WordPress image attachment
 may be set as the current post featured image by a present administrator, with
-Core audit before and after the write. These operations remain Core proposal
-paths unless a separate boundary decision defines a specific new local contract:
+Core audit before and after the write. The required guard documents are
+`docs/boundary-exceptions.md` and `docs/adversarial-boundary-review.md`; static
+contracts must fail if a second Local Admin Consent route or direct write path
+appears without a new ADR. These operations remain Core proposal paths unless a
+separate boundary decision defines a specific new local contract:
 
 - metadata apply
 - SEO mutation

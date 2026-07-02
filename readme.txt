@@ -68,8 +68,8 @@ closed.
 1. Upload the `npcink-workflow-toolbox` folder to `/wp-content/plugins/`, or install it
    through the WordPress plugin installer.
 2. Activate **Npcink Workflow Toolbox** in WordPress.
-3. Open **Npcink -> Toolbox** when a Npcink menu is available, or **Tools ->
-   Npcink Workflow Toolbox** for standalone installs.
+3. Open **Npcink -> Workflow Toolbox** when a Npcink menu is available, or
+   **Tools -> Npcink Workflow Toolbox** for standalone installs.
 4. Fill the Site Context fields with non-secret positioning, audience, brand
    voice, keyword, and SEO/AEO/GEO guidance.
 5. Connect the required Npcink Cloud Addon or host runtime before using

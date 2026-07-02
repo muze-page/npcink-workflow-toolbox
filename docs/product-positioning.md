@@ -151,7 +151,9 @@ explicit candidate mode: callers may provide reviewed generated image URLs, or
 a host may provide a bounded generated-image runtime seam. The legacy
 route/ability ids may still say "image-generation" for compatibility, but
 Toolbox must not own model routing, prompt management, provider billing, or
-media import.
+media import. Keep this seam aligned with
+`docs/adversarial-boundary-review.md` and `docs/boundary-exceptions.md` so the
+compatibility name does not become new runtime ownership.
 
 Cloud-managed Site Knowledge is the vector surface. Toolbox may collect bounded
 public WordPress manifests for explicit sync requests, show returned status, and
@@ -163,6 +165,12 @@ lifecycle are Cloud operator responsibilities. Toolbox must not act as an
 active Jina Reader/Reranker runtime or expose Jina toggles before a separate
 Cloud-owned workflow contract exists; it may only display Cloud-returned
 ranking or extraction evidence as result detail.
+
+The disabled Local Fallback WP-Cron dry-run preview is an accepted boundary
+exception documented in `docs/boundary-exceptions.md`, ADR-004, and ADR-005. It
+is not Toolbox-owned runtime lifecycle, scheduler truth, queue ownership, retry
+policy, lease storage, run recovery, Core proposal creation, Cloud calls, or
+WordPress writes.
 
 Cloud-managed site knowledge is the preferred high-level surface for semantic
 site search, related content, writing context, internal links, refresh

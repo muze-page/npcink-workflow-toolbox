@@ -373,12 +373,12 @@ This prevents early textdomain notices and duplicate Toolbox category notices.
 
 Preferred menu:
 
-- `Npcink -> Toolbox`
+- `Npcink -> Workflow Toolbox`
 - `admin.php?page=npcink-toolbox`
 
 When no shared Npcink parent menu exists:
 
-- `Tools -> Npcink Toolbox`
+- `Tools -> Npcink Workflow Toolbox`
 - `tools.php?page=npcink-toolbox`
 
 Submenu position is `45`, after Abilities and before Cloud Addon.

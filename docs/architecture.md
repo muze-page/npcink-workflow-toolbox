@@ -26,6 +26,12 @@ Status: MVP architecture.
 | `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph review. |
 | `assets/editor-content-support.css` | Compact editor-side layout for the content-support panel. |
 
+`Site_Knowledge_Auto_Sync` is a compatibility projection only; it must never
+become local indexing lifecycle ownership or a Toolbox queue. The bundled local
+automation module is an isolated exception recorded in
+`docs/boundary-exceptions.md` and ADR-004/ADR-005, not default Toolbox runtime
+ownership.
+
 Feature ownership and plugin split decisions should follow
 [Feature Ownership And Plugin Boundary](feature-ownership-and-plugin-boundary.md).
 New AI features should usually become Cloud capabilities, Ability contracts,
@@ -512,7 +518,7 @@ choices remain Core proposal handoffs.
 When another Npcink plugin has registered the shared `npcink` parent menu,
 Toolbox appears as:
 
-- `Npcink -> Toolbox`
+- `Npcink -> Workflow Toolbox`
 - `admin.php?page=npcink-toolbox`
 
 The submenu position is `45`, intentionally after `npcink-abilities-toolkit` (`40`)
@@ -520,7 +526,7 @@ and before Cloud Addon (`50`).
 
 When no Npcink parent menu exists, Toolbox falls back to:
 
-- `Tools -> Npcink Toolbox`
+- `Tools -> Npcink Workflow Toolbox`
 - `tools.php?page=npcink-toolbox`
 
 Tool result panels follow a summary-first display contract adapted from

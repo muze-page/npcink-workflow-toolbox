@@ -32,18 +32,20 @@ Toolbox is not:
 
 ## Call Model
 
-External AI callers should discover and call Toolbox abilities such as:
+External AI callers should discover and call Toolbox-registered wrapper
+abilities such as:
 
 - `npcink-toolbox/search-image-source`
 - `npcink-toolbox/generate-image`
 - `npcink-toolbox/search-site-knowledge`
-- `npcink-toolbox/cloud-web-search`
+- `npcink-toolbox/cloud-web-search` - Cloud-owned bridge metadata only; no
+  local provider execution, no local web-search route/runtime, no provider
+  keys, no request logs, and no quota or billing ownership.
 - `npcink-toolbox/get-site-knowledge-status`
 - `npcink-toolbox/request-site-knowledge-sync`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
-- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
 - `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-nightly-inspection-review-plan`
 - `npcink-toolbox/build-media-derivative-handoff`
@@ -51,6 +53,11 @@ External AI callers should discover and call Toolbox abilities such as:
 - `npcink-toolbox/validate-content-discoverability-context`
 - `npcink-toolbox/build-content-discoverability-brief`
 - `npcink-toolbox/build-ai-article-writing-pack`
+
+External Toolkit target abilities may appear in Toolbox handoff artifacts, but
+they are not registered or owned by Toolbox. For example,
+`npcink-abilities-toolkit/build-image-candidate-adoption-plan` remains a
+Toolkit-owned target used by Core/Adapter handoff paths.
 
 The caller provides task input. Toolbox reads non-secret compatibility
 configuration or delegates to Cloud/connector runtime ownership, normalizes the
