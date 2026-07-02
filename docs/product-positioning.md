@@ -49,9 +49,9 @@ semantics.
 ## Core Jobs
 
 1. Provide a visible admin product surface for external AI tools.
-2. Run configured external search, optional result reading, Cloud-managed
-   image-source requests, and Cloud-managed site knowledge operations from a
-   controlled WordPress UI.
+2. Run Cloud-managed external search request handoff, optional result reading,
+   Cloud-managed image-source requests, and Cloud-managed site knowledge
+   operations from a controlled WordPress UI.
 3. Convert repeated operator workflows into fixed buttons.
 4. Return planning artifacts, candidates, and handoff notes.
 5. Let operators fill non-secret SEO, AEO, and GEO content context for
@@ -67,7 +67,7 @@ semantics.
    Images surface rather than creating a duplicate runner.
 9. Surface a Site Check button that turns content, approved comment, media,
    taxonomy, context, and runtime signals into a prioritized review-only
-   decision queue for manual handling, existing fixed workflows, or optional
+   ranked decision list for manual handling, existing fixed workflows, or optional
    Cloud detail.
 10. Preserve Core and Abilities boundaries for final WordPress writes.
 
@@ -89,7 +89,7 @@ Npcink Workflow Toolbox does not own:
 | --- | --- |
 | `npcink-governance-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
 | `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
-| `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, configured external research, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
+| `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, Cloud-managed external research handoff, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
 
 ## Design Rule
@@ -146,10 +146,12 @@ vocabulary remains Core policy-gated strong review.
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source
 metadata in its candidate payloads; Unsplash candidates must also preserve
-download tracking metadata. AI-generated image candidates are a separate
+download tracking metadata. Host-generated image candidates are a separate
 explicit candidate mode: callers may provide reviewed generated image URLs, or
-a host may provide a bounded generation runtime seam. Toolbox must not own
-model routing, prompt management, provider billing, or media import.
+a host may provide a bounded generated-image runtime seam. The legacy
+route/ability ids may still say "image-generation" for compatibility, but
+Toolbox must not own model routing, prompt management, provider billing, or
+media import.
 
 Cloud-managed Site Knowledge is the vector surface. Toolbox may collect bounded
 public WordPress manifests for explicit sync requests, show returned status, and
@@ -157,7 +159,10 @@ call semantic site search. Automatic public content-change delivery belongs in
 Cloud Addon after its bridge is installed and verified; Toolbox no longer keeps
 a standalone legacy fallback queue. Embedding providers, vector database
 endpoints, collection names, dimensions, rerank, stale detection, and index
-lifecycle are Cloud operator responsibilities.
+lifecycle are Cloud operator responsibilities. Toolbox must not act as an
+active Jina Reader/Reranker runtime or expose Jina toggles before a separate
+Cloud-owned workflow contract exists; it may only display Cloud-returned
+ranking or extraction evidence as result detail.
 
 Cloud-managed site knowledge is the preferred high-level surface for semantic
 site search, related content, writing context, internal links, refresh

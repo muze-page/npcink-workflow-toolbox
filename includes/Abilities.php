@@ -99,13 +99,13 @@ final class Abilities {
 				array(
 					'composition_role' => 'image_source_candidates',
 				)
-			),
-			'npcink-toolbox/generate-image'                     => $this->definition(
-				__( 'Generate Image Candidate', 'npcink-workflow-toolbox' ),
-				__( 'Generate a Cloud-hosted AI image candidate after operator prompt review, without importing media.', 'npcink-workflow-toolbox' ),
-				array( 'prompt' ),
-				array( $this, 'generate_image_candidate' ),
-				'cap.toolbox.image_source',
+				),
+				'npcink-toolbox/generate-image'                     => $this->definition(
+					__( 'Request Hosted Image Candidate', 'npcink-workflow-toolbox' ),
+					__( 'Request a Cloud-hosted generated image candidate after operator prompt review, without importing media or owning the generation runtime.', 'npcink-workflow-toolbox' ),
+					array( 'prompt' ),
+					array( $this, 'generate_image_candidate' ),
+					'cap.toolbox.image_source',
 				array(
 					'composition_role'  => 'image_source_candidates',
 					'provider_execution' => 'cloud_runtime_via_addon',

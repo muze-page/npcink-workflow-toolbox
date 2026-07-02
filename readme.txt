@@ -26,8 +26,8 @@ The plugin provides a WordPress admin surface and post-editor panel for:
 * SEO, AEO, and GEO guidance from operator-maintained site context;
 * existing-category and existing-tag recommendations for review;
 * internal-link candidates and source-coverage notes;
-* image-source candidates, reviewed AI image candidates, current-article media
-  ALT/caption review sets, and media planning handoff packets;
+* image-source candidates, reviewed hosted image candidates, current-article
+  media ALT/caption review sets, and media planning handoff packets;
 * Cloud-managed site knowledge search, status, and sync requests when a
   compatible host runtime is connected;
 * review-only Scheduled Review previews, with Cloud runtime inspection and recovery routed to Cloud Addon.
@@ -86,8 +86,8 @@ those services.
 = Npcink Cloud runtime =
 
 Used for Cloud-managed web search, image-source candidates, site knowledge
-search/sync/status, hosted AI content-support suggestions, reviewed AI image
-candidates, and Cloud Addon Runtime Runs inspection details.
+search/sync/status, hosted AI content-support suggestions, reviewed hosted
+image candidates, and Cloud Addon Runtime Runs inspection details.
 
 Npcink Workflow Toolbox is designed to work with the official Npcink hosted
 runtime service, Npcink Cloud. The plugin does not include or hard-code a Cloud
@@ -171,8 +171,8 @@ workflow.
 
 Partially. Local settings, Site Context, editor surfaces, and review-only local
 planning remain available. Cloud-managed web search, image-source candidates,
-site knowledge, hosted AI suggestions, reviewed AI image generation, and Pro
-Cloud Runtime checks require a connected runtime.
+site knowledge, hosted AI suggestions, reviewed hosted image candidate requests,
+and Pro Cloud Runtime checks require a connected runtime.
 
 = Does the Zhihu hot-topic pool generate posts? =
 
@@ -185,11 +185,11 @@ drafts, rewrite content, or publish posts.
 No. The first version recommends existing categories and tags for review. New
 vocabulary remains a separate governance decision outside Toolbox shortcuts.
 
-= Is Unsplash image search the same as AI image generation? =
+= Is Unsplash image search the same as hosted image candidate requests? =
 
-No. Unsplash, Pixabay, and Pexels are image-source providers. Reviewed AI image
-candidates are a separate explicit mode and still do not import media or set
-featured images by themselves.
+No. Unsplash, Pixabay, and Pexels are image-source providers. Reviewed
+host-generated image candidates are a separate explicit mode and still do not
+import media or set featured images by themselves.
 
 = What happens when I accept a suggestion? =
 

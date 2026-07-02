@@ -70,6 +70,20 @@ Toolbox and Cloud Addon must reject or omit:
 - local indexing queues or scheduler truth
 - direct WordPress writes from Site Knowledge results
 
+## Jina And Rerank Boundary
+
+Jina Reader, Jina Reranker, embedding-provider selection, rerank policy, and
+vector scoring strategy are not active Toolbox runtime features. Toolbox may
+display candidate ranking, freshness, coverage, or rerank status returned by
+Cloud-managed Site Knowledge, but it must not expose Jina toggles, Reader
+enhancement controls, local rerank provider settings, embedding model fields, or
+collection lifecycle operations.
+
+If a future workflow needs Jina Reader or Jina Reranker, the accepted contract
+must live in Cloud or Cloud Addon first. Toolbox may then consume the returned
+evidence as suggestion-only result detail, not as provider configuration,
+runtime ownership, or indexing lifecycle control.
+
 ## Content Admission
 
 Public refresh payloads may include only:

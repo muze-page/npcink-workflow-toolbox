@@ -3,7 +3,10 @@
 Status: active first-version contract.
 
 This document summarizes how Toolbox exposes Cloud-managed web search status,
-image-source, embedding, and vector APIs to other AI callers.
+image-source candidates, Site Knowledge status/search wrappers, and
+Cloud-returned vector evidence to other AI callers. Toolbox does not expose
+embedding APIs, embedding model selection, vector database endpoints, or
+collection lifecycle controls.
 
 For AI composition examples, including article drafting and content planning, read
 `docs/ai-content-composition-abilities.md`.
@@ -12,13 +15,15 @@ For AI composition examples, including article drafting and content planning, re
 
 Toolbox is:
 
-- a WordPress admin configuration surface for bounded non-search external tools;
-- a server-side executor for configured non-search provider calls;
+- a WordPress admin configuration surface for bounded non-secret compatibility
+  settings;
+- a server-side normalization and delegation layer for Cloud/connector-owned
+  provider calls;
 - a WordPress Abilities API exposure layer for AI callers.
 
 Toolbox is not:
 
-- a provider-secret distribution channel;
+- a provider-secret store or distribution channel;
 - a second ability registry, workflow registry, approval store, or control
   plane;
 - a final WordPress write owner;
@@ -47,10 +52,10 @@ External AI callers should discover and call Toolbox abilities such as:
 - `npcink-toolbox/build-content-discoverability-brief`
 - `npcink-toolbox/build-ai-article-writing-pack`
 
-The caller provides task input. Toolbox reads local configuration or delegates
-to Cloud runtime ownership, normalizes the response, and returns a
-suggestion-oriented payload. Cloud-managed web search is executed by Npcink
-Cloud, not by a local Toolbox provider route.
+The caller provides task input. Toolbox reads non-secret compatibility
+configuration or delegates to Cloud/connector runtime ownership, normalizes the
+response, and returns a suggestion-oriented payload. Cloud-managed web search
+is executed by Npcink Cloud, not by a local Toolbox provider route.
 
 For SEO, AEO, and GEO context readiness, operators can run:
 
@@ -71,12 +76,12 @@ behind that editor-facing flow. It exposes `seo`, `aeo`, `geo`, `exceptions`,
 `special_cases`, and proposal fields. `build-ai-article-writing-pack` is only a
 convenience fallback for broad natural-language article requests.
 
-The caller must not receive provider API keys. Provider secrets remain in:
-
-- PHP constants;
-- environment variables;
-- stored WordPress connector settings for non-search providers, when the
-  operator chooses that path.
+The caller must not receive provider API keys. Durable provider secrets,
+key rotation, quotas, billing data, request logs, and provider routing belong
+to Cloud, host configuration, or dedicated connector owners. Toolbox may read a
+server-side delegated runtime result, but it must not own durable provider
+credential storage or expose those secrets through REST, Abilities, debug
+payloads, docs, or proposals.
 
 ## Provider Boundaries
 
@@ -97,8 +102,9 @@ must preserve provider name, source URL, photographer attribution, and Unsplash
 
 The same ability also accepts an explicit `ai_generated` candidate mode. In
 that mode a caller may provide a reviewed generated image URL, or a host may
-handle `npcink_toolbox_ai_image_generation_request` and return generated
-image candidates. Toolbox normalizes those candidates with
+handle `npcink_toolbox_ai_image_generation_request` and return host-generated
+image candidates. The route and ability ids keep legacy "image-generation"
+names for compatibility only. Toolbox normalizes those candidates with
 `source_type=ai_generated`, prompt/model evidence, and human license review
 status. Toolbox does not own model routing, prompt management, provider
 credentials, billing, media import, or featured-image writes.
@@ -119,8 +125,10 @@ Core proposals and WordPress abilities.
 
 `npcink-toolbox/build-site-knowledge-review-plan` converts one reviewed Cloud
 Site Knowledge agent handoff into a blocked `site_knowledge_review_plan`.
-It preserves evidence refs and may create a Core review proposal, but it
-requires human title/content input before any later approval or preflight path.
+It preserves evidence refs and returns a Core-ready blocked plan or proposal
+input artifact only. Proposal creation belongs to Adapter/Core intake, and the
+plan requires human title/content input before any later approval or preflight
+path.
 
 Vector provider configuration is not exposed locally. Embedding providers,
 embedding dimensions, vector database endpoints, collection names, rerank, and
@@ -148,6 +156,11 @@ runtime client or the `npcink_toolbox_site_knowledge_cloud_request` host
 filter. It does
 not store Cloud credentials, create a second ability registry, write WordPress
 content, or own Cloud vector collection lifecycle.
+
+Jina Reader and Jina Reranker are not local Toolbox runtime options. If Cloud
+later returns Jina-backed ranking or extraction evidence, Toolbox may display
+that evidence as result detail, but must not expose Jina keys, Reader toggles,
+rerank provider selection, or local indexing controls.
 
 ## Ability Metadata
 

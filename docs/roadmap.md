@@ -39,7 +39,7 @@ Target features:
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
 - Site Check button for a manual local `site_ops_insight_pack.v1` that presents
-  a current-run priority queue across content, approved-comment, media,
+  a current-run ranked review list across content, approved-comment, media,
   taxonomy, Site Context, and Cloud readiness findings, then routes the operator
   to manual handling, existing fixed workflows, or optional Cloud detail.
   Coverage metrics, lightweight charts, deterministic local summary, and
@@ -103,9 +103,15 @@ Target features:
   not create the proposal, approve, execute, or write media metadata;
 - OpenClaw/Adapter selected-batch execution proof before any Toolbox batch
   "replace original image" button is treated as product-ready;
+- before any new batch review-set button becomes product-ready, run the
+  adversarial boundary review and record whether the button remains a
+  suggestion/Core-handoff surface or needs a new boundary decision;
 - article write plan artifact for one reviewed human draft as a fallback
   off-ramp;
-- set featured image proposal handoff;
+- set featured image proposal handoff for external/generated image candidates,
+  media import, multiple posts, or any metadata-bearing media adoption path;
+- keep the existing-attachment/current-post featured image shortcut limited to
+  the Local Admin Consent exception only;
 - update media metadata proposal handoff;
 - set SEO meta proposal handoff;
 - use content discoverability context when preparing SEO/AEO/GEO proposal
@@ -120,9 +126,10 @@ Rules:
 - proposal payloads use real WordPress ability ids.
 - batch plans are review sets, not Toolbox-owned queues or automation workers.
 
-## Stage 3 - Knowledge Base Operations
+## Stage 3 - Cloud-Managed Site Knowledge Operations
 
-Goal: make vector search practical for site content.
+Goal: make Cloud-managed semantic site context practical from the Toolbox
+surface without making Toolbox the indexing lifecycle owner.
 
 Target features:
 
@@ -131,13 +138,13 @@ Target features:
   Site Check AI summary, semantic ranking, trend explanation, and operator
   next-action detail, using the Toolbox-prepared
   `site_ops_cloud_analysis_request.v1`;
-- site-content indexing plan;
-- Cloud operator vector provider configuration and migration paths;
-- manual re-index button;
-- index status display;
-- document/source coverage report;
-- stale index warnings;
-- internal-link and old-article refresh suggestions.
+- display of Cloud-owned indexing readiness, freshness, and coverage status
+  returned by Cloud or Cloud Addon;
+- explicit sync/search request handoff surfaces that do not own rebuild,
+  delete, stale-index policy, collection lifecycle, or embedding configuration;
+- document/source coverage reports returned by Cloud-owned Site Knowledge;
+- internal-link and old-article refresh suggestions from Cloud-managed site
+  context.
 
 Open decision:
 
@@ -172,7 +179,8 @@ Candidate buttons:
 - generate article outline with references only through bounded editor support
   or reviewed-draft handoff surfaces, not through a restored Article Assistant
   product entry.
-- rerank source, image, and vector candidates with Jina Reranker.
+- display source, image, and vector candidate ranking returned by Cloud after a
+  separate Cloud-owned reranking contract exists.
 - improve Cloud image-source ranking with abstract-query rewriting,
   site-context vector rerank, candidate dedupe, quality/watermark filters,
   license evidence, risk tags, and media SEO suggestions.
@@ -183,7 +191,10 @@ media ALT suggestions response with bounded eligibility, selected items,
 blocked reasons, retry guidance, and an explicit no-write posture. It defaults
 to current article used image metadata only; the recent media-library metadata
 sample remains an explicit advanced fallback. Every selected item requires
-human visual confirmation.
+human visual confirmation. It must pass the adversarial boundary review before
+it is exposed as a default fixed button, and any proposal creation, approval,
+execution, media metadata write, import, or replacement behavior stays outside
+Toolbox until a separate boundary decision exists.
 Before extracting any reusable logic to Toolkit, run the
 [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md).
 

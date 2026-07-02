@@ -75,13 +75,13 @@ final class Provider_Client {
 			trim( sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ) ),
 			self::AI_IMAGE_PROMPT_CHARS
 		);
-		if ( '' === $prompt ) {
-			return new WP_Error(
-				'npcink_toolbox_missing_ai_image_prompt',
-				__( 'Review and enter an image generation prompt before calling Cloud.', 'npcink-workflow-toolbox' ),
-				array( 'status' => 400 )
-			);
-		}
+			if ( '' === $prompt ) {
+				return new WP_Error(
+					'npcink_toolbox_missing_ai_image_prompt',
+					__( 'Review and enter a hosted image prompt before calling Cloud.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400 )
+				);
+			}
 
 		$n = max( 1, min( 4, (int) ( $input['n'] ?? 1 ) ) );
 		$aspect_ratio = sanitize_text_field( (string) ( $input['aspect_ratio'] ?? '16:9' ) );
@@ -157,12 +157,12 @@ final class Provider_Client {
 
 		$runtime_payload = apply_filters( 'npcink_toolbox_ai_image_generation_runtime_payload', $runtime_payload, $input );
 		if ( ! is_array( $runtime_payload ) ) {
-			return new WP_Error(
-				'npcink_toolbox_invalid_ai_image_generation_runtime_payload',
-				__( 'The AI image generation runtime payload was not valid.', 'npcink-workflow-toolbox' ),
-				array( 'status' => 500 )
-			);
-		}
+				return new WP_Error(
+					'npcink_toolbox_invalid_ai_image_generation_runtime_payload',
+					__( 'The hosted image candidate runtime payload was not valid.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 500 )
+				);
+			}
 		$runtime_payload = $this->runtime_payload_with_data_classification( $runtime_payload, 'internal', $input );
 
 		$handled = apply_filters( 'npcink_toolbox_ai_image_generation_cloud_request', null, $runtime_payload, $input );
@@ -1370,22 +1370,22 @@ final class Provider_Client {
 			return $result;
 		}
 
-		if ( null === $result ) {
-			return new WP_Error(
-				'npcink_toolbox_missing_ai_image_runtime',
-				__( 'No AI image generation runtime handled this image candidate request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter.', 'npcink-workflow-toolbox' ),
-				array( 'status' => 400 )
-			);
-		}
+			if ( null === $result ) {
+				return new WP_Error(
+					'npcink_toolbox_missing_ai_image_runtime',
+					__( 'No hosted image candidate runtime handled this request. Provide a generated_image_url or register the npcink_toolbox_ai_image_generation_request filter.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400 )
+				);
+			}
 
 		$candidates = $this->extract_ai_generated_image_candidates( $result );
-		if ( array() === $candidates ) {
-			return new WP_Error(
-				'npcink_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
-				array( 'status' => 502 )
-			);
-		}
+			if ( array() === $candidates ) {
+				return new WP_Error(
+					'npcink_toolbox_empty_ai_image_response',
+					__( 'The hosted image candidate runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 502 )
+				);
+			}
 
 		$images = array();
 		foreach ( $candidates as $candidate ) {
@@ -1403,13 +1403,13 @@ final class Provider_Client {
 			}
 		}
 
-		if ( array() === $images ) {
-			return new WP_Error(
-				'npcink_toolbox_empty_ai_image_response',
-				__( 'The AI image generation runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
-				array( 'status' => 502 )
-			);
-		}
+			if ( array() === $images ) {
+				return new WP_Error(
+					'npcink_toolbox_empty_ai_image_response',
+					__( 'The hosted image candidate runtime did not return an image URL candidate.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 502 )
+				);
+			}
 
 		return array(
 			'provider' => 'ai_generated',

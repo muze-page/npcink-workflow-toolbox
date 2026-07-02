@@ -8,10 +8,10 @@ Status: MVP architecture.
 | --- | --- |
 | `npcink-workflow-toolbox.php` | Plugin header and bootstrap. |
 | `Plugin` | Shared service construction and hook registration. |
-| `Settings` | Option defaults, sanitization, non-search connector secret lookup, and content context export. |
+| `Settings` | Option defaults, sanitization, non-secret compatibility settings, and content context export. Provider secrets, key rotation, quotas, billing, request logs, and routing remain Cloud/host/connector owned. |
 | `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Site Check Cloud detail runtime calls, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
-| `Admin_Page` | WordPress admin tool surface, connector settings form, content context form, and Npcink submenu fallback. |
+| `Admin_Page` | WordPress admin tool surface, non-secret compatibility/status forms, content context form, and Npcink submenu fallback. It is not a provider picker, key-management UI, request log, quota/billing UI, or connector approval surface. |
 | `Ability_Surface_Metadata` | Read-only local projection of Toolbox-owned workflow defaults, route-only compatibility entries, runtime ownership, handoff posture, and overlap policy. It is not an ability registry, workflow registry, provider picker, request log, or approval store. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Article_Audio_Playback` | Frontend single-post playback entry for already adopted article audio metadata. It reads protected post meta or a host-projected approved audio packet and does not generate, adopt, or write audio. |
@@ -20,7 +20,7 @@ Status: MVP architecture.
 | `Site_Ops_Insight_Builder` | Deterministic `site_ops_insight_pack.v1` builder that ranks local site-check findings for manual handling, existing fixed workflows, or optional Cloud detail without Cloud calls, persistence, proposals, or WordPress writes. |
 | `Site_Ops_Cloud_Request_Builder` | Contract-only `site_ops_cloud_analysis_request.v1` builder for Cloud runtime/detail analysis; it does not call Cloud, create local runtime state, schedule work, persist runs, create proposals, or write WordPress data. |
 | `Site_Knowledge_Auto_Sync` | Compatibility status projection for the Cloud Addon Site Knowledge change bridge plus retired legacy state cleanup. It does not own public content-change hooks, queues, retries, or refresh hints. |
-| `modules/local-automation-runtime/` | Bundled module for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview plus one Phase 2 disabled-by-default Basic WP-Cron dry-run hook for the Local Fallback Preview. |
+| `modules/local-automation-runtime/` | Isolated bundled module for the future `npcink-local-automation-runtime` owner; supports Phase 1A Manual Read-Only Preview plus one Phase 2 disabled-by-default Basic WP-Cron dry-run hook for the Local Fallback Preview. It is not Toolbox runtime lifecycle ownership, scheduler truth, queue ownership, retry policy, lease storage, or run recovery. |
 | `assets/admin.js` | Vanilla JS for fixed tool form submission and summary-first result rendering. |
 | `assets/admin.css` | Admin layout, summary/detail result panels, and tool result styling. |
 | `assets/editor-content-support.js` | Block editor sidebar panel for article checkup, publish preflight, taxonomy/tag, internal-link, image-candidate, outline, summary support flows, and selected-block paragraph review. |
@@ -33,21 +33,26 @@ Core-governed recipes, and Toolbox surfaces before a new plugin is considered.
 
 ## Current Data Storage
 
-The MVP stores two WordPress options:
+The MVP storage allowlist is intentionally small:
 
 - `npcink_toolbox_settings`
 - `npcink_toolbox_content_context`
+- one disabled Local Fallback Preview latest-preview option named by the local
+  automation runtime boundary when that exception is enabled
 
-The settings option may contain feature flags and non-vector connector keys when
-the operator chooses not to use environment variables. It must not contain web
-search provider keys, vector provider keys, embedding models, dimensions,
-endpoints, or collection names.
+The settings option may contain feature flags and non-secret compatibility
+settings only. It must not contain web search provider keys, vector provider
+keys, embedding models, dimensions, endpoints, collection names, billing
+state, quota records, request logs, or provider routing secrets.
 
 The content context option stores non-secret SEO, AEO, and GEO guidance for
 third-party AI callers. It must not contain provider keys, private credentials,
 request logs, quotas, billing details, or write authorization.
 
-No custom database tables are used in the first version.
+No custom database tables, run tables, queue tables, long-term Cloud result
+retention, or server-side Cloud run history are used in the first version. New
+options, custom tables, run stores, or queue stores require a boundary decision
+and static contract update before release.
 
 Article audio playback uses protected post meta as the local adopted playback
 projection. Toolbox may prepare a review-only Core handoff plan for adopting a
@@ -116,7 +121,7 @@ Current connector routes:
 | Unsplash | Image-source candidates | `/image-candidates` |
 | Pixabay | Image-source candidates | `/image-candidates` |
 | Pexels | Image-source candidates | `/image-candidates` |
-| Host AI image generation seam | AI-generated image candidates | `/image-candidates` with `provider=ai_generated` |
+| Host-generated image candidate seam | Host-generated image candidates | `/image-candidates` with `provider=ai_generated` |
 | Cloud Site Knowledge | Semantic site context | `/site-knowledge/*` and vector compatibility pointer |
 
 The legacy `/vector-search` route remains only as a compatibility pointer. It
@@ -129,7 +134,7 @@ Reserved provider slots:
 | --- | --- | --- |
 | External search | Npcink Cloud | Additional search providers are Cloud-owned by later contract. |
 | Image source | Unsplash, Pixabay, Pexels | Additional image-source providers by later contract. |
-| AI-generated image candidates | Caller-supplied generated URL or host filter | Durable AI image connector by later contract. |
+| Host-generated image candidates | Caller-supplied generated URL or host filter | Durable generated-image connector by later contract. |
 | Site knowledge vector infrastructure | Npcink Cloud | Cloud operator console by later contract. |
 
 ## Abilities Path
@@ -152,19 +157,22 @@ lower-level tools; the old article brief route is compatibility-only.
 If `npcink-abilities-toolkit` is active, Toolbox uses its public helper functions.
 Otherwise, Toolbox falls back to native WordPress Abilities API registration.
 
-Current ability ids:
+Current Toolbox wrapper ability ids:
 
 - `npcink-toolbox/search-image-source`
-- `npcink-toolbox/generate-image`
+- `npcink-toolbox/generate-image` - legacy id for hosted/generated image
+  candidate normalization only; Cloud/host owns generation runtime, model
+  routing, prompt/runtime management, provider credentials, billing, quota, and
+  media import remains outside Toolbox.
 - `npcink-toolbox/search-site-knowledge`
-- `npcink-toolbox/cloud-web-search`
+- `npcink-toolbox/cloud-web-search` - Cloud-owned bridge only; no local web
+  search provider execution, provider-key storage, request log, quota/billing,
+  or Toolbox-owned web-search route/runtime.
 - `npcink-toolbox/get-site-knowledge-status`
 - `npcink-toolbox/request-site-knowledge-sync`
 - `npcink-toolbox/build-article-write-plan`
 - `npcink-toolbox/build-article-batch-write-plan`
 - `npcink-toolbox/build-article-media-batch-write-plan`
-- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
-- `npcink-abilities-toolkit/build-article-audio-adoption-plan`
 - `npcink-toolbox/build-site-knowledge-review-plan`
 - `npcink-toolbox/build-nightly-inspection-review-plan`
 - `npcink-toolbox/build-media-derivative-handoff`
@@ -172,6 +180,12 @@ Current ability ids:
 - `npcink-toolbox/validate-content-discoverability-context`
 - `npcink-toolbox/build-content-discoverability-brief`
 - `npcink-toolbox/build-ai-article-writing-pack`
+
+Toolkit planner targets referenced by Toolbox, but not registered as Toolbox
+wrapper abilities:
+
+- `npcink-abilities-toolkit/build-image-candidate-adoption-plan`
+- `npcink-abilities-toolkit/build-article-audio-adoption-plan`
 
 These are read/suggestion tools. They must not imply final WordPress write
 approval, media import approval, or indexing lifecycle ownership. The legacy

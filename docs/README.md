@@ -60,6 +60,7 @@ Start from the active documents below before changing code.
 - [Site Check Operator Loop](full-site-insights-operator-loop.md)
 - [Site Check Decision Entry Closeout](site-check-decision-entry-closeout-2026-06-30.md)
 - [Site Check Scheduled Review Cloud Addon Closeout](site-check-scheduled-review-cloud-addon-closeout-2026-07-01.md)
+- [Operator Path Validation Closeout](operator-path-validation-closeout-2026-07-02.md)
 - [Batch Automation Governance Plan](batch-automation-governance-plan.md)
 - [Nightly Inspection Cross-Repo Handoff Checklist](nightly-inspection-cross-repo-handoff-checklist.md)
 - [Nightly Inspection Pro Cloud Runtime Acceptance](nightly-inspection-pro-cloud-runtime-acceptance.md)
@@ -70,6 +71,7 @@ Start from the active documents below before changing code.
 ## Boundary Notes And Deprecated Surfaces
 
 - [Article Assistant Workbench](article-assistant-workbench.md)
+- [Adversarial Boundary Review](adversarial-boundary-review.md)
 - [Boundary Exceptions Registry](boundary-exceptions.md)
 - [Cloud Diagnostics Transition Summary](cloud-diagnostics-transition-summary.md)
 - [Site Knowledge UI Migration Closeout](archive/2026-06/site-knowledge-ui-migration-closeout-2026-06-30.md)

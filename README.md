@@ -47,8 +47,8 @@ The first version provides:
   read-only decision router. It builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
-  Cloud availability into a priority queue for manual review, existing Toolbox
-  fixed workflows, or optional Cloud detail. Supporting coverage metrics,
+  Cloud availability into a ranked review list for manual review, existing
+  Toolbox fixed workflows, or optional Cloud detail. Supporting coverage metrics,
   charts, dimension views, findings, and evidence stay secondary. The local
   check runs without Cloud calls, Core proposals, persistence, or WordPress writes, and prepares a copyable
   `site_ops_cloud_analysis_request.v1` contract. When Cloud is connected and
@@ -89,8 +89,13 @@ The first version provides:
 ## Boundary
 
 Toolbox returns suggestions and planning artifacts. It does not directly update
-posts, upload media, publish content, or bypass governance. WordPress writes
-should continue through WordPress abilities and Core proposal approval.
+posts, upload media, publish content, or bypass governance except for the
+single documented `/local-admin-consent/featured-image` exception: one existing
+attachment, one current post, a present administrator click, Core-owned audit,
+rollback on completion-audit failure, and no media import, metadata write, post
+content change, SEO write, publish, `confirm_token`, or `write_confirmed`
+behavior. All other WordPress writes should continue through WordPress
+abilities and Core proposal approval.
 
 The default product posture is content support outside the article body:
 taxonomy/tag candidates, internal-link candidates, image candidates,
@@ -122,8 +127,12 @@ expect to stay discoverable from the root README:
 [Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),
 [Editor Progressive Recommendations Trial](docs/editor-progressive-recommendations-trial.md),
 [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md),
+[Adversarial Boundary Review](docs/adversarial-boundary-review.md),
 [Boundary Exceptions Registry](docs/boundary-exceptions.md),
-[Fixed Button Surface](docs/fixed-button-surface.md),
+[Fixed Button Surface](docs/fixed-button-surface.md).
+
+Accepted boundary exception records are indexed separately so they are not
+mistaken for default Toolbox runtime ownership:
 [Local Automation Runtime Module](modules/local-automation-runtime/README.md),
 [ADR-004: Bundle Local Automation Runtime As An Isolated Module](docs/decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md), and
 [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](docs/decisions/ADR-005-wp-cron-cloud-batch-orchestration.md).
@@ -149,7 +158,11 @@ Workflow and composition contracts remain indexed at
 
 ## REST Routes
 
-All routes require a logged-in user with `manage_options`.
+All routes require a logged-in user with `manage_options`. This list is a
+compatibility allowlist, not an ownership claim: routes marked in the boundary
+docs as Cloud-owned bridges, legacy compatibility seams, or explicit boundary
+exceptions must keep those limits even though their first-version paths remain
+registered.
 
 - `GET /wp-json/npcink-toolbox/v1/status`
 - `POST /wp-json/npcink-toolbox/v1/image-candidates`
@@ -164,7 +177,8 @@ All routes require a logged-in user with `manage_options`.
 - `POST /wp-json/npcink-toolbox/v1/agent-feedback/summary`
 - `POST /wp-json/npcink-toolbox/v1/ai/content-support`
 - `POST /wp-json/npcink-toolbox/v1/ai/site-helpers`
-- `POST /wp-json/npcink-toolbox/v1/ai/image-generation`
+- `POST /wp-json/npcink-toolbox/v1/ai/image-generation` (legacy hosted image
+  candidate normalization seam only)
 - `POST /wp-json/npcink-toolbox/v1/flows/article-brief`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-assistant`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
@@ -184,6 +198,31 @@ All routes require a logged-in user with `manage_options`.
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}`
 - `GET|POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/result`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/retry`
+
+High-risk entries are intentionally constrained:
+
+- `/ai/image-generation` is a legacy-compatible hosted image candidate seam.
+  It accepts a reviewed prompt and returns image candidates only; Cloud owns
+  generation runtime, model routing, prompt/runtime management, billing, quota,
+  provider execution, and durable provider credentials. It does not import
+  media, set featured images, or write WordPress data.
+- `/site-knowledge/sync` is an explicit Cloud Site Knowledge manifest handoff.
+  The only allowed first-version mode is a bounded refresh/manifest transport
+  to Cloud. It must not add rebuild/delete modes, local indexing queues,
+  stale-index policy, embedding configuration, vector database endpoints, or
+  vector collection lifecycle ownership.
+- `/local-admin-consent/featured-image` is the only current direct local write
+  exception. It is limited to one existing attachment on one current post with
+  Core-owned audit and rollback, and it is not precedent for media import,
+  metadata writes, post content changes, SEO writes, publish, `confirm_token`,
+  or `write_confirmed` behavior.
+- Nightly Inspection Cloud Batch routes are compatibility bridges to
+  Cloud-owned runtime runs. Toolbox must not store server-side run history,
+  own retry policy, expose a recovery workspace, schedule work, create Core
+  proposals, or write WordPress data.
+- `/flows/article-assistant` is route-only compatibility and must stay hidden
+  from the default operator UI. Normal editorial work belongs in the editor
+  content-support sidebar or reviewed Core handoff flows.
 
 `/flows/article-brief` remains an API composition primitive for OpenClaw and
 external AI callers; it is not exposed as a current operator-facing admin tool.
@@ -210,19 +249,24 @@ rewritten by preview generation.
 Batch media optimization uses bounded review sets: build a review plan,
 generate previews for selected candidates, and submit only selected Core
 reviews. It is intentionally not presented as one-click whole-site replacement.
-Toolbox also bundles `modules/local-automation-runtime/` for the future
-`npcink-local-automation-runtime` owner. That module supports Phase 1A Manual Read-Only Preview for Morning Brief evidence, validates dry-run replay fixtures,
-and now owns Phase 2 Basic WP-Cron Dry-Run. Phase 1A is a Toolbox-hosted
-operator preview, not a runtime execution phase; that manual path does not register hooks,
-create runtime job tables, schedule workers, acquire leases, retry actions,
-dead-letter failures, persist preview results, approve proposals, execute
-Adapter actions, or write WordPress data. Phase 2 Basic WP-Cron Dry-Run is the
-Local Fallback Preview; it may register one disabled-by-default WP-Cron hook
-that overwrites a single latest-preview option;
-it must not call Cloud, create Core proposals, use Action Scheduler, create
-custom tables, acquire leases, retry actions, process dead letters, or write
-WordPress content. Current Pro planning does not introduce plugin-side Action
-Scheduler; Pro batch processing should use Cloud Batch Runtime, with the plugin
+Toolbox also bundles `modules/local-automation-runtime/` as an isolated
+exception record for the future `npcink-local-automation-runtime` owner. That
+module supports Phase 1A Manual Read-Only Preview for Morning Brief evidence,
+validates dry-run replay fixtures, and contains the Phase 2 Basic WP-Cron
+Dry-Run Local Fallback Preview proof. Phase 1A is a Toolbox-hosted operator
+preview, not a runtime execution phase; that manual path does not register
+hooks, create runtime job tables, schedule workers, acquire leases, retry
+actions, dead-letter failures, persist preview results, approve proposals,
+execute Adapter actions, or write WordPress data. Phase 2 Basic WP-Cron
+Dry-Run is an accepted boundary exception only; it may register one
+disabled-by-default WP-Cron hook that overwrites a single latest-preview option.
+It must not become workflow runtime lifecycle ownership, scheduler truth, queue
+ownership, retry policy, lease storage, run recovery, Cloud scheduled
+inspection, or a Pro scheduler, and it must not call Cloud, create Core
+proposals, use Action Scheduler, create custom tables, acquire leases, retry
+actions, process dead letters, or write WordPress content. Current Pro planning
+does not introduce plugin-side Action Scheduler; Pro batch processing should
+use Cloud Batch Runtime, with the plugin
 limited to read-only entitlement detail, batch intent, status/result sync, and
 reviewed Core proposal handoff.
 The runtime module remains bundled with Toolbox for release. It should become a
@@ -259,7 +303,10 @@ provider API keys or direct provider credentials.
 General AI composition guidance is kept in
 [AI Content Composition Abilities](docs/ai-content-composition-abilities.md).
 
-When the WordPress Abilities API is available, Toolbox registers:
+When the WordPress Abilities API is available, Toolbox registers compatibility
+wrapper ids. These ids do not grant Toolbox ownership of Cloud runtime,
+provider secrets, content indexing lifecycle, or final WordPress write
+authorization:
 
 - `npcink-toolbox/search-image-source`
 - `npcink-toolbox/generate-image`
@@ -306,7 +353,9 @@ to the right work surface. Its Site Context form stores operator-maintained SEO,
 and GEO guidance: site positioning, target audience, brand voice, keywords,
 allowed and forbidden claims, exception rules, SEO/AEO/GEO rules, and proposal
 fields AI may suggest. It is stored in `npcink_toolbox_content_context`,
-separate from connector settings that may contain provider keys.
+which must not contain provider keys, private credentials, request logs, quota
+state, billing records, or write authorization. Provider keys and routing
+belong in Cloud/Addons or dedicated connector owners, not in Site Context.
 
 The context is exposed only as read-only, suggestion-only guidance through
 `npcink-toolbox/get-content-discoverability-context`. Third-party AI callers
@@ -372,8 +421,9 @@ article text. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
-while Cloud title/summary generation, image-source search, image generation,
-deep search, and proposal handoffs remain explicit follow-up actions. The metadata buttons use
+while Cloud title/summary generation, image-source search, hosted image
+candidate requests, deep search, and proposal handoffs remain explicit
+follow-up actions. The metadata buttons use
 lighter draft/taxonomy fast paths and merge their results into one
 `article_discoverability_optimization.v1` review surface. The full
 `summary_terms_optimization` intent remains available as a compatibility and
@@ -456,8 +506,8 @@ Core-owned audit evidence before and after the write, and no Core proposal is
 created. External image URLs, media import, media metadata writes, and
 multi-action adoption still use the Adapter/Core/Abilities path.
 When Cloud includes an `ai_generation_handoff`, the Toolbox result can show a
-reviewed-prompt AI image generation action. The action calls the Cloud Addon
-runtime seam with `grok-imagine-image-quality`, returns AI-generated
+reviewed-prompt hosted image candidate request. The action calls the Cloud
+Addon runtime seam with `grok-imagine-image-quality`, returns host-generated
 `image_candidate.v1` candidates, and still requires the local adoption/Core
 review path before any media import or featured-image write.
 Toolbox builds the adoption plan with proposed media title, alt text,
@@ -605,8 +655,10 @@ image contexts. The label informs Cloud ranking and UI copy; it does not grant
 write authority.
 `ai_generated` remains explicit: callers may provide a reviewed generated image
 URL, or a host may handle `npcink_toolbox_ai_image_generation_request` and
-return generated-image candidates. Toolbox still does not own model routing,
-provider billing, media import, or final WordPress writes.
+return host-generated image candidates. The route and ability ids keep legacy
+"image-generation" names for compatibility only; Toolbox still does not own
+model routing, prompt management, provider billing, media import, or final
+WordPress writes.
 
 Every returned image candidate is normalized to `image_candidate.v1` while
 preserving legacy URL fields for existing callers. The normalized fields include
