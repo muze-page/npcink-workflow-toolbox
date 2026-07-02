@@ -15,6 +15,7 @@
     "test:editor": "php tests/run.php --quiet --filter=Editor",
     "test:translations": "php tests/run.php --quiet --filter=translation",
     "test:eval-proxy": "php tests/run.php --quiet --filter='Eval lab proxy'",
+    "test:boundary-vocabulary": "@php scripts/check-boundary-vocabulary.php",
     "eval:lab": "sh scripts/eval-lab.sh",
     "eval:summary": "sh scripts/eval-lab.sh task=summary_hard_gate",
     "eval:recommendation:export": "sh scripts/eval-lab.sh task=recommendation_export",
@@ -96,6 +97,7 @@
     "test:all": [
       "@lint:php",
       "@test",
+      "@test:boundary-vocabulary",
       "@test:progressive-recommendations",
       "@test:editor-progressive-js",
       "@smoke:local-automation-runtime-replay",
