@@ -1398,44 +1398,51 @@ toolbox_assert( false === strpos( $admin_page, 'data-toolbox-tab-target="topic-p
 toolbox_assert( false === file_exists( $root . '/includes/Hot_Topics_Page.php' ) && false === strpos( $hot_topic_pool, 'npcink-hot-topics' ) && false === strpos( $admin_css, 'npcink-toolbox__topic-pool-row' ), 'Redundant Today Topics page, stale URL helper, and page-only topic-pool styles are removed.' );
 
 $rest = file_get_contents( $root . '/includes/Rest_Controller.php' );
-$allowed_rest_routes = array(
-	'/status',
-	'/image-candidates',
-	'/vector-search',
-	'/knowledge-search',
-	'/web-search/test',
-	'/web-search/diagnostics',
-	'/site-knowledge/search',
-	'/site-knowledge/sync',
-	'/site-knowledge/status',
-	'/agent-feedback',
-	'/agent-feedback/summary',
-	'/ai/content-support',
-	'/ai/site-helpers',
-	'/ai/image-generation',
-	'/flows/article-brief',
-	'/flows/article-assistant',
-	'/flows/article-plan',
-	'/flows/image-candidate-adoption-plan',
-	'/flows/article-audio-adoption-plan',
-	'/local-admin-consent/featured-image',
-	'/flows/site-knowledge-review-plan',
-	'/flows/nightly-inspection-review-plan',
-	'/flows/content-metadata-apply-plan',
-	'/flows/media-alt-caption-review-plan',
-	'/flows/media-brief',
-	'/editor/content-support',
-	'/media-derivative-handoff',
-	'/nightly-inspection/cloud-batch',
-	'/nightly-inspection/cloud-runtime-entitlement',
-	'/nightly-inspection/cloud-batch/recent',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/result',
-	'/nightly-inspection/cloud-batch/(?P<run_id>[A-Za-z0-9._:-]+)/retry',
-);
+$route_boundary_table = json_decode( (string) file_get_contents( $root . '/docs/route-boundary-table.json' ), true );
+toolbox_assert( is_array( $route_boundary_table ) && 'route_boundary_table.v1' === (string) ( $route_boundary_table['schema_version'] ?? '' ), 'Route boundary table exposes the v1 schema.' );
+toolbox_assert( 'npcink-toolbox/v1' === (string) ( $route_boundary_table['namespace'] ?? '' ) && 'cap.toolbox.admin' === (string) ( $route_boundary_table['fallback_scope'] ?? '' ), 'Route boundary table records namespace and fallback scope.' );
+$route_boundary_rows = is_array( $route_boundary_table['routes'] ?? null ) ? $route_boundary_table['routes'] : array();
+toolbox_assert( ! empty( $route_boundary_rows ), 'Route boundary table contains route rows.' );
+$allowed_rest_routes       = array();
+$route_boundary_scopes     = array();
+$route_boundary_doc_routes = array();
+$route_boundary_methods    = array();
+foreach ( $route_boundary_rows as $route_boundary_row ) {
+	$route = (string) ( $route_boundary_row['route'] ?? '' );
+	$scope = (string) ( $route_boundary_row['scope'] ?? '' );
+	$documented_route = (string) ( $route_boundary_row['documented_route'] ?? '' );
+	$methods = is_array( $route_boundary_row['methods'] ?? null ) ? $route_boundary_row['methods'] : array();
+	$direct_write = (bool) ( $route_boundary_row['direct_wordpress_write'] ?? false );
+	toolbox_assert( '' !== $route && str_starts_with( $route, '/' ), 'Route boundary row has an absolute route.' );
+	toolbox_assert( '' !== $documented_route && str_starts_with( $documented_route, '/' ), 'Route boundary row has a documented route: ' . $route );
+	toolbox_assert( ! empty( $methods ), 'Route boundary row records methods: ' . $route );
+	toolbox_assert( str_starts_with( $scope, 'cap.toolbox.' ), 'Route boundary row records a Toolbox scope: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['owner'] ?? '' ), 'Route boundary row records an owner: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['write_posture'] ?? '' ), 'Route boundary row records write posture: ' . $route );
+	toolbox_assert( '' !== (string) ( $route_boundary_row['boundary_note'] ?? '' ), 'Route boundary row records a boundary note: ' . $route );
+	if ( $direct_write ) {
+		toolbox_assert( 'ADR-003' === (string) ( $route_boundary_row['boundary_exception'] ?? '' ) && '/local-admin-consent/featured-image' === $route, 'Direct-write route is limited to the ADR-003 featured-image exception.' );
+	} else {
+		toolbox_assert( 'local_admin_consent_exception' !== (string) ( $route_boundary_row['write_posture'] ?? '' ), 'Non-write routes do not claim local admin consent posture: ' . $route );
+	}
+	$allowed_rest_routes[]                 = $route;
+	$route_boundary_scopes[ $route ]       = $scope;
+	$route_boundary_doc_routes[ $route ]   = $documented_route;
+	$route_boundary_methods[ $route ]      = array_values( array_unique( array_map( 'strtoupper', array_map( 'strval', $methods ) ) ) );
+}
 preg_match_all( "/\\\$this->post\\(\\s*'([^']+)'/", $rest, $post_route_matches );
 preg_match_all( "/\\\$this->get\\(\\s*'([^']+)'/", $rest, $get_route_matches );
 preg_match_all( "/register_rest_route\\(\\s*Plugin::REST_NAMESPACE\\s*,\\s*'([^']+)'/s", $rest, $direct_route_matches );
+$registered_route_methods = array();
+foreach ( $post_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'POST';
+}
+foreach ( $get_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'GET';
+}
+foreach ( $direct_route_matches[1] ?? array() as $route ) {
+	$registered_route_methods[ $route ][] = 'GET';
+}
 $registered_rest_routes = array_values(
 	array_unique(
 		array_merge(
@@ -1448,11 +1455,25 @@ $registered_rest_routes = array_values(
 sort( $allowed_rest_routes );
 sort( $registered_rest_routes );
 toolbox_assert( $allowed_rest_routes === $registered_rest_routes, 'REST route matrix exactly matches the first-version allowed routes.' );
+foreach ( $route_boundary_methods as $route => $expected_methods ) {
+	$registered_methods = array_values( array_unique( $registered_route_methods[ $route ] ?? array() ) );
+	sort( $expected_methods );
+	sort( $registered_methods );
+	toolbox_assert( $expected_methods === $registered_methods, 'Route boundary table methods match registered methods: ' . $route );
+}
+foreach ( $route_boundary_scopes as $route => $scope ) {
+	if ( false !== strpos( $route, '(?P<run_id>' ) ) {
+		toolbox_assert( 'cap.toolbox.nightly_inspection' === $scope && false !== strpos( $rest, "return 'cap.toolbox.nightly_inspection';" ), 'Dynamic Nightly route maps to the nightly inspection scope: ' . $route );
+		continue;
+	}
+	$route_literal = str_replace( "/local-admin-consent/featured-image", "/local-admin-consent' . '/featured-image", $route );
+	toolbox_assert( false !== strpos( $rest, "'{$route_literal}'" ) && false !== strpos( $rest, "=> '{$scope}'" ), 'REST scope map includes route scope from the boundary table: ' . $route );
+}
 $readme_route_doc       = (string) file_get_contents( $root . '/README.md' );
 $boundary_route_doc     = (string) file_get_contents( $root . '/docs/boundary.md' );
 $architecture_route_doc = (string) file_get_contents( $root . '/docs/architecture.md' );
 foreach ( $allowed_rest_routes as $allowed_rest_route ) {
-	$documented_route = str_replace( '(?P<run_id>[A-Za-z0-9._:-]+)', '{run_id}', $allowed_rest_route );
+	$documented_route = $route_boundary_doc_routes[ $allowed_rest_route ] ?? str_replace( '(?P<run_id>[A-Za-z0-9._:-]+)', '{run_id}', $allowed_rest_route );
 	toolbox_assert( false !== strpos( $readme_route_doc, '/wp-json/npcink-toolbox/v1' . $documented_route ), 'README documents REST route: ' . $documented_route );
 	toolbox_assert( false !== strpos( $boundary_route_doc, $documented_route ), 'Boundary docs document REST route: ' . $documented_route );
 	toolbox_assert( false !== strpos( $architecture_route_doc, '/wp-json/npcink-toolbox/v1' . $documented_route ), 'Architecture docs document REST route: ' . $documented_route );
