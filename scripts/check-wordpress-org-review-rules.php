@@ -59,6 +59,7 @@ $rules = array(
 	'Do not output raw script tags from PHP admin views; enqueue scripts.' => '/<\s*\/?\s*script\b/i',
 	'Do not output raw style tags from PHP admin views; enqueue styles.' => '/<\s*\/?\s*style\b/i',
 	'Do not read $_GET directly in plugin views; route reads through nonce-verified helpers.' => '/\$_GET\s*\[/',
+	'Do not use FILTER_UNSAFE_RAW for request input; choose a sanitizing filter and then normalize by expected type.' => '/FILTER_UNSAFE_RAW/',
 );
 
 foreach ( npcink_wporg_php_files() as $file ) {
@@ -70,6 +71,11 @@ foreach ( npcink_wporg_php_files() as $file ) {
 			npcink_wporg_fail( $relative . ': ' . $message );
 		}
 	}
+}
+
+$wporg_readme = npcink_wporg_read( $root . '/readme.txt' );
+if ( ! preg_match( '/^Contributors:\s*(?:[^\n,]+,\s*)*muze233(?:\s*,|\s*$)/mi', $wporg_readme ) ) {
+	npcink_wporg_fail( 'readme.txt: WordPress.org Contributors must include the submitting account muze233.' );
 }
 
 if ( ! empty( $failures ) ) {
