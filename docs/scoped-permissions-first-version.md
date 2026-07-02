@@ -17,6 +17,10 @@ WordPress writes, or a second approval store.
 
 ## Scope Matrix
 
+For per-route scope, owner, and write-posture metadata, use the
+machine-readable [Route Boundary Table](route-boundary-table.json). This matrix
+groups routes by scope for host integration planning.
+
 | Scope | REST routes | Ability examples | Notes |
 | --- | --- | --- | --- |
 | `cap.toolbox.status.read` | `/status` | none | Readiness only; no provider secrets or execution. |

@@ -134,6 +134,11 @@ The first-version REST surface is an allowlist, not an open namespace. Allowed
 routes are limited to status, bounded provider-backed tool actions, and fixed
 planning flows:
 
+The machine-readable source of truth for route scope, owner, and write posture
+is [Route Boundary Table](route-boundary-table.json). The list below is the
+human-readable allowlist and must stay aligned with that table and
+`Rest_Controller::rest_route_scope()`.
+
 - `/status`
 - `/image-candidates`
 - `/vector-search`
