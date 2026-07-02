@@ -1593,10 +1593,55 @@ foreach ( array( 'publish', 'delivery', 'workflow-run', 'workflow_run', 'queue',
 }
 
 $abilities = file_get_contents( $root . '/includes/Abilities.php' );
-foreach ( array( 'npcink-toolbox/search-image-source', 'npcink-toolbox/generate-image', 'npcink-toolbox/search-site-knowledge', 'npcink-toolbox/cloud-web-search', 'npcink-toolbox/get-site-knowledge-status', 'npcink-toolbox/request-site-knowledge-sync', 'npcink-toolbox/build-article-write-plan', 'npcink-toolbox/build-article-batch-write-plan', 'npcink-toolbox/build-article-media-batch-write-plan', 'npcink-toolbox/build-site-knowledge-review-plan', 'npcink-toolbox/build-nightly-inspection-review-plan', 'npcink-toolbox/build-media-derivative-handoff', 'npcink-toolbox/get-content-discoverability-context', 'npcink-toolbox/validate-content-discoverability-context', 'npcink-toolbox/build-content-discoverability-brief', 'npcink-toolbox/build-ai-article-writing-pack' ) as $ability_id ) {
+$connector_exposure_doc = (string) file_get_contents( $root . '/docs/connector-ability-exposure.md' );
+$ability_boundary_table = json_decode( (string) file_get_contents( $root . '/docs/ability-boundary-table.json' ), true );
+toolbox_assert( is_array( $ability_boundary_table ) && 'ability_boundary_table.v1' === (string) ( $ability_boundary_table['schema_version'] ?? '' ), 'Ability boundary table exposes the v1 schema.' );
+toolbox_assert( 'npcink-toolbox' === (string) ( $ability_boundary_table['category'] ?? '' ) && 'manage_options' === (string) ( $ability_boundary_table['default_capability'] ?? '' ) && 'core_proposal_required' === (string) ( $ability_boundary_table['default_final_write_path'] ?? '' ), 'Ability boundary table records category, default capability, and default final write path.' );
+$ability_boundary_rows = is_array( $ability_boundary_table['abilities'] ?? null ) ? $ability_boundary_table['abilities'] : array();
+toolbox_assert( ! empty( $ability_boundary_rows ), 'Ability boundary table contains ability rows.' );
+preg_match_all( "/'((?:npcink-toolbox\\/)[^']+)'\\s*=>\\s*\\\$this->definition\\(/", $abilities, $registered_ability_matches );
+$registered_ability_ids = array_values( array_unique( $registered_ability_matches[1] ?? array() ) );
+$allowed_ability_ids    = array();
+foreach ( $ability_boundary_rows as $ability_boundary_row ) {
+	$ability_id         = (string) ( $ability_boundary_row['ability_id'] ?? '' );
+	$required_scope     = (string) ( $ability_boundary_row['required_scope'] ?? '' );
+	$composition_role   = (string) ( $ability_boundary_row['composition_role'] ?? '' );
+	$write_posture      = (string) ( $ability_boundary_row['write_posture'] ?? '' );
+	$provider_execution = (string) ( $ability_boundary_row['provider_execution'] ?? '' );
+	$direct_write       = (bool) ( $ability_boundary_row['direct_wordpress_write'] ?? false );
+	toolbox_assert( str_starts_with( $ability_id, 'npcink-toolbox/' ), 'Ability boundary row has a Toolbox ability id.' );
+	toolbox_assert( str_starts_with( $required_scope, 'cap.toolbox.' ), 'Ability boundary row records a Toolbox scope: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['owner'] ?? '' ), 'Ability boundary row records an owner: ' . $ability_id );
+	toolbox_assert( '' !== $composition_role, 'Ability boundary row records a composition role: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['data_classification'] ?? '' ), 'Ability boundary row records data classification: ' . $ability_id );
+	toolbox_assert( '' !== $provider_execution, 'Ability boundary row records provider execution: ' . $ability_id );
+	toolbox_assert( '' !== $write_posture, 'Ability boundary row records write posture: ' . $ability_id );
+	toolbox_assert( 'core_proposal_required' === (string) ( $ability_boundary_row['final_write_path'] ?? '' ), 'Ability boundary row points final writes to Core proposals: ' . $ability_id );
+	toolbox_assert( array_key_exists( 'direct_wordpress_write', $ability_boundary_row ), 'Ability boundary row explicitly records direct write posture: ' . $ability_id );
+	toolbox_assert( false === $direct_write, 'Toolbox registered abilities must not direct-write WordPress: ' . $ability_id );
+	toolbox_assert( '' !== (string) ( $ability_boundary_row['boundary_note'] ?? '' ), 'Ability boundary row records a boundary note: ' . $ability_id );
+	$ability_source_pattern = "/'" . preg_quote( $ability_id, '/' ) . "'\\s*=>\\s*\\\$this->definition\\((.*?)(?=\\n\\t\\t\\t'npcink-toolbox\\/|\\n\\t\\t\\);)/s";
+	toolbox_assert( 1 === preg_match( $ability_source_pattern, $abilities, $ability_source_match ), 'Ability boundary row maps to a registered source block: ' . $ability_id );
+	$ability_source = (string) ( $ability_source_match[1] ?? '' );
+	toolbox_assert( 1 === preg_match( "/array\\(\\s*\\\$this,\\s*'[^']+'\\s*\\),\\s*'" . preg_quote( $required_scope, '/' ) . "'/s", $ability_source ), 'Ability source registers expected required scope: ' . $ability_id );
+	toolbox_assert( 1 === preg_match( "/'composition_role'\\s*=>\\s*'" . preg_quote( $composition_role, '/' ) . "'/", $ability_source ), 'Ability source declares expected composition role: ' . $ability_id );
+	if ( 'server_side_toolbox' !== $provider_execution ) {
+		toolbox_assert( 1 === preg_match( "/'provider_execution'\\s*=>\\s*'" . preg_quote( $provider_execution, '/' ) . "'/", $ability_source ), 'Ability source declares expected provider execution: ' . $ability_id );
+	}
+	if ( 'suggestion_only' !== $write_posture ) {
+		toolbox_assert( 1 === preg_match( "/'write_posture'\\s*=>\\s*'" . preg_quote( $write_posture, '/' ) . "'/", $ability_source ), 'Ability source declares expected write posture: ' . $ability_id );
+	}
+	$allowed_ability_ids[] = $ability_id;
+}
+sort( $allowed_ability_ids );
+sort( $registered_ability_ids );
+toolbox_assert( $allowed_ability_ids === $registered_ability_ids, 'Ability boundary table exactly matches registered Toolbox wrapper abilities.' );
+toolbox_assert( false !== strpos( $abilities, "'show_in_rest'   => true" ) && false !== strpos( $abilities, "'readonly'       => true" ) && false !== strpos( $abilities, "'direct_wordpress_write'   => false" ), 'Ability defaults keep REST exposure read-only and disable direct writes.' );
+toolbox_assert( false !== strpos( $readme_route_doc, 'docs/ability-boundary-table.json' ) && false !== strpos( $architecture_doc, 'Ability Boundary Table' ) && false !== strpos( $connector_exposure_doc, 'Ability Boundary Table' ), 'Ability boundary table is discoverable from README, architecture, and connector exposure docs.' );
+foreach ( $allowed_ability_ids as $ability_id ) {
 	toolbox_assert( false !== strpos( $abilities, $ability_id ), "Ability {$ability_id} is registered." );
 }
-foreach ( array( 'npcink-toolbox/vector-search', 'npcink-toolbox/build-article-brief', 'npcink-toolbox/build-article-assistant', 'npcink-toolbox/build-media-brief', 'npcink-toolbox/build-media-alt-caption-review-plan' ) as $deprecated_ability_id ) {
+foreach ( $ability_boundary_table['excluded_ability_ids'] ?? array() as $deprecated_ability_id ) {
 	toolbox_assert( false === strpos( $abilities, $deprecated_ability_id ), "Deprecated or route-only ability {$deprecated_ability_id} is not registered." );
 }
 toolbox_assert( false === strpos( $abilities, 'npcink-toolbox/build-content-metadata-apply-plan' ), 'Toolbox no longer registers the content metadata apply planner as a Toolbox ability.' );
