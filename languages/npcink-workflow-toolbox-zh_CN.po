@@ -17,6 +17,9 @@ msgstr ""
 msgid "Npcink Workflow Toolbox"
 msgstr "Npcink Workflow Toolbox"
 
+msgid "Fixed AI workflow buttons for WordPress operators, with review-only suggestions and governed handoff plans."
+msgstr "面向 WordPress 运营者的固定 AI 工作流按钮，提供仅供审阅的建议和受治理的交接计划。"
+
 msgid "Settings"
 msgstr "设置"
 
