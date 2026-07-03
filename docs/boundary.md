@@ -384,11 +384,13 @@ article's featured image and image-block metadata through `/editor/content-suppo
 that narrow snapshot must not become a media-library scan, batch update path,
 or direct media metadata write.
 
-	`/ai/image-generation` is a legacy-compatible route name for one
-	reviewed-prompt hosted image candidate request through Cloud Addon runtime. It
-	returns candidate-only `image_candidate.v1` evidence and must not import
-	media, set featured images, own prompt/model routing, store provider
-	credentials, approve proposals, or write WordPress data.
+`/ai/image-generation` is a legacy-compatible route name for one reviewed-prompt
+hosted image candidate request through Cloud Addon runtime. Toolbox should
+prefer `npcink_cloud_addon_execute_toolbox_image_generation_runtime()` when the
+addon provides it, then normalize the Cloud result into candidate-only
+`image_candidate.v1` evidence. It must not import media, set featured images,
+own prompt/model routing, store provider credentials, approve proposals, or
+write WordPress data.
 
 `/flows/image-candidate-adoption-plan` prepares a Core-ready
 `image_candidate_adoption_plan` from one reviewed `image_candidate.v1`. It may

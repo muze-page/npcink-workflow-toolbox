@@ -173,7 +173,29 @@ final class Provider_Client {
 			return $this->normalize_ai_image_generation_response( $handled, $runtime_payload );
 		}
 
+		$trace_id        = $this->trace_id( 'ai_image_generation' );
+		$idempotency_key = $this->trace_id( 'ai_image_generation_request' );
+		$request         = $this->toolbox_image_generation_runtime_request( $runtime_payload );
+
+		if ( function_exists( 'npcink_cloud_addon_execute_toolbox_image_generation_runtime' ) ) {
+			$response = npcink_cloud_addon_execute_toolbox_image_generation_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_ai_image_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		$client = $this->cloud_runtime_client();
+		if ( is_object( $client ) && method_exists( $client, 'execute_toolbox_image_generation_runtime' ) ) {
+			$response = $client->execute_toolbox_image_generation_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_ai_image_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_ai_image_generation_cloud_unavailable',
@@ -182,14 +204,29 @@ final class Provider_Client {
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'ai_image_generation' );
-		$idempotency_key = $this->trace_id( 'ai_image_generation_request' );
 		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 		return $this->normalize_ai_image_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
+	private function toolbox_image_generation_runtime_request( array $runtime_payload ): array {
+		$input = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+
+		return array(
+			'contract_version' => 'image_generation_request.v1',
+			'task'             => 'image_generation',
+			'prompt'           => sanitize_textarea_field( (string) ( $input['prompt'] ?? '' ) ),
+			'n'                => max( 1, min( 4, (int) ( $input['n'] ?? 1 ) ) ),
+			'response_format'  => sanitize_key( (string) ( $input['response_format'] ?? 'url' ) ),
+			'aspect_ratio'     => sanitize_text_field( (string) ( $input['aspect_ratio'] ?? '16:9' ) ),
+			'resolution'       => sanitize_key( (string) ( $input['resolution'] ?? 'high' ) ),
+			'source_surface'   => 'toolbox_featured_image',
+			'timeout_seconds'  => absint( $runtime_payload['timeout_seconds'] ?? 60 ),
+			'retention_ttl'    => absint( $runtime_payload['retention_ttl'] ?? 3600 ),
+		);
 	}
 
 	public function run_audio_generation( array $input ) {

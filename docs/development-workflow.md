@@ -560,11 +560,20 @@ For AI-generated image media SEO normalization, run:
 
 ```bash
 composer smoke:ai-image-media-seo
+composer smoke:ai-image-cloud-addon-transport
 ```
 
 This mocks the Cloud image-generation response and verifies that prompt-like
 candidate title, ALT, and description text are replaced with reviewed article
 context before the candidate reaches Core adoption.
+The Cloud Addon transport smoke runs against a local WordPress site with both
+plugins active, intercepts the Cloud Addon `/v1/runtime/execute` HTTP request,
+and verifies Toolbox sends `toolbox_image_generation` /
+`npcink-cloud/generate-image` as `result_only` suggestion transport before
+normalizing the response to an AI-generated `image_candidate.v1`. It is outside
+`composer test:all` because it depends on a running local WordPress site and an
+active Cloud Addon install, but it must still prove there is no media import,
+featured-image write, Core proposal creation, queue, or local run table.
 
 For the fixed media optimization flow, run:
 
