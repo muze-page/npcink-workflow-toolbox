@@ -321,6 +321,28 @@ final class Provider_Client {
 		}
 
 		$client = $this->cloud_runtime_client();
+		$trace_id        = $this->trace_id( 'audio_generation' );
+		$idempotency_key = $this->trace_id( 'audio_generation_request' );
+		$request         = $this->toolbox_audio_generation_runtime_request( $runtime_payload );
+
+		if ( function_exists( 'npcink_cloud_addon_execute_toolbox_audio_generation_runtime' ) ) {
+			$response = npcink_cloud_addon_execute_toolbox_audio_generation_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_audio_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
+		if ( is_object( $client ) && method_exists( $client, 'execute_toolbox_audio_generation_runtime' ) ) {
+			$response = $client->execute_toolbox_audio_generation_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_audio_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_audio_generation_cloud_unavailable',
@@ -329,14 +351,33 @@ final class Provider_Client {
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'audio_generation' );
-		$idempotency_key = $this->trace_id( 'audio_generation_request' );
-		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		$response = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 		return $this->normalize_audio_generation_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
+	private function toolbox_audio_generation_runtime_request( array $runtime_payload ): array {
+		$input = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+
+		return array(
+			'contract_version'  => 'audio_generation_request.v1',
+			'intent'            => sanitize_key( (string) ( $input['intent'] ?? 'article_narration' ) ),
+			'text'              => sanitize_textarea_field( (string) ( $input['text'] ?? '' ) ),
+			'summary_text'      => sanitize_textarea_field( (string) ( $input['summary_text'] ?? '' ) ),
+			'script'            => sanitize_textarea_field( (string) ( $input['script'] ?? '' ) ),
+			'voice_id'          => sanitize_text_field( (string) ( $input['voice_id'] ?? '' ) ),
+			'format'            => sanitize_key( (string) ( $input['format'] ?? 'mp3' ) ),
+			'source_surface'    => 'toolbox_article_audio_candidates',
+			'profile_id'        => sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'audio.narration.default' ) ),
+			'timeout_seconds'   => absint( $runtime_payload['timeout_seconds'] ?? 60 ),
+			'retention_ttl'     => absint( $runtime_payload['retention_ttl'] ?? 3600 ),
+			'user_instruction'  => sanitize_textarea_field( (string) ( $input['user_instruction'] ?? '' ) ),
+			'audio_preferences' => is_array( $input['audio_preferences'] ?? null ) ? $this->sanitize_payload( $input['audio_preferences'] ) : array(),
+			'context'           => is_array( $input['context'] ?? null ) ? $this->sanitize_payload( $input['context'] ) : array(),
+		);
 	}
 
 	public function submit_agent_feedback( array $input ) {
