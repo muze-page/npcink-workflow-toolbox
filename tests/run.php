@@ -105,6 +105,8 @@ function toolbox_assert( bool $condition, string $message ): void {
 $main = file_get_contents( $root . '/npcink-workflow-toolbox.php' );
 toolbox_assert( false !== $main && str_contains( $main, 'Plugin Name: Npcink Workflow Toolbox' ), 'Plugin header is present.' );
 toolbox_assert( false !== strpos( $main, 'Text Domain: npcink-workflow-toolbox' ) && false !== strpos( $main, 'Domain Path: /languages' ), 'Plugin header declares the Toolbox text domain and languages path.' );
+$zh_cn_catalog = file_get_contents( $root . '/languages/npcink-workflow-toolbox-zh_CN.po' );
+toolbox_assert( false !== $zh_cn_catalog && false !== strpos( $zh_cn_catalog, 'Fixed AI workflow buttons for WordPress operators, with review-only suggestions and governed handoff plans.' ), 'Simplified Chinese catalog includes the plugin header description.' );
 toolbox_assert( false !== strpos( $main, 'includes/Editor_Content_Support.php' ), 'Plugin bootstrap loads the post editor content support entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Article_Audio_Playback.php' ), 'Plugin bootstrap loads the frontend article audio playback entrypoint.' );
 toolbox_assert( false !== strpos( $main, 'includes/Dashboard_Widget.php' ), 'Plugin bootstrap loads the WordPress dashboard widget entrypoint.' );
