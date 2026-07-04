@@ -23,6 +23,7 @@ Start from the active documents below before changing code.
 - [AI Change Envelope Template](ai-change-envelope-template.md)
 - [GitHub Publishing Runbook](github-publishing-runbook.md)
 - [Security And Performance Release Gate](security-performance-release-gate.md)
+- [Cloud Addon Transport Release Gate](cloud-addon-transport-release-gate.md)
 - [WordPress.org Release Gate](wordpress-org-release-gate.md)
 - [WordPress.org Submission](wordpress-org-submission.md)
 - [WordPress.org Release Readiness Closeout](wordpress-org-release-readiness-closeout-2026-06-29.md)

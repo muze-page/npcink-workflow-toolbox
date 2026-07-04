@@ -131,7 +131,9 @@ and image-source on the local site.
 ## Next Phase Recommendation
 
 The next phase should not start with another broad migration. It should first
-turn the completed transport migration into a repeatable release gate:
+turn the completed transport migration into a repeatable release gate. That
+active gate is now recorded at
+[`Cloud Addon Transport Release Gate`](../../cloud-addon-transport-release-gate.md):
 
 1. Add a documented release checklist row for the four Cloud Addon transport
    paths, including which tests are no-credit contract gates and which are
