@@ -450,7 +450,29 @@ final class Provider_Client {
 			return $this->normalize_site_ops_cloud_analysis_response( $handled, $runtime_payload );
 		}
 
+		$trace_id        = $this->trace_id( 'site_ops_cloud_analysis' );
+		$idempotency_key = 'site-ops-cloud-analysis-' . substr( md5( (string) wp_json_encode( $runtime_payload['input'] ?? array() ) ), 0, 24 );
+		$request         = $this->toolbox_site_ops_cloud_analysis_runtime_request( $runtime_payload );
+
+		if ( function_exists( 'npcink_cloud_addon_execute_toolbox_site_ops_cloud_analysis_runtime' ) ) {
+			$response = npcink_cloud_addon_execute_toolbox_site_ops_cloud_analysis_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_site_ops_cloud_analysis_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		$client = $this->cloud_runtime_client();
+		if ( is_object( $client ) && method_exists( $client, 'execute_toolbox_site_ops_cloud_analysis_runtime' ) ) {
+			$response = $client->execute_toolbox_site_ops_cloud_analysis_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_site_ops_cloud_analysis_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_site_ops_cloud_analysis_unavailable',
@@ -459,14 +481,48 @@ final class Provider_Client {
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'site_ops_cloud_analysis' );
-		$idempotency_key = 'site-ops-cloud-analysis-' . substr( md5( (string) wp_json_encode( $runtime_payload['input'] ?? array() ) ), 0, 24 );
-		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		$response = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 		return $this->normalize_site_ops_cloud_analysis_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
+	private function toolbox_site_ops_cloud_analysis_runtime_request( array $runtime_payload ): array {
+		$input = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+		if ( array() === $input ) {
+			$input = array(
+				'artifact_type'            => 'site_ops_cloud_analysis_request',
+				'contract_version'         => 'site_ops_cloud_analysis_request.v1',
+				'expected_result_contract' => 'site_ops_cloud_analysis_result.v1',
+				'cloud_role'              => 'runtime_detail',
+				'execution_pattern'        => 'whole_run_offload',
+				'write_posture'            => 'suggestion_only',
+				'direct_wordpress_write'   => false,
+				'core_proposal_created'    => false,
+				'input'                    => array(),
+			);
+		}
+
+		$input['profile_id']        = sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'site-ops-analysis.managed' ) );
+		$input['timeout_seconds']   = absint( $runtime_payload['timeout_seconds'] ?? 60 );
+		$input['retention_ttl']     = absint( $runtime_payload['retention_ttl'] ?? 3600 );
+		$input['storage_mode']      = 'result_only';
+		$input['write_posture']     = 'suggestion_only';
+		$input['cloud_role']        = 'runtime_detail';
+		$input['execution_pattern'] = 'whole_run_offload';
+		$input['direct_wordpress_write'] = false;
+		$input['core_proposal_created']  = false;
+
+		if ( empty( $input['contract_version'] ) ) {
+			$input['contract_version'] = 'site_ops_cloud_analysis_request.v1';
+		}
+		if ( empty( $input['expected_result_contract'] ) ) {
+			$input['expected_result_contract'] = 'site_ops_cloud_analysis_result.v1';
+		}
+
+		return $this->sanitize_payload( $input );
 	}
 
 	public function get_agent_feedback_summary( array $input ) {
@@ -2226,7 +2282,29 @@ final class Provider_Client {
 			return $this->normalize_cloud_web_search_response( $handled, $runtime_payload );
 		}
 
+		$trace_id        = $this->trace_id( 'web_search' );
+		$idempotency_key = $this->trace_id( 'web_search_cloud_test' );
+		$request         = $this->toolbox_web_search_runtime_request( $runtime_payload );
+
+		if ( function_exists( 'npcink_cloud_addon_execute_toolbox_web_search_runtime' ) ) {
+			$response = npcink_cloud_addon_execute_toolbox_web_search_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_cloud_web_search_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		$client = $this->cloud_runtime_client();
+		if ( is_object( $client ) && method_exists( $client, 'execute_toolbox_web_search_runtime' ) ) {
+			$response = $client->execute_toolbox_web_search_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_cloud_web_search_response( is_array( $response ) ? $response : array(), $runtime_payload );
+		}
+
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_web_search_cloud_unavailable',
@@ -2235,14 +2313,26 @@ final class Provider_Client {
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'web_search' );
-		$idempotency_key = $this->trace_id( 'web_search_cloud_test' );
-		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		$response = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 		return $this->normalize_cloud_web_search_response( is_array( $response ) ? $response : array(), $runtime_payload );
+	}
+
+	private function toolbox_web_search_runtime_request( array $runtime_payload ): array {
+		$input = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+
+		$input['contract_version']       = 'web_search.v1';
+		$input['profile_id']             = sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'web-search.managed' ) );
+		$input['timeout_seconds']        = absint( $runtime_payload['timeout_seconds'] ?? 30 );
+		$input['retention_ttl']          = absint( $runtime_payload['retention_ttl'] ?? 3600 );
+		$input['write_posture']          = 'suggestion_only';
+		$input['direct_wordpress_write'] = false;
+		$input['allow_fallback']         = ! empty( $runtime_payload['policy']['allow_fallback'] );
+
+		return $this->sanitize_payload( $input );
 	}
 
 	public function diagnose_automatic_web_search( array $input ) {
@@ -4880,7 +4970,29 @@ final class Provider_Client {
 			return $this->normalize_image_source_candidates_response( $handled, $query, $provider, $runtime_payload );
 		}
 
+		$trace_id        = $this->trace_id( 'image_source' );
+		$idempotency_key = $this->trace_id( 'image_source_cloud_request' );
+		$request         = $this->toolbox_image_source_runtime_request( $runtime_payload );
+
+		if ( function_exists( 'npcink_cloud_addon_execute_toolbox_image_source_runtime' ) ) {
+			$response = npcink_cloud_addon_execute_toolbox_image_source_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_image_source_candidates_response( is_array( $response ) ? $response : array(), $query, $provider, $runtime_payload );
+		}
+
 		$client = $this->cloud_runtime_client();
+		if ( is_object( $client ) && method_exists( $client, 'execute_toolbox_image_source_runtime' ) ) {
+			$response = $client->execute_toolbox_image_source_runtime( $request, $trace_id, $idempotency_key );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			return $this->normalize_image_source_candidates_response( is_array( $response ) ? $response : array(), $query, $provider, $runtime_payload );
+		}
+
 		if ( ! is_object( $client ) || ! method_exists( $client, 'execute_runtime' ) ) {
 			return new WP_Error(
 				'npcink_toolbox_image_source_cloud_unavailable',
@@ -4889,14 +5001,28 @@ final class Provider_Client {
 			);
 		}
 
-		$trace_id        = $this->trace_id( 'image_source' );
-		$idempotency_key = $this->trace_id( 'image_source_cloud_request' );
-		$response        = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
+		$response = $client->execute_runtime( $runtime_payload, $trace_id, $idempotency_key );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 		return $this->normalize_image_source_candidates_response( is_array( $response ) ? $response : array(), $query, $provider, $runtime_payload );
+	}
+
+	private function toolbox_image_source_runtime_request( array $runtime_payload ): array {
+		$input = is_array( $runtime_payload['input'] ?? null ) ? $runtime_payload['input'] : array();
+
+		$input['contract_version']       = 'image_source_cloud_request.v1';
+		$input['profile_id']             = sanitize_text_field( (string) ( $runtime_payload['profile_id'] ?? 'image-source.managed' ) );
+		$input['timeout_seconds']        = absint( $runtime_payload['timeout_seconds'] ?? 60 );
+		$input['retention_ttl']          = absint( $runtime_payload['retention_ttl'] ?? 3600 );
+		$input['storage_mode']           = sanitize_key( (string) ( $runtime_payload['storage_mode'] ?? 'result_only' ) );
+		$input['data_classification']    = sanitize_key( (string) ( $runtime_payload['data_classification'] ?? 'public_reference_media' ) );
+		$input['write_posture']          = 'suggestion_only';
+		$input['direct_wordpress_write'] = false;
+		$input['allow_fallback']         = ! empty( $runtime_payload['policy']['allow_fallback'] );
+
+		return $this->sanitize_payload( $input );
 	}
 
 	private function image_visual_context_input( string $query, array $options, int $per_page ): array {
