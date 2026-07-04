@@ -561,6 +561,8 @@ For AI-generated image media SEO normalization, run:
 ```bash
 composer smoke:ai-image-media-seo
 composer smoke:ai-image-cloud-addon-transport
+composer smoke:web-search-cloud-addon-transport
+composer smoke:image-source-cloud-addon-transport
 ```
 
 This mocks the Cloud image-generation response and verifies that prompt-like
@@ -574,6 +576,16 @@ normalizing the response to an AI-generated `image_candidate.v1`. It is outside
 `composer test:all` because it depends on a running local WordPress site and an
 active Cloud Addon install, but it must still prove there is no media import,
 featured-image write, Core proposal creation, queue, or local run table.
+The Web Search and Image Source Cloud Addon transport smokes run against the
+same local WordPress site without mocking the Cloud Addon helper. They call the
+real named transports and verify `web_search_results` /
+`image_source_candidates` remain suggestion-only with
+`direct_wordpress_write=false`. They are also outside `composer test:all`
+because they require verified Cloud Addon credentials and Cloud-managed provider
+configuration. `cloud_web_search_zhihu_access_secret_missing` or
+`cloud_image_source_provider_not_configured` means the Cloud provider config is
+missing; do not work around that by adding provider keys or fallback provider
+ownership to Toolbox.
 
 For the fixed media optimization flow, run:
 
