@@ -26,6 +26,7 @@ Start from the active documents below before changing code.
 - [WordPress.org Release Gate](wordpress-org-release-gate.md)
 - [WordPress.org Submission](wordpress-org-submission.md)
 - [WordPress.org Release Readiness Closeout](wordpress-org-release-readiness-closeout-2026-06-29.md)
+- [Cloud Addon Transport Product Acceptance](archive/2026-07/cloud-addon-transport-product-acceptance-2026-07-04.md)
 
 ## Product Surfaces
 
@@ -94,6 +95,7 @@ Start from the active documents below before changing code.
 
 ## Archived Closeouts
 
-Historical stage records live under [archive/2026-06](archive/2026-06/).
+Historical stage records live under [archive/2026-06](archive/2026-06/) and
+[archive/2026-07](archive/2026-07/).
 They remain useful evidence, but they are not the first place to look for
 current product contracts.
