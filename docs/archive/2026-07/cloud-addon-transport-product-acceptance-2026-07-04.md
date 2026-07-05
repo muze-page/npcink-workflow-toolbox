@@ -128,6 +128,34 @@ The main open item is operational rather than architectural: replenish or
 increase test Cloud credits before repeating real provider E2E for web search
 and image-source on the local site.
 
+## Provider Gate Follow-Up - 2026-07-05
+
+The Cloud Addon entitlement check was repeated before rerunning the
+credit-consuming provider smokes. The local WordPress site and Cloud Addon
+transport were reachable:
+
+- liveness: ok;
+- signed entitlement probe: ok;
+- package: Free;
+- package tier: free;
+- AI credit usage: 298 of 300 credits;
+- remaining credits: 2;
+- credit status: `near_limit`;
+- direct WordPress write: false.
+
+The real provider gate was intentionally skipped according to
+[`Cloud Addon Transport Release Gate`](../../cloud-addon-transport-release-gate.md):
+
+| Gate | Result | Reason |
+| --- | --- | --- |
+| `composer smoke:web-search-cloud-addon-transport` | skipped | Cloud entitlement remained `near_limit` with 2 credits remaining. |
+| `composer smoke:image-source-cloud-addon-transport` | skipped | Cloud entitlement remained `near_limit` with 2 credits remaining. |
+
+This is a Cloud entitlement/quota state, not a Toolbox code failure. The
+no-credit contract gates already cover the migrated transport shape. The next
+real provider E2E pass should wait until Cloud credits are replenished or the
+release owner explicitly chooses to spend the remaining test credits.
+
 ## Next Phase Recommendation
 
 The next phase should not start with another broad migration. It should first
