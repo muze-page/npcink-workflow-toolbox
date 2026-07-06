@@ -71,6 +71,13 @@ npcink_toolbox_sk_cloud_bridge_assert( 'site_knowledge_change_bridge' === (strin
 npcink_toolbox_sk_cloud_bridge_assert( false === (bool) ( $health['legacy_toolbox_fallback'] ?? true ), 'Toolbox legacy fallback is disabled while Cloud Addon bridge is present.' );
 npcink_toolbox_sk_cloud_bridge_assert( array_key_exists( 'buffer_count', $health ), 'Toolbox exposes the Cloud Addon bridge buffer count without owning a legacy queue.' );
 npcink_toolbox_sk_cloud_bridge_assert( array_key_exists( 'queue_count', $health ) && in_array( 'queue_count', (array) ( $health['compatibility_aliases'] ?? array() ), true ), 'Toolbox keeps queue_count only as a compatibility alias for older callers.' );
+npcink_toolbox_sk_cloud_bridge_assert( 'local_wordpress_host' === (string) ( $health['ownership']['source_content_owner'] ?? '' ), 'Toolbox preserves local WordPress as Site Knowledge source content owner.' );
+npcink_toolbox_sk_cloud_bridge_assert( 'cloud_addon' === (string) ( $health['ownership']['delivery_bridge_owner'] ?? '' ), 'Toolbox preserves Cloud Addon as Site Knowledge delivery bridge owner.' );
+npcink_toolbox_sk_cloud_bridge_assert( 'cloud_service' === (string) ( $health['ownership']['vector_storage_owner'] ?? '' ), 'Toolbox preserves Cloud service as Site Knowledge vector storage owner.' );
+npcink_toolbox_sk_cloud_bridge_assert( true === (bool) ( $health['truth_boundaries']['cloud_is_index_truth'] ?? false ), 'Toolbox reports Cloud as Site Knowledge index truth.' );
+npcink_toolbox_sk_cloud_bridge_assert( false === (bool) ( $health['truth_boundaries']['cloud_is_wordpress_control_plane'] ?? true ), 'Toolbox reports Cloud is not the WordPress control plane.' );
+npcink_toolbox_sk_cloud_bridge_assert( false === (bool) ( $health['truth_boundaries']['cloud_creates_wordpress_writes'] ?? true ), 'Toolbox reports Cloud does not create WordPress writes.' );
+npcink_toolbox_sk_cloud_bridge_assert( 'local_wordpress_host' === (string) ( $health['site_knowledge_cloud_boundary']['ownership']['final_write_owner'] ?? '' ), 'Toolbox exposes Site Knowledge final write owner through the read-only boundary projection.' );
 
 $cloud_post_hook = has_action(
 	'transition_post_status',

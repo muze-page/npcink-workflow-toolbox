@@ -43,7 +43,8 @@ Allowed from Toolbox:
   link evidence, writing context, image context, FAQ candidates, content gap
   checks, and duplicate-risk checks.
 - `site_knowledge_status.v1` for read-only Cloud coverage, freshness, progress,
-  quota, and bridge status projection.
+  quota, bridge status projection, and the read-only
+  `site_knowledge_cloud_boundary` owner/truth map.
 - `site_knowledge_sync.v1` only with `sync_mode=refresh` for bounded public
   content refresh transport.
 
@@ -125,6 +126,12 @@ suggestion workflow.
 
 If an operator asks to connect Cloud, refresh public content, inspect delivery,
 or confirm whether the bridge is healthy, the entry belongs in Cloud Addon.
+
+Toolbox may display the Cloud/Add-on returned `ownership` and
+`truth_boundaries` maps as status detail. Those fields are explanatory only:
+they identify the local WordPress host, Cloud Addon, and Cloud service owners,
+and confirm that Cloud can be index/freshness/diagnostics truth without becoming
+a WordPress control plane, write owner, ability registry, or workflow registry.
 
 If an operator asks to rebuild an index, change vector providers, change
 collection settings, diagnose stale-index policy, or inspect vector operations

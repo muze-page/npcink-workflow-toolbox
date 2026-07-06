@@ -336,6 +336,12 @@ final class Rest_Controller {
 			$change_bridge = Site_Knowledge_Auto_Sync::health_snapshot();
 			$status['change_bridge'] = $change_bridge;
 			$status['auto_sync']     = $change_bridge;
+			if ( ! is_array( $status['site_knowledge_cloud_boundary'] ?? null ) ) {
+				$boundary = Site_Knowledge_Auto_Sync::cloud_boundary_projection( $change_bridge );
+				if ( array() !== $boundary ) {
+					$status['site_knowledge_cloud_boundary'] = $boundary;
+				}
+			}
 		}
 
 		return rest_ensure_response( $status );
