@@ -2223,7 +2223,7 @@
 			content_snapshot_suggestions: 'Content opportunities'
 		};
 		const summaryByIntent = {
-			media_alt_suggestions: 'Check each suggested ALT before submitting selected rows for Core review. Toolbox will not change media ALT here.',
+			media_alt_suggestions: 'Check each suggested ALT before preparing a Core handoff preview. Toolbox will not change media ALT here.',
 			content_snapshot_suggestions: 'Review opportunities from a bounded sample. This is not a full site audit and does not change content.'
 		};
 		const result = renderShell(
@@ -2287,112 +2287,13 @@
 			.filter(Boolean);
 	}
 
-	function mediaAltCaptionProposalId(payload) {
-		const ids = collectCoreHandoffProposalIds(payload, [], 0);
-		return ids.length ? ids[0] : proposalIdFromResponse(proposalFromPlanResponse(payload));
-	}
-
-	async function submitAndExecuteMediaAltCaptionAction(action, index) {
-		const proposalPayload = asObject(action.proposal_payload);
-		if (!proposalPayload.ability_id) {
-			throw { message: 'This ALT row is missing a Core proposal payload.' };
-		}
-
-		const proposal = await postJson(config.adapterRestUrl, 'proposals', proposalPayload);
-		const proposalId = mediaAltCaptionProposalId(proposal);
-		if (!proposalId) {
-			throw { message: 'Core did not return a proposal id for this ALT row.' };
-		}
-
-		const result = {
-			action: action,
-			proposal: proposal,
-			proposal_id: proposalId,
-			status: 'submitted'
-		};
-
-		try {
-			result.execution = await postJson(
-				config.adapterRestUrl,
-				'proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute',
-				{
-					note: 'Approved from Toolbox batch ALT review after operator row selection. Core policy owns approval, preflight, audit, and execution.',
-					source: 'toolbox_batch_media_alt_review',
-					batch_index: index,
-					source_item_id: action.attachment_id || ''
-				}
-			);
-			result.status = 'executed';
-		} catch (error) {
-			result.execution_error = error;
-			result.status = 'needs_core_review';
-		}
-
-		return result;
-	}
-
-	function renderMediaAltCaptionExecutionSummary(container, plan, results, failed) {
-		const section = createSection('ALT update results');
-		const submitted = results.length;
-		const executed = results.filter((item) => item.status === 'executed').length;
-		const needsReview = results.filter((item) => item.status === 'needs_core_review').length;
-		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Submitted', submitted);
-		appendMeta(meta, 'Updated', executed);
-		appendMeta(meta, 'Needs Core review', needsReview);
-		appendMeta(meta, 'Failed', failed ? 1 : 0);
-		section.appendChild(meta);
-
-		if (executed > 0) {
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-success', 'Core executed approved ALT updates. Media metadata changes are recorded by Core and WordPress abilities.'));
-		}
-		if (needsReview > 0) {
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Some proposals were created but Core policy kept them for manual review.'));
-		}
-		if (failed) {
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', failed.message || 'One selected ALT row could not be submitted.'));
-		}
-
-		if (results.length) {
-			const list = el('div', 'npcink-toolbox__batch-list');
-			results.forEach((result) => {
-				const action = asObject(result.action);
-				const row = el('div', 'npcink-toolbox__batch-row');
-				if (action.thumbnail_url) {
-					const image = document.createElement('img');
-					image.className = 'npcink-toolbox__media-thumb';
-					image.src = String(action.thumbnail_url);
-					image.alt = '';
-					row.appendChild(image);
-				}
-				const body = el('span', 'npcink-toolbox__batch-row-body');
-				body.appendChild(el('strong', '', '#' + String(action.attachment_id || '') + ' ' + String(action.title || action.filename || 'Media item')));
-				body.appendChild(el('small', '', (result.status === 'executed' ? t('Updated ALT: ') : t('Submitted ALT: ')) + String(action.accepted_alt || '')));
-				body.appendChild(el('small', '', result.status === 'executed' ? 'Updated by Core execution.' : 'Waiting for Core review.'));
-				if (result.proposal_id && coreHandoffProposalUrl(result.proposal_id)) {
-					body.appendChild(createLink(coreHandoffProposalUrl(result.proposal_id), 'Open Core proposal'));
-				}
-				row.appendChild(body);
-				list.appendChild(row);
-			});
-			section.appendChild(list);
-		}
-
-		section.appendChild(createRawDetails({
-			plan: plan,
-			results: results,
-			failed: failed || null
-		}, 'Advanced: Core submission payload'));
-		container.appendChild(section);
-	}
-
 	function renderMediaAltCaptionHandoffPlan(container, plan) {
-		const section = createSection('ALT update draft');
+		const section = createSection('ALT handoff preview');
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Selected images', plan.selected_count);
-		appendMeta(meta, 'Status', plan.selected_count > 0 ? 'Ready to submit through Adapter' : '');
+		appendMeta(meta, 'Status', plan.selected_count > 0 ? 'Preview only' : '');
 		section.appendChild(meta);
-		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Draft prepared. Adapter is unavailable, so no Core proposal was created.'));
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Handoff preview prepared locally. No Core proposal was created and no media metadata was changed.'));
 
 		const actions = asArray(plan.selected_actions);
 		if (actions.length) {
@@ -2411,13 +2312,13 @@
 				if (action.accepted_alt) {
 					body.appendChild(el('small', '', t('Accepted ALT: ') + String(action.accepted_alt)));
 				}
-				body.appendChild(el('small', '', 'Toolbox will not write media metadata directly.'));
+					body.appendChild(el('small', '', 'Toolbox will not write media metadata or submit this preview automatically.'));
 				row.appendChild(body);
 				list.appendChild(row);
 			});
 			section.appendChild(list);
 		}
-		section.appendChild(createRawDetails(plan, 'Advanced: handoff payload'));
+		section.appendChild(createRawDetails(plan, 'Advanced: dry-run handoff preview'));
 		container.appendChild(section);
 	}
 
@@ -2464,17 +2365,19 @@
 	}
 
 	function mediaAltCaptionReasonLabel(value) {
-		const labels = {
-			missing_alt: 'Missing ALT',
-			weak_alt: 'Weak ALT',
+			const labels = {
+				missing_alt: 'Missing ALT',
+				weak_alt: 'Weak ALT',
 			missing_caption: 'Missing caption',
 			title_filename_like: 'Title looks like a filename',
 			candidate_quality_insufficient: 'Suggestion quality was too weak',
 			caption_review_only: 'Caption review only',
 			context_confirmation_required: 'Location or proper-name context needs confirmation',
 			needs_context_confirmation: 'Confirm location or proper-name context',
-			context_only: 'Context-only metadata',
-			metadata_conflict: 'Metadata needs human review',
+				context_only: 'Context-only metadata',
+				visual_fact: 'External visual evidence, unconfirmed',
+				metadata_fact: 'Existing metadata evidence',
+				metadata_conflict: 'Metadata needs human review',
 			source_attribution_or_url: 'Looks like source attribution or URL',
 			runtime_provenance: 'Looks like AI generation details'
 		};
@@ -2495,21 +2398,25 @@
 		const imageContextRequest = asObject(reviewSet.image_context_evidence_request);
 		const imageContextRequestItems = asArray(imageContextRequest.items);
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Scanned images', eligibility.scanned_count);
-		appendMeta(meta, 'Review rows', eligibility.selected_count || selectedItems.length);
+			appendMeta(meta, 'Scanned images', eligibility.scanned_count);
+			appendMeta(meta, 'Review rows', eligibility.selected_count || selectedItems.length);
+			appendMeta(meta, 'Local preview rows', eligibility.local_preview_candidate_count || eligibility.ready_for_handoff_count);
+		appendMeta(meta, 'Need context confirmation', eligibility.context_confirmation_count);
 		appendMeta(meta, 'Need manual check', imageContextRequestItems.length);
+		appendMeta(meta, 'Need visual evidence', eligibility.visual_evidence_request_count);
 		appendMeta(meta, 'Excluded', eligibility.blocked_count || blockedItems.length);
 		if (meta.childNodes.length) {
 			section.appendChild(meta);
 		}
 
 		if (!selectedItems.length) {
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No ALT suggestions are ready to submit from this sample. Try another sample or review excluded images.'));
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No ALT suggestions are ready for review from this sample. Try another sample or review excluded images.'));
 		} else {
-			const noticeText = imageContextRequestItems.length
-				? 'Review the rows below. Some images still need visual confirmation before updating ALT.'
-				: 'Review the rows below, edit suggested ALT if needed, then submit selected rows.';
-			section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', noticeText));
+				const noticeText = imageContextRequestItems.length
+					? 'Review the rows below. Some images still need visual confirmation before any future Core handoff.'
+					: 'Review the rows below and edit suggested ALT if needed before preparing a handoff preview.';
+				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', noticeText));
+				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Quality scores and review hints are preview-only triage. They do not authorize proposals, approvals, execution, or media writes.'));
 			const list = el('div', 'npcink-toolbox__alt-review-table');
 			const header = el('div', 'npcink-toolbox__alt-review-header');
 			header.appendChild(el('span', '', 'Use'));
@@ -2548,6 +2455,8 @@
 				const candidateDetail = [
 					item.candidate_review_status ? t('Candidate status: ') + mediaAltCaptionReasonLabel(item.candidate_review_status) : '',
 					item.candidate_confidence ? t('Confidence: ') + formatLabel(item.candidate_confidence) : '',
+					item.candidate_quality_score || item.candidate_quality_tier ? t('Quality: ') + String(item.candidate_quality_score || 0) + (item.candidate_quality_tier ? ' / ' + formatLabel(item.candidate_quality_tier) : '') : '',
+					item.automation_recommendation ? t('Review hint: ') + formatLabel(item.automation_recommendation) : '',
 					Array.isArray(item.candidate_fact_types) && item.candidate_fact_types.length ? t('Basis type: ') + item.candidate_fact_types.map(mediaAltCaptionReasonLabel).join(t(', ')) : '',
 				].filter(Boolean).join(t(' | '));
 				if (candidateDetail) {
@@ -2565,7 +2474,7 @@
 				altField.appendChild(altInput);
 				body.appendChild(altField);
 				if (item.caption_candidate) {
-					body.appendChild(el('small', 'npcink-toolbox__muted', 'Caption suggestions are not applied by this ALT batch action.'));
+					body.appendChild(el('small', 'npcink-toolbox__muted', 'Caption suggestions are not included in this ALT handoff preview.'));
 				}
 				if (needsContext) {
 					body.appendChild(el('small', 'npcink-toolbox__result-notice is-warning', 'Location or proper-name context must be confirmed or removed before handoff.'));
@@ -2583,7 +2492,7 @@
 					body.appendChild(el('small', '', t('Image clue: ') + String(evidence.visual_summary)));
 				}
 				if (item.needs_human_visual_check) {
-					body.appendChild(el('small', 'npcink-toolbox__muted', 'Check the image before submitting this row.'));
+					body.appendChild(el('small', 'npcink-toolbox__muted', 'Check the image before using this row in any Core handoff.'));
 				}
 				row.appendChild(body);
 				row.__npcinkMediaAltCaptionItem = item;
@@ -2595,7 +2504,7 @@
 			const selectedCount = el('strong', '', '0');
 			selectedCount.setAttribute('data-toolbox-media-alt-caption-selected-count', '');
 			actions.appendChild(selectedCount);
-			const handoffButton = el('button', 'button button-primary', 'Submit and update selected ALT');
+			const handoffButton = el('button', 'button button-primary', 'Prepare handoff preview');
 			handoffButton.type = 'button';
 			handoffButton.setAttribute('data-toolbox-media-alt-caption-handoff', '');
 			handoffButton.addEventListener('click', async () => {
@@ -2604,33 +2513,17 @@
 					return;
 				}
 				handoffButton.disabled = true;
-				handoffButton.textContent = t('Submitting selected ALT...');
+				handoffButton.textContent = t('Preparing handoff preview...');
 				try {
 					const plan = await postJson(config.restUrl, 'flows/media-alt-caption-review-plan', {
 						selected_items: selected,
 						review_set: reviewSet
 					});
-					if (!config.adapterRestUrl) {
-						renderMediaAltCaptionHandoffPlan(section, plan);
-						return;
-					}
-					const actions = asArray(plan.selected_actions);
-					const results = [];
-					let failed = null;
-					for (let index = 0; index < actions.length; index += 1) {
-						handoffButton.textContent = t('Submitting ALT ') + String(index + 1) + t(' of ') + String(actions.length) + '...';
-						try {
-							results.push(await submitAndExecuteMediaAltCaptionAction(actions[index], index));
-						} catch (error) {
-							failed = error;
-							break;
-						}
-					}
-					renderMediaAltCaptionExecutionSummary(section, plan, results, failed);
+					renderMediaAltCaptionHandoffPlan(section, plan);
 				} catch (error) {
-					section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error && error.message ? error.message : 'Could not submit ALT updates.'));
+					section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error && error.message ? error.message : 'Could not prepare the ALT handoff preview.'));
 				} finally {
-					handoffButton.textContent = t('Submit and update selected ALT');
+					handoffButton.textContent = t('Prepare handoff preview');
 					updateMediaAltCaptionHandoffButton(section);
 				}
 			});

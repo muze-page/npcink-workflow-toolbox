@@ -367,7 +367,7 @@ try {
 				handoffDisabled: handoffButton instanceof HTMLButtonElement ? handoffButton.disabled : null,
 				readyLabelVisible: text.includes('Ready to update'),
 				reviewRowsLabelVisible: /Review rows|审核行|审阅行/.test(text),
-				captionNotAppliedVisible: /Caption suggestions are not applied by this ALT batch action|这个批量 ALT 操作不会应用说明文字建议|题注建议不会通过此 ALT 批处理操作应用|Caption.*ALT/.test(text),
+					captionNotAppliedVisible: /Caption suggestions are not included in this ALT handoff preview|说明文字建议不会包含在这个 ALT 交接预览中|Caption.*ALT/.test(text),
 				contextWarningVisible: /Location or proper-name context must be confirmed or removed before handoff|地点或专名上下文.*确认|确认地点或专名上下文/.test(text),
 				noWriteNoticeVisible: /Toolbox will not change media ALT here|Toolbox 不会在这里更改媒体 ALT|这里不会更改媒体 ALT/.test(text),
 			};
@@ -377,7 +377,7 @@ try {
 		if (expectedCaptionOnlyMin > 0) {
 			assert(initial.captionOnlyRows >= expectedCaptionOnlyMin, 'Review UI labels caption-only rows distinctly.');
 			assert(initial.emptyAltRows >= expectedCaptionOnlyMin, 'Caption-only rows keep the ALT input empty.');
-			assert(initial.captionNotAppliedVisible, 'Caption-only rows tell operators captions are not batch-applied.');
+				assert(initial.captionNotAppliedVisible, 'Caption-only rows tell operators captions are not included in the ALT handoff preview.');
 		} else {
 			pass('Caption-only row assertions are not required for this sample.');
 		}
