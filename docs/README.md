@@ -62,6 +62,7 @@ Start from the active documents below before changing code.
 - [Media Optimization Release Checklist](media-optimization-release-checklist.md)
 - [Media ALT/Caption Review Set](media-alt-caption-review-set.md)
 - [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md)
+- [Media ALT/Caption Toolkit Validation Reentry](archive/2026-07/media-alt-caption-toolkit-validation-reentry-2026-07-06.md)
 - [Site Check Operator Loop](full-site-insights-operator-loop.md)
 - [Site Check Decision Entry Closeout](site-check-decision-entry-closeout-2026-06-30.md)
 - [Site Check Scheduled Review Cloud Addon Closeout](site-check-scheduled-review-cloud-addon-closeout-2026-07-01.md)
