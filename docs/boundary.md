@@ -274,7 +274,11 @@ category, and existing tag choices into dry-run Core handoff actions and rejects
 missing term creation by keeping `create_missing=false`.
 Existing category/tag candidate ranking is sourced from
 `npcink-abilities-toolkit/suggest-post-taxonomy-terms`; Toolbox only supplies
-editor context, related-term evidence, and the review UI.
+editor context, related-term evidence, and the review UI. When available,
+`npcink-abilities-toolkit/build-taxonomy-tag-review-set` builds the reusable
+`taxonomy_tag_review_set.v1` review artifact; Toolbox may keep a compatibility
+fallback from Toolkit suggestion rows, but it must not create terms, assign
+terms, call Cloud runtime, create proposals, or write taxonomy metadata.
 Image ALT/caption review follows the same planning boundary. Current-article
 image text checks belong in the editor sidebar; backend Image Handling may build
 a small selected media-library review set and pass accepted items to

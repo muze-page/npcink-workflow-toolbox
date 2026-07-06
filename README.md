@@ -479,7 +479,9 @@ converted into a dry-run `content_metadata_apply_plan` through
 handoff ability so third-party plugins do not need to depend on Toolbox. Core still owns proposal
 approval and final execution remains outside Toolbox. Existing category/tag
 candidates are ranked by `npcink-abilities-toolkit/suggest-post-taxonomy-terms`
-and presented by Toolbox for review. That packet exposes proposal-ready action
+and the reusable `taxonomy_tag_review_set.v1` packet is built by
+`npcink-abilities-toolkit/build-taxonomy-tag-review-set` when available, then
+presented by Toolbox for review. That packet exposes proposal-ready action
 labels: Generate and apply summary, Recommend and apply tags, Recommend
 categories. Summary application and existing
 tag assignment can request Core auto-approval when policy allows; category

@@ -222,6 +222,7 @@ $delta   = is_array( $section['content_metadata_delta'] ?? null )
 $auth    = is_array( $delta['authorization'] ?? null ) ? $delta['authorization'] : array();
 $checks  = is_array( $delta['outcome_contract']['checks'] ?? null ) ? $delta['outcome_contract']['checks'] : array();
 $taxonomy_ranking = is_array( $section['taxonomy_terms']['ranking_context'] ?? null ) ? $section['taxonomy_terms']['ranking_context'] : array();
+$taxonomy_review_set = is_array( $section['taxonomy_terms']['taxonomy_tag_review_set'] ?? null ) ? $section['taxonomy_terms']['taxonomy_tag_review_set'] : array();
 $summary_context  = is_array( $section['summary_layers']['related_context_summary'] ?? null ) ? $section['summary_layers']['related_context_summary'] : array();
 
 toolbox_metadata_delta_smoke_assert( 'editor_content_support_flow' === (string) ( $result['artifact_type'] ?? '' ), 'REST result declares editor_content_support_flow.' );
@@ -236,6 +237,12 @@ toolbox_metadata_delta_smoke_assert( 'core_proposal_required' === (string) ( $de
 toolbox_metadata_delta_smoke_assert( false === (bool) ( $delta['direct_wordpress_write'] ?? true ), 'Content Metadata Delta disables direct WordPress writes.' );
 toolbox_metadata_delta_smoke_assert( is_array( $delta['issue_record'] ?? null ) && is_array( $delta['diagnosis'] ?? null ) && is_array( $delta['delta'] ?? null ), 'Content Metadata Delta includes issue, diagnosis, and delta sections.' );
 toolbox_metadata_delta_smoke_assert( 'ranking_evidence_only_no_term_creation_or_assignment' === (string) ( $taxonomy_ranking['related_term_policy'] ?? '' ), 'Taxonomy ranking treats related-content terms as ranking evidence only.' );
+toolbox_metadata_delta_smoke_assert( 'taxonomy_tag_review_set' === (string) ( $taxonomy_review_set['artifact_type'] ?? '' ), 'Taxonomy review set artifact is returned.' );
+toolbox_metadata_delta_smoke_assert( 'taxonomy_tag_review_set.v1' === (string) ( $taxonomy_review_set['contract_version'] ?? '' ), 'Taxonomy review set keeps the v1 contract.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $taxonomy_review_set['direct_wordpress_write'] ?? true ), 'Taxonomy review set disables direct WordPress writes.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $taxonomy_review_set['proposal_created'] ?? true ), 'Taxonomy review set does not create proposals.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $taxonomy_review_set['safety']['term_creation_allowed'] ?? true ), 'Taxonomy review set forbids term creation.' );
+toolbox_metadata_delta_smoke_assert( false === (bool) ( $taxonomy_review_set['safety']['term_assignment_allowed'] ?? true ), 'Taxonomy review set forbids term assignment.' );
 toolbox_metadata_delta_smoke_assert( 'related_context_checks_duplicate_coverage_and_term_fit_without_adding_new_facts' === (string) ( $summary_context['policy'] ?? '' ), 'Summary layers keep related context as duplicate/term-fit evidence without adding facts.' );
 toolbox_metadata_delta_smoke_assert( 'suggestion_only' === (string) ( $auth['classification'] ?? '' ), 'Authorization classification is suggestion_only.' );
 toolbox_metadata_delta_smoke_assert( 'operation-classification-v1' === (string) ( $auth['policy_version'] ?? '' ), 'Authorization records the operation classification policy version.' );

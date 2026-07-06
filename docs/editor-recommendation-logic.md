@@ -113,8 +113,11 @@ author loop:
 - `category_suggestions`: Toolbox presents existing WordPress category
   candidates ranked by `npcink-abilities-toolkit/suggest-post-taxonomy-terms`.
   Current draft text and, when supplied by the richer flow, related Site
-  Knowledge term evidence are passed to Toolkit as ranking context. The focused
-  shortcut does not use selected text and does not create categories.
+  Knowledge term evidence are passed to Toolkit as ranking context. The
+  reusable review artifact is built by
+  `npcink-abilities-toolkit/build-taxonomy-tag-review-set` when that Toolkit
+  ability is installed. The focused shortcut does not use selected text and
+  does not create categories.
 - `tag_suggestions`: Toolbox presents existing WordPress tag candidates from
   the same Toolkit ability. Proposed new tag gaps are deferred to a later
   taxonomy governance workflow; Toolbox does not create terms from this panel.
