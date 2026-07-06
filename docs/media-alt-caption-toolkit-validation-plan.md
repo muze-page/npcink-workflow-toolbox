@@ -1,6 +1,6 @@
 # Media ALT/Caption Toolkit Validation Plan
 
-Status: first review-artifact extraction started.
+Status: first review-artifact extraction merged.
 
 ## Decision
 
@@ -13,6 +13,14 @@ fallback.
 remains the operator/editor UI
 for media selection, review state, Cloud/provider evidence display, and Core
 handoff presentation.
+
+The first extraction is complete after the cross-repo merge of the Toolkit
+builder and Toolbox delegation path. The post-merge real WordPress smoke must
+remain the acceptance gate for this split: Toolbox should report
+`source_ability_id=npcink-abilities-toolkit/build-media-alt-caption-review-set`
+and `runtime_owner=npcink-abilities-toolkit`, while sampled attachment metadata
+stays unchanged and no proposal, execution, derivative run, queue, scheduler, or
+direct media metadata write is created.
 
 This validation gate exists to prevent two wrong moves:
 
