@@ -102,13 +102,13 @@ Reason counts:
 
 Selected candidates:
 
-| Attachment | Reasons | Human outcome |
+| Attachment | Reasons | Visual review outcome |
 | ---: | --- | --- |
-| `7774` | `missing_caption` | `pending` |
-| `769` | `weak_alt` | `pending` |
-| `767` | `weak_alt`, `filename_like_title` | `pending` |
-| `766` | `weak_alt` | `pending` |
-| `765` | `weak_alt` | `pending` |
+| `7774` | `missing_caption` | `accepted_with_context_caveat` |
+| `769` | `weak_alt` | `needs_edit_location_context` |
+| `767` | `weak_alt`, `filename_like_title` | `accepted_with_context_caveat` |
+| `766` | `weak_alt` | `needs_edit_location_context` |
+| `765` | `weak_alt` | `needs_edit_location_context` |
 
 The exported artifact reports:
 
@@ -119,21 +119,51 @@ The exported artifact reports:
 - every selected candidate requires human visual review and keeps
   `direct_wordpress_write=false`.
 
+## Visual Review Result
+
+Visual review in this Codex session inspected the five selected local upload
+files. This is validation evidence, not operator acceptance and not write
+authorization.
+
+| Metric | Result |
+| --- | ---: |
+| Candidates reviewed | 5 |
+| Accepted with context caveat | 2 |
+| Needs edit or location-context confirmation | 3 |
+| Rejected | 0 |
+| Misleading | 0 |
+
+Attachment notes:
+
+- `7774`: the caption matches the abstract card/checkmark approval-workflow
+  visual, but "WordPress AI workflow" comes from existing site context rather
+  than pixels alone.
+- `769`: the image shows a sunset rocky beach with an arch formation; the
+  proposed location text `Jericoacoara Ceara Brasil` needs operator context
+  confirmation or a more visual ALT.
+- `767`: the image shows a windmill in fog over a farm or rural field; the
+  location phrase "Walker, Iowa" needs context confirmation, but the visual
+  description is materially stronger than the current `Windmill` ALT.
+- `766`: the image shows a rocky coast, beach, waterfall, and ocean; `Big Sur,
+  CA` needs context confirmation or a more visual ALT.
+- `765`: the image shows clear sea water with rocks and distant coastline;
+  `Plimmerton, New Zealand` needs context confirmation or a more visual ALT.
+
 ## Decision
 
 Do not migrate implementation to `npcink-abilities-toolkit` in this stage.
 
 The fresh batch export is a useful positive signal because it found five
 candidate rows after the stricter metadata-only filter. It is not enough to
-approve extraction because all five human outcomes are still `pending`, the
-positive count is small, and previous cross-site validation showed a weak
+approve extraction because the positive count is small, three rows need edit or
+location-context confirmation, and previous cross-site validation showed a weak
 metadata library can correctly produce zero selected candidates.
 
-The next work should validate these five selected candidates before moving any
-code:
+The next work should validate operator acceptance before moving any code:
 
-1. Run human visual review on the five pending rows.
-2. If human review is clean, optionally run a small
+1. Convert the three location-bearing ALT candidates into visual-first
+   suggestions or require explicit operator confirmation for location terms.
+2. Optionally run a small
    `composer eval:media-alt-caption:judge-cross-batch` window against the same
    exported input to compare reviewer consistency.
 3. Repeat on at least one more real media library or a deliberate sample window
