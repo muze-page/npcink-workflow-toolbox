@@ -375,6 +375,8 @@ toolbox_media_alt_trial_assert( 'suggestion_only' === (string) ( $data['write_po
 
 $review_set = is_array( $data['media_alt_caption_review_set'] ?? null ) ? $data['media_alt_caption_review_set'] : array();
 toolbox_media_alt_trial_assert( 'media_alt_caption_review_set.v1' === (string) ( $review_set['contract_version'] ?? '' ), 'Trial response returns the media ALT/caption review-set contract.' );
+toolbox_media_alt_trial_assert( 'npcink-abilities-toolkit/build-media-alt-caption-review-set' === (string) ( $review_set['source_ability_id'] ?? '' ), 'Trial response is built by the Toolkit media ALT/caption review-set ability.' );
+toolbox_media_alt_trial_assert( 'npcink-abilities-toolkit' === (string) ( $review_set['runtime_owner'] ?? '' ), 'Trial response reports Toolkit as the review-set runtime owner.' );
 toolbox_media_alt_trial_assert( $expected_source_policy === (string) ( $review_set['source_policy'] ?? '' ), 'Trial uses metadata-only source policy.' );
 toolbox_media_alt_trial_assert( false === (bool) ( $review_set['direct_wordpress_write'] ?? true ), 'Review set does not authorize direct WordPress writes.' );
 toolbox_media_alt_trial_assert( false === (bool) ( $review_set['proposal_created'] ?? true ), 'Review set does not create a proposal.' );
