@@ -498,6 +498,11 @@ metadata direct-apply proof would first need a separate
 old/new metadata, actor and source evidence, confirmation copy, recovery
 evidence, and fail-closed audit behavior. Until then, accepted metadata choices
 remain Core proposal handoffs.
+The next narrow validation step is the
+[Content Metadata Delta Operator Trial](docs/content-metadata-operator-trial.md):
+3 to 5 real posts are exported as review cases, each still handled as a
+single-post metadata loop with no direct WordPress write, no new taxonomy term,
+no proposal creation from the export itself, and no batch execution.
 The image-source button opens a Cloud image recommendation modal: it
 automatically searches from the selected paragraph or selected block when
 available, combines that with the current draft context, and also lets the
