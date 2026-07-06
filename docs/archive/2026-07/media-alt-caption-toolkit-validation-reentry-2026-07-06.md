@@ -217,6 +217,93 @@ Verified operator behavior:
 Screenshot evidence was written to
 `build/smoke/media-alt-caption-browser.png`.
 
+## Second Sample Acceptance Result
+
+Command result: pass.
+
+The second sample used explicit attachment ids:
+
+```text
+764,761,759,758,757
+```
+
+The PHP trial sent a supplied metadata snapshot for those ids through the same
+`/ai/site-helpers` route and wrote ignored local evidence under `build/eval/`:
+
+- `build/eval/media-alt-caption-second-sample-cases.json`
+- `build/eval/media-alt-caption-second-sample-cases.md`
+
+Trial summary:
+
+| Metric | Result |
+| --- | ---: |
+| Scanned image attachments | 5 |
+| Eligible items | 5 |
+| Selected items | 5 |
+| Blocked items | 0 |
+| Max items | 5 |
+| Weak ALT reason count | 5 |
+
+The supplied trial source policy was
+`operator_supplied_media_metadata_only_no_pixel_vision`.
+
+Browser command result: pass.
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" \
+WP_PATH="/Users/muze/Local Sites/magick-ai/app/public" \
+WP_BASE_URL="https://magick-ai.local" \
+MEDIA_ALT_CAPTION_BROWSER_ATTACHMENT_IDS="764,761,759,758,757" \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_CAPTION_ONLY_MIN=0 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_CONTEXT_ROWS_MIN=4 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_READY_ROWS_MIN=1 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_REVIEW_ROWS_MIN=5 \
+MEDIA_ALT_CAPTION_BROWSER_SCREENSHOT="build/smoke/media-alt-caption-browser-second-sample.png" \
+composer smoke:media-alt-caption-browser
+```
+
+Verified behavior:
+
+- no caption-only row was required for this sample;
+- four rows required context confirmation;
+- one row was already ready for operator ALT review;
+- the initial ALT handoff count matched ready rows only: `1`;
+- selecting all rows did not add unconfirmed context rows to the handoff count;
+- confirming one context row increased the handoff count to `2`;
+- no Core proposal, Adapter execution, local consent, or media write route was
+  called during review.
+
+Screenshot evidence was written to
+`build/smoke/media-alt-caption-browser-second-sample.png`.
+
+Provider-backed eval-lab judge result: pass.
+
+```bash
+sh scripts/eval-lab.sh task=media_alt_caption_judge_cross \
+  "input=$PWD/build/eval/media-alt-caption-second-sample-cases.json" \
+  "limit=5" \
+  "dry_run=0" \
+  "output_json=media-alt-caption/generated/media-alt-caption-second-sample-judge.json" \
+  "output_md=media-alt-caption/generated/media-alt-caption-second-sample-judge.md" \
+  "output_csv=media-alt-caption/generated/media-alt-caption-second-sample-judge.csv"
+```
+
+Judge summary:
+
+| Metric | Result |
+| --- | ---: |
+| Cases reviewed | 5 |
+| Ready for review | 0 |
+| Context confirmation | 4 |
+| Human review required | 5 |
+
+The judges agreed that the four location/proper-name rows are correctly gated
+behind context confirmation. The one ready-for-review row still requires human
+visual review, and one judge marked it as premature because the visual detail
+is not provable from metadata alone. This strengthens the current migration
+position: extract only the deterministic candidate classification and no-write
+review artifact, not apply behavior, Cloud runtime behavior, or UI state.
+
 ## Implementation Follow-Up
 
 The validation finding above produced one local implementation change before
@@ -237,6 +324,11 @@ any Toolkit migration:
 - the admin UI labels review-set rows as `Review rows` instead of
   `Ready to update`, because context-confirmation and caption-only rows are not
   ready handoff candidates by default;
+- the browser smoke now supports sample-declared expected status counts so
+  second-sample gates can validate different real-media distributions without
+  weakening the default caption-only/context-confirmation regression;
+- the PHP trial can run explicit attachment-id samples by sending a bounded
+  supplied metadata snapshot through the existing site-helper route;
 - smoke and batch eval exports include the same fields for follow-up review.
 
 This is a quality gate inside the existing Toolbox review surface. It is not

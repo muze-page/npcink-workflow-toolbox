@@ -55,6 +55,30 @@ Move the reusable part to Toolkit only when all of these are true:
 8. Static tests in both repos can prove no direct media metadata writes, no
    Cloud runtime dependency, and no proposal creation.
 
+## Second-Sample Gate
+
+Before opening a Toolkit extraction branch, run at least one deliberate second
+real-media sample that is not the default recent batch. The sample should be
+declared by explicit attachment ids and should prove a different status
+distribution from the first pass, for example context-confirmation rows plus a
+ready-for-review row without any caption-only row.
+
+The second-sample gate must record:
+
+- exact attachment ids;
+- selected, blocked, ready-for-review, caption-review-only, and
+  context-confirmation counts;
+- initial ALT handoff count;
+- post-confirmation ALT handoff count;
+- eval-lab judge summary when provider-backed review is available;
+- unchanged metadata snapshots;
+- no Core proposal, execution, media derivative run, queue, scheduler, or
+  direct media metadata write.
+
+This gate is not migration approval by itself. It only proves whether the
+candidate classification and no-write review contract are stable enough to
+draft a narrow Toolkit extraction PR.
+
 ## Operator Trial Protocol
 
 Run the current Toolbox review set against ordinary media libraries before any

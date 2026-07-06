@@ -74,6 +74,78 @@ function toolbox_media_alt_trial_attachment_ids( int $limit ): array {
 	return array_values( array_map( 'absint', is_array( $ids ) ? $ids : array() ) );
 }
 
+function toolbox_media_alt_trial_explicit_attachment_ids( string $raw ): array {
+	if ( '' === trim( $raw ) ) {
+		return array();
+	}
+
+	$ids = array();
+	foreach ( explode( ',', $raw ) as $value ) {
+		$id = absint( trim( $value ) );
+		if ( $id > 0 ) {
+			$ids[] = $id;
+		}
+	}
+
+	return array_values( array_unique( $ids ) );
+}
+
+function toolbox_media_alt_trial_trim_text( string $value, int $limit ): string {
+	$value = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $value ) ) ?? $value );
+	if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+		return mb_strlen( $value, 'UTF-8' ) > $limit ? mb_substr( $value, 0, $limit, 'UTF-8' ) : $value;
+	}
+
+	return strlen( $value ) > $limit ? substr( $value, 0, $limit ) : $value;
+}
+
+function toolbox_media_alt_trial_media_item( int $attachment_id, array $snapshot ): array {
+	$url       = (string) ( $snapshot['url'] ?? '' );
+	$caption   = (string) ( $snapshot['post_excerpt'] ?? '' );
+	$alt       = sanitize_text_field( (string) ( $snapshot['alt'] ?? '' ) );
+	$image_src = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );
+	$filename  = '' !== $url ? wp_basename( $url ) : wp_basename( (string) ( $snapshot['attached_file'] ?? '' ) );
+
+	return array(
+		'attachment_id'   => $attachment_id,
+		'title'           => sanitize_text_field( (string) ( $snapshot['post_title'] ?? '' ) ),
+		'caption'         => sanitize_textarea_field( $caption ),
+		'description'     => toolbox_media_alt_trial_trim_text( (string) ( $snapshot['post_content'] ?? '' ), 240 ),
+		'alt'             => $alt,
+		'alt_length'      => function_exists( 'mb_strlen' ) ? mb_strlen( $alt, 'UTF-8' ) : strlen( $alt ),
+		'missing_alt'     => '' === $alt,
+		'missing_caption' => '' === trim( $caption ),
+		'filename'        => sanitize_file_name( $filename ),
+		'mime_type'       => sanitize_text_field( (string) get_post_mime_type( $attachment_id ) ),
+		'thumbnail_url'   => is_array( $image_src ) ? esc_url_raw( (string) ( $image_src[0] ?? '' ) ) : '',
+		'url'             => esc_url_raw( $url ),
+	);
+}
+
+function toolbox_media_alt_trial_media_snapshot( array $attachment_ids, array $before ): array {
+	$items       = array();
+	$missing_alt = 0;
+
+	foreach ( $attachment_ids as $attachment_id ) {
+		$attachment_id = absint( $attachment_id );
+		if ( ! isset( $before[ $attachment_id ] ) ) {
+			continue;
+		}
+		$item = toolbox_media_alt_trial_media_item( $attachment_id, $before[ $attachment_id ] );
+		if ( ! empty( $item['missing_alt'] ) ) {
+			++$missing_alt;
+		}
+		$items[] = $item;
+	}
+
+	return array(
+		'sample_size'       => count( $items ),
+		'missing_alt_count' => $missing_alt,
+		'items'             => $items,
+		'snapshot_policy'   => 'operator_supplied_media_metadata_only',
+	);
+}
+
 function toolbox_media_alt_trial_attachment_snapshot( array $attachment_ids ): array {
 	$snapshot = array();
 
@@ -253,7 +325,8 @@ toolbox_media_alt_trial_assert( $admin_user_id > 0, 'Found an administrator user
 wp_set_current_user( $admin_user_id );
 
 $max_items      = max( 1, min( 10, absint( $arg_map['max_items'] ?? ( getenv( 'NPCINK_TOOLBOX_MEDIA_ALT_TRIAL_MAX_ITEMS' ) ?: 10 ) ) ) );
-$attachment_ids = toolbox_media_alt_trial_attachment_ids( $max_items );
+$explicit_ids   = toolbox_media_alt_trial_explicit_attachment_ids( (string) ( $arg_map['attachment_ids'] ?? ( getenv( 'MEDIA_ALT_CAPTION_TRIAL_ATTACHMENT_IDS' ) ?: '' ) ) );
+$attachment_ids = ! empty( $explicit_ids ) ? array_slice( $explicit_ids, 0, $max_items ) : toolbox_media_alt_trial_attachment_ids( $max_items );
 toolbox_media_alt_trial_assert( ! empty( $attachment_ids ), 'Found real image attachments for the media ALT/caption trial.' );
 
 $before = toolbox_media_alt_trial_attachment_snapshot( $attachment_ids );
@@ -280,14 +353,20 @@ add_filter(
 	3
 );
 
+$expected_source_policy = ! empty( $explicit_ids ) ? 'operator_supplied_media_metadata_only_no_pixel_vision' : 'media_library_metadata_only_no_pixel_vision';
+$payload                = array(
+	'intent'           => 'media_alt_suggestions',
+	'focus'            => 'Local real media library operator trial',
+	'media_scope'      => 'media_library_sample',
+	'review_set_limit' => $max_items,
+	'source_policy'    => $expected_source_policy,
+);
+if ( ! empty( $explicit_ids ) ) {
+	$payload['media_snapshot'] = toolbox_media_alt_trial_media_snapshot( $attachment_ids, $before );
+}
+
 $data = toolbox_media_alt_trial_rest_request(
-	array(
-		'intent'           => 'media_alt_suggestions',
-		'focus'            => 'Local real media library operator trial',
-		'media_scope'      => 'media_library_sample',
-		'review_set_limit' => $max_items,
-		'source_policy'    => 'media_library_metadata_only_no_pixel_vision',
-	)
+	$payload
 );
 
 toolbox_media_alt_trial_assert( 1 === $cloud_filter_calls, 'Trial used a local host filter instead of requiring Cloud runtime availability.' );
@@ -296,7 +375,7 @@ toolbox_media_alt_trial_assert( 'suggestion_only' === (string) ( $data['write_po
 
 $review_set = is_array( $data['media_alt_caption_review_set'] ?? null ) ? $data['media_alt_caption_review_set'] : array();
 toolbox_media_alt_trial_assert( 'media_alt_caption_review_set.v1' === (string) ( $review_set['contract_version'] ?? '' ), 'Trial response returns the media ALT/caption review-set contract.' );
-toolbox_media_alt_trial_assert( 'media_library_metadata_only_no_pixel_vision' === (string) ( $review_set['source_policy'] ?? '' ), 'Trial uses metadata-only source policy.' );
+toolbox_media_alt_trial_assert( $expected_source_policy === (string) ( $review_set['source_policy'] ?? '' ), 'Trial uses metadata-only source policy.' );
 toolbox_media_alt_trial_assert( false === (bool) ( $review_set['direct_wordpress_write'] ?? true ), 'Review set does not authorize direct WordPress writes.' );
 toolbox_media_alt_trial_assert( false === (bool) ( $review_set['proposal_created'] ?? true ), 'Review set does not create a proposal.' );
 toolbox_media_alt_trial_assert( false === (bool) ( $review_set['execution_created'] ?? true ), 'Review set does not create an execution.' );
