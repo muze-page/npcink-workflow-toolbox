@@ -102,7 +102,7 @@ Target features:
   summaries, blocked reasons, selected previews, and selected Core proposal
   submissions;
 - selected media ALT/caption review-set planning for recent weak metadata
-  images, with operator selection and a Core handoff draft only; Toolbox does
+  images, with operator selection and a local handoff preview only; Toolbox does
   not create the proposal, approve, execute, or write media metadata;
 - OpenClaw/Adapter selected-batch execution proof before any Toolbox batch
   "replace original image" button is treated as product-ready;

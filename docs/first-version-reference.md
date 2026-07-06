@@ -137,7 +137,7 @@ attachment IDs into Batch Image ALT or Batch Optimize Images, while Toolbox
 owns the review, preview, and Core handoff workspace. It does not expose the former single-article Image Text Checks tool or the saved-post Media Brief tool.
 Article-level featured-image recommendation and media brief planning belong in the editor sidebar. Batch
 Image ALT is a separate selected media-library review-set surface that can
-prepare a Core handoff draft without scanning the whole library, creating
+prepare a local handoff preview without scanning the whole library, creating
 proposals, approving, executing, or writing media metadata.
 The separate Content Review tab and standalone content opportunity tool are
 retired. Site content opportunity review belongs in Site Check; the

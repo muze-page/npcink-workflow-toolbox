@@ -722,8 +722,37 @@ does not add gated rows, and confirming one context row enables one additional
 ALT handoff candidate. The expectation env vars let a deliberate second sample
 prove a different distribution, such as no caption-only rows, four
 context-confirmation rows, and one ready-for-review row. It does not click the
-handoff button and verifies the browser does not call Core proposal, Adapter
-execution, local consent, or media write routes.
+handoff preview button and verifies the browser does not call Core proposal,
+Adapter execution, local consent, or media write routes.
+
+Media ALT/Caption Quality Preview Gate:
+
+- run `composer test:all`;
+- run `composer smoke:media-alt-caption-trial` when local real attachments are
+  available;
+- run `composer smoke:media-alt-caption-browser` after UI label or button
+  changes.
+
+This gate is intentionally preview-only. Static and browser checks must keep
+`candidate_quality.*`, `automation_recommendation`, and
+`local_preview_candidate_count` as UI/eval triage hints only. They must not be
+used as proposal triggers, local write authorization, auto-approval signals,
+queue/runtime inputs, or provider-key ownership signals. Deprecated
+ready-for-handoff aliases must not be emitted by current responses and must be
+ignored if an old runtime returns them. The preview button may call only the Toolbox
+`/flows/media-alt-caption-review-plan` route to prepare a dry-run handoff
+preview with `core_submission=preview_only_not_submitted`; browser tests must
+keep Adapter, Core proposal, approve-and-execute, local consent, and
+`/wp/v2/media` calls forbidden. The gate must also check that admin UI and
+translation strings use review/preview wording and that each preview payload
+declares `submission_status=preview_only_not_submitted`,
+`target_contract_status=future_or_unavailable`, `not_submittable=true`,
+`proposal_created=false`, `execution_created=false`, and
+`direct_wordpress_write=false`, and that candidate quality fields are excluded
+from `future_contract_preview`. When this boundary is changed intentionally,
+rerun an eval-lab adversarial review against
+`docs/media-alt-caption-review-set.md`, `docs/boundary.md`,
+`docs/architecture.md`, and this workflow document before merging.
 
 When using `MEDIA_ALT_CAPTION_TRIAL_ATTACHMENT_IDS`, the PHP trial sends a
 bounded supplied media metadata snapshot for those attachment ids through the

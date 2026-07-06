@@ -1,6 +1,6 @@
 # Media ALT/Caption Review Set
 
-Status: P0 reviewed ALT proposal path.
+Status: P0 reviewed ALT candidate quality and handoff-preview path.
 
 ## Purpose
 
@@ -11,9 +11,11 @@ text before any governed write path exists. Recent media-library sampling stays
 available only as an explicit advanced fallback.
 
 This stage is intentionally not a Toolbox-owned media metadata writer. The
-admin UI may submit reviewed ALT-only proposal payloads through Adapter and ask
-Core to approve and execute them. Core policy remains the only place that can
-auto-approve a low-risk ALT update.
+admin UI may prepare a local dry-run handoff preview for reviewed ALT-only
+rows, but it must not submit that preview to Adapter, create a Core proposal,
+ask Core to approve or execute, or write media metadata in the current P0.
+Core policy remains the only place that can later approve a low-risk ALT
+update after a separately accepted write path exists.
 
 ## Contract
 
@@ -70,17 +72,42 @@ authorization. Each selected or quality-blocked row may include:
 - flat compatibility aliases such as `candidate_quality_score`,
   `candidate_quality_tier`, and `automation_recommendation`.
 
+`candidate_quality.automation_recommendation` is a legacy machine-readable
+review hint, not an executable automation command. Values must remain in the
+triage-only family, such as `visually_review_alt_caption`,
+`request_visual_evidence_or_skip`,
+`review_caption_manually_or_skip_alt_handoff`,
+`confirm_context_terms_or_edit_alt`, and
+`eligible_for_local_preview_after_visual_check`. Values that imply automatic
+apply, auto-approval, Core submission readiness, write readiness, or proposal
+readiness are not allowed in this contract. Flat aliases are read-only mirrors
+of nested `candidate_quality.*` values; they
+must not be treated as authorization inputs or stronger signals than the nested
+values. `candidate_quality.*`, `candidate_quality_score`,
+`candidate_quality_tier`, `automation_recommendation`, and any legacy
+ready-for-handoff aliases are forbidden as Adapter/Core proposal inputs,
+ability execution inputs, or WordPress write inputs.
+`tests/run.php` statically guards the allowed triage-only recommendation family
+and fails if the old Core-ready recommendation value returns to the provider
+client.
+
 The `eligibility_summary` may also include
-`ready_for_handoff_count`, `context_confirmation_count`,
+`local_preview_candidate_count`, `context_confirmation_count`,
 `caption_review_only_count`, `visual_evidence_request_count`, and
 `insufficient_quality_count`. These counts help the UI and eval tooling route
 operator attention, but every row still requires human visual confirmation and
-any accepted ALT write still uses the Core-governed handoff path.
+any accepted ALT write still uses a future Core-governed handoff path. New P0
+responses must not emit deprecated ready-for-handoff aliases. If an old runtime
+still returns such an alias, consumers must ignore it for button enablement,
+Adapter/Core submission, proposal creation, auto-approval, and WordPress writes.
+`local_preview_candidate_count` is also a UI triage hint only and is forbidden
+as an input to any Core proposal, Adapter execution profile, ability execution
+schema, or write decision.
 
 The follow-up `/flows/media-alt-caption-review-plan` response is
-`media_alt_caption_core_handoff_plan.v1`. It may include per-row
-`proposal_payload` objects for
-`npcink-abilities-toolkit/update-media-details` with only:
+`media_alt_caption_core_handoff_plan.v1`. In the current P0 it is preview-only
+and may include per-row `future_contract_preview` objects that point at the
+future `npcink-abilities-toolkit/update-media-details` contract with only:
 
 - `attachment_id`;
 - `alt`;
@@ -88,9 +115,18 @@ The follow-up `/flows/media-alt-caption-review-plan` response is
 - `commit=false`;
 - an idempotency key.
 
+Every selected action and future contract preview must also carry
+`submission_status: preview_only_not_submitted`,
+`target_contract_status: future_or_unavailable`, `not_submittable: true`,
+`proposal_created: false`, `execution_created: false`, and
+`direct_wordpress_write: false`. Current P0 consumers must not send
+`future_contract_preview` objects as Adapter/Core request bodies.
+
 Caption, title, description, source, and attribution fields are not part of
-the batch ALT auto-execution path. If they are present, Core must keep the
-proposal in manual review or reject the candidate.
+the ALT handoff preview. If a later governed write path accepts those fields,
+Core must keep the proposal in manual review or reject the candidate. Current
+P0 previews must keep `proposal_created=false`, `core_submission:
+preview_only_not_submitted`, and `direct_wordpress_write=false`.
 
 ## Source Boundary
 
@@ -148,19 +184,22 @@ P0 selects image attachments when:
 - title appears filename-like.
 
 Before an item becomes selected, Toolbox now applies a local candidate-quality
-gate. The gate removes ALT/caption candidates that only duplicate existing
-title, ALT, or caption text; look like URLs, source attribution, camera-default
-strings, or filenames; are generic placeholders; or conflict with supplied
-metadata such as horizontal/vertical wording. Items that need review but have
-no usable metadata-only candidate are blocked as
+rendering filter. The filter removes ALT/caption candidates that only duplicate
+existing title, ALT, or caption text; look like URLs, source attribution,
+camera-default strings, or filenames; are generic placeholders; or conflict
+with supplied metadata such as horizontal/vertical wording. This is local UI
+triage, not Core policy ownership or final write validation. Items that need
+review but have no usable metadata-only candidate are blocked as
 `candidate_quality_insufficient` instead of showing low-value text to the
 operator.
 
 The same gate classifies candidate basis so operators can focus on the rows
 that need real judgment:
 
-- `visual_fact`: produced from optional `image_context_evidence.v1` visual
-  summaries, scenes, objects, or visible text;
+- `visual_fact`: legacy compatibility value for unconfirmed external visual
+  evidence produced from optional `image_context_evidence.v1` visual summaries,
+  scenes, objects, or visible text. UI must render it as "external visual
+  evidence, unconfirmed" or equivalent, not as established visual fact;
 - `metadata_fact`: produced from existing ALT, caption, or description fields;
 - `context_only`: produced from title, filename, or other context that may
   describe the asset but may not be visible in the image.
@@ -184,8 +223,10 @@ The quality gate also rejects runtime provenance text such as "Generated by",
 model/provider names, prompt labels, dates, or Cloud execution descriptions.
 Those strings describe how an image was produced, not what the image shows, and
 must never become default ALT or caption text. The same rejection is applied
-again when a selected item is turned into a Core handoff draft so an edited
-review value cannot reintroduce provenance copy.
+again when a selected item is turned into a local handoff preview so an edited
+review value cannot reintroduce provenance copy. Toolbox never produces a
+Core-submittable draft in this P0; future Core/Abilities write paths must
+repeat the gate before accepting any proposal input.
 
 The response defaults to a small review set and caps local selection at 10
 items. Items outside the current selection, items with missing attachment ids,
@@ -199,7 +240,7 @@ The admin UI renders the review set as:
 - source policy and contract version;
 - selected item rows with ALT candidates and caption candidate;
 - candidate quality flags and filtered-candidate notes for audit/debug review;
-- candidate score, tier, and automation recommendation for triage;
+- candidate score, tier, and review hint for triage;
 - candidate fact type, confidence, and context-confirmation status;
 - blocked item details;
 - optional image context evidence request details for weak metadata;
@@ -243,11 +284,20 @@ The current stage is considered complete when:
   without local image recognition;
 - every selected item requires visual review;
 - the result states that no media metadata was changed;
+- admin UI and translation strings use review/preview wording and avoid
+  apply, approve, submit, update, ready-to-write, legacy ready-for-handoff,
+  dry-run-preview-payload, or similar write-authorization wording for quality
+  scores, review hints, counts, and preview rows;
+- responses state that quality scores, review hints, and preview payloads do
+  not authorize proposals, approvals, execution, or media writes;
 - direct writes, proposal creation, queues, and derivative replacement runs
   remain disabled.
 
-Do not add an "apply", "bulk update", "replace", or "submit selected" button
-for ALT/caption metadata in Toolbox until the Future Apply Path below exists.
+Do not add an "apply", "bulk update", "replace", "submit selected", or
+"submit and update" button for ALT/caption metadata in Toolbox until the Future
+Apply Path below exists. A P0 button may only prepare a local handoff preview
+and must not call Adapter, Core proposal, approval, execution, or media write
+routes.
 
 ## Restart Conditions
 
@@ -300,6 +350,7 @@ description, replacement URLs, or attachment file data from this review set.
 - no automatic media metadata update;
 - no automatic proposal creation;
 - no final WordPress write;
+- no Adapter/Core proposal submission from the preview button;
 - no claim that Toolbox itself has viewed image pixels;
 - no local image recognition model or bundled vision dataset;
 - no reuse of media derivative replacement execution for metadata writes.

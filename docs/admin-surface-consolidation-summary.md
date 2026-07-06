@@ -28,7 +28,7 @@ Media Library attachment details panel or image row actions and reuse the same
 selected-image workbenches. The former single-article image text helper is
 removed from the backend because it needs current editor context. A separate
 **Batch Image Text Review** tool now builds a small selected media-library
-review set and can prepare a Core handoff draft without creating proposals or
+review set and can prepare a local handoff preview without creating proposals or
 writing media metadata. Site Check owns site content opportunity triage; the
 standalone Content Review tab and content opportunity tool are
 retired. The reviewed draft handoff is no longer a backend tool and remains

@@ -3804,15 +3804,26 @@ final class Provider_Client {
 				'needs_context_confirmation'  => $needs_context_confirmation,
 				'context_confirmed'           => $context_confirmed,
 				'target_ability_id'           => 'npcink-abilities-toolkit/update-media-details',
-				'target_write_path'           => 'core_proposal_required',
-				'auto_execution_supported'    => true,
-				'proposal_payload'            => array(
-					'ability_id' => 'npcink-abilities-toolkit/update-media-details',
-					'title'      => sprintf( 'Update ALT for attachment #%d', $attachment_id ),
-					'summary'    => 'Apply one reviewed ALT text suggestion for a media-library image. Core owns approval, execution, and audit.',
-					'input'      => $proposal_input,
-					'preview'    => $proposal_preview,
-				),
+					'target_write_path'           => 'core_proposal_required',
+					'auto_execution_supported'    => false,
+					'submission_status'           => 'preview_only_not_submitted',
+					'target_contract_status'      => 'future_or_unavailable',
+					'proposal_created'            => false,
+					'execution_created'           => false,
+					'not_submittable'             => true,
+					'future_contract_preview'     => array(
+						'ability_id'              => 'npcink-abilities-toolkit/update-media-details',
+						'submission_status'       => 'preview_only_not_submitted',
+						'target_contract_status'  => 'future_or_unavailable',
+						'not_submittable'         => true,
+						'proposal_created'        => false,
+						'execution_created'       => false,
+						'direct_wordpress_write'  => false,
+						'title'                   => sprintf( 'Preview ALT update for attachment #%d', $attachment_id ),
+						'summary'                 => 'Preview one reviewed ALT text suggestion for a media-library image. No proposal is created from this Toolbox preview.',
+						'input'                   => $proposal_input,
+						'preview'                 => $proposal_preview,
+					),
 				'direct_wordpress_write'      => false,
 			);
 		}
@@ -3823,11 +3834,11 @@ final class Provider_Client {
 			'contract_version'      => 'media_alt_caption_core_handoff_plan.v1',
 			'composition_role'       => 'core_handoff_draft',
 			'write_posture'          => 'suggestion_only',
-			'final_write_path'       => 'core_proposal_required',
-			'direct_wordpress_write' => false,
-			'proposal_created'       => false,
-			'core_submission'        => 'adapter_submit_ready',
-			'workflow_runtime'       => false,
+				'final_write_path'       => 'core_proposal_required',
+				'direct_wordpress_write' => false,
+				'proposal_created'       => false,
+				'core_submission'        => 'preview_only_not_submitted',
+				'workflow_runtime'       => false,
 			'queue_created'          => false,
 			'selected_count'         => count( $actions ),
 			'selected_actions'       => $actions,
@@ -3839,12 +3850,13 @@ final class Provider_Client {
 				'selected_count'   => absint( $review_set['selected_count'] ?? count( $actions ) ),
 			),
 			'core_auto_approval_policy' => array(
-				'request_supported'          => true,
+				'request_supported'          => false,
 				'toolbox_direct_apply'       => false,
-				'approval_owner'             => 'npcink-governance-core',
-				'execution_owner'            => 'wordpress_abilities',
-				'safe_action_candidate'      => 'fill_missing_or_weak_alt_only',
-				'required_policy_checks'     => array(
+					'approval_owner'             => 'npcink-governance-core',
+					'execution_owner'            => 'wordpress_abilities',
+					'safe_action_candidate'      => 'fill_missing_or_weak_alt_only',
+					'current_stage'              => 'future_policy_only',
+					'required_policy_checks'     => array(
 					'operator_enabled_core_policy',
 					'missing_or_weak_alt_only',
 					'candidate_quality_gate_passed',
@@ -3862,20 +3874,21 @@ final class Provider_Client {
 				'target_ability_id'      => 'npcink-abilities-toolkit/update-media-details',
 				'recipe_id'              => 'media_alt_caption_review_v1',
 				'core_route'             => '/wp-json/npcink-governance-core/v1/proposals/from-plan',
-				'proposal_ready'         => 0 < count( $actions ),
-				'core_submission'        => 'adapter_submit_ready',
+					'proposal_ready'         => false,
+					'preview_available'      => 0 < count( $actions ),
+				'core_submission'        => 'preview_only_not_submitted',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
 			),
 			'operator_next_action'   => 0 < count( $actions )
-				? 'submit_selected_alt_updates_through_adapter'
+					? 'review_handoff_preview_before_future_core_submission'
 				: 'select_reviewed_media_alt_caption_items',
 			'guardrails'             => array(
 				'no_media_metadata_write_in_toolbox',
 				'no_toolbox_auto_approval',
-				'adapter_creates_core_proposal_on_operator_request',
-				'core_policy_owns_auto_approval',
-				'alt_only_auto_execution_candidate',
+					'no_adapter_or_core_submission_from_preview',
+					'core_policy_owns_auto_approval',
+					'alt_only_auto_execution_candidate_future_only',
 				'human_visual_confirmation_required',
 				'core_approval_required_before_final_write',
 			),
@@ -7089,16 +7102,16 @@ final class Provider_Client {
 			$tier                      = 'context_required';
 			$basis_summary             = 'context_requires_confirmation';
 			$automation_recommendation = 'confirm_context_terms_or_edit_alt';
-		} elseif ( in_array( 'visual_fact', $fact_types, true ) && $has_alt ) {
-			$score                     = 90;
-			$tier                      = 'ready';
-			$basis_summary             = 'visual_evidence';
-			$automation_recommendation = 'ready_for_core_handoff_after_visual_check';
-		} elseif ( in_array( 'metadata_fact', $fact_types, true ) && $has_alt ) {
-			$score                     = 75;
-			$tier                      = 'ready';
-			$basis_summary             = 'metadata_evidence';
-			$automation_recommendation = 'ready_for_core_handoff_after_visual_check';
+			} elseif ( in_array( 'visual_fact', $fact_types, true ) && $has_alt ) {
+				$score                     = 90;
+				$tier                      = 'ready';
+				$basis_summary             = 'visual_evidence';
+				$automation_recommendation = 'eligible_for_local_preview_after_visual_check';
+			} elseif ( in_array( 'metadata_fact', $fact_types, true ) && $has_alt ) {
+				$score                     = 75;
+				$tier                      = 'ready';
+				$basis_summary             = 'metadata_evidence';
+				$automation_recommendation = 'eligible_for_local_preview_after_visual_check';
 		} elseif ( $has_alt ) {
 			$score                     = 55;
 			$tier                      = 'review';
@@ -7120,9 +7133,9 @@ final class Provider_Client {
 	}
 
 	private function media_alt_caption_review_quality_summary( array $selected, array $blocked ): array {
-		$summary = array(
-			'ready_for_handoff_count'       => 0,
-			'context_confirmation_count'    => 0,
+			$summary = array(
+				'local_preview_candidate_count' => 0,
+				'context_confirmation_count'    => 0,
 			'caption_review_only_count'     => 0,
 			'visual_evidence_request_count' => 0,
 			'insufficient_quality_count'    => 0,
@@ -7131,9 +7144,9 @@ final class Provider_Client {
 		foreach ( $selected as $item ) {
 			$quality = is_array( $item['candidate_quality'] ?? null ) ? $item['candidate_quality'] : array();
 			$tier    = sanitize_key( (string) ( $quality['tier'] ?? ( $item['candidate_quality_tier'] ?? '' ) ) );
-			if ( 'ready' === $tier ) {
-				++$summary['ready_for_handoff_count'];
-			} elseif ( 'context_required' === $tier ) {
+				if ( 'ready' === $tier ) {
+					++$summary['local_preview_candidate_count'];
+				} elseif ( 'context_required' === $tier ) {
 				++$summary['context_confirmation_count'];
 			} elseif ( 'caption_only' === $tier ) {
 				++$summary['caption_review_only_count'];

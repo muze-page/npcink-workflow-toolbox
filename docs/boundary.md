@@ -80,6 +80,10 @@ handoff routes that OpenClaw recipes use. They may collect operator inputs,
 display candidates, build preview artifacts, and submit reviewed proposals, but
 they must not own OpenClaw projection truth, approval truth, prompt/model
 routing truth, media registry truth, or final WordPress write execution.
+Media ALT/caption review-plan is an explicit P0 carve-out: its current button
+may prepare only a local preview and is excluded from generic reviewed-proposal
+submission language until a separate governed media metadata write path is
+accepted.
 
 For batch operations, OpenClaw/Adapter must prove the governed execution
 contract before Toolbox productizes it. The required proof includes bounded
@@ -279,13 +283,23 @@ editor context, related-term evidence, and the review UI. When available,
 `taxonomy_tag_review_set.v1` review artifact; Toolbox may keep a compatibility
 fallback from Toolkit suggestion rows, but it must not create terms, assign
 terms, call Cloud runtime, create proposals, or write taxonomy metadata.
-Image ALT/caption review follows the same planning boundary. Current-article
-image text checks belong in the editor sidebar; backend Image Handling may build
-a small selected media-library review set and pass accepted items to
-`/flows/media-alt-caption-review-plan`. That plan points at
-`npcink-abilities-toolkit/update-media-details` for later Core review, but
-Toolbox does not create the proposal, approve it, execute it, or write media
-metadata.
+Image ALT/caption review follows the same planning boundary. The default scope
+is current-article used images in the editor/sidebar surface. Backend Image
+Handling may use bounded recent media-library metadata only as an explicit
+advanced fallback; it is not a batch runner, indexing job, proposal path, or
+write path. The selected review set may prepare a local
+`/flows/media-alt-caption-review-plan` future contract preview. That preview
+must carry `future_contract_preview`, `not_submittable: true`,
+`submission_status: preview_only_not_submitted`, and
+`proposal_created: false` markers. It may point at the future
+`npcink-abilities-toolkit/update-media-details` contract for later Core review,
+but Toolbox does not submit the preview to Adapter/Core, create the proposal,
+approve it, execute it, or write media metadata.
+`candidate_quality.*`, `automation_recommendation`, and
+`local_preview_candidate_count` remain local UI/eval triage hints; they confer
+no ability execution, proposal, or write rights. Deprecated ready-for-handoff
+aliases are not emitted by P0 responses and must be ignored if old runtimes
+return them.
 Internal-link support returns `internal_link_candidates.v1` with reviewable
 targets, anchor suggestions, and placement hints from
 `npcink-abilities-toolkit/resolve-internal-link-targets`. Toolbox supplies

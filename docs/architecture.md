@@ -435,12 +435,29 @@ back into the discoverability panel while preserving the
 `current_article_media_metadata_only` and no-media-write boundary.
 The backend Image Handling tab uses the same hosted site-helper intent only for
 an explicit small media-library review set. Operators can select returned
-items and call `/flows/media-alt-caption-review-plan` to prepare a
-`media_alt_caption_core_handoff_plan.v1`. The plan contains ALT-only proposal
-payloads that the admin UI may submit through Adapter and then request Core
-`approve-and-execute`. Core policy owns auto-approval, execution, and audit;
-Toolbox still does not directly write media metadata, and caption edits stay
-manual-review work.
+items and call `/flows/media-alt-caption-review-plan` to prepare a local
+preview-only `media_alt_caption_core_handoff_plan.v1`. The preview may include
+ALT-only dry-run payloads for the future
+`npcink-abilities-toolkit/update-media-details` path, but the current UI does
+not submit them through Adapter, request Core `approve-and-execute`, create a
+proposal, or write media metadata. Core policy owns any future auto-approval,
+execution, and audit; Toolbox still does not directly write media metadata,
+and caption edits stay manual-review work. Media ALT/caption quality fields
+such as `candidate_quality.*`, `automation_recommendation`, and
+`local_preview_candidate_count` are local review/eval hints, not Toolbox-owned
+ability schema, workflow registry state, or write authorization. Deprecated
+ready-for-handoff aliases are not emitted by P0 responses and must not enter
+future `npcink-abilities-toolkit/update-media-details` target contracts.
+`future_contract_preview` is a non-request preview wrapper; candidate quality
+fields and preview wrapper metadata are excluded from ability input schemas and
+must not be forwarded to Adapter/Core/Abilities execution routes.
+Optional `image_context_evidence.v1` remains a bounded Cloud Addon or
+host-provided helper boundary. Toolbox may prepare the request artifact and
+consume returned review evidence, but it does not run local vision inference,
+store provider credentials, create a queue, persist runtime ownership, or treat
+returned visual evidence as final truth. If that helper is productized beyond
+the current optional call, it must be represented in Cloud bridge and
+route-boundary documentation before release.
 The standalone discoverability result is a post-publish optimization task
 panel: SEO title, SEO description, slug, and excerpt are shown as actionable
 review tasks. SEO title and description use the governed SEO handoff, then ask
@@ -608,9 +625,9 @@ selected Batch Image ALT or Batch Optimize Images workbenches used by bulk
 selections.
 It no longer exposes a standalone one-image optimization picker or a
 single-article image text helper; article-specific image text needs current
-editor context in the editor sidebar. The separate **Batch Image ALT** group
-builds a small selected media-library review set and can prepare a Core handoff
-draft without creating a proposal or writing media metadata. The separate
+	editor context in the editor sidebar. The separate **Batch Image ALT** group
+	builds a small selected media-library review set and can prepare only a local
+	handoff preview without creating a proposal or writing media metadata. The separate
 standalone content opportunity admin tool is retired; site-level opportunities
 are reviewed through Site Check.
 The old Article Planning Bundle is not an operator-facing admin tool;
