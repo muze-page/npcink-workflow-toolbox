@@ -2402,6 +2402,7 @@
 			missing_caption: 'Missing caption',
 			title_filename_like: 'Title looks like a filename',
 			candidate_quality_insufficient: 'Suggestion quality was too weak',
+			caption_review_only: 'Caption review only',
 			context_confirmation_required: 'Location or proper-name context needs confirmation',
 			needs_context_confirmation: 'Confirm location or proper-name context',
 			context_only: 'Context-only metadata',

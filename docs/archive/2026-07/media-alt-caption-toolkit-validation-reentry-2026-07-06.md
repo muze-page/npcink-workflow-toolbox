@@ -104,7 +104,7 @@ Selected candidates:
 
 | Attachment | Reasons | Visual review outcome |
 | ---: | --- | --- |
-| `7774` | `missing_caption` | `accepted_with_context_caveat` |
+| `7774` | `missing_caption` | `caption_review_only` |
 | `769` | `weak_alt` | `needs_edit_location_context` |
 | `767` | `weak_alt`, `filename_like_title` | `accepted_with_context_caveat` |
 | `766` | `weak_alt` | `needs_edit_location_context` |
@@ -149,6 +149,43 @@ Attachment notes:
 - `765`: the image shows clear sea water with rocks and distant coastline;
   `Plimmerton, New Zealand` needs context confirmation or a more visual ALT.
 
+## AI Judge Cross Result
+
+Command result: pass.
+
+```bash
+MEDIA_ALT_CAPTION_JUDGE_LIMIT=5 MEDIA_ALT_CAPTION_JUDGE_RESUME=0 \
+MEDIA_ALT_CAPTION_JUDGE_OUTPUT_JSON=media-alt-caption/generated/media-alt-caption-judge-cross-20260706-caption-fix.json \
+MEDIA_ALT_CAPTION_JUDGE_OUTPUT_MD=media-alt-caption/generated/media-alt-caption-judge-cross-20260706-caption-fix.md \
+MEDIA_ALT_CAPTION_JUDGE_OUTPUT_CSV=media-alt-caption/generated/media-alt-caption-judge-cross-20260706-caption-fix.csv \
+composer eval:media-alt-caption:judge-cross-batch
+```
+
+The provider-backed judge run used `gpt-5.5` and `grok-4.3` through
+`npcink-eval-lab`. It produced eval-only evidence under
+`npcink-eval-lab/media-alt-caption/generated/`.
+
+| Metric | Result |
+| --- | ---: |
+| Cases reviewed | 5 |
+| Ready for review | 0 |
+| Context confirmation | 4 |
+| Human review required | 5 |
+| Rerun or fix | 0 |
+
+Judge result summary:
+
+- `7774`: `caption_review_only`; no ALT candidate is ready for ALT handoff.
+  The two judges disagreed on whether the caption's proper-name context needs
+  extra confirmation, so the automated action remains `human_review`.
+- `769`, `767`, `766`, and `765`: `needs_context_confirmation`; all remain
+  blocked from ready ALT handoff until the operator confirms or edits the
+  location/proper-name context.
+
+This confirms the current gate is conservative: no item is ready for automatic
+ALT handoff from this sample, and the only positive handoff path remains
+operator-reviewed, context-confirmed, Core-proposal-backed ALT.
+
 ## Implementation Follow-Up
 
 The validation finding above produced one local implementation change before
@@ -163,6 +200,9 @@ any Toolkit migration:
   context confirmation checkbox;
 - the handoff planner blocks unconfirmed rows as
   `context_confirmation_required` before building any Core proposal payload;
+- caption-only rows are marked `caption_review_only` and point to
+  `review_caption_manually_or_skip_alt_handoff` instead of appearing as ready
+  ALT handoff candidates;
 - smoke and batch eval exports include the same fields for follow-up review.
 
 This is a quality gate inside the existing Toolbox review surface. It is not

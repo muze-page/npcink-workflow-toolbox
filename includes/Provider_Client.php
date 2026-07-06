@@ -6660,7 +6660,7 @@ final class Provider_Client {
 					'needs_human_visual_check' => true,
 					'target_write_path'        => 'core_proposal_required',
 					'direct_wordpress_write'   => false,
-					'operator_next_action'     => $candidate_quality['needs_context_confirmation'] ? 'confirm_context_terms_or_edit_alt' : 'visually_review_alt_caption',
+					'operator_next_action'     => $candidate_quality['operator_next_action'],
 				),
 				$item_status
 			);
@@ -6971,16 +6971,25 @@ final class Provider_Client {
 			$flags[] = 'metadata_insufficient';
 		}
 
+		$alt_candidates          = array_slice( array_values( array_unique( array_filter( $alt_candidates ) ) ), 0, 2 );
+		$candidate_review_status = $needs_context_confirmation ? 'needs_context_confirmation' : 'ready_for_review';
+		$operator_next_action    = $needs_context_confirmation ? 'confirm_context_terms_or_edit_alt' : 'visually_review_alt_caption';
+		if ( empty( $alt_candidates ) && '' !== $caption_candidate ) {
+			$candidate_review_status = 'caption_review_only';
+			$operator_next_action    = 'review_caption_manually_or_skip_alt_handoff';
+		}
+
 		return array(
-			'alt_candidates'           => array_slice( array_values( array_unique( array_filter( $alt_candidates ) ) ), 0, 2 ),
+			'alt_candidates'           => $alt_candidates,
 			'caption_candidate'        => $caption_candidate,
 			'candidate_basis'          => array_values( array_unique( $basis ) ),
 			'candidate_quality_flags'  => array_values( array_unique( array_filter( $flags ) ) ),
 			'filtered_candidate_notes' => array_values( array_unique( array_filter( $notes ) ) ),
 			'candidate_fact_types'       => array_values( array_unique( array_filter( $fact_types ) ) ),
 			'candidate_confidence'       => $needs_context_confirmation ? 'context_required' : $candidate_confidence,
-			'candidate_review_status'    => $needs_context_confirmation ? 'needs_context_confirmation' : 'ready_for_review',
+			'candidate_review_status'    => $candidate_review_status,
 			'needs_context_confirmation' => $needs_context_confirmation,
+			'operator_next_action'       => $operator_next_action,
 		);
 	}
 
