@@ -50,7 +50,16 @@ The bridge smoke must prove Cloud Addon owns public content-change delivery,
 Toolbox reports `owner=cloud_addon`, and retired Toolbox legacy auto-sync hooks
 are not registered.
 
-## 4. Performance Baseline
+## 4. Cloud Addon Transport Gate
+
+Before treating Cloud-backed image, audio, web-search, or image-source paths as
+release-ready, follow
+[`Cloud Addon Transport Release Gate`](cloud-addon-transport-release-gate.md).
+That gate separates no-credit contract checks from credit-consuming real
+provider checks, and requires quota or provider-configuration blockers to be
+recorded as Cloud readiness state instead of Toolbox-owned provider logic.
+
+## 5. Performance Baseline
 
 Capture a small authenticated local or staging REST baseline:
 
@@ -72,7 +81,7 @@ content support, and fast-first image candidates. Any probe without an HTTP
 status, unexpected 4xx/5xx status, or over 2500ms should be investigated before
 release.
 
-## 5. Nightly Cloud E2E Gate
+## 6. Nightly Cloud E2E Gate
 
 When Cloud API, Redis/Postgres, Cloud runtime worker, Cloud Addon, and local
 WordPress are all available, run:
@@ -85,7 +94,7 @@ The smoke must still prove that Cloud returns runtime/detail only: no local
 Toolbox scheduler truth, no automatic Core proposal creation, and no direct
 WordPress write authority.
 
-## 6. Scoped Permission Design Gate
+## 7. Scoped Permission Design Gate
 
 Before granting non-admin access, review
 [`Scoped Permissions First Version`](scoped-permissions-first-version.md). A

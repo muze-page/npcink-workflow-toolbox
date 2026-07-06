@@ -586,6 +586,13 @@ configuration. `cloud_web_search_zhihu_access_secret_missing` or
 `cloud_image_source_provider_not_configured` means the Cloud provider config is
 missing; do not work around that by adding provider keys or fallback provider
 ownership to Toolbox.
+Before running the real provider smokes, follow
+[`Cloud Addon Transport Release Gate`](cloud-addon-transport-release-gate.md):
+the AI image and audio transport smokes are no-credit contract checks, while
+Web Search and Image Source consume real Cloud provider credits. If Cloud
+entitlement is `near_limit`, quota is exhausted, or credits are insufficient,
+record an intentional provider-gate skip instead of treating quota exhaustion
+as a Toolbox code failure or adding local provider/quota ownership.
 
 For the fixed media optimization flow, run:
 
