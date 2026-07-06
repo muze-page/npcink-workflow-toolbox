@@ -159,8 +159,8 @@ function toolbox_media_alt_trial_write_markdown( string $path, array $payload ):
 		'- Write posture: `' . (string) ( $payload['write_posture'] ?? '' ) . '`',
 		'- Scanned: `' . (string) ( $summary['scanned'] ?? 0 ) . '`, selected: `' . (string) ( $summary['selected'] ?? 0 ) . '`, blocked: `' . (string) ( $summary['blocked'] ?? 0 ) . '`',
 		'',
-		'| Attachment | Reasons | Current ALT | Caption candidate | ALT candidates | Human outcome |',
-		'| ---: | --- | --- | --- | --- | --- |',
+		'| Attachment | Status | Fact types | Reasons | Current ALT | Caption candidate | ALT candidates | Human outcome |',
+		'| ---: | --- | --- | --- | --- | --- | --- | --- |',
 	);
 
 	foreach ( (array) ( $payload['cases'] ?? array() ) as $case ) {
@@ -170,6 +170,8 @@ function toolbox_media_alt_trial_write_markdown( string $path, array $payload ):
 		$metadata = is_array( $case['metadata'] ?? null ) ? $case['metadata'] : array();
 		$candidate = is_array( $case['candidate'] ?? null ) ? $case['candidate'] : array();
 		$lines[] = '| ' . (string) ( $case['attachment_id'] ?? '' )
+			. ' | ' . toolbox_media_alt_trial_markdown_text( (string) ( $candidate['candidate_review_status'] ?? '' ) )
+			. ' | ' . toolbox_media_alt_trial_markdown_text( implode( ', ', array_map( 'strval', (array) ( $candidate['candidate_fact_types'] ?? array() ) ) ) )
 			. ' | ' . toolbox_media_alt_trial_markdown_text( implode( ', ', array_map( 'strval', (array) ( $candidate['review_reasons'] ?? array() ) ) ) )
 			. ' | ' . toolbox_media_alt_trial_markdown_text( (string) ( $metadata['alt'] ?? '' ) )
 			. ' | ' . toolbox_media_alt_trial_markdown_text( (string) ( $candidate['caption_candidate'] ?? '' ) )
@@ -209,6 +211,10 @@ function toolbox_media_alt_trial_case_payload( array $selected, array $before, a
 				'candidate_basis'            => array_values( array_map( 'strval', (array) ( $item['candidate_basis'] ?? array() ) ) ),
 				'candidate_quality_flags'    => array_values( array_map( 'strval', (array) ( $item['candidate_quality_flags'] ?? array() ) ) ),
 				'filtered_candidate_notes'   => array_values( array_map( 'strval', (array) ( $item['filtered_candidate_notes'] ?? array() ) ) ),
+				'candidate_fact_types'       => array_values( array_map( 'strval', (array) ( $item['candidate_fact_types'] ?? array() ) ) ),
+				'candidate_confidence'       => (string) ( $item['candidate_confidence'] ?? '' ),
+				'candidate_review_status'    => (string) ( $item['candidate_review_status'] ?? '' ),
+				'needs_context_confirmation' => (bool) ( $item['needs_context_confirmation'] ?? false ),
 				'needs_human_visual_check'   => (bool) ( $item['needs_human_visual_check'] ?? false ),
 				'direct_wordpress_write'     => (bool) ( $item['direct_wordpress_write'] ?? true ),
 				'target_write_path'          => (string) ( $item['target_write_path'] ?? '' ),

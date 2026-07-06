@@ -2210,6 +2210,10 @@
 				if (altInput instanceof HTMLInputElement) {
 					item.accepted_alt = altInput.value.trim();
 				}
+				const contextConfirm = row.querySelector('[data-toolbox-media-alt-caption-context-confirmed]');
+				if (contextConfirm instanceof HTMLInputElement) {
+					item.context_confirmed = contextConfirm.checked;
+				}
 				return item;
 			})
 			.filter(Boolean);
@@ -2350,7 +2354,12 @@
 	}
 
 	function updateMediaAltCaptionHandoffButton(section) {
-		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter((item) => String(item.accepted_alt || '').trim()).length;
+		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter((item) => {
+			if (!String(item.accepted_alt || '').trim()) {
+				return false;
+			}
+			return !mediaAltCaptionNeedsContext(item) || item.context_confirmed === true;
+		}).length;
 		const button = section.querySelector('[data-toolbox-media-alt-caption-handoff]');
 		const count = section.querySelector('[data-toolbox-media-alt-caption-selected-count]');
 		if (count) {
@@ -2378,6 +2387,14 @@
 		return String(item.accepted_alt || candidates[0] || '');
 	}
 
+	function mediaAltCaptionNeedsContext(item) {
+		item = asObject(item);
+		const flags = asArray(item.candidate_quality_flags).map((flag) => String(flag));
+		return item.needs_context_confirmation === true
+			|| String(item.candidate_review_status || '') === 'needs_context_confirmation'
+			|| flags.indexOf('needs_context_confirmation') !== -1;
+	}
+
 	function mediaAltCaptionReasonLabel(value) {
 		const labels = {
 			missing_alt: 'Missing ALT',
@@ -2385,6 +2402,9 @@
 			missing_caption: 'Missing caption',
 			title_filename_like: 'Title looks like a filename',
 			candidate_quality_insufficient: 'Suggestion quality was too weak',
+			context_confirmation_required: 'Location or proper-name context needs confirmation',
+			needs_context_confirmation: 'Confirm location or proper-name context',
+			context_only: 'Context-only metadata',
 			metadata_conflict: 'Metadata needs human review',
 			source_attribution_or_url: 'Looks like source attribution or URL',
 			runtime_provenance: 'Looks like AI generation details'
@@ -2429,9 +2449,10 @@
 			list.appendChild(header);
 			selectedItems.slice(0, 10).forEach((item, index) => {
 				const row = el('div', 'npcink-toolbox__batch-row npcink-toolbox__alt-review-row');
+				const needsContext = mediaAltCaptionNeedsContext(item);
 				const checkbox = document.createElement('input');
 				checkbox.type = 'checkbox';
-				checkbox.checked = true;
+				checkbox.checked = !needsContext;
 				checkbox.setAttribute('aria-label', t('Select image for ALT handoff'));
 				checkbox.setAttribute('data-toolbox-media-alt-caption-item', String(item.attachment_id || index + 1));
 				checkbox.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
@@ -2455,6 +2476,14 @@
 				if (detail) {
 					body.appendChild(el('small', '', detail));
 				}
+				const candidateDetail = [
+					item.candidate_review_status ? t('Candidate status: ') + mediaAltCaptionReasonLabel(item.candidate_review_status) : '',
+					item.candidate_confidence ? t('Confidence: ') + formatLabel(item.candidate_confidence) : '',
+					Array.isArray(item.candidate_fact_types) && item.candidate_fact_types.length ? t('Basis type: ') + item.candidate_fact_types.map(mediaAltCaptionReasonLabel).join(t(', ')) : '',
+				].filter(Boolean).join(t(' | '));
+				if (candidateDetail) {
+					body.appendChild(el('small', '', candidateDetail));
+				}
 				body.appendChild(el('small', '', t('Current ALT: ') + (item.current_alt ? String(item.current_alt) : t('Empty'))));
 				const altField = el('label', 'npcink-toolbox__alt-review-field');
 				altField.appendChild(el('span', '', 'Suggested ALT'));
@@ -2468,6 +2497,17 @@
 				body.appendChild(altField);
 				if (item.caption_candidate) {
 					body.appendChild(el('small', 'npcink-toolbox__muted', 'Caption suggestions are not applied by this ALT batch action.'));
+				}
+				if (needsContext) {
+					body.appendChild(el('small', 'npcink-toolbox__result-notice is-warning', 'Location or proper-name context must be confirmed or removed before handoff.'));
+					const contextLabel = el('label', 'npcink-toolbox__inline-check');
+					const contextInput = document.createElement('input');
+					contextInput.type = 'checkbox';
+					contextInput.setAttribute('data-toolbox-media-alt-caption-context-confirmed', '');
+					contextInput.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
+					contextLabel.appendChild(contextInput);
+					contextLabel.appendChild(el('span', '', 'I confirm this location or proper-name context'));
+					body.appendChild(contextLabel);
 				}
 				const evidence = asObject(item.image_context_evidence);
 				if (evidence.visual_summary) {
@@ -2483,7 +2523,7 @@
 			section.appendChild(list);
 			const actions = el('div', 'npcink-toolbox__result-actions');
 			actions.appendChild(el('span', 'npcink-toolbox__result-meta-item', 'Selected images: '));
-			const selectedCount = el('strong', '', String(selectedItems.length));
+			const selectedCount = el('strong', '', '0');
 			selectedCount.setAttribute('data-toolbox-media-alt-caption-selected-count', '');
 			actions.appendChild(selectedCount);
 			const handoffButton = el('button', 'button button-primary', 'Submit and update selected ALT');

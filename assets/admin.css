@@ -2655,6 +2655,16 @@ pre.npcink-toolbox__result {
 	max-width: 720px;
 }
 
+.npcink-toolbox__inline-check {
+	display: inline-flex;
+	gap: 6px;
+	align-items: center;
+	margin: 6px 0 0;
+	color: #1d2327;
+	font-size: 13px;
+	line-height: 1.4;
+}
+
 .npcink-toolbox__result-details {
 	margin: 8px 0 0;
 }

@@ -149,6 +149,25 @@ Attachment notes:
 - `765`: the image shows clear sea water with rocks and distant coastline;
   `Plimmerton, New Zealand` needs context confirmation or a more visual ALT.
 
+## Implementation Follow-Up
+
+The validation finding above produced one local implementation change before
+any Toolkit migration:
+
+- selected candidates now carry `candidate_fact_types`,
+  `candidate_confidence`, `candidate_review_status`, and
+  `needs_context_confirmation`;
+- title/filename-derived location or proper-name phrases are marked as
+  `context_only` and require operator confirmation;
+- the admin UI does not select those rows by default and exposes an explicit
+  context confirmation checkbox;
+- the handoff planner blocks unconfirmed rows as
+  `context_confirmation_required` before building any Core proposal payload;
+- smoke and batch eval exports include the same fields for follow-up review.
+
+This is a quality gate inside the existing Toolbox review surface. It is not
+Toolkit migration approval and does not add a direct media write path.
+
 ## Decision
 
 Do not migrate implementation to `npcink-abilities-toolkit` in this stage.
@@ -161,8 +180,9 @@ metadata library can correctly produce zero selected candidates.
 
 The next work should validate operator acceptance before moving any code:
 
-1. Convert the three location-bearing ALT candidates into visual-first
-   suggestions or require explicit operator confirmation for location terms.
+1. Re-run the batch export and verify that location-bearing ALT candidates are
+   marked `needs_context_confirmation` instead of appearing as ordinary ready
+   rows.
 2. Optionally run a small
    `composer eval:media-alt-caption:judge-cross-batch` window against the same
    exported input to compare reviewer consistency.

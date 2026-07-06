@@ -3729,6 +3729,25 @@ final class Provider_Client {
 			$current_alt_status = sanitize_key( (string) ( $item['current_alt_status'] ?? '' ) );
 			$candidate_basis   = $this->sanitize_string_list( $item['candidate_basis'] ?? array() );
 			$candidate_flags   = $this->sanitize_string_list( $item['candidate_quality_flags'] ?? array() );
+			$candidate_fact_types    = $this->sanitize_string_list( $item['candidate_fact_types'] ?? array() );
+			$candidate_confidence    = sanitize_key( (string) ( $item['candidate_confidence'] ?? '' ) );
+			$candidate_review_status = sanitize_key( (string) ( $item['candidate_review_status'] ?? '' ) );
+			$needs_context_confirmation = ! empty( $item['needs_context_confirmation'] )
+				|| in_array( 'needs_context_confirmation', $candidate_flags, true )
+				|| 'needs_context_confirmation' === $candidate_review_status;
+			$context_confirmed = $this->is_truthy( $item['context_confirmed'] ?? false );
+			if ( $needs_context_confirmation && $this->media_alt_caption_candidate_needs_context_confirmation( $proposed_alt ) && ! $context_confirmed ) {
+				$blocked_actions[] = array(
+					'action_id'                  => 'media-alt-caption:' . $attachment_id . ':alt',
+					'attachment_id'              => $attachment_id,
+					'rejected_field'             => 'alt',
+					'blocked_reason'             => 'context_confirmation_required',
+					'candidate_review_status'    => 'needs_context_confirmation',
+					'needs_context_confirmation' => true,
+					'operator_next_action'       => 'confirm_context_terms_or_edit_alt',
+				);
+				continue;
+			}
 			$proposal_input    = array(
 				'attachment_id'   => $attachment_id,
 				'alt'             => $proposed_alt,
@@ -3752,6 +3771,11 @@ final class Provider_Client {
 				'proposed_alt'                 => $proposed_alt,
 				'candidate_basis'              => $candidate_basis,
 				'candidate_quality_flags'      => $candidate_flags,
+				'candidate_fact_types'         => $candidate_fact_types,
+				'candidate_confidence'         => $candidate_confidence,
+				'candidate_review_status'      => $needs_context_confirmation && ! $context_confirmed ? 'needs_context_confirmation' : $candidate_review_status,
+				'needs_context_confirmation'   => $needs_context_confirmation,
+				'context_confirmed'            => $context_confirmed,
 				'operator_reviewed'            => true,
 				'operator_visual_review_confirmed' => true,
 				'visual_confirmation_required' => true,
@@ -3774,6 +3798,11 @@ final class Provider_Client {
 				'visual_confirmation_required' => true,
 				'candidate_basis'             => $candidate_basis,
 				'candidate_quality_flags'     => $candidate_flags,
+				'candidate_fact_types'        => $candidate_fact_types,
+				'candidate_confidence'        => $candidate_confidence,
+				'candidate_review_status'     => $needs_context_confirmation && ! $context_confirmed ? 'needs_context_confirmation' : $candidate_review_status,
+				'needs_context_confirmation'  => $needs_context_confirmation,
+				'context_confirmed'           => $context_confirmed,
 				'target_ability_id'           => 'npcink-abilities-toolkit/update-media-details',
 				'target_write_path'           => 'core_proposal_required',
 				'auto_execution_supported'    => true,
@@ -3819,6 +3848,7 @@ final class Provider_Client {
 					'operator_enabled_core_policy',
 					'missing_or_weak_alt_only',
 					'candidate_quality_gate_passed',
+					'context_terms_confirmed_or_removed',
 					'no_runtime_provenance_text',
 					'no_source_attribution_text',
 					'operator_visual_confirmation',
@@ -6583,6 +6613,10 @@ final class Provider_Client {
 					'mime_type'                  => sanitize_text_field( (string) ( $item['mime_type'] ?? '' ) ),
 					'candidate_quality_flags'    => $candidate_quality['candidate_quality_flags'],
 					'filtered_candidate_notes'   => $candidate_quality['filtered_candidate_notes'],
+					'candidate_fact_types'       => $candidate_quality['candidate_fact_types'],
+					'candidate_confidence'       => $candidate_quality['candidate_confidence'],
+					'candidate_review_status'    => $candidate_quality['candidate_review_status'],
+					'needs_context_confirmation' => $candidate_quality['needs_context_confirmation'],
 					'operator_next_action'       => 'request_ai_vision_evidence_or_skip',
 				);
 				continue;
@@ -6618,11 +6652,15 @@ final class Provider_Client {
 					'candidate_basis'          => $candidate_quality['candidate_basis'],
 					'candidate_quality_flags'  => $candidate_quality['candidate_quality_flags'],
 					'filtered_candidate_notes' => $candidate_quality['filtered_candidate_notes'],
+					'candidate_fact_types'     => $candidate_quality['candidate_fact_types'],
+					'candidate_confidence'     => $candidate_quality['candidate_confidence'],
+					'candidate_review_status'  => $candidate_quality['candidate_review_status'],
+					'needs_context_confirmation' => $candidate_quality['needs_context_confirmation'],
 					'image_context_evidence'   => ! empty( $item_evidence ) ? $this->media_alt_caption_public_image_context_evidence( $item_evidence ) : array(),
 					'needs_human_visual_check' => true,
 					'target_write_path'        => 'core_proposal_required',
 					'direct_wordpress_write'   => false,
-					'operator_next_action'     => 'visually_review_alt_caption',
+					'operator_next_action'     => $candidate_quality['needs_context_confirmation'] ? 'confirm_context_terms_or_edit_alt' : 'visually_review_alt_caption',
 				),
 				$item_status
 			);
@@ -6867,11 +6905,14 @@ final class Provider_Client {
 	}
 
 	private function media_alt_caption_candidate_quality( array $item, array $item_status ): array {
-		$flags   = array();
-		$notes   = array();
-		$basis   = array();
-		$alt_candidates = array();
-		$caption_candidate = '';
+		$flags                      = array();
+		$notes                      = array();
+		$basis                      = array();
+		$fact_types                 = array();
+		$alt_candidates             = array();
+		$caption_candidate          = '';
+		$candidate_confidence       = 'low';
+		$needs_context_confirmation = false;
 
 		if ( 'present' !== (string) ( $item_status['current_alt_status'] ?? '' ) ) {
 			foreach ( array( 'image_context_visual_summary', 'image_context_scene', 'image_context_objects_summary', 'description', 'caption', 'title', 'filename' ) as $field ) {
@@ -6888,6 +6929,12 @@ final class Provider_Client {
 					$notes[] = 'filtered_alt_' . $field . ':' . $rejection;
 					continue;
 				}
+				$context_profile            = $this->media_alt_caption_candidate_context_profile( $candidate, $item, $field );
+				$flags                      = array_merge( $flags, $context_profile['candidate_quality_flags'] );
+				$notes                      = array_merge( $notes, $context_profile['filtered_candidate_notes'] );
+				$fact_types                 = array_merge( $fact_types, $context_profile['candidate_fact_types'] );
+				$candidate_confidence       = $this->media_alt_caption_merge_candidate_confidence( $candidate_confidence, (string) $context_profile['candidate_confidence'] );
+				$needs_context_confirmation = $needs_context_confirmation || (bool) $context_profile['needs_context_confirmation'];
 				$alt_candidates[] = $this->trim_chars( $candidate, 140 );
 				$basis[]          = 'alt:' . $field;
 			}
@@ -6905,6 +6952,12 @@ final class Provider_Client {
 					$notes[] = 'filtered_caption_' . $field . ':' . $rejection;
 					continue;
 				}
+				$context_profile            = $this->media_alt_caption_candidate_context_profile( $candidate, $item, $field );
+				$flags                      = array_merge( $flags, $context_profile['candidate_quality_flags'] );
+				$notes                      = array_merge( $notes, $context_profile['filtered_candidate_notes'] );
+				$fact_types                 = array_merge( $fact_types, $context_profile['candidate_fact_types'] );
+				$candidate_confidence       = $this->media_alt_caption_merge_candidate_confidence( $candidate_confidence, (string) $context_profile['candidate_confidence'] );
+				$needs_context_confirmation = $needs_context_confirmation || (bool) $context_profile['needs_context_confirmation'];
 				$caption_candidate = $this->trim_chars( $this->media_alt_caption_sentence( $candidate ), 180 );
 				$basis[]           = 'caption:' . $field;
 				break;
@@ -6924,6 +6977,10 @@ final class Provider_Client {
 			'candidate_basis'          => array_values( array_unique( $basis ) ),
 			'candidate_quality_flags'  => array_values( array_unique( array_filter( $flags ) ) ),
 			'filtered_candidate_notes' => array_values( array_unique( array_filter( $notes ) ) ),
+			'candidate_fact_types'       => array_values( array_unique( array_filter( $fact_types ) ) ),
+			'candidate_confidence'       => $needs_context_confirmation ? 'context_required' : $candidate_confidence,
+			'candidate_review_status'    => $needs_context_confirmation ? 'needs_context_confirmation' : 'ready_for_review',
+			'needs_context_confirmation' => $needs_context_confirmation,
 		);
 	}
 
@@ -6958,6 +7015,79 @@ final class Provider_Client {
 		}
 
 		return '';
+	}
+
+	private function media_alt_caption_candidate_context_profile( string $candidate, array $item, string $source_field ): array {
+		$source_field               = sanitize_key( $source_field );
+		$is_visual_evidence         = 0 === strpos( $source_field, 'image_context_' );
+		$fact_types                 = array();
+		$flags                      = array();
+		$notes                      = array();
+		$confidence                 = 'low';
+		$needs_context_confirmation = false;
+
+		if ( $is_visual_evidence ) {
+			$fact_types[] = 'visual_fact';
+			$confidence   = 'high';
+		} elseif ( in_array( $source_field, array( 'alt', 'caption', 'description' ), true ) ) {
+			$fact_types[] = 'metadata_fact';
+			$confidence   = 'medium';
+		} else {
+			$fact_types[] = 'context_only';
+			$confidence   = 'low';
+		}
+
+		if ( ! $is_visual_evidence && $this->media_alt_caption_candidate_needs_context_confirmation( $candidate ) ) {
+			$needs_context_confirmation = true;
+			$fact_types[] = 'context_only';
+			$flags[]      = 'needs_context_confirmation';
+			$notes[]      = 'context_' . $source_field . ':needs_context_confirmation';
+		}
+
+		return array(
+			'candidate_fact_types'       => array_values( array_unique( $fact_types ) ),
+			'candidate_quality_flags'    => $flags,
+			'filtered_candidate_notes'   => $notes,
+			'candidate_confidence'       => $confidence,
+			'needs_context_confirmation' => $needs_context_confirmation,
+		);
+	}
+
+	private function media_alt_caption_merge_candidate_confidence( string $current, string $next ): string {
+		$ranks = array(
+			'low'    => 1,
+			'medium' => 2,
+			'high'   => 3,
+		);
+		$current_rank = $ranks[ $current ] ?? 0;
+		$next_rank    = $ranks[ $next ] ?? 0;
+
+		return $next_rank > $current_rank ? $next : $current;
+	}
+
+	private function media_alt_caption_candidate_needs_context_confirmation( string $candidate ): bool {
+		$candidate = $this->media_alt_caption_clean_candidate( $candidate );
+		if ( '' === $candidate ) {
+			return false;
+		}
+		if ( preg_match( '/\b(in|near|at|outside of|from)\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,3}\b/', $candidate ) ) {
+			return true;
+		}
+		if ( preg_match( '/,\s*[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?\b/', $candidate ) ) {
+			return true;
+		}
+
+		preg_match_all( '/\b[A-Z][a-z]{2,}\b/', $candidate, $matches );
+		$terms = array();
+		foreach ( (array) ( $matches[0] ?? array() ) as $term ) {
+			$normalized = strtolower( (string) $term );
+			if ( in_array( $normalized, array( 'abstract', 'approval', 'beach', 'big', 'image', 'rocky', 'rocks', 'sea', 'visual', 'windmill', 'wordpress' ), true ) ) {
+				continue;
+			}
+			$terms[] = $normalized;
+		}
+
+		return count( array_unique( $terms ) ) >= 2;
 	}
 
 	private function media_alt_caption_alt_candidates( array $item ): array {
@@ -8757,6 +8887,20 @@ final class Provider_Client {
 		}
 
 		return wp_trim_words( wp_strip_all_tags( $post_context ), 12, '' );
+	}
+
+	private function is_truthy( $value ): bool {
+		if ( is_bool( $value ) ) {
+			return $value;
+		}
+		if ( is_int( $value ) || is_float( $value ) ) {
+			return 0 !== (int) $value;
+		}
+		if ( is_string( $value ) ) {
+			return in_array( strtolower( trim( $value ) ), array( '1', 'true', 'yes', 'on' ), true );
+		}
+
+		return false;
 	}
 
 	private function is_list( array $value ): bool {
