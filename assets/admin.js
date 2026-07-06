@@ -2497,7 +2497,10 @@
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Scanned images', eligibility.scanned_count);
 		appendMeta(meta, 'Review rows', eligibility.selected_count || selectedItems.length);
+		appendMeta(meta, 'Ready after visual check', eligibility.ready_for_handoff_count);
+		appendMeta(meta, 'Need context confirmation', eligibility.context_confirmation_count);
 		appendMeta(meta, 'Need manual check', imageContextRequestItems.length);
+		appendMeta(meta, 'Need visual evidence', eligibility.visual_evidence_request_count);
 		appendMeta(meta, 'Excluded', eligibility.blocked_count || blockedItems.length);
 		if (meta.childNodes.length) {
 			section.appendChild(meta);
@@ -2548,6 +2551,8 @@
 				const candidateDetail = [
 					item.candidate_review_status ? t('Candidate status: ') + mediaAltCaptionReasonLabel(item.candidate_review_status) : '',
 					item.candidate_confidence ? t('Confidence: ') + formatLabel(item.candidate_confidence) : '',
+					item.candidate_quality_score || item.candidate_quality_tier ? t('Quality: ') + String(item.candidate_quality_score || 0) + (item.candidate_quality_tier ? ' / ' + formatLabel(item.candidate_quality_tier) : '') : '',
+					item.automation_recommendation ? t('Automation: ') + formatLabel(item.automation_recommendation) : '',
 					Array.isArray(item.candidate_fact_types) && item.candidate_fact_types.length ? t('Basis type: ') + item.candidate_fact_types.map(mediaAltCaptionReasonLabel).join(t(', ')) : '',
 				].filter(Boolean).join(t(' | '));
 				if (candidateDetail) {

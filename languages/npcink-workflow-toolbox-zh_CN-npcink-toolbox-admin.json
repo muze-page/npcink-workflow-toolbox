@@ -512,6 +512,8 @@
       "ALT review": ["ALT 审核"],
       "Candidate status: ": ["候选状态："],
       "Confidence: ": ["置信度："],
+      "Quality: ": ["质量："],
+      "Automation: ": ["自动化建议："],
       "Basis type: ": ["依据类型："],
       "Image clue: ": ["图片线索："],
       "Check the image before submitting this row.": ["提交这一行前请先看图确认。"],

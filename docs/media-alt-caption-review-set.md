@@ -58,6 +58,25 @@ Required operational fields:
 - `retry_guidance`;
 - per-item `status`, `review_reasons`, and `result_ref`.
 
+Candidate quality fields are machine-readable review hints, not write
+authorization. Each selected or quality-blocked row may include:
+
+- `candidate_quality.score`;
+- `candidate_quality.tier`;
+- `candidate_quality.basis_summary`;
+- `candidate_quality.primary_alt_candidate`;
+- `candidate_quality.automation_recommendation`;
+- `candidate_quality.visual_evidence_required`;
+- flat compatibility aliases such as `candidate_quality_score`,
+  `candidate_quality_tier`, and `automation_recommendation`.
+
+The `eligibility_summary` may also include
+`ready_for_handoff_count`, `context_confirmation_count`,
+`caption_review_only_count`, `visual_evidence_request_count`, and
+`insufficient_quality_count`. These counts help the UI and eval tooling route
+operator attention, but every row still requires human visual confirmation and
+any accepted ALT write still uses the Core-governed handoff path.
+
 The follow-up `/flows/media-alt-caption-review-plan` response is
 `media_alt_caption_core_handoff_plan.v1`. It may include per-row
 `proposal_payload` objects for
@@ -176,9 +195,11 @@ gate are reported as blocked items with a reason.
 The admin UI renders the review set as:
 
 - eligibility and blocked counts;
+- ready/context/caption-only/visual-evidence quality counts;
 - source policy and contract version;
 - selected item rows with ALT candidates and caption candidate;
 - candidate quality flags and filtered-candidate notes for audit/debug review;
+- candidate score, tier, and automation recommendation for triage;
 - candidate fact type, confidence, and context-confirmation status;
 - blocked item details;
 - optional image context evidence request details for weak metadata;
