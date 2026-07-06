@@ -186,6 +186,37 @@ This confirms the current gate is conservative: no item is ready for automatic
 ALT handoff from this sample, and the only positive handoff path remains
 operator-reviewed, context-confirmed, Core-proposal-backed ALT.
 
+## Browser Operator Acceptance Result
+
+Command result: pass.
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" \
+WP_PATH="/Users/muze/Local Sites/magick-ai/app/public" \
+WP_BASE_URL="https://magick-ai.local" \
+composer smoke:media-alt-caption-browser
+```
+
+The browser smoke opened the real Toolbox Image Handling admin page with the
+same real attachment ids. It used a temporary local site-helper runtime filter
+so this UI acceptance gate does not depend on Cloud runtime availability.
+
+Verified operator behavior:
+
+- `caption_review_only` rows are visibly separated from ALT handoff rows;
+- caption-only rows keep the ALT input empty and explain that caption
+  suggestions are not batch-applied by the ALT action;
+- location/proper-name rows expose explicit context-confirmation controls;
+- the initial ALT handoff count is `0`;
+- selecting context rows without confirmation still keeps the handoff disabled;
+- confirming one context row enables exactly one ALT handoff candidate;
+- the summary says `Review rows`, not `Ready to update`;
+- the browser does not call Core proposal, Adapter execution, local consent, or
+  media write routes during review.
+
+Screenshot evidence was written to
+`build/smoke/media-alt-caption-browser.png`.
+
 ## Implementation Follow-Up
 
 The validation finding above produced one local implementation change before
@@ -203,6 +234,9 @@ any Toolkit migration:
 - caption-only rows are marked `caption_review_only` and point to
   `review_caption_manually_or_skip_alt_handoff` instead of appearing as ready
   ALT handoff candidates;
+- the admin UI labels review-set rows as `Review rows` instead of
+  `Ready to update`, because context-confirmation and caption-only rows are not
+  ready handoff candidates by default;
 - smoke and batch eval exports include the same fields for follow-up review.
 
 This is a quality gate inside the existing Toolbox review surface. It is not

@@ -2428,7 +2428,7 @@
 		const imageContextRequestItems = asArray(imageContextRequest.items);
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Scanned images', eligibility.scanned_count);
-		appendMeta(meta, 'Ready to update', eligibility.selected_count || selectedItems.length);
+		appendMeta(meta, 'Review rows', eligibility.selected_count || selectedItems.length);
 		appendMeta(meta, 'Need manual check', imageContextRequestItems.length);
 		appendMeta(meta, 'Excluded', eligibility.blocked_count || blockedItems.length);
 		if (meta.childNodes.length) {
