@@ -5491,6 +5491,7 @@ final class Rest_Controller {
 			'category_limit'  => 5,
 			'tag_limit'       => 8,
 			'candidate_limit' => 10,
+			'review_set_limit' => 8,
 		);
 		if ( 0 >= (int) $input['post_id'] ) {
 			unset( $input['post_id'] );
@@ -5521,8 +5522,60 @@ final class Rest_Controller {
 
 		$taxonomy_terms['source_ability_id'] = 'npcink-abilities-toolkit/suggest-post-taxonomy-terms';
 		$taxonomy_terms['ranking_context']['related_term_policy'] = 'ranking_evidence_only_no_term_creation_or_assignment';
+		$review_set_result = $this->editor_toolkit_taxonomy_review_set( $input );
+		if ( is_wp_error( $review_set_result ) ) {
+			$taxonomy_terms['taxonomy_tag_review_set'] = $this->editor_taxonomy_review_set_from_suggestions( $taxonomy_terms, $review_set_result );
+		} else {
+			$review_set_data = is_array( $review_set_result['data'] ?? null ) ? $review_set_result['data'] : $review_set_result;
+			$taxonomy_terms['taxonomy_tag_review_set'] = is_array( $review_set_data ) && 'taxonomy_tag_review_set' === (string) ( $review_set_data['artifact_type'] ?? '' )
+				? $review_set_data
+				: $this->editor_taxonomy_review_set_from_suggestions(
+					$taxonomy_terms,
+					new WP_Error(
+						'npcink_toolbox_taxonomy_review_set_invalid_artifact',
+						__( 'The Toolkit taxonomy review-set ability returned an invalid artifact.', 'npcink-workflow-toolbox' ),
+						array( 'status' => 500 )
+					)
+				);
+		}
 
 		return $taxonomy_terms;
+	}
+
+	private function editor_toolkit_taxonomy_review_set( array $input ) {
+		$ability_id = 'npcink-abilities-toolkit/build-taxonomy-tag-review-set';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_taxonomy_review_set_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build taxonomy review sets.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error(
+				'npcink_toolbox_taxonomy_review_set_toolkit_unavailable',
+				__( 'The Toolkit taxonomy review-set ability is not currently callable.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		if ( ! is_array( $result ) ) {
+			return new WP_Error(
+				'npcink_toolbox_taxonomy_review_set_invalid_response',
+				__( 'The Toolkit taxonomy review-set ability returned an invalid response.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $result;
 	}
 
 	private function editor_toolkit_taxonomy_suggestions( array $input ) {
@@ -5559,6 +5612,90 @@ final class Rest_Controller {
 		}
 
 		return $result;
+	}
+
+	private function editor_taxonomy_review_set_from_suggestions( array $taxonomy_terms, WP_Error $fallback_reason ): array {
+		$items            = is_array( $taxonomy_terms['items'] ?? null ) ? array_values( array_filter( $taxonomy_terms['items'], 'is_array' ) ) : array();
+		$review_set_limit = 8;
+		$selected         = array();
+		$blocked          = array();
+
+		foreach ( $items as $item ) {
+			$quality = $this->editor_taxonomy_candidate_quality( $item );
+			$row     = array(
+				'candidate_id'               => ( 'category' === (string) ( $item['taxonomy'] ?? '' ) ? 'category_' : 'tag_' ) . absint( $item['term_id'] ?? 0 ),
+				'candidate_contract'         => 'taxonomy_tag_review_candidate.v1',
+				'taxonomy'                   => sanitize_key( (string) ( $item['taxonomy'] ?? '' ) ),
+				'term_id'                    => absint( $item['term_id'] ?? 0 ),
+				'name'                       => sanitize_text_field( (string) ( $item['name'] ?? '' ) ),
+				'slug'                       => sanitize_title( (string) ( $item['slug'] ?? '' ) ),
+				'score'                      => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : 0.0,
+				'quality'                    => $quality,
+				'reason'                     => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
+				'evidence_refs'              => is_array( $item['evidence_refs'] ?? null ) ? array_values( array_map( 'sanitize_text_field', $item['evidence_refs'] ) ) : array(),
+				'proposed_action'            => 'append_existing_term',
+				'needs_operator_review'      => true,
+				'direct_wordpress_write'     => false,
+				'term_creation_allowed'      => false,
+				'term_assignment_authorized' => false,
+			);
+			if ( '' === $row['name'] || 0 >= $row['term_id'] ) {
+				$row['blocked_reason'] = 'invalid_existing_term_candidate';
+				$blocked[] = $row;
+				continue;
+			}
+			if ( 'weak' === (string) $quality['status'] ) {
+				$row['blocked_reason'] = 'weak_taxonomy_evidence';
+				$blocked[] = $row;
+				continue;
+			}
+			if ( count( $selected ) >= $review_set_limit ) {
+				$row['blocked_reason'] = 'review_set_limit_reached';
+				$blocked[] = $row;
+				continue;
+			}
+			$row['review_status'] = 'good' === (string) $quality['status'] ? 'ready_for_review' : 'review_recommended';
+			$selected[] = $row;
+		}
+
+		return array(
+			'contract_version'            => 'taxonomy_tag_review_set.v1',
+			'artifact_type'               => 'taxonomy_tag_review_set',
+			'mode'                        => 'governed_review_set',
+			'write_posture'               => 'suggestion_only',
+			'final_write_path'            => 'core_proposal_required',
+			'direct_wordpress_write'      => false,
+			'proposal_created'            => false,
+			'execution_created'           => false,
+			'commit_execution'            => false,
+			'source_ability_id'           => 'npcink-abilities-toolkit/suggest-post-taxonomy-terms',
+			'preferred_source_ability_id' => 'npcink-abilities-toolkit/build-taxonomy-tag-review-set',
+			'runtime_owner'               => 'npcink-workflow-toolbox',
+			'fallback_reason'             => sanitize_key( $fallback_reason->get_error_code() ),
+			'fallback_message'            => sanitize_text_field( $fallback_reason->get_error_message() ),
+			'review_set_limit'            => $review_set_limit,
+			'eligibility_summary'         => array(
+				'scanned'  => count( $items ),
+				'selected' => count( $selected ),
+				'blocked'  => count( $blocked ),
+			),
+			'selected_items'              => $selected,
+			'blocked_items'               => $blocked,
+			'safety'                      => array(
+				'term_creation_allowed'    => false,
+				'term_assignment_allowed'  => false,
+				'proposal_created'         => false,
+				'direct_wordpress_write'   => false,
+				'provider_runtime_used'    => false,
+				'cloud_runtime_dependency' => false,
+			),
+			'handoff'                     => array(
+				'accepted_selection_target' => 'npcink-abilities-toolkit/build-content-metadata-apply-plan',
+				'term_assignment_target'    => 'npcink-abilities-toolkit/set-post-terms',
+				'final_write_path'          => 'core_proposal_required',
+				'operator_review_required'  => true,
+			),
+		);
 	}
 
 	private function empty_toolkit_taxonomy_term_candidates( WP_Error $error, array $related_term_evidence ): array {
