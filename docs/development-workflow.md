@@ -126,12 +126,15 @@ preserving the working tree.
 
 ## Git Remote Gate
 
+Use command-line `git` for all ordinary Git work in this repository: status,
+diff, branch, fetch, merge/rebase, staging, commit, push, pruning, and local
+sync. Use `gh` only for GitHub-specific PR metadata, check inspection, or PR
+operations that plain `git` cannot perform.
+
 Before creating, pushing, or updating a PR branch, verify that local Git can
 reach the configured remote without opening an interactive credential prompt:
 
 ```bash
-gh auth status
-gh auth setup-git
 composer git:remote-check
 ```
 
@@ -141,8 +144,8 @@ path before creating commits for a PR. Do not use GitHub's Git Data API for
 normal branch publishing; it is only an emergency fallback and can create commit
 objects that do not match the local commit SHA.
 
-For the detailed GitHub CLI/Git CLI publication path and timeout diagnostics,
-use the [GitHub Publishing Runbook](github-publishing-runbook.md).
+For the detailed Git CLI publication path and timeout diagnostics, use the
+[GitHub Publishing Runbook](github-publishing-runbook.md).
 
 ## Publication Status Gate
 
@@ -675,6 +678,20 @@ For the media ALT/caption Toolkit extraction gate, run:
 
 ```bash
 composer smoke:media-alt-caption-trial
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:media-alt-caption-browser
+MEDIA_ALT_CAPTION_TRIAL_ATTACHMENT_IDS="764,761,759,758,757" \
+NPCINK_TOOLBOX_MEDIA_ALT_TRIAL_MAX_ITEMS=5 \
+NPCINK_TOOLBOX_MEDIA_ALT_TRIAL_OUTPUT_JSON="build/eval/media-alt-caption-second-sample-cases.json" \
+NPCINK_TOOLBOX_MEDIA_ALT_TRIAL_OUTPUT_MD="build/eval/media-alt-caption-second-sample-cases.md" \
+composer smoke:media-alt-caption-trial
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" \
+MEDIA_ALT_CAPTION_BROWSER_ATTACHMENT_IDS="764,761,759,758,757" \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_CAPTION_ONLY_MIN=0 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_CONTEXT_ROWS_MIN=4 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_READY_ROWS_MIN=1 \
+MEDIA_ALT_CAPTION_BROWSER_EXPECT_REVIEW_ROWS_MIN=5 \
+MEDIA_ALT_CAPTION_BROWSER_SCREENSHOT="build/smoke/media-alt-caption-browser-second-sample.png" \
+composer smoke:media-alt-caption-browser
 composer eval:media-alt-caption:export
 composer eval:media-alt-caption:judge-cross
 composer eval:media-alt-caption:export-batch
@@ -693,6 +710,25 @@ can be checked by a human or passed to the development-only eval-lab checkout.
 The judge-cross command calls eval-lab task `media_alt_caption_judge_cross`
 with the exported file; it is AI-assisted review evidence only and never
 authorizes media metadata writes.
+
+The optional browser smoke opens the real Toolbox Image Handling admin surface
+with explicit real attachment ids and uses a temporary local host filter for
+the site-helper runtime response, so it does not depend on Cloud availability.
+It builds the review set and verifies operator acceptance behavior:
+`caption_review_only` rows are labeled as caption-only, location/proper-name
+rows expose explicit context confirmation, the ALT handoff count starts at
+the number of already ready rows only, selecting rows without confirmation
+does not add gated rows, and confirming one context row enables one additional
+ALT handoff candidate. The expectation env vars let a deliberate second sample
+prove a different distribution, such as no caption-only rows, four
+context-confirmation rows, and one ready-for-review row. It does not click the
+handoff button and verifies the browser does not call Core proposal, Adapter
+execution, local consent, or media write routes.
+
+When using `MEDIA_ALT_CAPTION_TRIAL_ATTACHMENT_IDS`, the PHP trial sends a
+bounded supplied media metadata snapshot for those attachment ids through the
+same site-helper route. That makes second-sample validation reproducible
+without changing the product route cap or relying on Cloud runtime availability.
 
 Use the `*-batch` commands when you need more sample volume for extraction
 confidence. The batch exporter pages real media-library metadata through the

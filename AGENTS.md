@@ -68,6 +68,10 @@ implementing it inside Toolbox.
 ## Development Rules
 
 - Check `git status --short --branch` before edits.
+- Use command-line `git` for all ordinary Git work: status, diff, branch,
+  fetch, merge/rebase, staging, commit, push, pruning, and local sync. Use
+  `gh` only for GitHub-specific PR metadata, check inspection, or PR operations
+  that plain `git` cannot perform.
 - Keep changes scoped to one module per session.
 - Prefer server-rendered WordPress admin UI and vanilla JS unless a real build
   requirement appears.

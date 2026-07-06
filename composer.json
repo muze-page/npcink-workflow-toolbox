@@ -62,6 +62,7 @@
     "smoke:editor-progressive-browser": "node tests/smoke-editor-progressive-browser.mjs",
     "smoke:core-handoff-receipt-ui": "node tests/smoke-core-handoff-receipt-ui.mjs",
     "smoke:media-conversion-review-set-browser": "node tests/smoke-media-conversion-review-set-browser.mjs",
+    "smoke:media-alt-caption-browser": "node tests/smoke-media-alt-caption-browser.mjs",
     "smoke:site-knowledge-review-ui": "php tests/smoke-site-knowledge-review-ui.php",
     "smoke:site-knowledge-cloud-addon-bridge": "sh scripts/smoke-site-knowledge-cloud-addon-bridge.sh",
     "smoke:security-permission-debug": "php tests/smoke-security-permission-debug.php",

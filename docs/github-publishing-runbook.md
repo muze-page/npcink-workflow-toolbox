@@ -3,8 +3,9 @@
 Status: active local publishing reference.
 
 Use this when local commits need to reach GitHub. The preferred path is normal
-Git CLI publication, with `gh` used for authentication setup, repository
-inspection, and PR creation after a successful push.
+Git CLI publication. Use `gh` only for GitHub-specific PR metadata, check
+inspection, or PR operations that plain `git` cannot perform after a successful
+push.
 
 ## Standard Path
 
@@ -16,11 +17,9 @@ git diff --stat
 git rev-list --left-right --count origin/master...HEAD
 ```
 
-Verify GitHub authentication and non-interactive remote access:
+Verify non-interactive remote access through Git:
 
 ```bash
-gh auth status
-gh auth setup-git
 composer git:remote-check
 ```
 
@@ -86,7 +85,8 @@ unrelated repository deploy key.
 The 2026-06-30 publishing attempt proved:
 
 - `gh auth status` succeeded for account `muze-page`;
-- `gh auth setup-git` completed;
+- `gh auth setup-git` completed during historical credential repair, but
+  current ordinary Git work should still use command-line `git`;
 - `gh repo view muze-page/npcink-workflow-toolbox` confirmed default branch
   `master`;
 - `composer git:remote-check` timed out while `git ls-remote origin HEAD` tried
