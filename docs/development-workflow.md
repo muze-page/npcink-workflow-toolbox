@@ -126,12 +126,15 @@ preserving the working tree.
 
 ## Git Remote Gate
 
+Use command-line `git` for all ordinary Git work in this repository: status,
+diff, branch, fetch, merge/rebase, staging, commit, push, pruning, and local
+sync. Use `gh` only for GitHub-specific PR metadata, check inspection, or PR
+operations that plain `git` cannot perform.
+
 Before creating, pushing, or updating a PR branch, verify that local Git can
 reach the configured remote without opening an interactive credential prompt:
 
 ```bash
-gh auth status
-gh auth setup-git
 composer git:remote-check
 ```
 
@@ -141,8 +144,8 @@ path before creating commits for a PR. Do not use GitHub's Git Data API for
 normal branch publishing; it is only an emergency fallback and can create commit
 objects that do not match the local commit SHA.
 
-For the detailed GitHub CLI/Git CLI publication path and timeout diagnostics,
-use the [GitHub Publishing Runbook](github-publishing-runbook.md).
+For the detailed Git CLI publication path and timeout diagnostics, use the
+[GitHub Publishing Runbook](github-publishing-runbook.md).
 
 ## Publication Status Gate
 

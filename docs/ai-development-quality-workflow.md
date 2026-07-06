@@ -112,6 +112,10 @@ Agents must keep rollback and cleanup explicit:
 
 - Do not run `git reset --hard`, `git checkout -- .`, or equivalent destructive
   cleanup unless the user explicitly asks for that exact action.
+- Use command-line `git` for ordinary Git operations, including status, diff,
+  branch, fetch, merge/rebase, staging, commit, push, pruning, and local sync.
+  Reserve `gh` for GitHub-specific PR metadata, check inspection, or PR
+  operations that plain `git` cannot perform.
 - Do not use `git add -A` in mixed worktrees.
 - Before edits, capture `git status --short --branch`.
 - Before staging, inspect `git status --short --branch` and `git diff --stat`.
