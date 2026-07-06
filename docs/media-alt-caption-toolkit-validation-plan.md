@@ -1,15 +1,16 @@
 # Media ALT/Caption Toolkit Validation Plan
 
-Status: validation gate; do not migrate code yet.
+Status: first review-artifact extraction started.
 
 ## Decision
 
-`media_alt_caption_review_set.v1` is a Toolkit extraction candidate, but the
-current implementation should stay in Toolbox until an operator trial proves a
-stable, reusable, review-only artifact.
+`media_alt_caption_review_set.v1` now has a narrow Toolkit builder candidate:
+`npcink-abilities-toolkit/build-media-alt-caption-review-set`. Toolbox should
+prefer that ability when available and keep its local builder as a compatibility
+fallback.
 
-The likely future owner is `npcink-abilities-toolkit`, but only for the
-artifact normalizer or planner contract. Toolbox remains the operator/editor UI
+`npcink-abilities-toolkit` owns only the artifact normalizer contract. Toolbox
+remains the operator/editor UI
 for media selection, review state, Cloud/provider evidence display, and Core
 handoff presentation.
 
@@ -25,14 +26,14 @@ This validation gate exists to prevent two wrong moves:
 | --- | --- |
 | Media selection, admin/editor display, operator review state | Toolbox |
 | Optional hosted AI or image-context runtime | Cloud or host runtime |
-| Reusable review artifact, if proven stable | `npcink-abilities-toolkit` |
+| Reusable review artifact builder | `npcink-abilities-toolkit` |
 | Proposal, approval, preflight, and audit | `npcink-governance-core` |
 | Approved execution relay | `npcink-ai-client-adapter` |
 | Final WordPress media metadata callback | WordPress Abilities callback |
 
 ## Extraction Acceptance Criteria
 
-Move the reusable part to Toolkit only when all of these are true:
+Keep the extracted reusable part in Toolkit only while all of these remain true:
 
 1. The artifact shape is stable across Toolbox, OpenClaw, and at least one
    third-party WordPress host.
@@ -57,8 +58,8 @@ Move the reusable part to Toolkit only when all of these are true:
 
 ## Second-Sample Gate
 
-Before opening a Toolkit extraction branch, run at least one deliberate second
-real-media sample that is not the default recent batch. The sample should be
+Before expanding beyond the first Toolkit builder, run at least one deliberate
+second real-media sample that is not the default recent batch. The sample should be
 declared by explicit attachment ids and should prove a different status
 distribution from the first pass, for example context-confirmation rows plus a
 ready-for-review row without any caption-only row.
@@ -75,14 +76,14 @@ The second-sample gate must record:
 - no Core proposal, execution, media derivative run, queue, scheduler, or
   direct media metadata write.
 
-This gate is not migration approval by itself. It only proves whether the
-candidate classification and no-write review contract are stable enough to
-draft a narrow Toolkit extraction PR.
+This gate is not approval to migrate UI, runtime, or writes. It only proves
+whether the candidate classification and no-write review contract are stable
+enough to continue using the narrow Toolkit builder.
 
 ## Operator Trial Protocol
 
-Run the current Toolbox review set against ordinary media libraries before any
-extraction branch:
+Run the Toolbox review set against ordinary media libraries before expanding
+the extraction:
 
 1. Record total scanned items, selected items, blocked items, and blocked
    reasons.
@@ -141,8 +142,8 @@ validation plan.
 
 ## First Extraction Shape
 
-If the trial passes, extract only a small Toolkit helper that accepts supplied
-media metadata and returns a `media_alt_caption_review_set.v1` artifact with:
+The first extraction is only a small Toolkit helper that accepts supplied media
+metadata and returns a `media_alt_caption_review_set.v1` artifact with:
 
 - eligibility summary;
 - selected items;
@@ -152,5 +153,5 @@ media metadata and returns a `media_alt_caption_review_set.v1` artifact with:
 - `needs_human_visual_check`;
 - no-write posture fields.
 
-Toolbox would continue to call the helper, render the result, collect operator
-review, and hand off any later governed apply path.
+Toolbox continues to call the helper when available, render the result, collect
+operator review, and hand off any later governed apply path.

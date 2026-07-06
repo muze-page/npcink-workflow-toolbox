@@ -6554,6 +6554,11 @@ final class Provider_Client {
 	}
 
 	private function build_media_alt_caption_review_set( array $media_snapshot, int $max_items, array $image_context_evidence = array() ): array {
+		$toolkit_review_set = $this->build_media_alt_caption_review_set_from_toolkit( $media_snapshot, $max_items, $image_context_evidence );
+		if ( is_array( $toolkit_review_set ) ) {
+			return $toolkit_review_set;
+		}
+
 		$items                     = is_array( $media_snapshot['items'] ?? null ) ? $media_snapshot['items'] : array();
 		$image_context_evidence_by_id = $this->media_alt_caption_index_image_context_evidence( $image_context_evidence );
 		$source_policy             = $this->media_alt_caption_review_source_policy( $media_snapshot );
@@ -6716,6 +6721,43 @@ final class Provider_Client {
 				'blocked_direct_apply_reason' => 'Toolbox does not own media metadata writes.',
 			),
 		);
+	}
+
+	private function build_media_alt_caption_review_set_from_toolkit( array $media_snapshot, int $max_items, array $image_context_evidence ) {
+		$ability_id = 'npcink-abilities-toolkit/build-media-alt-caption-review-set';
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return null;
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$ability    = is_array( $registered ) ? ( $registered[ $ability_id ] ?? null ) : null;
+		$callback   = is_array( $ability ) ? ( $ability['execute_callback'] ?? null ) : null;
+		if ( ! is_callable( $callback ) ) {
+			return null;
+		}
+
+		$result = call_user_func(
+			$callback,
+			array(
+				'media_snapshot'         => $media_snapshot,
+				'review_set_limit'       => $max_items,
+				'image_context_evidence' => $image_context_evidence,
+			)
+		);
+		if ( is_wp_error( $result ) || ! is_array( $result ) ) {
+			return null;
+		}
+
+		$data = is_array( $result['data'] ?? null ) ? $result['data'] : $result;
+		if (
+			'media_alt_caption_review_set.v1' !== (string) ( $data['contract_version'] ?? '' )
+			|| 'media_alt_caption_review_set' !== (string) ( $data['artifact_type'] ?? '' )
+			|| false !== (bool) ( $data['direct_wordpress_write'] ?? true )
+		) {
+			return null;
+		}
+
+		return $data;
 	}
 
 	private function media_alt_caption_review_source_policy( array $media_snapshot ): string {
