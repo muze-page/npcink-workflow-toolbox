@@ -555,6 +555,13 @@ show Cloud-returned status, and search Cloud-managed site knowledge. Toolbox
 must not store vector provider keys, provider endpoints, collection names,
 embedding model settings, or vector database lifecycle controls.
 
+Toolbox may also render Cloud/Add-on returned `site_knowledge_cloud_boundary`
+detail as a read-only owner/truth projection. That projection may name the local
+WordPress host as source/final-write owner, Cloud Addon as delivery bridge
+owner, and Cloud service as index/freshness/diagnostics owner. It must not add
+rebuild/delete controls, local indexing queues, collection lifecycle controls,
+or a second WordPress control plane.
+
 ## Cloud Diagnostics Ownership
 
 Toolbox does not own a Cloud Checks or Troubleshooting Checks product surface.

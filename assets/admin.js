@@ -126,6 +126,18 @@
 		return label ? t(label) : '';
 	}
 
+	function formatSiteKnowledgeOwner(value) {
+		const key = String(value || '');
+		const labels = {
+			local_wordpress_host: 'Local WordPress host',
+			cloud_addon: 'Cloud Addon',
+			cloud_addon_required: 'Cloud Addon required',
+			cloud_service: 'Cloud service',
+			toolbox_read_only_consumer: 'Toolbox read-only consumer',
+		};
+		return labels[key] ? t(labels[key]) : localizedLabel(key);
+	}
+
 	function truncate(value, limit) {
 		const text = String(value || '').trim();
 		if (!text || text.length <= limit) {
@@ -1467,6 +1479,7 @@
 		}
 
 		renderSiteKnowledgeChangeBridge(container, siteKnowledgeChangeBridgePayload(payload));
+		renderSiteKnowledgeCloudBoundary(container, siteKnowledgeCloudBoundaryPayload(payload));
 	}
 
 	function siteKnowledgeProgressMessage(message) {
@@ -1599,6 +1612,54 @@
 			return payload.change_bridge;
 		}
 		return payload && payload.auto_sync && typeof payload.auto_sync === 'object' ? payload.auto_sync : {};
+	}
+
+	function siteKnowledgeCloudBoundaryPayload(payload) {
+		if (payload && payload.site_knowledge_cloud_boundary && typeof payload.site_knowledge_cloud_boundary === 'object') {
+			return payload.site_knowledge_cloud_boundary;
+		}
+
+		const bridge = siteKnowledgeChangeBridgePayload(payload);
+		if (bridge.site_knowledge_cloud_boundary && typeof bridge.site_knowledge_cloud_boundary === 'object') {
+			return bridge.site_knowledge_cloud_boundary;
+		}
+		if (
+			(bridge.ownership && typeof bridge.ownership === 'object') ||
+			(bridge.truth_boundaries && typeof bridge.truth_boundaries === 'object')
+		) {
+			return {
+				contract_version: bridge.contract_version || 'site_knowledge_status.v1',
+				ownership: bridge.ownership || {},
+				truth_boundaries: bridge.truth_boundaries || {},
+			};
+		}
+
+		return {};
+	}
+
+	function renderSiteKnowledgeCloudBoundary(container, boundary) {
+		const ownership = boundary && boundary.ownership && typeof boundary.ownership === 'object' ? boundary.ownership : {};
+		const truth = boundary && boundary.truth_boundaries && typeof boundary.truth_boundaries === 'object' ? boundary.truth_boundaries : {};
+		if (!Object.keys(ownership).length && !Object.keys(truth).length) {
+			return;
+		}
+
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Cloud boundary truth', boundary.contract_version || 'site_knowledge_status.v1');
+		appendMeta(meta, 'Source content owner', formatSiteKnowledgeOwner(ownership.source_content_owner));
+		appendMeta(meta, 'Delivery bridge owner', formatSiteKnowledgeOwner(ownership.delivery_bridge_owner));
+		appendMeta(meta, 'Index execution owner', formatSiteKnowledgeOwner(ownership.index_execution_owner));
+		appendMeta(meta, 'Vector storage owner', formatSiteKnowledgeOwner(ownership.vector_storage_owner));
+		appendMeta(meta, 'Approval owner', formatSiteKnowledgeOwner(ownership.approval_owner));
+		appendMeta(meta, 'Final write owner', formatSiteKnowledgeOwner(ownership.final_write_owner || ownership.wordpress_write_owner));
+		appendMeta(meta, 'Cloud is index truth', truth.cloud_is_index_truth === true ? 'Yes' : (truth.cloud_is_index_truth === false ? 'No' : ''));
+		appendMeta(meta, 'Cloud is WordPress control plane', truth.cloud_is_wordpress_control_plane === true ? 'Yes' : (truth.cloud_is_wordpress_control_plane === false ? 'No' : ''));
+		appendMeta(meta, 'Cloud creates WordPress writes', truth.cloud_creates_wordpress_writes === true ? 'Yes' : (truth.cloud_creates_wordpress_writes === false ? 'No' : ''));
+		appendMeta(meta, 'Cloud owns ability registry', truth.cloud_owns_ability_registry === true ? 'Yes' : (truth.cloud_owns_ability_registry === false ? 'No' : ''));
+		appendMeta(meta, 'Cloud owns workflow registry', truth.cloud_owns_workflow_registry === true ? 'Yes' : (truth.cloud_owns_workflow_registry === false ? 'No' : ''));
+		if (meta.childNodes.length) {
+			container.appendChild(meta);
+		}
 	}
 
 	function renderSiteKnowledgeChangeBridge(container, health) {

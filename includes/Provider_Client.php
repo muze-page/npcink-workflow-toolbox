@@ -7587,6 +7587,7 @@ final class Provider_Client {
 		$results = is_array( $result['results'] ?? null ) ? $this->sanitize_payload( $result['results'] ) : array();
 		$results = $this->filter_current_public_site_knowledge_results( $results );
 		$agent_handoff = is_array( $result['agent_handoff'] ?? null ) ? $this->sanitize_payload( $result['agent_handoff'] ) : array();
+		$cloud_boundary = $this->normalize_site_knowledge_cloud_boundary( $result, $response, $runtime_payload );
 
 		$payload = $this->with_output_contract(
 			array(
@@ -7610,11 +7611,131 @@ final class Provider_Client {
 			$composition_role
 		);
 
+		if ( array() !== $cloud_boundary ) {
+			$payload['site_knowledge_cloud_boundary'] = $cloud_boundary;
+		}
+
 		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
 		return $payload;
+	}
+
+	private function normalize_site_knowledge_cloud_boundary( array $result, array $response, array $runtime_payload ): array {
+		$contract_version = sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'site_knowledge_status.v1' ) );
+		$candidates       = array( $result, $response );
+
+		foreach ( array( $result, $response ) as $source ) {
+			if ( is_array( $source['site_knowledge_cloud_boundary'] ?? null ) ) {
+				$candidates[] = $source['site_knowledge_cloud_boundary'];
+			}
+			if ( is_array( $source['data'] ?? null ) ) {
+				$candidates[] = $source['data'];
+				if ( is_array( $source['data']['site_knowledge_cloud_boundary'] ?? null ) ) {
+					$candidates[] = $source['data']['site_knowledge_cloud_boundary'];
+				}
+				if ( is_array( $source['data']['result'] ?? null ) ) {
+					$candidates[] = $source['data']['result'];
+				}
+			}
+			if ( is_array( $source['run']['result'] ?? null ) ) {
+				$candidates[] = $source['run']['result'];
+			}
+		}
+
+		foreach ( $candidates as $candidate ) {
+			if ( ! is_array( $candidate ) ) {
+				continue;
+			}
+
+			$source = is_array( $candidate['site_knowledge_cloud_boundary'] ?? null )
+				? $candidate['site_knowledge_cloud_boundary']
+				: $candidate;
+			$ownership        = $this->normalize_site_knowledge_ownership_map( is_array( $source['ownership'] ?? null ) ? $source['ownership'] : array() );
+			$truth_boundaries = $this->normalize_site_knowledge_truth_boundaries( is_array( $source['truth_boundaries'] ?? null ) ? $source['truth_boundaries'] : array() );
+
+			if ( array() === $ownership && array() === $truth_boundaries ) {
+				continue;
+			}
+
+			return array(
+				'contract_version' => sanitize_text_field( (string) ( $source['contract_version'] ?? $contract_version ) ),
+				'ownership'        => $ownership,
+				'truth_boundaries' => $truth_boundaries,
+				'projection_owner' => 'toolbox_read_only_consumer',
+			);
+		}
+
+		return array();
+	}
+
+	/**
+	 * @param array<string,mixed> $ownership Raw ownership map.
+	 * @return array<string,string>
+	 */
+	private function normalize_site_knowledge_ownership_map( array $ownership ): array {
+		$allowed_keys = array(
+			'source_content_owner',
+			'delivery_bridge_owner',
+			'index_execution_owner',
+			'index_lifecycle_owner',
+			'freshness_policy_owner',
+			'diagnostics_detail_owner',
+			'vector_storage_owner',
+			'embedding_execution_owner',
+			'approval_owner',
+			'final_write_owner',
+			'wordpress_write_owner',
+		);
+		$normalized = array();
+
+		foreach ( $allowed_keys as $key ) {
+			$value = sanitize_key( (string) ( $ownership[ $key ] ?? '' ) );
+			if ( '' !== $value ) {
+				$normalized[ $key ] = $value;
+			}
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * @param array<string,mixed> $truth_boundaries Raw truth boundary map.
+	 * @return array<string,bool>
+	 */
+	private function normalize_site_knowledge_truth_boundaries( array $truth_boundaries ): array {
+		$allowed_keys = array(
+			'cloud_is_index_truth',
+			'cloud_is_freshness_truth',
+			'cloud_is_diagnostics_truth',
+			'cloud_is_wordpress_control_plane',
+			'cloud_creates_wordpress_writes',
+			'cloud_owns_local_approval',
+			'cloud_owns_ability_registry',
+			'cloud_owns_workflow_registry',
+		);
+		$normalized = array();
+
+		foreach ( $allowed_keys as $key ) {
+			if ( array_key_exists( $key, $truth_boundaries ) ) {
+				$normalized[ $key ] = $this->normalize_site_knowledge_bool( $truth_boundaries[ $key ] );
+			}
+		}
+
+		return $normalized;
+	}
+
+	private function normalize_site_knowledge_bool( $value ): bool {
+		if ( is_bool( $value ) ) {
+			return $value;
+		}
+
+		if ( is_string( $value ) ) {
+			return in_array( strtolower( trim( $value ) ), array( '1', 'true', 'yes', 'on' ), true );
+		}
+
+		return (bool) $value;
 	}
 
 	private function agent_feedback_payload( array $input ) {

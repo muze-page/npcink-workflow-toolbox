@@ -3,7 +3,7 @@ set -u
 
 WP_PATH="${WP_PATH:-/Users/muze/Local Sites/npcink/app/public}"
 WP_CLI_BIN="${WP_CLI_BIN:-/opt/homebrew/bin/wp}"
-WP_CLI_PHP="${WP_CLI_PHP:-}"
+WP_CLI_PHP="${WP_CLI_PHP:-$HOME/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php}"
 SOCKET="${WP_DB_SOCKET:-$HOME/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock}"
 
 CLOUD_PLUGIN="${NPCINK_CLOUD_ADDON_PLUGIN:-npcink-cloud-addon}"
@@ -17,6 +17,7 @@ wp_cli() {
 			-d display_errors=0 \
 			-d error_reporting=8191 \
 			-d mysqli.default_socket="$SOCKET" \
+			-d pdo_mysql.default_socket="$SOCKET" \
 			"$WP_CLI_BIN" \
 			--path="$WP_PATH" \
 			--no-color \
