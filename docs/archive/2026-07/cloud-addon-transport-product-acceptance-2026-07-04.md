@@ -156,6 +156,38 @@ no-credit contract gates already cover the migrated transport shape. The next
 real provider E2E pass should wait until Cloud credits are replenished or the
 release owner explicitly chooses to spend the remaining test credits.
 
+## Provider Gate Completion - 2026-07-06
+
+After the Cloud test credits were replenished, the entitlement check was
+repeated and the real provider gate was run against the local WordPress site.
+The pre-run entitlement state was:
+
+- liveness: ok;
+- signed entitlement probe: ok;
+- package: Free;
+- package tier: free;
+- AI credit usage: 298 of 2000 credits;
+- remaining credits: 1702;
+- credit status: `ok`;
+- direct WordPress write: false.
+
+Real provider gates:
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| `composer smoke:web-search-cloud-addon-transport` | passed | Returned a structured `web_search_results` artifact with `web_search.v1`, at least one real Cloud-managed result, and `direct_wordpress_write=false` on both artifact and handoff. |
+| `composer smoke:image-source-cloud-addon-transport` | passed | Returned a structured `image_source_candidates` artifact, at least one real Cloud-managed candidate, an inspectable image URL, and `direct_wordpress_write=false` on both artifact and handoff. |
+
+The post-run entitlement state was:
+
+- AI credit usage: 305 of 2000 credits;
+- remaining credits: 1695;
+- credit status: `ok`.
+
+The smoke scripts do not print safe Cloud run ids or trace ids. None were added
+to this record to avoid storing raw provider payloads, signed request details,
+cookies, nonces, or request logs.
+
 ## Next Phase Recommendation
 
 The next phase should not start with another broad migration. It should first
