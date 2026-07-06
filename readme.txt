@@ -197,6 +197,13 @@ Accepted choices can be packaged into a governed handoff plan. Core proposal
 approval, preflight, audit, and the final WordPress ability execution remain
 outside Toolbox.
 
+== Screenshots ==
+
+1. Toolbox overview with capability health and the review-only site check entry.
+2. Site Profile fields for non-secret SEO, AEO, and GEO guidance.
+3. Post editor Npcink Content Support panel with fixed review and handoff actions.
+4. Site Check decision queue with local findings, handling paths, and optional Cloud detail.
+
 == Changelog ==
 
 = 0.1.1 =
