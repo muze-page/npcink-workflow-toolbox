@@ -739,14 +739,15 @@ WordPress responsibilities.
 
 When Cloud Addon exposes `npcink_cloud_addon_site_knowledge_change_bridge_health()`,
 it owns the public content-change bridge for Site Knowledge. Toolbox then shows
-that bridge health in the Site Knowledge status response and does not register
-its legacy local auto-sync hooks. Standalone installs without the Cloud Addon
-bridge show an install-and-verify requirement instead of running a Toolbox-owned
-fallback queue. Manual Site Knowledge sync remains as a compatibility REST and
-Ability contract for existing callers, but the operator-facing connection,
-refresh, indexing, and detailed delivery status live in Cloud Addon. Toolbox
-does not store provider credentials, run embeddings locally, own the index
-lifecycle, or write WordPress content.
+that bridge health under `change_bridge` in the Site Knowledge status response
+and does not register its legacy local auto-sync hooks. `auto_sync` remains only
+as a compatibility alias for older callers. Standalone installs without the
+Cloud Addon bridge show an install-and-verify requirement instead of running a
+Toolbox-owned fallback queue. Manual Site Knowledge sync remains as a
+compatibility REST and Ability contract for existing callers, but the
+operator-facing connection, refresh, indexing, and detailed delivery status
+live in Cloud Addon. Toolbox does not store provider credentials, run embeddings
+locally, own the index lifecycle, or write WordPress content.
 
 The secondary **Content Library Usage** panel is read-only from a daily
 operator perspective. It displays coverage/status returned by Cloud-managed

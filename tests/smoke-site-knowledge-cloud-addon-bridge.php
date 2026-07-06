@@ -65,11 +65,12 @@ npcink_toolbox_sk_cloud_bridge_assert(
 );
 
 $health = \Npcink_Toolbox\Site_Knowledge_Auto_Sync::health_snapshot();
-npcink_toolbox_sk_cloud_bridge_assert( is_array( $health ), 'Toolbox returns a Site Knowledge auto-sync health array.' );
+npcink_toolbox_sk_cloud_bridge_assert( is_array( $health ), 'Toolbox returns a Site Knowledge change bridge health array.' );
 npcink_toolbox_sk_cloud_bridge_assert( 'cloud_addon' === (string) ( $health['owner'] ?? '' ), 'Toolbox health reports Cloud Addon as Site Knowledge change delivery owner.' );
 npcink_toolbox_sk_cloud_bridge_assert( 'site_knowledge_change_bridge' === (string) ( $health['mode'] ?? '' ), 'Toolbox health reports the Cloud Addon bridge mode.' );
 npcink_toolbox_sk_cloud_bridge_assert( false === (bool) ( $health['legacy_toolbox_fallback'] ?? true ), 'Toolbox legacy fallback is disabled while Cloud Addon bridge is present.' );
-npcink_toolbox_sk_cloud_bridge_assert( array_key_exists( 'queue_count', $health ), 'Toolbox exposes the Cloud Addon bridge buffer count without owning a legacy queue.' );
+npcink_toolbox_sk_cloud_bridge_assert( array_key_exists( 'buffer_count', $health ), 'Toolbox exposes the Cloud Addon bridge buffer count without owning a legacy queue.' );
+npcink_toolbox_sk_cloud_bridge_assert( array_key_exists( 'queue_count', $health ) && in_array( 'queue_count', (array) ( $health['compatibility_aliases'] ?? array() ), true ), 'Toolbox keeps queue_count only as a compatibility alias for older callers.' );
 
 $cloud_post_hook = has_action(
 	'transition_post_status',

@@ -333,7 +333,9 @@ final class Rest_Controller {
 		);
 
 		if ( is_array( $status ) ) {
-			$status['auto_sync'] = Site_Knowledge_Auto_Sync::health_snapshot();
+			$change_bridge = Site_Knowledge_Auto_Sync::health_snapshot();
+			$status['change_bridge'] = $change_bridge;
+			$status['auto_sync']     = $change_bridge;
 		}
 
 		return rest_ensure_response( $status );
