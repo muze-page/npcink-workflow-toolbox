@@ -28,6 +28,7 @@ Start from the active documents below before changing code.
 - [WordPress.org Submission](wordpress-org-submission.md)
 - [WordPress.org Release Readiness Closeout](wordpress-org-release-readiness-closeout-2026-06-29.md)
 - [Cloud Addon Transport Product Acceptance](archive/2026-07/cloud-addon-transport-product-acceptance-2026-07-04.md)
+- [WordPress.org Publication And Translation Closeout](archive/2026-07/wordpress-org-publication-translation-closeout-2026-07-03.md)
 
 ## Product Surfaces
 

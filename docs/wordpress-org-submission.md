@@ -4,6 +4,8 @@ Status: prepared for the Npcink Workflow Toolbox 0.1.1 WordPress.org plugin subm
 
 The current release-readiness closeout is recorded in
 [`WordPress.org Release Readiness Closeout - 2026-06-29`](wordpress-org-release-readiness-closeout-2026-06-29.md).
+The post-approval publication and zh_CN translation closeout is recorded in
+[`WordPress.org Publication And Translation Closeout - 2026-07-03`](archive/2026-07/wordpress-org-publication-translation-closeout-2026-07-03.md).
 
 ## Plugin Details
 
@@ -64,8 +66,13 @@ Upload or copy these files to the WordPress.org plugin SVN top-level `assets/` d
 - `wporg-assets/icon-256x256.png` -> `assets/icon-256x256.png`
 - `wporg-assets/banner-772x250.png` -> `assets/banner-772x250.png`
 - `wporg-assets/banner-1544x500.png` -> `assets/banner-1544x500.png`
+- `wporg-assets/screenshot-1.png` -> `assets/screenshot-1.png`
+- `wporg-assets/screenshot-2.png` -> `assets/screenshot-2.png`
+- `wporg-assets/screenshot-3.png` -> `assets/screenshot-3.png`
+- `wporg-assets/screenshot-4.png` -> `assets/screenshot-4.png`
 
 These assets are intentionally excluded from the plugin release zip by `.distignore`.
+Do not upload local metadata files such as `.DS_Store`.
 
 ## Release Package
 
