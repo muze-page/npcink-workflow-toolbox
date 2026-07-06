@@ -37,6 +37,7 @@ Start from the active documents below before changing code.
 - [Content Support Product Readiness](content-support-product-readiness.md)
 - [Fixed Button Surface](fixed-button-surface.md)
 - [Toolbox Fixed Button Reference Notes](toolbox-fixed-button-reference-notes-2026-07.md)
+- [Reference Learning Synthesis](reference-learning-synthesis-2026-07.md)
 - [Content Support Writing Checkup History](content-support-writing-checkup-history.md)
 - [Editor Progressive Recommendations Trial](editor-progressive-recommendations-trial.md)
 - [Editor AI Image Recommendation Summary](editor-ai-image-recommendation-summary.md)
