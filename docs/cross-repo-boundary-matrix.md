@@ -72,6 +72,34 @@ Move to Toolkit only when all of these are true:
 Do not migrate provider runtime, Cloud indexing, editor UI state, proposal
 approval, audit, preflight, or final WordPress writes into Toolkit.
 
+## Migration Candidate Boundary Table
+
+Use this table before opening a new cross-repo migration branch. A migration is
+worth doing only when it reduces long-term ownership confusion without turning
+another project into a second control plane.
+
+| Candidate | Target | Decision | Gate |
+| --- | --- | --- | --- |
+| Media ALT/caption review-set builder | `npcink-abilities-toolkit` | Done for the reusable builder; keep the Toolbox local fallback through the first release window. | Post-merge smoke must show `source_ability_id=npcink-abilities-toolkit/build-media-alt-caption-review-set`, `runtime_owner=npcink-abilities-toolkit`, unchanged sampled attachment metadata, no proposal, no execution, no media derivative run, and no direct write. |
+| Taxonomy/tag review-set builder | `npcink-abilities-toolkit` | Next low-risk candidate. Build only a reusable review-set artifact over supplied post context, existing terms, and optional ranking evidence. | Must not create terms, assign terms, mutate SEO fields, persist feedback truth, call Cloud runtime, or create proposals. Toolbox keeps editor/admin review state and Core handoff presentation. |
+| Internal-link review-set builder | `npcink-abilities-toolkit` | Candidate after taxonomy/tag review sets. Build only reusable grouping, blocked reasons, and review artifact shape from supplied candidate evidence. | Must not insert links, patch post content, crawl/index content, own Site Knowledge, or create proposals. Toolbox keeps selection, copy/open actions, and operator review UI. |
+| Content metadata apply-plan envelope | `npcink-abilities-toolkit` | Already Toolkit-owned; extend only if Core/Adapter contract changes require a stable reusable envelope. | Must remain Core-proposal-ready or dry-run until Core approval and Adapter preflight provide approved host context. |
+| Media metadata apply path | `npcink-abilities-toolkit` plus Core/Adapter | Do not start from Toolbox. Design separately only after a governed write path is accepted. | Requires Toolkit write ability schema, Core proposal/preflight/audit, Adapter execution profile, and final WordPress callback. It must not expand Local Admin Consent to ALT/caption metadata. |
+| Site Knowledge bridge health and delivery status | `npcink-cloud-addon` | Belongs in Cloud Addon, not Toolbox. Toolbox may consume a shallow readiness projection. | Addon may show verified connection, buffered public changes, last delivery, last error, next flush, and Cloud Site Knowledge links. It must not expose rebuild/delete, collection lifecycle, provider settings, vector DB endpoints, or stale-index controls. |
+| Cloud runtime runs recent/status/result/retry detail | `npcink-cloud-addon` | Belongs in Cloud Addon Runtime Runs. Toolbox may keep compatibility routes or links only. | Addon must stay a runtime/detail surface. It must not become proposal approval, local scheduler truth, run-store truth for WordPress, or a second workflow console. |
+| Image-source, audio, and generated-image transport detail | `npcink-cloud-addon` | Transport/status/detail belongs in Cloud Addon or Cloud service plane. Toolbox keeps fixed buttons and candidate review UX. | Addon owns signed transport and shallow diagnostics only. Toolbox must not store provider keys, billing/quota truth, request logs, media imports, or featured-image writes. |
+| Hosted AI title, summary, outline, polish, and image-context generation | `npcink-ai-cloud` runtime, surfaced by Toolbox | Do not migrate to Toolkit. | These are provider/model runtime outputs. Toolkit can consume reviewed evidence only after the output is normalized into a stable WordPress artifact. |
+| Progressive local recommendations | Keep in Toolbox for now | Defer extraction. | Extract only if a stable host-reusable artifact emerges. While it depends on editor fingerprinting, loading state, and UI fallback behavior, it remains Toolbox product glue. |
+| Operator feedback and quality loop | Keep outside Toolkit | Do not migrate to Toolkit now. | Feedback and eval signals are product/runtime evidence. Move only bounded runtime detail to Cloud/Add-on surfaces, not WordPress ability definitions. |
+| OpenClaw projection | Adapter/OpenClaw path | Do not migrate to Toolbox or Toolkit. | OpenClaw should call the same Toolkit artifacts and Core proposal paths. Toolbox remains the fixed-button projection, not the natural-language projection owner. |
+
+Recommended order:
+
+1. Finish and verify the media ALT/caption merge on `master`.
+2. Add only the taxonomy/tag review-set builder candidate to Toolkit.
+3. Re-run the cross-repo boundary matrix and real WordPress smoke.
+4. Reassess before moving internal-link review sets or any Cloud Addon detail.
+
 | Candidate | Decision | Boundary |
 | --- | --- | --- |
 | Internal-link candidate assembly | Migrated; no further migration. | `npcink-abilities-toolkit/resolve-internal-link-targets` owns `internal_link_candidates.v1`. Toolbox passes bounded editor context and optional Cloud related-content evidence, then renders copy/open review actions. |
@@ -80,7 +108,7 @@ approval, audit, preflight, or final WordPress writes into Toolkit.
 | Image candidate review projection | Migrated; no further migration. | `npcink-abilities-toolkit/build-image-candidate-review-artifact` owns `image_candidate_review.v1` projections. Toolbox and Cloud still own image-source search, hosted image candidate requests, and provider UX. |
 | Image candidate adoption plan | Already Toolkit-owned. | `npcink-abilities-toolkit/build-image-candidate-adoption-plan` owns adoption planning for reviewed candidates. Core/Adapter govern any final media action. |
 | Content metadata apply plan | Already Toolkit-owned. | `npcink-abilities-toolkit/build-content-metadata-apply-plan` owns the reusable apply-plan artifact. Toolbox only packages accepted operator selections for Core proposal intake. |
-| Media ALT/caption review set | First extraction in progress; keep split. | `npcink-abilities-toolkit/build-media-alt-caption-review-set` owns the reusable `media_alt_caption_review_set.v1` builder for supplied metadata and optional reviewed evidence. Toolbox still owns UI, media selection, review state, Cloud evidence requests, local fallback, and Core handoff presentation. |
+| Media ALT/caption review set | Migrated; keep split. | `npcink-abilities-toolkit/build-media-alt-caption-review-set` owns the reusable `media_alt_caption_review_set.v1` builder for supplied metadata and optional reviewed evidence. Toolbox still owns UI, media selection, review state, Cloud evidence requests, local fallback, and Core handoff presentation. |
 | SEO meta handoff preview | Keep split; defer only if a reusable preview artifact stabilizes. | Toolkit owns `npcink-abilities-toolkit/set-post-seo-meta` for approved writes. Toolbox may present a single-post Core handoff preview but must not own SEO mutation. |
 | Title, summary, outline, polish, and other hosted AI text outputs | Do not migrate now. | These are provider/model runtime results surfaced as Toolbox suggestions. Moving prompt/runtime generation into Toolkit would make Toolkit too heavy. |
 | Image-source search and hosted image candidate requests | Do not migrate. | Toolbox owns source UX and Cloud/provider candidate requests; Toolkit may consume already retrieved candidate evidence for review or adoption artifacts only. |
