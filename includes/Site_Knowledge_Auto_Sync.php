@@ -10,9 +10,9 @@ namespace Npcink_Toolbox;
 defined( 'ABSPATH' ) || exit;
 
 final class Site_Knowledge_Auto_Sync {
-	private const QUEUE_OPTION   = 'npcink_toolbox_site_knowledge_auto_sync_queue';
-	private const CRON_HOOK      = 'npcink_toolbox_process_site_knowledge_auto_sync';
-	private const RECONCILE_HOOK = 'npcink_toolbox_reconcile_site_knowledge_auto_sync';
+	private const LEGACY_QUEUE_OPTION   = 'npcink_toolbox_site_knowledge_auto_sync_queue';
+	private const LEGACY_CRON_HOOK      = 'npcink_toolbox_process_site_knowledge_auto_sync';
+	private const LEGACY_RECONCILE_HOOK = 'npcink_toolbox_reconcile_site_knowledge_auto_sync';
 
 	public function __construct( Provider_Client $client ) {
 		unset( $client );
@@ -52,10 +52,10 @@ final class Site_Knowledge_Auto_Sync {
 			'enabled'                 => false,
 			'configured'              => false,
 			'verified'                => false,
-			'queue_count'             => 0,
 			'buffer_count'            => 0,
-			'next_queue_run_at'       => '',
+			'queue_count'             => 0,
 			'next_flush_at'           => '',
+			'next_queue_run_at'       => '',
 			'next_reconcile_at'       => '',
 			'last_delivery_at'        => '',
 			'last_success_at'         => '',
@@ -69,6 +69,7 @@ final class Site_Knowledge_Auto_Sync {
 			'scheduler_truth'         => false,
 			'workflow_truth'          => false,
 			'wordpress_write_included' => false,
+			'compatibility_aliases'    => array( 'auto_sync', 'queue_count', 'next_queue_run_at' ),
 			'message'                 => __( 'Install and verify Cloud Addon to enable automatic Site Knowledge public-change delivery. Manual Site Knowledge sync remains available from Toolbox.', 'npcink-workflow-toolbox' ),
 		);
 	}
@@ -115,10 +116,10 @@ final class Site_Knowledge_Auto_Sync {
 				'enabled'                 => $enabled,
 				'configured'              => $configured,
 				'verified'                => $verified,
-				'queue_count'             => $buffer_count,
 				'buffer_count'            => $buffer_count,
-				'next_queue_run_at'       => sanitize_text_field( (string) ( $snapshot['next_flush_at'] ?? '' ) ),
+				'queue_count'             => $buffer_count,
 				'next_flush_at'           => sanitize_text_field( (string) ( $snapshot['next_flush_at'] ?? '' ) ),
+				'next_queue_run_at'       => sanitize_text_field( (string) ( $snapshot['next_flush_at'] ?? '' ) ),
 				'next_reconcile_at'       => sanitize_text_field( (string) ( $snapshot['next_reconcile_at'] ?? '' ) ),
 				'last_delivery_at'        => sanitize_text_field( (string) ( $snapshot['last_delivery_at'] ?? ( $snapshot['last_delivered_at'] ?? '' ) ) ),
 				'last_success_at'         => sanitize_text_field( (string) ( $snapshot['last_success_at'] ?? '' ) ),
@@ -129,6 +130,7 @@ final class Site_Knowledge_Auto_Sync {
 				'scheduler_truth'         => false,
 				'workflow_truth'          => false,
 				'wordpress_write_included' => false,
+				'compatibility_aliases'    => array( 'auto_sync', 'queue_count', 'next_queue_run_at' ),
 				'message'                 => $message,
 			)
 		);
@@ -136,12 +138,12 @@ final class Site_Knowledge_Auto_Sync {
 
 	private static function clear_legacy_state(): void {
 		if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
-			wp_clear_scheduled_hook( self::CRON_HOOK );
-			wp_clear_scheduled_hook( self::RECONCILE_HOOK );
+			wp_clear_scheduled_hook( self::LEGACY_CRON_HOOK );
+			wp_clear_scheduled_hook( self::LEGACY_RECONCILE_HOOK );
 		}
 
 		if ( function_exists( 'delete_option' ) ) {
-			delete_option( self::QUEUE_OPTION );
+			delete_option( self::LEGACY_QUEUE_OPTION );
 		}
 	}
 }

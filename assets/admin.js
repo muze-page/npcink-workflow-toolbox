@@ -1466,7 +1466,7 @@
 			container.appendChild(details);
 		}
 
-		renderSiteKnowledgeAutoSync(container, payload && payload.auto_sync && typeof payload.auto_sync === 'object' ? payload.auto_sync : {});
+		renderSiteKnowledgeChangeBridge(container, siteKnowledgeChangeBridgePayload(payload));
 	}
 
 	function siteKnowledgeProgressMessage(message) {
@@ -1594,17 +1594,24 @@
 		}
 	}
 
-	function renderSiteKnowledgeAutoSync(container, health) {
+	function siteKnowledgeChangeBridgePayload(payload) {
+		if (payload && payload.change_bridge && typeof payload.change_bridge === 'object') {
+			return payload.change_bridge;
+		}
+		return payload && payload.auto_sync && typeof payload.auto_sync === 'object' ? payload.auto_sync : {};
+	}
+
+	function renderSiteKnowledgeChangeBridge(container, health) {
 		const status = String(health.status || 'idle');
-		const queueCount = Number(health.queue_count || 0);
-		const notice = siteKnowledgeAutoSyncNotice(health, status, queueCount);
+		const bufferCount = Number(health.buffer_count || health.queue_count || 0);
+		const notice = siteKnowledgeChangeBridgeNotice(health, status, bufferCount);
 		container.appendChild(el('div', notice.kind ? 'npcink-toolbox__result-notice is-' + notice.kind : 'npcink-toolbox__result-notice', notice.message));
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Change bridge', localizedLabel(status));
 		appendMeta(meta, 'Bridge owner', formatLabel(health.owner || 'cloud_addon'));
-		appendMeta(meta, 'Bridge state', siteKnowledgeAutoSyncQueueMeaning(health, status, queueCount));
-		appendMeta(meta, 'Buffered changes', health.queue_count);
+		appendMeta(meta, 'Bridge state', siteKnowledgeChangeBridgeMeaning(health, status, bufferCount));
+		appendMeta(meta, 'Buffered changes', bufferCount);
 		appendMeta(meta, 'Next flush', formatDateTime(health.next_flush_at || health.next_queue_run_at));
 		appendMeta(meta, 'Daily check', formatDateTime(health.next_reconcile_at));
 		appendMeta(meta, 'WP-Cron disabled', health.wp_cron_disabled === true ? 'Yes' : 'No');
@@ -1618,7 +1625,7 @@
 
 		if (health.cron_command || health.wp_cli_command) {
 			const details = el('details', 'npcink-toolbox__result-details');
-			details.appendChild(el('summary', '', siteKnowledgeAutoSyncCronSummary(health, status, queueCount)));
+			details.appendChild(el('summary', '', siteKnowledgeChangeBridgeCronSummary(health, status, bufferCount)));
 			if (health.cron_command) {
 				details.appendChild(el('p', 'description', 'Use this when your host supports URL-based scheduled tasks.'));
 				const curl = el('pre', 'npcink-toolbox__result-raw');
@@ -1635,20 +1642,20 @@
 		}
 	}
 
-	function siteKnowledgeAutoSyncNotice(health, status, queueCount) {
+	function siteKnowledgeChangeBridgeNotice(health, status, bufferCount) {
 		if (status === 'disabled') {
 			return {
 				kind: 'warning',
 				message: health.message || 'Cloud Addon change bridge is disabled until Cloud settings are verified.',
 			};
 		}
-		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeAutoSyncDue(health, queueCount)) {
+		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeChangeBridgeDue(health, bufferCount)) {
 			return {
 				kind: 'warning',
 				message: 'Cloud Addon has buffered Site Knowledge changes that are due for WP-Cron. If this stays buffered, run WP-Cron or configure the server cron command below.',
 			};
 		}
-		if (queueCount > 0) {
+		if (bufferCount > 0) {
 			return {
 				kind: '',
 				message: 'Cloud Addon is waiting for the debounce window. The current index remains usable; buffered changes will refresh on the next WP-Cron run.',
@@ -1660,29 +1667,29 @@
 		};
 	}
 
-	function siteKnowledgeAutoSyncQueueMeaning(health, status, queueCount) {
+	function siteKnowledgeChangeBridgeMeaning(health, status, bufferCount) {
 		if (status === 'disabled') {
 			return 'Disabled until Cloud Addon is installed and verified';
 		}
-		if (queueCount <= 0) {
+		if (bufferCount <= 0) {
 			return 'No buffered changes';
 		}
-		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeAutoSyncDue(health, queueCount)) {
+		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeChangeBridgeDue(health, bufferCount)) {
 			return 'Buffered changes are due for WP-Cron';
 		}
 		return 'Buffered changes waiting for the next WP-Cron run';
 	}
 
-	function siteKnowledgeAutoSyncCronSummary(health, status, queueCount) {
-		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeAutoSyncDue(health, queueCount)) {
+	function siteKnowledgeChangeBridgeCronSummary(health, status, bufferCount) {
+		if (status === 'delayed' || health.wp_cron_disabled === true || siteKnowledgeChangeBridgeDue(health, bufferCount)) {
 			return 'Server cron action';
 		}
 		return 'Server cron suggestion';
 	}
 
-	function siteKnowledgeAutoSyncDue(health, queueCount) {
+	function siteKnowledgeChangeBridgeDue(health, bufferCount) {
 		const nextValue = health.next_flush_at || health.next_queue_run_at;
-		if (queueCount <= 0 || !nextValue) {
+		if (bufferCount <= 0 || !nextValue) {
 			return false;
 		}
 		const nextRun = Date.parse(String(nextValue));

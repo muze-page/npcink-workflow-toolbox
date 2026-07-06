@@ -47,8 +47,10 @@ composer smoke:site-knowledge-cloud-addon-bridge
 ```
 
 The bridge smoke must prove Cloud Addon owns public content-change delivery,
-Toolbox reports `owner=cloud_addon`, and retired Toolbox legacy auto-sync hooks
-are not registered.
+Toolbox reports `owner=cloud_addon` through the `change_bridge`/`buffer_count`
+status projection, and retired Toolbox legacy auto-sync hooks are not
+registered. The old `auto_sync` and `queue_count` fields are compatibility
+aliases only.
 
 ## 4. Cloud Addon Transport Gate
 
