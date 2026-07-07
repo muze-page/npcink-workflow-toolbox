@@ -110,6 +110,8 @@ Required evidence and constraints:
 - one current post and one existing image attachment;
 - exact visible selected image before the click;
 - operation classifier result `local_admin_consent`;
+- current `operation-classification-v1` `decision_envelope` preserved in Core
+  audit metadata;
 - Core-owned `local_admin_consent.requested` and
   `local_admin_consent.completed` audit records;
 - rollback if completion audit fails;

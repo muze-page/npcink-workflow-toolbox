@@ -244,9 +244,11 @@ For selected candidates that are already WordPress image attachments, the
 editor may use `/local-admin-consent/featured-image` to set one attachment as
 the current post's featured image. That route is the first Local Admin Consent
 proof: it requires a present administrator, exact visible selection, one post,
-one existing image attachment, Core audit before and after the write, and
-rollback if completion audit fails. It does not import media, update metadata,
-create a Core proposal, approve, preflight, or execute abilities.
+one existing image attachment, current `operation-classification-v1`
+`decision_envelope` evidence in Core audit metadata, Core audit before and
+after the write, and rollback if completion audit fails. It does not import
+media, update metadata, create a Core proposal, approve, preflight, or execute
+abilities.
 The editor image-source modal may call this route for the selected candidate
 when the selected candidate already has an attachment id, and it returns a
 local consent result rather than an Adapter plan. For external URLs, generated

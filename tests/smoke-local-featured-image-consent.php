@@ -128,6 +128,8 @@ $data     = $response->get_data();
 toolbox_local_featured_smoke_assert( 200 === $status, 'Local featured image consent REST dispatch succeeds.' );
 toolbox_local_featured_smoke_assert( is_array( $data ) && 'local_admin_consent_featured_image_result' === (string) ( $data['artifact_type'] ?? '' ), 'REST result declares the local consent artifact.' );
 toolbox_local_featured_smoke_assert( 'local_admin_consent' === (string) ( $data['classification']['classification'] ?? '' ), 'REST result records local_admin_consent classification.' );
+toolbox_local_featured_smoke_assert( 'operation-classification-v1' === (string) ( $data['classification']['decision_envelope']['decision_version'] ?? '' ), 'REST result records the current classification decision envelope.' );
+toolbox_local_featured_smoke_assert( 'set_featured_image' === (string) ( $data['classification']['decision_envelope']['operation_kind'] ?? '' ), 'REST result classification envelope records the featured-image operation kind.' );
 toolbox_local_featured_smoke_assert( false === (bool) ( $data['proposal_created'] ?? true ), 'REST result does not create a Core proposal.' );
 toolbox_local_featured_smoke_assert( 'npcink-governance-core' === (string) ( $data['audit_owner'] ?? '' ), 'REST result assigns audit ownership to Core.' );
 toolbox_local_featured_smoke_assert( ! empty( $data['audit']['requested']['event_id'] ?? '' ) && ! empty( $data['audit']['completed']['event_id'] ?? '' ), 'REST result includes Core requested and completed audit events.' );

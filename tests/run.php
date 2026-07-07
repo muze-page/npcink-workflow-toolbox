@@ -649,6 +649,7 @@ $operation_classifier = file_get_contents( $root . '/includes/Operation_Classifi
 foreach ( array( 'suggestion_only', 'local_admin_consent', 'strong_local_confirmation', 'core_proposal_required', 'operation-classification-v1', 'set_featured_image', 'batch_plan' ) as $required_classifier_text ) {
 	toolbox_assert( false !== strpos( $operation_classifier, $required_classifier_text ), 'Operation classifier preserves contract text: ' . $required_classifier_text );
 }
+toolbox_assert( false !== strpos( $operation_classifier, "'decision_envelope'" ) && false !== strpos( $operation_classifier, "'decision_version'" ) && false !== strpos( $operation_classifier, 'risk_factors_for_context' ), 'Operation classifier returns a stable decision envelope for governance evidence.' );
 
 require_once $root . '/includes/Operation_Classifier.php';
 $classifier = new \Npcink_Toolbox\Operation_Classifier();
@@ -670,6 +671,8 @@ $local_classification = $classifier->classify(
 	)
 );
 toolbox_assert( 'local_admin_consent' === (string) ( $local_classification['classification'] ?? '' ), 'Operation classifier recognizes a low-risk single visible admin action.' );
+toolbox_assert( 'operation-classification-v1' === (string) ( $local_classification['decision_envelope']['decision_version'] ?? '' ), 'Operation classifier local consent decision envelope keeps the current policy version.' );
+toolbox_assert( 'set_featured_image' === (string) ( $local_classification['decision_envelope']['operation_kind'] ?? '' ), 'Operation classifier local consent decision envelope preserves the operation kind.' );
 $batch_classification = $classifier->classify(
 	array(
 		'request_source'       => 'external_adapter',
@@ -1501,6 +1504,7 @@ toolbox_assert( false !== strpos( $rest, 'private function rest_route_scope' ) &
 toolbox_assert( false !== strpos( $rest, "apply_filters( 'npcink_toolbox_rest_permission', current_user_can( 'manage_options' ), \$request, \$required_scope, \$route )" ), 'REST permission filter passes request, scope, and route context to host authorization.' );
 toolbox_assert( false !== strpos( $rest, 'editor_content_support' ) && false !== strpos( $rest, "'artifact_type'          => 'editor_content_support_flow'" ) && false !== strpos( $rest, 'editor_support_section' ), 'REST controller exposes a safe suggestion-only editor content support flow.' );
 toolbox_assert( false !== strpos( $rest, 'local_admin_consent_featured_image' ) && false !== strpos( $rest, 'npcink_governance_core_record_local_admin_consent' ) && false !== strpos( $rest, 'set_post_thumbnail' ), 'REST controller exposes a narrow local-admin-consent featured image path with Core audit.' );
+toolbox_assert( false !== strpos( $rest, "'operation_classification' => \$classification" ), 'REST local featured image audit sends operation classification evidence to Core.' );
 toolbox_assert( 1 === substr_count( $rest, "'/local-admin-consent/" ), 'REST controller registers only one Local Admin Consent route.' );
 toolbox_assert( in_array( '/local-admin-consent/featured-image', $registered_rest_routes, true ), 'REST Local Admin Consent route is limited to featured-image.' );
 foreach ( array( '/local-admin-consent/metadata', '/local-admin-consent/seo', '/local-admin-consent/media', '/local-admin-consent/settings', '/local-admin-consent/batch' ) as $forbidden_local_consent_route ) {
@@ -2280,7 +2284,7 @@ toolbox_assert( false !== strpos( $site_ops_cloud_detail_browser_smoke, 'data-to
 toolbox_assert( false !== strpos( $site_ops_cloud_detail_browser_smoke, 'forbiddenWriteRequests' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'proposals|governance-core|approve-and-execute|media-derivative-runs' ) && false !== strpos( $site_ops_cloud_detail_browser_smoke, 'site-ops-cloud-detail-browser-failure.png' ), 'Site Check Cloud detail browser smoke blocks browser-side proposal/execute drift and captures diagnostics.' );
 $local_featured_smoke = file_get_contents( $root . '/tests/smoke-local-featured-image-consent.php' );
 toolbox_assert( false !== $local_featured_smoke && false !== strpos( $local_featured_smoke, '/npcink-toolbox/v1/local-admin-consent/featured-image' ) && false !== strpos( $local_featured_smoke, 'local_admin_consent_featured_image_result' ), 'Local featured image smoke calls the Local Admin Consent route.' );
-toolbox_assert( false !== strpos( $local_featured_smoke, 'local_admin_consent' ) && false !== strpos( $local_featured_smoke, 'proposal_created' ) && false !== strpos( $local_featured_smoke, 'audit_owner' ), 'Local featured image smoke verifies classification, no proposal, and Core audit ownership.' );
+toolbox_assert( false !== strpos( $local_featured_smoke, 'local_admin_consent' ) && false !== strpos( $local_featured_smoke, 'proposal_created' ) && false !== strpos( $local_featured_smoke, 'audit_owner' ) && false !== strpos( $local_featured_smoke, 'decision_envelope' ), 'Local featured image smoke verifies classification evidence, no proposal, and Core audit ownership.' );
 toolbox_assert( false !== strpos( $local_featured_smoke, 'Smoke restores the previous featured image state' ), 'Local featured image smoke restores the sampled post featured image.' );
 $article_media_batch_smoke = file_get_contents( $root . '/tests/smoke-article-media-batch-core-proof.php' );
 toolbox_assert( false !== $article_media_batch_smoke && false !== strpos( $article_media_batch_smoke, 'article_media_batch_write_plan' ) && false !== strpos( $article_media_batch_smoke, '/npcink-governance-core/v1/proposals/from-plan' ), 'Article/media batch smoke submits the high-risk batch plan to Core from-plan intake.' );

@@ -23,6 +23,8 @@ Allowed scope:
 - set that attachment as the current post featured image;
 - record Core-owned `local_admin_consent.requested` and
   `local_admin_consent.completed` audit events;
+- include the current `operation-classification-v1` `decision_envelope` in
+  Core audit metadata;
 - roll back the featured-image change if completion audit fails.
 
 Required static contracts:
@@ -31,6 +33,8 @@ Required static contracts:
 - the route remains `/local-admin-consent/featured-image`;
 - the route requires an image attachment and
   `Operation_Classifier::LOCAL_ADMIN_CONSENT`;
+- the route sends `operation_classification` evidence with a
+  `decision_envelope` to Core audit;
 - completion-audit failure triggers rollback;
 - article/media batch handoffs never use Local Admin Consent audit events.
 
