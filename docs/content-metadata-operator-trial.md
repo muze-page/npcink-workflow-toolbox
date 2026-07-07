@@ -57,8 +57,6 @@ Default local sample:
 ```bash
 composer smoke:metadata-operator-trial
 composer eval:content-metadata:export
-composer eval:content-metadata:review
-composer eval:content-metadata:review-html
 ```
 
 Explicit post sample:
@@ -99,12 +97,8 @@ The JSON artifact uses `content_metadata_delta_operator_trial.v1` and includes:
 - Learning Entry.
 
 `npcink-eval-lab` may review the exported JSON as AI-assisted development
-evidence. The review task can mark likely accept/edit/reject paths and route
-disputed, low-confidence, or provider-error rows to human review. The HTML
-review task generates a Chinese local browser worksheet where the operator can
-record final field-level feedback for excerpt, categories, and tags. Eval-lab
-feedback never authorizes a WordPress write and should not be copied into Core
-as audit truth.
+evidence. Eval-lab feedback never authorizes a WordPress write and should not be
+copied into Core as audit truth.
 
 ## Completion Target
 

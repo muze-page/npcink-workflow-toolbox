@@ -229,8 +229,6 @@ For the Content Metadata Delta operator trial, run:
 ```bash
 composer smoke:metadata-operator-trial
 composer eval:content-metadata:export
-composer eval:content-metadata:review
-composer eval:content-metadata:review-html
 ```
 
 To pin the 3 to 5 real posts under review:
@@ -247,10 +245,8 @@ content-support and content metadata apply-plan routes, creates no proposal,
 performs no execution, creates no taxonomy term, and verifies the sampled post
 snapshots remain unchanged. The export can be checked by a human or passed to
 the development-only `npcink-eval-lab` checkout as AI-assisted review evidence;
-eval-lab output is never write authorization or Core audit truth. The review
-task can preclassify obvious accept/edit/reject cases, while the HTML task
-creates a Chinese browser worksheet for final human feedback on disputed fields.
-See [Content Metadata Delta Operator Trial](content-metadata-operator-trial.md).
+eval-lab output is never write authorization or Core audit truth. See
+[Content Metadata Delta Operator Trial](content-metadata-operator-trial.md).
 
 For the post-editor progressive recommendation surface, run:
 
