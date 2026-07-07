@@ -120,10 +120,6 @@ Target features:
 - use content discoverability context when preparing SEO/AEO/GEO proposal
   payloads;
 - validate content discoverability context before third-party AI usage;
-- Content Metadata Delta operator trial for 3 to 5 real posts, producing
-  single-post review evidence, dry-run Core handoff readiness, unchanged
-  readback, and learning fields without creating terms, proposals, executions,
-  queues, or batch product UX;
 - handoff status display that points operators to Core review.
 
 Rules:

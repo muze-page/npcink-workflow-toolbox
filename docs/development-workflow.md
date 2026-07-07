@@ -224,30 +224,6 @@ term creation, that Core `/wp-json/npcink-governance-core/v1/proposals/from-plan
 creates one pending `plan_to_proposal_batch` review proposal, and that the
 smoke does not mutate the sampled post.
 
-For the Content Metadata Delta operator trial, run:
-
-```bash
-composer smoke:metadata-operator-trial
-composer eval:content-metadata:export
-```
-
-To pin the 3 to 5 real posts under review:
-
-```bash
-CONTENT_METADATA_TRIAL_POST_IDS="123,124,125" \
-NPCINK_TOOLBOX_METADATA_TRIAL_MAX_POSTS=3 \
-composer eval:content-metadata:export
-```
-
-This exports `content_metadata_delta_operator_trial.v1` JSON and Markdown
-worksheets under local `build/eval/`. It uses the existing editor
-content-support and content metadata apply-plan routes, creates no proposal,
-performs no execution, creates no taxonomy term, and verifies the sampled post
-snapshots remain unchanged. The export can be checked by a human or passed to
-the development-only `npcink-eval-lab` checkout as AI-assisted review evidence;
-eval-lab output is never write authorization or Core audit truth. See
-[Content Metadata Delta Operator Trial](content-metadata-operator-trial.md).
-
 For the post-editor progressive recommendation surface, run:
 
 ```bash
