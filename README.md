@@ -428,7 +428,10 @@ and Toolkit-backed internal-link candidates rather than a separate visible
 button. The route-only article checkup remains a local full-draft diagnostic
 surface for sentence density, fact-gap, tone, and structure review; it points to
 paragraphs and editing direction, but does not rewrite, insert, or replace
-article text. The sidebar
+article text. When a generic AI plugin shows output in the editor and the author
+chooses to insert, save, or publish through the normal editor flow, that visible
+editor action is the human review step and should not be routed through Npcink
+Core approval. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
