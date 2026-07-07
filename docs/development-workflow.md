@@ -55,6 +55,41 @@ Run when changing Composer metadata:
 composer validate --no-check-publish
 ```
 
+## AI Write Classification Release Regression
+
+Before a release candidate or after changes touching AI-assisted write
+entrypoints, rerun the three-lane classification regression on the local
+`magick-ai` smoke site:
+
+1. **Editor or generic AI plugin acceptance.** A present author may review
+   visible AI plugin output in the WordPress editor and save or publish through
+   the normal editor controls. Core proposal and audit counts must remain
+   unchanged before and after that editor action.
+2. **Local Admin Consent featured image.** Run:
+
+   ```bash
+   WP_CLI_BIN=/opt/homebrew/bin/wp composer smoke:local-featured-image
+   ```
+
+   Expected result: no Core proposal is created; the run records one
+   `local_admin_consent.requested` event and one
+   `local_admin_consent.completed` event with the current
+   `operation-classification-v1` `decision_envelope`; the sampled featured
+   image is restored.
+3. **High-risk article/media batch.** Run:
+
+   ```bash
+   WP_CLI_BIN=/opt/homebrew/bin/wp composer smoke:article-media-batch-core
+   ```
+
+   Expected result: the batch is classified `core_proposal_required`, creates
+   Core proposal evidence, performs no WordPress post/media writes, and emits
+   no `local_admin_consent.*` audit events.
+
+This gate is not a new product feature. Do not add summary/category/tag
+generation, a second write path, a local queue, workflow runtime, Cloud
+WordPress writes, or Core final execution to satisfy it.
+
 ## Commit Scope Gate
 
 Before staging, inspect the worktree:
