@@ -581,6 +581,13 @@ final class Admin_Page {
 					<span class="npcink-toolbox__eyebrow"><?php esc_html_e( 'Start here', 'npcink-workflow-toolbox' ); ?></span>
 					<h3><?php esc_html_e( 'Check my site', 'npcink-workflow-toolbox' ); ?></h3>
 					<p><?php esc_html_e( 'Generate one read-only report with content, image, and setup suggestions. Nothing is changed automatically.', 'npcink-workflow-toolbox' ); ?></p>
+					<div class="npcink-toolbox__start-trust" aria-label="<?php esc_attr_e( 'Site Check trust labels', 'npcink-workflow-toolbox' ); ?>">
+						<span><strong><?php esc_html_e( 'Source', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'Local public content, approved comments, media, taxonomy, and setup signals', 'npcink-workflow-toolbox' ); ?></span>
+						<span><strong><?php esc_html_e( 'Runtime', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'Local deterministic scan; Cloud detail only when explicitly requested', 'npcink-workflow-toolbox' ); ?></span>
+						<span><strong><?php esc_html_e( 'Action', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'Review-only ranked findings and fixed-workflow next steps', 'npcink-workflow-toolbox' ); ?></span>
+						<span><strong><?php esc_html_e( 'Write posture', 'npcink-workflow-toolbox' ); ?></strong><?php esc_html_e( 'No local queue, Core proposal, approval, or WordPress write', 'npcink-workflow-toolbox' ); ?></span>
+					</div>
+					<p class="npcink-toolbox__start-blocked"><strong><?php esc_html_e( 'Blocked guidance:', 'npcink-workflow-toolbox' ); ?></strong> <?php esc_html_e( 'Local scan still works when Cloud is unavailable; Cloud detail requires a verified Cloud Addon connection.', 'npcink-workflow-toolbox' ); ?></p>
 					<div class="npcink-toolbox__inline-actions">
 						<a class="button button-primary" href="<?php echo esc_url( $this->site_ops_insights_preview_url() ); ?>"><?php esc_html_e( 'Start site check', 'npcink-workflow-toolbox' ); ?></a>
 					</div>

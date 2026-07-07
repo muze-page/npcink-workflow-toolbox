@@ -222,30 +222,65 @@
 			label: __('Publish preflight', 'npcink-workflow-toolbox'),
 			description: __('Check missing fields and compare related existing posts for duplicate-risk before publishing.', 'npcink-workflow-toolbox'),
 			group: 'review_handoff',
+			sourceLabel: __('Current draft, editor fields, Site Knowledge evidence', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Preflight checks, duplicate-risk refs, SEO handoff preview', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review / handoff', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox UI; Core/Adapter for accepted writes', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Local checks plus optional hosted suggestion support', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No publish or SEO write in Toolbox', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked only when required draft context or governed handoff evidence is missing.', 'npcink-workflow-toolbox'),
 		},
 		{
 			intent: 'internal_links',
 			label: __('Find internal links', 'npcink-workflow-toolbox'),
 			description: __('Find related existing posts to cite manually after the draft direction is clear.', 'npcink-workflow-toolbox'),
 			group: 'review_handoff',
+			sourceLabel: __('Current draft plus related Site Knowledge evidence', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Existing-post refs, anchor hints, relevance notes', 'npcink-workflow-toolbox'),
+			actionLabel: __('Copy / open manually', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox UI with Toolkit candidate assembly', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Toolkit review artifact; optional Cloud Site Knowledge evidence', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No automatic link insertion', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked when the draft has too little context or related content evidence is unavailable.', 'npcink-workflow-toolbox'),
 		},
 		{
 			intent: 'image_candidates',
 			label: __('AI recommended featured image', 'npcink-workflow-toolbox'),
 			description: __('Recommend or generate a featured image from the current article context.', 'npcink-workflow-toolbox'),
 			group: 'review_handoff',
+			sourceLabel: __('Current draft visual brief and Cloud image-source candidates', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Provider/source refs, attribution, quality and risk tags', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review candidate / governed adoption', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox UI; Cloud runtime for hosted candidates', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Cloud image-source or hosted image candidate runtime', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No media import except the existing-attachment Local Admin Consent path', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked when Cloud image-source is not connected, no draft image context exists, or adoption needs Core review.', 'npcink-workflow-toolbox'),
 		},
 		{
 			intent: 'article_narration',
 			label: __('Article narration', 'npcink-workflow-toolbox'),
 			description: __('Generate a review-only audio narration candidate from the current article text.', 'npcink-workflow-toolbox'),
 			group: 'audio_candidates',
+			sourceLabel: __('Reviewed article text from the current editor', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Script source fingerprint and audio candidate metadata', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review candidate / prepare adoption plan', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox UI; Cloud audio runtime; Core/Adapter/Toolkit for adoption', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Cloud audio generation runtime', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No media import, post meta write, or playback adoption in Toolbox', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked when article text is missing, Cloud audio runtime is unavailable, or adoption evidence is incomplete.', 'npcink-workflow-toolbox'),
 		},
 		{
 			intent: 'article_audio_summary',
 			label: __('Audio summary', 'npcink-workflow-toolbox'),
 			description: __('Create a short listening summary script, then generate an audio candidate through Cloud.', 'npcink-workflow-toolbox'),
 			group: 'audio_candidates',
+			sourceLabel: __('Current draft summary context and reviewed audio preferences', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Summary script, generation settings, and adoption-plan evidence', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review candidate / prepare adoption plan', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox UI; Cloud audio runtime; Core/Adapter/Toolkit for adoption', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Cloud audio generation runtime', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No media import, post meta write, or playback adoption in Toolbox', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked when summary context is missing, Cloud audio runtime is unavailable, or adoption evidence is incomplete.', 'npcink-workflow-toolbox'),
 		},
 	];
 
@@ -259,6 +294,46 @@
 			label: __('Article audio candidates', 'npcink-workflow-toolbox'),
 		},
 	];
+
+	function flowByIntent(intent) {
+		const key = String(intent || '');
+		return flows.find((flow) => flow.intent === key) || null;
+	}
+
+	function renderFlowTrustMeta(flow, options) {
+		if (!flow) {
+			return null;
+		}
+		const compact = Boolean(options && options.compact);
+		const rows = [
+			{ key: 'source', label: __('Source', 'npcink-workflow-toolbox'), value: flow.sourceLabel },
+			{ key: 'evidence', label: __('Evidence', 'npcink-workflow-toolbox'), value: flow.evidenceLabel },
+			{ key: 'action', label: __('Action', 'npcink-workflow-toolbox'), value: flow.actionLabel },
+			{ key: 'owner', label: __('Owner', 'npcink-workflow-toolbox'), value: flow.ownerLabel },
+			{ key: 'runtime', label: __('Runtime', 'npcink-workflow-toolbox'), value: flow.runtimeLabel },
+			{ key: 'write', label: __('Write posture', 'npcink-workflow-toolbox'), value: flow.writePostureLabel },
+		].filter((item) => item.value);
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__flow-trust' + (compact ? ' is-compact' : '') },
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__flow-trust-grid' },
+				rows.map((item) => createElement(
+					'span',
+					{ key: item.key, className: 'npcink-toolbox-editor-support__flow-trust-chip is-' + item.key },
+					createElement('strong', null, item.label),
+					createElement('span', null, item.value)
+				))
+			),
+			flow.blockedLabel ? createElement(
+				'p',
+				{ className: 'npcink-toolbox-editor-support__flow-blocked' },
+				createElement('strong', null, __('Blocked guidance: ', 'npcink-workflow-toolbox')),
+				flow.blockedLabel
+			) : null
+		);
+	}
 
 	function normalizeText(value) {
 		if (value && typeof value === 'object' && value.raw !== undefined) {
@@ -7655,6 +7730,7 @@
 							createElement('strong', null, resultTitle),
 							createElement('span', null, running ? __('Running content support flow...', 'npcink-workflow-toolbox') : resultScopeLabel(rerunIntent))
 						),
+						renderFlowTrustMeta(flowByIntent(rerunIntent), { compact: true }),
 						rerunIntent && flowAcceptsUserInstruction(rerunIntent) ? createElement(
 							'div',
 							{ className: 'npcink-toolbox-editor-support__flow-instruction' },
@@ -7733,7 +7809,13 @@
 									return createElement(
 										'div',
 										{ className: 'npcink-toolbox-editor-support__flow', key: flow.intent },
-										createElement('div', null, createElement('strong', null, flow.label), createElement('span', null, flow.description)),
+										createElement(
+											'div',
+											{ className: 'npcink-toolbox-editor-support__flow-main' },
+											createElement('strong', null, flow.label),
+											createElement('span', null, flow.description),
+											renderFlowTrustMeta(flow)
+										),
 										createElement(
 											Button,
 											{
