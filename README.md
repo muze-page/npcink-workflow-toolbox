@@ -431,7 +431,8 @@ paragraphs and editing direction, but does not rewrite, insert, or replace
 article text. When a generic AI plugin shows output in the editor and the author
 chooses to insert, save, or publish through the normal editor flow, that visible
 editor action is the human review step and should not be routed through Npcink
-Core approval. The sidebar
+Core approval. Toolbox follows the Core AI write classification matrix for the
+remaining local consent, strong confirmation, and Core proposal cases. The sidebar
 also prefetches a local-only progressive recommendation
 set after the editor opens or the draft stabilizes: existing taxonomy matches,
 recent media-library candidates, and local preflight checks are shown quickly,
