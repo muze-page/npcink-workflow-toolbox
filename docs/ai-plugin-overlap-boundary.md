@@ -31,6 +31,32 @@ Toolbox must not copy these as parallel default buttons, a second provider
 settings page, a second request-log product, or a second connector approval
 surface.
 
+## Editor Confirmation Rule
+
+When a generic AI plugin shows title, excerpt, summary, category, tag, ALT, meta
+description, or editing suggestions inside the WordPress editor, the author can
+review the output in place and use the normal editor save or publish action. In
+that path, the author's visible editor action is the human review step.
+
+Do not add a Core proposal hop for this path when all of these are true:
+
+- the source is the WordPress admin editor;
+- the author or administrator is present and intentionally clicks to insert,
+  save, or publish;
+- the AI output is visible before the click;
+- WordPress core or the generic AI plugin owns the editor apply/publish action;
+- the action is not a hidden batch, scheduled run, external Agent request, Cloud
+  callback, or background automation.
+
+Toolbox may record lightweight product activity when that is useful, but it
+should not block the author's native editor flow with Npcink Core approval.
+Publishing from the editor remains the author's editorial decision, not a Core
+proposal workflow.
+
+Core or strong local confirmation is still appropriate when the request is
+external, automated, batch-oriented, insufficiently previewed, or attempts to
+write high-impact state outside the author's immediate editor action.
+
 ## Toolbox Territory
 
 Toolbox keeps the operator-facing Npcink workflow surface:
