@@ -57,6 +57,29 @@ Core or strong local confirmation is still appropriate when the request is
 external, automated, batch-oriented, insufficiently previewed, or attempts to
 write high-impact state outside the author's immediate editor action.
 
+## Classification Handoff Rule
+
+Toolbox follows Core's
+`docs/operation-classification-contract.md` AI write classification matrix:
+
+- generic AI plugin editor output accepted through normal editor insert, save,
+  or publish flow stays in the author's editor workflow and must not create a
+  Core proposal;
+- Npcink suggestions that do not write WordPress state remain
+  `suggestion_only`;
+- one visible low-risk admin-present apply action may use
+  `local_admin_consent` with activity or Core local-consent audit evidence;
+- one visible high-impact action uses `strong_local_confirmation` or a Core
+  proposal, depending on reversibility and preview completeness;
+- external Agent, Adapter, Cloud callback, scheduled, batch, destructive,
+  taxonomy-creation, media-import, settings, permission, or insufficiently
+  previewed writes remain `core_proposal_required`.
+
+If a future Toolbox feature mostly needs title, excerpt, summary, category,
+tag, ALT, meta description, or editing generation, start by deferring to the
+generic AI plugin. Add Toolbox UI only when the task is a Npcink-owned workflow
+or a governance handoff that the generic AI plugin does not already own.
+
 ## Toolbox Territory
 
 Toolbox keeps the operator-facing Npcink workflow surface:
