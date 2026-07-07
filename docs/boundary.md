@@ -196,12 +196,14 @@ Core proposals, or writes WordPress data.
 `/local-admin-consent/featured-image` may set one existing WordPress image
 attachment as the current post's featured image after a present administrator
 clicks a visible selection. The route must classify the operation as
-`local_admin_consent`, record Core-owned audit before and after the write, and
-roll back if completion audit fails. It must not import media, update media
-metadata, create a proposal, approve a proposal, execute an ability, or process
-multiple posts or multiple images. All other accepted write-like changes keep
-using Core proposal handoff or Adapter/Core/Abilities user actions until a
-separate boundary decision defines the specific local write and audit contract.
+`local_admin_consent`, send the current `operation-classification-v1`
+`decision_envelope` as Core audit evidence, record Core-owned audit before and
+after the write, and roll back if completion audit fails. It must not import
+media, update media metadata, create a proposal, approve a proposal, execute an
+ability, or process multiple posts or multiple images. All other accepted
+write-like changes keep using Core proposal handoff or Adapter/Core/Abilities
+user actions until a separate boundary decision defines the specific local
+write and audit contract.
 
 `/flows/article-plan` prepares a Core-ready `article_write_plan` for
 `npcink-toolbox/build-article-write-plan`. It is a planning artifact route,
