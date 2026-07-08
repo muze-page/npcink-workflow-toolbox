@@ -59,6 +59,46 @@ If `https://github.com` times out but `https://api.github.com` works, GitHub's
 REST API may still be reachable while normal Git HTTPS remains blocked. Do not
 treat API reachability as proof that `git push` can work.
 
+## China Mainland VPN / Proxy Baseline
+
+On workstations inside mainland China, a browser VPN may not automatically
+cover terminal Git traffic. If direct `git ls-remote origin HEAD`,
+`git push`, `curl https://github.com`, or `nc github.com 443` times out, first
+check whether the local proxy can establish a GitHub HTTPS tunnel:
+
+```bash
+curl -x http://127.0.0.1:7890 -I --connect-timeout 10 --max-time 20 https://github.com
+```
+
+Expected evidence is `HTTP/1.1 200 Connection established` followed by a
+GitHub HTTP response such as `HTTP/2 200`. If that works, configure GitHub-only
+Git proxy settings:
+
+```bash
+git config --global http.https://github.com.proxy http://127.0.0.1:7890
+git config --global https.https://github.com.proxy http://127.0.0.1:7890
+git config --global --get-regexp '^(http|https)\.https://github\.com\.proxy'
+```
+
+Then verify the Git path before pushing:
+
+```bash
+GIT_TERMINAL_PROMPT=0 git ls-remote origin HEAD
+git push -u origin codex/<topic>
+```
+
+If the local proxy port changes, update both Git config entries. If this
+workstation no longer needs the proxy, remove both entries:
+
+```bash
+git config --global --unset http.https://github.com.proxy
+git config --global --unset https.https://github.com.proxy
+```
+
+This keeps ordinary publishing on the Git CLI path. `gh auth setup-git` can
+provide credentials for HTTPS Git, but it does not route Git traffic through a
+VPN or proxy by itself.
+
 ## SSH Fallback
 
 When Git HTTPS is blocked, test SSH authentication:
@@ -97,6 +137,18 @@ The 2026-06-30 publishing attempt proved:
 - SSH authenticated, but the available key identified as a deploy key for a
   different repository and `git push` was rejected with deploy-key permission
   denial.
+
+The 2026-07-08 connector-diagnostics publishing attempt added one more
+workstation fact:
+
+- direct HTTPS Git and `nc github.com 443` timed out;
+- `curl -x http://127.0.0.1:7890 https://github.com` returned a valid GitHub
+  response through the local proxy;
+- setting GitHub-only Git proxy config for `http://127.0.0.1:7890` restored
+  `git ls-remote origin HEAD` and `git push -u origin
+  codex/connector-status-diagnostics-evaluation`;
+- SSH remained readable but not writable because the active key was a deploy
+  key without write permission for this repository.
 
 Until either Git HTTPS connectivity is restored or a writable SSH key is
 selected for this repository, leave commits local and report:
