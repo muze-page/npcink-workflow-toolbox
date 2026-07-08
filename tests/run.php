@@ -205,6 +205,7 @@ toolbox_assert( false !== strpos( $site_ops_operator_loop_doc, 'Site Check is th
 
 $cross_repo_boundary_doc              = file_get_contents( $root . '/docs/cross-repo-boundary-matrix.md' );
 $cross_repo_database_boundary_doc     = file_get_contents( $root . '/docs/cross-repo-database-boundary.md' );
+$cross_repo_database_closeout_doc     = file_get_contents( $root . '/docs/cross-repo-database-boundary-closeout-2026-07-08.md' );
 $cross_repo_contract_reuse_doc        = file_get_contents( $root . '/docs/cross-repo-contract-reuse-acceptance.md' );
 $cross_repo_contract_release_prep_doc = file_get_contents( $root . '/docs/cross-repo-contract-reuse-release-prep-2026-07-08.md' );
 $cross_repo_contract_stage_closeout   = file_get_contents( $root . '/docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md' );
@@ -221,11 +222,16 @@ foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-a
 }
 foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon' ) as $database_boundary_repo_name ) {
 	toolbox_assert( false !== strpos( $cross_repo_database_boundary_doc, $database_boundary_repo_name ), 'Cross-repo database boundary includes repo: ' . $database_boundary_repo_name );
+	toolbox_assert( false !== strpos( $cross_repo_database_closeout_doc, $database_boundary_repo_name ), 'Cross-repo database boundary closeout includes repo: ' . $database_boundary_repo_name );
 }
 foreach ( array( 'only WordPress plugin in this set that owns custom governance tables', 'proposal, approval, sensitive read, app-auth, preflight, or audit truth belongs in `npcink-governance-core`', 'bridge/idempotency state only', 'must not become a durable execution-history database', 'Must not create run tables, queue tables, provider request logs, vector/index tables, approval stores, or workflow registries', 'Local buffers support delivery durability only', 'reliable queues, run detail, indexing lifecycle, usage, billing, entitlement, and diagnostics detail belong in Cloud service storage', 'Do not add a second WordPress table in Toolbox, Adapter, Cloud Addon, or Toolkit as a shortcut' ) as $required_database_boundary_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_database_boundary_doc, $required_database_boundary_text ), 'Cross-repo database boundary preserves rule: ' . $required_database_boundary_text );
 }
+foreach ( array( 'Cross-Repo Database Boundary Closeout', 'ff5f450 Document cross-repo database boundary', '493c6ec Lock Adapter persistence boundary', '515190e Document Cloud Addon persistence boundary', 'inspect the real repositories before judging the design', 'one durable owner per kind of truth', 'Do not add a custom WordPress table to Toolkit, Adapter, Toolbox, or Cloud Addon as a shortcut', 'durable runtime/detail/indexing/usage/billing/diagnostics -> Cloud service', 'Toolbox `composer test:all`: passed', 'Adapter `composer test:all`: passed', 'Cloud Addon `composer test:all`: passed' ) as $required_database_closeout_text ) {
+	toolbox_assert( false !== strpos( $cross_repo_database_closeout_doc, $required_database_closeout_text ), 'Cross-repo database boundary closeout preserves history: ' . $required_database_closeout_text );
+}
 toolbox_assert( false !== strpos( $platform_history_readme_doc, 'docs/cross-repo-database-boundary.md' ) && false !== strpos( $platform_history_docs_index_doc, 'cross-repo-database-boundary.md' ), 'Cross-repo database boundary is indexed from README and docs index.' );
+toolbox_assert( false !== strpos( $platform_history_readme_doc, 'docs/cross-repo-database-boundary-closeout-2026-07-08.md' ) && false !== strpos( $platform_history_docs_index_doc, 'cross-repo-database-boundary-closeout-2026-07-08.md' ) && false !== strpos( $platform_governance_index_doc, 'cross-repo-database-boundary-closeout-2026-07-08.md' ), 'Cross-repo database boundary closeout is indexed from README, docs index, and platform index.' );
 foreach ( array( 'platform coordination index', 'not a replacement for each repository', 'Keep `npcink-governance-core` as the governance truth source only', 'proposal records', 'approval policy', 'commit preflight', 'operation classification', 'app-key governance', 'audit evidence', 'Each rule must have one authoritative owner', 'Default to `suggestion_only`', 'Escalate to `core_proposal_required`', 'Do not migrate a scattered norm into this repository just because it is useful', 'Existing Core documents that are governance-specific should remain in Core', 'second ability registry', 'second workflow registry', 'second approval store', 'second WordPress write executor' ) as $required_platform_index_text ) {
 	toolbox_assert( false !== strpos( $platform_governance_index_doc, $required_platform_index_text ), 'Platform governance index preserves rule: ' . $required_platform_index_text );
 }

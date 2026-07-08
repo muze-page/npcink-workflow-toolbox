@@ -56,6 +56,7 @@ Start here before multi-repository design or implementation:
 - [Cross-Repo Platform Governance History - 2026-07-08](cross-repo-platform-governance-history-2026-07-08.md)
 - [Feature Ownership And Plugin Boundary](../feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](../cross-repo-boundary-matrix.md)
+- [Cross-Repo Database Boundary Closeout - 2026-07-08](../cross-repo-database-boundary-closeout-2026-07-08.md)
 - [Cross-Repo Contract Reuse Acceptance](../cross-repo-contract-reuse-acceptance.md)
 - [AI Development Quality Workflow](../ai-development-quality-workflow.md)
 - [AI Change Envelope Template](../ai-change-envelope-template.md)
