@@ -12,6 +12,7 @@ for new records.
 
 ## Records
 
+- [Connector status diagnostics readiness evaluation - 2026-07-08](connector-status-diagnostics-readiness-2026-07-08.md)
 - [SEO/checklist media metadata recommendation evaluation - 2026-07-08](seo-media-metadata-checklist-2026-07-08.md)
 
 ## Rules
