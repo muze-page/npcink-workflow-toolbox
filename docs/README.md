@@ -6,6 +6,7 @@ Start from the active documents below before changing code.
 ## Core Contracts
 
 - [Platform Governance Index](platform/README.md)
+- [Cross-Repo Platform Governance History](platform/cross-repo-platform-governance-history-2026-07-08.md)
 - [Product Positioning](product-positioning.md)
 - [Boundary](boundary.md)
 - [Architecture](architecture.md)

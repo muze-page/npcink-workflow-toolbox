@@ -209,6 +209,9 @@ $cross_repo_contract_release_prep_doc = file_get_contents( $root . '/docs/cross-
 $cross_repo_contract_stage_closeout   = file_get_contents( $root . '/docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md' );
 $toolbox_contract_reuse_readiness_doc = file_get_contents( $root . '/docs/toolbox-contract-reuse-readiness-2026-07-08.md' );
 $platform_governance_index_doc        = file_get_contents( $root . '/docs/platform/README.md' );
+$platform_governance_history_doc      = file_get_contents( $root . '/docs/platform/cross-repo-platform-governance-history-2026-07-08.md' );
+$platform_history_readme_doc          = file_get_contents( $root . '/README.md' );
+$platform_history_docs_index_doc      = file_get_contents( $root . '/docs/README.md' );
 foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'npcink-ai-cloud' ) as $boundary_repo_name ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $boundary_repo_name ), 'Cross-repo boundary matrix includes repo: ' . $boundary_repo_name );
 	toolbox_assert( false !== strpos( $cross_repo_contract_reuse_doc, $boundary_repo_name ), 'Cross-repo contract reuse acceptance includes repo: ' . $boundary_repo_name );
@@ -217,6 +220,10 @@ foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-a
 }
 foreach ( array( 'platform coordination index', 'not a replacement for each repository', 'Keep `npcink-governance-core` as the governance truth source only', 'proposal records', 'approval policy', 'commit preflight', 'operation classification', 'app-key governance', 'audit evidence', 'Each rule must have one authoritative owner', 'Default to `suggestion_only`', 'Escalate to `core_proposal_required`', 'Do not migrate a scattered norm into this repository just because it is useful', 'Existing Core documents that are governance-specific should remain in Core', 'second ability registry', 'second workflow registry', 'second approval store', 'second WordPress write executor' ) as $required_platform_index_text ) {
 	toolbox_assert( false !== strpos( $platform_governance_index_doc, $required_platform_index_text ), 'Platform governance index preserves rule: ' . $required_platform_index_text );
+}
+toolbox_assert( false !== strpos( $platform_history_readme_doc, 'docs/platform/cross-repo-platform-governance-history-2026-07-08.md' ) && false !== strpos( $platform_history_docs_index_doc, 'platform/cross-repo-platform-governance-history-2026-07-08.md' ) && false !== strpos( $platform_governance_index_doc, 'cross-repo-platform-governance-history-2026-07-08.md' ), 'Cross-repo platform governance history is indexed from README, docs index, and platform index.' );
+foreach ( array( 'Centralize Navigation, Not Authority', 'Default To Suggestion Artifacts', 'Keep Core Narrow', 'Keep Toolbox Product-Facing', 'Treat PR Management As A Gate', 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'second ability registry', 'second workflow registry', 'second approval store', 'workflow runtime', 'direct WordPress write executor' ) as $required_platform_history_text ) {
+	toolbox_assert( false !== strpos( $platform_governance_history_doc, $required_platform_history_text ), 'Cross-repo platform governance history preserves lesson: ' . $required_platform_history_text );
 }
 foreach ( array( 'Core preflight', 'host approval context', 'The only current Toolbox Local Admin Consent write path', 'metadata apply', 'SEO mutation', 'media import', 'settings mutation', 'batch operation', 'second ability registry, workflow registry, approval store' ) as $required_cross_repo_boundary_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_cross_repo_boundary_text ), 'Cross-repo boundary matrix preserves boundary: ' . $required_cross_repo_boundary_text );

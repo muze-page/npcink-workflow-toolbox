@@ -53,6 +53,7 @@ a way that can drift from the owner repository.
 
 Start here before multi-repository design or implementation:
 
+- [Cross-Repo Platform Governance History - 2026-07-08](cross-repo-platform-governance-history-2026-07-08.md)
 - [Feature Ownership And Plugin Boundary](../feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](../cross-repo-boundary-matrix.md)
 - [Cross-Repo Contract Reuse Acceptance](../cross-repo-contract-reuse-acceptance.md)
