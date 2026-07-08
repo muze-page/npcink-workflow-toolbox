@@ -306,7 +306,7 @@ $report = array(
 );
 
 if ( $options['json'] ) {
-	$output = json_encode( $report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+	$output = json_encode( $report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE );
 	if ( ! is_string( $output ) ) {
 		fwrite( STDERR, "Failed to encode quality matrix report.\n" );
 		exit( 1 );

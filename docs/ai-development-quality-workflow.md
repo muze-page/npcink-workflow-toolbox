@@ -44,10 +44,22 @@ Fast status-only matrix:
 composer quality:matrix
 ```
 
+Fast next-action brief:
+
+```bash
+composer quality:observe
+```
+
 Run the configured default gates:
 
 ```bash
 composer quality:matrix:run
+```
+
+Gate-backed next-action brief:
+
+```bash
+composer quality:observe:run
 ```
 
 Write a report artifact:
@@ -57,10 +69,12 @@ php scripts/cross-repo-quality-matrix.php --run-gates \
   --output=var/reports/cross-repo-quality-matrix.md
 ```
 
-The script reports branch state, dirty file counts, ahead/behind counts,
-configured gate commands, gate results, and bounded gate output tails. It is
-read-only except for the optional report file; it must not fetch, stage, reset,
-or mutate WordPress.
+The matrix script reports branch state, dirty file counts, ahead/behind counts,
+configured gate commands, gate results, and bounded gate output tails. The
+observation brief turns that same read-only JSON into a decision queue for
+failed gates, dirty worktrees, behind branches, ahead branches, and clean repos.
+They are read-only except for the optional report file; they must not fetch,
+stage, reset, or mutate WordPress.
 
 If a repository is missing or not a Git checkout, treat the matrix as
 incomplete. Do not silently substitute a different repository path without
