@@ -2383,6 +2383,20 @@ toolbox_assert( false !== strpos( $development_workflow, 'image_context_evidence
 $quality_workflow_doc = file_get_contents( $root . '/docs/ai-development-quality-workflow.md' );
 toolbox_assert( false !== $quality_workflow_doc && false !== strpos( $quality_workflow_doc, 'composer quality:matrix' ) && false !== strpos( $quality_workflow_doc, 'composer quality:matrix:run' ) && false !== strpos( $quality_workflow_doc, 'composer quality:observe' ) && false !== strpos( $quality_workflow_doc, 'composer quality:observe:run' ) && false !== strpos( $quality_workflow_doc, 'change envelope -> narrow implementation' ), 'AI development quality workflow documents the cross-repo matrix, observation brief, and envelope sequence.' );
 toolbox_assert( false !== strpos( $quality_workflow_doc, 'Do not run `git reset --hard`' ) && false !== strpos( $quality_workflow_doc, 'Do not use `git add -A`' ) && false !== strpos( $quality_workflow_doc, 'git reset --mixed HEAD~1' ), 'AI development quality workflow documents anti-rollback and scoped commit correction rules.' );
+$reference_plugin_checklist = file_get_contents( $root . '/docs/reference-plugin-evaluation-checklist.md' );
+toolbox_assert( false !== $reference_plugin_checklist && false !== strpos( $reference_plugin_checklist, 'Reference Plugin Evaluation Checklist' ) && false !== strpos( $reference_plugin_checklist, 'Capability Breakdown' ) && false !== strpos( $reference_plugin_checklist, 'Repository Ownership' ) && false !== strpos( $reference_plugin_checklist, 'Decision Result Template' ) && false !== strpos( $reference_plugin_checklist, 'Verification Matrix' ), 'Reference plugin evaluation checklist records intake, breakdown, ownership, decision template, and verification sections.' );
+foreach ( array( 'npcink-abilities-toolkit', 'npcink-governance-core', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'npcink-ai-cloud', 'wp-magick-toolbox' ) as $reference_plugin_owner ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_owner ), 'Reference plugin evaluation checklist names repository owner: ' . $reference_plugin_owner );
+}
+foreach ( array( 'second ability registry', 'second workflow registry', 'approval store', 'local runtime queue', 'provider billing', 'Core-governed approval', 'WordPress write path' ) as $reference_plugin_redline ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_redline ), 'Reference plugin evaluation checklist preserves boundary red line: ' . $reference_plugin_redline );
+}
+foreach ( array( 'Borrow as documentation only', 'Borrow as static contract', 'Borrow as suggestion-only Toolbox surface', 'Borrow as Core-governed handoff', 'Reject / defer because boundary conflict', 'composer test:all', 'composer quality:observe', 'composer quality:matrix:run' ) as $reference_plugin_decision ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_decision ), 'Reference plugin evaluation checklist preserves decision and gate vocabulary: ' . $reference_plugin_decision );
+}
+$readme_doc = file_get_contents( $root . '/README.md' );
+$docs_index_doc = file_get_contents( $root . '/docs/README.md' );
+toolbox_assert( false !== $readme_doc && false !== strpos( $readme_doc, 'docs/reference-plugin-evaluation-checklist.md' ) && false !== $docs_index_doc && false !== strpos( $docs_index_doc, 'reference-plugin-evaluation-checklist.md' ), 'Reference plugin evaluation checklist is indexed from the root README and documentation index.' );
 $change_envelope_doc = file_get_contents( $root . '/docs/ai-change-envelope-template.md' );
 toolbox_assert( false !== $change_envelope_doc && false !== strpos( $change_envelope_doc, 'Target repositories:' ) && false !== strpos( $change_envelope_doc, 'Files or areas that must not change:' ) && false !== strpos( $change_envelope_doc, 'Rollback plan:' ), 'AI change envelope template records required scope and rollback fields.' );
 $quality_matrix_script = file_get_contents( $root . '/scripts/cross-repo-quality-matrix.php' );
