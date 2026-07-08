@@ -130,6 +130,7 @@ expect to stay discoverable from the root README:
 [Reference Plugin Evaluation Checklist](docs/reference-plugin-evaluation-checklist.md),
 [Reference Plugin Evaluation Record Template](docs/reference-plugin-evaluation-record-template.md),
 [Reference Plugin Evaluation Records](docs/reference-plugin-evaluations/README.md),
+[Reference Capability Library](docs/reference-capability-library/README.md),
 [Cross-Repo Contract Reuse Release Prep](docs/cross-repo-contract-reuse-release-prep-2026-07-08.md),
 [Cloud Diagnostics Transition Summary](docs/cloud-diagnostics-transition-summary.md),
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
