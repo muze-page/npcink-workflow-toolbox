@@ -118,6 +118,7 @@ the [documentation index](docs/README.md). Start with:
 
 The documentation index also tracks key detail records that static contracts
 expect to stay discoverable from the root README:
+[Platform Governance Index](docs/platform/README.md),
 [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md),
 [Cross-Repo Contract Reuse Acceptance](docs/cross-repo-contract-reuse-acceptance.md),
 [Toolbox Contract Reuse Readiness](docs/toolbox-contract-reuse-readiness-2026-07-08.md),

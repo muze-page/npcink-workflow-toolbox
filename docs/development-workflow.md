@@ -17,6 +17,7 @@ Read:
 - `docs/boundary.md`
 - `docs/architecture.md`
 - `docs/roadmap.md`
+- `docs/platform/README.md`
 - `docs/cross-repo-boundary-matrix.md`
 - `docs/boundary-exceptions.md`
 - `docs/adversarial-boundary-review.md`

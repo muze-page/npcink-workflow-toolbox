@@ -5,6 +5,7 @@ Start from the active documents below before changing code.
 
 ## Core Contracts
 
+- [Platform Governance Index](platform/README.md)
 - [Product Positioning](product-positioning.md)
 - [Boundary](boundary.md)
 - [Architecture](architecture.md)
