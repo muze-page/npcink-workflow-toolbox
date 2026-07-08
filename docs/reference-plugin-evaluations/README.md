@@ -1,27 +1,13 @@
 # Reference Plugin Evaluation Records
 
-Status: active evaluation log.
+Status: migrated pointer.
 
-This directory stores small, reviewable records created from the
-[Reference Plugin Evaluation Checklist](../reference-plugin-evaluation-checklist.md).
-Each record should answer one capability question and stop before product code
-unless the repository owner, boundary posture, and verification gate are clear.
+The canonical reference-plugin evaluation records now live in `npcink-eval-lab`:
 
-Use the [Reference Plugin Evaluation Record Template](../reference-plugin-evaluation-record-template.md)
-for new records.
+- https://github.com/muze-page/npcink-eval-lab/blob/main/docs/reference-plugin-evaluations/README.md
 
-## Records
-
-- [Connector status diagnostics readiness evaluation - 2026-07-08](connector-status-diagnostics-readiness-2026-07-08.md)
-- [Site Kit connection readiness evaluation - 2026-07-08](site-kit-connection-readiness-2026-07-08.md)
-- [SEO/checklist media metadata recommendation evaluation - 2026-07-08](seo-media-metadata-checklist-2026-07-08.md)
-
-## Rules
-
-- One record should evaluate one capability pattern.
-- Records may cite mature plugin behavior as inspiration, but they must decide
-  against the current Npcink repository boundaries.
-- Records must not add a runtime, queue, registry, approval store, provider
-  billing/log owner, or WordPress write path.
-- A record that recommends implementation must name the minimum gate and the
-  broader gate required before closeout.
+This Toolbox directory remains only for historical links from earlier
+documentation and PRs. Do not add new evaluation records here. New learning
+records should be stored in `npcink-eval-lab` and only promoted back into
+Toolbox when the result is a bounded suggestion-only surface or Core-governed
+handoff candidate.
