@@ -78,6 +78,13 @@ final class Ability_Surface_Metadata {
 				'status_text' => __( 'Review required', 'npcink-workflow-toolbox' ),
 				'description' => __( 'Write-like outcomes remain Core/Adapter/Abilities handoffs; this summary creates no proposals and writes nothing.', 'npcink-workflow-toolbox' ),
 			),
+			array(
+				'id'          => 'contract_reuse',
+				'label'       => __( 'Contract reuse', 'npcink-workflow-toolbox' ),
+				'status'      => 'ok',
+				'status_text' => __( 'Shared contracts', 'npcink-workflow-toolbox' ),
+				'description' => __( 'Reuses Toolkit ability ids, Core proposal handoff, Adapter execution profiles, and Cloud runtime/detail; Toolbox adds no registry, runtime, approval store, queue, or write executor.', 'npcink-workflow-toolbox' ),
+			),
 		);
 	}
 
