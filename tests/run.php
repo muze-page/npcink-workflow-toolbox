@@ -208,11 +208,15 @@ $cross_repo_contract_reuse_doc        = file_get_contents( $root . '/docs/cross-
 $cross_repo_contract_release_prep_doc = file_get_contents( $root . '/docs/cross-repo-contract-reuse-release-prep-2026-07-08.md' );
 $cross_repo_contract_stage_closeout   = file_get_contents( $root . '/docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md' );
 $toolbox_contract_reuse_readiness_doc = file_get_contents( $root . '/docs/toolbox-contract-reuse-readiness-2026-07-08.md' );
+$platform_governance_index_doc        = file_get_contents( $root . '/docs/platform/README.md' );
 foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'npcink-ai-cloud' ) as $boundary_repo_name ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $boundary_repo_name ), 'Cross-repo boundary matrix includes repo: ' . $boundary_repo_name );
 	toolbox_assert( false !== strpos( $cross_repo_contract_reuse_doc, $boundary_repo_name ), 'Cross-repo contract reuse acceptance includes repo: ' . $boundary_repo_name );
 	toolbox_assert( false !== strpos( $toolbox_contract_reuse_readiness_doc, $boundary_repo_name ), 'Toolbox contract reuse readiness includes repo: ' . $boundary_repo_name );
 	toolbox_assert( false !== strpos( $cross_repo_contract_stage_closeout, $boundary_repo_name ), 'Cross-repo contract reuse stage closeout includes repo: ' . $boundary_repo_name );
+}
+foreach ( array( 'platform coordination index', 'not a replacement for each repository', 'Keep `npcink-governance-core` as the governance truth source only', 'proposal records', 'approval policy', 'commit preflight', 'operation classification', 'app-key governance', 'audit evidence', 'Each rule must have one authoritative owner', 'Default to `suggestion_only`', 'Escalate to `core_proposal_required`', 'Do not migrate a scattered norm into this repository just because it is useful', 'Existing Core documents that are governance-specific should remain in Core', 'second ability registry', 'second workflow registry', 'second approval store', 'second WordPress write executor' ) as $required_platform_index_text ) {
+	toolbox_assert( false !== strpos( $platform_governance_index_doc, $required_platform_index_text ), 'Platform governance index preserves rule: ' . $required_platform_index_text );
 }
 foreach ( array( 'Core preflight', 'host approval context', 'The only current Toolbox Local Admin Consent write path', 'metadata apply', 'SEO mutation', 'media import', 'settings mutation', 'batch operation', 'second ability registry, workflow registry, approval store' ) as $required_cross_repo_boundary_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_cross_repo_boundary_text ), 'Cross-repo boundary matrix preserves boundary: ' . $required_cross_repo_boundary_text );
@@ -514,6 +518,7 @@ toolbox_assert( false !== strpos( $readme, 'Content Support Toolkit Migration Hi
 toolbox_assert( false !== strpos( $readme, 'Content Metadata Apply Plan Decision Envelope Closeout' ), 'README links the content metadata apply-plan decision-envelope closeout.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Trial' ), 'README links the editor progressive recommendations trial log.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Closeout' ), 'README links the editor progressive recommendations closeout.' );
+toolbox_assert( false !== strpos( $readme, 'Platform Governance Index' ) && false !== strpos( $readme, 'docs/platform/README.md' ), 'README links the platform governance index.' );
 toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ) && false !== strpos( $readme, 'Cross-Repo Contract Reuse Acceptance' ) && false !== strpos( $readme, 'Toolbox Contract Reuse Readiness' ) && false !== strpos( $readme, 'Cross-Repo Contract Reuse Stage Closeout' ) && false !== strpos( $readme, 'Cross-Repo Contract Reuse Release Prep' ), 'README links the cross-repo boundary matrix, Toolbox contract reuse readiness, contract reuse acceptance, stage closeout, and release prep.' );
 toolbox_assert( false !== strpos( $readme, 'Adversarial Boundary Review' ) && false !== strpos( $readme, 'docs/adversarial-boundary-review.md' ), 'README links the adversarial boundary review mechanism.' );
 toolbox_assert( false !== strpos( $readme, 'Adversarial Boundary Findings Triage' ) && false !== strpos( $readme, 'docs/adversarial-boundary-findings-triage.md' ), 'README links the adversarial boundary findings triage record.' );
@@ -1057,7 +1062,7 @@ toolbox_assert( false !== strpos( $admin_js, 'renderSiteKnowledgeCloudBoundary' 
 
 $development_workflow = file_get_contents( $root . '/docs/development-workflow.md' );
 toolbox_assert( false !== strpos( $development_workflow, 'WordPress site timezone' ) && false !== strpos( $development_workflow, 'Y-m-d H:i:s' ) && false !== strpos( $development_workflow, 'Keep machine timestamps unchanged' ), 'Development workflow documents the wp-admin time display standard.' );
-toolbox_assert( false !== strpos( $development_workflow, 'docs/cross-repo-boundary-matrix.md' ) && false !== strpos( $development_workflow, 'docs/boundary-exceptions.md' ) && false !== strpos( $development_workflow, 'docs/adversarial-boundary-review.md' ) && false !== strpos( $development_workflow, 'docs/adversarial-boundary-findings-triage.md' ), 'Development workflow startup reads boundary matrix, exceptions, adversarial review, and findings triage guidance before edits.' );
+toolbox_assert( false !== strpos( $development_workflow, 'docs/platform/README.md' ) && false !== strpos( $development_workflow, 'docs/cross-repo-boundary-matrix.md' ) && false !== strpos( $development_workflow, 'docs/boundary-exceptions.md' ) && false !== strpos( $development_workflow, 'docs/adversarial-boundary-review.md' ) && false !== strpos( $development_workflow, 'docs/adversarial-boundary-findings-triage.md' ), 'Development workflow startup reads the platform index, boundary matrix, exceptions, adversarial review, and findings triage guidance before edits.' );
 toolbox_assert( false !== strpos( $development_workflow, 'accepted_fix' ) && false !== strpos( $development_workflow, 'accepted_exception' ) && false !== strpos( $development_workflow, 'rejected_finding' ) && false !== strpos( $development_workflow, 'Accepted exceptions must point to' ), 'Development workflow requires adversarial findings to be triaged before implementation work.' );
 
 $editor_support = file_get_contents( $root . '/includes/Editor_Content_Support.php' );
@@ -2383,6 +2388,20 @@ toolbox_assert( false !== strpos( $development_workflow, 'image_context_evidence
 $quality_workflow_doc = file_get_contents( $root . '/docs/ai-development-quality-workflow.md' );
 toolbox_assert( false !== $quality_workflow_doc && false !== strpos( $quality_workflow_doc, 'composer quality:matrix' ) && false !== strpos( $quality_workflow_doc, 'composer quality:matrix:run' ) && false !== strpos( $quality_workflow_doc, 'composer quality:observe' ) && false !== strpos( $quality_workflow_doc, 'composer quality:observe:run' ) && false !== strpos( $quality_workflow_doc, 'change envelope -> narrow implementation' ), 'AI development quality workflow documents the cross-repo matrix, observation brief, and envelope sequence.' );
 toolbox_assert( false !== strpos( $quality_workflow_doc, 'Do not run `git reset --hard`' ) && false !== strpos( $quality_workflow_doc, 'Do not use `git add -A`' ) && false !== strpos( $quality_workflow_doc, 'git reset --mixed HEAD~1' ), 'AI development quality workflow documents anti-rollback and scoped commit correction rules.' );
+$reference_plugin_checklist = file_get_contents( $root . '/docs/reference-plugin-evaluation-checklist.md' );
+toolbox_assert( false !== $reference_plugin_checklist && false !== strpos( $reference_plugin_checklist, 'Reference Plugin Evaluation Checklist' ) && false !== strpos( $reference_plugin_checklist, 'Capability Breakdown' ) && false !== strpos( $reference_plugin_checklist, 'Repository Ownership' ) && false !== strpos( $reference_plugin_checklist, 'Decision Result Template' ) && false !== strpos( $reference_plugin_checklist, 'Verification Matrix' ), 'Reference plugin evaluation checklist records intake, breakdown, ownership, decision template, and verification sections.' );
+foreach ( array( 'npcink-abilities-toolkit', 'npcink-governance-core', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'npcink-ai-cloud', 'wp-magick-toolbox' ) as $reference_plugin_owner ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_owner ), 'Reference plugin evaluation checklist names repository owner: ' . $reference_plugin_owner );
+}
+foreach ( array( 'second ability registry', 'second workflow registry', 'approval store', 'local runtime queue', 'provider billing', 'Core-governed approval', 'WordPress write path' ) as $reference_plugin_redline ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_redline ), 'Reference plugin evaluation checklist preserves boundary red line: ' . $reference_plugin_redline );
+}
+foreach ( array( 'Borrow as documentation only', 'Borrow as static contract', 'Borrow as suggestion-only Toolbox surface', 'Borrow as Core-governed handoff', 'Reject / defer because boundary conflict', 'composer test:all', 'composer quality:observe', 'composer quality:matrix:run' ) as $reference_plugin_decision ) {
+	toolbox_assert( false !== strpos( $reference_plugin_checklist, $reference_plugin_decision ), 'Reference plugin evaluation checklist preserves decision and gate vocabulary: ' . $reference_plugin_decision );
+}
+$readme_doc = file_get_contents( $root . '/README.md' );
+$docs_index_doc = file_get_contents( $root . '/docs/README.md' );
+toolbox_assert( false !== $readme_doc && false !== strpos( $readme_doc, 'docs/reference-plugin-evaluation-checklist.md' ) && false !== $docs_index_doc && false !== strpos( $docs_index_doc, 'reference-plugin-evaluation-checklist.md' ), 'Reference plugin evaluation checklist is indexed from the root README and documentation index.' );
 $change_envelope_doc = file_get_contents( $root . '/docs/ai-change-envelope-template.md' );
 toolbox_assert( false !== $change_envelope_doc && false !== strpos( $change_envelope_doc, 'Target repositories:' ) && false !== strpos( $change_envelope_doc, 'Files or areas that must not change:' ) && false !== strpos( $change_envelope_doc, 'Rollback plan:' ), 'AI change envelope template records required scope and rollback fields.' );
 $quality_matrix_script = file_get_contents( $root . '/scripts/cross-repo-quality-matrix.php' );
