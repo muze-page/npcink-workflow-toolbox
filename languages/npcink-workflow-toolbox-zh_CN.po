@@ -6389,6 +6389,15 @@ msgstr "通用 AI 重叠能力为兼容性保持可调用，但不会恢复为 T
 msgid "Core handoff boundary"
 msgstr "Core 交接边界"
 
+msgid "Contract reuse"
+msgstr "契约复用"
+
+msgid "Shared contracts"
+msgstr "共享契约"
+
+msgid "Reuses Toolkit ability ids, Core proposal handoff, Adapter execution profiles, and Cloud runtime/detail; Toolbox adds no registry, runtime, approval store, queue, or write executor."
+msgstr "复用 Toolkit ability id、Core 提案交接、Adapter 执行配置和 Cloud 运行时/详情；Toolbox 不增加注册中心、运行时、审批存储、队列或写入执行器。"
+
 msgid "Site content index"
 msgstr "站点内容索引"
 
@@ -6520,6 +6529,36 @@ msgstr "此页面只准备预览和审核请求。最终媒体更改稍后通过
 
 msgid "Write-like outcomes remain Core/Adapter/Abilities handoffs; this summary creates no proposals and writes nothing."
 msgstr "类似写入的结果仍然交给 Core/Adapter/Abilities；此摘要不会创建提案，也不会写入任何内容。"
+
+msgid "Site Check trust labels"
+msgstr "站点检查可信标签"
+
+msgid "Source"
+msgstr "来源"
+
+msgid "Local public content, approved comments, media, taxonomy, and setup signals"
+msgstr "本地公开内容、已批准评论、媒体、分类法和设置状态信号"
+
+msgid "Runtime"
+msgstr "运行时"
+
+msgid "Local deterministic scan; Cloud detail only when explicitly requested"
+msgstr "本地确定性扫描；仅在明确请求时使用 Cloud 详情"
+
+msgid "Review-only ranked findings and fixed-workflow next steps"
+msgstr "仅供审阅的排序发现和固定工作流下一步"
+
+msgid "Write posture"
+msgstr "写入姿态"
+
+msgid "No local queue, Core proposal, approval, or WordPress write"
+msgstr "无本地队列、Core 提案、审批或 WordPress 写入"
+
+msgid "Blocked guidance:"
+msgstr "阻塞指引："
+
+msgid "Local scan still works when Cloud is unavailable; Cloud detail requires a verified Cloud Addon connection."
+msgstr "Cloud 不可用时本地扫描仍可使用；Cloud 详情需要已验证的 Cloud Addon 连接。"
 
 msgid "Build a blocked Core review proposal plan from selected scheduled review items without writing WordPress content."
 msgstr "基于选中的定期巡检条目生成已阻塞的 Core 审核提案计划，不写入 WordPress 内容。"

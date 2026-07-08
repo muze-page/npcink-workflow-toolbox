@@ -119,6 +119,8 @@ the [documentation index](docs/README.md). Start with:
 The documentation index also tracks key detail records that static contracts
 expect to stay discoverable from the root README:
 [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md),
+[Cross-Repo Contract Reuse Acceptance](docs/cross-repo-contract-reuse-acceptance.md),
+[Cross-Repo Contract Reuse Release Prep](docs/cross-repo-contract-reuse-release-prep-2026-07-08.md),
 [Cloud Diagnostics Transition Summary](docs/cloud-diagnostics-transition-summary.md),
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
 [Content Support Product Readiness](docs/content-support-product-readiness.md),

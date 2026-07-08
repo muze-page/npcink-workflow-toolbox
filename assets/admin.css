@@ -119,6 +119,49 @@
 	line-height: 1.5;
 }
 
+.npcink-toolbox__start-trust {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	max-width: 720px;
+}
+
+.npcink-toolbox__start-trust span {
+	display: inline-grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 4px;
+	max-width: 100%;
+	padding: 4px 7px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	color: #50575e;
+	font-size: 11px;
+	line-height: 1.3;
+}
+
+.npcink-toolbox__start-trust strong {
+	color: #1d2327;
+	font-size: inherit;
+	line-height: inherit;
+}
+
+.npcink-toolbox__start-trust strong::after {
+	content: ":";
+}
+
+.npcink-toolbox__start-blocked {
+	max-width: 720px;
+	margin: 0;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.45;
+}
+
+.npcink-toolbox__start-blocked strong {
+	color: #1d2327;
+}
+
 .npcink-toolbox__start-status-list {
 	display: grid;
 	gap: 0;

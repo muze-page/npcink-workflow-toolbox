@@ -583,9 +583,13 @@ folded advanced directory and a collapsed **System status** disclosure. That
 disclosure shows **Workflow readiness**, a
 read-only summary from `Ability_Surface_Metadata` for site profile readiness,
 Cloud runtime availability, default Npcink workflow entries, route-only
-compatibility, and Core handoff boundary. This summary is not a generic Abilities Explorer,
-provider picker, request log, or connector approval surface. It does not create
-proposals or writes. Single-post article
+compatibility, Core handoff boundary, and cross-project contract reuse. The
+contract reuse row confirms that fixed buttons reuse Toolkit ability ids, Core
+proposal handoff, Adapter execution profiles, and Cloud runtime/detail rather
+than creating a second registry, runtime, approval store, queue, or write
+executor. This summary is not a generic Abilities Explorer, provider picker,
+request log, or connector approval surface. It does not create proposals or
+writes. Single-post article
 support stays in the post editor sidebar and is not rendered as an Overview
 work block. The visible top-level admin tabs after Overview are **Site Check**,
 **Site Profile**, and **Image Handling**. **Site Check** is the direct
