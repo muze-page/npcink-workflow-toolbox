@@ -136,10 +136,27 @@ Run a fast cross-repo status matrix before and after multi-repo work:
 composer quality:matrix
 ```
 
+For a faster next-action readout, run the observation brief:
+
+```bash
+composer quality:observe
+```
+
+It reuses the same read-only matrix data and summarizes the decision queue:
+failed gates, dirty worktrees, branches behind upstream, branches ahead of
+upstream, and clean repos. Use it before planning a new slice so the next action
+is obvious without manually reopening every repository.
+
 Before a multi-repo release or milestone closeout, run the gate matrix:
 
 ```bash
 composer quality:matrix:run
+```
+
+When you need the same decision queue after running gates, use:
+
+```bash
+composer quality:observe:run
 ```
 
 `composer quality:matrix` is status-only. `composer quality:matrix:run` runs the
