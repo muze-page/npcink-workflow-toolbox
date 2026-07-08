@@ -14,6 +14,7 @@ Start from the active documents below before changing code.
 - [First Version Reference](first-version-reference.md)
 - [Feature Ownership And Plugin Boundary](feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](cross-repo-boundary-matrix.md)
+- [Cross-Repo Database Boundary](cross-repo-database-boundary.md)
 - [Cross-Repo Contract Reuse Acceptance](cross-repo-contract-reuse-acceptance.md)
 - [Toolbox Contract Reuse Readiness](toolbox-contract-reuse-readiness-2026-07-08.md)
 - [Cross-Repo Contract Reuse Stage Closeout](cross-repo-contract-reuse-stage-closeout-2026-07-08.md)

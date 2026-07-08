@@ -121,6 +121,7 @@ expect to stay discoverable from the root README:
 [Platform Governance Index](docs/platform/README.md),
 [Cross-Repo Platform Governance History](docs/platform/cross-repo-platform-governance-history-2026-07-08.md),
 [Cross-Repo Boundary Matrix](docs/cross-repo-boundary-matrix.md),
+[Cross-Repo Database Boundary](docs/cross-repo-database-boundary.md),
 [Cross-Repo Contract Reuse Acceptance](docs/cross-repo-contract-reuse-acceptance.md),
 [Toolbox Contract Reuse Readiness](docs/toolbox-contract-reuse-readiness-2026-07-08.md),
 [Cross-Repo Contract Reuse Stage Closeout](docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md),
