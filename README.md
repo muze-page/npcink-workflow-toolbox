@@ -122,6 +122,7 @@ expect to stay discoverable from the root README:
 [Cross-Repo Contract Reuse Acceptance](docs/cross-repo-contract-reuse-acceptance.md),
 [Toolbox Contract Reuse Readiness](docs/toolbox-contract-reuse-readiness-2026-07-08.md),
 [Cross-Repo Contract Reuse Stage Closeout](docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md),
+[Cross-Repo GitHub Release Closeout](docs/cross-repo-github-release-closeout-2026-07-08.md),
 [Cross-Repo Contract Reuse Release Prep](docs/cross-repo-contract-reuse-release-prep-2026-07-08.md),
 [Cloud Diagnostics Transition Summary](docs/cloud-diagnostics-transition-summary.md),
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
