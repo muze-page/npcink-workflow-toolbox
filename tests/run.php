@@ -203,12 +203,20 @@ toolbox_assert( false !== strpos( $site_ops_cloud_contract_doc, 'failed runtime 
 $site_ops_operator_loop_doc = file_get_contents( $root . '/docs/full-site-insights-operator-loop.md' );
 toolbox_assert( false !== strpos( $site_ops_operator_loop_doc, 'Site Check is the site-level fixed-workflow decision router' ) && false !== strpos( $site_ops_operator_loop_doc, 'Scan local data' ) && false !== strpos( $site_ops_operator_loop_doc, 'Pick the next fixed workflow' ) && false !== strpos( $site_ops_operator_loop_doc, 'Add Cloud detail only when useful' ) && false !== strpos( $site_ops_operator_loop_doc, 'Choose the follow-up path' ) && false !== strpos( $site_ops_operator_loop_doc, 'public posts and pages' ) && false !== strpos( $site_ops_operator_loop_doc, 'approved comment signal counts' ) && false !== strpos( $site_ops_operator_loop_doc, 'Cloud remains runtime/detail only' ) && false !== strpos( $site_ops_operator_loop_doc, 'not create local queues' ), 'Site Check operator loop doc records fixed-workflow routing scope, review loop, and no-runtime/no-write boundary.' );
 
-$cross_repo_boundary_doc = file_get_contents( $root . '/docs/cross-repo-boundary-matrix.md' );
+$cross_repo_boundary_doc       = file_get_contents( $root . '/docs/cross-repo-boundary-matrix.md' );
+$cross_repo_contract_reuse_doc = file_get_contents( $root . '/docs/cross-repo-contract-reuse-acceptance.md' );
 foreach ( array( 'npcink-governance-core', 'npcink-abilities-toolkit', 'npcink-ai-client-adapter', 'npcink-workflow-toolbox', 'npcink-cloud-addon', 'npcink-ai-cloud' ) as $boundary_repo_name ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $boundary_repo_name ), 'Cross-repo boundary matrix includes repo: ' . $boundary_repo_name );
+	toolbox_assert( false !== strpos( $cross_repo_contract_reuse_doc, $boundary_repo_name ), 'Cross-repo contract reuse acceptance includes repo: ' . $boundary_repo_name );
 }
 foreach ( array( 'Core preflight', 'host approval context', 'The only current Toolbox Local Admin Consent write path', 'metadata apply', 'SEO mutation', 'media import', 'settings mutation', 'batch operation', 'second ability registry, workflow registry, approval store' ) as $required_cross_repo_boundary_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_cross_repo_boundary_text ), 'Cross-repo boundary matrix preserves boundary: ' . $required_cross_repo_boundary_text );
+}
+foreach ( array( 'Contract Reuse Map', 'ability_contracts', 'proposal_handoff', 'execution_profiles', 'product_surface', 'signed_transport', 'runtime_detail', 'adds_registry=false', 'adds_scheduler_truth=false', 'adds_approval_store=false', 'adds_queue=false', 'adds_write_executor=false', 'End-To-End Acceptance Path', 'GET /v1/entitlements/current', 'Cloud Addon preserves that contract', 'Toolbox shows Workflow readiness `contract_reuse`', 'composer quality:matrix:run', 'Publish And PR Rule', 'Do not start another implementation slice', 'Stop Rule' ) as $required_contract_reuse_text ) {
+	toolbox_assert( false !== strpos( $cross_repo_contract_reuse_doc, $required_contract_reuse_text ), 'Cross-repo contract reuse acceptance preserves rule: ' . $required_contract_reuse_text );
+}
+foreach ( array( '/Users/muze/gitee/npcink-ai-cloud/app/api/routes/entitlements.py', '/Users/muze/gitee/npcink-cloud-addon/includes/class-cloud-entitlement-summary.php', '/Users/muze/gitee/npcink-cloud-addon/includes/class-cloud-settings-page.php', 'includes/Ability_Surface_Metadata.php' ) as $required_contract_reuse_source ) {
+	toolbox_assert( false !== strpos( $cross_repo_contract_reuse_doc, $required_contract_reuse_source ), 'Cross-repo contract reuse acceptance records source: ' . $required_contract_reuse_source );
 }
 foreach ( array( 'Remaining Migration Audit', 'No broad migration should continue by default', 'Move to Toolkit only when', 'Do not migrate provider runtime, Cloud indexing, editor UI state', 'approval, audit, preflight, or final WordPress writes into Toolkit', 'Next Work Rule' ) as $required_migration_audit_text ) {
 	toolbox_assert( false !== strpos( $cross_repo_boundary_doc, $required_migration_audit_text ), 'Cross-repo boundary matrix preserves migration audit rule: ' . $required_migration_audit_text );
@@ -492,7 +500,7 @@ toolbox_assert( false !== strpos( $readme, 'Content Support Toolkit Migration Hi
 toolbox_assert( false !== strpos( $readme, 'Content Metadata Apply Plan Decision Envelope Closeout' ), 'README links the content metadata apply-plan decision-envelope closeout.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Trial' ), 'README links the editor progressive recommendations trial log.' );
 toolbox_assert( false !== strpos( $readme, 'Editor Progressive Recommendations Closeout' ), 'README links the editor progressive recommendations closeout.' );
-toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ), 'README links the cross-repo boundary matrix.' );
+toolbox_assert( false !== strpos( $readme, 'Cross-Repo Boundary Matrix' ) && false !== strpos( $readme, 'Cross-Repo Contract Reuse Acceptance' ), 'README links the cross-repo boundary matrix and contract reuse acceptance.' );
 toolbox_assert( false !== strpos( $readme, 'Adversarial Boundary Review' ) && false !== strpos( $readme, 'docs/adversarial-boundary-review.md' ), 'README links the adversarial boundary review mechanism.' );
 toolbox_assert( false !== strpos( $readme, 'Adversarial Boundary Findings Triage' ) && false !== strpos( $readme, 'docs/adversarial-boundary-findings-triage.md' ), 'README links the adversarial boundary findings triage record.' );
 toolbox_assert( false !== strpos( $readme, 'Boundary Exceptions Registry' ) && false !== strpos( $readme, 'docs/boundary-exceptions.md' ), 'README links the boundary exceptions registry.' );

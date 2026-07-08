@@ -12,6 +12,7 @@ Start from the active documents below before changing code.
 - [First Version Reference](first-version-reference.md)
 - [Feature Ownership And Plugin Boundary](feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](cross-repo-boundary-matrix.md)
+- [Cross-Repo Contract Reuse Acceptance](cross-repo-contract-reuse-acceptance.md)
 - [Route Boundary Table](route-boundary-table.json)
 - [Ability Boundary Table](ability-boundary-table.json)
 - [Cloud Bridge Contract Table](cloud-bridge-contract-table.json)
