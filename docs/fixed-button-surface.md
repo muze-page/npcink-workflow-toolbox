@@ -15,6 +15,12 @@ used by the admin UI; it is not an exhaustive button catalog, ability registry,
 workflow registry, or route-compatibility registry. Do not add metadata entries
 only to mirror every route-compatible support path.
 
+Workflow readiness may show contract reuse status when it helps operators and
+support verify that fixed buttons stand on existing project contracts: Toolkit
+ability ids, Core proposal handoff, Adapter execution profiles, and Cloud
+runtime/detail. That status must remain read-only and must not become a second
+registry, runtime, approval store, queue, or write executor.
+
 ## V1 Default Buttons
 
 | Button | Surface | Input | Output artifact | Runtime | Handoff | Boundary |

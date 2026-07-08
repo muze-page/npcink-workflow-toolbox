@@ -6389,6 +6389,15 @@ msgstr "通用 AI 重叠能力为兼容性保持可调用，但不会恢复为 T
 msgid "Core handoff boundary"
 msgstr "Core 交接边界"
 
+msgid "Contract reuse"
+msgstr "契约复用"
+
+msgid "Shared contracts"
+msgstr "共享契约"
+
+msgid "Reuses Toolkit ability ids, Core proposal handoff, Adapter execution profiles, and Cloud runtime/detail; Toolbox adds no registry, runtime, approval store, queue, or write executor."
+msgstr "复用 Toolkit ability id、Core 提案交接、Adapter 执行配置和 Cloud 运行时/详情；Toolbox 不增加注册中心、运行时、审批存储、队列或写入执行器。"
+
 msgid "Site content index"
 msgstr "站点内容索引"
 
