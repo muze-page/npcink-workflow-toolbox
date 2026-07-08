@@ -89,6 +89,26 @@ Do not create a new screen, connected-services registry, setup wizard, Cloud
 settings clone, or diagnostics console until a separate product decision proves
 that the existing surfaces cannot carry the pattern.
 
+## Selection Rubric Result
+
+```text
+boundary_fit: pass
+repo_owner: npcink-workflow-toolbox
+borrow_shape: suggestion_only_surface
+user_value: high
+complexity: low
+risk: low
+recommended_result: candidate
+required_gate: composer_test_all
+review_required: shortlist_only
+```
+
+Rationale: the pattern improves operator clarity on existing readiness/status
+surfaces without adding provider setup ownership, runtime queues, approval
+storage, or a second WordPress write path. It is a candidate rather than an
+automatic implementation because each touched readiness row still needs a
+specific owner and UI surface check.
+
 ## Do Not Borrow
 
 Do not borrow or recreate:

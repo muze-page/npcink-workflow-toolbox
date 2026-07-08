@@ -31,6 +31,37 @@ why the pattern is rejected.
 
 - [Connection Readiness](connection-readiness.md)
 
+## Selection Rubric
+
+Use this rubric before promoting a learning record into an implementation
+candidate. The default answer is `library_only` unless the pattern passes
+boundary, ownership, value, complexity, and gate checks.
+
+```text
+boundary_fit: pass | fail
+repo_owner: npcink-workflow-toolbox | npcink-cloud-addon | npcink-ai-cloud | npcink-governance-core | npcink-abilities-toolkit | npcink-ai-client-adapter | wp-magick-toolbox
+borrow_shape: documentation_only | static_contract | suggestion_only_surface | core_governed_handoff
+user_value: low | medium | high
+complexity: low | medium | high
+risk: low | medium | high
+recommended_result: reject | library_only | candidate | p1_implementation
+required_gate: docs_static | composer_test_all | quality_observe | quality_matrix_run
+review_required: no | shortlist_only | owner_approval
+```
+
+## Decision Buckets
+
+| Bucket | Meaning | User review expectation |
+| --- | --- | --- |
+| `reject` | The pattern crosses a boundary or does not fit current Npcink problems. | No line-by-line user review; summarize rejected reasons in the batch closeout. |
+| `library_only` | The pattern is useful context but does not justify product or contract work yet. | No user review unless it changes repository ownership assumptions. |
+| `candidate` | The pattern has clear ownership, value, and a plausible small implementation path. | Include in the shortlist with owner, scope, risk, and gate. |
+| `p1_implementation` | The pattern is the best next small slice for the current batch. | Requires explicit user confirmation before implementation. |
+
+Agents should prefilter records into these buckets. The user should only need
+to review the shortlist and approve `p1_implementation` items, not every
+learning note.
+
 ## Entry Requirements
 
 Each capability entry should include:
@@ -41,6 +72,7 @@ Each capability entry should include:
 - Npcink repository mapping;
 - recommended implementation shape;
 - do-not-borrow list;
+- selection rubric result when the entry creates an implementation candidate;
 - security and performance notes;
 - verification gates;
 - sources.
@@ -80,7 +112,7 @@ After this seed library exists, batch learning should stay small:
 - one or two capability patterns per plugin;
 - one evaluation record per capability question;
 - one capability-library update per reusable pattern;
-- at most one P1 implementation slice per batch.
+- at most one `p1_implementation` slice per batch.
 
 This keeps learning useful for product evolution without turning the library
 into a backlog, runtime registry, or broad competitive research archive.
