@@ -21,6 +21,8 @@ Start from the active documents below before changing code.
 - [Cross-Repo Contract Reuse Stage Closeout](cross-repo-contract-reuse-stage-closeout-2026-07-08.md)
 - [Cross-Repo GitHub Release Closeout](cross-repo-github-release-closeout-2026-07-08.md)
 - [Reference Plugin Evaluation Checklist](reference-plugin-evaluation-checklist.md)
+- [Reference Plugin Evaluation Record Template](reference-plugin-evaluation-record-template.md)
+- [Reference Plugin Evaluation Records](reference-plugin-evaluations/README.md)
 - [Route Boundary Table](route-boundary-table.json)
 - [Ability Boundary Table](ability-boundary-table.json)
 - [Cloud Bridge Contract Table](cloud-bridge-contract-table.json)
