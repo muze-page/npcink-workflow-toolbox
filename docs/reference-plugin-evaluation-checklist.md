@@ -10,6 +10,15 @@ importing the other plugin's ownership model.
 This checklist is a documentation and decision aid. It is not a runtime,
 registry, queue, approval store, provider console, or WordPress write path.
 
+## Reusable Artifacts
+
+- Use the [Reference Plugin Evaluation Record Template](reference-plugin-evaluation-record-template.md)
+  when a capability needs a durable review artifact.
+- Store accepted trial records under
+  [Reference Plugin Evaluation Records](reference-plugin-evaluations/README.md).
+- The first accepted trial is
+  [SEO/checklist media metadata recommendation evaluation - 2026-07-08](reference-plugin-evaluations/seo-media-metadata-checklist-2026-07-08.md).
+
 ## Evaluation Entry
 
 Use this checklist before writing code when any of these are true:

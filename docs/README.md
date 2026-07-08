@@ -6,6 +6,7 @@ Start from the active documents below before changing code.
 ## Core Contracts
 
 - [Platform Governance Index](platform/README.md)
+- [Cross-Repo Platform Governance History](platform/cross-repo-platform-governance-history-2026-07-08.md)
 - [Product Positioning](product-positioning.md)
 - [Boundary](boundary.md)
 - [Architecture](architecture.md)
@@ -13,11 +14,15 @@ Start from the active documents below before changing code.
 - [First Version Reference](first-version-reference.md)
 - [Feature Ownership And Plugin Boundary](feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](cross-repo-boundary-matrix.md)
+- [Cross-Repo Database Boundary](cross-repo-database-boundary.md)
+- [Cross-Repo Database Boundary Closeout](cross-repo-database-boundary-closeout-2026-07-08.md)
 - [Cross-Repo Contract Reuse Acceptance](cross-repo-contract-reuse-acceptance.md)
 - [Toolbox Contract Reuse Readiness](toolbox-contract-reuse-readiness-2026-07-08.md)
 - [Cross-Repo Contract Reuse Stage Closeout](cross-repo-contract-reuse-stage-closeout-2026-07-08.md)
 - [Cross-Repo GitHub Release Closeout](cross-repo-github-release-closeout-2026-07-08.md)
 - [Reference Plugin Evaluation Checklist](reference-plugin-evaluation-checklist.md)
+- [Reference Plugin Evaluation Record Template](reference-plugin-evaluation-record-template.md)
+- [Reference Plugin Evaluation Records](reference-plugin-evaluations/README.md)
 - [Route Boundary Table](route-boundary-table.json)
 - [Ability Boundary Table](ability-boundary-table.json)
 - [Cloud Bridge Contract Table](cloud-bridge-contract-table.json)
