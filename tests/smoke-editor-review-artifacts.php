@@ -327,6 +327,13 @@ toolbox_editor_review_smoke_assert( ! empty( $internal_projection ), 'Internal-l
 toolbox_editor_review_smoke_assert( 'recommendation_candidate.v1' === (string) ( $internal_projection[0]['contract'] ?? '' ), 'Internal-link projection uses recommendation_candidate.v1.' );
 toolbox_editor_review_smoke_assert( 'internal_link' === (string) ( $internal_projection[0]['kind'] ?? '' ), 'Internal-link projection keeps the internal_link candidate kind.' );
 toolbox_editor_review_smoke_assert( 'operator_review_only_no_insert' === (string) ( $internal_projection[0]['action_policy'] ?? '' ), 'Internal-link projection keeps the no-insert action policy.' );
+toolbox_editor_review_smoke_assert( 'human_editor' === (string) ( $internal_links['owner_label'] ?? '' ), 'Internal-link section names the human editor as the placement owner.' );
+toolbox_editor_review_smoke_assert( 'copy_or_open_then_place_manually' === (string) ( $internal_links['next_safe_action'] ?? '' ), 'Internal-link section exposes the safe manual next action.' );
+toolbox_editor_review_smoke_assert( is_array( $internal_projection[0]['target_ref'] ?? null ) && $target_post_id === absint( $internal_projection[0]['target_ref']['post_id'] ?? 0 ), 'Internal-link projection exposes a bounded target_ref.' );
+toolbox_editor_review_smoke_assert( '' !== (string) ( $internal_projection[0]['anchor_or_context'] ?? '' ), 'Internal-link projection exposes the suggested anchor or review context.' );
+toolbox_editor_review_smoke_assert( '' !== (string) ( $internal_projection[0]['evidence_note'] ?? '' ), 'Internal-link projection exposes a review evidence note.' );
+toolbox_editor_review_smoke_assert( 'human_editor' === (string) ( $internal_projection[0]['owner_label'] ?? '' ), 'Internal-link projection keeps placement ownership with the human editor.' );
+toolbox_editor_review_smoke_assert( 'copy_or_open_then_place_manually' === (string) ( $internal_projection[0]['next_safe_action'] ?? '' ), 'Internal-link projection exposes a copy/open manual placement action.' );
 toolbox_editor_review_smoke_assert( in_array( 'no_link_insertion_in_toolbox', (array) ( $internal_handoff['blocked_actions'] ?? array() ), true ), 'Internal-link handoff blocks Toolbox link insertion.' );
 
 $publish_result  = toolbox_editor_review_smoke_rest( array( 'intent' => 'publish_preflight' ) + $base_params );
