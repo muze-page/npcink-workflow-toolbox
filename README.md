@@ -127,6 +127,7 @@ expect to stay discoverable from the root README:
 [Toolbox Contract Reuse Readiness](docs/toolbox-contract-reuse-readiness-2026-07-08.md),
 [Cross-Repo Contract Reuse Stage Closeout](docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md),
 [Cross-Repo GitHub Release Closeout](docs/cross-repo-github-release-closeout-2026-07-08.md),
+[Reference Learning Migration Closeout](docs/reference-learning-migration-closeout-2026-07-08.md),
 [Reference Plugin Evaluation Checklist](docs/reference-plugin-evaluation-checklist.md),
 [Reference Plugin Evaluation Record Template](docs/reference-plugin-evaluation-record-template.md),
 [Reference Plugin Evaluation Records](docs/reference-plugin-evaluations/README.md),

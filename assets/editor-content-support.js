@@ -4764,35 +4764,75 @@
 			return [
 				{
 					key: 'editor-readiness',
+					group: 'publish-review',
+					groupLabel: __('Publish preflight', 'npcink-workflow-toolbox'),
 					label: __('Editor readiness', 'npcink-workflow-toolbox'),
 					status: hasAction ? 'warning' : (hasReview ? 'review' : 'ok'),
 					value: hasAction ? __('Fix required items', 'npcink-workflow-toolbox') : (hasReview ? __('Review before publish', 'npcink-workflow-toolbox') : __('Ready for human publish review', 'npcink-workflow-toolbox')),
 					detail: hasAction
 						? __('Resolve blocking checklist rows before using WordPress publish controls.', 'npcink-workflow-toolbox')
 						: (hasReview ? __('Use the preflight dialog to review evidence; Toolbox still does not publish.', 'npcink-workflow-toolbox') : __('No required fixes were found. Publishing still uses normal WordPress controls.', 'npcink-workflow-toolbox')),
+					ownerLabel: __('Toolbox', 'npcink-workflow-toolbox'),
+					writePosture: __('Suggestion only', 'npcink-workflow-toolbox'),
 				},
 				{
 					key: 'core-handoff-readiness',
+					group: 'governed-handoff',
+					groupLabel: __('Governed handoff', 'npcink-workflow-toolbox'),
 					label: __('Core handoff readiness', 'npcink-workflow-toolbox'),
 					status: seoHandoff.proposal_ready ? 'review' : 'warning',
 					value: seoHandoff.proposal_ready ? __('Ready for Core review', 'npcink-workflow-toolbox') : __('SEO handoff incomplete', 'npcink-workflow-toolbox'),
 					detail: seoHandoff.proposal_ready
 						? __('SEO title and description are packaged for Adapter/Core review. Toolbox does not write SEO fields.', 'npcink-workflow-toolbox')
 						: __('Run discoverability suggestions until SEO title and description candidates are available.', 'npcink-workflow-toolbox'),
+					ownerLabel: __('Core', 'npcink-workflow-toolbox'),
+					writePosture: __('Core review required', 'npcink-workflow-toolbox'),
 				},
 			];
+		}
+
+		function preflightReadinessGroups(sections, counts) {
+			const groups = [];
+			const seen = {};
+			preflightReadinessRows(sections, counts).forEach((row) => {
+				const groupKey = row.group || 'publish-review';
+				if (!seen[groupKey]) {
+					seen[groupKey] = {
+						key: groupKey,
+						label: row.groupLabel || row.label,
+						rows: [],
+					};
+					groups.push(seen[groupKey]);
+				}
+				seen[groupKey].rows.push(row);
+			});
+			return groups;
 		}
 
 		function renderPreflightReadinessRows(sections, counts) {
 			return createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__preflight-readiness-rows' },
-				preflightReadinessRows(sections, counts).map((item) => createElement(
+				preflightReadinessGroups(sections, counts).map((group) => createElement(
 					'div',
-					{ key: item.key, className: 'npcink-toolbox-editor-support__preflight-readiness-row is-' + item.status },
-					createElement('span', null, item.label),
-					createElement('strong', null, item.value),
-					createElement('p', null, item.detail)
+					{
+						key: group.key,
+						className: 'npcink-toolbox-editor-support__preflight-readiness-group',
+						'data-readiness-group': group.key,
+					},
+					createElement('span', { className: 'npcink-toolbox-editor-support__preflight-readiness-group-label' }, group.label),
+					group.rows.map((item) => createElement(
+						'div',
+						{ key: item.key, className: 'npcink-toolbox-editor-support__preflight-readiness-row is-' + item.status },
+						createElement('span', null, item.label),
+						createElement('strong', null, item.value),
+						createElement('p', null, item.detail),
+						createElement(
+							'p',
+							{ className: 'npcink-toolbox-editor-support__preflight-readiness-meta' },
+							__('Owner', 'npcink-workflow-toolbox') + ': ' + item.ownerLabel + ' · ' + __('Write posture', 'npcink-workflow-toolbox') + ': ' + item.writePosture
+						)
+					))
 				))
 			);
 		}
