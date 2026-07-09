@@ -4756,6 +4756,46 @@
 			);
 		}
 
+		function preflightReadinessRows(sections, counts) {
+			const seoHandoff = sections && sections.seo_handoff ? sections.seo_handoff : {};
+			const hasAction = Boolean(counts.action);
+			const hasReview = Boolean(counts.review);
+			return [
+				{
+					key: 'editor-readiness',
+					label: __('Editor readiness', 'npcink-workflow-toolbox'),
+					status: hasAction ? 'warning' : (hasReview ? 'review' : 'ok'),
+					value: hasAction ? __('Fix required items', 'npcink-workflow-toolbox') : (hasReview ? __('Review before publish', 'npcink-workflow-toolbox') : __('Ready for human publish review', 'npcink-workflow-toolbox')),
+					detail: hasAction
+						? __('Resolve blocking checklist rows before using WordPress publish controls.', 'npcink-workflow-toolbox')
+						: (hasReview ? __('Use the preflight dialog to review evidence; Toolbox still does not publish.', 'npcink-workflow-toolbox') : __('No required fixes were found. Publishing still uses normal WordPress controls.', 'npcink-workflow-toolbox')),
+				},
+				{
+					key: 'core-handoff-readiness',
+					label: __('Core handoff readiness', 'npcink-workflow-toolbox'),
+					status: seoHandoff.proposal_ready ? 'review' : 'warning',
+					value: seoHandoff.proposal_ready ? __('Ready for Core review', 'npcink-workflow-toolbox') : __('SEO handoff incomplete', 'npcink-workflow-toolbox'),
+					detail: seoHandoff.proposal_ready
+						? __('SEO title and description are packaged for Adapter/Core review. Toolbox does not write SEO fields.', 'npcink-workflow-toolbox')
+						: __('Run discoverability suggestions until SEO title and description candidates are available.', 'npcink-workflow-toolbox'),
+				},
+			];
+		}
+
+		function renderPreflightReadinessRows(sections, counts) {
+			return createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__preflight-readiness-rows' },
+				preflightReadinessRows(sections, counts).map((item) => createElement(
+					'div',
+					{ key: item.key, className: 'npcink-toolbox-editor-support__preflight-readiness-row is-' + item.status },
+					createElement('span', null, item.label),
+					createElement('strong', null, item.value),
+					createElement('p', null, item.detail)
+				))
+			);
+		}
+
 		function preflightBlockingActions(actions) {
 			return actions.filter((item) => preflightStatusBucket(item.status) === 'action');
 		}
@@ -4815,6 +4855,7 @@
 					createElement('span', null, summaryText)
 				),
 				renderPreflightStatusStrip(counts),
+				renderPreflightReadinessRows(sections, counts),
 				renderPreflightBlockingHint(actions, controls),
 				createElement(
 					'div',
