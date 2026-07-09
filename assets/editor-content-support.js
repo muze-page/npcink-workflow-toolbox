@@ -4492,15 +4492,16 @@
 		if (section && Array.isArray(section.recommendation_candidates) && section.recommendation_candidates.length) {
 			return section.recommendation_candidates.map((item, index) => {
 				const source = sourceItems[index] && typeof sourceItems[index] === 'object' ? sourceItems[index] : {};
+				const targetRef = item && item.target_ref && typeof item.target_ref === 'object' ? item.target_ref : {};
 				const title = readableItemText(item.label || item.name || source.title || item.id, __('Internal link candidate', 'npcink-workflow-toolbox'));
-				const targetUrl = readableItemText(item.target_url || item.source_candidate_ref || source.target_url || source.url, '');
-				const anchorText = readableItemText(item.value || source.suggested_anchor_text || title, '');
+				const targetUrl = readableItemText(item.target_url || targetRef.url || item.source_candidate_ref || source.target_url || source.url, '');
+				const anchorText = readableItemText(item.anchor_or_context || item.value || source.suggested_anchor_text || title, '');
 				return {
 					id: readableItemText(item.id || source.target_post_id || String(index + 1), String(index + 1)),
 					title,
 					anchorText,
 					targetUrl,
-					reason: internalLinkReasonText(item.reason || item.detail || source.reason),
+					reason: internalLinkReasonText(item.evidence_note || item.reason || item.detail || source.reason),
 					placementHint: readableItemText(source.placement_hint || item.placement_hint, ''),
 					score: internalLinkScoreText(item.quality_score),
 					quality_status: item.quality_status,

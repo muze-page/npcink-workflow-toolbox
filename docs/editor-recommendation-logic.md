@@ -87,8 +87,10 @@ author loop:
 - image candidates stay in the image-source modal and continue through the
   existing media adoption flow;
 - internal-link candidates show target article, anchor text, and placement
-  evidence with explicit actions to copy the link or open the target. Toolbox
-  must not insert links or patch post content in the background;
+  evidence with explicit actions to copy the link or open the target. The
+  machine-readable preview exposes `target_ref`, `anchor_or_context`,
+  `evidence_note`, `owner_label=human_editor`, and
+  `next_safe_action=copy_or_open_then_place_manually`. Toolbox must not insert links or patch post content in the background;
 - publish preflight renders a suggested handling list that routes operators
   back to the focused tools. It must not create a parallel apply surface or
   bypass Core proposals.

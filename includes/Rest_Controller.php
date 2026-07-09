@@ -2991,6 +2991,9 @@ final class Rest_Controller {
 		$artifact['recommendation_candidates'] = $this->editor_internal_link_recommendation_candidates( $items );
 		$artifact['final_write_path'] = 'operator_review_only_no_insert';
 		$artifact['direct_wordpress_write'] = false;
+		$artifact['owner_label'] = 'human_editor';
+		$artifact['next_safe_action'] = 'copy_or_open_then_place_manually';
+		$artifact['action_policy'] = 'operator_review_only_no_insert';
 		$artifact['review_policy'] = array_merge(
 			is_array( $artifact['review_policy'] ?? null ) ? $artifact['review_policy'] : array(),
 			array(
@@ -3093,6 +3096,9 @@ final class Rest_Controller {
 			'error_message'          => sanitize_text_field( $error->get_error_message() ),
 			'items'                  => array(),
 			'recommendation_candidates' => array(),
+			'owner_label'            => 'human_editor',
+			'next_safe_action'       => 'fix_toolkit_or_retry_later',
+			'action_policy'          => 'operator_review_only_no_insert',
 			'source_knowledge'       => $source_knowledge,
 			'review_policy'          => array(
 				'link_insertion_owner'       => 'human_editor',
@@ -3118,6 +3124,9 @@ final class Rest_Controller {
 			$title  = sanitize_text_field( (string) ( $item['title'] ?? '' ) );
 			$anchor = sanitize_text_field( (string) ( $item['suggested_anchor_text'] ?? '' ) );
 			$url    = esc_url_raw( (string) ( $item['target_url'] ?? '' ) );
+			$target_post_id = absint( $item['target_post_id'] ?? 0 );
+			$placement_hint = sanitize_text_field( (string) ( $item['placement_hint'] ?? '' ) );
+			$reason = sanitize_text_field( (string) ( $item['reason'] ?? '' ) );
 			if ( '' === $title && '' === $anchor && '' === $url ) {
 				continue;
 			}
@@ -3143,10 +3152,19 @@ final class Rest_Controller {
 					'kind'                 => 'internal_link',
 					'label'                => '' !== $title ? $title : __( 'Internal link candidate', 'npcink-workflow-toolbox' ),
 					'value'                => '' !== $anchor ? $anchor : $url,
-					'reason'               => sanitize_text_field( (string) ( $item['reason'] ?? '' ) ),
+					'reason'               => $reason,
 					'confidence'           => $has_score && $score > 0 && $score <= 1 ? $score : null,
 					'target_field'         => 'post_content',
 					'action_policy'        => 'operator_review_only_no_insert',
+					'target_ref'           => array(
+						'post_id' => $target_post_id,
+						'title'   => $title,
+						'url'     => $url,
+					),
+					'anchor_or_context'    => '' !== $anchor ? $anchor : $placement_hint,
+					'evidence_note'        => '' !== $reason ? $reason : __( 'Related content candidate for manual internal-link review.', 'npcink-workflow-toolbox' ),
+					'owner_label'          => 'human_editor',
+					'next_safe_action'     => 'copy_or_open_then_place_manually',
 					'quality_status'       => $quality_score >= 60 && '' !== $url ? 'review' : 'weak',
 					'quality_score'        => $quality_score,
 					'quality_issues'       => $quality_issues,
@@ -4326,6 +4344,26 @@ final class Rest_Controller {
 
 		if ( '' !== (string) ( $args['source_candidate_ref'] ?? '' ) ) {
 			$candidate['source_candidate_ref'] = sanitize_text_field( (string) $args['source_candidate_ref'] );
+		}
+		if ( is_array( $args['target_ref'] ?? null ) ) {
+			$target_ref = $args['target_ref'];
+			$candidate['target_ref'] = array(
+				'post_id' => absint( $target_ref['post_id'] ?? 0 ),
+				'title'   => sanitize_text_field( (string) ( $target_ref['title'] ?? '' ) ),
+				'url'     => esc_url_raw( (string) ( $target_ref['url'] ?? '' ) ),
+			);
+		}
+		if ( '' !== (string) ( $args['anchor_or_context'] ?? '' ) ) {
+			$candidate['anchor_or_context'] = sanitize_text_field( (string) $args['anchor_or_context'] );
+		}
+		if ( '' !== (string) ( $args['evidence_note'] ?? '' ) ) {
+			$candidate['evidence_note'] = sanitize_text_field( (string) $args['evidence_note'] );
+		}
+		if ( '' !== (string) ( $args['owner_label'] ?? '' ) ) {
+			$candidate['owner_label'] = sanitize_key( (string) $args['owner_label'] );
+		}
+		if ( '' !== (string) ( $args['next_safe_action'] ?? '' ) ) {
+			$candidate['next_safe_action'] = sanitize_key( (string) $args['next_safe_action'] );
 		}
 
 		return $candidate;
