@@ -122,6 +122,25 @@ $pack    = $builder->build(
 	array(
 		'content_context_ready' => false,
 		'cloud_ready'           => false,
+		'internal_link_graph_health' => array(
+			'available'         => true,
+			'source_ability_id' => 'npcink-abilities-toolkit/get-internal-link-graph-health',
+			'data'              => array(
+				'summary'      => array( 'scanned_count' => 2 ),
+				'issue_counts' => array(
+					'orphan_post'             => 1,
+					'low_outbound_links'      => 1,
+					'excessive_outbound_links' => 0,
+				),
+				'items'        => array(
+					array(
+						'post_id' => 101,
+						'title'   => 'Old active tutorial',
+						'issues'  => array( 'orphan_post', 'low_outbound_links' ),
+					),
+				),
+			),
+		),
 	)
 );
 
@@ -153,12 +172,25 @@ $categories = array_values(
 );
 site_ops_smoke_assert( in_array( 'media', $issue_types, true ) && in_array( 'comments', $issue_types, true ), 'Site Ops findings expose issue_type values for dimension panels.' );
 site_ops_smoke_assert( $issue_types === $categories, 'Site Ops findings keep category as an issue_type compatibility alias.' );
+$link_health_findings = array_values(
+	array_filter(
+		$pack['top_findings'],
+		static function ( $finding ) {
+			return is_array( $finding ) && 'internal_link_health' === (string) ( $finding['id'] ?? '' );
+		}
+	)
+);
+site_ops_smoke_assert( 1 === count( $link_health_findings ), 'Site Ops builder projects bounded internal-link graph evidence as one finding.' );
+$link_health = $link_health_findings[0];
+site_ops_smoke_assert( 'npcink-abilities-toolkit/get-internal-link-graph-health' === (string) ( $link_health['source_ability_id'] ?? '' ) && 'bounded_local_internal_graph' === (string) ( $link_health['scope'] ?? '' ), 'Internal-link health finding identifies the existing Toolkit source and bounded local scope.' );
+site_ops_smoke_assert( 'human_editor' === (string) ( $link_health['owner_label'] ?? '' ) && 'open_existing_internal_link_review' === (string) ( $link_health['next_safe_action'] ?? '' ) && 'operator_review_only_no_fix' === (string) ( $link_health['action_policy'] ?? '' ), 'Internal-link health finding keeps human review ownership and no-fix action policy.' );
+site_ops_smoke_assert( 2 === (int) ( $pack['summary']['internal_link_graph_scanned_posts'] ?? 0 ) && 2 === (int) ( $pack['summary']['internal_link_graph_issue_count'] ?? 0 ), 'Site Ops summary exposes bounded internal-link graph scan and issue counts.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_text_returned'] ?? true ), 'Site Ops insight pack omits full comment text.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_author_email_returned'] ?? true ), 'Site Ops insight pack omits comment author emails.' );
 site_ops_smoke_assert( false === ( $pack['safety']['comment_ip_returned'] ?? true ), 'Site Ops insight pack omits comment IP addresses.' );
 
 $encoded = json_encode( $pack );
 site_ops_smoke_assert( false !== $encoded, 'Site Ops insight pack is JSON encodable.' );
-foreach ( array( '"comment_content"', '"comment_author_email"', '"comment_author_IP"', '"comment_agent"', 'wp_insert_post', 'wp_update_post', 'update_post_meta' ) as $forbidden ) {
+foreach ( array( '"comment_content"', '"comment_author_email"', '"comment_author_IP"', '"comment_agent"', 'wp_insert_post', 'wp_update_post', 'update_post_meta', 'wp_schedule_event', 'as_enqueue_async_action' ) as $forbidden ) {
 	site_ops_smoke_assert( false === strpos( (string) $encoded, $forbidden ), 'Site Ops insight pack omits forbidden field or write token: ' . $forbidden );
 }

@@ -369,6 +369,12 @@ cross-run, trend, AI-summary, and external-data detail, but Cloud remains
 runtime detail and must not become a second WordPress write owner, approval
 store, or control plane.
 
+When Toolkit is installed, the same explicit local check may project its
+bounded deterministic internal-link graph evidence for published posts. This
+is a review-only content finding with affected-post references and an editor
+next action; it is not an HTTP broken-link crawler, scheduler, queue, durable
+scan store, automatic insertion, redirect, proposal, or WordPress write path.
+
 Toolbox may prepare a copyable `site_ops_cloud_analysis_request.v1` from the
 local pack. When Cloud is ready and an administrator explicitly clicks **Use
 Cloud detail**, Toolbox may send that request through the Cloud runtime seam.
