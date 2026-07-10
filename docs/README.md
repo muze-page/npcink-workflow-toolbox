@@ -83,6 +83,7 @@ Start from the active documents below before changing code.
 - [Media ALT/Caption Migration Closeout](archive/2026-07/media-alt-caption-migration-closeout-2026-07-06.md)
 - [Site Check Operator Loop](full-site-insights-operator-loop.md)
 - [Site Check Decision Entry Closeout](site-check-decision-entry-closeout-2026-06-30.md)
+- [Site Check Visibility Reassessment](site-check-visibility-reassessment-2026-07-10.md)
 - [Site Check Scheduled Review Cloud Addon Closeout](site-check-scheduled-review-cloud-addon-closeout-2026-07-01.md)
 - [Operator Path Validation Closeout](operator-path-validation-closeout-2026-07-02.md)
 - [Batch Automation Governance Plan](batch-automation-governance-plan.md)
