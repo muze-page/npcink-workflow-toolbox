@@ -1625,21 +1625,10 @@ final class Admin_Page {
 	private function render_site_ops_dimension_panel( string $title, string $description, array $summary, array $findings, array $categories ): void {
 		$dimension_findings = $this->site_ops_findings_by_category( $findings, $categories );
 		?>
-		<div class="npcink-toolbox__ops-summary-bar">
+		<div class="npcink-toolbox__ops-summary-bar npcink-toolbox__ops-summary-bar--dimension">
 			<div>
 				<strong><?php echo esc_html( $title ); ?></strong>
 				<span><?php echo esc_html( $description ); ?></span>
-				<?php if ( array() !== $dimension_findings ) : ?>
-					<small>
-						<?php
-						printf(
-							/* translators: %d: number of related findings. */
-							esc_html__( 'Start with the first %d related item below; supporting metrics stay secondary.', 'npcink-workflow-toolbox' ),
-							(int) min( 3, count( $dimension_findings ) )
-						);
-						?>
-					</small>
-				<?php endif; ?>
 			</div>
 			<div class="npcink-toolbox__ops-scope">
 				<?php /* translators: %d: number of scanned posts and pages. */ ?>
@@ -1660,7 +1649,42 @@ final class Admin_Page {
 					<?php $this->render_site_ops_finding_row( $finding ); ?>
 				<?php endforeach; ?>
 			</div>
+			<?php $this->render_site_ops_dimension_rules( $dimension_findings ); ?>
 		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Renders the shared, folded handling guidance once per analysis dimension.
+	 *
+	 * @param array<int,mixed> $findings Findings for the current dimension.
+	 */
+	private function render_site_ops_dimension_rules( array $findings ): void {
+		$boundaries = array();
+		foreach ( $findings as $finding ) {
+			if ( ! is_array( $finding ) ) {
+				continue;
+			}
+			$boundary = (string) ( $finding['write_boundary'] ?? 'suggestion_only' );
+			if ( ! isset( $boundaries[ $boundary ] ) ) {
+				$boundaries[ $boundary ] = $this->site_ops_boundary_guidance( $boundary );
+			}
+		}
+		if ( array() === $boundaries ) {
+			return;
+		}
+		?>
+		<details class="npcink-toolbox__ops-dimension-rules" aria-label="<?php esc_attr_e( 'Handling rules and limits', 'npcink-workflow-toolbox' ); ?>">
+			<summary><?php esc_html_e( 'View handling rules and limits', 'npcink-workflow-toolbox' ); ?></summary>
+			<ul>
+				<?php foreach ( $boundaries as $boundary => $guidance ) : ?>
+					<li>
+						<strong><?php echo esc_html( $this->site_ops_boundary_label( (string) $boundary ) ); ?></strong>
+						<span><?php echo esc_html( (string) $guidance ); ?></span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</details>
 		<?php
 	}
 
@@ -1676,27 +1700,29 @@ final class Admin_Page {
 		$action  = $this->site_ops_finding_recommended_action( $finding );
 		$score   = (int) ( $finding['priority_score'] ?? 0 );
 		$owner   = $this->site_ops_owner_label( (string) ( $finding['owner_label'] ?? '' ) );
+		$boundary = (string) ( $finding['write_boundary'] ?? 'suggestion_only' );
 		?>
 		<article class="npcink-toolbox__ops-priority-row">
 			<div class="npcink-toolbox__ops-priority-main">
 				<span class="npcink-toolbox__priority-label"><?php echo esc_html( $this->site_ops_priority_label( $score ) ); ?></span>
 				<div>
-					<h3><?php echo esc_html( $title ); ?></h3>
+					<div class="npcink-toolbox__ops-priority-heading">
+						<h3><?php echo esc_html( $title ); ?></h3>
+						<span class="npcink-toolbox__priority-score"><?php echo esc_html( $this->site_ops_priority_action_label( $score ) ); ?></span>
+						<span class="npcink-toolbox__ops-handling-pill"><?php echo esc_html( $this->site_ops_boundary_label( $boundary ) ); ?></span>
+					</div>
 					<p><?php echo esc_html( $summary ); ?></p>
 				</div>
-				<span class="npcink-toolbox__priority-score"><?php echo esc_html( $this->site_ops_priority_action_label( $score ) ); ?></span>
 			</div>
 			<div class="npcink-toolbox__ops-action-line">
 				<strong><?php esc_html_e( 'Next', 'npcink-workflow-toolbox' ); ?></strong>
 				<span><?php echo esc_html( $action ); ?></span>
+				<?php $this->render_site_ops_action_buttons( $finding, 'row' ); ?>
 				<?php if ( '' !== $owner ) : ?>
 					<strong><?php esc_html_e( 'Owner', 'npcink-workflow-toolbox' ); ?></strong>
 					<span><?php echo esc_html( $owner ); ?></span>
 				<?php endif; ?>
-				<em><?php echo esc_html( $this->site_ops_boundary_label( (string) ( $finding['write_boundary'] ?? 'suggestion_only' ) ) ); ?></em>
-				<span><?php echo esc_html( $this->site_ops_boundary_guidance( (string) ( $finding['write_boundary'] ?? 'suggestion_only' ) ) ); ?></span>
 			</div>
-			<?php $this->render_site_ops_action_buttons( $finding, 'row' ); ?>
 		</article>
 		<?php
 	}
