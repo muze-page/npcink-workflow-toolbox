@@ -65,10 +65,10 @@ semantics.
 8. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.
-9. Surface a Site Check button that turns content, approved comment, media,
-   taxonomy, context, and runtime signals into a prioritized review-only
-   ranked decision list for manual handling, existing fixed workflows, or optional
-   Cloud detail.
+9. Retain the Site Check compatibility route for bounded local review while it
+   is hidden from the default operator UI pending a clearer problem statement,
+   action model, and acceptance loop. The retained route preserves its bounded
+   ranked decision list without expanding Toolbox runtime or write ownership.
 10. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals

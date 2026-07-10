@@ -218,6 +218,7 @@ try {
 		await page.goto(loginHelper.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 		await openToolboxPage(page, baseUrl);
 		await page.waitForSelector('[data-toolbox-site-ops-insights]', { state: 'attached', timeout: 30000 });
+		assert(await page.locator('[data-toolbox-tab-target="operations-insights"]').count() === 0, 'Site Check is hidden from the normal top-level tab navigation while its compatibility deep link remains available.');
 		if (await page.locator('[data-toolbox-tab-panel="operations-insights"]').isHidden()) {
 			await page.locator('[data-toolbox-tab-target="operations-insights"]').click();
 		}

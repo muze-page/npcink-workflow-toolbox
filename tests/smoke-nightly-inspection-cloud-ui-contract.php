@@ -80,8 +80,6 @@ foreach (
 	array(
 		'cloud_addon_runtime_runs_url',
 		"'tab'  => 'runtime_runs'",
-		'data-toolbox-tab-target="operations-insights"',
-		'Site Check',
 		'data-toolbox-site-check-target="current-check"',
 		'data-toolbox-site-check-target="scheduled-review"',
 		'data-toolbox-site-check-panel="scheduled-review"',
@@ -96,6 +94,8 @@ foreach (
 ) {
 	$assert_contains( $admin_page, $required_admin_text, 'Scheduled Review admin panel routes Cloud run detail and recovery to Cloud Addon Runtime Runs.' );
 }
+
+$assert_not_contains( $admin_page, 'data-toolbox-tab-target="operations-insights"', 'Scheduled Review remains reachable through the Site Check compatibility panel without restoring a top-level Site Check tab.' );
 
 foreach (
 	array(

@@ -6607,3 +6607,12 @@ msgstr "通过允许的人工或审核路径处理所选对象后，重新扫描
 
 msgid "Rescan to verify"
 msgstr "重新扫描验证"
+
+msgid "Improve images and prepare safe AI suggestions without changing WordPress automatically."
+msgstr "优化图片并准备安全的 AI 建议，不会自动更改 WordPress。"
+
+msgid "Use Site Profile and Image Handling for currently supported operator tasks."
+msgstr "请使用站点画像和图片处理完成当前支持的运营任务。"
+
+msgid "V1 defaults are Publish Preflight, Internal Link Candidates, Image Candidates, and Article Audio Candidates."
+msgstr "V1 默认入口是发布预检、内链候选、图片候选和文章音频候选。"

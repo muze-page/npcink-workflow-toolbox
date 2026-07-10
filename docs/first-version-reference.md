@@ -85,22 +85,18 @@ Standalone diagnostics do not live in Toolbox. Marketplace, provider routing,
 vector provider settings, and vector lifecycle controls do not belong in
 Toolbox.
 
-The admin page should default to Overview: one recommended site-level action,
-compact readiness rows for AI service, Site Profile, and safe mode, site-level
-and media next actions. The visible top-level tabs are Overview, Site Check,
-Site Profile, and Image Handling; Site Knowledge and Morning Brief remain
-secondary deep-link panels. Overview should not render a single-post
-article-support work block.
+The admin page should default to Overview. The visible top-level tabs are
+Overview, Site Profile, and Image Handling; Site Check, Site Knowledge, and
+Morning Brief remain hidden compatibility/deep-link panels. Overview should not
+render a single-post article-support work block.
 Article-specific jobs use the editor Content Support sidebar:
 publish preflight, internal links, image candidates, article narration, and
 article audio summary. Summary, category, tag, outline, discoverability,
 article-checkup, current-article ALT, and related existing-post helpers remain
 compatible route or rendering paths, so `writing_support` remains
 route-compatible but is not a default editor button.
-Site Check is the site-level decision surface, the Overview page's
-recommended next action, and the ordinary site-maintenance entry for operators.
-It is a direct Site Check tab, and the stable `operations-insights` deep link
-still opens the same panel. It
+Site Check is temporarily hidden from the default operator UI while its
+problem statement, action model, and acceptance loop are reassessed. The stable `operations-insights` deep link remains capability-gated for compatibility and still opens the same panel. It
 builds a manual local `site_ops_insight_pack.v1` from bounded public content,
 approved-comment signal counts, media metadata, taxonomy summaries, Site
 Context readiness, and Cloud availability, then presents the current run as a
@@ -118,8 +114,8 @@ local run table, Core proposal, or WordPress write.
 The low-frequency Scheduled Review path is the **Scheduled Review** sub tab
 inside Site Check. **Current Check** contains the ordinary manual report.
 `toolbox_tab=advanced` may remain only as a compatibility alias into the
-direct Site Check tab instead of rendering a separate directory or listing Site
-Check detail and Scheduled Review preview as parallel choices.
+hidden Site Check panel instead of rendering a separate directory or listing
+Site Check detail and Scheduled Review preview as parallel choices.
 `toolbox_tab=morning-brief` may remain only as a compatibility alias that opens
 the Scheduled Review sub tab. Scheduled Review uses the Nightly/Morning Brief
 preview and folded optional local fallback settings, but it is not presented as

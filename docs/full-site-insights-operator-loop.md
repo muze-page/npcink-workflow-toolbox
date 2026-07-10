@@ -1,6 +1,6 @@
 # Site Check Operator Loop
 
-Status: active product loop for the current Toolbox stage.
+Status: retained compatibility loop; temporarily hidden from the default Toolbox UI.
 
 Site Check is the site-level fixed-workflow decision router for WordPress
 operators. Its job is to turn bounded current-site evidence into a prioritized
@@ -8,11 +8,17 @@ review queue, then help the operator decide whether each item stays manual,
 moves into an existing Toolbox workflow, needs optional Cloud detail, or should
 later move into a Core-governed handoff path.
 
-It is also the ordinary site-maintenance starting point. Low-frequency
-scheduled review and Nightly/Morning Brief preview remain available as a folded
-Scheduled Review path. Cloud run recovery is linked from that path to Cloud
-Addon Runtime Runs, but operators should not need to understand that runtime
-path before using Site Check.
+## Visibility
+
+Site Check is temporarily hidden from the Overview and top-level admin tabs.
+The `operations-insights` deep link remains capability-gated for compatibility
+and future product review, but it is not a default operator entry while the
+problem statement and end-to-end operator loop are reassessed.
+
+It remains available only through the compatibility deep link while the
+product loop is reassessed. Low-frequency scheduled review and Nightly/Morning
+Brief preview remain available as a folded Scheduled Review path. Cloud run
+recovery is linked from that path to Cloud Addon Runtime Runs.
 
 ## Purpose
 

@@ -38,7 +38,7 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
-- Site Check button for a manual local `site_ops_insight_pack.v1` that presents
+- Hidden Site Check compatibility route for a manual local `site_ops_insight_pack.v1` that presents
   a current-run ranked review list across content, approved-comment, media,
   taxonomy, Site Context, and Cloud readiness findings, then routes the operator
   to manual handling, existing fixed workflows, or optional Cloud detail.
@@ -49,6 +49,8 @@ Target features:
   Cloud is ready, an administrator may explicitly run Cloud detail for a
   suggestion-only `site_ops_cloud_analysis_result.v1`, without Toolbox owning a
   local queue, run table, scheduler truth, Core proposal, or WordPress write.
+  It is not a default operator entry until its problem statement, action model,
+  and acceptance loop are ready for another review.
 - Post editor Content Support panel for default Npcink review and handoff
   buttons: publish preflight, internal-link candidates, image candidates, and
   article audio candidates. Generic AI-plugin-style intents such as local

@@ -43,7 +43,7 @@ The first version provides:
   review lives in **Site Check**; media
   ALT/caption helper contracts stay available for editor-sidebar use and future
   batch review sets, but the standalone admin tool is not exposed;
-- a **Site Check** top-level tab that acts as the fixed-button toolbox's
+- a **temporarily hidden Site Check compatibility panel** that retains the fixed-button toolbox's
   read-only decision router. It builds a local
   `site_ops_insight_pack.v1` from bounded public content, approved comment
   signals, media metadata, taxonomy summaries, Site Context readiness, and
@@ -64,9 +64,9 @@ The first version provides:
   reads, and recovery live in the Cloud Addon Runtime Runs tab. The
   scheduled-review preview reads bounded local public-content evidence and
   renders a dry-run Nightly Site Inspection preview without cron, Cloud calls,
-  Core proposals, persistence, or WordPress writes. **Site Check** remains the
-  ordinary manual site-check report and the only default site maintenance entry
-  operators need to understand;
+  Core proposals, persistence, or WordPress writes. **Site Check** remains a
+  manual site-check report for future reassessment, but not a default operator
+  entry;
 - no local Cloud Checks or Troubleshooting Checks panel. Cloud connection,
   hosted runtime, search, image-source, quota, entitlement, and service health
   diagnostics belong in `npcink-cloud-addon` or Cloud service-plane surfaces;
