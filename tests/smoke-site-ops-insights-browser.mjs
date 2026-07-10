@@ -260,6 +260,12 @@ try {
 		await page.locator('.npcink-toolbox__ops-scan-details summary').click();
 		const scanDetailText = await page.locator('.npcink-toolbox__ops-scan-details').innerText();
 		assert(/Local analysis summary|本地分析摘要|Coverage snapshot|覆盖快照/.test(scanDetailText), 'Scan-detail disclosure contains local coverage detail and charts.');
+		assert(/\d+ posts checked; \d+ internal-link issues|已检查\s*\d+\s*篇文章.*\d+\s*个内链问题/.test(scanDetailText), 'Scan-detail disclosure shows bounded internal-link health counts without raw JSON.');
+		await openOpsTab(page, 'content');
+		const contentText = await page.locator('[data-toolbox-ops-panel="content"]').innerText();
+		assert(/Internal-link health needs review|内链健康状况需要审核/.test(contentText), 'Content analysis renders the internal-link health finding for operator review.');
+		assert(/Owner|负责人/.test(contentText) && /Human editor|人工编辑/.test(contentText), 'Internal-link health finding names the human editor as the responsible owner.');
+		assert(/Open first link review|打开首个内链审核/.test(contentText), 'Internal-link health finding exposes the existing manual link-review entry point.');
 
 		for (const target of ['content', 'media', 'comments', 'structure', 'findings', 'evidence', 'cloud', 'advanced']) {
 			await openOpsTab(page, target);

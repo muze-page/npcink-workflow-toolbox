@@ -22,10 +22,12 @@ final class Site_Ops_Insight_Builder {
 		$media      = $this->array_value( $snapshot, 'media' );
 		$comments   = is_array( $snapshot['comments'] ?? null ) ? $snapshot['comments'] : array();
 		$taxonomies = is_array( $snapshot['taxonomies'] ?? null ) ? $snapshot['taxonomies'] : array();
+		$internal_link_graph = is_array( $context['internal_link_graph_health'] ?? null ) ? $context['internal_link_graph_health'] : array();
 		$findings   = array();
 
 		$this->add_content_freshness_finding( $posts, $snapshot, $findings );
 		$this->add_content_quality_finding( $posts, $findings );
+		$this->add_internal_link_health_finding( $internal_link_graph, $findings );
 		$this->add_metadata_finding( $posts, $findings );
 		$this->add_comment_finding( $comments, $findings );
 		$this->add_media_finding( $media, $posts, $findings );
@@ -59,8 +61,8 @@ final class Site_Ops_Insight_Builder {
 			'direct_wordpress_write' => false,
 			'cloud_required'         => false,
 			'core_proposal_created'  => false,
-			'summary'                => $this->summary( $posts, $media, $comments, $taxonomies, $findings ),
-			'data_sources'           => $this->data_sources( $posts, $media, $comments, $taxonomies, $context ),
+			'summary'                => $this->summary( $posts, $media, $comments, $taxonomies, $findings, $internal_link_graph ),
+			'data_sources'           => $this->data_sources( $posts, $media, $comments, $taxonomies, $context, $internal_link_graph ),
 			'top_findings'           => $findings,
 			'opportunities'          => $this->opportunities( $findings ),
 			'blocked_items'          => $this->blocked_items( $context ),
@@ -162,6 +164,77 @@ final class Site_Ops_Insight_Builder {
 			__( 'Prioritize internal-link review and content-depth review before creating new articles on the same topics.', 'npcink-workflow-toolbox' ),
 			'manual_review_only',
 			array_slice( $this->object_refs( array_merge( $thin_posts, $no_internal_links ) ), 0, 5 )
+		);
+	}
+
+	/**
+	 * Adds bounded Toolkit internal-link graph evidence as a manual review finding.
+	 *
+	 * @param array<string,mixed>            $internal_link_graph Toolkit graph-health projection.
+	 * @param array<int,array<string,mixed>> $findings Findings.
+	 */
+	private function add_internal_link_health_finding( array $internal_link_graph, array &$findings ): void {
+		if ( empty( $internal_link_graph['available'] ) ) {
+			return;
+		}
+
+		$data            = is_array( $internal_link_graph['data'] ?? null ) ? $internal_link_graph['data'] : array();
+		$summary         = is_array( $data['summary'] ?? null ) ? $data['summary'] : array();
+		$issue_counts    = is_array( $data['issue_counts'] ?? null ) ? $data['issue_counts'] : array();
+		$scanned_count   = max( 0, (int) ( $summary['scanned_count'] ?? 0 ) );
+		$orphan_count    = max( 0, (int) ( $issue_counts['orphan_post'] ?? 0 ) );
+		$low_count       = max( 0, (int) ( $issue_counts['low_outbound_links'] ?? 0 ) );
+		$excessive_count = max( 0, (int) ( $issue_counts['excessive_outbound_links'] ?? 0 ) );
+		$issue_total     = $orphan_count + $low_count + $excessive_count;
+		if ( $scanned_count <= 0 || $issue_total <= 0 ) {
+			return;
+		}
+
+		$source_refs = array();
+		$items       = is_array( $data['items'] ?? null ) ? $data['items'] : array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) || empty( $item['issues'] ) ) {
+				continue;
+			}
+			$post_id = max( 0, (int) ( $item['post_id'] ?? 0 ) );
+			if ( $post_id <= 0 ) {
+				continue;
+			}
+			$source_refs[] = array(
+				'object_type' => 'post',
+				'object_id'   => $post_id,
+				'title'       => sanitize_text_field( html_entity_decode( (string) ( $item['title'] ?? '' ), ENT_QUOTES, 'UTF-8' ) ),
+			);
+			if ( count( $source_refs ) >= 5 ) {
+				break;
+			}
+		}
+
+		$findings[] = $this->finding(
+			'internal_link_health',
+			__( 'Internal-link health needs review', 'npcink-workflow-toolbox' ),
+			'internal_link_health',
+			min( 86, 46 + $issue_total * 6 + $orphan_count * 4 ),
+			$orphan_count >= 3 || $issue_total >= 6 ? 'high' : 'medium',
+			sprintf(
+				/* translators: 1: scanned post count, 2: orphan post count, 3: low outbound-link count, 4: excessive outbound-link count. */
+				__( '%1$d published posts were checked: %2$d orphaned, %3$d with too few outbound links, and %4$d with too many outbound links.', 'npcink-workflow-toolbox' ),
+				$scanned_count,
+				$orphan_count,
+				$low_count,
+				$excessive_count
+			),
+			__( 'Weak internal paths can make related content harder for readers and editors to discover.', 'npcink-workflow-toolbox' ),
+			__( 'Open an affected post, review internal-link candidates, and place only contextually useful links manually.', 'npcink-workflow-toolbox' ),
+			'manual_review_only',
+			$source_refs,
+			array(
+				'source_ability_id' => sanitize_text_field( (string) ( $internal_link_graph['source_ability_id'] ?? '' ) ),
+				'scope'             => 'bounded_local_internal_graph',
+				'owner_label'       => 'human_editor',
+				'next_safe_action'  => 'open_existing_internal_link_review',
+				'action_policy'     => 'operator_review_only_no_fix',
+			)
 		);
 	}
 
@@ -373,13 +446,17 @@ final class Site_Ops_Insight_Builder {
 	 * @param array<int,array<string,mixed>> $findings Findings.
 	 * @return array<string,mixed>
 	 */
-	private function summary( array $posts, array $media, array $comments, array $taxonomies, array $findings ): array {
+	private function summary( array $posts, array $media, array $comments, array $taxonomies, array $findings, array $internal_link_graph ): array {
 		$high = 0;
 		foreach ( $findings as $finding ) {
 			if ( 'high' === (string) ( $finding['severity'] ?? '' ) ) {
 				++$high;
 			}
 		}
+
+		$link_data         = is_array( $internal_link_graph['data'] ?? null ) ? $internal_link_graph['data'] : array();
+		$link_summary      = is_array( $link_data['summary'] ?? null ) ? $link_data['summary'] : array();
+		$link_issue_counts = is_array( $link_data['issue_counts'] ?? null ) ? $link_data['issue_counts'] : array();
 
 		return array(
 			'scanned_posts'          => count( $posts ),
@@ -390,6 +467,8 @@ final class Site_Ops_Insight_Builder {
 			'tag_terms'              => (int) ( $taxonomies['post_tag']['total'] ?? 0 ),
 			'top_finding_count'      => count( $findings ),
 			'high_priority_findings' => $high,
+			'internal_link_graph_scanned_posts' => max( 0, (int) ( $link_summary['scanned_count'] ?? 0 ) ),
+			'internal_link_graph_issue_count'   => max( 0, (int) ( $link_issue_counts['orphan_post'] ?? 0 ) ) + max( 0, (int) ( $link_issue_counts['low_outbound_links'] ?? 0 ) ) + max( 0, (int) ( $link_issue_counts['excessive_outbound_links'] ?? 0 ) ),
 		);
 	}
 
@@ -401,7 +480,12 @@ final class Site_Ops_Insight_Builder {
 	 * @param array<string,mixed> $context Context.
 	 * @return array<string,mixed>
 	 */
-	private function data_sources( array $posts, array $media, array $comments, array $taxonomies, array $context ): array {
+	private function data_sources( array $posts, array $media, array $comments, array $taxonomies, array $context, array $internal_link_graph ): array {
+		$link_data    = is_array( $internal_link_graph['data'] ?? null ) ? $internal_link_graph['data'] : array();
+		$link_summary = is_array( $link_data['summary'] ?? null ) ? $link_data['summary'] : array();
+		$link_counts  = is_array( $link_data['issue_counts'] ?? null ) ? $link_data['issue_counts'] : array();
+		$link_issues  = max( 0, (int) ( $link_counts['orphan_post'] ?? 0 ) ) + max( 0, (int) ( $link_counts['low_outbound_links'] ?? 0 ) ) + max( 0, (int) ( $link_counts['excessive_outbound_links'] ?? 0 ) );
+
 		return array(
 			'posts'          => array( 'available' => count( $posts ) > 0, 'count' => count( $posts ), 'source' => 'local_public_wordpress' ),
 			'comments'       => array( 'available' => (int) ( $comments['recent_sample_count'] ?? 0 ) > 0, 'count' => (int) ( $comments['recent_sample_count'] ?? 0 ), 'privacy' => is_array( $comments['privacy'] ?? null ) ? $comments['privacy'] : array() ),
@@ -410,6 +494,12 @@ final class Site_Ops_Insight_Builder {
 			'site_context'   => array( 'available' => ! empty( $context['content_context_ready'] ), 'source' => 'npcink_toolbox_content_context' ),
 			'site_knowledge' => array( 'available' => ! empty( $context['cloud_ready'] ), 'source' => 'cloud_managed_site_knowledge' ),
 			'cloud_runtime'  => array( 'available' => ! empty( $context['cloud_ready'] ), 'used_in_p0' => false ),
+			'internal_link_graph_health' => array(
+				'available'     => ! empty( $internal_link_graph['available'] ),
+				'scanned_count' => max( 0, (int) ( $link_summary['scanned_count'] ?? 0 ) ),
+				'issue_count'   => $link_issues,
+				'source'        => sanitize_text_field( (string) ( $internal_link_graph['source_ability_id'] ?? 'local_internal_link_graph_health' ) ),
+			),
 		);
 	}
 
@@ -471,8 +561,8 @@ final class Site_Ops_Insight_Builder {
 	/**
 	 * @return array<string,mixed>
 	 */
-	private function finding( string $id, string $title, string $issue_type, int $priority_score, string $severity, string $evidence_summary, string $impact, string $recommended_action, string $write_boundary, array $source_refs ): array {
-		return array(
+	private function finding( string $id, string $title, string $issue_type, int $priority_score, string $severity, string $evidence_summary, string $impact, string $recommended_action, string $write_boundary, array $source_refs, array $details = array() ): array {
+		$finding = array(
 			'id'                     => $id,
 			'title'                  => $title,
 			'issue_type'             => $issue_type,
@@ -487,6 +577,13 @@ final class Site_Ops_Insight_Builder {
 			'direct_wordpress_write' => false,
 			'source_refs'            => $source_refs,
 		);
+		foreach ( $details as $key => $value ) {
+			if ( is_string( $key ) && ! array_key_exists( $key, $finding ) ) {
+				$finding[ $key ] = $value;
+			}
+		}
+
+		return $finding;
 	}
 
 	private function age_days( string $date, string $generated_at ): int {

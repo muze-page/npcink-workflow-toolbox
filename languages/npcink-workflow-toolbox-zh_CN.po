@@ -6571,3 +6571,30 @@ msgstr "定期巡检条目"
 
 msgid "Scheduled review found reviewable content quality signals. Human draft title and content are required before execution can be considered."
 msgstr "定期巡检发现了可审阅的内容质量信号。必须先补充人工草稿标题和正文，才能考虑执行。"
+
+msgid "Internal-link health needs review"
+msgstr "内链健康状况需要审核"
+
+msgid "%1$d published posts were checked: %2$d orphaned, %3$d with too few outbound links, and %4$d with too many outbound links."
+msgstr "已检查 %1$d 篇已发布文章：%2$d 篇为孤立文章，%3$d 篇出链过少，%4$d 篇出链过多。"
+
+msgid "Weak internal paths can make related content harder for readers and editors to discover."
+msgstr "薄弱的内链路径会让读者和编辑更难发现相关内容。"
+
+msgid "Open an affected post, review internal-link candidates, and place only contextually useful links manually."
+msgstr "打开受影响文章，审核内链候选，并仅手动放置与上下文相关的链接。"
+
+msgid "%1$d posts checked; %2$d internal-link issues"
+msgstr "已检查 %1$d 篇文章；发现 %2$d 个内链问题"
+
+msgid "Open first link review"
+msgstr "打开首个内链审核"
+
+msgid "Open posts for link review"
+msgstr "打开文章进行内链审核"
+
+msgid "Owner"
+msgstr "负责人"
+
+msgid "Human editor"
+msgstr "人工编辑"
