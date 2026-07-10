@@ -274,6 +274,8 @@ try {
 		assert(await firstContentFinding.locator('.npcink-toolbox__ops-priority-heading .npcink-toolbox__ops-handling-pill').count() === 1, 'Content finding keeps handling beside its title and priority.');
 		assert(await firstContentFinding.locator('.npcink-toolbox__ops-action-line .npcink-toolbox__ops-next-actions .button').count() > 0, 'Content finding keeps the existing action button on the next-step line.');
 		assert(await contentPanel.locator('.npcink-toolbox__ops-dimension-rules').count() === 1, 'Content analysis folds repeated handling rules into one disclosure.');
+		assert(/Acceptance check|验收检查/.test(contentText) && /Rescan to verify|重新扫描验证/.test(contentText), 'Content analysis explains how to verify a handled finding with the existing local rescan.');
+		assert(await firstContentFinding.locator('.npcink-toolbox__ops-acceptance-line .button').count() === 1, 'Content finding keeps a bounded rescan verification action without a completion button.');
 		await page.setViewportSize({ width: 1440, height: 1100 });
 		mkdirSync(dirname(contentDesktopScreenshotPath), { recursive: true });
 		await contentPanel.screenshot({ path: contentDesktopScreenshotPath, animations: 'disabled', timeout: 15000 });

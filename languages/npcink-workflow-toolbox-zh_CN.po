@@ -6598,3 +6598,12 @@ msgstr "负责人"
 
 msgid "Human editor"
 msgstr "人工编辑"
+
+msgid "Acceptance check"
+msgstr "验收检查"
+
+msgid "After handling the selected item through the allowed manual or review path, rescan and confirm it no longer matches this finding or the affected count has decreased. This is a current bounded check, not a saved completion record."
+msgstr "通过允许的人工或审核路径处理所选对象后，重新扫描并确认它不再命中此问题，或受影响数量已经下降。这只是当前有界检查，不会保存完成记录。"
+
+msgid "Rescan to verify"
+msgstr "重新扫描验证"

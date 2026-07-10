@@ -1441,6 +1441,35 @@
 	margin-left: 4px;
 }
 
+.npcink-toolbox__ops-acceptance-line {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px 8px;
+	align-items: center;
+	padding: 7px 8px;
+	background: #f6f7f7;
+	border-left: 3px solid #72aee6;
+	color: #50575e;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.npcink-toolbox__ops-acceptance-line strong {
+	flex: 0 0 auto;
+	color: #1d2327;
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.npcink-toolbox__ops-acceptance-line span {
+	flex: 1 1 360px;
+	min-width: 0;
+}
+
+.npcink-toolbox__ops-acceptance-line .button {
+	flex: 0 0 auto;
+}
+
 .npcink-toolbox__ops-dimension-rules {
 	margin-top: 8px;
 	padding: 8px 10px;
