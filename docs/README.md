@@ -80,6 +80,7 @@ Start from the active documents below before changing code.
 - [Media Optimization Release Checklist](media-optimization-release-checklist.md)
 - [Media ALT/Caption Review Set](media-alt-caption-review-set.md)
 - [Media ALT/Caption Toolkit Validation Plan](media-alt-caption-toolkit-validation-plan.md)
+- [Media ALT Governed Workflow Closeout](media-alt-governed-workflow-closeout-2026-07-11.md)
 - [Media ALT/Caption Toolkit Validation Reentry](archive/2026-07/media-alt-caption-toolkit-validation-reentry-2026-07-06.md)
 - [Media ALT/Caption Migration Closeout](archive/2026-07/media-alt-caption-migration-closeout-2026-07-06.md)
 - [Site Check Operator Loop](full-site-insights-operator-loop.md)
