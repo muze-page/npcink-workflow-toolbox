@@ -119,11 +119,11 @@ and the final write goes through Core proposal governance.
 Media optimization is the first fixed governed media workflow. Toolbox may
 present `media_optimization_v1` through media-library single-image actions and
 a Toolbox Batch Optimize Images workbench, with visible steps from media
-selection through Cloud preview, Core proposal handoff, and policy-gated
-Adapter/Core execution for selected proposals. Core policy decides whether
-automatic execution is allowed or the proposal stays pending for review. Toolbox
-must not add a workflow runtime, persistent run store, media registry, approval
-path, provider routing UI, or direct WordPress write executor.
+selection through Cloud preview and selected Core proposal handoff. The fixed
+batch action stops after proposal submission; approval and execution continue
+on the separate governed Core/Adapter surface. Toolbox must not add a workflow
+runtime, persistent run store, media registry, approval path, provider routing
+UI, or direct WordPress write executor.
 Batch media conversion and direct replacement should reuse the same
 OpenClaw/Adapter/Core/Abilities replacement path once the OpenClaw batch
 contract is accepted; Toolbox should not duplicate attachment replacement or URL
@@ -132,9 +132,9 @@ repair logic locally.
 High-frequency article support belongs in the WordPress post editor as a
 Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor
 panel defaults to fixed flows for publish preflight, internal-link candidates,
-image candidates, article narration, and article audio summary. Summary,
-category, tag, outline, discoverability, article-checkup, current-article ALT,
-and related existing-post helpers remain supported route or rendering paths, not
+current-article contextual ALT review, image candidates, article narration, and
+article audio summary. Summary, category, tag, outline, discoverability,
+article-checkup, and related existing-post helpers remain supported route or rendering paths, not
 default visible buttons. They must keep the same suggestion-only and
 Core-governed write posture as the admin surface. Related existing-post review
 belongs inside publish preflight duplicate-risk checks and internal-link
@@ -142,6 +142,24 @@ candidates rather than a separate writing-preparation button. Internal-link
 candidates are manual review aids, publish preflight is a unified advisory
 review panel, SEO metadata is only a single-post Core handoff preview, and new
 vocabulary remains Core policy-gated strong review.
+
+For the current article only, an author clicking the editor's reviewed SEO,
+external-image adoption, or article-audio adoption action is the approval step.
+Toolbox creates the Core proposal and stores only its bounded proposal id on the
+draft. Adapter/Abilities execution begins after the next successful native
+Publish or Update, never on the adoption click itself. Attempted intents are
+removed after that save and failures stay visible in Core without an automatic
+retry loop. The private control metadata never enters the native Gutenberg post
+payload, and completion does not trigger a second article save. This narrow
+editor handoff does not apply to batch admin actions.
+
+The contextual ALT exception is editor-state only: one administrator action
+generates and automatically fills missing `core/image` ALT in Gutenberg memory
+after Core local-consent audit. Article context remains primary; only absent
+context may use the existing Cloud visual-evidence runtime silently, without a
+new control or blocking state. Existing ALT and attachment-global ALT remain
+unchanged, and native WordPress Save draft or Update is still the persistence
+action.
 
 Unsplash, Pixabay, and Pexels are image-source connectors, not AI
 image-generation connectors. Toolbox must preserve attribution and source

@@ -52,11 +52,15 @@ Target features:
   It is not a default operator entry until its problem statement, action model,
   and acceptance loop are ready for another review.
 - Post editor Content Support panel for default Npcink review and handoff
-  buttons: publish preflight, internal-link candidates, image candidates, and
-  article audio candidates. Generic AI-plugin-style intents such as local
+  buttons: publish preflight, internal-link candidates, current-article
+  contextual ALT review, image candidates, and article audio candidates. The
+  ALT flow keeps each image occurrence separate, uses nearby article context
+  first, and automatically fills missing block ALT after Core audit. When useful
+  context is absent, the existing Cloud visual-evidence runtime may run silently
+  once as a non-blocking fallback. Existing ALT and media-library ALT remain
+  unchanged; native WordPress save is still required. Generic AI-plugin-style intents such as local
   article checkup, title suggestions, outline support, discoverability,
-  summary suggestions, category suggestions, tag suggestions, current article
-  image ALT suggestions, and comment-reply suggestions remain compatible
+  summary suggestions, category suggestions, tag suggestions, and comment-reply suggestions remain compatible
   route/result paths, not default visible buttons. Selection-only paragraph
   checks belong in the selected-block toolbar beside paragraph image
   suggestions. Related existing-post review belongs inside publish preflight

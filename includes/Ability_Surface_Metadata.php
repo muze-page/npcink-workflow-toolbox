@@ -25,7 +25,7 @@ final class Ability_Surface_Metadata {
 			'summary_suggestions'      => self::definition( __( 'Summary suggestions', 'npcink-workflow-toolbox' ), 'editor_route_only_compatibility', false, 'hosted_ai_runtime', 'content_metadata_apply_plan', 'generic_ai_plugin_overlap_route_only' ),
 			'category_tag_suggestions' => self::definition( __( 'Category and tag suggestions', 'npcink-workflow-toolbox' ), 'editor_route_only_compatibility', false, 'toolkit_and_hosted_ai_runtime', 'content_metadata_apply_plan', 'generic_ai_plugin_overlap_route_only' ),
 			'article_checkup'          => self::definition( __( 'Article checkup', 'npcink-workflow-toolbox' ), 'editor_route_only_compatibility', false, 'local_and_hosted_ai_runtime', 'operator_review_only_no_insert', 'generic_ai_plugin_overlap_route_only' ),
-			'image_alt_suggestions'    => self::definition( __( 'Current-article ALT suggestions', 'npcink-workflow-toolbox' ), 'editor_route_only_compatibility', false, 'hosted_ai_runtime', 'media_alt_caption_review_plan', 'generic_ai_plugin_overlap_route_only' ),
+			'image_alt_suggestions'    => self::definition( __( 'Article image ALT (SEO)', 'npcink-workflow-toolbox' ), 'editor_default_button', true, 'toolbox_local_with_optional_cloud_vision_fallback', 'current_article_image_alt_context_review', 'npcink_owned_default' ),
 			'comment_reply_suggestion' => self::definition( __( 'Comment reply suggestions', 'npcink-workflow-toolbox' ), 'editor_route_only_compatibility', false, 'toolkit_runtime', 'operator_review_only_no_comment_write', 'generic_ai_plugin_overlap_route_only' ),
 		);
 	}
@@ -58,7 +58,7 @@ final class Ability_Surface_Metadata {
 				'label'       => __( 'Default entries', 'npcink-workflow-toolbox' ),
 				'status'      => 'ok',
 				'status_text' => __( 'Npcink workflows', 'npcink-workflow-toolbox' ),
-				'description' => __( 'V1 defaults are Publish Preflight, Internal Link Candidates, Image Candidates, and Article Audio Candidates.', 'npcink-workflow-toolbox' ),
+				'description' => __( 'V1 defaults are Publish Preflight, Internal Link Candidates, Image Candidates, Article Audio Candidates, and Article Image ALT (SEO).', 'npcink-workflow-toolbox' ),
 			),
 			array(
 				'id'          => 'route_only_compatibility',

@@ -162,6 +162,7 @@ human-readable allowlist and must stay aligned with that table and
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
 - `/flows/article-audio-adoption-plan`
+- `/editor/reviewed-action-intents`
 - `/local-admin-consent/featured-image`
 - `/flows/site-knowledge-review-plan`
 - `/flows/nightly-inspection-review-plan`
@@ -169,6 +170,7 @@ human-readable allowlist and must stay aligned with that table and
 - `/flows/media-alt-caption-review-plan`
 - `/flows/media-brief`
 - `/editor/content-support`
+- `/editor/contextual-alt-audit`
 - `/media-derivative-handoff`
 - `/nightly-inspection/cloud-runtime-entitlement`
 - `/nightly-inspection/cloud-batch`
@@ -214,13 +216,26 @@ not a WordPress write route and not a Core proposal execution route.
 describe playback metadata projection, evidence refs, and the target Toolkit
 audio adoption ability, including whether the adopted audio should be imported
 into the local WordPress media library. Toolbox itself must not import media,
-update post meta, create or approve a Core proposal, execute a write ability, or
-patch post content.
+update article-audio post meta, execute a write ability, or patch post content.
+The current-article editor may submit the reviewed plan as a Core proposal and
+retain only its bounded proposal id on the draft. The author's Adopt action is
+approval for execution after the next successful native Publish or Update;
+the adoption click itself performs no media or metadata write.
 It may include lightweight source-content freshness evidence such as content
 hash, word count, and generation timestamp so Core/Abilities can later decide
 whether the adopted audio is current, lightly drifted, review-recommended, or
 stale. Toolbox must not use that evidence to auto-regenerate audio, run
 background refresh jobs, or patch audio segments.
+
+`/editor/reviewed-action-intents` is a private,
+administrator-and-post-editor capability-gated control route for the three
+current-article actions above. It stores, lists, and completes at most 20
+sanitized proposal references in one private post-meta value. It never accepts
+SEO fields, image/audio candidates, media metadata, article content, or
+execution results, and it is not exposed in the native post REST schema.
+Completion updates only this control metadata, so publish-time execution does
+not trigger a second Gutenberg post save or risk overwriting
+Adapter/Abilities results.
 
 The high-risk contrast for Local Admin Consent is the article/media batch
 handoff. `npcink-toolbox/build-article-media-batch-write-plan` may group
@@ -315,12 +330,15 @@ duplicate-risk, and SEO readiness into `pre_publish_review.v1`, but that
 artifact remains advisory. SEO metadata support is limited to a single current
 post `seo_meta_handoff_preview.v1` proposal payload that the editor may submit
 through Adapter. For this single current-post SEO title/description action, the
-editor may ask Adapter `/proposals/{proposal_id}/approve-and-execute` to finish
-the same reviewed user action when host policy allows. Adapter/Core remain the
-approval, preflight, proposal, and audit owner, and Abilities remain the final
-WordPress write executor. If policy blocks execution, the proposal stays in
-Core review. Toolbox must not batch SEO changes, mutate SEO plugin fields
-directly, or write schema/GEO metadata directly.
+author's explicit editor click approves the proposal for the next native
+Publish or Update. Toolbox stores only the bounded proposal id on the draft;
+after that save succeeds, it asks Adapter
+`/proposals/{proposal_id}/approve-and-execute` to complete Core approval,
+preflight, audit, and allowlisted Abilities execution. It must not execute on
+the adoption click. If policy blocks execution, the proposal stays in Core
+review and Toolbox does not retry automatically. Toolbox must not batch SEO
+changes, mutate SEO plugin fields directly, or write schema/GEO metadata
+directly.
 The standalone discoverability button may render post-publish optimization
 tasks and expose the same SEO Adapter/Core apply action. Excerpt and slug
 suggestions may update the current editor draft only after an explicit operator
@@ -408,7 +426,16 @@ must not become a whole-library update path.
 When the editor sidebar needs image ALT support, it may pass only the current
 article's featured image and image-block metadata through `/editor/content-support`;
 that narrow snapshot must not become a media-library scan, batch update path,
-or direct media metadata write.
+or direct media metadata write. For current `core/image` occurrences,
+`/editor/contextual-alt-audit` may record Core-owned local-consent audit evidence
+while the browser automatically fills only missing ALT in the in-memory
+Gutenberg draft. Article context remains the local truth for image purpose. When
+that context is absent, Toolbox may silently consume the existing Cloud Addon
+`image_context_evidence.v1` suggestion-only runtime as bounded visual facts; it
+must not retry, block the editor, expose provider controls, overwrite existing
+ALT, or treat Cloud output as write truth. The audit route must fail closed when
+Core is unavailable, create no proposal, write no WordPress post or attachment
+data, and require native Save draft or Update for persistence.
 
 `/ai/image-generation` is a legacy-compatible route name for one reviewed-prompt
 hosted image candidate request through Cloud Addon runtime. Toolbox should
@@ -440,12 +467,12 @@ media import, metadata updates, and combined import-plus-featured-image actions
 must keep using `/flows/image-candidate-adoption-plan` and the
 Adapter/Core/Abilities path.
 Editor-side adoption may submit that plan through Adapter `/proposals/from-plan`
-and then call Adapter `/proposals/{proposal_id}/approve-and-execute` for the
-created Core proposal. Adapter must remain only the unified user-action proxy:
-Core stays the approval, preflight, proposal, and audit owner, and Abilities
-stay the final WordPress write executor. Toolbox must treat any automatic
-completion as an Adapter/Core/Abilities result, not as a Toolbox-owned direct
-write.
+and retain the bounded proposal id on the current draft after the author clicks
+Adopt. It may call Adapter `/proposals/{proposal_id}/approve-and-execute` only
+after the next native Publish or Update succeeds. Adapter remains the unified
+user-action proxy: Core stays the approval, preflight, proposal, and audit
+owner, and Abilities stay the final WordPress write executor. Toolbox must not
+execute on the adoption click or run an automatic retry loop.
 
 `/flows/site-knowledge-review-plan` prepares a blocked Core review handoff from
 Cloud Site Knowledge agent evidence. It may preserve evidence refs, blocked
@@ -463,7 +490,8 @@ optimization starts from selected media-library attachments or the
 `tab=image&tool=batch-optimize` workbench. These surfaces may guide operator
 intent through media selection, Toolbox policy defaults, Adapter/Cloud
 derivative preview, reviewed metadata, selected Core proposal submission, and
-explicit Adapter/Core execution. They must not add a generic workflow runner,
+links to separate Core/Adapter execution. The fixed batch action stops after
+selected proposal submission. It must not add a generic workflow runner,
 persistent run table, Toolbox media registry, automatic approval, retry worker,
 queue, scheduler, or direct media write.
 
@@ -490,17 +518,17 @@ The dedicated batch admin surface may call
 `run-read-ability` for selected attachment IDs or bounded bulk requests such as
 date-range format conversion. The batch surface may show candidates, skipped
 reasons, selected per-attachment previews, selected Core proposal submissions,
-and a policy-gated Adapter/Core execution request for selected proposals. It
-must still use the per-attachment Adapter media derivative recipe for Cloud
+and links to the governed execution surface; it must not request execution
+itself. It must still use the per-attachment Adapter media derivative recipe for Cloud
 artifacts and must not create a Toolbox-side media registry, approval queue,
 scheduler, or write executor.
-When selected batch items are submitted and executed, it must be the
+When selected batch items are later executed on the separate governed surface,
+it must be the
 Adapter/Core/Abilities approved execution path: Core approval and preflight
 first, Adapter allowlisted execution second, Abilities media replacement
 callback last. If Core policy blocks automatic execution, the proposal remains
-pending for Core review. Toolbox may show Adapter's per-action results and
-rollback evidence, but it must not update attachment files or URL references
-directly.
+pending for Core review. Toolbox links to that evidence but does not mirror the
+execution state, update attachment files, or update URL references directly.
 
 After a local media replacement has been approved and executed, the admin
 surface may ask Adapter to run `npcink-abilities-toolkit/build-media-reference-repair-plan`

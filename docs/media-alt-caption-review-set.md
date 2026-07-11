@@ -323,6 +323,10 @@ reasons, and manual review cost.
 
 Applying accepted ALT/caption changes requires a separate governed path:
 
+The implementation order, candidate ALT-only schema, upstream acceptance
+evidence, and Toolbox re-entry conditions are frozen in
+[Media ALT Governed Write Implementation Gate](media-alt-governed-write-implementation-gate.md).
+
 1. `npcink-abilities-toolkit` defines the media metadata update ability schema
    and dry-run preview.
 2. `npcink-governance-core` accepts the proposal, approval, preflight, and audit

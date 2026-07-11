@@ -34,6 +34,7 @@
 	const IMAGE_CANDIDATE_TARGET_COUNT = 9;
 	const IMAGE_DIRECTION_TARGET_COUNT = 4;
 	const AUDIO_PREFERENCE_STORAGE_KEY = 'npcink_toolbox_audio_preferences_v1';
+	const PUBLISH_EXECUTION_OPERATIONS = ['seo_meta', 'image_adoption', 'article_audio'];
 	const AUDIO_PREFERENCE_DEFAULTS = {
 		tone: 'calm',
 		pace: 'normal',
@@ -244,6 +245,19 @@
 			blockedLabel: __('Blocked when the draft has too little context or related content evidence is unavailable.', 'npcink-workflow-toolbox'),
 		},
 		{
+			intent: 'image_alt_suggestions',
+			label: __('Article image ALT (SEO)', 'npcink-workflow-toolbox'),
+			description: __('Draft ALT for each image occurrence from its nearest heading and adjacent article text.', 'npcink-workflow-toolbox'),
+			group: 'review_handoff',
+			sourceLabel: __('Current article image blocks and their local context', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Nearest heading, adjacent text, caption, current block ALT', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review and edit preview only', 'npcink-workflow-toolbox'),
+			ownerLabel: __('Toolbox editor UI; future Core-governed block update', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Local deterministic context draft; no Cloud required', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('No post block or attachment ALT write', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked only when the article has no image occurrence or usable context.', 'npcink-workflow-toolbox'),
+		},
+		{
 			intent: 'image_candidates',
 			label: __('AI recommended featured image', 'npcink-workflow-toolbox'),
 			description: __('Recommend or generate a featured image from the current article context.', 'npcink-workflow-toolbox'),
@@ -373,52 +387,94 @@
 
 	function currentArticleMediaItems(blocks) {
 		const items = [];
-		const seen = {};
+		const flattened = [];
 
-		function addItem(source, attrs) {
+		function flatten(block) {
+			if (!block || typeof block !== 'object') {
+				return;
+			}
+			flattened.push(block);
+			if (Array.isArray(block.innerBlocks)) {
+				block.innerBlocks.forEach(flatten);
+			}
+		}
+
+		function neighboringText(index, direction) {
+			for (let offset = index + direction; offset >= 0 && offset < flattened.length; offset += direction) {
+				const candidate = flattened[offset];
+				const name = String(candidate && candidate.name ? candidate.name : '');
+				if (name === 'core/image' || name === 'core/gallery' || name === 'core/cover') {
+					continue;
+				}
+				const text = selectedBlockText(candidate);
+				if (text) {
+					return truncateText(text, 240);
+				}
+			}
+			return '';
+		}
+
+		function nearestHeading(index) {
+			for (let offset = index - 1; offset >= 0; offset -= 1) {
+				const candidate = flattened[offset];
+				if (candidate && candidate.name === 'core/heading') {
+					return truncateText(selectedBlockText(candidate), 120);
+				}
+			}
+			return '';
+		}
+
+		function addItem(source, attrs, block, index, suffix) {
+			if (items.length >= 12) {
+				return;
+			}
 			const attributes = attrs && typeof attrs === 'object' ? attrs : {};
 			const url = String(attributes.url || attributes.src || attributes.poster || '').trim();
 			const id = parseInt(attributes.id || attributes.mediaId || attributes.media_id || '0', 10) || 0;
 			if (!id && !url) {
 				return;
 			}
-			const key = id ? 'id:' + String(id) : 'url:' + url;
-			if (seen[key]) {
-				return;
-			}
-			seen[key] = true;
+			const occurrenceIndex = items.length + 1;
+			const clientId = String(block && block.clientId ? block.clientId : 'image-' + String(occurrenceIndex));
+			const contextHeading = nearestHeading(index);
+			const contextBefore = neighboringText(index, -1);
+			const contextAfter = neighboringText(index, 1);
+			const caption = truncateText(plainTextFromHtml(attributes.caption || attributes.figcaption || ''), 220);
 			items.push({
 				source,
+				occurrence_id: clientId + String(suffix || ''),
+				block_client_id: clientId,
+				block_name: String(block && block.name ? block.name : 'core/image'),
+				occurrence_index: occurrenceIndex,
 				attachment_id: id,
 				url,
 				title: truncateText(plainTextFromHtml(attributes.title || attributes.name || ''), 120),
 				alt: truncateText(plainTextFromHtml(attributes.alt || attributes.altText || ''), 160),
-				caption: truncateText(plainTextFromHtml(attributes.caption || attributes.figcaption || ''), 220),
+				caption,
 				description: truncateText(plainTextFromHtml(attributes.description || ''), 220),
+				context_heading: contextHeading,
+				context_before: contextBefore,
+				context_after: contextAfter,
+				context_caption: caption,
+				context_summary: [contextHeading, contextBefore || contextAfter].filter(Boolean).join(' · '),
+				target_scope: 'post_block_alt',
 			});
 		}
 
-		function visit(block) {
-			if (!block || typeof block !== 'object') {
-				return;
-			}
+		(Array.isArray(blocks) ? blocks : []).forEach(flatten);
+		flattened.forEach((block, index) => {
 			const name = String(block.name || '');
 			const attrs = block.attributes || {};
 			if (name === 'core/image') {
-				addItem('content_image', attrs);
+				addItem('content_image', attrs, block, index, '');
 			}
 			if (name === 'core/cover') {
-				addItem('content_cover', attrs);
+				addItem('content_cover', attrs, block, index, '');
 			}
-			if (name === 'core/gallery' && Array.isArray(attrs.images)) {
-				attrs.images.forEach((image) => addItem('content_gallery', image));
+			if (name === 'core/gallery' && Array.isArray(attrs.images) && !(Array.isArray(block.innerBlocks) && block.innerBlocks.length)) {
+				attrs.images.forEach((image, galleryIndex) => addItem('content_gallery', image, block, index, ':gallery-' + String(galleryIndex + 1)));
 			}
-			if (Array.isArray(block.innerBlocks)) {
-				block.innerBlocks.forEach(visit);
-			}
-		}
-
-		(Array.isArray(blocks) ? blocks : []).forEach(visit);
+		});
 		return items.slice(0, 12);
 	}
 
@@ -569,6 +625,17 @@
 		return postJsonToUrl(joinRestUrl(config.restUrl, path), payload);
 	}
 
+	function editorConfirmationCorrelationId() {
+		if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function') {
+			return window.crypto.randomUUID();
+		}
+		return 'toolbox-editor-alt-' + String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+	}
+
+	function normalizeEditorAlt(value) {
+		return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+	}
+
 	async function postJsonWithTimeout(path, payload, timeoutMs, timeoutMessage, timeoutCode) {
 		if (!timeoutMs || typeof window === 'undefined' || typeof window.AbortController !== 'function') {
 			return postJson(path, payload);
@@ -634,6 +701,39 @@
 
 	function adapterRestUrl(path) {
 		return joinRestUrl(config.adapterRestUrl || '/wp-json/npcink-openclaw-adapter/v1', path);
+	}
+
+	function normalizePublishExecutionIntents(value) {
+		return (Array.isArray(value) ? value : []).map((intent) => {
+			const proposalId = String(intent && intent.proposal_id ? intent.proposal_id : '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 191);
+			const operation = String(intent && intent.operation ? intent.operation : '');
+			const approvedAt = String(intent && intent.author_approved_at ? intent.author_approved_at : '');
+			if (!proposalId || PUBLISH_EXECUTION_OPERATIONS.indexOf(operation) < 0 || !approvedAt) {
+				return null;
+			}
+			return { proposal_id: proposalId, operation, author_approved_at: approvedAt };
+		}).filter(Boolean).slice(0, 20);
+	}
+
+	async function queuePublishExecutionIntent(postId, proposalId, operation) {
+		const safeProposalId = String(proposalId || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 191);
+		if (!postId || !safeProposalId || PUBLISH_EXECUTION_OPERATIONS.indexOf(operation) < 0) {
+			throw new Error(__('The reviewed action could not be attached to this post for publish-time execution.', 'npcink-workflow-toolbox'));
+		}
+		const response = await postJson('editor/reviewed-action-intents', {
+			action: 'queue',
+			post_id: postId,
+			proposal_id: safeProposalId,
+			operation,
+		});
+		return normalizePublishExecutionIntents(response && response.intents);
+	}
+
+	async function executeReviewedProposalOnPublish(intent) {
+		return postJsonToUrl(
+			adapterRestUrl('proposals/' + encodeURIComponent(intent.proposal_id) + '/approve-and-execute'),
+			{ note: __('Author reviewed this action in the post editor. Execute it after the article publish or update completed.', 'npcink-workflow-toolbox') }
+		);
 	}
 
 	function extractProposalId(value, depth) {
@@ -920,13 +1020,6 @@
 		return postJsonToUrl(adapterRestUrl('proposals'), seoMetaProposalPayload(section, options));
 	}
 
-	async function executeSeoMetaProposal(proposalId) {
-		return postJsonToUrl(
-			adapterRestUrl('proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute'),
-			{ note: __('Approved from the post editor discoverability optimization action.', 'npcink-workflow-toolbox') }
-		);
-	}
-
 	async function postLocalFeaturedImageConsent(input) {
 		return postJson('local-admin-consent/featured-image', input);
 	}
@@ -947,15 +1040,7 @@
 				message: __('Core did not create an executable adoption proposal from this image plan.', 'npcink-workflow-toolbox'),
 			} };
 		}
-		try {
-			const execution = await postJsonToUrl(
-				adapterRestUrl('proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute'),
-				{ note: __('Approved from the post editor image adoption action.', 'npcink-workflow-toolbox') }
-			);
-			return { bridge, proposal_id: proposalId, execution };
-		} catch (executionError) {
-			return { bridge, proposal_id: proposalId, execution_error: executionError };
-		}
+		return { bridge, proposal_id: proposalId, deferred_to_publish: true };
 	}
 
 	async function postArticleAudioAdoptionToAdapter(plan, planInput) {
@@ -975,15 +1060,7 @@
 				message: __('Core did not create an executable article audio adoption proposal from this plan.', 'npcink-workflow-toolbox'),
 			} };
 		}
-		try {
-			const execution = await postJsonToUrl(
-				adapterRestUrl('proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute'),
-				{ note: __('Approved from the post editor article audio adoption action.', 'npcink-workflow-toolbox') }
-			);
-			return { bridge, proposal_id: proposalId, execution };
-		} catch (executionError) {
-			return { bridge, proposal_id: proposalId, execution_error: executionError };
-		}
+		return { bridge, proposal_id: proposalId, deferred_to_publish: true };
 	}
 
 	function usePostContext() {
@@ -995,7 +1072,6 @@
 			}
 			const selectedBlock = blockEditor && blockEditor.getSelectedBlock ? blockEditor.getSelectedBlock() : null;
 			const blocks = blockEditor && blockEditor.getBlocks ? blockEditor.getBlocks() : [];
-
 			return {
 				post_id: editor.getCurrentPostId ? editor.getCurrentPostId() : 0,
 				post_type: editor.getCurrentPostType ? editor.getCurrentPostType() : 'post',
@@ -1006,6 +1082,9 @@
 				category_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('categories') : []) || [],
 				tag_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('tags') : []) || [],
 				featured_media: editor.getEditedPostAttribute ? editor.getEditedPostAttribute('featured_media') : 0,
+				is_saving_post: editor.isSavingPost ? editor.isSavingPost() : false,
+				is_autosaving_post: editor.isAutosavingPost ? editor.isAutosavingPost() : false,
+				did_post_save_succeed: editor.didPostSaveRequestSucceed ? editor.didPostSaveRequestSucceed() : false,
 				media_items: currentArticleMediaItems(blocks),
 				selected_block_name: selectedBlock && selectedBlock.name ? String(selectedBlock.name) : '',
 				selected_block_text: selectedBlockText(selectedBlock),
@@ -1755,7 +1834,7 @@
 			article_outline: __('Outline suggestions', 'npcink-workflow-toolbox'),
 			polish_notes: __('Paragraph review', 'npcink-workflow-toolbox'),
 			discoverability: __('Discoverability suggestions', 'npcink-workflow-toolbox'),
-				image_alt_suggestions: __('Article image text check', 'npcink-workflow-toolbox'),
+				image_alt_suggestions: __('Article image ALT (SEO)', 'npcink-workflow-toolbox'),
 			comment_reply_suggestion: __('Comment reply suggestions', 'npcink-workflow-toolbox'),
 			categories: __('Categories', 'npcink-workflow-toolbox'),
 			tags: __('Tags', 'npcink-workflow-toolbox'),
@@ -1886,7 +1965,7 @@
 			return __('Discoverability suggestions', 'npcink-workflow-toolbox');
 		}
 			if (value === 'image_alt_suggestions') {
-				return __('Article image text check', 'npcink-workflow-toolbox');
+				return __('Article image ALT (SEO)', 'npcink-workflow-toolbox');
 			}
 		if (value === 'comment_reply_suggestion') {
 			return __('Comment reply suggestions', 'npcink-workflow-toolbox');
@@ -1938,7 +2017,7 @@
 			return __('Turn SEO, AEO, GEO, and proposal-field suggestions into reviewable optimization tasks and Core handoff candidates.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'image_alt_suggestions') {
-			return __('Review ALT and caption suggestions against the actual image before any media edit.', 'npcink-workflow-toolbox');
+			return __('Review one contextual ALT draft for each image occurrence. Nothing is written from this preview.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'comment_reply_suggestion') {
 			return __('Review reply options before taking any comment action. Toolbox does not publish replies or change comment status.', 'npcink-workflow-toolbox');
@@ -2453,14 +2532,14 @@
 		const mediaImportOnly = result.adoption_target === 'media_import';
 		const title = status === 'adopted'
 			? (mediaImportOnly ? __('Media imported', 'npcink-workflow-toolbox') : __('Featured image adopted', 'npcink-workflow-toolbox'))
-			: (status === 'submitted' ? __('Adoption request sent', 'npcink-workflow-toolbox') : __('Automatic adoption not completed', 'npcink-workflow-toolbox'));
+			: (status === 'submitted' ? __('Image approved for publish', 'npcink-workflow-toolbox') : __('Image adoption not queued', 'npcink-workflow-toolbox'));
 		const summary = status === 'adopted'
 			? (localConsent
 				? __('Existing media is now the featured image.', 'npcink-workflow-toolbox')
 				: (mediaImportOnly ? __('Media is imported and ready in the media library.', 'npcink-workflow-toolbox') : __('Image is imported and applied as the featured image.', 'npcink-workflow-toolbox')))
 			: (status === 'submitted'
-				? __('Request was sent to Core. Open Core to check the current status.', 'npcink-workflow-toolbox')
-				: __('Automatic completion was unavailable. Open Core to review the proposal.', 'npcink-workflow-toolbox'));
+				? __('Core recorded the reviewed request. Publish or update the article to import and adopt it.', 'npcink-workflow-toolbox')
+				: __('The request could not be queued for publish-time execution. Open Core to review the proposal.', 'npcink-workflow-toolbox'));
 		const coreLink = proposalId && config.coreAdminUrl
 			? createElement(
 				'a',
@@ -3897,29 +3976,28 @@
 			return null;
 		}
 		const core = result.core && typeof result.core === 'object' ? result.core : null;
-		const execution = core && core.execution && typeof core.execution === 'object' ? core.execution : null;
 		const executionError = core && core.execution_error ? core.execution_error : null;
 		const proposalId = core && core.proposal_id ? String(core.proposal_id) : '';
-		const adopted = execution && execution.success !== false;
-		const statusText = adopted
-			? __('Article audio adopted.', 'npcink-workflow-toolbox')
-			: (proposalId ? __('Core proposal created. Automatic adoption did not complete.', 'npcink-workflow-toolbox') : __('Article audio adoption plan prepared.', 'npcink-workflow-toolbox'));
+		const approvedForPublish = Boolean(proposalId && core.deferred_to_publish && !executionError);
+		const statusText = approvedForPublish
+			? __('Article audio approved for publish.', 'npcink-workflow-toolbox')
+			: (proposalId ? __('Core proposal created, but publish-time adoption was not queued.', 'npcink-workflow-toolbox') : __('Article audio adoption plan prepared.', 'npcink-workflow-toolbox'));
 		const rows = [];
 		if (proposalId) {
 			rows.push({ name: __('Proposal', 'npcink-workflow-toolbox'), detail: proposalId });
 		}
-		if (execution && execution.ability_id) {
-			rows.push({ name: __('Ability', 'npcink-workflow-toolbox'), detail: String(execution.ability_id) });
+		if (approvedForPublish) {
+			rows.push({ name: __('Next step', 'npcink-workflow-toolbox'), detail: __('Publish or update the article. Core/Adapter will then execute the reviewed adoption.', 'npcink-workflow-toolbox') });
 		}
 		if (executionError) {
 			rows.push({ name: __('Next step', 'npcink-workflow-toolbox'), detail: executionError.message || __('Open Core review and complete the approved adoption from there.', 'npcink-workflow-toolbox') });
 		}
 		return createElement(
 			'div',
-			{ className: 'npcink-toolbox-editor-support__handoff-result' + (adopted ? ' is-ok' : '') },
+			{ className: 'npcink-toolbox-editor-support__handoff-result' + (approvedForPublish ? ' is-ok' : '') },
 			createElement('strong', null, statusText),
 			rows.length ? renderItems(rows, '') : null,
-			!adopted ? renderAudioAdoptionPlan(result.plan || result) : null
+			!approvedForPublish ? renderAudioAdoptionPlan(result.plan || result) : null
 		);
 	}
 
@@ -4009,7 +4087,6 @@
 				'article_outline',
 				'polish_notes',
 				'discoverability',
-				'image_alt_suggestions',
 				'comment_reply_suggestion',
 			].indexOf(intent) >= 0;
 		}
@@ -4035,9 +4112,6 @@
 		}
 		if (intent === 'article_checkup') {
 			return __('Example: focus on structure and factual claims, not style preference.', 'npcink-workflow-toolbox');
-		}
-		if (intent === 'image_alt_suggestions') {
-			return __('Example: concise, factual ALT text; no keyword stuffing.', 'npcink-workflow-toolbox');
 		}
 		if (intent === 'comment_reply_suggestion') {
 			return __('Paste or select the comment text; add tone guidance if needed.', 'npcink-workflow-toolbox');
@@ -4376,16 +4450,15 @@
 		return createElement(
 			'section',
 			{ className: 'npcink-toolbox-editor-support__discoverability-media' },
-				createElement('h4', null, __('Article image text check', 'npcink-workflow-toolbox')),
+				createElement('h4', null, __('Article image ALT (SEO)', 'npcink-workflow-toolbox')),
 			mediaSummary.total ? createElement(
 				'div',
 				{ className: 'npcink-toolbox-editor-support__discoverability-media-counts' },
 				createElement('span', null, sprintf(__('%d image(s) in draft', 'npcink-workflow-toolbox'), mediaSummary.total)),
 				createElement('span', null, sprintf(__('%d missing ALT', 'npcink-workflow-toolbox'), mediaSummary.missingAlt)),
-				createElement('span', null, sprintf(__('%d weak ALT', 'npcink-workflow-toolbox'), mediaSummary.weakAlt)),
-				createElement('span', null, sprintf(__('%d missing captions', 'npcink-workflow-toolbox'), mediaSummary.missingCaption))
+				createElement('span', null, sprintf(__('%d weak ALT', 'npcink-workflow-toolbox'), mediaSummary.weakAlt))
 			) : createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('No images are currently used by this draft.', 'npcink-workflow-toolbox')),
-				createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Generate review-only ALT and caption suggestions for images already used by this article. Toolbox will not write media metadata.', 'npcink-workflow-toolbox')),
+				createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Generate one review-only ALT draft per image occurrence from nearby article context. Toolbox will not write post blocks or media metadata.', 'npcink-workflow-toolbox')),
 			createElement(
 				Button,
 				{
@@ -4398,7 +4471,7 @@
 						resultIntent: 'discoverability',
 					}),
 				},
-					isRunning ? __('Checking article images', 'npcink-workflow-toolbox') : __('Check article image text', 'npcink-workflow-toolbox')
+					isRunning ? __('Building ALT preview', 'npcink-workflow-toolbox') : __('Preview contextual ALT', 'npcink-workflow-toolbox')
 			),
 			suggestionItems.length ? createElement(
 				'div',
@@ -4433,7 +4506,7 @@
 				'section',
 				{ className: 'npcink-toolbox-editor-support__discoverability-next-step' },
 				createElement('h4', null, __('Main action', 'npcink-workflow-toolbox')),
-					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Apply the reviewed SEO title and description through Adapter/Core. If policy blocks automatic execution, the proposal stays available for Core review. Toolbox does not approve, execute, or write SEO fields.', 'npcink-workflow-toolbox')),
+					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it only after Publish or Update succeeds.', 'npcink-workflow-toolbox')),
 					createElement(
 						Button,
 						{
@@ -4444,7 +4517,7 @@
 							disabled: seoDisabled,
 							onClick: seoControls && seoControls.submit,
 					},
-						seoControls && seoControls.running ? __('Applying', 'npcink-workflow-toolbox') : __('Apply SEO optimization', 'npcink-workflow-toolbox')
+						seoControls && seoControls.running ? __('Approving', 'npcink-workflow-toolbox') : __('Approve SEO for publish', 'npcink-workflow-toolbox')
 				),
 				seoControls && seoControls.error ? createElement(Notice, { status: 'error', isDismissible: false }, seoControls.error) : null,
 				seoControls && seoControls.result ? createElement(
@@ -4566,6 +4639,121 @@
 			return [];
 		}
 		return hostedWritingSupportItems(section);
+	}
+
+	function isContextualImageAltReview(section) {
+		return Boolean(section && section.contract_version === 'current_article_image_alt_context_review.v1' && Array.isArray(section.items));
+	}
+
+	function renderContextualImageAltReview(section, applyControls) {
+		if (!isContextualImageAltReview(section)) {
+			return null;
+		}
+		const items = section.items;
+		const supportedCount = items.filter((item) => item && item.apply_supported && item.block_name === 'core/image').length;
+		const appliedCount = items.filter((item) => item && item.write_status === 'applied_to_editor_state').length;
+		return createElement(
+			'section',
+			{ className: 'npcink-toolbox-editor-support__contextual-alt-review' },
+			createElement('h4', null, __('Article image ALT (SEO)', 'npcink-workflow-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Missing ALT values are prepared from article context and applied automatically. When context is insufficient, AI vision runs silently as a fallback. Editing below is optional.', 'npcink-workflow-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__contextual-alt-summary' },
+				createElement('span', null, sprintf(__('%d image occurrence(s)', 'npcink-workflow-toolbox'), Number(section.image_occurrence_count || items.length))),
+				createElement('span', null, sprintf(__('%d missing ALT', 'npcink-workflow-toolbox'), Number(section.missing_alt_count || 0))),
+				createElement('span', null, __('Target: article image block ALT', 'npcink-workflow-toolbox'))
+			),
+			items.length ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__contextual-alt-list' },
+				items.map((item, index) => {
+					const context = item && item.context && typeof item.context === 'object' ? item.context : {};
+					const suggestedAlt = String(item && item.suggested_alt ? item.suggested_alt : '');
+					const currentAlt = String(item && item.current_alt ? item.current_alt : '');
+					const contextText = [context.heading, context.before || context.after].filter(Boolean).join(' · ');
+					return createElement(
+						'article',
+						{
+							className: 'npcink-toolbox-editor-support__contextual-alt-card',
+							key: item.occurrence_id || index,
+							'data-occurrence-id': item.occurrence_id || String(index + 1),
+						},
+						item.thumbnail_url ? createElement('img', {
+							className: 'npcink-toolbox-editor-support__contextual-alt-thumb',
+							src: item.thumbnail_url,
+							alt: '',
+						}) : null,
+						createElement(
+							'div',
+							{ className: 'npcink-toolbox-editor-support__contextual-alt-body' },
+							createElement('strong', null, sprintf(__('Image occurrence %d', 'npcink-workflow-toolbox'), Number(item.occurrence_index || index + 1))),
+							createElement('span', { className: 'npcink-toolbox-editor-support__contextual-alt-badge' }, item.write_status === 'applied_to_editor_state' ? __('Applied to draft', 'npcink-workflow-toolbox') : (currentAlt ? __('Existing ALT preserved', 'npcink-workflow-toolbox') : __('Prepared automatically', 'npcink-workflow-toolbox'))),
+							contextText ? createElement(
+								'div',
+								{ className: 'npcink-toolbox-editor-support__contextual-alt-context' },
+								createElement('small', null, __('Article context', 'npcink-workflow-toolbox')),
+								createElement('p', null, truncateText(contextText, 260))
+							) : null,
+							createElement('p', { className: 'npcink-toolbox-editor-support__contextual-alt-current' }, __('Current block ALT: ', 'npcink-workflow-toolbox') + (currentAlt || __('Empty', 'npcink-workflow-toolbox'))),
+							createElement(
+								'label',
+								{ className: 'npcink-toolbox-editor-support__contextual-alt-field' },
+								createElement('span', null, __('Contextual ALT draft', 'npcink-workflow-toolbox')),
+								createElement('input', {
+									key: String(item.occurrence_id || index) + ':' + suggestedAlt,
+									type: 'text',
+									defaultValue: suggestedAlt,
+									maxLength: 180,
+									placeholder: __('Write concise ALT for this article context', 'npcink-workflow-toolbox'),
+									'data-toolbox-contextual-alt-input': item.occurrence_id || String(index + 1),
+									'data-suggested-alt': suggestedAlt,
+									'data-current-alt': currentAlt,
+									'data-block-client-id': item.block_client_id || '',
+									'data-block-name': item.block_name || '',
+									'data-context-fingerprint': item.context_fingerprint || '',
+								})
+							),
+							createElement(
+								'label',
+								{ className: 'npcink-toolbox-editor-support__contextual-alt-decorative' },
+								createElement('input', {
+									type: 'checkbox',
+									'data-toolbox-contextual-alt-decorative': item.occurrence_id || String(index + 1),
+									onChange: (event) => {
+										const card = event.currentTarget.closest('.npcink-toolbox-editor-support__contextual-alt-card');
+										const input = card ? card.querySelector('[data-toolbox-contextual-alt-input]') : null;
+										if (input instanceof HTMLInputElement) {
+											input.disabled = event.currentTarget.checked;
+											input.value = event.currentTarget.checked ? '' : String(input.getAttribute('data-suggested-alt') || '');
+										}
+									},
+								}),
+								createElement('span', null, __('Decorative in this context — use empty ALT', 'npcink-workflow-toolbox'))
+							),
+							item.apply_supported ? null : createElement('small', { className: 'npcink-toolbox-editor-support__muted' }, __('Preview only for this block type. Direct draft apply currently supports core/image blocks.', 'npcink-workflow-toolbox'))
+						)
+					);
+				})
+			) : createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('No article image occurrences were found.', 'npcink-workflow-toolbox')),
+			applyControls ? createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__contextual-alt-apply' },
+				createElement(
+					Button,
+					{
+						type: 'button',
+						variant: 'primary',
+						isBusy: Boolean(applyControls.running),
+						disabled: Boolean(applyControls.running) || supportedCount < 1,
+						onClick: (event) => applyControls.apply(section, event.currentTarget.closest('.npcink-toolbox-editor-support__contextual-alt-review')),
+					},
+					applyControls.running ? __('Applying ALT', 'npcink-workflow-toolbox') : (appliedCount > 0 ? __('Apply edited ALT changes', 'npcink-workflow-toolbox') : __('Apply ALT to draft', 'npcink-workflow-toolbox'))
+				),
+				applyControls.status ? createElement(Notice, { status: applyControls.status.status || 'info', isDismissible: false }, applyControls.status.message || '') : null
+			) : null,
+			createElement('p', { className: 'npcink-toolbox-editor-support__contextual-alt-boundary' }, __('Core records automatic or edited ALT application. Only the current Gutenberg draft changes; use WordPress Save draft or Update to persist it. The media library stays unchanged.', 'npcink-workflow-toolbox'))
+		);
 	}
 
 	function commentReplySuggestionItems(section) {
@@ -5638,7 +5826,7 @@
 		const changes = payload && payload.changes && typeof payload.changes === 'object' ? payload.changes : {};
 		const items = [];
 		if (result && result.proposal_id) {
-			items.push({ name: __('Core proposal', 'npcink-workflow-toolbox'), value: result.proposal_id, status: result.execution_error ? 'review_required' : 'applied' });
+			items.push({ name: __('Core proposal', 'npcink-workflow-toolbox'), value: result.proposal_id, status: result.deferred_to_publish ? 'approved_for_publish' : 'review_required' });
 		}
 		if (payload.provider) {
 			items.push({ name: __('SEO provider', 'npcink-workflow-toolbox'), value: payload.provider, status: payload.updated ? 'applied' : 'review_required' });
@@ -5670,7 +5858,7 @@
 				createElement(
 					'div',
 					{ className: 'npcink-toolbox-editor-support__metadata-handoff-body' },
-					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Apply the reviewed SEO title and description through Adapter/Core. Toolbox creates the governed request; Core keeps approval, preflight, execution, and audit ownership.', 'npcink-workflow-toolbox')),
+					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it after the next successful Publish or Update.', 'npcink-workflow-toolbox')),
 				renderItems(
 					[
 						{ name: __('SEO title', 'npcink-workflow-toolbox'), value: input.seo_title, status: 'review_required' },
@@ -5688,14 +5876,14 @@
 						disabled,
 						onClick: controls.submit,
 					},
-						controls.running ? __('Applying', 'npcink-workflow-toolbox') : __('Apply SEO optimization', 'npcink-workflow-toolbox')
+						controls.running ? __('Approving', 'npcink-workflow-toolbox') : __('Approve SEO for publish', 'npcink-workflow-toolbox')
 					),
 					controls.error ? createElement(Notice, { status: 'error', isDismissible: false }, handoffErrorMessage(controls.error, __('Could not apply the SEO optimization.', 'npcink-workflow-toolbox'))) : null,
 					controls.error && controls.error.handoff_receipt ? renderCoreHandoffReceipt(controls.error.handoff_receipt) : null,
 					controls.result ? createElement(
 						Notice,
 						{ status: controls.result.execution_error ? 'warning' : 'success', isDismissible: false },
-						controls.result.message || __('SEO optimization applied and recorded.', 'npcink-workflow-toolbox')
+						controls.result.message || __('SEO optimization approved for the next publish or update.', 'npcink-workflow-toolbox')
 					) : null,
 					controls.result && controls.result.handoff_receipt ? renderCoreHandoffReceipt(controls.result.handoff_receipt) : null,
 					controls.result ? renderItems(
@@ -5937,10 +6125,13 @@
 
 				if (sections.image_alt_suggestions && !showImageAltInsideDiscoverability) {
 					if (metadataHandoffControls && metadataHandoffControls.intent !== 'image_alt_suggestions') {
-							blocks.push(createElement('h4', { key: 'image-alt-suggestions-title' }, __('Article image text suggestions', 'npcink-workflow-toolbox')));
+						blocks.push(createElement('h4', { key: 'image-alt-suggestions-title' }, __('Article image text suggestions', 'npcink-workflow-toolbox')));
 					}
-					blocks.push(renderItems(imageAltSuggestionItems(sections.image_alt_suggestions), __('No image ALT suggestions returned.', 'npcink-workflow-toolbox')));
-					blocks.push(renderHostedAiDiagnostics(sections.image_alt_suggestions));
+					const contextualAltReview = renderContextualImageAltReview(sections.image_alt_suggestions, metadataHandoffControls && metadataHandoffControls.contextualAltApply);
+					blocks.push(contextualAltReview || renderItems(imageAltSuggestionItems(sections.image_alt_suggestions), __('No image ALT suggestions returned.', 'npcink-workflow-toolbox')));
+					if (!contextualAltReview) {
+						blocks.push(renderHostedAiDiagnostics(sections.image_alt_suggestions));
+					}
 				}
 
 				if (sections.comment_reply_suggestion) {
@@ -6140,12 +6331,18 @@
 		const [audioAdoptionRunning, setAudioAdoptionRunning] = useState('');
 		const [audioAdoptionResult, setAudioAdoptionResult] = useState(null);
 		const [audioAdoptionError, setAudioAdoptionError] = useState('');
+		const [publishExecutionIntents, setPublishExecutionIntents] = useState([]);
+		const [publishExecutionStatus, setPublishExecutionStatus] = useState(null);
+		const publishExecutionRunningRef = useRef(false);
+		const wasSavingPostRef = useRef(false);
 		const [audioPlaybackErrors, setAudioPlaybackErrors] = useState({});
 		const [audioPreferences, setAudioPreferences] = useState(readAudioPreferences);
 		const [contentFeedbackRunning, setContentFeedbackRunning] = useState('');
 		const [contentFeedbackStatus, setContentFeedbackStatus] = useState(null);
-		const [internalLinkRunning, setInternalLinkRunning] = useState('');
-		const [internalLinkStatus, setInternalLinkStatus] = useState(null);
+			const [internalLinkRunning, setInternalLinkRunning] = useState('');
+			const [internalLinkStatus, setInternalLinkStatus] = useState(null);
+			const [contextualAltApplyRunning, setContextualAltApplyRunning] = useState(false);
+			const [contextualAltApplyStatus, setContextualAltApplyStatus] = useState(null);
 				const [flowInstructions, setFlowInstructions] = useState({});
 				const [titleApplyStatus, setTitleApplyStatus] = useState(null);
 				const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
@@ -6161,6 +6358,40 @@
 			const progressiveRequestSeqRef = useRef(0);
 			const progressiveCurrentKeyRef = useRef(progressiveKey);
 			progressiveCurrentKeyRef.current = progressiveKey;
+			const pendingPublishExecutionKey = publishExecutionIntents.map((intent) => intent.proposal_id).join('|');
+
+			useEffect(() => {
+				let active = true;
+				if (!postContext.post_id) {
+					setPublishExecutionIntents([]);
+					return undefined;
+				}
+				postJson('editor/reviewed-action-intents', { action: 'list', post_id: postContext.post_id })
+					.then((response) => {
+						if (active) {
+							setPublishExecutionIntents(normalizePublishExecutionIntents(response && response.intents));
+						}
+					})
+					.catch(() => {
+						if (active) {
+							setPublishExecutionIntents([]);
+						}
+					});
+				return () => {
+					active = false;
+				};
+			}, [postContext.post_id]);
+
+			useEffect(() => {
+				const completedPublishSave = wasSavingPostRef.current
+					&& !postContext.is_saving_post
+					&& postContext.did_post_save_succeed
+					&& postContext.post_status === 'publish';
+				wasSavingPostRef.current = Boolean(postContext.is_saving_post && !postContext.is_autosaving_post);
+				if (completedPublishSave && pendingPublishExecutionKey && !publishExecutionRunningRef.current) {
+					executePendingPublishIntents();
+				}
+			}, [postContext.is_saving_post, postContext.is_autosaving_post, postContext.did_post_save_succeed, postContext.post_status, pendingPublishExecutionKey]);
 
 			useEffect(() => {
 				progressiveMountedRef.current = true;
@@ -6342,8 +6573,10 @@
 				setAudioPlaybackErrors({});
 				setContentFeedbackRunning('');
 				setContentFeedbackStatus(null);
-				setInternalLinkRunning('');
-				setInternalLinkStatus(null);
+					setInternalLinkRunning('');
+					setInternalLinkStatus(null);
+					setContextualAltApplyRunning(false);
+					setContextualAltApplyStatus(null);
 					setTitleApplyStatus(null);
 					setExcerptApplyStatus(null);
 					setSlugApplyStatus(null);
@@ -6393,7 +6626,13 @@
 								intent: displayIntent,
 								sections: Object.assign({}, current.sections || {}, mergedFlowResult.sections || {}),
 							});
-						});
+							});
+					if (intent === 'image_alt_suggestions') {
+						const contextualAltSection = flowResult && flowResult.sections ? flowResult.sections.image_alt_suggestions : null;
+						if (isContextualImageAltReview(contextualAltSection)) {
+							await applyContextualAltToDraft(contextualAltSection, null, { automatic: true });
+						}
+					}
 					if (intent === 'publish_preflight' && runOptions.reopenPreflightModal) {
 						setPreflightModalOpen(true);
 					}
@@ -6407,6 +6646,190 @@
 					setSupportView('result');
 				} finally {
 					setRunning('');
+				}
+			}
+
+			async function applyContextualAltToDraft(section, container, options) {
+				const applyOptions = options && typeof options === 'object' ? options : {};
+				const automatic = Boolean(applyOptions.automatic);
+				if (!postContext.post_id) {
+					setContextualAltApplyStatus({ status: 'error', message: __('Save or open the current post before applying reviewed ALT drafts.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				if ((!container && !automatic) || !section || !Array.isArray(section.items)) {
+					setContextualAltApplyStatus({ status: 'error', message: __('The contextual ALT review is no longer available. Run it again.', 'npcink-workflow-toolbox') });
+					return;
+				}
+
+				const supported = {};
+				section.items.forEach((item) => {
+					if (item && item.apply_supported && item.block_name === 'core/image' && item.occurrence_id) {
+						supported[String(item.occurrence_id)] = item;
+					}
+				});
+				const changes = [];
+				let validationMessage = '';
+				if (automatic) {
+					section.items.forEach((source) => {
+						if (!source || !supported[String(source.occurrence_id || '')]) {
+							return;
+						}
+						const expectedOldAlt = normalizeEditorAlt(source.current_alt || '');
+						const finalAlt = normalizeEditorAlt(source.suggested_alt || '');
+						if (expectedOldAlt || !finalAlt) {
+							return;
+						}
+						changes.push({
+							occurrence_id: String(source.occurrence_id || ''),
+							block_client_id: String(source.block_client_id || ''),
+							block_name: 'core/image',
+							expected_old_alt: '',
+							final_alt: finalAlt,
+							decorative: false,
+							context_fingerprint: String(source.context_fingerprint || ''),
+							generation_basis: source.visual_fallback_used ? 'silent_ai_vision_fallback' : 'article_context',
+						});
+					});
+				} else {
+					Array.from(container.querySelectorAll('.npcink-toolbox-editor-support__contextual-alt-card')).forEach((card) => {
+						const occurrenceId = String(card.getAttribute('data-occurrence-id') || '');
+						const source = supported[occurrenceId];
+						if (!source) {
+							return;
+						}
+						const input = card.querySelector('[data-toolbox-contextual-alt-input]');
+						const decorativeInput = card.querySelector('[data-toolbox-contextual-alt-decorative]');
+						if (!input) {
+							return;
+						}
+						const decorative = Boolean(decorativeInput && decorativeInput.checked);
+						const finalAlt = decorative ? '' : normalizeEditorAlt(input.value);
+						const expectedOldAlt = normalizeEditorAlt(source.current_alt || '');
+						if (!finalAlt && !decorative) {
+							validationMessage = __('An empty ALT value requires the decorative-image option.', 'npcink-workflow-toolbox');
+							return;
+						}
+						if (finalAlt === expectedOldAlt && !decorative) {
+							return;
+						}
+						changes.push({
+							occurrence_id: occurrenceId,
+							block_client_id: String(source.block_client_id || ''),
+							block_name: 'core/image',
+							expected_old_alt: expectedOldAlt,
+							final_alt: finalAlt,
+							decorative,
+							context_fingerprint: String(source.context_fingerprint || ''),
+							generation_basis: source.visual_fallback_used ? 'silent_ai_vision_fallback' : 'article_context',
+						});
+					});
+				}
+				if (validationMessage) {
+					setContextualAltApplyStatus({ status: 'error', message: validationMessage });
+					return;
+				}
+
+				if (!changes.length) {
+					setContextualAltApplyStatus({ status: 'info', message: automatic ? __('No missing ALT values need automatic application.', 'npcink-workflow-toolbox') : __('No reviewed ALT changes need to be applied.', 'npcink-workflow-toolbox') });
+					return;
+				}
+
+				const blockSelector = data.select('core/block-editor');
+				const blockDispatcher = data.dispatch('core/block-editor');
+				if (!blockSelector || !blockDispatcher || typeof blockSelector.getBlock !== 'function' || typeof blockDispatcher.updateBlockAttributes !== 'function') {
+					setContextualAltApplyStatus({ status: 'error', message: __('The Gutenberg block editor is unavailable. No ALT values were applied.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				for (let index = 0; index < changes.length; index += 1) {
+					const change = changes[index];
+					const block = blockSelector.getBlock(change.block_client_id);
+					const currentAlt = normalizeEditorAlt(block && block.attributes ? block.attributes.alt : '');
+					if (!block || block.name !== 'core/image' || currentAlt !== change.expected_old_alt) {
+						setContextualAltApplyStatus({ status: 'error', message: __('The article changed after this ALT review. Run the review again before applying.', 'npcink-workflow-toolbox') });
+						return;
+					}
+				}
+
+				const correlationId = editorConfirmationCorrelationId();
+				const auditPayload = {
+					post_id: Number(postContext.post_id || 0),
+					correlation_id: correlationId,
+					apply_mode: automatic ? 'automatic_missing_alt' : 'manual_editor_apply',
+					items: changes,
+				};
+				let requestedRecorded = false;
+				let editorStateApplied = false;
+				setContextualAltApplyRunning(true);
+				setContextualAltApplyStatus(null);
+				try {
+					await postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, { stage: 'requested' }));
+					requestedRecorded = true;
+					changes.forEach((change) => {
+						blockDispatcher.updateBlockAttributes(change.block_client_id, { alt: change.final_alt });
+					});
+					editorStateApplied = true;
+					const unapplied = changes.some((change) => {
+						const block = blockSelector.getBlock(change.block_client_id);
+						return !block || block.name !== 'core/image' || normalizeEditorAlt(block.attributes && block.attributes.alt) !== change.final_alt;
+					});
+					if (unapplied) {
+						throw new Error(__('Gutenberg could not apply every reviewed ALT value.', 'npcink-workflow-toolbox'));
+					}
+					const completion = await postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, { stage: 'completed' }));
+					const appliedByOccurrence = {};
+					changes.forEach((change) => {
+						appliedByOccurrence[change.occurrence_id] = change.final_alt;
+					});
+					setResult((current) => {
+						const currentSection = current && current.sections ? current.sections.image_alt_suggestions : null;
+						if (!currentSection || !Array.isArray(currentSection.items)) {
+							return current;
+						}
+						const nextItems = currentSection.items.map((item) => Object.prototype.hasOwnProperty.call(appliedByOccurrence, item.occurrence_id)
+							? Object.assign({}, item, {
+								current_alt: appliedByOccurrence[item.occurrence_id],
+								suggested_alt: appliedByOccurrence[item.occurrence_id],
+								write_status: 'applied_to_editor_state',
+							})
+							: item);
+						const nextSection = Object.assign({}, currentSection, {
+							items: nextItems,
+							missing_alt_count: nextItems.filter((item) => !String(item.current_alt || '')).length,
+							editor_confirmation: completion,
+						});
+						return Object.assign({}, current, {
+							sections: Object.assign({}, current.sections, { image_alt_suggestions: nextSection }),
+						});
+					});
+					setContextualAltApplyStatus({
+						status: 'success',
+						message: automatic
+							? sprintf(__('%d missing ALT value(s) were automatically applied to the current editor. Core recorded the action. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length)
+							: sprintf(__('%d reviewed ALT draft(s) applied to the current editor. Core recorded editor confirmation. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length),
+					});
+					submitContentImplicitFeedback('contextual_alt_editor_apply', 'accepted', ['editor_confirmed', 'core_audit_recorded']);
+				} catch (requestError) {
+					if (editorStateApplied) {
+						changes.forEach((change) => {
+							const block = blockSelector.getBlock(change.block_client_id);
+							const currentAlt = normalizeEditorAlt(block && block.attributes ? block.attributes.alt : '');
+							if (block && block.name === 'core/image' && currentAlt === change.final_alt) {
+								blockDispatcher.updateBlockAttributes(change.block_client_id, { alt: change.expected_old_alt });
+							}
+						});
+					}
+					if (requestedRecorded) {
+						postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, {
+							stage: 'failed',
+							failure_code: editorStateApplied ? 'completion_audit_failed_editor_state_reverted' : 'editor_state_apply_failed',
+						})).catch(() => {});
+					}
+					setContextualAltApplyStatus({
+						status: 'error',
+						message: (requestError && requestError.message ? requestError.message : __('Core could not record editor confirmation.', 'npcink-workflow-toolbox')) + ' ' + __('No ALT changes were kept in the editor.', 'npcink-workflow-toolbox'),
+					});
+				} finally {
+					setContextualAltApplyRunning(false);
 				}
 			}
 
@@ -6496,17 +6919,64 @@
 				if (plan && plan.proposal_ready !== false) {
 					try {
 						core = await postArticleAudioAdoptionToAdapter(plan, planInput);
+						if (core && core.proposal_id) {
+							const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, core.proposal_id, 'article_audio');
+							setPublishExecutionIntents(queuedIntents);
+							setPublishExecutionStatus({ status: 'info', message: __('Article audio was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
+						}
 					} catch (coreError) {
 						core = { bridge: null, proposal_id: '', execution_error: coreError };
 					}
 				}
 				setAudioAdoptionResult({ plan, plan_input: planInput, core });
-				submitContentImplicitFeedback('article_audio_adoption_plan', plan && plan.proposal_ready === false ? 'edited_before_accept' : 'accepted', [core && core.execution && core.execution.success !== false ? 'core_handoff_executed' : 'core_handoff_prepared']);
+				submitContentImplicitFeedback('article_audio_adoption_plan', plan && plan.proposal_ready === false ? 'edited_before_accept' : 'accepted', [core && core.proposal_id ? 'core_handoff_approved_for_publish' : 'core_handoff_prepared']);
 			} catch (requestError) {
 				setAudioAdoptionError(requestError && requestError.message ? requestError.message : __('Could not adopt the article audio candidate through Core.', 'npcink-workflow-toolbox'));
 			} finally {
 				setAudioAdoptionRunning('');
 			}
+		}
+
+		async function executePendingPublishIntents() {
+			const intents = normalizePublishExecutionIntents(publishExecutionIntents);
+			if (!intents.length || publishExecutionRunningRef.current) {
+				return;
+			}
+			publishExecutionRunningRef.current = true;
+			setPublishExecutionStatus({ status: 'info', message: sprintf(__('Executing %d author-reviewed action(s) after publish...', 'npcink-workflow-toolbox'), intents.length) });
+			const failures = [];
+			let cleanupFailed = false;
+			for (let index = 0; index < intents.length; index += 1) {
+				try {
+					await executeReviewedProposalOnPublish(intents[index]);
+				} catch (executionError) {
+					failures.push({ intent: intents[index], error: executionError });
+				}
+			}
+
+			try {
+				const attemptedIds = intents.map((intent) => intent.proposal_id);
+				const cleanup = await postJson('editor/reviewed-action-intents', {
+					action: 'complete',
+					post_id: postContext.post_id,
+					proposal_ids: attemptedIds,
+				});
+				setPublishExecutionIntents(normalizePublishExecutionIntents(cleanup && cleanup.intents));
+			} catch (cleanupError) {
+				cleanupFailed = true;
+			}
+
+			if (failures.length || cleanupFailed) {
+				setPublishExecutionStatus({
+					status: 'warning',
+					message: cleanupFailed
+						? __('Publish-time execution finished, but the editor could not clear its temporary handoff record. Review Core before the next update.', 'npcink-workflow-toolbox')
+						: sprintf(__('%1$d of %2$d publish-time action(s) need attention in Core. Automatic retries were not started.', 'npcink-workflow-toolbox'), failures.length, intents.length),
+				});
+			} else {
+				setPublishExecutionStatus({ status: 'success', message: sprintf(__('%d author-reviewed action(s) executed and recorded after publish.', 'npcink-workflow-toolbox'), intents.length) });
+			}
+			publishExecutionRunningRef.current = false;
 		}
 
 		function markAudioPlaybackError(key) {
@@ -7358,28 +7828,20 @@
 						bridge,
 						proposal_id: '',
 						handoff_receipt: handoffReceipt,
-						message: __('SEO optimization was submitted for Core review, but automatic application could not start.', 'npcink-workflow-toolbox'),
+						message: __('SEO optimization was submitted for Core review, but it could not be attached to this article for publish-time execution.', 'npcink-workflow-toolbox'),
 					});
 					return;
 				}
-				try {
-					const execution = await executeSeoMetaProposal(proposalId);
-					setSeoHandoffResult({
-						bridge,
-						proposal_id: proposalId,
-						execution,
-						handoff_receipt: Object.assign({}, handoffReceipt, { status: 'executed', operator_next_action: 'review_execution_result' }),
-						message: __('SEO optimization applied and recorded.', 'npcink-workflow-toolbox'),
-					});
-				} catch (executionError) {
-					setSeoHandoffResult({
-						bridge,
-						proposal_id: proposalId,
-						execution_error: executionError,
-						handoff_receipt: Object.assign({}, handoffReceipt, { status: 'pending_review', operator_next_action: 'review_in_core' }),
-						message: __('SEO optimization was submitted for Core review, but automatic application was blocked: ', 'npcink-workflow-toolbox') + (executionError && executionError.message ? executionError.message : __('review in Core before execution.', 'npcink-workflow-toolbox')),
-					});
-				}
+				const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, proposalId, 'seo_meta');
+				setPublishExecutionIntents(queuedIntents);
+				setPublishExecutionStatus({ status: 'info', message: __('SEO optimization was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
+				setSeoHandoffResult({
+					bridge,
+					proposal_id: proposalId,
+					deferred_to_publish: true,
+					handoff_receipt: Object.assign({}, handoffReceipt, { status: 'approved_for_publish', operator_next_action: 'publish_post' }),
+					message: __('SEO optimization approved by the author. It will be applied when the article is published or updated.', 'npcink-workflow-toolbox'),
+				});
 			} catch (requestError) {
 				setSeoHandoffError(coreHandoffFailure(requestError, {
 					fallback: __('Could not apply the SEO optimization.', 'npcink-workflow-toolbox'),
@@ -7445,8 +7907,10 @@
 				const plan = await postJson('flows/image-candidate-adoption-plan', planInput);
 				try {
 					const core = await postAdapterAdoption(plan, planInput);
-					if (setFeaturedImage) {
-						syncFeaturedMediaFromCore(core);
+					if (core && core.proposal_id) {
+						const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, core.proposal_id, 'image_adoption');
+						setPublishExecutionIntents(queuedIntents);
+						setPublishExecutionStatus({ status: 'info', message: __('Image adoption was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
 					}
 					setImageAdoptionResult({ plan, core, adoption_target: setFeaturedImage ? 'featured_image' : 'media_import' });
 					submitImplicitAgentFeedback(
@@ -7746,6 +8210,11 @@
 					copy: copyInternalLinkCandidate,
 					open: openInternalLinkCandidate,
 				},
+				contextualAltApply: {
+					apply: applyContextualAltToDraft,
+					running: contextualAltApplyRunning,
+					status: contextualAltApplyStatus,
+				},
 				seoHandoff: {
 				submit: submitSeoHandoff,
 				running: seoHandoffRunning,
@@ -7783,6 +8252,11 @@
 				createElement(
 					'div',
 					{ className: 'npcink-toolbox-editor-support__surface' },
+					publishExecutionStatus ? createElement(
+						Notice,
+						{ status: publishExecutionStatus.status || 'info', isDismissible: false },
+						publishExecutionStatus.message
+					) : null,
 					showResultView ? createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__result-view' },

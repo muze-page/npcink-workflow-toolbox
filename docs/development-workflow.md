@@ -316,6 +316,18 @@ Adapter, or Core proposal route is called. It is intentionally outside
 `composer test:all` because it depends on a running local WordPress site,
 WP-CLI login-cookie generation, Playwright, and a local browser.
 
+For the per-occurrence article image ALT prototype, run:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:editor-contextual-alt-browser
+```
+
+The smoke creates and deletes a temporary draft that reuses one attachment in
+two different article sections. It verifies two distinct editable contextual
+ALT drafts, one bounded Toolbox REST request, and no Cloud, Core proposal, or
+WordPress content write path, then saves a review screenshot under
+`build/smoke/`.
+
 For the post-editor review artifact surface, run:
 
 ```bash
@@ -350,9 +362,12 @@ composer smoke:editor-seo-apply
 This creates a temporary draft and asks Toolbox only for the `discoverability`
 SEO handoff preview. The fixture then uses Adapter/Core/Abilities to create an
 executable `npcink-abilities-toolkit/set-post-seo-meta` Core proposal and call
-Adapter `approve-and-execute`. Toolbox does not approve, execute, or write SEO
-meta in this smoke; it proves only that a Toolbox suggestion/handoff can be
-carried into the governed Core/Adapter/Abilities path. If local Core policy
+Adapter `approve-and-execute`, simulating the editor's post-save execution step
+after a successful Publish or Update. The browser-side editor contract must
+queue only the bounded proposal id before that save and must not execute on the
+adoption click. Toolbox does not write SEO meta in this smoke; it proves that a
+reviewed Toolbox handoff can be carried into the governed
+Core/Adapter/Abilities path. If local Core policy
 allows execution, the smoke verifies the SEO title and description meta were
 written by the Core-approved ability. If policy blocks automatic execution, it
 verifies the Core proposal remains reviewable and the temporary post SEO meta
@@ -704,8 +719,8 @@ Adapter `run-read-ability`, generates selected Cloud previews, builds reviewed
 media optimization proposal payloads, and creates two Core review proposals. It
 does not approve, preflight, execute, or replace media files.
 
-For the selected batch execution proof behind the fixed "Submit and execute"
-button, run:
+For downstream selected-batch execution proof outside the Toolbox workbench,
+run:
 
 ```bash
 composer smoke:media-derivative-batch-execute
@@ -719,6 +734,8 @@ proposal, verifies file pointer/MIME/ALT/backup evidence, and restores each
 attachment through governed restore proposals. Keep it outside `composer
 test:all` because it performs real local media replacements and requires
 Adapter, Core, Abilities, Cloud Addon, and Cloud runtime availability.
+This smoke validates the separate governed Core/Adapter execution surface; the
+Toolbox batch button stops after selected Core review proposal submission.
 
 Before adding another media or batch surface, run the
 [Media Optimization Operator Trial](archive/2026-06/media-optimization-operator-trial.md). The
@@ -855,6 +872,14 @@ snapshots. When the Cloud Addon exposes `request_image_context_evidence()`,
 Toolbox may call that named helper once and rebuild the local review set with
 the returned evidence; helper absence or Cloud failure must fall back to the
 visible request packet without blocking the metadata-only review flow.
+
+The current-article editor ALT flow may reuse the same helper only for missing
+ALT occurrences that have no useful heading, adjacent text, or caption. In that
+surface the author is already present with the image in Gutenberg, and native
+Save draft or Update remains the persistence action, so no additional visual
+confirmation control is added. The call stays single-shot and silent; existing
+ALT is never overwritten, Cloud failure falls back locally, Core records the
+automatic editor-state action, and media metadata remains unchanged.
 
 ## Coding Rules
 

@@ -86,8 +86,8 @@ Toolbox owns:
 - selected candidate controls;
 - selected preview generation;
 - selected Core review submission;
-- approved-execution result rendering returned by Adapter;
-- recovery guidance and rollback links or refs.
+- proposal submission receipts and links into Core review;
+- recovery guidance for preview or proposal submission failures.
 
 Toolbox does not own:
 
@@ -105,7 +105,7 @@ makes the governance path clear:
 ```text
 Review selected previews.
 Submit selected Core replacement reviews.
-Execute approved replacements through Adapter/Core/Abilities.
+Open Core review and execute approved replacements from the governed execution surface.
 Restore from recorded backups if needed.
 ```
 
@@ -114,14 +114,11 @@ the current Toolbox surface. Broad scopes can produce bounded review sets, but
 the operator must still review selected candidates and see skipped reasons
 before any proposal or execution step.
 
-The fixed Toolbox action may call Adapter `approve-and-execute` for selected
-Core media replacement proposals only after selected previews and proposal ids
-exist. The UI must render Adapter response fields such as
-`selected_count`, `submitted_count`, `executed_count`, `failed_count`,
-`blocked_count`, `partial_success`, `retryable`, `operator_next_action`,
-Core preflight evidence, per-action `execution_profile`, and per-action
-`idempotency_key`. These are operator feedback and audit pointers, not Toolbox
-runtime state.
+The fixed Toolbox action stops after selected Core proposal submission. It must
+not call Adapter `approve-and-execute`. Core review and the governed execution
+surface render approval, preflight, execution, rollback, and audit evidence.
+Toolbox may retain only the immediate proposal receipt needed to link the
+operator to that surface; it does not mirror execution state.
 
 ## Non-Goals
 

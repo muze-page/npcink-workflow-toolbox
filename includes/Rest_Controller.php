@@ -57,6 +57,8 @@ final class Rest_Controller {
 		$this->post( '/flows/media-alt-caption-review-plan', 'media_alt_caption_review_plan' );
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
+		$this->post( '/editor/reviewed-action-intents', 'editor_publish_execution_intents', $this->editor_publish_execution_intent_args() );
+		$this->post( '/editor/contextual-alt-audit', 'editor_contextual_alt_audit', $this->editor_contextual_alt_audit_args() );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
 		$this->post( '/nightly-inspection/cloud-batch', 'nightly_inspection_cloud_batch' );
 		$this->get( '/nightly-inspection/cloud-runtime-entitlement', 'nightly_inspection_cloud_runtime_entitlement' );
@@ -135,6 +137,8 @@ final class Rest_Controller {
 			'/flows/media-alt-caption-review-plan'         => 'cap.toolbox.workflow_suggest',
 			'/flows/media-brief'                           => 'cap.toolbox.workflow_suggest',
 			'/editor/content-support'                      => 'cap.toolbox.workflow_suggest',
+			'/editor/reviewed-action-intents'               => 'cap.toolbox.workflow_suggest',
+			'/editor/contextual-alt-audit'                 => 'cap.toolbox.local_admin_consent',
 			'/media-derivative-handoff'                    => 'cap.toolbox.workflow_suggest',
 			'/nightly-inspection/cloud-runtime-entitlement' => 'cap.toolbox.nightly_inspection',
 			'/nightly-inspection/cloud-batch'              => 'cap.toolbox.nightly_inspection',
@@ -821,6 +825,73 @@ final class Rest_Controller {
 		);
 	}
 
+	/**
+	 * Stores only bounded proposal references; article fields and adopted media
+	 * metadata never pass through this control route.
+	 */
+	public function editor_publish_execution_intents( WP_REST_Request $request ) {
+		$post_id = absint( $request->get_param( 'post_id' ) );
+		$action  = sanitize_key( (string) $request->get_param( 'action' ) );
+		if ( ! get_post( $post_id ) ) {
+			return new WP_Error( 'npcink_toolbox_publish_intent_post_missing', __( 'The current post is unavailable.', 'npcink-workflow-toolbox' ), array( 'status' => 404 ) );
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new WP_Error( 'npcink_toolbox_publish_intent_forbidden', __( 'You do not have permission to edit this post.', 'npcink-workflow-toolbox' ), array( 'status' => 403 ) );
+		}
+
+		$current = Editor_Content_Support::sanitize_publish_execution_intents( get_post_meta( $post_id, Editor_Content_Support::PUBLISH_EXECUTION_META_KEY, true ) );
+		if ( 'queue' === $action ) {
+			$queued = Editor_Content_Support::sanitize_publish_execution_intents(
+				array_merge(
+					$current,
+					array(
+						array(
+							'proposal_id'       => $request->get_param( 'proposal_id' ),
+							'operation'         => $request->get_param( 'operation' ),
+							'author_approved_at' => gmdate( 'c' ),
+						),
+					)
+				)
+			);
+			if ( count( $queued ) === count( $current ) ) {
+				$proposal_id = substr( (string) preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $request->get_param( 'proposal_id' ) ), 0, 191 );
+				$already_has = array_filter( $current, static fn( array $intent ): bool => $proposal_id === $intent['proposal_id'] );
+				if ( '' === $proposal_id || array() === $already_has ) {
+					return new WP_Error( 'npcink_toolbox_publish_intent_invalid', __( 'A valid proposal and supported editor operation are required.', 'npcink-workflow-toolbox' ), array( 'status' => 400 ) );
+				}
+			}
+			$current = $queued;
+			update_post_meta( $post_id, Editor_Content_Support::PUBLISH_EXECUTION_META_KEY, $current );
+		} elseif ( 'complete' === $action ) {
+			$completed_ids = array_values(
+				array_filter(
+					array_map(
+						static fn( $proposal_id ): string => substr( (string) preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $proposal_id ), 0, 191 ),
+						(array) $request->get_param( 'proposal_ids' )
+					)
+				)
+			);
+			if ( array() === $completed_ids ) {
+				return new WP_Error( 'npcink_toolbox_publish_intent_completion_invalid', __( 'At least one attempted proposal id is required.', 'npcink-workflow-toolbox' ), array( 'status' => 400 ) );
+			}
+			$current = array_values( array_filter( $current, static fn( array $intent ): bool => ! in_array( $intent['proposal_id'], $completed_ids, true ) ) );
+			if ( array() === $current ) {
+				delete_post_meta( $post_id, Editor_Content_Support::PUBLISH_EXECUTION_META_KEY );
+			} else {
+				update_post_meta( $post_id, Editor_Content_Support::PUBLISH_EXECUTION_META_KEY, $current );
+			}
+		}
+
+		return rest_ensure_response(
+			array(
+				'intents'                => $current,
+				'pending_count'          => count( $current ),
+				'direct_wordpress_write' => false,
+				'storage_scope'          => 'bounded_publish_handoff_control_meta',
+			)
+		);
+	}
+
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
 		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'article_narration', 'article_audio_summary', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
@@ -1058,6 +1129,158 @@ final class Rest_Controller {
 		return rest_ensure_response( $result );
 	}
 
+	/**
+	 * Records an administrator-confirmed contextual ALT application to the
+	 * current Gutenberg draft. The browser owns the reversible editor-state
+	 * update; this endpoint records Core audit evidence and writes no post or
+	 * media data.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function editor_contextual_alt_audit( WP_REST_Request $request ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_admin_required',
+				__( 'Applying reviewed ALT drafts requires an administrator editor session.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$post_id = absint( $request->get_param( 'post_id' ) );
+		$post    = $post_id > 0 ? get_post( $post_id ) : null;
+		if ( ! $post ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_post_not_found',
+				__( 'Save or open the current post before applying reviewed ALT drafts.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 404 )
+			);
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_permission_denied',
+				__( 'You do not have permission to edit this post.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$stage = sanitize_key( (string) $request->get_param( 'stage' ) );
+		$event_names = array(
+			'requested' => 'local_admin_consent.requested',
+			'completed' => 'local_admin_consent.completed',
+			'failed'    => 'local_admin_consent.failed',
+		);
+		if ( ! isset( $event_names[ $stage ] ) ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_stage_invalid',
+				__( 'A supported contextual ALT audit stage is required.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$items = $this->sanitize_editor_contextual_alt_audit_items( $request->get_param( 'items' ) );
+		if ( is_wp_error( $items ) ) {
+			return $items;
+		}
+
+		$classification = ( new Operation_Classifier() )->classify(
+			array(
+				'request_source'         => Operation_Classifier::SOURCE_WP_ADMIN_UI,
+				'actor_presence'        => Operation_Classifier::ACTOR_PRESENT_CLICK,
+				'preview_completeness'  => Operation_Classifier::PREVIEW_EXACT_FINAL,
+				'scope'                 => Operation_Classifier::SCOPE_ONE_OBJECT,
+				'reversibility'         => Operation_Classifier::REVERSIBILITY_EASY_UNDO,
+				'operation_kind'        => Operation_Classifier::KIND_UPDATE_METADATA,
+				'writes_wordpress_state' => true,
+			)
+		);
+		if ( Operation_Classifier::LOCAL_ADMIN_CONSENT !== (string) ( $classification['classification'] ?? '' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_classification_rejected',
+				__( 'This contextual ALT action is not eligible for editor confirmation.', 'npcink-workflow-toolbox' ),
+				array(
+					'status'         => 422,
+					'classification' => $classification,
+				)
+			);
+		}
+
+		$correlation_id = $this->editor_trim_chars( sanitize_text_field( (string) $request->get_param( 'correlation_id' ) ), 100 );
+		if ( '' === $correlation_id ) {
+			$correlation_id = wp_generate_uuid4();
+		}
+		$apply_mode = sanitize_key( (string) $request->get_param( 'apply_mode' ) );
+		if ( ! in_array( $apply_mode, array( 'automatic_missing_alt', 'manual_editor_apply' ), true ) ) {
+			$apply_mode = 'manual_editor_apply';
+		}
+		$metadata = array(
+			'source_module'            => 'npcink-toolbox',
+			'surface'                  => 'editor_contextual_alt_review',
+			'route_or_action_id'       => '/editor/contextual-alt-audit',
+			'operation_kind'           => Operation_Classifier::KIND_UPDATE_METADATA,
+			'classification'           => Operation_Classifier::LOCAL_ADMIN_CONSENT,
+			'policy_version'           => sanitize_text_field( (string) ( $classification['policy_version'] ?? Operation_Classifier::POLICY_VERSION ) ),
+			'operation_classification' => $classification,
+			'actor_user_id'            => get_current_user_id(),
+			'target_object_type'       => 'post_editor_draft',
+			'target_object_id'         => $post_id,
+			'post_id'                  => $post_id,
+			'post_type'                => sanitize_key( (string) get_post_type( $post ) ),
+			'confirmation_stage'       => $stage,
+			'apply_mode'               => $apply_mode,
+			'decision'                 => 'editor_confirmed',
+			'approval_mode'            => 'editor_confirmation_auto_accept',
+			'review_queue_required'    => false,
+			'ai_suggestion_summary'    => sprintf(
+				/* translators: %d: number of reviewed article image occurrences. */
+				_n( 'Apply %d reviewed article image ALT draft to the current editor state.', 'Apply %d reviewed article image ALT drafts to the current editor state.', count( $items ), 'npcink-workflow-toolbox' ),
+				count( $items )
+			),
+			'reviewed_items'           => $items,
+			'item_count'               => count( $items ),
+			'preview_completeness'     => Operation_Classifier::PREVIEW_EXACT_FINAL,
+			'actor_presence'           => Operation_Classifier::ACTOR_PRESENT_CLICK,
+			'reversibility'            => Operation_Classifier::REVERSIBILITY_EASY_UNDO,
+			'editor_state_only'        => true,
+			'wordpress_save_required'  => true,
+			'direct_wordpress_write'   => false,
+			'media_library_unchanged'  => true,
+			'core_proposal_created'    => false,
+			'request_or_correlation_id' => $correlation_id,
+		);
+		$failure_code = sanitize_key( (string) $request->get_param( 'failure_code' ) );
+		if ( 'failed' === $stage && '' !== $failure_code ) {
+			$metadata['failure_code'] = $failure_code;
+		}
+
+		$audit = $this->record_core_local_admin_consent_audit( $event_names[ $stage ], $metadata );
+		if ( is_wp_error( $audit ) ) {
+			return $audit;
+		}
+
+		return rest_ensure_response(
+			array(
+				'artifact_type'          => 'contextual_alt_editor_audit_receipt.v1',
+				'status'                 => 'recorded',
+				'stage'                  => $stage,
+				'decision'               => 'editor_confirmed',
+				'auto_accepted'          => true,
+				'approval_required'      => false,
+				'proposal_created'       => false,
+				'direct_wordpress_write' => false,
+				'editor_state_only'      => true,
+				'wordpress_save_required' => true,
+				'media_library_unchanged' => true,
+				'post_id'                => $post_id,
+				'item_count'             => count( $items ),
+				'correlation_id'         => $correlation_id,
+				'apply_mode'             => $apply_mode,
+				'classification'         => $classification,
+				'audit'                  => $audit,
+			)
+		);
+	}
+
 	public function media_derivative_handoff( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_media_derivative_handoff( is_array( $params ) ? $params : array() ) );
@@ -1130,7 +1353,7 @@ final class Rest_Controller {
 		return is_array( $result ) ? $result : array( 'event_id' => sanitize_text_field( (string) $result ) );
 	}
 
-	private function post( string $route, string $method ): void {
+	private function post( string $route, string $method, array $args = array() ): void {
 		register_rest_route(
 			Plugin::REST_NAMESPACE,
 			$route,
@@ -1138,8 +1361,172 @@ final class Rest_Controller {
 				'methods'             => 'POST',
 				'callback'            => array( $this, $method ),
 				'permission_callback' => array( $this, 'permission' ),
+				'args'                => $args,
 			)
 		);
+	}
+
+	/**
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function editor_publish_execution_intent_args(): array {
+		return array(
+			'action'       => array(
+				'required'          => true,
+				'type'              => 'string',
+				'enum'              => array( 'list', 'queue', 'complete' ),
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'post_id'      => array(
+				'required'          => true,
+				'type'              => 'integer',
+				'minimum'           => 1,
+				'sanitize_callback' => 'absint',
+			),
+			'proposal_id'  => array(
+				'type'      => 'string',
+				'maxLength' => 191,
+			),
+			'proposal_ids' => array(
+				'type'     => 'array',
+				'maxItems' => 20,
+				'items'    => array(
+					'type'      => 'string',
+					'maxLength' => 191,
+				),
+			),
+			'operation'    => array(
+				'type' => 'string',
+				'enum' => array( 'seo_meta', 'image_adoption', 'article_audio' ),
+			),
+		);
+	}
+
+	/**
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function editor_contextual_alt_audit_args(): array {
+		return array(
+			'post_id' => array(
+				'type'     => 'integer',
+				'required' => true,
+				'minimum'  => 1,
+			),
+			'stage' => array(
+				'type'     => 'string',
+				'required' => true,
+				'enum'     => array( 'requested', 'completed', 'failed' ),
+			),
+			'correlation_id' => array(
+				'type'      => 'string',
+				'required'  => true,
+				'maxLength' => 100,
+			),
+			'items' => array(
+				'type'     => 'array',
+				'required' => true,
+				'minItems' => 1,
+				'maxItems' => 12,
+				'items'    => array(
+					'type'                 => 'object',
+					'required'             => array( 'occurrence_id', 'block_client_id', 'block_name', 'expected_old_alt', 'final_alt', 'decorative', 'context_fingerprint' ),
+					'additionalProperties' => false,
+					'properties'           => array(
+						'occurrence_id' => array( 'type' => 'string', 'maxLength' => 180 ),
+						'block_client_id' => array( 'type' => 'string', 'maxLength' => 100 ),
+						'block_name' => array( 'type' => 'string', 'enum' => array( 'core/image' ) ),
+						'expected_old_alt' => array( 'type' => 'string', 'maxLength' => 180 ),
+						'final_alt' => array( 'type' => 'string', 'maxLength' => 180 ),
+						'decorative' => array( 'type' => 'boolean' ),
+						'context_fingerprint' => array( 'type' => 'string', 'maxLength' => 64 ),
+						'generation_basis' => array( 'type' => 'string', 'enum' => array( 'article_context', 'silent_ai_vision_fallback' ) ),
+					),
+				),
+			),
+			'failure_code' => array(
+				'type'      => 'string',
+				'required'  => false,
+				'maxLength' => 80,
+			),
+			'apply_mode' => array(
+				'type'      => 'string',
+				'required'  => false,
+				'enum'      => array( 'automatic_missing_alt', 'manual_editor_apply' ),
+				'default'   => 'manual_editor_apply',
+			),
+		);
+	}
+
+	/**
+	 * @param mixed $raw_items Raw request items.
+	 * @return array<int,array<string,mixed>>|WP_Error
+	 */
+	private function sanitize_editor_contextual_alt_audit_items( $raw_items ) {
+		if ( ! is_array( $raw_items ) || empty( $raw_items ) || count( $raw_items ) > 12 ) {
+			return new WP_Error(
+				'npcink_toolbox_contextual_alt_items_invalid',
+				__( 'Choose between one and twelve reviewed article image ALT drafts.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$items = array();
+		$seen  = array();
+		foreach ( $raw_items as $raw_item ) {
+			if ( ! is_array( $raw_item ) ) {
+				return new WP_Error(
+					'npcink_toolbox_contextual_alt_item_invalid',
+					__( 'Each contextual ALT audit item must be an object.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400 )
+				);
+			}
+			$occurrence_id = $this->editor_trim_chars( sanitize_text_field( (string) ( $raw_item['occurrence_id'] ?? '' ) ), 180 );
+			$block_client_id = $this->editor_trim_chars( sanitize_text_field( (string) ( $raw_item['block_client_id'] ?? '' ) ), 100 );
+			$block_name = sanitize_text_field( (string) ( $raw_item['block_name'] ?? '' ) );
+			$old_alt = $this->editor_trim_chars( sanitize_text_field( (string) ( $raw_item['expected_old_alt'] ?? '' ) ), 180 );
+			$final_alt = $this->editor_trim_chars( sanitize_text_field( (string) ( $raw_item['final_alt'] ?? '' ) ), 180 );
+			$decorative = ! empty( $raw_item['decorative'] );
+			$context_fingerprint = strtolower( sanitize_text_field( (string) ( $raw_item['context_fingerprint'] ?? '' ) ) );
+			$generation_basis = sanitize_key( (string) ( $raw_item['generation_basis'] ?? 'article_context' ) );
+			if ( ! in_array( $generation_basis, array( 'article_context', 'silent_ai_vision_fallback' ), true ) ) {
+				$generation_basis = 'article_context';
+			}
+			if ( '' === $occurrence_id || '' === $block_client_id || 'core/image' !== $block_name || isset( $seen[ $occurrence_id ] ) ) {
+				return new WP_Error(
+					'npcink_toolbox_contextual_alt_item_target_invalid',
+					__( 'Every reviewed ALT draft must target one unique core/image occurrence.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 422 )
+				);
+			}
+			if ( '' === $final_alt && ! $decorative ) {
+				return new WP_Error(
+					'npcink_toolbox_contextual_alt_empty_requires_decorative',
+					__( 'An empty ALT value requires an explicit decorative-image choice.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 422 )
+				);
+			}
+			if ( ! preg_match( '/^[a-f0-9]{64}$/', $context_fingerprint ) ) {
+				return new WP_Error(
+					'npcink_toolbox_contextual_alt_context_fingerprint_invalid',
+					__( 'The contextual ALT evidence fingerprint is invalid.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 422 )
+				);
+			}
+
+			$seen[ $occurrence_id ] = true;
+			$items[] = array(
+				'occurrence_id'       => $occurrence_id,
+				'block_client_id'     => $block_client_id,
+				'block_name'          => 'core/image',
+				'expected_old_alt'    => $old_alt,
+				'final_alt'           => $final_alt,
+				'decorative'          => $decorative,
+				'context_fingerprint' => $context_fingerprint,
+				'generation_basis'     => $generation_basis,
+			);
+		}
+
+		return $items;
 	}
 
 	private function get( string $route, string $method ): void {
@@ -1283,9 +1670,10 @@ final class Rest_Controller {
 	private function editor_media_items_from_request( WP_REST_Request $request ): array {
 		$items = array();
 		$seen  = array();
+		$intent = sanitize_key( (string) $request->get_param( 'intent' ) );
 
 		$featured_media = absint( $request->get_param( 'featured_media' ) );
-		if ( $featured_media > 0 ) {
+		if ( 'image_alt_suggestions' !== $intent && $featured_media > 0 ) {
 			$featured = $this->editor_attachment_media_item( $featured_media, 'featured_media' );
 			if ( ! empty( $featured ) ) {
 				$items[] = $featured;
@@ -1307,9 +1695,11 @@ final class Rest_Controller {
 			if ( empty( $media_item ) ) {
 				continue;
 			}
-			$key = ! empty( $media_item['attachment_id'] )
-				? 'id:' . (string) $media_item['attachment_id']
-				: 'url:' . (string) ( $media_item['url'] ?? '' );
+			$key = ! empty( $media_item['occurrence_id'] )
+				? 'occurrence:' . (string) $media_item['occurrence_id']
+				: ( ! empty( $media_item['attachment_id'] )
+					? 'id:' . (string) $media_item['attachment_id']
+					: 'url:' . (string) ( $media_item['url'] ?? '' ) );
 			if ( '' === $key || in_array( $key, $seen, true ) ) {
 				continue;
 			}
@@ -1340,6 +1730,7 @@ final class Rest_Controller {
 			'title'         => sanitize_text_field( (string) ( $attachment->post_title ?? '' ) ),
 			'caption'       => sanitize_textarea_field( (string) ( $attachment->post_excerpt ?? '' ) ),
 			'description'   => sanitize_textarea_field( wp_trim_words( wp_strip_all_tags( (string) ( $attachment->post_content ?? '' ) ), 80, '' ) ),
+			'mime_type'     => sanitize_text_field( (string) ( $attachment->post_mime_type ?? '' ) ),
 			'alt'           => function_exists( 'get_post_meta' ) ? sanitize_text_field( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) ) : '',
 			'missing_alt'   => function_exists( 'get_post_meta' ) ? '' === trim( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) ) : true,
 			'thumbnail_url' => is_array( $image_src ) ? esc_url_raw( (string) ( $image_src[0] ?? '' ) ) : '',
@@ -1349,13 +1740,27 @@ final class Rest_Controller {
 
 	private function sanitize_editor_media_item( array $item ): array {
 		$attachment_id = absint( $item['attachment_id'] ?? ( $item['id'] ?? 0 ) );
+		$occurrence_id = sanitize_text_field( (string) ( $item['occurrence_id'] ?? '' ) );
+		$occurrence_fields = array(
+			'occurrence_id'   => $occurrence_id,
+			'block_client_id' => sanitize_text_field( (string) ( $item['block_client_id'] ?? '' ) ),
+			'block_name'      => sanitize_text_field( (string) ( $item['block_name'] ?? '' ) ),
+			'occurrence_index' => absint( $item['occurrence_index'] ?? 0 ),
+			'context_heading' => sanitize_text_field( (string) ( $item['context_heading'] ?? '' ) ),
+			'context_before'  => sanitize_textarea_field( $this->editor_trim_chars( (string) ( $item['context_before'] ?? '' ), 240 ) ),
+			'context_after'   => sanitize_textarea_field( $this->editor_trim_chars( (string) ( $item['context_after'] ?? '' ), 240 ) ),
+			'context_caption' => sanitize_textarea_field( $this->editor_trim_chars( (string) ( $item['context_caption'] ?? '' ), 220 ) ),
+			'context_summary' => sanitize_textarea_field( $this->editor_trim_chars( (string) ( $item['context_summary'] ?? '' ), 360 ) ),
+			'target_scope'    => 'post_block_alt',
+		);
 		if ( $attachment_id > 0 ) {
 			$attachment_item = $this->editor_attachment_media_item( $attachment_id, sanitize_key( (string) ( $item['source'] ?? 'content_image' ) ) );
 			if ( ! empty( $attachment_item ) ) {
 				$attachment_item['url']     = '' !== (string) ( $attachment_item['url'] ?? '' ) ? $attachment_item['url'] : esc_url_raw( (string) ( $item['url'] ?? '' ) );
-				$attachment_item['alt']     = '' !== (string) ( $attachment_item['alt'] ?? '' ) ? $attachment_item['alt'] : sanitize_text_field( (string) ( $item['alt'] ?? '' ) );
+				$attachment_item['alt']     = '' !== $occurrence_id ? sanitize_text_field( (string) ( $item['alt'] ?? '' ) ) : ( '' !== (string) ( $attachment_item['alt'] ?? '' ) ? $attachment_item['alt'] : sanitize_text_field( (string) ( $item['alt'] ?? '' ) ) );
 				$attachment_item['caption'] = '' !== (string) ( $attachment_item['caption'] ?? '' ) ? $attachment_item['caption'] : sanitize_textarea_field( (string) ( $item['caption'] ?? '' ) );
-				return $attachment_item;
+				$attachment_item['missing_alt'] = '' === trim( (string) $attachment_item['alt'] );
+				return array_merge( $attachment_item, $occurrence_fields );
 			}
 		}
 
@@ -1365,26 +1770,36 @@ final class Rest_Controller {
 		}
 
 		$alt = sanitize_text_field( (string) ( $item['alt'] ?? '' ) );
-		return array(
+		return array_merge(
+			array(
 			'source'        => sanitize_key( (string) ( $item['source'] ?? 'content_image' ) ),
 			'attachment_id' => 0,
 			'title'         => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
 			'caption'       => sanitize_textarea_field( (string) ( $item['caption'] ?? '' ) ),
 			'description'   => sanitize_textarea_field( (string) ( $item['description'] ?? '' ) ),
+			'mime_type'     => sanitize_text_field( (string) ( $item['mime_type'] ?? '' ) ),
 			'alt'           => $alt,
 			'missing_alt'   => '' === trim( $alt ),
 			'thumbnail_url' => $url,
 			'url'           => $url,
+			),
+			$occurrence_fields
 		);
 	}
 
 	private function editor_article_image_alt_suggestions( array $context ): array {
 		$items = is_array( $context['media_items'] ?? null ) ? $context['media_items'] : array();
+		$items = array_values(
+			array_filter(
+				$items,
+				static fn( $item ): bool => is_array( $item ) && '' !== trim( (string) ( $item['occurrence_id'] ?? '' ) )
+			)
+		);
 		if ( empty( $items ) ) {
 			return array(
 				'artifact_type'          => 'current_article_image_alt_suggestions.v1',
 				'status'                 => 'empty',
-				'message'                => __( 'No current article images were found. Add a featured image or image block before requesting ALT suggestions.', 'npcink-workflow-toolbox' ),
+				'message'                => __( 'No image blocks were found in the current article. Add an image block before previewing contextual ALT.', 'npcink-workflow-toolbox' ),
 				'write_posture'          => 'suggestion_only',
 				'final_write_path'       => 'core_proposal_required',
 				'direct_wordpress_write' => false,
@@ -1392,28 +1807,230 @@ final class Rest_Controller {
 			);
 		}
 
-		$media_snapshot = array(
-			'sample_size'       => count( $items ),
-			'missing_alt_count' => count( array_filter( $items, static fn( array $item ): bool => ! empty( $item['missing_alt'] ) ) ),
-			'items'             => array_slice( $items, 0, 12 ),
-			'snapshot_policy'   => 'current_article_media_metadata_only',
-			'post_context'      => array(
-				'post_id' => absint( $context['post_id'] ?? 0 ),
-				'title'   => sanitize_text_field( (string) ( $context['title'] ?? '' ) ),
-				'excerpt' => sanitize_textarea_field( (string) ( $context['excerpt'] ?? '' ) ),
+		$visual_fallback = $this->editor_article_image_visual_fallback( $items );
+		$review_items    = array();
+		$visual_fallback_used_count = 0;
+		foreach ( array_slice( $items, 0, 12 ) as $index => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$current_alt    = sanitize_text_field( (string) ( $item['alt'] ?? '' ) );
+			$attachment_id  = absint( $item['attachment_id'] ?? 0 );
+			$visual_evidence = $visual_fallback[ $attachment_id ] ?? array();
+			$suggested_alt  = $this->editor_contextual_image_alt_draft( $item, $context, $visual_evidence );
+			$visual_fallback_used = ! empty( $visual_evidence ) && $this->editor_article_image_needs_visual_fallback( $item );
+			if ( $visual_fallback_used ) {
+				++$visual_fallback_used_count;
+			}
+			$context_data = array(
+				'heading' => sanitize_text_field( (string) ( $item['context_heading'] ?? '' ) ),
+				'before'  => sanitize_textarea_field( (string) ( $item['context_before'] ?? '' ) ),
+				'after'   => sanitize_textarea_field( (string) ( $item['context_after'] ?? '' ) ),
+				'caption' => sanitize_textarea_field( (string) ( $item['context_caption'] ?? '' ) ),
+				'visual_fallback' => $visual_fallback_used ? $this->editor_article_image_visual_summary( $visual_evidence ) : '',
+			);
+			$review_items[] = array(
+				'occurrence_id'            => sanitize_text_field( (string) ( $item['occurrence_id'] ?? 'article-image-' . ( $index + 1 ) ) ),
+				'occurrence_index'         => absint( $item['occurrence_index'] ?? ( $index + 1 ) ),
+				'block_client_id'          => sanitize_text_field( (string) ( $item['block_client_id'] ?? '' ) ),
+				'block_name'               => sanitize_text_field( (string) ( $item['block_name'] ?? '' ) ),
+				'apply_supported'           => 'core/image' === (string) ( $item['block_name'] ?? '' ),
+				'attachment_id'            => $attachment_id,
+				'thumbnail_url'            => esc_url_raw( (string) ( $item['thumbnail_url'] ?? ( $item['url'] ?? '' ) ) ),
+				'current_alt'              => $current_alt,
+				'suggested_alt'            => $suggested_alt,
+				'candidate_review_status'  => '' === $current_alt ? 'contextual_draft' : 'existing_alt_review',
+				'candidate_basis'          => array_values( array_filter( array( 'article_context', '' !== $context_data['caption'] ? 'figure_caption' : '', '' !== $context_data['heading'] ? 'nearest_heading' : '', '' !== $context_data['before'] || '' !== $context_data['after'] ? 'adjacent_text' : '', $visual_fallback_used ? 'silent_ai_vision_fallback' : '' ) ) ),
+				'context'                  => $context_data,
+				'context_fingerprint'      => hash( 'sha256', wp_json_encode( $context_data ) ?: '' ),
+				'target_scope'             => 'post_block_alt',
+				'needs_human_visual_check' => false,
+				'visual_fallback_used'      => $visual_fallback_used,
+				'visual_fallback_source'    => $visual_fallback_used ? sanitize_key( (string) ( $visual_evidence['source'] ?? 'cloud_or_host_runtime' ) ) : '',
+				'visual_confirmation_basis' => $visual_fallback_used ? 'author_present_in_post_editor' : 'article_context_only',
+				'decorative_option'        => 'operator_may_choose_empty_alt',
+				'write_status'             => 'preview_only_not_submitted',
+			);
+		}
+
+		return array(
+			'artifact_type'          => 'current_article_image_alt_suggestions.v1',
+			'contract_version'      => 'current_article_image_alt_context_review.v1',
+			'composition_role'      => 'current_article_contextual_alt_review',
+			'status'                => 'ready',
+			'runtime_owner'         => 'npcink-workflow-toolbox',
+			'provider_execution'    => $visual_fallback_used_count > 0 ? 'optional_cloud_visual_fallback' : 'none',
+			'source_policy'         => 'current_article_context_with_silent_visual_fallback',
+			'target_scope'          => 'post_block_alt',
+			'post_id'               => absint( $context['post_id'] ?? 0 ),
+			'post_title'            => sanitize_text_field( (string) ( $context['title'] ?? '' ) ),
+			'image_occurrence_count' => count( $review_items ),
+			'missing_alt_count'     => count( array_filter( $review_items, static fn( array $item ): bool => '' === (string) ( $item['current_alt'] ?? '' ) ) ),
+			'visual_fallback_used_count' => $visual_fallback_used_count,
+			'visual_confirmation_policy' => 'no_extra_step_author_present_and_native_save',
+			'items'                 => $review_items,
+			'write_posture'         => 'suggestion_only',
+			'editor_apply_path'      => 'local_admin_consent_audit_then_editor_state',
+			'final_write_path'      => 'wordpress_editor_save_after_confirmation',
+			'proposal_ready'        => false,
+			'proposal_created'      => false,
+			'direct_wordpress_write' => false,
+			'guardrails'            => array(
+				'context_decides_image_purpose',
+				'visual_facts_are_used_only_when_article_context_is_insufficient',
+				'visual_runtime_failure_is_silent_and_non_blocking',
+				'no_keyword_stuffing',
+				'decorative_images_may_use_empty_alt',
+				'no_attachment_global_alt_write',
+				'no_post_block_write_in_preview',
 			),
 		);
+	}
 
-		return $this->editor_support_section(
-			$this->client->run_hosted_ai_site_helper(
-				array(
-					'intent'         => 'media_alt_suggestions',
-					'focus'          => __( 'Suggest ALT and caption notes only for images already used by the current article.', 'npcink-workflow-toolbox' ),
-					'media_snapshot' => $media_snapshot,
-					'source_policy'  => 'current_article_media_metadata_only',
-				)
+	private function editor_contextual_image_alt_draft( array $item, array $context, array $visual_evidence = array() ): string {
+		$current_alt = sanitize_text_field( (string) ( $item['alt'] ?? '' ) );
+		$caption = sanitize_text_field( (string) ( $item['context_caption'] ?? ( $item['caption'] ?? '' ) ) );
+		$heading = sanitize_text_field( (string) ( $item['context_heading'] ?? '' ) );
+		$nearby  = sanitize_text_field( (string) ( $item['context_before'] ?? '' ) );
+		if ( '' === $nearby ) {
+			$nearby = sanitize_text_field( (string) ( $item['context_after'] ?? '' ) );
+		}
+		$article_title = sanitize_text_field( (string) ( $context['title'] ?? '' ) );
+		$candidates    = array();
+		if ( '' !== $caption ) {
+			$candidates[] = $caption;
+		}
+		if ( '' !== $heading && '' !== $nearby ) {
+			$candidates[] = false === stripos( $nearby, $heading ) ? $heading . '：' . $nearby : $nearby;
+		}
+		$candidates[] = $nearby;
+		$candidates[] = $heading;
+		$candidates[] = $current_alt;
+		$candidates[] = $this->editor_article_image_visual_summary( $visual_evidence );
+		$candidates[] = $article_title;
+
+		foreach ( $candidates as $candidate ) {
+			$candidate = trim( preg_replace( '/\s+/u', ' ', (string) $candidate ) ?: '' );
+			if ( '' !== $candidate ) {
+				return $this->editor_trim_chars( $candidate, 120 );
+			}
+		}
+
+		return '';
+	}
+
+	private function editor_article_image_needs_visual_fallback( array $item ): bool {
+		if ( '' !== trim( sanitize_text_field( (string) ( $item['alt'] ?? '' ) ) ) ) {
+			return false;
+		}
+
+		foreach ( array( 'context_caption', 'context_heading', 'context_before', 'context_after' ) as $key ) {
+			if ( '' !== trim( sanitize_textarea_field( (string) ( $item[ $key ] ?? '' ) ) ) ) {
+				return false;
+			}
+		}
+
+		return absint( $item['attachment_id'] ?? 0 ) > 0
+			&& '' !== esc_url_raw( (string) ( $item['url'] ?? ( $item['thumbnail_url'] ?? '' ) ) );
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $items Article image occurrences.
+	 * @return array<int,array<string,mixed>> Evidence indexed by attachment id.
+	 */
+	private function editor_article_image_visual_fallback( array $items ): array {
+		$request_items = array();
+		$requested_ids = array();
+		foreach ( array_slice( $items, 0, 12 ) as $item ) {
+			if ( ! is_array( $item ) || ! $this->editor_article_image_needs_visual_fallback( $item ) ) {
+				continue;
+			}
+			$attachment_id = absint( $item['attachment_id'] ?? 0 );
+			if ( isset( $requested_ids[ $attachment_id ] ) ) {
+				continue;
+			}
+			$requested_ids[ $attachment_id ] = true;
+			$request_items[] = array(
+				'attachment_id'          => $attachment_id,
+				'title'                  => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+				'filename'               => sanitize_file_name( wp_basename( (string) wp_parse_url( (string) ( $item['url'] ?? '' ), PHP_URL_PATH ) ) ),
+				'thumbnail_url'          => esc_url_raw( (string) ( $item['thumbnail_url'] ?? '' ) ),
+				'url'                    => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+				'mime_type'              => sanitize_text_field( (string) ( $item['mime_type'] ?? '' ) ),
+				'current_alt_status'     => 'missing',
+				'current_caption_status' => '' === trim( (string) ( $item['caption'] ?? '' ) ) ? 'missing' : 'present',
+				'candidate_quality_flags' => array( 'article_context_insufficient' ),
+				'filtered_candidate_notes' => array(),
+			);
+			if ( count( $request_items ) >= 10 ) {
+				break;
+			}
+		}
+
+		if ( empty( $request_items ) ) {
+			return array();
+		}
+
+		$evidence = $this->client->request_image_context_evidence(
+			array(
+				'contract_version'          => 'image_context_evidence_request.v1',
+				'artifact_type'             => 'image_context_evidence_request',
+				'runtime_owner'             => 'cloud_or_host_runtime',
+				'write_posture'             => 'suggestion_only',
+				'direct_wordpress_write'    => false,
+				'proposal_created'          => false,
+				'execution_created'         => false,
+				'no_local_model'            => true,
+				'no_media_write'            => true,
+				'source_policy'             => 'bounded_article_image_urls_for_silent_visual_fallback',
+				'expected_response_contract' => 'image_context_evidence.v1',
+				'requested_count'           => count( $request_items ),
+				'max_items'                 => count( $request_items ),
+				'items'                     => $request_items,
+				'operator_next_action'      => 'silent_runtime_fallback_no_extra_ui',
 			)
 		);
+		if ( empty( $evidence ) ) {
+			return array();
+		}
+
+		$indexed = array();
+		foreach ( (array) ( $evidence['items'] ?? array() ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$attachment_id = absint( $item['attachment_id'] ?? 0 );
+			if ( empty( $requested_ids[ $attachment_id ] ) ) {
+				continue;
+			}
+			$summary = $this->editor_article_image_visual_summary( $item );
+			if ( '' === $summary ) {
+				continue;
+			}
+			$indexed[ $attachment_id ] = array(
+				'source'         => sanitize_key( (string) ( $item['source'] ?? 'cloud_or_host_runtime' ) ),
+				'visual_summary' => $summary,
+			);
+		}
+
+		return $indexed;
+	}
+
+	private function editor_article_image_visual_summary( array $evidence ): string {
+		$summary = sanitize_text_field( (string) ( $evidence['visual_summary'] ?? ( $evidence['alt_text_basis'] ?? '' ) ) );
+		if ( '' === $summary ) {
+			$summary = sanitize_text_field( (string) ( $evidence['scene'] ?? '' ) );
+		}
+		if ( preg_match( '/(?:https?:\/\/|generated\s+by|system\s+prompt|model[_\s-]?id|provider[_\s-]?id|ignore\s+previous)/i', $summary ) ) {
+			return '';
+		}
+
+		$trimmed = $this->editor_trim_chars( $summary, 120 );
+		if ( $trimmed !== $summary && preg_match( '/\s/u', $trimmed ) ) {
+			$trimmed = preg_replace( '/\s+\S*$/u', '', $trimmed ) ?: $trimmed;
+		}
+
+		return rtrim( $trimmed, " \t\n\r\0\x0B,;:-" );
 	}
 
 	private function editor_comment_reply_suggestions( array $context ): array {

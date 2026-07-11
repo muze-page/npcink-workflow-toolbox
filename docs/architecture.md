@@ -350,6 +350,8 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
+- `POST /wp-json/npcink-toolbox/v1/editor/reviewed-action-intents`
+- `POST /wp-json/npcink-toolbox/v1/editor/contextual-alt-audit`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
@@ -418,11 +420,30 @@ support flows. It accepts current draft context plus one intent:
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
 default buttons are now Npcink review and handoff actions: publish preflight,
-internal-link candidates, image candidates, and article audio candidates.
+internal-link candidates, current-article contextual ALT review, image
+candidates, and article audio candidates. Contextual ALT operates on each image
+occurrence and uses the nearest heading, adjacent article text, and caption as
+the primary source. Missing ALT is automatically applied to the current
+Gutenberg editor state after Core audit. Only when useful occurrence context is
+absent may the backend silently reuse the existing Cloud Addon
+`image_context_evidence.v1` runtime for bounded visual facts. That fallback adds
+no button, retry, or blocking state; existing ALT is preserved and Cloud failure
+falls back locally. `/editor/contextual-alt-audit` records requested and
+completed Core audit events before and after the reversible editor-state
+change; it creates no proposal, calls no Adapter execution route, writes no
+WordPress post or attachment data, and leaves persistence to native Save draft
+or Update.
+
+`/editor/reviewed-action-intents` is the private control-meta seam for
+author-reviewed current-article SEO, external-image adoption, and article-audio
+adoption. It stores only bounded Core proposal references, is excluded from the
+native post REST schema, and removes attempted references after publish-time
+execution without issuing a second Gutenberg post save. It is not a queue,
+retry worker, approval store, execution history, or final write path.
 Generic AI-plugin-style generation and diagnosis intents such as
 `article_checkup`, `title_suggestions`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `article_outline`,
-`discoverability`, `image_alt_suggestions`, and `comment_reply_suggestion`
+`discoverability`, and `comment_reply_suggestion`
 remain supported by compatible route/result-rendering code, but they are not
 default visible buttons. Related existing-post review is folded into publish
 preflight duplicate-risk checks and internal-link candidates; `writing_support`
@@ -625,13 +646,13 @@ The admin **Image Handling** tab groups image-first buttons by operator job and
 defaults to **Image Optimization**, with **Batch Optimize Images** as the first
 visible workbench. Single-image actions start from the WordPress
 media-library attachment details panel or image row actions, then enter the same
-selected Batch Image ALT or Batch Optimize Images workbenches used by bulk
+	selected Batch Image ALT Review or Batch Optimize Images workbenches used by bulk
 selections.
 It no longer exposes a standalone one-image optimization picker or a
 single-article image text helper; article-specific image text needs current
-	editor context in the editor sidebar. The separate **Batch Image ALT** group
+	editor context in the editor sidebar. The separate **Batch Image ALT Review** group
 	builds a small selected media-library review set and can prepare only a local
-	handoff preview without creating a proposal or writing media metadata. The separate
+	dry-run summary without creating or submitting a proposal or writing media metadata. The separate
 standalone content opportunity admin tool is retired; site-level opportunities
 are reviewed through Site Check.
 The old Article Planning Bundle is not an operator-facing admin tool;
@@ -746,8 +767,9 @@ Batch media replacement follows the same dependency direction: OpenClaw/Adapter
 must prove selected-batch execution with Core approval, commit preflight,
 execution profile allowlist evidence, per-action results, and Abilities media
 replacement callbacks before Toolbox presents it as a fixed best-practice
-button. Toolbox may render review sets, selected previews, proposal submission,
-and returned execution outcomes; it must not own the batch execution semantics.
+button. Toolbox may render review sets, selected previews, and Core proposal
+submission receipts. Approval and execution outcomes belong to the governed
+Core/Adapter execution surface; Toolbox must not own or trigger batch execution.
 
 Toolbox no longer renders a Cloud Checks or Troubleshooting Checks secondary
 panel. Cloud connection checks, hosted runtime health, provider/search/image

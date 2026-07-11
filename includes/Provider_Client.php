@@ -43,6 +43,47 @@ final class Provider_Client {
 		return null;
 	}
 
+	/**
+	 * Requests bounded Cloud-owned visual evidence without exposing the runtime
+	 * client or adding another Toolbox route.
+	 *
+	 * @param array<string,mixed> $request Image context evidence request.
+	 * @return array<string,mixed>
+	 */
+	public function request_image_context_evidence( array $request ): array {
+		$items = is_array( $request['items'] ?? null ) ? $request['items'] : array();
+		if (
+			empty( $items )
+			|| 'image_context_evidence_request.v1' !== (string) ( $request['contract_version'] ?? '' )
+			|| 'suggestion_only' !== (string) ( $request['write_posture'] ?? '' )
+			|| false !== (bool) ( $request['direct_wordpress_write'] ?? true )
+		) {
+			return array();
+		}
+
+		$client = $this->cloud_runtime_client();
+		if ( ! is_object( $client ) || ! method_exists( $client, 'request_image_context_evidence' ) ) {
+			return array();
+		}
+
+		$result = $client->request_image_context_evidence(
+			$request,
+			$this->trace_id( 'image_context_evidence' ),
+			$this->trace_id( 'image_context_evidence_request' )
+		);
+		if (
+			is_wp_error( $result )
+			|| ! is_array( $result )
+			|| 'image_context_evidence.v1' !== (string) ( $result['contract_version'] ?? '' )
+			|| 'suggestion_only' !== (string) ( $result['write_posture'] ?? '' )
+			|| false !== (bool) ( $result['direct_wordpress_write'] ?? true )
+		) {
+			return array();
+		}
+
+		return $this->sanitize_payload( $result );
+	}
+
 	public function image_candidates( string $query, array $options = array() ) {
 		$provider = sanitize_key( (string) ( $options['provider'] ?? 'auto' ) );
 		if ( ! in_array( $provider, array( 'auto', 'cloud', 'unsplash', 'pixabay', 'pexels', 'ai_generated' ), true ) ) {
@@ -4552,10 +4593,16 @@ final class Provider_Client {
 
 		$handled = apply_filters( 'npcink_toolbox_hosted_ai_site_helper_cloud_request', null, $runtime_payload, $input );
 		if ( is_wp_error( $handled ) ) {
+			if ( 'media_alt_suggestions' === $intent ) {
+				return $this->local_media_alt_caption_review_response( $runtime_payload, $media_alt_caption_review_set, $handled->get_error_code() );
+			}
 			return $handled;
 		}
 		if ( is_array( $handled ) ) {
 			return $this->normalize_hosted_ai_site_helper_response( $handled, $runtime_payload, $intent, $media_alt_caption_review_set );
+		}
+		if ( 'media_alt_suggestions' === $intent ) {
+			return $this->local_media_alt_caption_review_response( $runtime_payload, $media_alt_caption_review_set );
 		}
 
 		$client = $this->cloud_runtime_client();
@@ -4575,6 +4622,38 @@ final class Provider_Client {
 		}
 
 		return $this->normalize_hosted_ai_site_helper_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent, $media_alt_caption_review_set );
+	}
+
+	private function local_media_alt_caption_review_response( array $runtime_payload, array $review_set, string $cloud_status = 'optional_not_requested' ): array {
+		$quality_contract = $this->hosted_ai_site_helper_quality_contract( 'media_alt_suggestions' );
+
+		return $this->with_output_contract(
+			array(
+				'provider'                     => 'local_metadata_review',
+				'cloud_runtime'                => 'optional',
+				'cloud_enrichment_status'      => sanitize_key( $cloud_status ),
+				'cloud_ability'                => sanitize_text_field( (string) ( $runtime_payload['ability_name'] ?? 'npcink-toolbox/ai-site-helper' ) ),
+				'contract_version'             => sanitize_text_field( (string) ( $runtime_payload['contract_version'] ?? 'hosted_ai_site_helper.v1' ) ),
+				'intent'                       => 'media_alt_suggestions',
+				'status'                       => 'ready_local',
+				'output_text'                  => '',
+				'result'                       => array(),
+				'quality_contract'             => $this->sanitize_payload( $quality_contract ),
+				'output_shape'                 => $this->sanitize_payload( $quality_contract['output_shape'] ?? array() ),
+				'review_checklist'             => $this->sanitize_string_list( $quality_contract['review_checklist'] ?? array() ),
+				'reject_if'                    => $this->sanitize_string_list( $quality_contract['reject_if'] ?? array() ),
+				'media_alt_caption_review_set' => $this->sanitize_payload( $review_set ),
+				'write_posture'                => 'suggestion_only',
+				'final_write_path'             => 'future_core_contract_required',
+				'direct_wordpress_write'       => false,
+				'handoff'                      => array(
+					'core_submission'        => 'not_available_from_preview',
+					'direct_wordpress_write' => false,
+				),
+			),
+			'hosted_ai_site_helper',
+			'hosted_ai_site_helper'
+		);
 	}
 
 	public function build_ai_article_writing_pack( array $input ) {
@@ -6798,29 +6877,7 @@ final class Provider_Client {
 
 	private function maybe_request_media_alt_caption_image_context_evidence( array $review_set ): array {
 		$request = is_array( $review_set['image_context_evidence_request'] ?? null ) ? $review_set['image_context_evidence_request'] : array();
-		$items   = is_array( $request['items'] ?? null ) ? $request['items'] : array();
-		if ( empty( $items ) ) {
-			return array();
-		}
-
-		$client = $this->cloud_runtime_client();
-		if ( ! is_object( $client ) || ! method_exists( $client, 'request_image_context_evidence' ) ) {
-			return array();
-		}
-
-		$result = $client->request_image_context_evidence(
-			$request,
-			$this->trace_id( 'image_context_evidence' ),
-			$this->trace_id( 'image_context_evidence_request' )
-		);
-		if ( is_wp_error( $result ) || ! is_array( $result ) ) {
-			return array();
-		}
-		if ( 'image_context_evidence.v1' !== (string) ( $result['contract_version'] ?? '' ) ) {
-			return array();
-		}
-
-		return $this->sanitize_payload( $result );
+		return $this->request_image_context_evidence( $request );
 	}
 
 	private function media_alt_caption_index_image_context_evidence( array $image_context_evidence ): array {

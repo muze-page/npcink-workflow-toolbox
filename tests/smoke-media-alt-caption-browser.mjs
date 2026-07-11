@@ -324,6 +324,11 @@ try {
 		const submit = form.locator('button[type="submit"]');
 		assert(await submit.isEnabled(), 'Media ALT/Caption review-set button is enabled for the local admin smoke.');
 		await form.locator('[data-toolbox-selected-attachment-ids]').fill(attachmentIds.join(', '));
+		await form.locator('.npcink-toolbox__alt-sample-options').evaluate((details) => {
+			if (details instanceof HTMLDetailsElement) {
+				details.open = true;
+			}
+		});
 		await form.locator('select[name="sample_size"]').selectOption('10');
 		await form.locator('select[name="review_set_limit"]').selectOption('5');
 		await form.locator('select[name="media_filter"]').selectOption('all_recent');
@@ -333,8 +338,10 @@ try {
 			(expectations) => {
 				const rows = Array.from(document.querySelectorAll('.npcink-toolbox__alt-review-row'));
 				const statuses = rows.map((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status).filter(Boolean);
-				return rows.length >= expectations.reviewRowsMin
-					&& statuses.filter((status) => status === 'caption_review_only').length >= expectations.captionOnlyMin
+				const captionOnlyCount = parseInt(document.querySelector('[data-toolbox-media-alt-caption-caption-only]')?.getAttribute('data-toolbox-media-alt-caption-caption-only') || '0', 10) || 0;
+				return rows.length >= Math.max(1, expectations.reviewRowsMin - expectations.captionOnlyMin)
+					&& statuses.filter((status) => status === 'caption_review_only').length === 0
+					&& captionOnlyCount >= expectations.captionOnlyMin
 					&& statuses.filter((status) => status === 'needs_context_confirmation').length >= expectations.contextRowsMin
 					&& statuses.filter((status) => status === 'ready_for_review').length >= expectations.readyRowsMin;
 			},
@@ -355,29 +362,26 @@ try {
 			return {
 				text,
 				rowCount: rows.length,
-				captionOnlyRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'caption_review_only').length,
+				captionOnlyRows: parseInt(document.querySelector('[data-toolbox-media-alt-caption-caption-only]')?.getAttribute('data-toolbox-media-alt-caption-caption-only') || '0', 10) || 0,
+				captionOnlyRowsInMainList: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'caption_review_only').length,
 				contextRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'needs_context_confirmation').length,
 				readyRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'ready_for_review').length,
 				contextConfirmInputs: document.querySelectorAll('[data-toolbox-media-alt-caption-context-confirmed]').length,
-				emptyAltRows: rows.filter((row) => {
-					const input = row.querySelector('[data-toolbox-media-alt-caption-accepted-alt]');
-					return input && !String(input.value || '').trim();
-				}).length,
 				initialSelectedCount: selectedCount ? selectedCount.textContent : '',
 				handoffDisabled: handoffButton instanceof HTMLButtonElement ? handoffButton.disabled : null,
 				readyLabelVisible: text.includes('Ready to update'),
-				reviewRowsLabelVisible: /Review rows|审核行|审阅行/.test(text),
-					captionNotAppliedVisible: /Caption suggestions are not included in this ALT handoff preview|说明文字建议不会包含在这个 ALT 交接预览中|Caption.*ALT/.test(text),
-				contextWarningVisible: /Location or proper-name context must be confirmed or removed before handoff|地点或专名上下文.*确认|确认地点或专名上下文/.test(text),
-				noWriteNoticeVisible: /Toolbox will not change media ALT here|Toolbox 不会在这里更改媒体 ALT|这里不会更改媒体 ALT/.test(text),
+				reviewRowsLabelVisible: /ALT draft rows|ALT 草稿行|ALT 草稿/.test(text),
+				captionNotAppliedVisible: /Caption-only items \(not part of ALT review\)|说明文字.*不属于 ALT 审核|Caption-only/.test(text),
+				contextWarningVisible: /Location or proper-name context must be confirmed or removed before this draft can be selected|地点或专名上下文.*确认|确认地点或专名上下文/.test(text),
+				noWriteNoticeVisible: /does not create a Core proposal or change media ALT|不会创建 Core 提案或更改媒体|不会创建 Core 提案或更新媒体/.test(text),
 			};
 		});
 
-		assert(initial.rowCount >= expectedReviewRowsMin, 'Review UI renders the expected real media rows.');
+		assert(initial.rowCount >= Math.max(1, expectedReviewRowsMin - expectedCaptionOnlyMin), 'Review UI renders the expected actionable ALT rows.');
 		if (expectedCaptionOnlyMin > 0) {
-			assert(initial.captionOnlyRows >= expectedCaptionOnlyMin, 'Review UI labels caption-only rows distinctly.');
-			assert(initial.emptyAltRows >= expectedCaptionOnlyMin, 'Caption-only rows keep the ALT input empty.');
-				assert(initial.captionNotAppliedVisible, 'Caption-only rows tell operators captions are not included in the ALT handoff preview.');
+			assert(initial.captionOnlyRows >= expectedCaptionOnlyMin, 'Review UI counts caption-only rows in a separate disclosure.');
+			assert(initial.captionOnlyRowsInMainList === 0, 'Caption-only rows are excluded from the actionable ALT list.');
+			assert(initial.captionNotAppliedVisible, 'Caption-only rows are clearly separated from ALT review.');
 		} else {
 			pass('Caption-only row assertions are not required for this sample.');
 		}
@@ -388,7 +392,7 @@ try {
 		}
 		assert(initial.initialSelectedCount === String(initial.readyRows), 'Initial ALT handoff count matches ready rows only.');
 		assert(initial.handoffDisabled === (initial.readyRows === 0), 'ALT handoff button state follows ready rows and required context confirmation.');
-		assert(initial.reviewRowsLabelVisible && !initial.readyLabelVisible, 'Summary counts review rows without implying they are ready to update.');
+		assert(initial.reviewRowsLabelVisible && !initial.readyLabelVisible, 'Summary counts ALT draft rows without implying they are ready to update.');
 		if (expectedContextRowsMin > 0) {
 			assert(initial.contextWarningVisible, 'Context rows tell operators to confirm or remove location/proper-name context.');
 		}
@@ -406,7 +410,7 @@ try {
 			selectedCount: document.querySelector('[data-toolbox-media-alt-caption-selected-count]')?.textContent || '',
 			handoffDisabled: document.querySelector('[data-toolbox-media-alt-caption-handoff]')?.disabled ?? null,
 		}));
-		assert(afterSelectingRows.selectedCount === String(initial.readyRows) && afterSelectingRows.handoffDisabled === (initial.readyRows === 0), 'Selecting rows alone still excludes unconfirmed-context and caption-only rows from ALT handoff.');
+		assert(afterSelectingRows.selectedCount === String(initial.readyRows) && afterSelectingRows.handoffDisabled === (initial.readyRows === 0), 'Selecting rows alone still excludes unconfirmed-context rows from the ALT dry-run.');
 
 		if (initial.contextRows > 0) {
 			await page.locator('[data-toolbox-media-alt-caption-context-confirmed]').first().check();
@@ -414,7 +418,7 @@ try {
 				selectedCount: document.querySelector('[data-toolbox-media-alt-caption-selected-count]')?.textContent || '',
 				handoffDisabled: document.querySelector('[data-toolbox-media-alt-caption-handoff]')?.disabled ?? null,
 			}));
-			assert(afterConfirmingOne.selectedCount === String(initial.readyRows + 1) && afterConfirmingOne.handoffDisabled === false, 'Confirming one context row enables one additional ALT handoff candidate.');
+			assert(afterConfirmingOne.selectedCount === String(initial.readyRows + 1) && afterConfirmingOne.handoffDisabled === false, 'Confirming one context row enables one additional ALT dry-run candidate.');
 		}
 		assert(forbiddenWriteRequests(requests).length === 0, 'Building and reviewing the UI does not call proposal, Core, media write, or local consent routes.');
 		assert(requests.some((request) => request.method === 'POST' && request.url.includes('/wp-json/npcink-toolbox/v1/ai/site-helpers')), 'Browser smoke builds the review set through the Toolbox site-helper route.');

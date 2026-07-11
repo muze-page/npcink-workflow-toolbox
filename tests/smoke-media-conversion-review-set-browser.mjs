@@ -51,7 +51,7 @@ function wpCli(args, options = {}) {
 	const php = env('WP_CLI_PHP', `${process.env.HOME}/Library/Application Support/Local/lightning-services/php-8.5.3+1/bin/darwin-arm64/bin/php`);
 	const wp = env('WP_CLI_BIN', '/opt/homebrew/bin/wp');
 	const socket = env('WP_DB_SOCKET', `${process.env.HOME}/Library/Application Support/Local/run/NPb24Zg9g/mysql/mysqld.sock`);
-	const wpPath = env('WP_PATH', '/Users/muze/Local Sites/npcink/app/public');
+	const wpPath = env('WP_PATH', '/Users/muze/Local Sites/magick-ai/app/public');
 	return execFileSync(
 		php,
 		[
@@ -134,7 +134,7 @@ async function waitForReviewSet(page, timeoutMs = 15000) {
 }
 
 const { chromium } = await loadPlaywright();
-const baseUrl = env('WP_BASE_URL', 'https://npcink.local').replace(/\/$/, '');
+const baseUrl = env('WP_BASE_URL', 'https://magick-ai.local').replace(/\/$/, '');
 const browserOptions = {
 	headless: process.env.HEADLESS !== '0',
 };
@@ -166,6 +166,15 @@ try {
 	});
 
 	await page.goto(`${baseUrl}/wp-admin/admin.php?page=npcink-toolbox&tab=image&tool=batch-optimize`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+	const loadedPage = await page.evaluate(() => ({
+		url: window.location.href,
+		bodyClass: document.body ? document.body.className : '',
+		pageTitle: document.querySelector('h1')?.innerText || document.title || '',
+		buttonCount: document.querySelectorAll('[data-toolbox-build-media-batch-plan]').length,
+	}));
+	assert(!loadedPage.url.includes('wp-login.php'), `WordPress auth cookie opens wp-admin without a login redirect. Loaded: ${loadedPage.url}`);
+	assert(loadedPage.bodyClass.includes('npcink-toolbox'), `Toolbox admin page is loaded before UI assertions. Loaded: ${loadedPage.url}; title: ${loadedPage.pageTitle}; body: ${loadedPage.bodyClass}`);
+	assert(loadedPage.buttonCount === 1, `Toolbox renders one media batch plan button. Loaded: ${loadedPage.url}; title: ${loadedPage.pageTitle}`);
 	await page.waitForSelector('[data-toolbox-build-media-batch-plan]', { timeout: 30000 });
 	await page.locator('[data-toolbox-build-media-batch-plan]').click();
 	await waitForReviewSet(page);

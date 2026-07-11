@@ -477,10 +477,10 @@ final class Admin_Page {
 		$settings        = $this->settings->get_all();
 		$content_context = $this->settings->get_content_context();
 		$cloud_ready     = $this->settings->cloud_runtime_available();
-		$nightly_preview = $this->nightly_inspection_preview_from_request();
-		$site_ops_preview = $this->site_ops_insights_preview_from_request( $content_context, $cloud_ready );
 		$active_tab      = $this->requested_toolbox_tab();
 		$active_site_check_tab = $this->requested_site_check_tab();
+		$nightly_preview = 'operations-insights' === $active_tab ? $this->nightly_inspection_preview_from_request() : null;
+		$site_ops_preview = 'operations-insights' === $active_tab ? $this->site_ops_insights_preview_from_request( $content_context, $cloud_ready ) : null;
 		?>
 		<div class="wrap npcink-toolbox">
 			<h1><?php esc_html_e( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ); ?></h1>
@@ -3345,14 +3345,14 @@ final class Admin_Page {
 			),
 			array(
 				'surface'     => 'image',
-				'group'       => __( 'Batch ALT Completion', 'npcink-workflow-toolbox' ),
+				'group'       => __( 'Batch ALT Review', 'npcink-workflow-toolbox' ),
 				'group_id'    => 'image-text-review',
 				'id'          => 'media-alt-caption-review',
 				'endpoint'    => 'ai/site-helpers',
-				'title'       => __( 'Batch ALT Review Handoff', 'npcink-workflow-toolbox' ),
-				'description' => __( 'Build a selected media review set for missing ALT text, then hand accepted rows to Core review.', 'npcink-workflow-toolbox' ),
+				'title'       => __( 'Review ALT Suggestions', 'npcink-workflow-toolbox' ),
+				'description' => __( 'Build a local review preview for missing or weak ALT text. Cloud visual evidence is optional.', 'npcink-workflow-toolbox' ),
 				'intent'      => 'media_alt_suggestions',
-				'button'      => __( 'Build review set', 'npcink-workflow-toolbox' ),
+				'button'      => __( 'Build ALT review preview', 'npcink-workflow-toolbox' ),
 				'custom'      => 'media_alt_caption_review',
 			),
 		);
@@ -3375,8 +3375,8 @@ final class Admin_Page {
 				'description' => __( 'Preview selected images before submitting an optimization request.', 'npcink-workflow-toolbox' ),
 			),
 			'image-text-review' => array(
-				'title'       => __( 'Batch Image ALT', 'npcink-workflow-toolbox' ),
-				'description' => __( 'Review selected image ALT suggestions before submitting them for review.', 'npcink-workflow-toolbox' ),
+				'title'       => __( 'Batch Image ALT Review', 'npcink-workflow-toolbox' ),
+				'description' => __( 'Inspect and edit ALT drafts locally. This stage does not submit or update media.', 'npcink-workflow-toolbox' ),
 			),
 		);
 		$group_counts = array();
@@ -3530,19 +3530,25 @@ final class Admin_Page {
 			<h2><?php echo esc_html( $title ); ?></h2>
 			<p><?php echo esc_html( $description ); ?></p>
 			<?php if ( ! $cloud_ready ) : ?>
-				<div class="npcink-toolbox__result-notice is-warning"><?php esc_html_e( 'Connect Cloud Addon before building image text review sets.', 'npcink-workflow-toolbox' ); ?></div>
+				<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'Local metadata review is available. Connect Cloud Addon only when optional visual evidence is needed.', 'npcink-workflow-toolbox' ); ?></div>
 			<?php endif; ?>
 			<input type="hidden" name="intent" value="media_alt_suggestions" />
 				<div class="npcink-toolbox__example is-ai">
-					<strong><?php esc_html_e( 'Review first', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Toolbox only prepares ALT suggestions. Media ALT text changes only after selected rows pass review.', 'npcink-workflow-toolbox' ); ?></span>
+					<strong><?php esc_html_e( 'Local review preview', 'npcink-workflow-toolbox' ); ?></strong>
+					<span><?php esc_html_e( 'Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. It does not create a Core proposal or change media.', 'npcink-workflow-toolbox' ); ?></span>
 				</div>
+			<div class="npcink-toolbox__result-actions npcink-toolbox__alt-source-actions">
+				<a class="button" href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><?php esc_html_e( 'Select images in Media Library', 'npcink-workflow-toolbox' ); ?></a>
+				<span class="description"><?php esc_html_e( 'Use the Npcink bulk action there, or enter attachment IDs below.', 'npcink-workflow-toolbox' ); ?></span>
+			</div>
 			<label>
-				<span><?php esc_html_e( 'Selected attachment IDs', 'npcink-workflow-toolbox' ); ?></span>
+				<span><?php esc_html_e( 'Images to review', 'npcink-workflow-toolbox' ); ?></span>
 				<input type="text" name="attachment_ids" data-toolbox-selected-attachment-ids placeholder="<?php esc_attr_e( 'Optional: 12, 34, 56', 'npcink-workflow-toolbox' ); ?>" />
 			</label>
-			<p class="description" data-toolbox-selected-attachment-summary><?php esc_html_e( 'Use the media library bulk action to prefill this field, or leave it empty to scan by range.', 'npcink-workflow-toolbox' ); ?></p>
-			<div class="npcink-toolbox__split">
+			<p class="description" data-toolbox-selected-attachment-summary><?php esc_html_e( 'No images selected yet. You can use the bounded sample options below.', 'npcink-workflow-toolbox' ); ?></p>
+			<details class="npcink-toolbox__result-details npcink-toolbox__alt-sample-options">
+				<summary><?php esc_html_e( 'Or scan a bounded sample', 'npcink-workflow-toolbox' ); ?></summary>
+				<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Scan range', 'npcink-workflow-toolbox' ); ?></span>
 					<select name="media_scope" data-toolbox-media-alt-scope>
@@ -3554,8 +3560,8 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Article ID', 'npcink-workflow-toolbox' ); ?></span>
 					<input type="number" name="post_id" min="1" step="1" placeholder="<?php esc_attr_e( 'Required for article images', 'npcink-workflow-toolbox' ); ?>" />
 				</label>
-			</div>
-			<div class="npcink-toolbox__split">
+				</div>
+				<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Scan count', 'npcink-workflow-toolbox' ); ?></span>
 					<select name="sample_size">
@@ -3571,8 +3577,8 @@ final class Admin_Page {
 						<option value="10"><?php esc_html_e( '10 images', 'npcink-workflow-toolbox' ); ?></option>
 					</select>
 				</label>
-			</div>
-			<div class="npcink-toolbox__split">
+				</div>
+				<div class="npcink-toolbox__split">
 				<label>
 					<span><?php esc_html_e( 'Problem type', 'npcink-workflow-toolbox' ); ?></span>
 					<select name="media_filter">
@@ -3585,9 +3591,10 @@ final class Admin_Page {
 					<span><?php esc_html_e( 'Focus note', 'npcink-workflow-toolbox' ); ?></span>
 					<input type="text" name="focus" placeholder="<?php esc_attr_e( 'Optional: product screenshots, diagrams, or missing captions', 'npcink-workflow-toolbox' ); ?>" />
 				</label>
-			</div>
-			<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'No media ALT is changed here. Review the rows, then submit selected items for review.', 'npcink-workflow-toolbox' ); ?></div>
-			<button type="submit" class="button button-primary" <?php echo disabled( ! $cloud_ready, true, false ); ?>><?php echo esc_html( $button ); ?></button>
+				</div>
+			</details>
+			<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'This builds a local dry-run preview. No Core proposal or media update is created.', 'npcink-workflow-toolbox' ); ?></div>
+			<button type="submit" class="button button-primary"><?php echo esc_html( $button ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
 		<?php
@@ -3847,7 +3854,7 @@ final class Admin_Page {
 				<li><?php esc_html_e( 'Choose image source', 'npcink-workflow-toolbox' ); ?></li>
 				<li><?php esc_html_e( 'Build review list', 'npcink-workflow-toolbox' ); ?></li>
 				<li><?php esc_html_e( 'Generate previews', 'npcink-workflow-toolbox' ); ?></li>
-				<li><?php esc_html_e( 'Submit optimization request', 'npcink-workflow-toolbox' ); ?></li>
+				<li><?php esc_html_e( 'Submit selected previews to Core review', 'npcink-workflow-toolbox' ); ?></li>
 			</ol>
 			<p class="description" data-toolbox-selected-attachment-summary><?php esc_html_e( 'Use Media Library bulk actions to prefill selected image IDs, or use the source below to build a small sample.', 'npcink-workflow-toolbox' ); ?></p>
 			<div class="npcink-toolbox__split">
@@ -3919,7 +3926,7 @@ final class Admin_Page {
 			<div class="npcink-toolbox__inline-actions">
 				<button type="button" class="button button-primary" data-toolbox-build-media-batch-plan><?php esc_html_e( 'Build review list', 'npcink-workflow-toolbox' ); ?></button>
 				<button type="button" class="button" data-toolbox-run-media-batch-previews disabled><?php esc_html_e( 'Generate selected previews', 'npcink-workflow-toolbox' ); ?></button>
-				<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected for review', 'npcink-workflow-toolbox' ); ?></button>
+				<button type="button" class="button" data-toolbox-submit-media-batch-proposals disabled><?php esc_html_e( 'Submit selected to Core review', 'npcink-workflow-toolbox' ); ?></button>
 			</div>
 			<div class="npcink-toolbox__batch-plan" data-toolbox-media-batch-plan hidden></div>
 		</div>
@@ -3934,7 +3941,7 @@ final class Admin_Page {
 			<p><?php echo esc_html( $description ); ?></p>
 			<div class="npcink-toolbox__example is-ai">
 				<strong><?php esc_html_e( 'Review before submitting', 'npcink-workflow-toolbox' ); ?></strong>
-				<span><?php esc_html_e( 'This page prepares previews and review requests only. Final media changes happen later through Core approval and Adapter execution.', 'npcink-workflow-toolbox' ); ?></span>
+				<span><?php esc_html_e( 'This page prepares previews and submits selected rows to Core review only. Approval and execution happen from the governed Core/Adapter review path.', 'npcink-workflow-toolbox' ); ?></span>
 			</div>
 			<?php $this->render_media_derivative_toolbox_defaults( $toolbox_policy ); ?>
 			<?php $this->render_media_derivative_batch_controls( $toolbox_policy ); ?>

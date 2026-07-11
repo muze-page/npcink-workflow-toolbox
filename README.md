@@ -28,9 +28,9 @@ The first version provides:
   approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
   on Npcink review and handoff flows: publish preflight, internal-link
-  candidates, image candidates, and article audio candidates. Generic title,
-  summary, taxonomy/tag, outline, article-checkup, and current-article ALT
-  support remains available through compatible route/rendering paths, plus
+  candidates, current-article contextual ALT review, image candidates, and
+  article audio candidates. Generic title, summary, taxonomy/tag, outline, and
+  article-checkup support remains available through compatible route/rendering paths, plus
   selected-paragraph toolbar checks that do not replace body text;
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
@@ -127,6 +127,7 @@ expect to stay discoverable from the root README:
 [Toolbox Contract Reuse Readiness](docs/toolbox-contract-reuse-readiness-2026-07-08.md),
 [Cross-Repo Contract Reuse Stage Closeout](docs/cross-repo-contract-reuse-stage-closeout-2026-07-08.md),
 [Cross-Repo GitHub Release Closeout](docs/cross-repo-github-release-closeout-2026-07-08.md),
+[Cross-Repo Third-Party AI Review Brief](docs/cross-repo-third-party-ai-review-brief-2026-07-09.md),
 [Reference Learning Migration Closeout](docs/reference-learning-migration-closeout-2026-07-08.md),
 [Reference Plugin Evaluation Checklist](docs/reference-plugin-evaluation-checklist.md),
 [Reference Plugin Evaluation Record Template](docs/reference-plugin-evaluation-record-template.md),
@@ -209,6 +210,9 @@ registered.
 - `POST /wp-json/npcink-toolbox/v1/flows/article-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/image-candidate-adoption-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/article-audio-adoption-plan`
+- `POST /wp-json/npcink-toolbox/v1/editor/reviewed-action-intents`
+  (private bounded proposal-id list/queue/complete control; no article, SEO,
+  media, or audio payload writes)
 - `POST /wp-json/npcink-toolbox/v1/local-admin-consent/featured-image`
 - `POST /wp-json/npcink-toolbox/v1/flows/site-knowledge-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/nightly-inspection-review-plan`
@@ -216,6 +220,7 @@ registered.
 - `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
+- `POST /wp-json/npcink-toolbox/v1/editor/contextual-alt-audit`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
@@ -471,8 +476,10 @@ insertion stays a human editor action. Publish preflight now returns a unified
 `pre_publish_review.v1` panel that points the operator back to summary,
 category, tag, internal-link, image, duplicate-risk, and SEO handoff checks.
 SEO metadata is prepared as a single-post `seo_meta_handoff_preview.v1`
-payload and can be submitted through Adapter as one pending Core review
-proposal; Toolbox does not approve, execute, or mutate SEO fields.
+payload and can be submitted through Adapter as one Core proposal. The author's
+explicit editor action approves it for the next native Publish or Update; only
+after that save succeeds does the editor request governed Adapter/Abilities
+execution. Toolbox does not mutate SEO fields directly or retry failures.
 See [Editor Progressive Recommendations Closeout](docs/archive/2026-06/editor-progressive-recommendations-closeout.md)
 for the local prefetch contract, quality rules, and verification record.
 Current-article image ALT/caption review belongs in the editor sidebar, where
@@ -486,7 +493,17 @@ itself. The current P0 admin UI must not submit those packets through Adapter,
 request Core `approve-and-execute`, or treat candidate quality signals as write
 authorization. Any future narrow missing-or-weak ALT update still needs a
 separate governed media metadata write path. Toolbox performs no media upload,
-media metadata write, approval, execution, or audit ownership.
+media metadata write, approval, execution, or audit ownership. For current
+article `core/image` occurrences only, the editor may automatically apply
+missing ALT to the in-memory Gutenberg draft through
+`/editor/contextual-alt-audit`. That route records Core-owned
+`local_admin_consent.requested` and `local_admin_consent.completed` evidence,
+creates no proposal, writes no post or media data, and still requires the
+operator to use WordPress Save draft or Update for persistence. Context remains
+the primary ALT source. Only missing ALT with no useful nearby heading,
+paragraph, or caption may silently reuse the existing Cloud Addon
+`image_context_evidence.v1` runtime as a visual-fact fallback; failure is
+non-blocking, existing ALT is preserved, and no extra confirmation UI is added.
 ALT/caption candidates reject runtime provenance text such as model/provider
 names, prompt labels, and "Generated by" descriptions before review and again
 before any future governed handoff. Caption edits are excluded from the P0 ALT
@@ -544,11 +561,12 @@ Addon runtime seam with `grok-imagine-image-quality`, returns host-generated
 review path before any media import or featured-image write.
 Toolbox builds the adoption plan with proposed media title, alt text,
 description, attribution, filename, and featured-image step, submits it through
-Adapter's plan-to-proposal bridge, then calls Adapter's unified
-`approve-and-execute` action for the created Core proposal. Adapter calls Core
-approval and preflight, then executes the allowlisted WordPress ability writes
-when policy permits. Toolbox does not import media, mutate SEO/meta fields,
-approve, execute, or set the featured image directly.
+Adapter's plan-to-proposal bridge, and stores only the bounded proposal id on
+the current draft after the author clicks Adopt. After the next native Publish
+or Update succeeds, the editor calls Adapter's unified `approve-and-execute`
+action. Adapter calls Core approval and preflight, then executes the allowlisted
+WordPress ability writes when policy permits. Toolbox does not import media,
+mutate SEO/meta fields, or set the featured image directly.
 The only direct featured-image write exception is
 `/local-admin-consent/featured-image`, and it accepts existing image
 attachments only. If Core audit is unavailable or completion audit fails,
@@ -712,9 +730,12 @@ can build an `image_candidate_adoption_plan`. That plan targets only
 optional `npcink-abilities-toolkit/set-post-featured-image` through Core proposal intake. It
 does not import media, update metadata, set a featured image, or write
 WordPress directly. The editor one-click adoption flow uses Adapter
-`/proposals/from-plan` followed by `/proposals/{proposal_id}/approve-and-execute`
-so the visible action can complete only through Core approval, preflight, audit,
-and allowlisted Abilities execution.
+`/proposals/from-plan` when the author clicks Adopt, persists only the bounded
+proposal id with the draft, and waits. After the next successful native Publish
+or Update it calls `/proposals/{proposal_id}/approve-and-execute`, so the write
+still completes only through Core approval, preflight, audit, and allowlisted
+Abilities execution. Failed attempts stay reviewable in Core and are not
+retried automatically.
 The standalone admin `tool=image-candidate-adoption` surface is deprecated and
 is not exposed as a Toolbox button; single-article image adoption belongs in the
 post editor image recommendation sidebar, while batch adoption of new image
