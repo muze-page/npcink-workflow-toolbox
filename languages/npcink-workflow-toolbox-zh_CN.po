@@ -6056,6 +6056,81 @@ msgstr "检查文章图片文字"
 msgid "Article image text suggestions"
 msgstr "文章图片文字建议"
 
+msgid "Article image ALT (SEO)"
+msgstr "文章图片 ALT（SEO）"
+
+msgid "Draft ALT for each image occurrence from its nearest heading and adjacent article text."
+msgstr "根据每次图片出现位置附近的标题和正文起草 ALT。"
+
+msgid "Current article image blocks and their local context"
+msgstr "当前文章的图片区块及其局部上下文"
+
+msgid "Nearest heading, adjacent text, caption, current block ALT"
+msgstr "最近标题、相邻正文、图注和当前区块 ALT"
+
+msgid "Review and edit preview only"
+msgstr "仅审阅和编辑预览"
+
+msgid "Toolbox editor UI; future Core-governed block update"
+msgstr "Toolbox 编辑器界面；未来通过 Core 治理区块更新"
+
+msgid "Local deterministic context draft; no Cloud required"
+msgstr "本地确定性上下文草稿；无需 Cloud"
+
+msgid "No post block or attachment ALT write"
+msgstr "不写入文章区块或附件 ALT"
+
+msgid "Blocked only when the article has no image occurrence or usable context."
+msgstr "仅在文章没有图片使用位置或可用上下文时阻塞。"
+
+msgid "Review one contextual ALT draft for each image occurrence. Nothing is written from this preview."
+msgstr "逐一审阅文章中每次图片出现位置的上下文 ALT 草稿。此预览不会写入任何内容。"
+
+msgid "Generate one review-only ALT draft per image occurrence from nearby article context. Toolbox will not write post blocks or media metadata."
+msgstr "根据附近文章上下文，为每次图片出现位置生成仅供审阅的 ALT 草稿。Toolbox 不会写入文章区块或媒体元数据。"
+
+msgid "Building ALT preview"
+msgstr "正在生成 ALT 预览"
+
+msgid "Preview contextual ALT"
+msgstr "预览上下文 ALT"
+
+msgid "Each row represents one image occurrence in this article. The draft uses nearby article context and still needs a visual check."
+msgstr "每一行代表图片在本文中的一次使用。草稿使用附近文章上下文，但仍需对照图片确认。"
+
+msgid "%d image occurrence(s)"
+msgstr "%d 个图片使用位置"
+
+msgid "Target: article image block ALT"
+msgstr "目标：文章图片区块 ALT"
+
+msgid "Image occurrence %d"
+msgstr "图片位置 %d"
+
+msgid "Visual confirmation required"
+msgstr "需要看图确认"
+
+msgid "Article context"
+msgstr "文章上下文"
+
+msgid "Current block ALT: "
+msgstr "当前区块 ALT："
+
+msgid "Contextual ALT draft"
+msgstr "上下文 ALT 草稿"
+
+msgid "Write concise ALT for this article context"
+msgstr "为当前文章语境填写简洁 ALT"
+
+msgid "Decorative in this context — use empty ALT"
+msgstr "在当前语境中属于装饰图——使用空 ALT"
+
+msgid "No article image occurrences were found."
+msgstr "未发现文章图片使用位置。"
+
+msgid "Preview only. Nothing is saved, submitted to Core, or written to the media library."
+msgstr "仅供预览。不会保存、提交到 Core 或写入媒体库。"
+
 msgid "Npcink AI"
 msgstr "Npcink AI"
 
@@ -6353,9 +6428,6 @@ msgstr "文章音频候选"
 msgid "Category and tag suggestions"
 msgstr "分类和标签建议"
 
-msgid "Current-article ALT suggestions"
-msgstr "当前文章 ALT 建议"
-
 msgid "Comment reply suggestions"
 msgstr "评论回复建议"
 
@@ -6598,3 +6670,293 @@ msgstr "负责人"
 
 msgid "Human editor"
 msgstr "人工编辑"
+
+msgid "Acceptance check"
+msgstr "验收检查"
+
+msgid "After handling the selected item through the allowed manual or review path, rescan and confirm it no longer matches this finding or the affected count has decreased. This is a current bounded check, not a saved completion record."
+msgstr "通过允许的人工或审核路径处理所选对象后，重新扫描并确认它不再命中此问题，或受影响数量已经下降。这只是当前有界检查，不会保存完成记录。"
+
+msgid "Rescan to verify"
+msgstr "重新扫描验证"
+
+msgid "Improve images and prepare safe AI suggestions without changing WordPress automatically."
+msgstr "优化图片并准备安全的 AI 建议，不会自动更改 WordPress。"
+
+msgid "Use Site Profile and Image Handling for currently supported operator tasks."
+msgstr "请使用站点画像和图片处理完成当前支持的运营任务。"
+
+msgid "V1 defaults are Publish Preflight, Internal Link Candidates, Image Candidates, and Article Audio Candidates."
+msgstr "V1 默认入口是发布预检、内链候选、图片候选和文章音频候选。"
+
+msgid "V1 defaults are Publish Preflight, Internal Link Candidates, Image Candidates, Article Audio Candidates, and Article Image ALT (SEO)."
+msgstr "V1 默认入口是发布预检、内链候选、图片候选、文章音频候选和文章图片 ALT（SEO）。"
+
+msgid "No image blocks were found in the current article. Add an image block before previewing contextual ALT."
+msgstr "当前文章中没有找到图片区块。请先添加图片区块，再预览上下文 ALT。"
+
+msgid "Batch ALT Review"
+msgstr "批量 ALT 审核"
+
+msgid "Review ALT Suggestions"
+msgstr "审核 ALT 建议"
+
+msgid "Build a local review preview for missing or weak ALT text. Cloud visual evidence is optional."
+msgstr "为缺失或薄弱的 ALT 文本生成本地审核预览。Cloud 视觉证据为可选项。"
+
+msgid "Build ALT review preview"
+msgstr "生成 ALT 审核预览"
+
+msgid "Batch Image ALT Review"
+msgstr "批量图片 ALT 审核"
+
+msgid "Inspect and edit ALT drafts locally. This stage does not submit or update media."
+msgstr "在本地检查并编辑 ALT 草稿。此阶段不会提交或更新媒体。"
+
+msgid "Local metadata review is available. Connect Cloud Addon only when optional visual evidence is needed."
+msgstr "本地元数据审核可直接使用。仅在需要可选视觉证据时连接 Cloud Addon。"
+
+msgid "Local review preview"
+msgstr "本地审核预览"
+
+msgid "Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. Confirmed missing ALT rows can be submitted to Core review; Toolbox does not approve, execute, or change media."
+msgstr "Toolbox 根据现有元数据和可选视觉证据生成可编辑的 ALT 草稿。确认后的缺失 ALT 行可提交至 Core 审核；Toolbox 不会批准、执行或更改媒体。"
+
+msgid "Select images in Media Library"
+msgstr "在媒体库中选择图片"
+
+msgid "Use the Npcink bulk action there, or enter attachment IDs below."
+msgstr "可在媒体库中使用 Npcink 批量操作，或在下方输入附件 ID。"
+
+msgid "No images selected yet. You can use the bounded sample options below."
+msgstr "尚未选择图片。你也可以使用下方的有界抽样选项。"
+
+msgid "Or scan a bounded sample"
+msgstr "或扫描有界样本"
+
+msgid "The scan is read-only. After reviewing an image, only a missing ALT row can be submitted to Core; Toolbox never approves, executes, or updates media."
+msgstr "扫描为只读。查看图片后，仅缺失 ALT 的行可提交至 Core；Toolbox 不会批准、执行或更新媒体。"
+
+msgid "Submit selected previews to Core review"
+msgstr "将所选预览提交到 Core 审核"
+
+msgid "Submit selected to Core review"
+msgstr "将所选项提交到 Core 审核"
+
+msgid "This page prepares previews and submits selected rows to Core review only. Approval and execution happen from the governed Core/Adapter review path."
+msgstr "此页面只负责生成预览并将所选行提交到 Core 审核。批准和执行在受治理的 Core/Adapter 审核路径中完成。"
+
+msgid "Preview only for this block type. Direct draft apply currently supports core/image blocks."
+msgstr "此区块类型仅供预览。当前只有 core/image 区块支持直接应用到草稿。"
+
+msgid "Applying reviewed ALT"
+msgstr "正在应用已审核 ALT"
+
+msgid "Apply reviewed ALT to draft"
+msgstr "将已审核 ALT 应用到草稿"
+
+msgid "Applying updates only the current Gutenberg draft after Core records editor confirmation. Use WordPress Save draft or Update to persist it. The media library stays unchanged."
+msgstr "Core 记录编辑器确认后，只更新当前 Gutenberg 草稿。请使用 WordPress 保存草稿或更新来持久化，媒体库保持不变。"
+
+msgid "Save or open the current post before applying reviewed ALT drafts."
+msgstr "请先保存或打开当前文章，再应用已审核的 ALT 草稿。"
+
+msgid "The contextual ALT review is no longer available. Run it again."
+msgstr "当前上下文 ALT 审核已失效，请重新运行。"
+
+msgid "An empty ALT value requires the decorative-image option."
+msgstr "空 ALT 必须明确选择装饰图选项。"
+
+msgid "No reviewed ALT changes need to be applied."
+msgstr "没有需要应用的已审核 ALT 更改。"
+
+msgid "The Gutenberg block editor is unavailable. No ALT values were applied."
+msgstr "Gutenberg 区块编辑器不可用，未应用任何 ALT。"
+
+msgid "Gutenberg could not apply every reviewed ALT value."
+msgstr "Gutenberg 无法应用全部已审核 ALT。"
+
+msgid "The article changed after this ALT review. Run the review again before applying."
+msgstr "文章在 ALT 审核后已发生变化，请重新审核后再应用。"
+
+msgid "%d reviewed ALT draft(s) applied to the current editor. Core recorded editor confirmation. Use Save draft or Update to persist."
+msgstr "已将 %d 条审核后的 ALT 草稿应用到当前编辑器。Core 已记录编辑器确认；请使用保存草稿或更新来持久化。"
+
+msgid "Core could not record editor confirmation."
+msgstr "Core 无法记录编辑器确认。"
+
+msgid "No ALT changes were kept in the editor."
+msgstr "编辑器中未保留任何 ALT 更改。"
+
+msgid "Applying reviewed ALT drafts requires an administrator editor session."
+msgstr "应用已审核的 ALT 草稿需要管理员编辑会话。"
+
+msgid "You do not have permission to edit this post."
+msgstr "你没有编辑此文章的权限。"
+
+msgid "A supported contextual ALT audit stage is required."
+msgstr "必须提供受支持的上下文 ALT 审计阶段。"
+
+msgid "This contextual ALT action is not eligible for editor confirmation."
+msgstr "此上下文 ALT 操作不符合编辑器确认条件。"
+
+msgid "Apply %d reviewed article image ALT draft to the current editor state."
+msgid_plural "Apply %d reviewed article image ALT drafts to the current editor state."
+msgstr[0] "将 %d 条已审核的文章图片 ALT 草稿应用到当前编辑器状态。"
+
+msgid "Choose between one and twelve reviewed article image ALT drafts."
+msgstr "请选择 1 至 12 条已审核的文章图片 ALT 草稿。"
+
+msgid "Each contextual ALT audit item must be an object."
+msgstr "每个上下文 ALT 审计项都必须是对象。"
+
+msgid "Every reviewed ALT draft must target one unique core/image occurrence."
+msgstr "每条已审核 ALT 草稿都必须对应一个唯一的 core/image 使用位置。"
+
+msgid "An empty ALT value requires an explicit decorative-image choice."
+msgstr "空 ALT 必须明确选择装饰图。"
+
+msgid "The contextual ALT evidence fingerprint is invalid."
+msgstr "上下文 ALT 证据指纹无效。"
+
+msgid "Missing ALT values are prepared from article context and applied automatically. When context is insufficient, AI vision runs silently as a fallback. Editing below is optional."
+msgstr "缺失的 ALT 会根据文章上下文生成并自动应用。上下文不足时，系统会在后台静默使用 AI 识图兜底；下方编辑为可选操作。"
+
+msgid "Applied to draft"
+msgstr "已应用到草稿"
+
+msgid "Prepared automatically"
+msgstr "已自动生成"
+
+msgid "Existing ALT preserved"
+msgstr "已有 ALT 已保留"
+
+msgid "Applying ALT"
+msgstr "正在应用 ALT"
+
+msgid "Apply edited ALT changes"
+msgstr "应用编辑后的 ALT"
+
+msgid "Apply ALT to draft"
+msgstr "将 ALT 应用到草稿"
+
+msgid "Core records automatic or edited ALT application. Only the current Gutenberg draft changes; use WordPress Save draft or Update to persist it. The media library stays unchanged."
+msgstr "Core 会记录自动或编辑后的 ALT 应用。只更改当前 Gutenberg 草稿；请使用 WordPress 保存草稿或更新来持久化，媒体库保持不变。"
+
+msgid "No missing ALT values need automatic application."
+msgstr "没有需要自动应用的缺失 ALT。"
+
+msgid "%d missing ALT value(s) were automatically applied to the current editor. Core recorded the action. Use Save draft or Update to persist."
+msgstr "已将 %d 条缺失 ALT 自动应用到当前编辑器。Core 已记录该操作；请使用保存草稿或更新来持久化。"
+
+#: assets/editor-content-support.js
+msgid "The reviewed action could not be attached to this post for publish-time execution."
+msgstr "无法将已审核操作附加到此文章以便在发布时执行。"
+
+#: assets/editor-content-support.js
+msgid "The editor cannot persist this reviewed action for the next publish or update."
+msgstr "编辑器无法保存此已审核操作，因而不能在下次发布或更新时执行。"
+
+#: assets/editor-content-support.js
+msgid "Author reviewed this action in the post editor. Execute it after the article publish or update completed."
+msgstr "作者已在文章编辑器中审核此操作。文章发布或更新完成后执行。"
+
+#: assets/editor-content-support.js
+msgid "Image approved for publish"
+msgstr "图片已批准随文章发布"
+
+#: assets/editor-content-support.js
+msgid "Image adoption not queued"
+msgstr "图片采用未加入发布操作"
+
+#: assets/editor-content-support.js
+msgid "Core recorded the reviewed request. Publish or update the article to import and adopt it."
+msgstr "Core 已记录审核请求。发布或更新文章后将导入并采用该图片。"
+
+#: assets/editor-content-support.js
+msgid "The request could not be queued for publish-time execution. Open Core to review the proposal."
+msgstr "请求无法加入发布时执行。请打开 Core 检查该提案。"
+
+#: assets/editor-content-support.js
+msgid "Article audio approved for publish."
+msgstr "文章音频已批准随文章发布。"
+
+#: assets/editor-content-support.js
+msgid "Core proposal created, but publish-time adoption was not queued."
+msgstr "Core 提案已创建，但未能加入发布时采用操作。"
+
+#: assets/editor-content-support.js
+msgid "Publish or update the article. Core/Adapter will then execute the reviewed adoption."
+msgstr "请发布或更新文章，随后由 Core/Adapter 执行已审核的采用操作。"
+
+#: assets/editor-content-support.js
+msgid "Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it only after Publish or Update succeeds."
+msgstr "批准此文章已审核的 SEO 标题和描述。Core 现在记录请求；仅在发布或更新成功后才由 Adapter/Abilities 执行。"
+
+#: assets/editor-content-support.js
+msgid "Approving"
+msgstr "正在批准"
+
+#: assets/editor-content-support.js
+msgid "Approve SEO for publish"
+msgstr "批准 SEO 随文章发布"
+
+#: assets/editor-content-support.js
+msgid "Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it after the next successful Publish or Update."
+msgstr "批准此文章已审核的 SEO 标题和描述。Core 现在记录请求；下次发布或更新成功后由 Adapter/Abilities 执行。"
+
+#: assets/editor-content-support.js
+msgid "SEO optimization approved for the next publish or update."
+msgstr "SEO 优化已批准，将在下次发布或更新后执行。"
+
+#: assets/editor-content-support.js
+msgid "Article audio was reviewed and queued. Publish or update the article to execute it through Core/Adapter."
+msgstr "文章音频已审核并加入发布操作。发布或更新文章后将通过 Core/Adapter 执行。"
+
+#: assets/editor-content-support.js
+msgid "Executing %d author-reviewed action(s) after publish..."
+msgstr "正在发布后执行 %d 个作者已审核操作……"
+
+#: assets/editor-content-support.js
+msgid "The editor could not clear completed publish-time actions."
+msgstr "编辑器无法清理已完成的发布时操作。"
+
+#: assets/editor-content-support.js
+msgid "Publish-time execution finished, but the editor could not clear its temporary handoff record. Review Core before the next update."
+msgstr "发布时执行已结束，但编辑器无法清理临时交接记录。下次更新前请检查 Core。"
+
+#: assets/editor-content-support.js
+msgid "%1$d of %2$d publish-time action(s) need attention in Core. Automatic retries were not started."
+msgstr "%2$d 个发布时操作中有 %1$d 个需要在 Core 中处理，未启动自动重试。"
+
+#: assets/editor-content-support.js
+msgid "%d author-reviewed action(s) executed and recorded after publish."
+msgstr "发布后已执行并记录 %d 个作者已审核操作。"
+
+#: assets/editor-content-support.js
+msgid "SEO optimization was submitted for Core review, but it could not be attached to this article for publish-time execution."
+msgstr "SEO 优化已提交 Core，但无法附加到此文章以便在发布时执行。"
+
+#: assets/editor-content-support.js
+msgid "SEO optimization was reviewed and queued. Publish or update the article to execute it through Core/Adapter."
+msgstr "SEO 优化已审核并加入发布操作。发布或更新文章后将通过 Core/Adapter 执行。"
+
+#: assets/editor-content-support.js
+msgid "SEO optimization approved by the author. It will be applied when the article is published or updated."
+msgstr "作者已批准 SEO 优化，将在文章发布或更新后应用。"
+
+#: assets/editor-content-support.js
+msgid "Image adoption was reviewed and queued. Publish or update the article to execute it through Core/Adapter."
+msgstr "图片采用已审核并加入发布操作。发布或更新文章后将通过 Core/Adapter 执行。"
+
+#: includes/Rest_Controller.php
+msgid "The current post is unavailable."
+msgstr "当前文章不可用。"
+
+#: includes/Rest_Controller.php
+msgid "A valid proposal and supported editor operation are required."
+msgstr "必须提供有效提案和受支持的编辑器操作。"
+
+#: includes/Rest_Controller.php
+msgid "At least one attempted proposal id is required."
+msgstr "至少需要一个已尝试的提案 ID。"

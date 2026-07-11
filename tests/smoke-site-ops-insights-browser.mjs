@@ -180,6 +180,8 @@ async function captureViewportScreenshot(page, screenshotPath) {
 const { chromium } = await loadPlaywright();
 const baseUrl = env('WP_BASE_URL', 'https://magick-ai.local').replace(/\/$/, '');
 const screenshotPath = resolve(env('SITE_OPS_BROWSER_SCREENSHOT', 'build/smoke/site-ops-insights.png'));
+const contentDesktopScreenshotPath = resolve(env('SITE_OPS_CONTENT_DESKTOP_SCREENSHOT', 'build/smoke/site-ops-content-desktop.png'));
+const contentNarrowScreenshotPath = resolve(env('SITE_OPS_CONTENT_NARROW_SCREENSHOT', 'build/smoke/site-ops-content-narrow.png'));
 const browserOptions = {
 	headless: process.env.HEADLESS !== '0',
 };
@@ -216,6 +218,7 @@ try {
 		await page.goto(loginHelper.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 		await openToolboxPage(page, baseUrl);
 		await page.waitForSelector('[data-toolbox-site-ops-insights]', { state: 'attached', timeout: 30000 });
+		assert(await page.locator('[data-toolbox-tab-target="operations-insights"]').count() === 0, 'Site Check is hidden from the normal top-level tab navigation while its compatibility deep link remains available.');
 		if (await page.locator('[data-toolbox-tab-panel="operations-insights"]').isHidden()) {
 			await page.locator('[data-toolbox-tab-target="operations-insights"]').click();
 		}
@@ -266,6 +269,23 @@ try {
 		assert(/Internal-link health needs review|内链健康状况需要审核/.test(contentText), 'Content analysis renders the internal-link health finding for operator review.');
 		assert(/Owner|负责人/.test(contentText) && /Human editor|人工编辑/.test(contentText), 'Internal-link health finding names the human editor as the responsible owner.');
 		assert(/Open first link review|打开首个内链审核/.test(contentText), 'Internal-link health finding exposes the existing manual link-review entry point.');
+		const contentPanel = page.locator('[data-toolbox-ops-panel="content"]');
+		const firstContentFinding = contentPanel.locator('.npcink-toolbox__ops-priority-row').first();
+		assert(await contentPanel.locator('.npcink-toolbox__ops-summary-bar--dimension').count() === 1, 'Content analysis keeps a single compact inline summary.');
+		assert(await firstContentFinding.locator('.npcink-toolbox__ops-priority-heading .npcink-toolbox__ops-handling-pill').count() === 1, 'Content finding keeps handling beside its title and priority.');
+		assert(await firstContentFinding.locator('.npcink-toolbox__ops-action-line .npcink-toolbox__ops-next-actions .button').count() > 0, 'Content finding keeps the existing action button on the next-step line.');
+		assert(await contentPanel.locator('.npcink-toolbox__ops-dimension-rules').count() === 1, 'Content analysis folds repeated handling rules into one disclosure.');
+		assert(/Acceptance check|验收检查/.test(contentText) && /Rescan to verify|重新扫描验证/.test(contentText), 'Content analysis explains how to verify a handled finding with the existing local rescan.');
+		assert(await firstContentFinding.locator('.npcink-toolbox__ops-acceptance-line .button').count() === 1, 'Content finding keeps a bounded rescan verification action without a completion button.');
+		await page.setViewportSize({ width: 1440, height: 1100 });
+		mkdirSync(dirname(contentDesktopScreenshotPath), { recursive: true });
+		await contentPanel.screenshot({ path: contentDesktopScreenshotPath, animations: 'disabled', timeout: 15000 });
+		assert(existsSync(contentDesktopScreenshotPath), `Desktop content-analysis screenshot captured at ${contentDesktopScreenshotPath}.`);
+		await page.setViewportSize({ width: 390, height: 1000 });
+		await contentPanel.screenshot({ path: contentNarrowScreenshotPath, animations: 'disabled', timeout: 15000 });
+		assert(existsSync(contentNarrowScreenshotPath), `Narrow content-analysis screenshot captured at ${contentNarrowScreenshotPath}.`);
+		assert(await firstContentFinding.evaluate((element) => element.scrollWidth <= element.clientWidth), 'Narrow content finding does not overflow horizontally.');
+		await page.setViewportSize({ width: 1280, height: 720 });
 
 		for (const target of ['content', 'media', 'comments', 'structure', 'findings', 'evidence', 'cloud', 'advanced']) {
 			await openOpsTab(page, target);

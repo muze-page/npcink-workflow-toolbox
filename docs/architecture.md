@@ -350,6 +350,8 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
+- `POST /wp-json/npcink-toolbox/v1/editor/reviewed-action-intents`
+- `POST /wp-json/npcink-toolbox/v1/editor/contextual-alt-audit`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
@@ -418,11 +420,30 @@ support flows. It accepts current draft context plus one intent:
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
 default buttons are now Npcink review and handoff actions: publish preflight,
-internal-link candidates, image candidates, and article audio candidates.
+internal-link candidates, current-article contextual ALT review, image
+candidates, and article audio candidates. Contextual ALT operates on each image
+occurrence and uses the nearest heading, adjacent article text, and caption as
+the primary source. Missing ALT is automatically applied to the current
+Gutenberg editor state after Core audit. Only when useful occurrence context is
+absent may the backend silently reuse the existing Cloud Addon
+`image_context_evidence.v1` runtime for bounded visual facts. That fallback adds
+no button, retry, or blocking state; existing ALT is preserved and Cloud failure
+falls back locally. `/editor/contextual-alt-audit` records requested and
+completed Core audit events before and after the reversible editor-state
+change; it creates no proposal, calls no Adapter execution route, writes no
+WordPress post or attachment data, and leaves persistence to native Save draft
+or Update.
+
+`/editor/reviewed-action-intents` is the private control-meta seam for
+author-reviewed current-article SEO, external-image adoption, and article-audio
+adoption. It stores only bounded Core proposal references, is excluded from the
+native post REST schema, and removes attempted references after publish-time
+execution without issuing a second Gutenberg post save. It is not a queue,
+retry worker, approval store, execution history, or final write path.
 Generic AI-plugin-style generation and diagnosis intents such as
 `article_checkup`, `title_suggestions`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `article_outline`,
-`discoverability`, `image_alt_suggestions`, and `comment_reply_suggestion`
+`discoverability`, and `comment_reply_suggestion`
 remain supported by compatible route/result-rendering code, but they are not
 default visible buttons. Related existing-post review is folded into publish
 preflight duplicate-risk checks and internal-link candidates; `writing_support`
@@ -436,15 +457,13 @@ CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
 `current_article_media_metadata_only` and no-media-write boundary.
 The backend Image Handling tab uses the same hosted site-helper intent only for
-an explicit small media-library review set. Operators can select returned
-items and call `/flows/media-alt-caption-review-plan` to prepare a local
-preview-only `media_alt_caption_core_handoff_plan.v1`. The preview may include
-ALT-only dry-run payloads for the future
-`npcink-abilities-toolkit/update-media-details` path, but the current UI does
-not submit them through Adapter, request Core `approve-and-execute`, create a
-proposal, or write media metadata. Core policy owns any future auto-approval,
-execution, and audit; Toolbox still does not directly write media metadata,
-and caption edits stay manual-review work. Media ALT/caption quality fields
+an explicit small media-library review set. For missing ALT only, operators can
+select a row, edit the suggestion, confirm that they reviewed the image, run
+`npcink-abilities-toolkit/build-media-alt-apply-plan` through Adapter, and send
+the returned `media_alt_apply_plan.v1` to `/proposals/from-plan`. Each row creates
+an independent Core proposal. Toolbox then stops: it does not request
+`approve-and-execute`, poll, or write media metadata. Caption edits stay outside
+this contract. Media ALT/caption quality fields
 such as `candidate_quality.*`, `automation_recommendation`, and
 `local_preview_candidate_count` are local review/eval hints, not Toolbox-owned
 ability schema, workflow registry state, or write authorization. Deprecated
@@ -591,10 +610,10 @@ executor. This summary is not a generic Abilities Explorer, provider picker,
 request log, or connector approval surface. It does not create proposals or
 writes. Single-post article
 support stays in the post editor sidebar and is not rendered as an Overview
-work block. The visible top-level admin tabs after Overview are **Site Check**,
-**Site Profile**, and **Image Handling**. **Site Check** is the direct
-operator-facing site-check tab and the Overview page's recommended site-check
-action; it builds a local
+work block. The visible top-level admin tabs after Overview are **Site Profile**
+and **Image Handling**. **Site Check** is temporarily hidden from the normal
+operator UI while its product loop is reassessed; the stable
+`operations-insights` compatibility route still builds a local
 `site_ops_insight_pack.v1` from bounded public content, approved comment signal
 counts, media metadata, taxonomy summaries, Site Context readiness, and Cloud
 availability, then presents it as a current-run decision queue for manual
@@ -615,10 +634,8 @@ manual report. The former Advanced directory is not rendered as a separate top-l
 Check's Scheduled Review sub tab. Cloud run status, result reads, recent runs,
 and recovery live in Cloud Addon Runtime Runs. They do not live inside Cloud
 Checks. That keeps recurring inspection preview and Cloud run recovery separate
-from ordinary connection diagnostics while giving operators one direct Site
-Check entry with two clearly named modes. These controls do not belong in the
-default Overview view, and Site Check remains the ordinary manual
-site-maintenance entry. Site Knowledge
+from ordinary connection diagnostics without restoring a default Site Check
+entry. Site Knowledge
 connection, refresh, indexing, and deep delivery detail live in
 `npcink-cloud-addon`; Toolbox keeps only a secondary **Content Library Usage**
 panel for read-only status and best-practice result consumption.
@@ -627,13 +644,13 @@ The admin **Image Handling** tab groups image-first buttons by operator job and
 defaults to **Image Optimization**, with **Batch Optimize Images** as the first
 visible workbench. Single-image actions start from the WordPress
 media-library attachment details panel or image row actions, then enter the same
-selected Batch Image ALT or Batch Optimize Images workbenches used by bulk
+	selected Batch Image ALT Review or Batch Optimize Images workbenches used by bulk
 selections.
 It no longer exposes a standalone one-image optimization picker or a
 single-article image text helper; article-specific image text needs current
-	editor context in the editor sidebar. The separate **Batch Image ALT** group
+	editor context in the editor sidebar. The separate **Batch Image ALT Review** group
 	builds a small selected media-library review set and can prepare only a local
-	handoff preview without creating a proposal or writing media metadata. The separate
+	dry-run summary without creating or submitting a proposal or writing media metadata. The separate
 standalone content opportunity admin tool is retired; site-level opportunities
 are reviewed through Site Check.
 The old Article Planning Bundle is not an operator-facing admin tool;
@@ -748,8 +765,9 @@ Batch media replacement follows the same dependency direction: OpenClaw/Adapter
 must prove selected-batch execution with Core approval, commit preflight,
 execution profile allowlist evidence, per-action results, and Abilities media
 replacement callbacks before Toolbox presents it as a fixed best-practice
-button. Toolbox may render review sets, selected previews, proposal submission,
-and returned execution outcomes; it must not own the batch execution semantics.
+button. Toolbox may render review sets, selected previews, and Core proposal
+submission receipts. Approval and execution outcomes belong to the governed
+Core/Adapter execution surface; Toolbox must not own or trigger batch execution.
 
 Toolbox no longer renders a Cloud Checks or Troubleshooting Checks secondary
 panel. Cloud connection checks, hosted runtime health, provider/search/image
@@ -757,9 +775,9 @@ diagnostics, key verification, entitlement, quota, billing, request logs,
 content-operations coverage, and Agent quality summaries belong in
 `npcink-cloud-addon` or Cloud service-plane surfaces. Toolbox keeps only
 task-owned product panels: Content Library Usage for read-only Site Knowledge
-status/result consumption, Site Check for manual site checks, the ordinary
-site-maintenance entry, and Nightly/Morning Brief preview, plus Image Handling
-for selected-media review/handoff flows. The direct Site Check tab has two
+status/result consumption, a hidden Site Check compatibility route for manual
+site checks and Nightly/Morning Brief preview, plus Image Handling for
+selected-media review/handoff flows. The hidden Site Check compatibility panel has two
 internal sections: **Current Check** contains the manual report, while
 **Scheduled Review** exposes scheduled preview, optional local fallback settings,
 and Cloud recovery links. `toolbox_tab=advanced`

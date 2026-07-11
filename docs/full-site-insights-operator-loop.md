@@ -1,6 +1,6 @@
 # Site Check Operator Loop
 
-Status: active product loop for the current Toolbox stage.
+Status: retained compatibility loop; temporarily hidden from the default Toolbox UI.
 
 Site Check is the site-level fixed-workflow decision router for WordPress
 operators. Its job is to turn bounded current-site evidence into a prioritized
@@ -8,11 +8,17 @@ review queue, then help the operator decide whether each item stays manual,
 moves into an existing Toolbox workflow, needs optional Cloud detail, or should
 later move into a Core-governed handoff path.
 
-It is also the ordinary site-maintenance starting point. Low-frequency
-scheduled review and Nightly/Morning Brief preview remain available as a folded
-Scheduled Review path. Cloud run recovery is linked from that path to Cloud
-Addon Runtime Runs, but operators should not need to understand that runtime
-path before using Site Check.
+## Visibility
+
+Site Check is temporarily hidden from the Overview and top-level admin tabs.
+The `operations-insights` deep link remains capability-gated for compatibility
+and future product review, but it is not a default operator entry while the
+problem statement and end-to-end operator loop are reassessed.
+
+It remains available only through the compatibility deep link while the
+product loop is reassessed. Low-frequency scheduled review and Nightly/Morning
+Brief preview remain available as a folded Scheduled Review path. Cloud run
+recovery is linked from that path to Cloud Addon Runtime Runs.
 
 ## Purpose
 
@@ -53,6 +59,11 @@ workflow or manual path is allowed.
    workflow candidates, the Overview may show a folded handoff draft with
    candidate objects, evidence, and a suggested review note. This preview is
    still read-only and does not create a Core proposal.
+6. **Verify with a new local scan.** After the operator handles a selected
+   object through its allowed manual or review path, Site Check provides the
+   same explicit local rescan entry used for the original report. The operator
+   verifies that the object no longer matches the finding or that the affected
+   count has decreased. This is a current bounded acceptance check, not a saved completion state or historical comparison.
 
 ## Solved Problems
 
@@ -76,12 +87,19 @@ workflow or manual path is allowed.
 - Review-workflow candidate previews reduce the gap between "this needs
   review" and "what should I carry into review" without adding a second
   approval path.
+- Each rendered finding exposes an acceptance check and a manual rescan path,
+  so the operator can close the current read-only loop without a local task
+  record or an automatic completion claim.
 
 ## Boundary
 
 Toolbox does not store a historical run ledger for Site Check. It does
 not create local queues, custom run tables, schedulers, retries, Core
 proposals, or WordPress writes from this report.
+
+The rescan acceptance check does not mark a finding completed, persist an
+operator decision, or create a task. Durable assignment, completion tracking,
+or cross-run history requires an owner outside this Toolbox surface.
 
 Cloud may return executive summaries, semantic ranking, trend explanations,
 dimension summaries, blocked items, next actions, handoff candidates, and

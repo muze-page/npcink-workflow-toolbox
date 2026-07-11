@@ -26,6 +26,12 @@ $assert_not_contains = static function ( string $haystack, string $needle, strin
 
 $admin_js   = (string) file_get_contents( $root . '/assets/admin.js' );
 $admin_page = (string) file_get_contents( $root . '/includes/Admin_Page.php' );
+$scheduled_review_start = strpos( $admin_page, 'private function nightly_inspection_preview_url' );
+$scheduled_review_end   = strpos( $admin_page, 'private function render_content_context_form' );
+if ( false === $scheduled_review_start || false === $scheduled_review_end || $scheduled_review_end <= $scheduled_review_start ) {
+	$fail( 'Could not isolate the Scheduled Review admin surface.' );
+}
+$scheduled_review_admin = substr( $admin_page, $scheduled_review_start, $scheduled_review_end - $scheduled_review_start );
 
 foreach (
 	array(
@@ -80,8 +86,6 @@ foreach (
 	array(
 		'cloud_addon_runtime_runs_url',
 		"'tab'  => 'runtime_runs'",
-		'data-toolbox-tab-target="operations-insights"',
-		'Site Check',
 		'data-toolbox-site-check-target="current-check"',
 		'data-toolbox-site-check-target="scheduled-review"',
 		'data-toolbox-site-check-panel="scheduled-review"',
@@ -96,6 +100,8 @@ foreach (
 ) {
 	$assert_contains( $admin_page, $required_admin_text, 'Scheduled Review admin panel routes Cloud run detail and recovery to Cloud Addon Runtime Runs.' );
 }
+
+$assert_not_contains( $admin_page, 'data-toolbox-tab-target="operations-insights"', 'Scheduled Review remains reachable through the Site Check compatibility panel without restoring a top-level Site Check tab.' );
 
 foreach (
 	array(
@@ -129,7 +135,7 @@ foreach (
 		'Review the current site report first. Preview scheduled review or open Cloud run recovery from the folded section when needed.',
 	) as $forbidden_admin_text
 ) {
-	$assert_not_contains( $admin_page, $forbidden_admin_text, 'Scheduled Review admin panel must not expose local Cloud run submit/recent/retry controls.' );
+	$assert_not_contains( $scheduled_review_admin, $forbidden_admin_text, 'Scheduled Review admin panel must not expose local Cloud run submit/recent/retry controls.' );
 }
 
 foreach (

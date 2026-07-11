@@ -216,12 +216,12 @@ function findPlaywrightChromiumExecutable(chromium) {
 	return candidates.find((candidate) => candidate && existsSync(candidate)) || '';
 }
 
-function forbiddenWriteRequests(requests) {
+function forbiddenExecutionRequests(requests) {
 	return requests.filter((request) => {
 		if (!/POST|PUT|PATCH|DELETE/.test(request.method)) {
 			return false;
 		}
-		return /proposals|governance-core|approve-and-execute|media-derivative-runs|local-admin-consent|\/wp\/v2\/media/i.test(request.url);
+		return /approve-and-execute|\/proposals\/[^/]+\/execute|media-derivative-runs|local-admin-consent|\/wp\/v2\/media/i.test(request.url);
 	});
 }
 
@@ -308,6 +308,90 @@ try {
 	runtimeFilter = createRuntimeFilter();
 	const context = await browser.newContext({ ignoreHTTPSErrors: true });
 	page = await context.newPage();
+	await page.route('**/wp-json/npcink-toolbox/v1/ai/site-helpers', async (route) => {
+		const selectedItems = attachmentIds.map((attachmentId, index) => ({
+			attachment_id: attachmentId,
+			title: `Browser smoke image ${index + 1}`,
+			thumbnail_url: '',
+			current_alt: '',
+			current_alt_status: 'missing',
+			review_reasons: ['missing_alt'],
+			alt_candidates: index === attachmentIds.length - 1 ? [] : [`Reviewed browser smoke image ${index + 1}`],
+			candidate_review_status: index === attachmentIds.length - 1 ? 'caption_review_only' : 'needs_context_confirmation',
+			candidate_confidence: 'medium',
+			candidate_quality_score: 80,
+			candidate_quality_tier: 'review',
+			automation_recommendation: 'human_review',
+			candidate_fact_types: ['metadata_fact'],
+			needs_context_confirmation: index !== attachmentIds.length - 1,
+			needs_human_visual_check: true,
+			source_item_id: `media-alt-caption:${attachmentId}`,
+			evidence_refs: [`browser-smoke:${attachmentId}`],
+		}));
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				artifact_type: 'hosted_ai_site_helper',
+				intent: 'media_alt_suggestions',
+				status: 'ready',
+				model_id: 'browser_smoke_fixture',
+				media_alt_caption_review_set: {
+					contract_version: 'media_alt_caption_review_set.v1',
+					selected_items: selectedItems,
+					blocked_items: [],
+					eligibility_summary: {
+						scanned_count: attachmentIds.length,
+						local_preview_candidate_count: Math.max(0, attachmentIds.length - 1),
+						context_confirmation_count: Math.max(0, attachmentIds.length - 1),
+						caption_review_only_count: attachmentIds.length ? 1 : 0,
+						visual_evidence_request_count: Math.max(0, attachmentIds.length - 1),
+						blocked_count: 0,
+					},
+					image_context_evidence_request: { items: [] },
+				},
+			}),
+		});
+	});
+	await page.route('**/wp-json/npcink-openclaw-adapter/v1/run-read-ability', async (route) => {
+		const payload = JSON.parse(route.request().postData() || '{}');
+		const input = payload.input || {};
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				result: {
+					data: {
+						artifact_type: 'media_alt_apply_plan',
+						contract_version: 'media_alt_apply_plan.v1',
+						proposal_mode: 'single',
+						dry_run: true,
+						commit_execution: false,
+						direct_wordpress_write: false,
+						authorization: { classification: 'core_proposal_required' },
+						write_actions: [{ target_ability_id: 'npcink-abilities-toolkit/update-media-details', input }],
+					},
+				},
+			}),
+		});
+	});
+	await page.route('**/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan', async (route) => {
+		const payload = JSON.parse(route.request().postData() || '{}');
+		const attachmentId = Number(payload.plan_input?.attachment_id || 0);
+		await route.fulfill({
+			status: 201,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				proposal_count: 1,
+				commit_execution: false,
+				proposals: [{
+					proposal_id: `fixture-media-alt-${attachmentId}`,
+					status: 'pending',
+					ability_id: 'npcink-abilities-toolkit/update-media-details',
+				}],
+			}),
+		});
+	});
 	page.on('request', (request) => {
 		const url = request.url();
 		if (url.includes('/wp-json/')) {
@@ -324,6 +408,11 @@ try {
 		const submit = form.locator('button[type="submit"]');
 		assert(await submit.isEnabled(), 'Media ALT/Caption review-set button is enabled for the local admin smoke.');
 		await form.locator('[data-toolbox-selected-attachment-ids]').fill(attachmentIds.join(', '));
+		await form.locator('.npcink-toolbox__alt-sample-options').evaluate((details) => {
+			if (details instanceof HTMLDetailsElement) {
+				details.open = true;
+			}
+		});
 		await form.locator('select[name="sample_size"]').selectOption('10');
 		await form.locator('select[name="review_set_limit"]').selectOption('5');
 		await form.locator('select[name="media_filter"]').selectOption('all_recent');
@@ -333,8 +422,10 @@ try {
 			(expectations) => {
 				const rows = Array.from(document.querySelectorAll('.npcink-toolbox__alt-review-row'));
 				const statuses = rows.map((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status).filter(Boolean);
-				return rows.length >= expectations.reviewRowsMin
-					&& statuses.filter((status) => status === 'caption_review_only').length >= expectations.captionOnlyMin
+				const captionOnlyCount = parseInt(document.querySelector('[data-toolbox-media-alt-caption-caption-only]')?.getAttribute('data-toolbox-media-alt-caption-caption-only') || '0', 10) || 0;
+				return rows.length >= Math.max(1, expectations.reviewRowsMin - expectations.captionOnlyMin)
+					&& statuses.filter((status) => status === 'caption_review_only').length === 0
+					&& captionOnlyCount >= expectations.captionOnlyMin
 					&& statuses.filter((status) => status === 'needs_context_confirmation').length >= expectations.contextRowsMin
 					&& statuses.filter((status) => status === 'ready_for_review').length >= expectations.readyRowsMin;
 			},
@@ -355,29 +446,27 @@ try {
 			return {
 				text,
 				rowCount: rows.length,
-				captionOnlyRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'caption_review_only').length,
+				captionOnlyRows: parseInt(document.querySelector('[data-toolbox-media-alt-caption-caption-only]')?.getAttribute('data-toolbox-media-alt-caption-caption-only') || '0', 10) || 0,
+				captionOnlyRowsInMainList: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'caption_review_only').length,
 				contextRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'needs_context_confirmation').length,
 				readyRows: rows.filter((row) => row.__npcinkMediaAltCaptionItem && row.__npcinkMediaAltCaptionItem.candidate_review_status === 'ready_for_review').length,
 				contextConfirmInputs: document.querySelectorAll('[data-toolbox-media-alt-caption-context-confirmed]').length,
-				emptyAltRows: rows.filter((row) => {
-					const input = row.querySelector('[data-toolbox-media-alt-caption-accepted-alt]');
-					return input && !String(input.value || '').trim();
-				}).length,
+				visualConfirmInputs: document.querySelectorAll('[data-toolbox-media-alt-caption-visual-confirmed]').length,
 				initialSelectedCount: selectedCount ? selectedCount.textContent : '',
 				handoffDisabled: handoffButton instanceof HTMLButtonElement ? handoffButton.disabled : null,
 				readyLabelVisible: text.includes('Ready to update'),
-				reviewRowsLabelVisible: /Review rows|审核行|审阅行/.test(text),
-					captionNotAppliedVisible: /Caption suggestions are not included in this ALT handoff preview|说明文字建议不会包含在这个 ALT 交接预览中|Caption.*ALT/.test(text),
-				contextWarningVisible: /Location or proper-name context must be confirmed or removed before handoff|地点或专名上下文.*确认|确认地点或专名上下文/.test(text),
-				noWriteNoticeVisible: /Toolbox will not change media ALT here|Toolbox 不会在这里更改媒体 ALT|这里不会更改媒体 ALT/.test(text),
+				reviewRowsLabelVisible: /ALT draft rows|ALT 草稿行|ALT 草稿/.test(text),
+				captionNotAppliedVisible: /Caption-only items \(not part of ALT review\)|说明文字.*不属于 ALT 审核|Caption-only/.test(text),
+				contextWarningVisible: /Location or proper-name context must be confirmed or removed before this draft can be selected|地点或专名上下文.*确认|确认地点或专名上下文/.test(text),
+				noWriteNoticeVisible: /does not approve, execute, poll, or write media metadata|never approves, executes, or updates media|不会批准、执行|不会.*更新媒体/.test(text),
 			};
 		});
 
-		assert(initial.rowCount >= expectedReviewRowsMin, 'Review UI renders the expected real media rows.');
+		assert(initial.rowCount >= Math.max(1, expectedReviewRowsMin - expectedCaptionOnlyMin), 'Review UI renders the expected actionable ALT rows.');
 		if (expectedCaptionOnlyMin > 0) {
-			assert(initial.captionOnlyRows >= expectedCaptionOnlyMin, 'Review UI labels caption-only rows distinctly.');
-			assert(initial.emptyAltRows >= expectedCaptionOnlyMin, 'Caption-only rows keep the ALT input empty.');
-				assert(initial.captionNotAppliedVisible, 'Caption-only rows tell operators captions are not included in the ALT handoff preview.');
+			assert(initial.captionOnlyRows >= expectedCaptionOnlyMin, 'Review UI counts caption-only rows in a separate disclosure.');
+			assert(initial.captionOnlyRowsInMainList === 0, 'Caption-only rows are excluded from the actionable ALT list.');
+			assert(initial.captionNotAppliedVisible, 'Caption-only rows are clearly separated from ALT review.');
 		} else {
 			pass('Caption-only row assertions are not required for this sample.');
 		}
@@ -386,9 +475,10 @@ try {
 		if (expectedContextRowsMin > 0) {
 			assert(initial.contextConfirmInputs >= expectedContextRowsMin, 'Review UI exposes explicit context confirmation controls.');
 		}
-		assert(initial.initialSelectedCount === String(initial.readyRows), 'Initial ALT handoff count matches ready rows only.');
-		assert(initial.handoffDisabled === (initial.readyRows === 0), 'ALT handoff button state follows ready rows and required context confirmation.');
-		assert(initial.reviewRowsLabelVisible && !initial.readyLabelVisible, 'Summary counts review rows without implying they are ready to update.');
+		assert(initial.visualConfirmInputs === initial.rowCount, 'Every missing ALT row exposes explicit visual confirmation.');
+		assert(initial.initialSelectedCount === '0', 'Initial ALT handoff count is zero before visual confirmation.');
+		assert(initial.handoffDisabled === true, 'ALT handoff button starts disabled before visual confirmation.');
+		assert(initial.reviewRowsLabelVisible && !initial.readyLabelVisible, 'Summary counts ALT draft rows without implying they are ready to update.');
 		if (expectedContextRowsMin > 0) {
 			assert(initial.contextWarningVisible, 'Context rows tell operators to confirm or remove location/proper-name context.');
 		}
@@ -406,18 +496,43 @@ try {
 			selectedCount: document.querySelector('[data-toolbox-media-alt-caption-selected-count]')?.textContent || '',
 			handoffDisabled: document.querySelector('[data-toolbox-media-alt-caption-handoff]')?.disabled ?? null,
 		}));
-		assert(afterSelectingRows.selectedCount === String(initial.readyRows) && afterSelectingRows.handoffDisabled === (initial.readyRows === 0), 'Selecting rows alone still excludes unconfirmed-context and caption-only rows from ALT handoff.');
+		assert(afterSelectingRows.selectedCount === '0' && afterSelectingRows.handoffDisabled === true, 'Selecting rows alone does not authorize Core submission.');
 
-		if (initial.contextRows > 0) {
-			await page.locator('[data-toolbox-media-alt-caption-context-confirmed]').first().check();
-			const afterConfirmingOne = await page.evaluate(() => ({
+		await page.evaluate(() => {
+			const row = document.querySelector('.npcink-toolbox__alt-review-row');
+			const visual = row?.querySelector('[data-toolbox-media-alt-caption-visual-confirmed]');
+			const context = row?.querySelector('[data-toolbox-media-alt-caption-context-confirmed]');
+			if (context instanceof HTMLInputElement) {
+				context.checked = true;
+				context.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+			if (visual instanceof HTMLInputElement) {
+				visual.checked = true;
+				visual.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+		});
+		const afterVisualReview = await page.evaluate(() => ({
+			selectedCount: document.querySelector('[data-toolbox-media-alt-caption-selected-count]')?.textContent || '',
+			handoffDisabled: document.querySelector('[data-toolbox-media-alt-caption-handoff]')?.disabled ?? null,
+		}));
+		assert(afterVisualReview.selectedCount === '1' && afterVisualReview.handoffDisabled === false, 'One selected row becomes eligible only after visual and required context confirmation.');
+		await page.locator('[data-toolbox-media-alt-caption-handoff]').click();
+		await page.waitForSelector('.npcink-toolbox__handoff-receipt', { timeout: 15000 });
+		const receiptText = await page.locator('.npcink-toolbox__handoff-receipt').first().innerText();
+		assert(/fixture-media-alt-/.test(receiptText), 'Toolbox renders the Core proposal receipt after submission.');
+		const submittedRowState = await page.evaluate(() => {
+			const row = document.querySelector('.npcink-toolbox__alt-review-row');
+			const selection = row?.querySelector('[data-toolbox-media-alt-caption-item]');
+			return {
+				selectionDisabled: selection instanceof HTMLInputElement ? selection.disabled : false,
 				selectedCount: document.querySelector('[data-toolbox-media-alt-caption-selected-count]')?.textContent || '',
-				handoffDisabled: document.querySelector('[data-toolbox-media-alt-caption-handoff]')?.disabled ?? null,
-			}));
-			assert(afterConfirmingOne.selectedCount === String(initial.readyRows + 1) && afterConfirmingOne.handoffDisabled === false, 'Confirming one context row enables one additional ALT handoff candidate.');
-		}
-		assert(forbiddenWriteRequests(requests).length === 0, 'Building and reviewing the UI does not call proposal, Core, media write, or local consent routes.');
+			};
+		});
+		assert(submittedRowState.selectionDisabled && submittedRowState.selectedCount === '0', 'Submitted rows are locked to prevent duplicate Core proposals without a re-scan.');
+		assert(forbiddenExecutionRequests(requests).length === 0, 'Toolbox proposal handoff does not approve, execute, poll, use local consent, or write media.');
 		assert(requests.some((request) => request.method === 'POST' && request.url.includes('/wp-json/npcink-toolbox/v1/ai/site-helpers')), 'Browser smoke builds the review set through the Toolbox site-helper route.');
+		assert(requests.some((request) => request.method === 'POST' && request.url.includes('/wp-json/npcink-openclaw-adapter/v1/run-read-ability') && request.body.includes('build-media-alt-apply-plan')), 'Browser smoke builds the shared Toolkit missing ALT plan through Adapter.');
+		assert(requests.some((request) => request.method === 'POST' && request.url.includes('/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan') && request.body.includes('build-media-alt-apply-plan')), 'Browser smoke submits the shared plan to Core through Adapter.');
 
 		mkdirSync(resolve(screenshotPath, '..'), { recursive: true });
 		await captureViewportScreenshot(page, screenshotPath);

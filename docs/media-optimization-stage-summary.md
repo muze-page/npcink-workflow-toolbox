@@ -66,8 +66,8 @@ The product should continue to present:
 - settings URL repair: separate governed action for theme settings, plugin
   options, and other settings values;
 - batch media optimization: bounded review set, selected previews, selected
-  Core reviews, and explicit selected replacement execution after proposal
-  submission.
+  Core reviews, then an explicit move to the governed Core/Adapter surface for
+  any approved replacement execution.
 
 Batch work must not be presented as one-click whole-site replacement. Broad
 scopes can find candidates, but visible language should keep the operator in a

@@ -38,7 +38,7 @@ Target features:
   candidates, and internal-link context.
 - Media brief button.
 - Content Context form for SEO, AEO, and GEO guidance.
-- Site Check button for a manual local `site_ops_insight_pack.v1` that presents
+- Hidden Site Check compatibility route for a manual local `site_ops_insight_pack.v1` that presents
   a current-run ranked review list across content, approved-comment, media,
   taxonomy, Site Context, and Cloud readiness findings, then routes the operator
   to manual handling, existing fixed workflows, or optional Cloud detail.
@@ -49,12 +49,18 @@ Target features:
   Cloud is ready, an administrator may explicitly run Cloud detail for a
   suggestion-only `site_ops_cloud_analysis_result.v1`, without Toolbox owning a
   local queue, run table, scheduler truth, Core proposal, or WordPress write.
+  It is not a default operator entry until its problem statement, action model,
+  and acceptance loop are ready for another review.
 - Post editor Content Support panel for default Npcink review and handoff
-  buttons: publish preflight, internal-link candidates, image candidates, and
-  article audio candidates. Generic AI-plugin-style intents such as local
+  buttons: publish preflight, internal-link candidates, current-article
+  contextual ALT review, image candidates, and article audio candidates. The
+  ALT flow keeps each image occurrence separate, uses nearby article context
+  first, and automatically fills missing block ALT after Core audit. When useful
+  context is absent, the existing Cloud visual-evidence runtime may run silently
+  once as a non-blocking fallback. Existing ALT and media-library ALT remain
+  unchanged; native WordPress save is still required. Generic AI-plugin-style intents such as local
   article checkup, title suggestions, outline support, discoverability,
-  summary suggestions, category suggestions, tag suggestions, current article
-  image ALT suggestions, and comment-reply suggestions remain compatible
+  summary suggestions, category suggestions, tag suggestions, and comment-reply suggestions remain compatible
   route/result paths, not default visible buttons. Selection-only paragraph
   checks belong in the selected-block toolbar beside paragraph image
   suggestions. Related existing-post review belongs inside publish preflight

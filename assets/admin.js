@@ -2223,7 +2223,7 @@
 			content_snapshot_suggestions: 'Content opportunities'
 		};
 		const summaryByIntent = {
-			media_alt_suggestions: 'Check each suggested ALT before preparing a Core handoff preview. Toolbox will not change media ALT here.',
+			media_alt_suggestions: 'Review and edit missing ALT drafts. Visually confirmed rows may be submitted to Core review; this scan does not change media ALT.',
 			content_snapshot_suggestions: 'Review opportunities from a bounded sample. This is not a full site audit and does not change content.'
 		};
 		const result = renderShell(
@@ -2282,53 +2282,48 @@
 				if (contextConfirm instanceof HTMLInputElement) {
 					item.context_confirmed = contextConfirm.checked;
 				}
+				const visualConfirm = row.querySelector('[data-toolbox-media-alt-caption-visual-confirmed]');
+				if (visualConfirm instanceof HTMLInputElement) {
+					item.visual_confirmed = visualConfirm.checked;
+				}
 				return item;
 			})
 			.filter(Boolean);
 	}
 
-	function renderMediaAltCaptionHandoffPlan(container, plan) {
-		const section = createSection('ALT handoff preview');
+	function renderMediaAltCaptionCoreReceipts(container, receipts, failures) {
+		const section = createSection('Core review submission');
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Selected images', plan.selected_count);
-		appendMeta(meta, 'Status', plan.selected_count > 0 ? 'Preview only' : '');
+		appendMeta(meta, 'Submitted', receipts.length);
+		appendMeta(meta, 'Failed', failures.length);
+		appendMeta(meta, 'Status', failures.length ? 'Needs attention' : 'Waiting for Core review');
 		section.appendChild(meta);
-		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Handoff preview prepared locally. No Core proposal was created and no media metadata was changed.'));
-
-		const actions = asArray(plan.selected_actions);
-		if (actions.length) {
-			const list = el('div', 'npcink-toolbox__batch-list');
-			actions.slice(0, 10).forEach((action) => {
-				const row = el('div', 'npcink-toolbox__batch-row npcink-toolbox__handoff-row');
-				if (action.thumbnail_url) {
-					const image = document.createElement('img');
-					image.className = 'npcink-toolbox__media-thumb';
-					image.src = String(action.thumbnail_url);
-					image.alt = '';
-					row.appendChild(image);
-				}
-				const body = el('span', 'npcink-toolbox__batch-row-body');
-				body.appendChild(el('strong', '', '#' + String(action.attachment_id || '') + ' ' + String(action.title || action.filename || 'Media item')));
-				if (action.accepted_alt) {
-					body.appendChild(el('small', '', t('Accepted ALT: ') + String(action.accepted_alt)));
-				}
-					body.appendChild(el('small', '', 'Toolbox will not write media metadata or submit this preview automatically.'));
-				row.appendChild(body);
-				list.appendChild(row);
-			});
-			section.appendChild(list);
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Toolbox stopped after proposal submission. Core owns review and approval; Adapter and Toolkit perform any later governed write.'));
+		receipts.forEach((receipt) => {
+			const node = renderCoreHandoffReceipt(receipt);
+			if (node) {
+				section.appendChild(node);
+			}
+		});
+		failures.forEach((failure) => {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', '#' + String(failure.attachment_id || '') + ': ' + String(failure.message || 'Core proposal submission failed.')));
+		});
+		if (!receipts.length && !failures.length) {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No eligible missing ALT rows were submitted.'));
 		}
-		section.appendChild(createRawDetails(plan, 'Advanced: dry-run handoff preview'));
 		container.appendChild(section);
 	}
 
+	function mediaAltCaptionEligibleForCore(item) {
+		const status = String(item.current_alt_status || '').toLowerCase();
+		return (status === 'missing' || status === 'empty')
+			&& !!String(item.accepted_alt || '').trim()
+			&& item.visual_confirmed === true
+			&& (!mediaAltCaptionNeedsContext(item) || item.context_confirmed === true);
+	}
+
 	function updateMediaAltCaptionHandoffButton(section) {
-		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter((item) => {
-			if (!String(item.accepted_alt || '').trim()) {
-				return false;
-			}
-			return !mediaAltCaptionNeedsContext(item) || item.context_confirmed === true;
-		}).length;
+		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter(mediaAltCaptionEligibleForCore).length;
 		const button = section.querySelector('[data-toolbox-media-alt-caption-handoff]');
 		const count = section.querySelector('[data-toolbox-media-alt-caption-selected-count]');
 		if (count) {
@@ -2393,18 +2388,26 @@
 		payload = asObject(payload);
 		const section = createSection('Scan results');
 		const eligibility = asObject(reviewSet.eligibility_summary);
-		const selectedItems = asArray(reviewSet.selected_items);
+		const allSelectedItems = asArray(reviewSet.selected_items);
+		const captionOnlyItems = allSelectedItems.filter((item) => String(item.candidate_review_status || '') === 'caption_review_only');
+		const selectedItems = allSelectedItems.filter((item) => {
+			const altStatus = String(item.current_alt_status || '').toLowerCase();
+			return String(item.candidate_review_status || '') !== 'caption_review_only'
+				&& (altStatus === 'missing' || altStatus === 'empty')
+				&& asArray(item.alt_candidates).filter(Boolean).length > 0;
+		});
 		const blockedItems = asArray(reviewSet.blocked_items);
 		const imageContextRequest = asObject(reviewSet.image_context_evidence_request);
 		const imageContextRequestItems = asArray(imageContextRequest.items);
 		const meta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(meta, 'Scanned images', eligibility.scanned_count);
-			appendMeta(meta, 'Review rows', eligibility.selected_count || selectedItems.length);
+			appendMeta(meta, 'ALT draft rows', selectedItems.length);
 			appendMeta(meta, 'Local preview rows', eligibility.local_preview_candidate_count || eligibility.ready_for_handoff_count);
 		appendMeta(meta, 'Need context confirmation', eligibility.context_confirmation_count);
 		appendMeta(meta, 'Need manual check', imageContextRequestItems.length);
 		appendMeta(meta, 'Need visual evidence', eligibility.visual_evidence_request_count);
 		appendMeta(meta, 'Excluded', eligibility.blocked_count || blockedItems.length);
+		appendMeta(meta, 'Caption-only rows', captionOnlyItems.length);
 		if (meta.childNodes.length) {
 			section.appendChild(meta);
 		}
@@ -2413,10 +2416,10 @@
 			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No ALT suggestions are ready for review from this sample. Try another sample or review excluded images.'));
 		} else {
 				const noticeText = imageContextRequestItems.length
-					? 'Review the rows below. Some images still need visual confirmation before any future Core handoff.'
-					: 'Review the rows below and edit suggested ALT if needed before preparing a handoff preview.';
+					? 'Review the rows below. Some images still need visual confirmation before their ALT draft is usable.'
+					: 'Review the image and edit the suggested ALT before submitting it to Core review.';
 				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', noticeText));
-				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Quality scores and review hints are preview-only triage. They do not authorize proposals, approvals, execution, or media writes.'));
+				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Only missing ALT is eligible. Submission creates one Core proposal per confirmed image; Toolbox does not approve, execute, poll, or write media metadata.'));
 			const list = el('div', 'npcink-toolbox__alt-review-table');
 			const header = el('div', 'npcink-toolbox__alt-review-header');
 			header.appendChild(el('span', '', 'Use'));
@@ -2428,8 +2431,8 @@
 				const needsContext = mediaAltCaptionNeedsContext(item);
 				const checkbox = document.createElement('input');
 				checkbox.type = 'checkbox';
-				checkbox.checked = !needsContext;
-				checkbox.setAttribute('aria-label', t('Select image for ALT handoff'));
+				checkbox.checked = false;
+				checkbox.setAttribute('aria-label', t('Select image for Core ALT review'));
 				checkbox.setAttribute('data-toolbox-media-alt-caption-item', String(item.attachment_id || index + 1));
 				checkbox.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
 				row.appendChild(checkbox);
@@ -2459,9 +2462,6 @@
 					item.automation_recommendation ? t('Review hint: ') + formatLabel(item.automation_recommendation) : '',
 					Array.isArray(item.candidate_fact_types) && item.candidate_fact_types.length ? t('Basis type: ') + item.candidate_fact_types.map(mediaAltCaptionReasonLabel).join(t(', ')) : '',
 				].filter(Boolean).join(t(' | '));
-				if (candidateDetail) {
-					body.appendChild(el('small', '', candidateDetail));
-				}
 				body.appendChild(el('small', '', t('Current ALT: ') + (item.current_alt ? String(item.current_alt) : t('Empty'))));
 				const altField = el('label', 'npcink-toolbox__alt-review-field');
 				altField.appendChild(el('span', '', 'Suggested ALT'));
@@ -2473,11 +2473,8 @@
 				altInput.addEventListener('input', () => updateMediaAltCaptionHandoffButton(section));
 				altField.appendChild(altInput);
 				body.appendChild(altField);
-				if (item.caption_candidate) {
-					body.appendChild(el('small', 'npcink-toolbox__muted', 'Caption suggestions are not included in this ALT handoff preview.'));
-				}
 				if (needsContext) {
-					body.appendChild(el('small', 'npcink-toolbox__result-notice is-warning', 'Location or proper-name context must be confirmed or removed before handoff.'));
+					body.appendChild(el('small', 'npcink-toolbox__result-notice is-warning', 'Location or proper-name context must be confirmed or removed before this draft can be selected.'));
 					const contextLabel = el('label', 'npcink-toolbox__inline-check');
 					const contextInput = document.createElement('input');
 					contextInput.type = 'checkbox';
@@ -2487,12 +2484,27 @@
 					contextLabel.appendChild(el('span', '', 'I confirm this location or proper-name context'));
 					body.appendChild(contextLabel);
 				}
+				const visualLabel = el('label', 'npcink-toolbox__inline-check');
+				const visualInput = document.createElement('input');
+				visualInput.type = 'checkbox';
+				visualInput.setAttribute('data-toolbox-media-alt-caption-visual-confirmed', '');
+				visualInput.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
+				visualLabel.appendChild(visualInput);
+				visualLabel.appendChild(el('span', '', 'I reviewed this image and confirm the ALT describes it in context'));
+				body.appendChild(visualLabel);
 				const evidence = asObject(item.image_context_evidence);
-				if (evidence.visual_summary) {
-					body.appendChild(el('small', '', t('Image clue: ') + String(evidence.visual_summary)));
+				const technicalDetails = document.createElement('details');
+				technicalDetails.className = 'npcink-toolbox__result-details npcink-toolbox__alt-technical-details';
+				technicalDetails.appendChild(el('summary', '', 'Quality and evidence details'));
+				if (candidateDetail) {
+					technicalDetails.appendChild(el('small', '', candidateDetail));
 				}
+				if (evidence.visual_summary) {
+					technicalDetails.appendChild(el('small', '', t('Image clue: ') + String(evidence.visual_summary)));
+				}
+				body.appendChild(technicalDetails);
 				if (item.needs_human_visual_check) {
-					body.appendChild(el('small', 'npcink-toolbox__muted', 'Check the image before using this row in any Core handoff.'));
+					body.appendChild(el('small', 'npcink-toolbox__muted', 'Check the image before accepting this ALT draft.'));
 				}
 				row.appendChild(body);
 				row.__npcinkMediaAltCaptionItem = item;
@@ -2504,28 +2516,70 @@
 			const selectedCount = el('strong', '', '0');
 			selectedCount.setAttribute('data-toolbox-media-alt-caption-selected-count', '');
 			actions.appendChild(selectedCount);
-			const handoffButton = el('button', 'button button-primary', 'Prepare handoff preview');
+			const handoffButton = el('button', 'button button-primary', 'Submit selected to Core review');
 			handoffButton.type = 'button';
 			handoffButton.setAttribute('data-toolbox-media-alt-caption-handoff', '');
 			handoffButton.addEventListener('click', async () => {
-				const selected = selectedMediaAltCaptionReviewItems(section);
+				const selected = selectedMediaAltCaptionReviewItems(section).filter(mediaAltCaptionEligibleForCore);
 				if (!selected.length) {
 					return;
 				}
 				handoffButton.disabled = true;
-				handoffButton.textContent = t('Preparing handoff preview...');
-				try {
-					const plan = await postJson(config.restUrl, 'flows/media-alt-caption-review-plan', {
-						selected_items: selected,
-						review_set: reviewSet
-					});
-					renderMediaAltCaptionHandoffPlan(section, plan);
-				} catch (error) {
-					section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error && error.message ? error.message : 'Could not prepare the ALT handoff preview.'));
-				} finally {
-					handoffButton.textContent = t('Prepare handoff preview');
-					updateMediaAltCaptionHandoffButton(section);
+				handoffButton.textContent = t('Submitting to Core review...');
+				const receipts = [];
+				const failures = [];
+				for (const item of selected) {
+					const input = {
+						attachment_id: Number(item.attachment_id || 0),
+						alt: String(item.accepted_alt || '').trim(),
+						expected_current_alt: '',
+						operator_visual_review_confirmed: true,
+						review_set_contract: 'media_alt_caption_review_set.v1',
+						source_item_id: String(item.source_item_id || ('media-alt-caption:' + String(item.attachment_id || ''))),
+						evidence_refs: asArray(item.evidence_refs).slice(0, 20),
+					};
+					try {
+						const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+							ability_id: 'npcink-abilities-toolkit/build-media-alt-apply-plan',
+							input,
+						});
+						const plan = planDataFromEnvelope(planEnvelope) || {};
+						const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
+							plan_ability_id: 'npcink-abilities-toolkit/build-media-alt-apply-plan',
+							plan,
+							plan_input: input,
+						});
+						receipts.push(coreHandoffReceipt(bridge, {
+							sourceItemId: input.source_item_id,
+							handoffType: 'missing_media_alt_apply_plan',
+							targetAbilityId: 'npcink-abilities-toolkit/update-media-details',
+							operatorNextAction: 'review_in_core',
+						}));
+						const submittedRow = Array.from(section.querySelectorAll('.npcink-toolbox__alt-review-row')).find((row) => {
+							return Number(row.__npcinkMediaAltCaptionItem?.attachment_id || 0) === input.attachment_id;
+						});
+						if (submittedRow) {
+							submittedRow.querySelectorAll('input').forEach((field) => {
+								if (field instanceof HTMLInputElement) {
+									field.checked = false;
+									field.disabled = true;
+								}
+							});
+							const body = submittedRow.querySelector('.npcink-toolbox__batch-row-body');
+							if (body) {
+								body.appendChild(el('small', 'npcink-toolbox__result-notice is-pending', t('Submitted to Core review. Re-scan before creating a revised proposal.')));
+							}
+						}
+					} catch (error) {
+						failures.push({
+							attachment_id: input.attachment_id,
+							message: error && error.message ? error.message : 'Core proposal submission failed.',
+						});
+					}
 				}
+				renderMediaAltCaptionCoreReceipts(section, receipts, failures);
+				handoffButton.textContent = t('Submit selected to Core review');
+				updateMediaAltCaptionHandoffButton(section);
 			});
 			actions.appendChild(handoffButton);
 			section.appendChild(actions);
@@ -2546,6 +2600,24 @@
 				blockedList.appendChild(row);
 			});
 			details.appendChild(blockedList);
+			section.appendChild(details);
+		}
+
+		if (captionOnlyItems.length) {
+			const details = document.createElement('details');
+			details.className = 'npcink-toolbox__result-details';
+			details.setAttribute('data-toolbox-media-alt-caption-caption-only', String(captionOnlyItems.length));
+			details.appendChild(el('summary', '', 'Caption-only items (not part of ALT review)'));
+			const captionList = el('div', 'npcink-toolbox__batch-list');
+			captionOnlyItems.slice(0, 10).forEach((item) => {
+				const row = el('div', 'npcink-toolbox__batch-row is-skipped');
+				const body = el('span', 'npcink-toolbox__batch-row-body');
+				body.appendChild(el('strong', '', '#' + String(item.attachment_id || '') + ' ' + String(item.title || item.filename || 'Media item')));
+				body.appendChild(el('small', '', 'This image has no actionable ALT draft; caption review belongs in a separate workflow.'));
+				row.appendChild(body);
+				captionList.appendChild(row);
+			});
+			details.appendChild(captionList);
 			section.appendChild(details);
 		}
 
@@ -3666,6 +3738,9 @@
 	}
 
 	function mediaBatchResultStatus(state) {
+		if (state && state.batchPreviewError) {
+			return 'preview_failed';
+		}
 		if (state && state.batchExecutionError) {
 			return 'execution_failed';
 		}
@@ -3684,38 +3759,28 @@
 		return state && state.batchStatus ? state.batchStatus : 'pending';
 	}
 
-	function mediaBatchExecutionPayload(state) {
-		return asObject(state && state.batchExecutionResult ? state.batchExecutionResult : null);
-	}
-
-	function mediaBatchExecutionErrorPayload(state) {
-		return asObject(state && state.batchExecutionError ? state.batchExecutionError : null);
-	}
-
-	function mediaBatchFirstExecutionAction(state) {
-		const payload = mediaBatchExecutionPayload(state);
-		const execution = asObject(payload.execution);
-		const results = asArray(firstFilled([payload.results, execution.results], []));
-		if (results.length) {
-			return asObject(results[0]);
+	function formatMediaBytes(value) {
+		let bytes = Number(value || 0);
+		if (!Number.isFinite(bytes) || bytes <= 0) {
+			return '';
 		}
-		return asObject(firstFilled([payload.result, execution.result], {}));
+		const units = ['B', 'KB', 'MB', 'GB'];
+		let unit = 0;
+		while (bytes >= 1024 && unit < units.length - 1) {
+			bytes /= 1024;
+			unit += 1;
+		}
+		return (unit === 0 ? String(Math.round(bytes)) : bytes.toFixed(bytes >= 10 ? 1 : 2)) + ' ' + units[unit];
 	}
 
-	async function executeCoreProposalFromBatchState(state, index) {
-		const proposalId = proposalIdFromResponse(state && state.batchProposalResult);
-		if (!proposalId) {
-			throw { message: 'Core did not return a proposal id for this selected preview.' };
+	function mediaBatchSavingsLabel(originalBytes, previewBytes) {
+		originalBytes = Number(originalBytes || 0);
+		previewBytes = Number(previewBytes || 0);
+		if (originalBytes <= 0 || previewBytes <= 0) {
+			return '';
 		}
-		return postJson(
-			config.adapterRestUrl,
-			'proposals/' + encodeURIComponent(proposalId) + '/approve-and-execute',
-			{
-				note: 'Approved from Toolbox batch image optimization after selected preview review. Core policy owns approval, preflight, audit, and execution.',
-				source: 'toolbox_batch_image_optimization_review',
-				batch_index: index,
-			}
-		);
+		const percent = Math.round((1 - (previewBytes / originalBytes)) * 100);
+		return formatMediaBytes(originalBytes) + ' → ' + formatMediaBytes(previewBytes) + ' (' + (percent >= 0 ? '-' + String(percent) : '+' + String(Math.abs(percent))) + '%)';
 	}
 
 	function renderMediaDerivativeRun(form, state, message) {
@@ -3861,6 +3926,14 @@
 				updateMediaBatchSelectedCount(form);
 			});
 			row.appendChild(checkbox);
+			const thumbnailUrl = candidate.thumbnail_url || candidate.attachment_url || candidate.url || '';
+			if (thumbnailUrl) {
+				const thumbnail = el('img', 'npcink-toolbox__batch-thumb');
+				thumbnail.src = String(thumbnailUrl);
+				thumbnail.alt = '';
+				thumbnail.loading = 'lazy';
+				row.appendChild(thumbnail);
+			}
 			const body = el('span', 'npcink-toolbox__batch-row-body');
 			body.appendChild(el('strong', '', '#' + String(candidate.attachment_id || '') + ' ' + String(candidate.title || 'Untitled media')));
 			const detail = [
@@ -3989,15 +4062,39 @@
 			.filter(Boolean);
 	}
 
+	function mediaBatchAttachmentId(value) {
+		value = asObject(value);
+		const abilityInput = asObject(value.abilityInput);
+		const candidate = asObject(value.batchCandidate);
+		return parseInt(abilityInput.attachment_id || candidate.attachment_id || value.attachment_id || '0', 10) || 0;
+	}
+
+	function mediaBatchPreviewReady(state) {
+		return !!(state && !state.batchPreviewError && state.derivative && mediaBatchAttachmentId(state) > 0);
+	}
+
+	function selectedMediaBatchPreviewStates(form) {
+		const selectedIds = new Set(selectedMediaBatchCandidates(form).map((candidate) => mediaBatchAttachmentId(candidate)).filter(Boolean));
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+		return states.filter((state) => selectedIds.has(mediaBatchAttachmentId(state)) && mediaBatchPreviewReady(state));
+	}
+
 	function updateMediaBatchSelectedCount(form) {
 		const selectedCount = selectedMediaBatchCandidates(form).length;
+		const selectedPreviewStates = selectedMediaBatchPreviewStates(form);
+		const previewReadyCount = selectedPreviewStates.length;
+		const pendingProposalCount = selectedPreviewStates.filter((state) => !state.batchProposalResult).length;
 		const selectedValue = form.querySelector('[data-toolbox-media-batch-selected-meta] .npcink-toolbox__result-meta-value');
 		const previewButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
+		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
 		if (selectedValue) {
 			selectedValue.textContent = String(selectedCount);
 		}
 		if (previewButton instanceof HTMLButtonElement) {
 			previewButton.disabled = selectedCount < 1;
+		}
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = selectedCount < 1 || previewReadyCount !== selectedCount || pendingProposalCount < 1;
 		}
 	}
 
@@ -4010,16 +4107,9 @@
 		);
 		const failedCount = integerOr(
 			batchContext.failed_count || batchContext.failedCount,
-			states.filter((state) => state && (state.batchProposalError || state.batchExecutionError)).length
+			states.filter((state) => state && (state.batchPreviewError || state.batchProposalError)).length
 		);
-		const executedCount = integerOr(
-			batchContext.executed_count || batchContext.executedCount,
-			states.filter((state) => state && state.batchExecutionResult).length
-		);
-		const blockedCount = integerOr(
-			batchContext.blocked_count || batchContext.blockedCount,
-			0
-		);
+		const previewedCount = integerOr(batchContext.previewed_count || batchContext.previewedCount, states.filter(mediaBatchPreviewReady).length);
 		const result = renderShell(
 			form,
 			{ provider: 'core governance' },
@@ -4032,14 +4122,12 @@
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Selected', selectedCount);
-		appendMeta(meta, 'Previewed', states.length);
+		appendMeta(meta, 'Previewed', previewedCount);
 		appendMeta(meta, 'Submitted', submittedCount);
-		appendMeta(meta, 'Executed', executedCount);
 		appendMeta(meta, 'Failed', failedCount);
-		appendMeta(meta, 'Blocked', blockedCount);
 		appendMeta(meta, 'Partial success', batchContext.partial_success ? 'Yes' : 'No');
 		appendMeta(meta, 'Retryable', batchContext.retryable ? 'Yes' : 'No');
-		appendMeta(meta, 'Proposal path', 'Core/Adapter governed execution');
+		appendMeta(meta, 'Proposal path', 'Core review only');
 		appendMeta(meta, 'Crop', states.length ? mediaDerivativeCropLabel(states[0].abilityInput) : '');
 		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
@@ -4053,25 +4141,27 @@
 		if (batchContext.core_preflight_evidence) {
 			result.appendChild(createRawDetails(batchContext.core_preflight_evidence, 'Core preflight evidence'));
 		}
+		if (states.some((state) => state && state.batchPreviewError)) {
+			const retryActions = el('div', 'npcink-toolbox__result-actions');
+			const retryButton = el('button', 'button', 'Retry failed previews');
+			retryButton.type = 'button';
+			retryButton.setAttribute('data-toolbox-retry-failed-media-previews', '');
+			retryActions.appendChild(retryButton);
+			result.appendChild(retryActions);
+		}
 
 		const list = el('div', 'npcink-toolbox__result-list');
 		states.forEach((state) => {
 			const derivative = state.derivative || {};
 			const candidate = asObject(state.batchCandidate);
-			const executionPayload = mediaBatchExecutionPayload(state);
-			const executionError = mediaBatchExecutionErrorPayload(state);
-			const executionAction = mediaBatchFirstExecutionAction(state);
 			const row = el('article', 'npcink-toolbox__result-item');
 			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(candidate.title || (derivative.format ? String(derivative.format).toUpperCase() : 'Derivative'))));
 			const itemMeta = el('div', 'npcink-toolbox__result-meta');
 			appendMeta(itemMeta, 'Status', formatLabel(mediaBatchResultStatus(state)));
 			appendMeta(itemMeta, 'Artifact', derivative.artifact_id || derivative.id);
 			appendMeta(itemMeta, 'Proposal', proposalIdFromResponse(state.batchProposalResult));
-			appendMeta(itemMeta, 'Execution profile', executionAction.execution_profile || executionPayload.execution_profile || executionError.failed_execution_profile);
-			appendMeta(itemMeta, 'Idempotency', executionAction.idempotency_key || executionPayload.idempotency_key || executionError.failed_idempotency_key);
-			appendMeta(itemMeta, 'Executed actions', executionPayload.executed_count);
-			appendMeta(itemMeta, 'Operator action', executionPayload.operator_next_action || executionError.operator_next_action);
 			appendMeta(itemMeta, 'Size', derivative.width && derivative.height ? derivative.width + ' x ' + derivative.height : '');
+			appendMeta(itemMeta, 'File saving', mediaBatchSavingsLabel(candidate.filesize_bytes, derivative.filesize_bytes));
 			appendMeta(itemMeta, 'Expires', formatDateTime(derivative.expires_at));
 			appendMeta(itemMeta, 'Crop', mediaDerivativeCropLabel(state.abilityInput));
 			appendMeta(itemMeta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
@@ -4085,16 +4175,38 @@
 			if (state.batchProposalError) {
 				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', formatErrorMessage(state.batchProposalError)));
 			}
-			if (state.batchExecutionError) {
-				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', formatErrorMessage(state.batchExecutionError)));
+			if (state.batchPreviewError) {
+				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview failed: ' + formatErrorMessage(state.batchPreviewError)));
 			}
 			const previewUrl = withRestNonce(derivative.preview_url || '');
-			if (previewUrl) {
-				const link = createLink(previewUrl, 'Open preview');
-				row.appendChild(link);
+			const originalUrl = candidate.thumbnail_url || candidate.attachment_url || candidate.url || '';
+			if (originalUrl || previewUrl) {
+				const comparison = el('div', 'npcink-toolbox__media-comparison');
+				if (originalUrl) {
+					const originalFigure = el('figure');
+					const originalImage = el('img');
+					originalImage.src = String(originalUrl);
+					originalImage.alt = '';
+					originalImage.loading = 'lazy';
+					originalFigure.appendChild(originalImage);
+					originalFigure.appendChild(el('figcaption', '', 'Original'));
+					comparison.appendChild(originalFigure);
+				}
+				if (previewUrl) {
+					const previewFigure = el('figure');
+					const previewImage = el('img');
+					previewImage.src = previewUrl;
+					previewImage.alt = '';
+					previewImage.loading = 'lazy';
+					previewFigure.appendChild(previewImage);
+					previewFigure.appendChild(el('figcaption', '', 'Optimized preview'));
+					comparison.appendChild(previewFigure);
+				}
+				row.appendChild(comparison);
 			}
-			if (Object.keys(executionPayload).length) {
-				row.appendChild(createRawDetails(executionPayload, 'Adapter execution result'));
+			const proposalUrl = coreProposalUrl(state.batchProposalResult);
+			if (proposalUrl) {
+				row.appendChild(createLink(proposalUrl, 'Open in Core review'));
 			}
 			list.appendChild(row);
 		});
@@ -4515,20 +4627,20 @@
 			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
 			input,
 		});
-			const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
-			form.__npcinkMediaDerivativeBatchPlan = plan;
-			form.__npcinkMediaDerivativeBatchStates = [];
-			renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
-			renderTextResult(form, plan.operator_next_action || 'Review list ready. Select images and generate previews.', 'ok');
-			const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
-			const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
-			if (runButton instanceof HTMLButtonElement) {
-				runButton.disabled = !(asArray(plan.candidates).length > 0);
-			}
-			if (submitButton instanceof HTMLButtonElement) {
-				submitButton.disabled = true;
-			}
+		const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
+		form.__npcinkMediaDerivativeBatchPlan = plan;
+		form.__npcinkMediaDerivativeBatchStates = [];
+		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
+		renderTextResult(form, plan.operator_next_action || 'Review list ready. Select images and generate previews.', 'ok');
+		const runButton = form.querySelector('[data-toolbox-run-media-batch-previews]');
+		const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
+		if (runButton instanceof HTMLButtonElement) {
+			runButton.disabled = !(asArray(plan.candidates).length > 0);
 		}
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = true;
+		}
+	}
 
 	async function runMediaDerivativeBatchPreviews(form) {
 		if (!config.adapterRestUrl) {
@@ -4550,25 +4662,71 @@
 				input.attachment_id = candidate.attachment_id;
 			}
 			renderTextResult(form, 'Generating preview ' + String(index + 1) + ' of ' + String(candidates.length) + '...', 'pending');
-			const state = await createMediaDerivativePreview(input);
-			state.batchCandidate = candidate;
-			state.batchStatus = 'preview_ready';
-			states.push(state);
+			try {
+				const state = await createMediaDerivativePreview(input);
+				state.batchCandidate = candidate;
+				state.batchStatus = 'preview_ready';
+				states.push(state);
+			} catch (error) {
+				states.push({
+					abilityInput: input,
+					batchCandidate: candidate,
+					batchStatus: 'preview_failed',
+					batchPreviewError: error,
+				});
 			}
-	
-			form.__npcinkMediaDerivativeBatchStates = states;
-			const submitButton = form.querySelector('[data-toolbox-submit-media-batch-proposals]');
-			if (submitButton instanceof HTMLButtonElement) {
-				submitButton.disabled = states.length <= 0;
+		}
+
+		form.__npcinkMediaDerivativeBatchStates = states;
+		const previewReadyCount = states.filter(mediaBatchPreviewReady).length;
+		const failedCount = states.length - previewReadyCount;
+		updateMediaBatchSelectedCount(form);
+		renderMediaDerivativeBatchResults(form, states, '', '', {
+			selected_count: candidates.length,
+			submitted_count: 0,
+			previewed_count: previewReadyCount,
+			failed_count: failedCount,
+			retryable: failedCount > 0,
+			operator_next_action: failedCount > 0 ? 'Review successful previews and retry only the failed items.' : 'Review selected previews, then submit selected items to Core review.',
+			retry_guidance: failedCount > 0 ? 'Retry failed previews without regenerating successful items, or deselect failed rows before Core submission.' : 'Change selected media or rebuild the plan before generating previews again.',
+		});
+	}
+
+	async function retryFailedMediaDerivativeBatchPreviews(form) {
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+		const failedIndexes = states.map((state, index) => state && state.batchPreviewError ? index : -1).filter((index) => index >= 0);
+		if (!failedIndexes.length) {
+			throw { message: 'No failed previews are available to retry.' };
+		}
+
+		for (let offset = 0; offset < failedIndexes.length; offset += 1) {
+			const stateIndex = failedIndexes[offset];
+			const failedState = states[stateIndex] || {};
+			renderTextResult(form, 'Retrying failed preview ' + String(offset + 1) + ' of ' + String(failedIndexes.length) + '...', 'pending');
+			try {
+				const retriedState = await createMediaDerivativePreview(asObject(failedState.abilityInput));
+				retriedState.batchCandidate = asObject(failedState.batchCandidate);
+				retriedState.batchStatus = 'preview_ready';
+				states[stateIndex] = retriedState;
+			} catch (error) {
+				failedState.batchPreviewError = error;
+				failedState.batchStatus = 'preview_failed';
+				states[stateIndex] = failedState;
 			}
-			renderMediaDerivativeBatchResults(form, states, '', '', {
-				selected_count: candidates.length,
-				submitted_count: 0,
-				failed_count: 0,
-				retryable: false,
-				operator_next_action: 'Review selected previews, then submit selected items for review.',
-				retry_guidance: 'Change selected media or rebuild the plan before generating previews again.',
-			});
+		}
+
+		form.__npcinkMediaDerivativeBatchStates = states;
+		const previewReadyCount = states.filter(mediaBatchPreviewReady).length;
+		const failedCount = states.length - previewReadyCount;
+		updateMediaBatchSelectedCount(form);
+		renderMediaDerivativeBatchResults(form, states, 'Preview retry finished', failedCount > 0 ? 'Some previews still need attention.' : 'All selected previews are ready for review.', {
+			selected_count: selectedMediaBatchCandidates(form).length,
+			previewed_count: previewReadyCount,
+			failed_count: failedCount,
+			retryable: failedCount > 0,
+			operator_next_action: failedCount > 0 ? 'Retry failed previews again or deselect those rows.' : 'Review selected previews, then submit selected items to Core review.',
+			retry_guidance: failedCount > 0 ? 'Successful preview evidence was preserved.' : '',
+		});
 	}
 
 	async function submitMediaDerivativeBatchProposals(form) {
@@ -4576,73 +4734,70 @@
 			throw { message: 'Npcink Adapter REST URL is unavailable.' };
 		}
 
-			const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
-			if (!states.length) {
-				throw { message: 'Generate selected previews before submitting items for review.' };
-			}
+		const selectedCandidates = selectedMediaBatchCandidates(form);
+		const states = selectedMediaBatchPreviewStates(form);
+		if (!states.length) {
+			throw { message: 'Generate selected previews before submitting items for review.' };
+		}
+		if (states.length !== selectedCandidates.length) {
+			throw { message: 'Every currently selected image needs a successful preview before Core submission.' };
+		}
+		const statesToSubmit = states.filter((state) => !state.batchProposalResult);
+		if (!statesToSubmit.length) {
+			throw { message: 'All currently selected previews already have Core review proposals.' };
+		}
 
 		const proposals = [];
-		const executions = [];
-		let failed = null;
-		let executionBlocked = 0;
-			for (let index = 0; index < states.length; index += 1) {
-				const state = states[index];
-				renderTextResult(form, t('Submitting and requesting Core execution ') + String(index + 1) + t(' of ') + String(states.length) + '...', 'pending');
-				try {
+		const failures = [];
+		for (let index = 0; index < statesToSubmit.length; index += 1) {
+			const state = statesToSubmit[index];
+			renderTextResult(form, t('Submitting to Core review ') + String(index + 1) + t(' of ') + String(statesToSubmit.length) + '...', 'pending');
+			try {
 				const proposal = await postJson(config.adapterRestUrl, 'proposals', {
 					ability_id: 'npcink-abilities-toolkit/adopt-cloud-media-derivative',
 					title: 'Replace media file with Cloud derivative',
-					summary: 'Review one short-lived Cloud derivative artifact before local WordPress media replacement. Core policy may approve and execute automatically only when allowed.',
+					summary: 'Review one short-lived Cloud derivative artifact before any governed local WordPress media replacement.',
 					input: proposalInputFromState(state),
 					preview: state.proposalPayload,
 				});
 				state.batchProposalResult = proposal;
+				delete state.batchProposalError;
 				state.batchStatus = 'submitted';
 				proposals.push(proposal);
-				try {
-					const execution = await executeCoreProposalFromBatchState(state, index);
-					state.batchExecutionResult = execution;
-					state.batchStatus = 'executed';
-					executions.push(execution);
-				} catch (executionError) {
-					state.batchExecutionError = executionError;
-					state.batchStatus = 'execution_blocked';
-					executionBlocked += 1;
-				}
 			} catch (error) {
 				state.batchProposalError = error;
 				state.batchStatus = 'proposal_failed';
-				failed = error;
-				break;
+				failures.push({ attachment_id: mediaBatchAttachmentId(state), error });
 			}
 		}
-			renderMediaDerivativeBatchResults(
-				form,
-				states,
-				failed ? 'Batch submission stopped' : 'Batch submission finished',
-				failed ? 'One selected preview failed before all requests were submitted. Review the failed item and retry after revision.' : 'Selected previews were submitted. Core executed policy-allowed items and kept blocked items in review.',
-				{
-					selected_count: states.length,
-					submitted_count: proposals.length,
-					executed_count: executions.length,
-					failed_count: failed ? 1 : 0,
-					blocked_count: executionBlocked,
-					partial_success: executions.length > 0 && (executionBlocked > 0 || failed),
-					retryable: Boolean(failed),
-					operator_next_action: failed ? 'Resolve the failed item before submitting the remaining previews.' : (executionBlocked ? 'Review blocked items in Core before execution.' : 'Review execution records in Core if needed.'),
-					retry_guidance: failed ? 'Retry after revising the failed preview, authorization, or review input.' : 'If Core policy blocked execution, adjust policy or complete review in Core rather than retrying from Toolbox.',
-				}
-			);
-			const result = form.querySelector('.npcink-toolbox__result');
-			if (result) {
-				result.appendChild(createRawDetails({
-					proposals,
-					executions,
-					blocked_execution_count: executionBlocked,
-					failed: failed ? formatErrorMessage(failed) : null,
-				}, 'Core submission and execution details'));
+		const totalSubmittedCount = states.filter((state) => state.batchProposalResult).length;
+		renderMediaDerivativeBatchResults(
+			form,
+			states,
+			failures.length ? 'Batch submission partially finished' : 'Batch submission finished',
+			failures.length ? 'Some selected previews could not be submitted. Successful Core proposals were preserved; retry only unresolved items.' : 'Selected previews were submitted to Core review. No execution was requested from Toolbox.',
+			{
+				selected_count: states.length,
+				submitted_count: totalSubmittedCount,
+				failed_count: failures.length,
+				partial_success: totalSubmittedCount > 0 && failures.length > 0,
+				retryable: failures.length > 0,
+				operator_next_action: failures.length ? 'Resolve or retry only failed proposal submissions.' : 'Open Core review to approve or reject the submitted proposals.',
+				retry_guidance: failures.length ? 'Successful Core proposals remain available and will not be resubmitted.' : 'Execution stays outside this Toolbox workbench.',
 			}
+		);
+		updateMediaBatchSelectedCount(form);
+		const result = form.querySelector('.npcink-toolbox__result');
+		if (result) {
+			result.appendChild(createRawDetails({
+				proposals,
+				failures: failures.map((failure) => ({
+					attachment_id: failure.attachment_id,
+					error: formatErrorMessage(failure.error),
+				})),
+			}, 'Core review submission details'));
 		}
+	}
 
 	async function submitMediaDerivativeProposal(form) {
 		if (!config.adapterRestUrl) {
@@ -6107,7 +6262,15 @@
 			toolbox_tab: null,
 			toolbox_tool: null,
 			site_check_tab: null,
+			site_ops_insights_preview: null,
+			site_ops_cloud_analysis: null,
+			nightly_inspection_preview: null,
+			_wpnonce: null,
 		};
+	}
+
+	function hasPreviewActionParams(params) {
+		return params.has('site_ops_insights_preview') || params.has('site_ops_cloud_analysis') || params.has('nightly_inspection_preview');
 	}
 
 	function updateToolboxUrl(values) {
@@ -6348,7 +6511,7 @@
 		}
 		if (tab === 'tools' && requestedTool) {
 			activateToolPanel(requestedTool, false, toolWorkspaceForTab(tab) || requestedToolWorkspace);
-			if (canonicalizeToolUrl) {
+			if (canonicalizeToolUrl || hasPreviewActionParams(params)) {
 				updateToolboxUrl(toolUrlState(toolWorkspaceForTab(tab) || requestedToolWorkspace, requestedTool));
 			}
 		}
@@ -6813,6 +6976,15 @@
 				if (batchProposalButton && form.contains(batchProposalButton)) {
 					event.preventDefault();
 					submitMediaDerivativeBatchProposals(form).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
+				const retryFailedPreviewButton = event.target.closest('[data-toolbox-retry-failed-media-previews]');
+				if (retryFailedPreviewButton && form.contains(retryFailedPreviewButton)) {
+					event.preventDefault();
+					retryFailedMediaDerivativeBatchPreviews(form).catch((error) => {
 						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
 					});
 					return;
