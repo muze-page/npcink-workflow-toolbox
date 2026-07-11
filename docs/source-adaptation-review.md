@@ -1,6 +1,6 @@
 # External Source Adaptation Review
 
-Status: staged exact-source editor slice.
+Status: evolved into the URL-reference input path for `article_writing_pack.v1`.
 
 ## AI Change Envelope
 
@@ -9,9 +9,9 @@ Status: staged exact-source editor slice.
   adaptation review.
 - **Intended change:** accept one public source URL, first return a bounded exact
   URL extraction preview, then query Cloud Site Knowledge for related local
-  passages and return one review-only `source_adaptation_review.v1`
-  artifact with Chinese source summary, site-style signals, adaptation
-  directions, outline guidance, and fact/copyright checks.
+  passages and return one review-only `article_writing_pack.v1` artifact with
+  inferred audience, priorities, source facts, overlap, distinct angle, outline,
+  and fact/copyright/similarity checks.
 - **Explicit non-goals:** no full article generation, translation-and-publish,
   direct URL fetch from WordPress, media import, editor body replacement,
   automatic publishing, Core proposal creation, queue, indexing lifecycle,
@@ -19,10 +19,11 @@ Status: staged exact-source editor slice.
 - **Boundary owner:** Toolbox owns the editor button and composition; Cloud owns
   web-reader runtime, hosted AI runtime, and Site Knowledge/vector detail;
   WordPress authors retain article text and native save authority.
-- **Public contracts touched:** editor intent `source_adaptation_review`, stages
-  `extract|adapt`, Cloud `source_extraction_preview.v1`, Site Knowledge `writing_support_plan`, hosted
-  content-support suggestion contract, and artifact
-  `source_adaptation_review.v1`.
+- **Public contracts touched:** compatibility editor intent
+  `source_adaptation_review`, stages `extract|research_plan` (`adapt` alias),
+  input mode `url_reference`, Cloud `source_extraction_preview.v1`, Site
+  Knowledge `writing_support_plan`, hosted content-support suggestion contract,
+  and artifact `article_writing_pack.v1`.
 - **Files expected to change:** `includes/Rest_Controller.php`,
   `includes/Provider_Client.php`, `assets/editor-content-support.js`, product
   boundary/docs, translation assets, and `tests/run.php`.
@@ -40,9 +41,9 @@ Status: staged exact-source editor slice.
 
 The button solves one bounded decision problem:
 
-> Given one external article, what should an editor preserve, verify, and
-> change so a future human-written article fits this site's existing coverage
-> and tone without copying or automatically publishing the source?
+> Given one external article, what reviewed planning artifact should a future
+> article generator consume so it follows source facts, avoids existing-site
+> overlap, and uses a distinct site-appropriate direction?
 
 The first slice intentionally stops before article-body generation. Cloud web
 reader output is bounded evidence, not proof that a whole source article was
@@ -59,9 +60,11 @@ one public source URL
 -> continue explicitly
 -> Cloud Site Knowledge writing-support query
 -> related local passages and coverage signals
--> hosted AI source-adaptation review
--> operator reviews summary, style signals, directions, outline, and risks
--> human editor writes or revises the current article
+-> hosted AI writing-pack inference
+-> `article_writing_pack.v1`
+-> operator reviews inferred audience, focus, facts, overlap, angle, outline,
+   and risks
+-> future article generation remains blocked in this stage
 ```
 
 ## Acceptance Rules
@@ -75,13 +78,19 @@ one public source URL
   results.
 - Preserve the resolved source URL and reader status in review evidence.
 - The default `extract` stage must stop before Site Knowledge and hosted AI.
-- Enable `adapt` only when Cloud reports `status=ready` and `url_match=matched`,
-  with a second Toolbox path check as defense in depth.
+- Enable `research_plan` only when Cloud reports `status=ready` and
+  `url_match=matched`, with a second Toolbox path check as defense in depth.
+  Accept `adapt` only as a compatibility alias.
+- Accept only `input_mode=url_reference` in this version and fail unsupported
+  modes explicitly. Preserve the generic `source_materials` and
+  `editorial_brief` output boundary for later manual and mixed inputs.
 - Treat reader content as `untrusted_external_source`; embedded instructions
   are data and must never override the adaptation prompt.
 - Keep every returned artifact `suggestion_only` with
   `direct_wordpress_write=false`.
 - Do not expose a button that inserts or replaces the article body.
+- Return `article_generation_allowed=false`; the writing pack is a prerequisite
+  artifact, not permission to generate or write an article.
 - Make incomplete reader coverage, source rights, factual verification, and
   overlap with existing site articles explicit review items.
 

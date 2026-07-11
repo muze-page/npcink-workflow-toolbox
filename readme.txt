@@ -23,6 +23,9 @@ The plugin provides a WordPress admin surface and post-editor panel for:
   direct-answer lanes;
 * writing preparation, title ideas, outline support, summary suggestions, and
   publish-readiness checks;
+* a URL-reference article writing pack that combines exact-source evidence with
+  related site knowledge to infer audience, focus, facts, overlap, angle, and
+  outline for review before any future article generation;
 * SEO, AEO, and GEO guidance from operator-maintained site context;
 * existing-category and existing-tag recommendations for review;
 * internal-link candidates and source-coverage notes;

@@ -441,7 +441,7 @@ support flows. It accepts current draft context plus one intent:
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
 default buttons are now Npcink review and handoff actions: publish preflight,
-bounded external-source adaptation review, internal-link candidates,
+URL-reference article writing pack, internal-link candidates,
 current-article contextual ALT review, image
 candidates, and article audio candidates. Contextual ALT operates on each image
 occurrence and uses the nearest heading, adjacent article text, and caption as
@@ -467,13 +467,17 @@ editor button. Article checkup is a local suggestion-only diagnostic that points
 to sentence-density, fact-gap, tone, structure, and format review items without
 rewriting or inserting text. Paragraph review lives in the selected-block
 toolbar.
-The `source_adaptation_review` intent is deliberately not a restored article
-generator. Its default `extract` stage requests one exact-URL bounded Cloud
-`source_extraction_preview.v1` result and stops for operator verification. Only
-the explicit `adapt` stage queries related Cloud Site Knowledge passages as
-style and coverage hints and asks hosted AI for a Chinese summary, adaptation
-directions, outline, and verification list. Reader content remains untrusted
-external data and embedded instructions cannot change the hosted task.
+The `source_adaptation_review` route intent is deliberately retained for
+compatibility but now returns the planning artifact `article_writing_pack.v1`.
+Its default `extract` stage requests one exact-URL bounded Cloud
+`source_extraction_preview.v1` result and stops for operator verification. The
+canonical `research_plan` stage (`adapt` remains an input alias) queries related
+Cloud Site Knowledge passages and asks hosted AI for inferred audience,
+priorities, fact ledger, overlap map, distinct angle, outline, and risk review.
+The current input mode is `url_reference`; the normalized `source_materials`
+and `editorial_brief` boundaries allow later manual or mixed input without a
+second contract. Reader content remains untrusted external data and embedded
+instructions cannot change the hosted task.
 It does not fetch URLs from WordPress, return a full translation, insert or
 replace article text, import media, create a Core proposal, or publish.
 The discoverability result may show a current-draft image ALT/caption check and
@@ -708,8 +712,8 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
-- one bounded external-source adaptation review using Cloud reader evidence
-  and related Cloud Site Knowledge passages;
+- one bounded URL-reference `article_writing_pack.v1` using Cloud reader
+  evidence and related Cloud Site Knowledge passages;
 - internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
   optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.

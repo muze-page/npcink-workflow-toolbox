@@ -853,13 +853,24 @@ final class Rest_Controller {
 
 		$context = $this->editor_post_context( $request );
 		if ( 'source_adaptation_review' === $intent ) {
+			$input_mode = sanitize_key( (string) ( $request->get_param( 'input_mode' ) ?: 'url_reference' ) );
+			if ( 'url_reference' !== $input_mode ) {
+				return new WP_Error(
+					'npcink_toolbox_writing_pack_input_mode_not_supported',
+					__( 'This version supports article writing packs generated from one public reference URL only.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400 )
+				);
+			}
 			$source_url = $this->editor_source_adaptation_url( (string) $request->get_param( 'source_url' ) );
 			if ( is_wp_error( $source_url ) ) {
 				return $source_url;
 			}
 			$context['source_url'] = $source_url;
 			$source_stage = sanitize_key( (string) ( $request->get_param( 'source_stage' ) ?: 'extract' ) );
-			$context['source_stage'] = in_array( $source_stage, array( 'extract', 'adapt' ), true ) ? $source_stage : 'extract';
+			$context['source_stage'] = in_array( $source_stage, array( 'extract', 'adapt', 'research_plan' ), true ) ? $source_stage : 'extract';
+			$context['source_stage_requested'] = $context['source_stage'];
+			$context['input_mode']   = $input_mode;
+			$context['user_instruction'] = '';
 		}
 			if ( 'title_suggestions' === $intent ) {
 				$context['context_scope']        = 'full_article';
@@ -936,6 +947,9 @@ final class Rest_Controller {
 		if ( 'source_adaptation_review' === $intent ) {
 			$source_url   = (string) ( $context['source_url'] ?? '' );
 			$source_stage = (string) ( $context['source_stage'] ?? 'extract' );
+			if ( 'adapt' === $source_stage ) {
+				$source_stage = 'research_plan';
+			}
 			$external_raw  = $this->editor_cached_cloud_web_search(
 				array(
 					'query'        => $source_url,
@@ -957,6 +971,8 @@ final class Rest_Controller {
 			$result['sections']['source_article']['resolved_url']  = $source_resolved_url;
 			$result['sections']['source_article']['url_match']     = $source_url_matches ? 'matched' : ( $cloud_url_match ?: 'unavailable' );
 			$result['artifact_type']              = 'source_extraction_preview.v1';
+			$result['contract_version']           = 'source_extraction_preview.v1';
+			$result['input_mode']                 = 'url_reference';
 			$result['composition_role']           = 'external_source_extraction_review';
 			$result['final_write_path']            = 'operator_review_only_no_insert';
 			$result['handoff']['final_writes']     = 'operator_review_only_no_insert';
@@ -1007,12 +1023,25 @@ final class Rest_Controller {
 				);
 			}
 
-			$result['artifact_type']              = 'source_adaptation_review.v1';
-			$result['composition_role']           = 'external_source_site_style_review';
-			$result['final_write_path']            = 'human_editor_native_save_after_review';
-			$result['handoff']['final_writes']     = 'human_editor_native_save_after_review';
+			$result['sections']['article_writing_pack'] = $this->editor_article_writing_pack(
+				$context,
+				$result['sections']['source_article'],
+				$result['sections']['source_site_context'] ?? array(),
+				$result['sections']['source_adaptation_review'] ?? array(),
+				$source_text
+			);
+			$legacy_adapt_stage = 'adapt' === (string) ( $context['source_stage_requested'] ?? '' );
+			$result['artifact_type']              = $legacy_adapt_stage ? 'source_adaptation_review.v1' : 'article_writing_pack.v1';
+			$result['contract_version']           = $legacy_adapt_stage ? 'source_adaptation_review.v1' : 'article_writing_pack.v1';
+			$result['primary_artifact_type']      = 'article_writing_pack.v1';
+			$result['input_mode']                 = 'url_reference';
+			$result['composition_role']           = 'source_grounded_article_planning';
+			$result['final_write_path']            = 'operator_review_only_no_insert';
+			$result['handoff']['final_writes']     = 'operator_review_only_no_insert';
 			$result['handoff']['source_runtime']   = 'cloud_exact_url_reader';
 			$result['handoff']['style_runtime']    = 'cloud_site_knowledge';
+			$result['handoff']['required_input_contract'] = 'article_writing_pack.v1';
+			$result['handoff']['article_generation_status'] = 'not_admitted_current_stage';
 			$result['handoff']['body_generation']  = false;
 			$result['handoff']['body_replacement'] = false;
 			$result['recommendation_set']          = $this->editor_recommendation_set( $context, $intent, $result['sections'] );
@@ -3089,6 +3118,7 @@ final class Rest_Controller {
 			$this->editor_cached_hosted_ai_content_support(
 				array(
 					'intent'                  => 'source_adaptation_review',
+					'input_mode'              => (string) ( $context['input_mode'] ?? 'url_reference' ),
 					'post_id'                 => absint( $context['post_id'] ?? 0 ),
 					'title'                   => (string) ( $source['title'] ?? '' ),
 					'content'                 => (string) ( $source['content'] ?? '' ),
@@ -3112,6 +3142,220 @@ final class Rest_Controller {
 		$section['body_replacement']       = false;
 
 		return $section;
+	}
+
+	private function editor_article_writing_pack( array $context, array $source, array $knowledge, array $review, string $source_text ): array {
+		$output = $this->editor_writing_pack_hosted_output( $review );
+		$editorial = is_array( $output['editorial_direction'] ?? null ) ? $output['editorial_direction'] : $output;
+		$research  = is_array( $output['research_basis'] ?? null ) ? $output['research_basis'] : $output;
+		$adaptation = is_array( $output['site_adaptation'] ?? null ) ? $output['site_adaptation'] : $output;
+		$plan      = is_array( $output['writing_plan'] ?? null ) ? $output['writing_plan'] : $output;
+		$risk      = is_array( $output['risk_review'] ?? null ) ? $output['risk_review'] : $output;
+		$source_ready = 'ready' === sanitize_key( (string) ( $source['status'] ?? '' ) )
+			&& 'matched' === sanitize_key( (string) ( $source['url_match'] ?? '' ) )
+			&& '' !== trim( $source_text );
+		$review_ready = ! empty( $output ) && ! in_array( sanitize_key( (string) ( $review['status'] ?? '' ) ), array( 'blocked', 'error', 'failed' ), true );
+		$blocking_reasons = array();
+		if ( ! $source_ready ) {
+			$blocking_reasons[] = 'source_extraction_not_ready';
+		}
+		if ( ! $review_ready ) {
+			$blocking_reasons[] = 'writing_pack_output_not_ready';
+		}
+
+		$operator_instruction = trim( sanitize_textarea_field( (string) ( $context['user_instruction'] ?? '' ) ) );
+		$pack = array(
+			'artifact_type'          => 'article_writing_pack.v1',
+			'contract_version'       => 'article_writing_pack.v1',
+			'composition_role'       => 'source_grounded_article_planning',
+			'input_mode'             => 'url_reference',
+			'inputs'                 => array(
+				'source_materials'   => array(
+					array(
+						'material_type'       => 'public_url',
+						'requested_url'       => esc_url_raw( (string) ( $source['requested_url'] ?? $context['source_url'] ?? '' ) ),
+						'resolved_url'        => esc_url_raw( (string) ( $source['resolved_url'] ?? '' ) ),
+						'title'               => sanitize_text_field( (string) ( $source['title'] ?? '' ) ),
+						'content_hash'        => sanitize_text_field( (string) ( $source['content_hash'] ?? '' ) ),
+						'coverage'            => $this->editor_writing_pack_payload_value( $source['coverage'] ?? array() ),
+						'content_trust'       => sanitize_key( (string) ( $source['content_trust'] ?? 'untrusted_external_source' ) ),
+						'url_match'           => sanitize_key( (string) ( $source['url_match'] ?? '' ) ),
+						'continuation_requested' => true,
+						'operator_confirmed'     => false,
+					),
+				),
+				'editorial_brief'    => array(
+					'audience'             => $this->editor_writing_pack_inferred_field( $editorial['audience'] ?? $editorial['inferred_audience'] ?? '' ),
+					'article_goal'          => $this->editor_writing_pack_inferred_field( $editorial['article_goal'] ?? '' ),
+					'reader_problem'        => $this->editor_writing_pack_inferred_field( $editorial['reader_problem'] ?? '' ),
+					'focus_points'          => $this->editor_writing_pack_inferred_field( $this->editor_writing_pack_list( $editorial['focus_points'] ?? $output['adaptation_directions'] ?? array(), 8 ) ),
+					'operator_instruction'  => array(
+						'value'              => $operator_instruction,
+						'source'             => '' !== $operator_instruction ? 'operator' : 'not_supplied',
+						'operator_confirmed' => '' !== $operator_instruction,
+					),
+				),
+				'site_context_policy' => array(
+					'role'                   => 'overlap_tone_terminology_and_internal_reference_only',
+					'factual_source_for_external_claims' => false,
+					'index_lifecycle_owner'  => 'npcink_ai_cloud',
+				),
+			),
+			'research_basis'        => array(
+				'source_summary'     => $this->editor_writing_pack_list( $research['source_summary'] ?? $research['source_summary_zh'] ?? $output['source_summary_zh'] ?? array(), 6 ),
+				'fact_ledger'        => $this->editor_writing_pack_list( $research['fact_ledger'] ?? array(), 16 ),
+				'source_coverage'    => $this->editor_writing_pack_payload_value( $source['coverage'] ?? array() ),
+				'verification_items' => $this->editor_writing_pack_list( $research['verification_items'] ?? $output['facts_to_verify'] ?? array(), 12 ),
+			),
+			'site_adaptation'       => array(
+				'related_articles'   => $this->editor_writing_pack_related_articles( $knowledge ),
+				'overlap_map'        => $this->editor_writing_pack_list( $adaptation['overlap_map'] ?? array(), 10 ),
+				'site_style_signals' => $this->editor_writing_pack_list( $adaptation['site_style_signals'] ?? $output['site_style_signals'] ?? array(), 8 ),
+				'unique_angle'       => $this->editor_writing_pack_inferred_field( $adaptation['unique_angle'] ?? $output['unique_angle'] ?? '' ),
+			),
+			'writing_plan'          => array(
+				'title_directions' => $this->editor_writing_pack_list( $plan['title_directions'] ?? array(), 6 ),
+				'reader_promise'   => $this->editor_writing_pack_inferred_field( $plan['reader_promise'] ?? '' ),
+				'content_type'     => $this->editor_writing_pack_inferred_field( $plan['content_type'] ?? '' ),
+				'outline'          => $this->editor_writing_pack_list( $plan['outline'] ?? $output['suggested_outline'] ?? array(), 12 ),
+				'cta_direction'    => $this->editor_writing_pack_inferred_field( $plan['cta_direction'] ?? '' ),
+			),
+			'risk_review'           => array(
+				'fact_risks'       => $this->editor_writing_pack_list( $risk['fact_risks'] ?? $output['facts_to_verify'] ?? array(), 12 ),
+				'rights_risks'     => $this->editor_writing_pack_list( $risk['rights_risks'] ?? $output['copyright_and_attribution'] ?? array(), 12 ),
+				'similarity_risks' => $this->editor_writing_pack_list( $risk['similarity_risks'] ?? array(), 10 ),
+			),
+			'generation_admission' => array(
+				'status'                     => empty( $blocking_reasons ) ? 'needs_review' : 'blocked',
+				'blocking_reasons'           => $blocking_reasons,
+				'review_requirements'        => array(
+					'operator_editorial_review',
+					'fact_traceability_review',
+					'source_rights_confirmation',
+					'similarity_and_overlap_review',
+				),
+				'article_generation_allowed' => false,
+				'next_gate'                  => 'review_and_confirm_article_writing_pack_before_future_draft_generation',
+			),
+			'provenance'            => array(
+				'source_facts'        => 'cloud_exact_source_extraction',
+				'site_context'        => 'cloud_site_knowledge',
+				'editorial_direction' => 'hosted_ai_inference_not_operator_confirmed',
+				'operator_input'      => '' !== $operator_instruction ? 'optional_instruction_only' : 'none',
+			),
+			'write_posture'          => 'suggestion_only',
+			'final_write_path'       => 'operator_review_only_no_insert',
+			'direct_wordpress_write' => false,
+			'body_generation'        => false,
+			'body_replacement'       => false,
+		);
+		$missing_required_fields = array();
+		if ( empty( $pack['inputs']['editorial_brief']['audience']['value'] ) ) {
+			$missing_required_fields[] = 'editorial_brief.audience';
+		}
+		if ( empty( $pack['research_basis']['fact_ledger'] ) ) {
+			$missing_required_fields[] = 'research_basis.fact_ledger';
+		}
+		if ( empty( $pack['site_adaptation']['unique_angle']['value'] ) ) {
+			$missing_required_fields[] = 'site_adaptation.unique_angle';
+		}
+		if ( empty( $pack['writing_plan']['outline'] ) ) {
+			$missing_required_fields[] = 'writing_plan.outline';
+		}
+		if ( ! empty( $missing_required_fields ) ) {
+			$pack['generation_admission']['status'] = 'blocked';
+			$pack['generation_admission']['blocking_reasons'][] = 'writing_pack_required_fields_missing';
+			$pack['generation_admission']['missing_required_fields'] = $missing_required_fields;
+		}
+		$fingerprint_basis = $pack;
+		$fingerprint = 'sha256:' . hash( 'sha256', (string) wp_json_encode( $fingerprint_basis ) );
+		$pack['writing_pack_id']     = 'awp_' . substr( hash( 'sha256', $fingerprint ), 0, 20 );
+		$pack['content_fingerprint'] = $fingerprint;
+		$pack['generated_at']        = gmdate( 'c' );
+
+		return $pack;
+	}
+
+	private function editor_writing_pack_hosted_output( array $review ): array {
+		if ( is_array( $review['output_json'] ?? null ) ) {
+			return $review['output_json'];
+		}
+		$result = is_array( $review['result'] ?? null ) ? $review['result'] : array();
+		if ( is_array( $result['output_json'] ?? null ) ) {
+			return $result['output_json'];
+		}
+
+		return array();
+	}
+
+	private function editor_writing_pack_inferred_field( $value ): array {
+		if ( is_array( $value ) && array_key_exists( 'value', $value ) ) {
+			$value = $value['value'];
+		}
+		return array(
+			'value'              => $this->editor_writing_pack_payload_value( $value ),
+			'source'             => 'ai_inferred_from_source_and_site_context',
+			'operator_confirmed' => false,
+		);
+	}
+
+	private function editor_writing_pack_list( $value, int $limit ): array {
+		$is_list = is_array( $value ) && ( array() === $value || array_keys( $value ) === range( 0, count( $value ) - 1 ) );
+		$items = $is_list ? $value : ( null === $value || '' === $value ? array() : array( $value ) );
+		$result = array();
+		foreach ( array_slice( $items, 0, max( 1, min( 20, $limit ) ) ) as $item ) {
+			$sanitized = $this->editor_writing_pack_payload_value( $item );
+			if ( null !== $sanitized && '' !== $sanitized && array() !== $sanitized ) {
+				$result[] = $sanitized;
+			}
+		}
+
+		return $result;
+	}
+
+	private function editor_writing_pack_payload_value( $value, int $depth = 0 ) {
+		if ( $depth > 4 || null === $value ) {
+			return null;
+		}
+		if ( is_bool( $value ) || is_int( $value ) || is_float( $value ) ) {
+			return $value;
+		}
+		if ( is_string( $value ) ) {
+			return wp_trim_words( sanitize_textarea_field( wp_strip_all_tags( $value ) ), 180, '' );
+		}
+		if ( ! is_array( $value ) ) {
+			return null;
+		}
+
+		$result = array();
+		foreach ( array_slice( $value, 0, 20, true ) as $key => $item ) {
+			$clean_key = is_int( $key ) ? $key : sanitize_key( (string) $key );
+			if ( '' === (string) $clean_key && ! is_int( $clean_key ) ) {
+				continue;
+			}
+			$clean_value = $this->editor_writing_pack_payload_value( $item, $depth + 1 );
+			if ( null !== $clean_value ) {
+				$result[ $clean_key ] = $clean_value;
+			}
+		}
+
+		return $result;
+	}
+
+	private function editor_writing_pack_related_articles( array $knowledge ): array {
+		$items = $this->editor_related_content_items( $knowledge );
+		$result = array();
+		foreach ( array_slice( $items, 0, 6 ) as $index => $item ) {
+			$result[] = array(
+				'post_id'      => absint( $item['post_id'] ?? $item['id'] ?? 0 ),
+				'title'        => sanitize_text_field( (string) ( $item['title'] ?? $item['name'] ?? '' ) ),
+				'url'          => esc_url_raw( (string) ( $item['url'] ?? $item['permalink'] ?? '' ) ),
+				'score'        => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
+				'evidence_ref' => 'site_knowledge:' . sanitize_key( (string) ( $item['post_id'] ?? $item['id'] ?? $index ) ),
+			);
+		}
+
+		return $result;
 	}
 
 	private function editor_image_recommendation_section( array $section ): array {

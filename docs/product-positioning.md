@@ -91,8 +91,9 @@ semantics.
    Assistant route as compatibility only, not as an operator-facing or public
    Ability surface.
 8. Let editors review one external source against Cloud Site Knowledge vectors
-   and receive a bounded Chinese adaptation brief without generating, inserting,
-   or publishing a replacement article body.
+   and receive `article_writing_pack.v1`: a bounded, source-grounded planning
+   artifact with inferred audience, priorities, facts, overlap, angle, and
+   outline, without generating, inserting, or publishing an article body.
 9. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.
@@ -184,10 +185,13 @@ candidates are manual review aids, publish preflight is a unified advisory
 review panel, SEO metadata is only a single-post Core handoff preview, and new
 vocabulary remains Core policy-gated strong review.
 
-The editor may also expose one external-source adaptation review that combines
-bounded Cloud reader evidence with related Site Knowledge passages. It returns
-summary, overlap/style signals, directions, outline guidance, and verification
+The editor may also expose one URL-reference article-writing-pack flow that
+combines bounded Cloud reader evidence with related Site Knowledge passages.
+It returns `article_writing_pack.v1` with inferred editorial direction,
+fact ledger, overlap/style signals, distinct angle, outline guidance, and risk
 checks only; it must not generate or insert a translated replacement body.
+The contract keeps `source_materials` and `editorial_brief` separate so future
+manual and mixed inputs can extend it without replacing the URL-first format.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.

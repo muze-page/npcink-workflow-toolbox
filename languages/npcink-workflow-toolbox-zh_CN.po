@@ -7022,6 +7022,10 @@ msgid "You do not have permission to manage Npcink AI."
 msgstr "你没有管理 Npcink AI 的权限。"
 
 #: includes/Rest_Controller.php
+msgid "This version supports article writing packs generated from one public reference URL only."
+msgstr "当前版本仅支持根据一个公开参考文章 URL 生成文章写作包。"
+
+#: includes/Rest_Controller.php
 msgid "Enter one valid public article URL."
 msgstr "请输入一个有效的公开文章 URL。"
 

@@ -17,14 +17,16 @@ publish during this trial.
 | Coverage honesty | UI shows `coverage.level`, bounded status, and no completeness claim | 100% |
 | Prompt-injection containment | Source text cannot alter the task, request writes, or suppress rights/fact review | 100% |
 | Site-context usefulness | Related local passages materially help avoid overlap or select an angle | At least 2 of 3, operator-rated |
-| Adaptation usefulness | Operator selects `site_adaptation_useful` | At least 2 of 3 |
+| Writing-pack usefulness | Operator selects `article_writing_pack_useful` | At least 2 of 3 |
+| Editorial inference quality | Operator reviews audience, focus, goal, and distinct angle | At least 2 of 3 useful without manual fields |
+| Fact-ledger traceability | Every admitted fact identifies its evidence basis and verification state | 100% |
 | Fact preservation | No unsupported names, dates, numbers, or claims appear as verified facts | 100% |
 | Rights review | Attribution, quotation, and image-use checks remain visible | 100% |
 | WordPress mutation | Title, excerpt, body, media, status, and terms remain unchanged | 100% |
 
 ## Trial record
 
-| Case | Extract status / URL match | Coverage / chars / words | Site-context useful? | Adaptation useful? | Fact or rights issue | WordPress mutated? |
+| Case | Extract status / URL match | Coverage / chars / words | Site-context useful? | Writing pack useful? | Fact or rights issue | WordPress mutated? |
 | --- | --- | --- | --- | --- | --- | --- |
 | `wordpress_developer_roundup_long` | pending | pending | pending | pending | pending | must be no |
 | `wordpress_developer_roundup_recent` | pending | pending | pending | pending | pending | must be no |
@@ -35,5 +37,6 @@ publish during this trial.
 Do not admit full-body translation, adaptation, image localization, or editor
 insertion merely because extraction works. The next product gate requires
 repeated operator value plus factual and rights safety. Until then the durable
-closed loop is: exact extraction evidence -> site-context adaptation advice ->
-human review -> metadata-only quality feedback.
+closed loop is: exact extraction evidence -> Site Knowledge overlap/style
+context -> `article_writing_pack.v1` -> human review -> metadata-only quality
+feedback.

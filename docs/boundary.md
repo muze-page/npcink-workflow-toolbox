@@ -21,8 +21,10 @@ Owned here:
 - operator-facing admin UI for the toolbox.
 - one editor-side staged composition that first reviews exact-URL
   `source_extraction_preview.v1` evidence, then joins Cloud Site Knowledge
-  passages into `source_adaptation_review.v1` hosted suggestion output without
-  fetching URLs locally or generating replacement article text.
+  passages and hosted suggestions into `article_writing_pack.v1` without
+  fetching URLs locally or generating replacement article text. The current
+  input mode is `url_reference`; future manual brief fields must extend the same
+  contract rather than create a parallel writer.
 
 Not owned here:
 

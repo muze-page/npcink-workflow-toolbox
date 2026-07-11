@@ -29,7 +29,7 @@ The first version provides:
   a generic Abilities Explorer, provider picker, request log, or connector
   approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
-  on Npcink review and handoff flows: bounded external-source adaptation review,
+  on Npcink review and handoff flows: URL-reference article writing pack,
   publish preflight, internal-link
   candidates, current-article contextual ALT review, image candidates, and
   article audio candidates. Generic title, summary, taxonomy/tag, outline, and
@@ -154,6 +154,7 @@ expect to stay discoverable from the root README:
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
 [Content Support Product Readiness](docs/content-support-product-readiness.md),
 [External Source Adaptation Review](docs/source-adaptation-review.md),
+[Article Writing Pack V1](docs/article-writing-pack-v1.md),
 [Source Adaptation Operator Trial](docs/source-adaptation-operator-trial.md),
 [Content Support Release And Trial Closeout](docs/archive/2026-06/content-support-release-trial-closeout.md),
 [Content Support Toolkit Migration History](docs/archive/2026-06/content-support-toolkit-migration-history-2026-06-21.md),

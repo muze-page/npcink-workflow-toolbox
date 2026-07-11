@@ -1975,7 +1975,7 @@
 
 	function resultScopeLabel(value) {
 		if (value === 'source_adaptation_review') {
-			return __('Uses a bounded source excerpt and related site vectors to suggest a distinct Chinese angle, tone, outline, and verification checklist. It does not generate or insert a full article.', 'npcink-workflow-toolbox');
+			return __('Builds a reviewable article writing pack from exact source evidence and related site vectors. Audience, focus, angle, facts, overlap, and outline remain planning inputs; no article body is generated or inserted.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'writing_support') {
 			return __('Finds similar published content first, then helps you decide how this draft should differ.', 'npcink-workflow-toolbox');
@@ -2632,7 +2632,10 @@
 			{ label: __('Wrong source', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_url_mismatch', 'operator_confidence_low'] },
 		];
 		const sourceAdaptationOptions = [
-			{ label: __('Adaptation useful', 'npcink-workflow-toolbox'), outcome: 'accepted', labels: ['site_adaptation_useful', 'good_but_needs_human_draft'] },
+			{ label: __('Writing pack useful', 'npcink-workflow-toolbox'), outcome: 'accepted', labels: ['article_writing_pack_useful', 'good_but_needs_human_draft'] },
+			{ label: __('Audience inference wrong', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['writing_pack_audience_wrong', 'operator_input_needed'] },
+			{ label: __('Focus inference wrong', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['writing_pack_focus_wrong', 'operator_input_needed'] },
+			{ label: __('Overlap analysis wrong', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['site_overlap_wrong', 'operator_confidence_low'] },
 			{ label: __('Site tone mismatch', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['site_style_mismatch', 'operator_confidence_low'] },
 			{ label: __('Fact risk', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_fact_risk', 'manual_verification_required'] },
 			{ label: __('Rights risk', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_or_license_risk', 'manual_rights_review_required'] },
@@ -3188,6 +3191,65 @@
 			{ key: 'suggested-outline', label: __('Suggested outline', 'npcink-workflow-toolbox'), items: sourceAdaptationValueItems(output.suggested_outline, __('Section', 'npcink-workflow-toolbox')) },
 			{ key: 'facts-to-verify', label: __('Facts to verify', 'npcink-workflow-toolbox'), items: sourceAdaptationValueItems(output.facts_to_verify, __('Check', 'npcink-workflow-toolbox')) },
 			{ key: 'copyright-attribution', label: __('Copyright and attribution review', 'npcink-workflow-toolbox'), items: sourceAdaptationValueItems(output.copyright_and_attribution, __('Review item', 'npcink-workflow-toolbox')) },
+		].filter((group) => group.items.length);
+	}
+
+	function articleWritingPackItems(value, label) {
+		const raw = value && typeof value === 'object' && !Array.isArray(value) && Object.prototype.hasOwnProperty.call(value, 'value') ? value.value : value;
+		const values = Array.isArray(raw) ? raw : (raw === null || typeof raw === 'undefined' || raw === '' ? [] : [raw]);
+		return values.map((item, index) => {
+			const objectItem = item && typeof item === 'object' && !Array.isArray(item) ? item : {};
+			const name = readableItemText(objectItem.claim || objectItem.title || objectItem.heading || objectItem.angle || objectItem.name || objectItem.label || (values.length === 1 ? label : sprintf(__('%1$s %2$d', 'npcink-workflow-toolbox'), label, index + 1)), '');
+			const detail = [
+				objectItem.value,
+				objectItem.detail,
+				objectItem.reason,
+				objectItem.purpose,
+				objectItem.evidence_basis ? __('Evidence: ', 'npcink-workflow-toolbox') + readableItemText(objectItem.evidence_basis, '') : '',
+				objectItem.verification_status ? __('Verification: ', 'npcink-workflow-toolbox') + readableItemText(objectItem.verification_status, '') : '',
+				!objectItem.claim && !objectItem.title && !objectItem.heading && !objectItem.angle && !objectItem.name && !objectItem.label ? readableItemText(item, '') : '',
+			].filter(Boolean).join(' · ');
+			return {
+				name,
+				detail,
+				evidence_refs: ['article_writing_pack:v1'],
+				action_policy: 'operator_review_only_no_insert',
+			};
+		}).filter((item) => item.name || item.detail);
+	}
+
+	function articleWritingPackGroups(pack) {
+		if (!pack || typeof pack !== 'object') {
+			return [];
+		}
+		const inputs = pack.inputs || {};
+		const brief = inputs.editorial_brief || {};
+		const research = pack.research_basis || {};
+		const adaptation = pack.site_adaptation || {};
+		const plan = pack.writing_plan || {};
+		const risk = pack.risk_review || {};
+		const admission = pack.generation_admission || {};
+		return [
+			{ key: 'writing-pack-audience', label: __('Inferred audience', 'npcink-workflow-toolbox'), items: articleWritingPackItems(brief.audience, __('Audience', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-goal', label: __('Article goal and reader problem', 'npcink-workflow-toolbox'), items: articleWritingPackItems([brief.article_goal, brief.reader_problem].filter(Boolean), __('Editorial direction', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-focus', label: __('Inferred focus points', 'npcink-workflow-toolbox'), items: articleWritingPackItems(brief.focus_points, __('Focus', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-facts', label: __('Source fact ledger', 'npcink-workflow-toolbox'), items: articleWritingPackItems(research.fact_ledger, __('Fact', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-overlap', label: __('Existing-site overlap map', 'npcink-workflow-toolbox'), items: articleWritingPackItems(adaptation.overlap_map, __('Overlap', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-style', label: __('Site style and terminology signals', 'npcink-workflow-toolbox'), items: articleWritingPackItems(adaptation.site_style_signals, __('Signal', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-angle', label: __('Distinct article angle', 'npcink-workflow-toolbox'), items: articleWritingPackItems(adaptation.unique_angle, __('Angle', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-titles', label: __('Title directions', 'npcink-workflow-toolbox'), items: articleWritingPackItems(plan.title_directions, __('Title direction', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-promise', label: __('Reader promise and content type', 'npcink-workflow-toolbox'), items: articleWritingPackItems([plan.reader_promise, plan.content_type].filter(Boolean), __('Plan', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-outline', label: __('Writing outline', 'npcink-workflow-toolbox'), items: articleWritingPackItems(plan.outline, __('Section', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-verification', label: __('Facts to verify', 'npcink-workflow-toolbox'), items: articleWritingPackItems(research.verification_items || risk.fact_risks, __('Check', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-rights', label: __('Rights and similarity review', 'npcink-workflow-toolbox'), items: articleWritingPackItems([].concat(risk.rights_risks || [], risk.similarity_risks || []), __('Review item', 'npcink-workflow-toolbox')) },
+			{ key: 'writing-pack-admission', label: __('Article-generation admission', 'npcink-workflow-toolbox'), items: articleWritingPackItems({
+				value: [
+					sprintf(__('Status: %s', 'npcink-workflow-toolbox'), admission.status || __('needs review', 'npcink-workflow-toolbox')),
+					(admission.blocking_reasons || []).length ? __('Blocking reasons: ', 'npcink-workflow-toolbox') + admission.blocking_reasons.map(formatMetaLabel).join(', ') : '',
+					(admission.missing_required_fields || []).length ? __('Missing required fields: ', 'npcink-workflow-toolbox') + admission.missing_required_fields.join(', ') : '',
+					__('Full article generation is not enabled in this stage. Review and confirm the writing pack first.', 'npcink-workflow-toolbox'),
+				].filter(Boolean).join(' · '),
+			}, __('Admission', 'npcink-workflow-toolbox')) },
 		].filter((group) => group.items.length);
 	}
 
@@ -4133,7 +4195,6 @@
 
 	function flowAcceptsUserInstruction(intent) {
 		return [
-			'source_adaptation_review',
 			'title_suggestions',
 			'summary_suggestions',
 			'article_narration',
@@ -6136,7 +6197,7 @@
 				}
 			}
 
-			if (sections.source_article || sections.source_adaptation_review) {
+			if (sections.source_article || sections.source_adaptation_review || sections.article_writing_pack) {
 				blocks.push(createElement('h4', { key: 'source-adaptation-source-title' }, __('External source evidence', 'npcink-workflow-toolbox')));
 				blocks.push(createElement('p', { key: 'source-adaptation-source-help', className: 'npcink-toolbox-editor-support__muted' }, __('Reader output is bounded evidence, not proof that the complete article was captured. Verify the source and usage rights before drafting.', 'npcink-workflow-toolbox')));
 				blocks.push(renderItems(sourceArticleEvidenceItems(sections.source_article), __('No readable source evidence returned.', 'npcink-workflow-toolbox')));
@@ -6144,16 +6205,23 @@
 					blocks.push(createElement('h4', { key: 'source-adaptation-site-title' }, __('Related site articles from Site Knowledge', 'npcink-workflow-toolbox')));
 					blocks.push(renderItems(extractWritingSupportItems(sections.source_site_context), __('No related site articles were found.', 'npcink-workflow-toolbox')));
 				}
-				if (sections.source_adaptation_review) {
-					const groups = sourceAdaptationReviewGroups(sections.source_adaptation_review);
+				if (sections.article_writing_pack || sections.source_adaptation_review) {
+					if (sections.article_writing_pack) {
+						blocks.push(createElement('p', { key: 'writing-pack-inference-help', className: 'npcink-toolbox-editor-support__muted' }, __('Audience, goals, priorities, and angle are inferred planning fields and remain unconfirmed until a future typed manual-review mode is introduced.', 'npcink-workflow-toolbox')));
+					}
+					const groups = sections.article_writing_pack
+						? articleWritingPackGroups(sections.article_writing_pack)
+						: sourceAdaptationReviewGroups(sections.source_adaptation_review);
 					groups.forEach((group) => {
 						blocks.push(createElement('h4', { key: group.key + '-title' }, group.label));
 						blocks.push(renderItems(group.items, __('No review items returned.', 'npcink-workflow-toolbox')));
 					});
-					if (!groups.length && sections.source_adaptation_review.message) {
+					if (sections.source_adaptation_review && sections.source_adaptation_review.message) {
 						blocks.push(createElement('p', { key: 'source-adaptation-message', className: 'npcink-toolbox-editor-support__muted' }, sections.source_adaptation_review.message));
 					}
-					blocks.push(renderHostedAiDiagnostics(sections.source_adaptation_review, { defaultOpen: false }));
+					if (sections.source_adaptation_review) {
+						blocks.push(renderHostedAiDiagnostics(sections.source_adaptation_review, { defaultOpen: false }));
+					}
 				}
 			}
 
@@ -6664,6 +6732,7 @@
 							force_regenerate: shouldForceRegenerate,
 							user_instruction: userInstruction,
 							source_url: intent === 'source_adaptation_review' ? String(sourceArticleUrl || '').trim() : '',
+							input_mode: intent === 'source_adaptation_review' ? 'url_reference' : '',
 							source_stage: intent === 'source_adaptation_review' ? (runOptions.sourceStage || 'extract') : '',
 					});
 					if (isAudioIntent(intent)) {
@@ -8167,7 +8236,7 @@
 		const resultTitle = rerunIntent ? formatIntentLabel(rerunIntent) : __('Content support', 'npcink-workflow-toolbox');
 		const sourceExtractionSection = result && result.sections && result.sections.source_article ? result.sections.source_article : {};
 		const sourceExtractionReady = Boolean(result && result.artifact_type === 'source_extraction_preview.v1' && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched');
-		const sourceAdaptationComplete = Boolean(result && result.artifact_type === 'source_adaptation_review.v1');
+		const sourceAdaptationComplete = Boolean(result && result.sections && result.sections.article_writing_pack && result.sections.article_writing_pack.artifact_type === 'article_writing_pack.v1');
 		const isContextualParagraphResult = contextualResult && rerunIntent === 'polish_notes';
 		const resultControls = {
 			intent: activeFlowIntent || (result && result.intent) || '',
@@ -8285,7 +8354,7 @@
 									setResult(null);
 								},
 							}),
-							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Use only sources you may lawfully review and adapt. This first version returns guidance, not a copied or translated article body.', 'npcink-workflow-toolbox'))
+							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('This version generates a reviewable writing pack from one public URL. Audience, priorities, and angle are inferred and not yet operator-confirmed; no article body is generated or inserted.', 'npcink-workflow-toolbox'))
 						) : null,
 						rerunIntent && flowAcceptsUserInstruction(rerunIntent) ? createElement(
 							'div',
@@ -8313,11 +8382,11 @@
 									onClick: () => {
 										if (rerunIntent === 'source_adaptation_review') {
 											if (sourceExtractionReady) {
-												submitContentImplicitFeedback('continue_to_site_adaptation', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
-												runFlow(rerunIntent, { sourceStage: 'adapt' });
+												submitContentImplicitFeedback('generate_article_writing_pack', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
+												runFlow(rerunIntent, { sourceStage: 'research_plan' });
 											} else if (sourceAdaptationComplete) {
-												submitContentImplicitFeedback('rerun_site_adaptation', 'edited_before_accept', ['good_but_needs_human_draft']);
-												runFlow(rerunIntent, { sourceStage: 'adapt', forceRegenerate: true });
+												submitContentImplicitFeedback('regenerate_article_writing_pack', 'edited_before_accept', ['good_but_needs_human_draft']);
+												runFlow(rerunIntent, { sourceStage: 'research_plan', forceRegenerate: true });
 											} else {
 												runFlow(rerunIntent, { sourceStage: 'extract' });
 											}
@@ -8327,7 +8396,7 @@
 										runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
 										},
 									},
-									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionReady ? __('Continue to site adaptation', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-run site adaptation', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
+									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionReady ? __('Generate writing pack', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-generate writing pack', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
 								),
 								canAdvancedSummaryRerun ? createElement(
 									Button,
