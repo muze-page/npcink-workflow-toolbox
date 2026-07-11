@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 final class Admin_Page {
 	private const PARENT_MENU_SLUG = 'npcink-ai';
 	private const MENU_SLUG        = 'npcink-toolbox';
+	private const MENU_CAPABILITY  = 'manage_options';
 
 	private Settings $settings;
 	private string $hook_suffix = '';
@@ -25,34 +26,85 @@ final class Admin_Page {
 		$this->settings = $settings;
 	}
 
-	public function register_menu(): void {
-		if ( $this->has_npcink_parent_menu() ) {
-			$this->hook_suffix = add_submenu_page(
-				self::PARENT_MENU_SLUG,
-				__( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
-				__( 'Toolbox', 'npcink-workflow-toolbox' ),
-				'manage_options',
-				self::MENU_SLUG,
-				array( $this, 'render' ),
-				45
-			);
-			return;
-		}
+	public function register_navigation(): void {
+		add_menu_page(
+			__( 'Npcink AI', 'npcink-workflow-toolbox' ),
+			__( 'Npcink AI', 'npcink-workflow-toolbox' ),
+			self::MENU_CAPABILITY,
+			self::PARENT_MENU_SLUG,
+			array( $this, 'render_suite_overview' ),
+			'dashicons-superhero',
+			58
+		);
 
-		$this->hook_suffix = add_management_page(
-			__( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
-			__( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
-			'manage_options',
-			self::MENU_SLUG,
-			array( $this, 'render' )
+		add_submenu_page(
+			self::PARENT_MENU_SLUG,
+			__( 'Npcink AI Overview', 'npcink-workflow-toolbox' ),
+			__( 'Overview', 'npcink-workflow-toolbox' ),
+			self::MENU_CAPABILITY,
+			self::PARENT_MENU_SLUG,
+			array( $this, 'render_suite_overview' ),
+			0
 		);
 	}
 
-	private function has_npcink_parent_menu(): bool {
-		global $menu;
+	public function register_menu(): void {
+		$this->hook_suffix = add_submenu_page(
+			self::PARENT_MENU_SLUG,
+			__( 'Npcink Workflow Toolbox', 'npcink-workflow-toolbox' ),
+			__( 'Toolbox', 'npcink-workflow-toolbox' ),
+			self::MENU_CAPABILITY,
+			self::MENU_SLUG,
+			array( $this, 'render' ),
+			45
+		);
+	}
 
-		foreach ( (array) $menu as $item ) {
-			if ( isset( $item[2] ) && self::PARENT_MENU_SLUG === $item[2] ) {
+	public function render_suite_overview(): void {
+		if ( ! current_user_can( self::MENU_CAPABILITY ) ) {
+			wp_die( esc_html__( 'You do not have permission to manage Npcink AI.', 'npcink-workflow-toolbox' ) );
+		}
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Npcink AI', 'npcink-workflow-toolbox' ); ?></h1>
+			<p><?php esc_html_e( 'Installed Npcink WordPress tools and their independent administration surfaces.', 'npcink-workflow-toolbox' ); ?></p>
+			<h2><?php esc_html_e( 'Installed Surfaces', 'npcink-workflow-toolbox' ); ?></h2>
+			<table class="widefat striped" style="max-width: 920px;">
+				<tbody>
+					<?php
+					$this->render_suite_overview_row( __( 'Core', 'npcink-workflow-toolbox' ), __( 'Review proposals, approval decisions, commit preflight, audit, and client access tokens.', 'npcink-workflow-toolbox' ), 'npcink-governance-core' );
+					$this->render_suite_overview_row( __( 'Adapter', 'npcink-workflow-toolbox' ), __( 'Connect OpenClaw and compatible AI clients through the Adapter surface.', 'npcink-workflow-toolbox' ), 'npcink-ai-client-adapter' );
+					$this->render_suite_overview_row( __( 'Abilities', 'npcink-workflow-toolbox' ), __( 'Inspect WordPress Abilities API packages and bounded ability controls.', 'npcink-workflow-toolbox' ), 'npcink-abilities-toolkit' );
+					$this->render_suite_overview_row( __( 'Workflow Toolbox', 'npcink-workflow-toolbox' ), __( 'Open fixed review-only tools, site checks, and governed handoff suggestions.', 'npcink-workflow-toolbox' ), self::MENU_SLUG );
+					$this->render_suite_overview_row( __( 'Cloud Addon', 'npcink-workflow-toolbox' ), __( 'Connect this site to Npcink Cloud and inspect connector status.', 'npcink-workflow-toolbox' ), 'npcink-cloud-addon' );
+					?>
+				</tbody>
+			</table>
+		</div>
+		<?php
+	}
+
+	private function render_suite_overview_row( string $label, string $description, string $slug ): void {
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $label ); ?></th>
+			<td><?php echo esc_html( $description ); ?></td>
+			<td>
+				<?php if ( $this->is_suite_submenu_registered( $slug ) ) : ?>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $slug ) ); ?>"><?php esc_html_e( 'Open', 'npcink-workflow-toolbox' ); ?></a>
+				<?php else : ?>
+					<span style="color: #646970;"><?php esc_html_e( 'Not installed', 'npcink-workflow-toolbox' ); ?></span>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	private function is_suite_submenu_registered( string $slug ): bool {
+		global $submenu;
+
+		foreach ( (array) ( $submenu[ self::PARENT_MENU_SLUG ] ?? array() ) as $item ) {
+			if ( isset( $item[2] ) && $slug === $item[2] ) {
 				return true;
 			}
 		}

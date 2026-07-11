@@ -53,6 +53,7 @@ final class Plugin {
 
 	public function register_hooks(): void {
 		add_action( 'admin_init', array( $this->settings, 'register' ) );
+		add_action( 'admin_menu', array( $this->admin_page, 'register_navigation' ), 5 );
 		add_action( 'admin_menu', array( $this->admin_page, 'register_menu' ), 45 );
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue' ) );
 		add_action( 'admin_post_npcink_toolbox_download_scheduled_review_dry_run', array( $this->admin_page, 'download_scheduled_review_dry_run' ) );
