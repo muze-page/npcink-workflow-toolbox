@@ -119,6 +119,7 @@ Start from the active documents below before changing code.
 - [ADR-004: Bundle Local Automation Runtime As An Isolated Module](decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md)
 - [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](decisions/ADR-005-wp-cron-cloud-batch-orchestration.md)
 - [ADR-006: Separate Native Editor Commit From Governed Batch Handoff](decisions/ADR-006-native-editor-commit-and-governed-batch-handoff.md)
+- [ADR-007: Let Toolbox Own Optional Suite Navigation](decisions/ADR-007-toolbox-owned-admin-navigation.md)
 
 ## Archived Closeouts
 

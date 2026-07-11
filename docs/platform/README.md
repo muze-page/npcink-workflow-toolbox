@@ -65,6 +65,7 @@ Tools or Settings entry and must not create a replacement suite Overview.
 
 Start here before multi-repository design or implementation:
 
+- [ADR-007: Let Toolbox Own Optional Suite Navigation](../decisions/ADR-007-toolbox-owned-admin-navigation.md)
 - [Cross-Repo Platform Governance History - 2026-07-08](cross-repo-platform-governance-history-2026-07-08.md)
 - [Feature Ownership And Plugin Boundary](../feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](../cross-repo-boundary-matrix.md)
