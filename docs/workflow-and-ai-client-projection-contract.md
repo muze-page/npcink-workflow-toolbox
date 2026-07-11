@@ -85,3 +85,11 @@ For every reusable workflow exposed by both Toolbox and Adapter, verify:
 6. a definition version mismatch fails closed or is shown as unsupported;
 7. no consumer persists workflow execution state merely to display the
    definition.
+
+The first enforced sample is
+`npcink-abilities-toolkit/recipes/media-optimization`, with compatibility alias
+`media_optimization_v1`. Toolkit owns its definition. Toolbox emits a
+`fixed_button` projection in the media derivative handoff, while Adapter
+contract v4 exposes the generic client projection rules. The central platform
+checker reads the Toolkit replay fixture and verifies both consumers without
+creating a second runtime registry.

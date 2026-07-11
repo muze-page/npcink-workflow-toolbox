@@ -7,6 +7,9 @@ It is exposed through media-library single-image actions and the Toolbox Batch
 Optimize Images workbench.
 This is a product contract over the current media derivative, metadata review,
 Adapter recipe, and Core proposal handoff. It is not a new workflow runtime.
+The canonical reusable definition is
+`npcink-abilities-toolkit/recipes/media-optimization`; this document and the
+Toolbox button are consumer projections, not another definition registry.
 
 The current V1 has passed release smokes and one real-attachment operator trial:
 one single-image execution, one selected batch review set, governed execution,
@@ -39,12 +42,12 @@ The workflow is deterministic:
 
 | Project | Owns |
 | --- | --- |
-| `npcink-toolbox` | Fixed operator UI, media selection, media optimization defaults, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
+| `npcink-workflow-toolbox` | Fixed-button projection, media selection, media optimization defaults, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
 | `npcink-governance-core` | Plan intake, proposal records, approval, preflight, and audit truth. |
-| `npcink-openclaw-adapter` | Bounded media derivative recipe dispatch, same-origin preview proxy, from-plan relay, and approved allowlisted execution. |
+| `npcink-ai-client-adapter` | Generic external AI-client projection with OpenClaw first, from-plan relay, and approved allowlisted execution after Core preflight. |
 | `npcink-cloud-addon` | Verified local-to-Cloud signing and transport. |
-| `npcink-cloud` | Hosted derivative processing, run/result state, entitlement, quota, provider routing, and runtime diagnostics. |
-| `npcink-abilities-toolkit` | Reusable media read, derivative request, optimization plan, metadata, and derivative adoption abilities. |
+| `npcink-ai-cloud` | Hosted derivative processing, run/result state, entitlement, quota, provider routing, and runtime diagnostics. |
+| `npcink-abilities-toolkit` | Canonical `media-optimization` workflow definition plus reusable media read, derivative request, optimization plan, metadata, and derivative adoption abilities. |
 
 ## Non-Goals
 

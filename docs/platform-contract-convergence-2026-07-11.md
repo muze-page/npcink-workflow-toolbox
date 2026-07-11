@@ -40,10 +40,10 @@ The platform converges on these rules:
 
 | Repository | Current evidence | Assessment | Required next action |
 | --- | --- | --- | --- |
-| `npcink-governance-core` | ADR-005 keeps Core independent, defines the four governed classifications, and standardizes channel adapters. Core AGENTS blocks workflow-definition registries. | **Partial** | Add `native_editor_commit` as a pre-classification exclusion so it is not mistaken for a fifth Core class. Do not add editor-specific runtime state. |
-| `npcink-abilities-toolkit` | `docs/workflow-definition-contract.md` names Toolkit as canonical owner and forbids runtime and governance fields. | **Conforms** | Keep its v1 definition shape authoritative. Consumers link to it instead of copying the schema. |
-| `npcink-ai-client-adapter` | README describes a thin AI-client channel for OpenClaw-compatible and similar clients; Core ADR-005 already treats OpenClaw as the first adapter. AGENTS and many recipe names remain OpenClaw-centric. | **Partial** | Rename the product boundary to generic AI-client contract while retaining `npcink-openclaw-adapter/v1` as compatibility. Mark recipes as Toolkit-definition projections, not Adapter-owned canonical definitions. |
-| `npcink-workflow-toolbox` | ADR-006 and active boundary docs define the two write lanes. Native editor ALT updates only Gutenberg state. SEO, image import/adoption, and audio adoption stop at a Core proposal receipt and governance link. The former intent meta, control routes, and post-save executor are removed. | **Conforms** | Keep the zero-legacy-marker gate active and do not reintroduce hidden post-save execution. |
+| `npcink-governance-core` | Runtime `/contract` exposes `native_editor_commit` only through `pre_classification_exclusions`, keeps the four governed classifications unchanged, and requires no Core record for the excluded path. | **Conforms** | Preserve the exclusion before Core classification; do not add editor-specific runtime state. |
+| `npcink-abilities-toolkit` | `docs/workflow-definition-contract.md` names Toolkit as canonical owner and forbids runtime and governance fields. The production provider and replay fixture now own `media_optimization_v1` as the first cross-surface sample. | **Conforms** | Keep its v1 definition shape authoritative. Consumers project it instead of copying a registry. |
+| `npcink-ai-client-adapter` | Contract v4 declares `generic_ai_client`, keeps OpenClaw as the priority channel and compatibility namespace, points workflow discovery to Toolkit, requires parity fields, and fails closed on definition-version mismatch. | **Conforms** | Preserve the thin projection and do not add canonical definition or runtime storage. |
+| `npcink-workflow-toolbox` | ADR-006 defines the two write lanes. Native editor ALT updates only Gutenberg state. Media optimization now emits an explicit Toolkit-owned fixed-button projection; SEO, image import/adoption, and audio adoption stop at Core proposal receipt and governance link. | **Conforms** | Keep the zero-legacy-marker and projection-parity gates active. |
 | `npcink-cloud-addon` | AGENTS limits the plugin to connector/transport ownership and blocks approval, proposal, workflow runtime, scheduler truth, and WordPress writes. | **Conforms** | Preserve transport-only ownership. Current unrelated dirty worktree files were not evaluated as part of this documentation change. |
 | `npcink-ai-cloud` | AGENTS and active runtime contracts block a second WordPress control plane, local ability/workflow registry, governance truth, and WordPress writes; Site Knowledge output remains `suggestion_only`. | **Conforms** | Preserve runtime/detail-only ownership. Current unrelated dirty worktree files and branch work were not evaluated as part of this documentation change. |
 
@@ -84,6 +84,10 @@ This convergence stage is complete only when:
 - all six default repository gates pass;
 - the central quality matrix contains exactly the six Npcink projects and no
   `wp-magick-toolbox` entry.
+
+Current status: the contract and projection criteria above are implemented.
+`media_optimization_v1` is the reference acceptance sample, not a new runtime
+or a signal to expand the feature surface.
 
 ## Change Discipline
 

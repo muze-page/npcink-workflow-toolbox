@@ -163,37 +163,6 @@ function toolbox_media_batch_core_smoke_create_attachment( string $label ): int 
 	return (int) $attachment_id;
 }
 
-function toolbox_media_batch_core_smoke_derivative_from_result( array $result ): array {
-	$cloud_result = is_array( $result['cloud_result'] ?? null ) ? $result['cloud_result'] : $result;
-	foreach ( array( 'derivative_artifact', 'artifact', 'derivative' ) as $key ) {
-		if ( is_array( $cloud_result[ $key ] ?? null ) ) {
-			return (array) $cloud_result[ $key ];
-		}
-	}
-
-	return array();
-}
-
-function toolbox_media_batch_core_smoke_wait_for_result( string $run_id ): array {
-	$result = array();
-	for ( $attempt = 0; $attempt < 40; $attempt++ ) {
-		usleep( 0 === $attempt ? 250000 : 750000 );
-		$poll   = toolbox_media_batch_core_smoke_rest_raw( 'GET', '/npcink-openclaw-adapter/v1/media-derivative-runs/' . rawurlencode( $run_id ) . '/result' );
-		$result = is_array( $poll['data'] ?? null ) ? (array) $poll['data'] : array();
-		$status = (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' );
-		if ( in_array( $status, array( 'succeeded', 'completed' ), true ) ) {
-			return $result;
-		}
-
-		$http_status = (int) ( $poll['status'] ?? 0 );
-		if ( 409 !== $http_status && ( $http_status < 200 || $http_status >= 300 ) ) {
-			toolbox_media_batch_core_smoke_fail( 'Cloud result polling returned HTTP ' . $http_status );
-		}
-	}
-
-	toolbox_media_batch_core_smoke_fail( 'Adapter media derivative run result did not become available.' );
-}
-
 function toolbox_media_batch_core_smoke_cleanup(): void {
 	global $wpdb, $toolbox_media_batch_core_smoke_attachment_ids, $toolbox_media_batch_core_smoke_paths, $toolbox_media_batch_core_smoke_proposal_ids;
 
@@ -265,42 +234,51 @@ foreach ( $candidates as $index => $candidate ) {
 	$input     = is_array( $candidate['cloud_request_input'] ?? null ) ? (array) $candidate['cloud_request_input'] : array();
 	toolbox_media_batch_core_smoke_assert( ! empty( $input['attachment_id'] ), 'Candidate ' . ( $index + 1 ) . ' carries an attachment id.' );
 
-	$create = toolbox_media_batch_core_smoke_rest(
+	$derivative = array(
+		'artifact_id'        => 'toolbox_media_projection_' . (int) $input['attachment_id'] . '_' . $index,
+		'expires_at'         => gmdate( 'c', time() + 600 ),
+		'mime_type'         => 'image/webp',
+		'format'             => 'webp',
+		'width'              => 320,
+		'height'             => 180,
+		'filesize_bytes'     => 16384,
+		'suggested_filename' => 'toolbox-media-projection-' . (int) $input['attachment_id'] . '.webp',
+	);
+	$media_details_input = array(
+		'title'       => 'Toolbox batch optimized smoke image ' . ( $index + 1 ),
+		'alt'         => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' alt text.',
+		'caption'     => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' caption.',
+		'description' => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' description.',
+		'source_type' => 'ai_generated',
+	);
+	$plan_input = array(
+		'attachment_id'                 => (int) $input['attachment_id'],
+		'media_details_input'           => $media_details_input,
+		'derivative_artifact'           => $derivative,
+		'file_name'                     => 'toolbox-media-projection-' . (int) $input['attachment_id'] . '.webp',
+		'expected_current_mime_type'    => 'image/jpeg',
+		'expected_derivative_mime_type' => 'image/webp',
+	);
+	$plan_envelope = toolbox_media_batch_core_smoke_rest(
 		'POST',
-		'/npcink-openclaw-adapter/v1/media-derivative-runs',
+		'/npcink-openclaw-adapter/v1/run-read-ability',
 		array(
-			'input'           => $input,
-			'idempotency_key' => 'toolbox-media-batch-core-' . (int) $input['attachment_id'] . '-' . time() . '-' . $index,
+			'ability_id' => 'npcink-abilities-toolkit/build-media-optimization-plan',
+			'input'      => $plan_input,
 		)
 	);
-	$run_id = sanitize_text_field( (string) ( $create['run_id'] ?? $create['cloud_run']['run_id'] ?? '' ) );
-	toolbox_media_batch_core_smoke_assert( '' !== $run_id, 'Adapter returns Cloud run id for selected preview ' . ( $index + 1 ) . '.' );
-
-	$result = toolbox_media_batch_core_smoke_wait_for_result( $run_id );
-	toolbox_media_batch_core_smoke_assert( in_array( (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' ), array( 'succeeded', 'completed' ), true ), 'Selected preview ' . ( $index + 1 ) . ' result becomes available.' );
-	$derivative = toolbox_media_batch_core_smoke_derivative_from_result( $result );
-	toolbox_media_batch_core_smoke_assert( '' !== (string) ( $derivative['artifact_id'] ?? '' ), 'Selected preview ' . ( $index + 1 ) . ' returns derivative artifact evidence.' );
-	toolbox_media_batch_core_smoke_assert( 'image/webp' === (string) ( $derivative['mime_type'] ?? '' ), 'Selected preview ' . ( $index + 1 ) . ' derivative is WebP.' );
-
-	$proposal_payload = toolbox_media_batch_core_smoke_rest(
-		'POST',
-		'/npcink-openclaw-adapter/v1/media-derivative-proposal-payload',
-		array(
-			'ability_response'     => is_array( $create['ability_response'] ?? null ) ? (array) $create['ability_response'] : array(),
-			'cloud_result'         => is_array( $result['cloud_result'] ?? null ) ? (array) $result['cloud_result'] : $result,
-			'derivative_artifact'  => $derivative,
-			'media_details_input'  => array(
-				'title'       => 'Toolbox batch optimized smoke image ' . ( $index + 1 ),
-				'alt'         => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' alt text.',
-				'caption'     => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' caption.',
-				'description' => 'Toolbox batch optimized smoke image ' . ( $index + 1 ) . ' description.',
-				'source_type' => 'ai_generated',
-			),
-		)
+	$optimization_plan = is_array( $plan_envelope['result']['data'] ?? null ) ? (array) $plan_envelope['result']['data'] : array();
+	toolbox_media_batch_core_smoke_assert( 'media_optimization_plan' === (string) ( $optimization_plan['artifact_type'] ?? '' ), 'Adapter returns the canonical media optimization plan for selected preview ' . ( $index + 1 ) . '.' );
+	toolbox_media_batch_core_smoke_assert( false === (bool) ( $optimization_plan['commit_execution'] ?? true ), 'Media optimization plan remains non-commit for selected preview ' . ( $index + 1 ) . '.' );
+	$from_plan_request = array(
+		'plan_ability_id' => 'npcink-abilities-toolkit/build-media-optimization-plan',
+		'plan'            => $optimization_plan,
+		'plan_input'      => $plan_input,
+		'caller'          => array(
+			'surface' => 'toolbox_media_optimization_projection_smoke',
+			'source'  => 'tests/smoke-media-derivative-batch-core-proposals.php',
+		),
 	);
-	toolbox_media_batch_core_smoke_assert( ! empty( $proposal_payload['proposal_ready'] ), 'Adapter builds proposal-ready payload for selected preview ' . ( $index + 1 ) . '.' );
-	$from_plan_request = is_array( $proposal_payload['from_plan_request'] ?? null ) ? (array) $proposal_payload['from_plan_request'] : array();
-	toolbox_media_batch_core_smoke_assert( 'npcink-abilities-toolkit/build-media-optimization-plan' === (string) ( $from_plan_request['plan_ability_id'] ?? '' ), 'Selected preview ' . ( $index + 1 ) . ' targets the media optimization plan ability.' );
 
 	$proposal_bridge = toolbox_media_batch_core_smoke_rest( 'POST', '/npcink-openclaw-adapter/v1/proposals/from-plan', $from_plan_request );
 	$proposal        = is_array( $proposal_bridge['proposals'][0] ?? null ) ? (array) $proposal_bridge['proposals'][0] : array();

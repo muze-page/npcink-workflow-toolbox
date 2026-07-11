@@ -699,17 +699,19 @@ browser does not call preview, Core proposal, or execute routes. It is outside
 `composer test:all` because it needs a running local WordPress site, WP-CLI
 login-cookie generation, Playwright, and a local browser.
 
-When Adapter, Cloud Addon, and Core are available, run the selected-preview
-Core proposal smoke:
+When Adapter, Toolkit, and Core are available, run the workflow-projection Core
+proposal smoke:
 
 ```bash
 composer smoke:media-derivative-batch-core
 ```
 
 This creates two temporary JPEG attachments, builds the batch plan through
-Adapter `run-read-ability`, generates selected Cloud previews, builds reviewed
-media optimization proposal payloads, and creates two Core review proposals. It
-does not approve, preflight, execute, or replace media files.
+Adapter `run-read-ability`, supplies bounded non-production derivative evidence,
+resolves the canonical Toolkit `build-media-optimization-plan`, and creates two
+Core review proposals through Adapter `proposals/from-plan`. It does not call
+the removed Adapter Cloud routes, approve, preflight, execute, or replace media
+files. Cloud transport is tested separately by Cloud Addon.
 
 For downstream selected-batch execution proof outside the Toolbox workbench,
 run:
