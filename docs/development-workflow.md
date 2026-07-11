@@ -803,17 +803,18 @@ Media ALT/Caption Quality Preview Gate:
 - run `composer smoke:media-alt-caption-browser` after UI label or button
   changes.
 
-This gate is intentionally preview-only. Static and browser checks must keep
+Candidate generation remains preview-only. Static and browser checks must keep
 `candidate_quality.*`, `automation_recommendation`, and
 `local_preview_candidate_count` as UI/eval triage hints only. They must not be
-used as proposal triggers, local write authorization, auto-approval signals,
+used as local write authorization or auto-approval signals,
 queue/runtime inputs, or provider-key ownership signals. Deprecated
 ready-for-handoff aliases must not be emitted by current responses and must be
-ignored if an old runtime returns them. The preview button may call only the Toolbox
-`/flows/media-alt-caption-review-plan` route to prepare a dry-run handoff
-preview with `core_submission=preview_only_not_submitted`; browser tests must
-keep Adapter, Core proposal, approve-and-execute, local consent, and
-`/wp/v2/media` calls forbidden. The gate must also check that admin UI and
+ignored if an old runtime returns them. Product submission must call Adapter
+`run-read-ability` for `build-media-alt-apply-plan`, then `/proposals/from-plan`,
+and stop. Browser tests must require explicit visual confirmation and keep
+`approve-and-execute`, proposal polling, local consent, and `/wp/v2/media`
+calls forbidden. The legacy preview route remains diagnostic-only. The gate
+must also check that admin UI and
 translation strings use review/preview wording and that each preview payload
 declares `submission_status=preview_only_not_submitted`,
 `target_contract_status=future_or_unavailable`, `not_submittable=true`,

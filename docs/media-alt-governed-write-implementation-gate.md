@@ -1,13 +1,13 @@
 # Media ALT Governed Write Implementation Gate
 
-Status: contract handoff only; no write path is enabled in Toolbox.
+Status: implemented and verified across Toolkit, Core, Adapter, and Toolbox.
 
 ## Decision
 
-The current Batch Image ALT Review remains a local, non-submittable dry run.
-Actual ALT updates may be enabled only after Toolkit, Core, and Adapter prove a
-shared write contract. Toolbox must not fill that gap with a direct media write,
-Local Admin Consent, or an `approve-and-execute` call.
+Batch Image ALT Review may submit visually confirmed, missing-only ALT rows to
+Core. Each row uses the shared `media_alt_apply_plan.v1` contract. Toolbox stops
+after proposal creation and must not use a direct media write, Local Admin
+Consent, or an `approve-and-execute` call.
 
 ## Repository Order
 
@@ -22,17 +22,16 @@ Implement and validate the path in this order:
 4. `npcink-workflow-toolbox`: convert reviewed rows into proposal-ready plans
    and stop after Core proposal submission.
 
-Do not start step 4 while any earlier gate is incomplete.
+All four steps are now implemented. The ordering remains the required change
+sequence for future contract versions.
 
 ## Toolkit Contract Gate
 
 The reusable write ability already exists as
 `npcink-abilities-toolkit/update-media-details`. Its current public input is
 intentionally broader than this flow because other governed media operations
-also use it. What is missing is a published, tested ALT-only plan and execution
-profile that safely constrains calls to the fields below. Toolbox must continue
-to treat the ALT-only contract as `future_or_unavailable` until those narrower
-Toolkit, Core, and Adapter gates pass.
+also use it. Toolkit now publishes `build-media-alt-apply-plan` and constrains
+guarded calls to the fields below.
 
 Minimum input:
 
@@ -98,12 +97,10 @@ rollback truth, batch queues, or retries.
 
 ## Toolbox Re-entry Gate
 
-Only after all three upstream gates pass may Toolbox change the current
-`media_alt_caption_core_handoff_plan.v1` preview into a proposal-ready plan.
-At that point Toolbox may:
+The three upstream gates have passed. Toolbox now:
 
 - collect reviewed ALT-only rows and visual-confirmation state;
-- request the Toolkit dry-run preview;
+- request the Toolkit `media_alt_apply_plan.v1` through Adapter;
 - show stale-value or validation failures per row;
 - submit selected proposal-ready rows to Core;
 - show proposal receipts and links to Core review.
@@ -127,5 +124,5 @@ Before enabling proposal submission in Toolbox, all of the following must pass:
 - a browser smoke proving Toolbox stops after proposal creation and makes no
   `approve-and-execute` or `/wp/v2/media` request.
 
-Until that evidence exists, the current local dry-run summary is the complete
-and honest product behavior.
+The repository and real WordPress gates now cover this evidence. Toolbox exposes
+proposal submission only for missing ALT and preserves Core as canonical truth.

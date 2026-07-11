@@ -2223,7 +2223,7 @@
 			content_snapshot_suggestions: 'Content opportunities'
 		};
 		const summaryByIntent = {
-			media_alt_suggestions: 'Review and edit local ALT drafts. This preview does not create a Core proposal or change media ALT.',
+			media_alt_suggestions: 'Review and edit missing ALT drafts. Visually confirmed rows may be submitted to Core review; this scan does not change media ALT.',
 			content_snapshot_suggestions: 'Review opportunities from a bounded sample. This is not a full site audit and does not change content.'
 		};
 		const result = renderShell(
@@ -2282,53 +2282,48 @@
 				if (contextConfirm instanceof HTMLInputElement) {
 					item.context_confirmed = contextConfirm.checked;
 				}
+				const visualConfirm = row.querySelector('[data-toolbox-media-alt-caption-visual-confirmed]');
+				if (visualConfirm instanceof HTMLInputElement) {
+					item.visual_confirmed = visualConfirm.checked;
+				}
 				return item;
 			})
 			.filter(Boolean);
 	}
 
-	function renderMediaAltCaptionHandoffPlan(container, plan) {
-		const section = createSection('ALT dry-run summary');
+	function renderMediaAltCaptionCoreReceipts(container, receipts, failures) {
+		const section = createSection('Core review submission');
 		const meta = el('div', 'npcink-toolbox__result-meta');
-		appendMeta(meta, 'Selected images', plan.selected_count);
-		appendMeta(meta, 'Status', plan.selected_count > 0 ? 'Preview only' : '');
+		appendMeta(meta, 'Submitted', receipts.length);
+		appendMeta(meta, 'Failed', failures.length);
+		appendMeta(meta, 'Status', failures.length ? 'Needs attention' : 'Waiting for Core review');
 		section.appendChild(meta);
-		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Dry-run summary prepared locally. It is not submittable: no Core proposal was created and no media metadata was changed.'));
-
-		const actions = asArray(plan.selected_actions);
-		if (actions.length) {
-			const list = el('div', 'npcink-toolbox__batch-list');
-			actions.slice(0, 10).forEach((action) => {
-				const row = el('div', 'npcink-toolbox__batch-row npcink-toolbox__handoff-row');
-				if (action.thumbnail_url) {
-					const image = document.createElement('img');
-					image.className = 'npcink-toolbox__media-thumb';
-					image.src = String(action.thumbnail_url);
-					image.alt = '';
-					row.appendChild(image);
-				}
-				const body = el('span', 'npcink-toolbox__batch-row-body');
-				body.appendChild(el('strong', '', '#' + String(action.attachment_id || '') + ' ' + String(action.title || action.filename || 'Media item')));
-				if (action.accepted_alt) {
-					body.appendChild(el('small', '', t('Accepted ALT: ') + String(action.accepted_alt)));
-				}
-					body.appendChild(el('small', '', 'Toolbox will not write media metadata or submit this preview automatically.'));
-				row.appendChild(body);
-				list.appendChild(row);
-			});
-			section.appendChild(list);
+		section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Toolbox stopped after proposal submission. Core owns review and approval; Adapter and Toolkit perform any later governed write.'));
+		receipts.forEach((receipt) => {
+			const node = renderCoreHandoffReceipt(receipt);
+			if (node) {
+				section.appendChild(node);
+			}
+		});
+		failures.forEach((failure) => {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', '#' + String(failure.attachment_id || '') + ': ' + String(failure.message || 'Core proposal submission failed.')));
+		});
+		if (!receipts.length && !failures.length) {
+			section.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'No eligible missing ALT rows were submitted.'));
 		}
-		section.appendChild(createRawDetails(plan, 'Advanced: dry-run contract preview'));
 		container.appendChild(section);
 	}
 
+	function mediaAltCaptionEligibleForCore(item) {
+		const status = String(item.current_alt_status || '').toLowerCase();
+		return (status === 'missing' || status === 'empty')
+			&& !!String(item.accepted_alt || '').trim()
+			&& item.visual_confirmed === true
+			&& (!mediaAltCaptionNeedsContext(item) || item.context_confirmed === true);
+	}
+
 	function updateMediaAltCaptionHandoffButton(section) {
-		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter((item) => {
-			if (!String(item.accepted_alt || '').trim()) {
-				return false;
-			}
-			return !mediaAltCaptionNeedsContext(item) || item.context_confirmed === true;
-		}).length;
+		const selectedCount = selectedMediaAltCaptionReviewItems(section).filter(mediaAltCaptionEligibleForCore).length;
 		const button = section.querySelector('[data-toolbox-media-alt-caption-handoff]');
 		const count = section.querySelector('[data-toolbox-media-alt-caption-selected-count]');
 		if (count) {
@@ -2395,7 +2390,12 @@
 		const eligibility = asObject(reviewSet.eligibility_summary);
 		const allSelectedItems = asArray(reviewSet.selected_items);
 		const captionOnlyItems = allSelectedItems.filter((item) => String(item.candidate_review_status || '') === 'caption_review_only');
-		const selectedItems = allSelectedItems.filter((item) => String(item.candidate_review_status || '') !== 'caption_review_only' && asArray(item.alt_candidates).filter(Boolean).length > 0);
+		const selectedItems = allSelectedItems.filter((item) => {
+			const altStatus = String(item.current_alt_status || '').toLowerCase();
+			return String(item.candidate_review_status || '') !== 'caption_review_only'
+				&& (altStatus === 'missing' || altStatus === 'empty')
+				&& asArray(item.alt_candidates).filter(Boolean).length > 0;
+		});
 		const blockedItems = asArray(reviewSet.blocked_items);
 		const imageContextRequest = asObject(reviewSet.image_context_evidence_request);
 		const imageContextRequestItems = asArray(imageContextRequest.items);
@@ -2417,9 +2417,9 @@
 		} else {
 				const noticeText = imageContextRequestItems.length
 					? 'Review the rows below. Some images still need visual confirmation before their ALT draft is usable.'
-					: 'Review the rows below and edit the suggested ALT before preparing a local dry-run summary.';
+					: 'Review the image and edit the suggested ALT before submitting it to Core review.';
 				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', noticeText));
-				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Quality scores and review hints are preview-only triage. They do not authorize proposals, approvals, execution, or media writes.'));
+				section.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Only missing ALT is eligible. Submission creates one Core proposal per confirmed image; Toolbox does not approve, execute, poll, or write media metadata.'));
 			const list = el('div', 'npcink-toolbox__alt-review-table');
 			const header = el('div', 'npcink-toolbox__alt-review-header');
 			header.appendChild(el('span', '', 'Use'));
@@ -2431,8 +2431,8 @@
 				const needsContext = mediaAltCaptionNeedsContext(item);
 				const checkbox = document.createElement('input');
 				checkbox.type = 'checkbox';
-				checkbox.checked = !needsContext;
-				checkbox.setAttribute('aria-label', t('Select image for ALT dry-run'));
+				checkbox.checked = false;
+				checkbox.setAttribute('aria-label', t('Select image for Core ALT review'));
 				checkbox.setAttribute('data-toolbox-media-alt-caption-item', String(item.attachment_id || index + 1));
 				checkbox.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
 				row.appendChild(checkbox);
@@ -2484,6 +2484,14 @@
 					contextLabel.appendChild(el('span', '', 'I confirm this location or proper-name context'));
 					body.appendChild(contextLabel);
 				}
+				const visualLabel = el('label', 'npcink-toolbox__inline-check');
+				const visualInput = document.createElement('input');
+				visualInput.type = 'checkbox';
+				visualInput.setAttribute('data-toolbox-media-alt-caption-visual-confirmed', '');
+				visualInput.addEventListener('change', () => updateMediaAltCaptionHandoffButton(section));
+				visualLabel.appendChild(visualInput);
+				visualLabel.appendChild(el('span', '', 'I reviewed this image and confirm the ALT describes it in context'));
+				body.appendChild(visualLabel);
 				const evidence = asObject(item.image_context_evidence);
 				const technicalDetails = document.createElement('details');
 				technicalDetails.className = 'npcink-toolbox__result-details npcink-toolbox__alt-technical-details';
@@ -2508,28 +2516,70 @@
 			const selectedCount = el('strong', '', '0');
 			selectedCount.setAttribute('data-toolbox-media-alt-caption-selected-count', '');
 			actions.appendChild(selectedCount);
-			const handoffButton = el('button', 'button button-primary', 'Prepare dry-run summary');
+			const handoffButton = el('button', 'button button-primary', 'Submit selected to Core review');
 			handoffButton.type = 'button';
 			handoffButton.setAttribute('data-toolbox-media-alt-caption-handoff', '');
 			handoffButton.addEventListener('click', async () => {
-				const selected = selectedMediaAltCaptionReviewItems(section);
+				const selected = selectedMediaAltCaptionReviewItems(section).filter(mediaAltCaptionEligibleForCore);
 				if (!selected.length) {
 					return;
 				}
 				handoffButton.disabled = true;
-				handoffButton.textContent = t('Preparing dry-run summary...');
-				try {
-					const plan = await postJson(config.restUrl, 'flows/media-alt-caption-review-plan', {
-						selected_items: selected,
-						review_set: reviewSet
-					});
-					renderMediaAltCaptionHandoffPlan(section, plan);
-				} catch (error) {
-					section.appendChild(el('div', 'npcink-toolbox__result-notice is-error', error && error.message ? error.message : 'Could not prepare the ALT dry-run summary.'));
-				} finally {
-					handoffButton.textContent = t('Prepare dry-run summary');
-					updateMediaAltCaptionHandoffButton(section);
+				handoffButton.textContent = t('Submitting to Core review...');
+				const receipts = [];
+				const failures = [];
+				for (const item of selected) {
+					const input = {
+						attachment_id: Number(item.attachment_id || 0),
+						alt: String(item.accepted_alt || '').trim(),
+						expected_current_alt: '',
+						operator_visual_review_confirmed: true,
+						review_set_contract: 'media_alt_caption_review_set.v1',
+						source_item_id: String(item.source_item_id || ('media-alt-caption:' + String(item.attachment_id || ''))),
+						evidence_refs: asArray(item.evidence_refs).slice(0, 20),
+					};
+					try {
+						const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+							ability_id: 'npcink-abilities-toolkit/build-media-alt-apply-plan',
+							input,
+						});
+						const plan = planDataFromEnvelope(planEnvelope) || {};
+						const bridge = await postJson(config.adapterRestUrl, 'proposals/from-plan', {
+							plan_ability_id: 'npcink-abilities-toolkit/build-media-alt-apply-plan',
+							plan,
+							plan_input: input,
+						});
+						receipts.push(coreHandoffReceipt(bridge, {
+							sourceItemId: input.source_item_id,
+							handoffType: 'missing_media_alt_apply_plan',
+							targetAbilityId: 'npcink-abilities-toolkit/update-media-details',
+							operatorNextAction: 'review_in_core',
+						}));
+						const submittedRow = Array.from(section.querySelectorAll('.npcink-toolbox__alt-review-row')).find((row) => {
+							return Number(row.__npcinkMediaAltCaptionItem?.attachment_id || 0) === input.attachment_id;
+						});
+						if (submittedRow) {
+							submittedRow.querySelectorAll('input').forEach((field) => {
+								if (field instanceof HTMLInputElement) {
+									field.checked = false;
+									field.disabled = true;
+								}
+							});
+							const body = submittedRow.querySelector('.npcink-toolbox__batch-row-body');
+							if (body) {
+								body.appendChild(el('small', 'npcink-toolbox__result-notice is-pending', t('Submitted to Core review. Re-scan before creating a revised proposal.')));
+							}
+						}
+					} catch (error) {
+						failures.push({
+							attachment_id: input.attachment_id,
+							message: error && error.message ? error.message : 'Core proposal submission failed.',
+						});
+					}
 				}
+				renderMediaAltCaptionCoreReceipts(section, receipts, failures);
+				handoffButton.textContent = t('Submit selected to Core review');
+				updateMediaAltCaptionHandoffButton(section);
 			});
 			actions.appendChild(handoffButton);
 			section.appendChild(actions);

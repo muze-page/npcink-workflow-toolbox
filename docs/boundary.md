@@ -300,18 +300,15 @@ editor context, related-term evidence, and the review UI. When available,
 `taxonomy_tag_review_set.v1` review artifact; Toolbox may keep a compatibility
 fallback from Toolkit suggestion rows, but it must not create terms, assign
 terms, call Cloud runtime, create proposals, or write taxonomy metadata.
-Image ALT/caption review follows the same planning boundary. The default scope
-is current-article used images in the editor/sidebar surface. Backend Image
-Handling may use bounded recent media-library metadata only as an explicit
-advanced fallback; it is not a batch runner, indexing job, proposal path, or
-write path. The selected review set may prepare a local
-`/flows/media-alt-caption-review-plan` future contract preview. That preview
-must carry `future_contract_preview`, `not_submittable: true`,
-`submission_status: preview_only_not_submitted`, and
-`proposal_created: false` markers. It may point at the future
-`npcink-abilities-toolkit/update-media-details` contract for later Core review,
-but Toolbox does not submit the preview to Adapter/Core, create the proposal,
-approve it, execute it, or write media metadata.
+Image ALT/caption review follows the same planning boundary. Backend Image
+Handling may use bounded recent media-library metadata, but it is not a batch
+runner or write path. For image attachments whose live ALT is empty, an operator
+may edit the draft, explicitly confirm the image visually, and submit one
+`npcink-abilities-toolkit/build-media-alt-apply-plan` per selected row through
+Adapter `/proposals/from-plan`. Toolbox stops after Core proposal creation. It
+does not approve, execute, poll, retry, or write media metadata. The legacy
+`/flows/media-alt-caption-review-plan` remains a local diagnostic preview only
+and is not the proposal contract.
 `candidate_quality.*`, `automation_recommendation`, and
 `local_preview_candidate_count` remain local UI/eval triage hints; they confer
 no ability execution, proposal, or write rights. Deprecated ready-for-handoff

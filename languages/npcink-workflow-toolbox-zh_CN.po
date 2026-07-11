@@ -6719,8 +6719,8 @@ msgstr "本地元数据审核可直接使用。仅在需要可选视觉证据时
 msgid "Local review preview"
 msgstr "本地审核预览"
 
-msgid "Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. It does not create a Core proposal or change media."
-msgstr "Toolbox 根据现有元数据和可选视觉证据生成可编辑的 ALT 草稿，不会创建 Core 提案或更改媒体。"
+msgid "Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. Confirmed missing ALT rows can be submitted to Core review; Toolbox does not approve, execute, or change media."
+msgstr "Toolbox 根据现有元数据和可选视觉证据生成可编辑的 ALT 草稿。确认后的缺失 ALT 行可提交至 Core 审核；Toolbox 不会批准、执行或更改媒体。"
 
 msgid "Select images in Media Library"
 msgstr "在媒体库中选择图片"
@@ -6734,8 +6734,8 @@ msgstr "尚未选择图片。你也可以使用下方的有界抽样选项。"
 msgid "Or scan a bounded sample"
 msgstr "或扫描有界样本"
 
-msgid "This builds a local dry-run preview. No Core proposal or media update is created."
-msgstr "这里只生成本地试运行预览，不会创建 Core 提案或更新媒体。"
+msgid "The scan is read-only. After reviewing an image, only a missing ALT row can be submitted to Core; Toolbox never approves, executes, or updates media."
+msgstr "扫描为只读。查看图片后，仅缺失 ALT 的行可提交至 Core；Toolbox 不会批准、执行或更新媒体。"
 
 msgid "Submit selected previews to Core review"
 msgstr "将所选预览提交到 Core 审核"

@@ -457,15 +457,13 @@ CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
 `current_article_media_metadata_only` and no-media-write boundary.
 The backend Image Handling tab uses the same hosted site-helper intent only for
-an explicit small media-library review set. Operators can select returned
-items and call `/flows/media-alt-caption-review-plan` to prepare a local
-preview-only `media_alt_caption_core_handoff_plan.v1`. The preview may include
-ALT-only dry-run payloads for the future
-`npcink-abilities-toolkit/update-media-details` path, but the current UI does
-not submit them through Adapter, request Core `approve-and-execute`, create a
-proposal, or write media metadata. Core policy owns any future auto-approval,
-execution, and audit; Toolbox still does not directly write media metadata,
-and caption edits stay manual-review work. Media ALT/caption quality fields
+an explicit small media-library review set. For missing ALT only, operators can
+select a row, edit the suggestion, confirm that they reviewed the image, run
+`npcink-abilities-toolkit/build-media-alt-apply-plan` through Adapter, and send
+the returned `media_alt_apply_plan.v1` to `/proposals/from-plan`. Each row creates
+an independent Core proposal. Toolbox then stops: it does not request
+`approve-and-execute`, poll, or write media metadata. Caption edits stay outside
+this contract. Media ALT/caption quality fields
 such as `candidate_quality.*`, `automation_recommendation`, and
 `local_preview_candidate_count` are local review/eval hints, not Toolbox-owned
 ability schema, workflow registry state, or write authorization. Deprecated

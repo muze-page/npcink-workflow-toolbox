@@ -1,21 +1,20 @@
 # Media ALT/Caption Review Set
 
-Status: P0 reviewed ALT candidate quality and handoff-preview path.
+Status: reviewed candidate set plus governed missing-ALT proposal handoff.
 
 ## Purpose
 
 The media ALT/caption review set turns the existing **AI Site Helpers -> Media
 ALT suggestions** flow into a bounded operator artifact. It helps an operator
-review images already used by one article and inspect possible ALT or caption
-text before any governed write path exists. Recent media-library sampling stays
+review images and inspect possible ALT or caption text before a governed
+handoff. Recent media-library sampling stays
 available only as an explicit advanced fallback.
 
-This stage is intentionally not a Toolbox-owned media metadata writer. The
-admin UI may prepare a local dry-run handoff preview for reviewed ALT-only
-rows, but it must not submit that preview to Adapter, create a Core proposal,
-ask Core to approve or execute, or write media metadata in the current P0.
-Core policy remains the only place that can later approve a low-risk ALT
-update after a separately accepted write path exists.
+This is not a Toolbox-owned media metadata writer. The admin UI may submit one
+fresh Toolkit `media_alt_apply_plan.v1` per visually confirmed missing-ALT row
+through Adapter to Core. It must not send the legacy local preview, approve or
+execute a proposal, poll execution, or write media metadata. Core remains the
+approval truth.
 
 ## Contract
 
@@ -96,7 +95,7 @@ The `eligibility_summary` may also include
 `caption_review_only_count`, `visual_evidence_request_count`, and
 `insufficient_quality_count`. These counts help the UI and eval tooling route
 operator attention, but every row still requires human visual confirmation and
-any accepted ALT write still uses a future Core-governed handoff path. New P0
+any accepted missing ALT uses the Core-governed `media_alt_apply_plan.v1` path. New P0
 responses must not emit deprecated ready-for-handoff aliases. If an old runtime
 still returns such an alias, consumers must ignore it for button enablement,
 Adapter/Core submission, proposal creation, auto-approval, and WordPress writes.
@@ -104,8 +103,8 @@ Adapter/Core submission, proposal creation, auto-approval, and WordPress writes.
 as an input to any Core proposal, Adapter execution profile, ability execution
 schema, or write decision.
 
-The follow-up `/flows/media-alt-caption-review-plan` response is
-`media_alt_caption_core_handoff_plan.v1`. In the current P0 it is preview-only
+The follow-up `/flows/media-alt-caption-review-plan` response remains
+`media_alt_caption_core_handoff_plan.v1`. It is a preview-only diagnostic
 and may include per-row `future_contract_preview` objects that point at the
 future `npcink-abilities-toolkit/update-media-details` contract with only:
 
@@ -115,12 +114,14 @@ future `npcink-abilities-toolkit/update-media-details` contract with only:
 - `commit=false`;
 - an idempotency key.
 
-Every selected action and future contract preview must also carry
+Every diagnostic preview must also carry
 `submission_status: preview_only_not_submitted`,
 `target_contract_status: future_or_unavailable`, `not_submittable: true`,
 `proposal_created: false`, `execution_created: false`, and
-`direct_wordpress_write: false`. Current P0 consumers must not send
-`future_contract_preview` objects as Adapter/Core request bodies.
+`direct_wordpress_write: false`. Consumers must not send these legacy
+`future_contract_preview` objects as Adapter/Core request bodies. Product
+submission instead builds a fresh Toolkit `media_alt_apply_plan.v1` per
+visually confirmed missing-ALT row and stops after Core proposal creation.
 
 Caption, title, description, source, and attribution fields are not part of
 the ALT handoff preview. If a later governed write path accepts those fields,

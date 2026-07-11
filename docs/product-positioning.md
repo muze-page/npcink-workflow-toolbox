@@ -129,6 +129,12 @@ OpenClaw/Adapter/Core/Abilities replacement path once the OpenClaw batch
 contract is accepted; Toolbox should not duplicate attachment replacement or URL
 repair logic locally.
 
+Batch media ALT follows the same boundary with a narrower contract. Toolbox may
+submit one visually confirmed, missing-only `media_alt_apply_plan.v1` per image
+through Adapter to Core, then stop. It does not approve, execute, poll, overwrite
+existing ALT, or include caption/title/description changes. OpenClaw uses the
+same Toolkit plan and Adapter execution profile.
+
 High-frequency article support belongs in the WordPress post editor as a
 Toolbox-owned panel, not only on the standalone Toolbox admin page. The editor
 panel defaults to fixed flows for publish preflight, internal-link candidates,

@@ -3535,7 +3535,7 @@ final class Admin_Page {
 			<input type="hidden" name="intent" value="media_alt_suggestions" />
 				<div class="npcink-toolbox__example is-ai">
 					<strong><?php esc_html_e( 'Local review preview', 'npcink-workflow-toolbox' ); ?></strong>
-					<span><?php esc_html_e( 'Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. It does not create a Core proposal or change media.', 'npcink-workflow-toolbox' ); ?></span>
+					<span><?php esc_html_e( 'Toolbox prepares editable ALT drafts from available metadata and optional visual evidence. Confirmed missing ALT rows can be submitted to Core review; Toolbox does not approve, execute, or change media.', 'npcink-workflow-toolbox' ); ?></span>
 				</div>
 			<div class="npcink-toolbox__result-actions npcink-toolbox__alt-source-actions">
 				<a class="button" href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><?php esc_html_e( 'Select images in Media Library', 'npcink-workflow-toolbox' ); ?></a>
@@ -3582,8 +3582,8 @@ final class Admin_Page {
 				<label>
 					<span><?php esc_html_e( 'Problem type', 'npcink-workflow-toolbox' ); ?></span>
 					<select name="media_filter">
-						<option value="missing_or_weak_alt"><?php esc_html_e( 'Missing or weak ALT', 'npcink-workflow-toolbox' ); ?></option>
 						<option value="missing_alt"><?php esc_html_e( 'Missing ALT only', 'npcink-workflow-toolbox' ); ?></option>
+						<option value="missing_or_weak_alt"><?php esc_html_e( 'Missing or weak ALT', 'npcink-workflow-toolbox' ); ?></option>
 						<option value="all_recent"><?php esc_html_e( 'All recent images', 'npcink-workflow-toolbox' ); ?></option>
 					</select>
 				</label>
@@ -3593,7 +3593,7 @@ final class Admin_Page {
 				</label>
 				</div>
 			</details>
-			<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'This builds a local dry-run preview. No Core proposal or media update is created.', 'npcink-workflow-toolbox' ); ?></div>
+			<div class="npcink-toolbox__result-notice is-pending"><?php esc_html_e( 'The scan is read-only. After reviewing an image, only a missing ALT row can be submitted to Core; Toolbox never approves, executes, or updates media.', 'npcink-workflow-toolbox' ); ?></div>
 			<button type="submit" class="button button-primary"><?php echo esc_html( $button ); ?></button>
 			<div class="npcink-toolbox__result is-empty" aria-live="polite" hidden></div>
 		</form>
