@@ -29,8 +29,8 @@ a way that can drift from the owner repository.
 | Norm type | Authoritative owner | This index may contain |
 | --- | --- | --- |
 | Proposal lifecycle, approval policy, commit preflight, audit, app keys, operation classification | `npcink-governance-core` | A summary and link to Core contracts. |
-| WordPress ability ids, schemas, dry-run previews, host-approved callbacks | `npcink-abilities-toolkit` | Reuse guidance and migration criteria. |
-| Channel adapter entry, OpenClaw recipes, signed client handoff, execution profiles | `npcink-ai-client-adapter` | Channel placement and handoff guidance. |
+| WordPress ability ids, schemas, dry-run previews, host-approved callbacks, reusable static workflow definitions | `npcink-abilities-toolkit` | Reuse guidance and migration criteria. |
+| Channel adapter entry, OpenClaw projections of Toolkit-owned workflow definitions, signed client handoff, execution profiles | `npcink-ai-client-adapter` | Channel placement and handoff guidance. |
 | Operator UI, fixed buttons, suggestion artifacts, Core-ready plans, cross-repo quality gates | `npcink-workflow-toolbox` | Full local product-surface guidance. |
 | Cloud Base URL/API key settings, signed transport, entitlement and runtime detail reads | `npcink-cloud-addon` | Shallow transport ownership and handoff guidance. |
 
@@ -38,8 +38,9 @@ a way that can drift from the owner repository.
 
 - Core governs; it does not plan, execute, route models, run workflows, or own
   product UX.
-- Toolkit defines reusable WordPress ability contracts; it does not decide
-  whether a write is authorized.
+- Toolkit defines reusable WordPress ability contracts and is the canonical
+  owner of reusable static workflow definitions; it does not execute workflow
+  runtime or decide whether a write is authorized.
 - Adapter projects channels into existing governance contracts; it does not
   store private approval truth or create a second governance path.
 - Toolbox presents repeatable operator workflows; it returns suggestions,
@@ -109,8 +110,9 @@ Safe to centralize here:
 Keep in the owner repository:
 
 - Core governance data and lifecycle contracts;
-- Toolkit ability schemas and callback contracts;
-- Adapter recipe and execution-profile details;
+- Toolkit ability schemas, callback contracts, and reusable static workflow
+  definitions;
+- Adapter channel projections and execution-profile details;
 - Cloud Addon credential and signed transport details;
 - Cloud hosted runtime, entitlement, provider, Site Knowledge, queue, and
   billing contracts.
