@@ -2,6 +2,18 @@
 
 Status: planning baseline.
 
+## Completed Priority - Platform Contract Convergence
+
+Before adding another write-capable button or Adapter channel, preserve the
+[platform contract convergence baseline](platform-contract-convergence-2026-07-11.md)
+and the [editor native commit migration](editor-native-commit-migration-spec.md).
+The gate is `composer check:platform-contracts`.
+
+This stage completed when the
+editor contains no hidden proposal-intent/post-save executor, Toolkit remains
+the single reusable workflow-definition owner, Adapter owner wording is generic
+with OpenClaw-first compatibility, and all six repository gates pass.
+
 ## Stage 0 - Project Contract
 
 Goal: make the standalone plugin understandable to future sessions.
@@ -130,7 +142,8 @@ Target features:
 
 Rules:
 
-- every write-like action creates or prepares a Core proposal;
+- every write-like action outside ADR-006 `native_editor_commit` creates or
+  prepares a Core proposal;
 - Toolbox does not bypass Core approval;
 - proposal payloads use real WordPress ability ids.
 - batch plans are review sets, not Toolbox-owned queues or automation workers.

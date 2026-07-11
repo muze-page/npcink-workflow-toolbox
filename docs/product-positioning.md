@@ -12,21 +12,49 @@ and repeatable AI-assisted content-support workflows.
 Npcink Workflow Toolbox turns proven AI-assisted WordPress operations and
 content-support abilities into fixed, review-only buttons for site operators.
 
-## Relationship To OpenClaw
+## Relationship To External AI Clients And OpenClaw
 
-Toolbox and OpenClaw should expose the same governed workflows through
+Toolbox and external AI clients should expose the same governed workflows through
 different operator entry points:
 
-- OpenClaw is the natural-language channel for broad requests.
+- Npcink AI Client Adapter is the generic external AI-client contract.
+- OpenClaw is the first and priority natural-language implementation.
 - Toolbox is the fixed-button product surface for the same repeatable flows.
-- Adapter publishes OpenClaw recipe guidance and forwards reviewed plans.
+- Adapter projects Toolkit-owned workflow definitions into client-specific
+  recipes and forwards reviewed plans.
 - Core owns proposal, approval, preflight, and final WordPress write truth.
 - Abilities execute the reusable WordPress read/write callbacks.
 - Cloud may provide hosted runtime processing, but not write authority.
 
-When a workflow can be used both by OpenClaw and by a Toolbox button, the
+When a workflow can be used both by an external AI client and by a Toolbox button, the
 Toolbox button should reuse the same ability ids, plan artifact shapes, and
-Core proposal handoff as the OpenClaw recipe. Toolbox must not fork the flow
+Core proposal handoff as the Adapter projection. The reusable, versioned,
+static workflow definition is owned by `npcink-abilities-toolkit`. Toolbox and
+Adapter must not fork it into a separate workflow registry, approval path,
+media registry, prompt/model control plane, or WordPress write executor.
+
+OpenClaw-specific REST names may remain for compatibility. Channels with
+materially different authentication, transport, lifecycle, or durable state
+may use separate adapter plugins instead of distorting the common contract.
+
+## Two Write Lanes
+
+The product has two intentionally different commit paths:
+
+- In the article editor, reviewed values may enter the current article's
+  visible and editable editor state. They become durable only when the author
+  uses normal WordPress Publish or Update. This `native_editor_commit` path
+  does not create a Core proposal or Core audit record.
+- In plugin-admin batch execution surfaces, selected writes become Core
+  proposals. Toolbox then stops and links or navigates to the governance
+  surface; approval and execution do not occur in Toolbox.
+
+The editor rule applies only to the current article and the native save
+transaction. Hidden post-save execution, media import or mutation,
+cross-object/global writes, external/background actions, and batches remain on
+the Core proposal path. See ADR-006 for the complete eligibility test.
+
+Toolbox must not fork the flow
 into a separate approval path, media registry, prompt/model control plane, or
 WordPress write executor.
 
@@ -88,9 +116,13 @@ Npcink Workflow Toolbox does not own:
 | Project | Owns |
 | --- | --- |
 | `npcink-governance-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
-| `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
+| `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, dry-run previews, and reusable versioned static workflow definitions. |
+| `npcink-ai-client-adapter` | Generic external AI-client contract and channel projections, with OpenClaw implemented first. |
 | `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, Cloud-managed external research handoff, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
+
+`wp-magick-toolbox` is an independent plugin with no migration, compatibility,
+release, or ownership relationship to `npcink-workflow-toolbox`.
 
 ## Design Rule
 

@@ -169,7 +169,6 @@ $roles = array(
 	'npcink-workflow-toolbox'  => 'product_surface',
 	'npcink-cloud-addon'       => 'signed_transport',
 	'npcink-ai-cloud'          => 'runtime_detail',
-	'magick-ai-toolbox'        => 'legacy_current_toolbox',
 );
 
 $rows = array();

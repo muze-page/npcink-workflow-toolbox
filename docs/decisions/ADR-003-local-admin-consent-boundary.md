@@ -4,6 +4,10 @@
 
 Accepted
 
+Partially superseded by ADR-006 for author-reviewed values committed through
+the current article's native WordPress Publish or Update transaction. The
+featured-image Local Admin Consent proof remains active.
+
 ## Date
 
 2026-06-09
@@ -53,14 +57,11 @@ modal. All other write-like Toolbox actions must continue to use Core proposal
 handoff, Adapter unified user actions, and reusable WordPress abilities until
 their own boundary decision exists.
 
-The post-editor SEO title/description apply action is not a Local Admin Consent
-expansion. It remains a Core proposal plus Adapter unified user action:
-Toolbox may submit the reviewed single-post `set-post-seo-meta` proposal and
-record the author's adoption as approval for the next native Publish or Update.
-Only after that save succeeds may the editor ask Adapter to approve, preflight,
-and execute it. Core policy may allow execution or leave the proposal pending
-for Core review. Toolbox still does not mutate SEO meta directly and does not
-own approval, preflight, audit, or final write execution.
+The older post-editor SEO proposal-plus-post-save-execution rule is superseded
+by ADR-006. A reviewed value qualifies for `native_editor_commit` only when it
+is visible and editable in the current article and is persisted solely by the
+author's native WordPress Publish or Update transaction. Hidden post-save SEO
+execution remains prohibited; non-native SEO writes use Core proposals.
 
 ## Current Mapping
 
@@ -69,7 +70,7 @@ own approval, preflight, audit, or final write execution.
 | `suggestion_only` | Return candidates or planning artifacts. No proposal required. No WordPress write. |
 | `local_admin_consent` | Implemented only for one existing image attachment -> current post featured image, with Core audit and rollback on completion-audit failure. |
 | `strong_local_confirmation` | Classification only. Requires a future confirmation and audit contract or Core proposal. |
-| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. Reviewed current-article SEO, external-image adoption, and article-audio adoption may retain a bounded proposal id and ask Adapter/Core to approve and execute only after a successful native Publish or Update. Batch admin actions stop after selected Core proposal submission. |
+| `core_proposal_required` | Prepare or submit a Core proposal through the existing governed handoff path. External-image adoption, article-audio adoption, non-native SEO mutation, and other cross-object writes stay governed. Batch admin actions stop after selected Core proposal submission. |
 
 ## Future Strong Local Confirmation Candidate
 
@@ -141,7 +142,6 @@ images, or emit `local_admin_consent.*` audit events.
 - Featured-image, media import, publishing, deletion, batch, external agent,
   and incomplete-preview writes continue to use Core proposal review unless a
   later ADR explicitly narrows an exception.
-- SEO meta remains Core-governed. The current editor records the author's
-  reviewed single-post title/description proposal and asks Adapter/Core to
-  execute only after a successful native Publish or Update; blocked execution
-  remains a Core review proposal without automatic retry.
+- SEO meta written outside the current article's visible native editor state
+  remains Core-governed. Qualifying native editor values follow ADR-006 and do
+  not create a Core proposal or hidden post-save execution.

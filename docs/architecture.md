@@ -1,5 +1,23 @@
 # Architecture
 
+## Authoritative Write-Lane Split
+
+ADR-006 supersedes older editor handoff assumptions in this document. A value
+reviewed in the current article and placed into visible, editable editor state
+is persisted only by the author's native WordPress Publish or Update action.
+That `native_editor_commit` path does not create or execute a Core proposal and
+does not need a Core audit record. No editor proposal-intent seam or hidden
+post-save executor remains.
+
+Plugin-admin batches, external clients, background work, media mutation, and
+cross-object or global writes continue through Core proposals. Toolbox stops
+after proposal creation and links to Core governance.
+
+Reusable, versioned static workflow definitions are owned by
+`npcink-abilities-toolkit`. Toolbox is their fixed-button projection and
+`npcink-ai-client-adapter` is their generic external-client projection, with
+OpenClaw implemented first.
+
 Status: MVP architecture.
 
 ## Components
@@ -11,7 +29,7 @@ Status: MVP architecture.
 | `Settings` | Option defaults, sanitization, non-secret compatibility settings, and content context export. Provider secrets, key rotation, quotas, billing, request logs, and routing remain Cloud/host/connector owned. |
 | `Provider_Client` | Cloud image-source runtime calls, explicit AI-generated image candidate normalization, Cloud-managed site knowledge calls, Cloud-managed web search status, manual Site Check Cloud detail runtime calls, and fixed-flow planning actions. |
 | `Rest_Controller` | Admin-facing REST routes for tool execution. |
-| `Admin_Page` | WordPress admin tool surface, non-secret compatibility/status forms, content context form, and Npcink submenu fallback. It is not a provider picker, key-management UI, request log, quota/billing UI, or connector approval surface. |
+| `Admin_Page` | WordPress admin tool surface, sole Npcink AI navigation shell, non-secret compatibility/status forms, and content context form. The shell centralizes navigation only; it does not absorb another plugin's settings or authority. |
 | `Ability_Surface_Metadata` | Read-only local projection of Toolbox-owned workflow defaults, route-only compatibility entries, runtime ownership, handoff posture, and overlap policy. It is not an ability registry, workflow registry, provider picker, request log, or approval store. |
 | `Editor_Content_Support` | Post editor document panel entrypoint for fixed content-support flows. |
 | `Article_Audio_Playback` | Frontend single-post playback entry for already adopted article audio metadata. It reads protected post meta or a host-projected approved audio packet and does not generate, adopt, or write audio. |
@@ -350,8 +368,6 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-alt-caption-review-plan`
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
-- `POST /wp-json/npcink-toolbox/v1/editor/reviewed-action-intents`
-- `POST /wp-json/npcink-toolbox/v1/editor/contextual-alt-audit`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
@@ -424,22 +440,15 @@ internal-link candidates, current-article contextual ALT review, image
 candidates, and article audio candidates. Contextual ALT operates on each image
 occurrence and uses the nearest heading, adjacent article text, and caption as
 the primary source. Missing ALT is automatically applied to the current
-Gutenberg editor state after Core audit. Only when useful occurrence context is
+Gutenberg editor state as Native Commit state. Only when useful occurrence context is
 absent may the backend silently reuse the existing Cloud Addon
 `image_context_evidence.v1` runtime for bounded visual facts. That fallback adds
 no button, retry, or blocking state; existing ALT is preserved and Cloud failure
-falls back locally. `/editor/contextual-alt-audit` records requested and
-completed Core audit events before and after the reversible editor-state
-change; it creates no proposal, calls no Adapter execution route, writes no
-WordPress post or attachment data, and leaves persistence to native Save draft
-or Update.
-
-`/editor/reviewed-action-intents` is the private control-meta seam for
-author-reviewed current-article SEO, external-image adoption, and article-audio
-adoption. It stores only bounded Core proposal references, is excluded from the
-native post REST schema, and removes attempted references after publish-time
-execution without issuing a second Gutenberg post save. It is not a queue,
-retry worker, approval store, execution history, or final write path.
+falls back locally. The browser changes only Gutenberg block state, creates no
+Core trace, calls no Adapter execution route, writes no attachment data, and
+leaves persistence to native Save draft or Update. SEO, external-image
+adoption, and article-audio adoption stop after Core proposal creation and show
+the governance link.
 Generic AI-plugin-style generation and diagnosis intents such as
 `article_checkup`, `title_suggestions`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `article_outline`,
@@ -571,13 +580,12 @@ Toolbox appears as:
 - `Npcink -> Workflow Toolbox`
 - `admin.php?page=npcink-toolbox`
 
-The submenu position is `45`, intentionally after `npcink-abilities-toolkit` (`40`)
-and before Cloud Addon (`50`).
-
-When no Npcink parent menu exists, Toolbox falls back to:
-
-- `Tools -> Npcink Workflow Toolbox`
-- `tools.php?page=npcink-toolbox`
+Toolbox registers the top-level `npcink-ai` navigation shell at `admin_menu`
+priority `5`. Independent plugins register later and either attach their own
+submenu or use their native Settings/Tools fallback when Toolbox is inactive.
+The Toolbox submenu position remains `45`, after Abilities (`40`) and before
+Cloud Addon (`50`). Navigation ownership does not transfer runtime, settings,
+governance, ability, channel, or Cloud truth into Toolbox.
 
 Tool result panels follow a summary-first display contract adapted from
 Content Assistant product-surface discipline:

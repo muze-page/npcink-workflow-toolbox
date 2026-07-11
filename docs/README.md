@@ -107,6 +107,9 @@ Start from the active documents below before changing code.
 - [OpenClaw Content Discoverability Handoff](openclaw-content-discoverability-handoff.md)
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](openclaw-seo-geo-aeo-acceptance-summary.md)
 - [OpenClaw Batch Media Optimization Handoff](openclaw-batch-media-optimization-handoff.md)
+- [Platform Contract Convergence Baseline](platform-contract-convergence-2026-07-11.md)
+- [Editor Native Commit Migration Specification](editor-native-commit-migration-spec.md)
+- [Workflow Definition And AI Client Projection Contract](workflow-and-ai-client-projection-contract.md)
 
 ## Architecture Decisions
 
@@ -115,6 +118,7 @@ Start from the active documents below before changing code.
 - [ADR-003: Local Admin Consent Requires A Separate Write Boundary](decisions/ADR-003-local-admin-consent-boundary.md)
 - [ADR-004: Bundle Local Automation Runtime As An Isolated Module](decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md)
 - [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](decisions/ADR-005-wp-cron-cloud-batch-orchestration.md)
+- [ADR-006: Separate Native Editor Commit From Governed Batch Handoff](decisions/ADR-006-native-editor-commit-and-governed-batch-handoff.md)
 
 ## Archived Closeouts
 

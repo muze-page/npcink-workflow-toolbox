@@ -43,6 +43,19 @@ For a focused redline vocabulary check, run:
 composer test:boundary-vocabulary
 ```
 
+For the six-project ownership baseline and bounded editor migration-debt check,
+run:
+
+```bash
+composer check:platform-contracts
+```
+
+The gate validates local authority documents, the six-project matrix, Toolkit
+workflow-definition ownership, generic Adapter direction, Cloud boundaries,
+and requires legacy editor post-save execution markers to remain absent from
+production source. Missing sibling checkouts are reported as
+skipped; a present but drifting sibling contract fails the gate.
+
 This source-only gate keeps the highest-risk boundary terms discoverable:
 write-confirmation contracts, local vector/RAG ownership, old menu labels,
 local web-search ability wording, image-source versus generated-image wording,
@@ -353,27 +366,6 @@ responses, verifies success and failure receipt rendering, checks the Core
 review link, and confirms failed handoffs show operator recovery feedback. It
 does not create WordPress, Adapter, or Core records.
 
-For the post-editor SEO apply loop, run:
-
-```bash
-composer smoke:editor-seo-apply
-```
-
-This creates a temporary draft and asks Toolbox only for the `discoverability`
-SEO handoff preview. The fixture then uses Adapter/Core/Abilities to create an
-executable `npcink-abilities-toolkit/set-post-seo-meta` Core proposal and call
-Adapter `approve-and-execute`, simulating the editor's post-save execution step
-after a successful Publish or Update. The browser-side editor contract must
-queue only the bounded proposal id before that save and must not execute on the
-adoption click. Toolbox does not write SEO meta in this smoke; it proves that a
-reviewed Toolbox handoff can be carried into the governed
-Core/Adapter/Abilities path. If local Core policy
-allows execution, the smoke verifies the SEO title and description meta were
-written by the Core-approved ability. If policy blocks automatic execution, it
-verifies the Core proposal remains reviewable and the temporary post SEO meta
-is unchanged. It is intentionally outside `composer test:all` because it
-depends on a running local WordPress site with Adapter, Core, and Abilities
-active.
 
 For hosted AI no-result editor diagnostics, run:
 

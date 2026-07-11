@@ -81,6 +81,11 @@ implementing it inside Toolbox.
 - Keep REST routes capability-gated with `manage_options` until a scoped host
   auth model is intentionally designed.
 - Treat provider outputs as suggestions, not committed WordPress changes.
+- Treat an author-reviewed value added to the current article's visible editor
+  state as `native_editor_commit` only when it is persisted solely by the
+  author's normal WordPress Publish or Update action. Toolbox must not attach a
+  hidden post-save executor or use this rule for media, cross-object, global,
+  external, background, or batch writes; see ADR-006.
 - Preserve Unsplash attribution and `download_location` metadata.
 - Keep vector search limited to synchronous text query embeddings, supplied
   vector JSON, or Qdrant query objects. Do not add indexing/re-indexing without

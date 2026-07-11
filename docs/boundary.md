@@ -2,6 +2,10 @@
 
 Npcink Toolbox owns product-facing tools and fixed-flow buttons.
 
+ADR-006 is the active authority for choosing between native editor commit and
+Core-governed handoff. The former proposal-intent and post-save execution
+routes have been removed.
+
 Owned here:
 
 - Cloud-managed web search status and handoff guidance;
@@ -21,6 +25,8 @@ Not owned here:
 - Core governance truth;
 - final WordPress write approval;
 - reusable first-party WordPress ability definitions already owned by
+  `npcink-abilities-toolkit`;
+- reusable, versioned static workflow definitions already owned by
   `npcink-abilities-toolkit`;
 - workflow runtime, queues, or MCP control-plane state;
 - long-term provider billing, quota, and request log ownership.
@@ -43,6 +49,26 @@ First-version write posture:
 7. Render article audio on the public post only after approved audio has been
    adopted into local WordPress metadata; the playback surface is read-only and
    does not call Cloud, create proposals, import media, or write post meta.
+
+## Native Editor Commit Boundary
+
+Toolbox may place an author-reviewed value into the one current article's
+visible, editable editor state. If that value is persisted solely by the
+author's normal WordPress Publish or Update transaction, the operation is a
+`native_editor_commit`: it does not call Core or Adapter and requires no Core
+trace.
+
+This is not a direct-write exception and not a fifth Core classification.
+Toolbox itself does not commit backend state. The rule is invalid if the action
+uses a hidden post-save executor, a direct write route, another object, media
+import or mutation, global settings, taxonomy creation, external/background
+execution, or a batch. Those operations remain `core_proposal_required`.
+
+## Plugin-Admin Batch Boundary
+
+Batch surfaces may submit reviewed plans to Core, then must stop and navigate
+or link to Core governance. They must not approve, execute, or poll-to-execute
+the submitted proposals inside Toolbox.
 
 Hard blocks:
 
@@ -162,7 +188,6 @@ human-readable allowlist and must stay aligned with that table and
 - `/flows/article-plan`
 - `/flows/image-candidate-adoption-plan`
 - `/flows/article-audio-adoption-plan`
-- `/editor/reviewed-action-intents`
 - `/local-admin-consent/featured-image`
 - `/flows/site-knowledge-review-plan`
 - `/flows/nightly-inspection-review-plan`
@@ -170,7 +195,6 @@ human-readable allowlist and must stay aligned with that table and
 - `/flows/media-alt-caption-review-plan`
 - `/flows/media-brief`
 - `/editor/content-support`
-- `/editor/contextual-alt-audit`
 - `/media-derivative-handoff`
 - `/nightly-inspection/cloud-runtime-entitlement`
 - `/nightly-inspection/cloud-batch`
@@ -217,25 +241,14 @@ describe playback metadata projection, evidence refs, and the target Toolkit
 audio adoption ability, including whether the adopted audio should be imported
 into the local WordPress media library. Toolbox itself must not import media,
 update article-audio post meta, execute a write ability, or patch post content.
-The current-article editor may submit the reviewed plan as a Core proposal and
-retain only its bounded proposal id on the draft. The author's Adopt action is
-approval for execution after the next successful native Publish or Update;
-the adoption click itself performs no media or metadata write.
+The current-article editor may submit the reviewed plan as a Core proposal,
+show the receipt and Governance Core link, then stop. It does not retain the
+proposal id on the draft or treat the adoption click as approval.
 It may include lightweight source-content freshness evidence such as content
 hash, word count, and generation timestamp so Core/Abilities can later decide
 whether the adopted audio is current, lightly drifted, review-recommended, or
 stale. Toolbox must not use that evidence to auto-regenerate audio, run
 background refresh jobs, or patch audio segments.
-
-`/editor/reviewed-action-intents` is a private,
-administrator-and-post-editor capability-gated control route for the three
-current-article actions above. It stores, lists, and completes at most 20
-sanitized proposal references in one private post-meta value. It never accepts
-SEO fields, image/audio candidates, media metadata, article content, or
-execution results, and it is not exposed in the native post REST schema.
-Completion updates only this control metadata, so publish-time execution does
-not trigger a second Gutenberg post save or risk overwriting
-Adapter/Abilities results.
 
 The high-risk contrast for Local Admin Consent is the article/media batch
 handoff. `npcink-toolbox/build-article-media-batch-write-plan` may group
@@ -423,16 +436,15 @@ must not become a whole-library update path.
 When the editor sidebar needs image ALT support, it may pass only the current
 article's featured image and image-block metadata through `/editor/content-support`;
 that narrow snapshot must not become a media-library scan, batch update path,
-or direct media metadata write. For current `core/image` occurrences,
-`/editor/contextual-alt-audit` may record Core-owned local-consent audit evidence
-while the browser automatically fills only missing ALT in the in-memory
-Gutenberg draft. Article context remains the local truth for image purpose. When
+or direct media metadata write. For current `core/image` occurrences, the
+browser may automatically fill only missing ALT in the in-memory Gutenberg
+draft as Native Commit state, without a Core proposal or audit. Article context
+remains the local truth for image purpose. When
 that context is absent, Toolbox may silently consume the existing Cloud Addon
 `image_context_evidence.v1` suggestion-only runtime as bounded visual facts; it
 must not retry, block the editor, expose provider controls, overwrite existing
-ALT, or treat Cloud output as write truth. The audit route must fail closed when
-Core is unavailable, create no proposal, write no WordPress post or attachment
-data, and require native Save draft or Update for persistence.
+ALT, or treat Cloud output as write truth. The browser writes no attachment
+data and requires native Save draft or Update for persistence.
 
 `/ai/image-generation` is a legacy-compatible route name for one reviewed-prompt
 hosted image candidate request through Cloud Addon runtime. Toolbox should
@@ -463,13 +475,11 @@ single-object local write with Core audit. External URLs, generated image URLs,
 media import, metadata updates, and combined import-plus-featured-image actions
 must keep using `/flows/image-candidate-adoption-plan` and the
 Adapter/Core/Abilities path.
-Editor-side adoption may submit that plan through Adapter `/proposals/from-plan`
-and retain the bounded proposal id on the current draft after the author clicks
-Adopt. It may call Adapter `/proposals/{proposal_id}/approve-and-execute` only
-after the next native Publish or Update succeeds. Adapter remains the unified
-user-action proxy: Core stays the approval, preflight, proposal, and audit
-owner, and Abilities stay the final WordPress write executor. Toolbox must not
-execute on the adoption click or run an automatic retry loop.
+Editor-side adoption may submit that plan through Adapter `/proposals/from-plan`,
+display the Core receipt and governance link, then stop. Core stays the
+approval, preflight, proposal, and audit owner, and Abilities stay the final
+WordPress write executor. Toolbox must not retain the proposal on the draft,
+approve, execute, poll, or run an automatic retry loop.
 
 `/flows/site-knowledge-review-plan` prepares a blocked Core review handoff from
 Cloud Site Knowledge agent evidence. It may preserve evidence refs, blocked

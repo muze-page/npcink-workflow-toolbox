@@ -48,12 +48,6 @@ $repos = array(
 		'gate'       => 'npm run check:fast',
 		'gate_notes' => 'Cloud runtime fast contract, seam, perimeter, and anti-drift checks.',
 	),
-	array(
-		'name'       => 'magick-ai-toolbox',
-		'paths'      => array( 'magick-ai-toolbox', 'wp-magick-toolbox' ),
-		'gate'       => 'composer test',
-		'gate_notes' => 'Legacy/current Magick Toolbox local test gate when present.',
-	),
 );
 
 $options = array(

@@ -1,6 +1,6 @@
 # Feature Ownership And Plugin Boundary
 
-Status: proposed.
+Status: active.
 
 Scope: Npcink Core, Abilities Toolkit, Cloud, Toolbox, Adapter/OpenClaw, and
 future channel surfaces.
@@ -47,7 +47,7 @@ channel or Toolbox entry
 | Abilities Toolkit | Reusable WordPress read/write ability definitions and callbacks; reusable static workflow definitions | AI reasoning, workflow UI, workflow runtime, approval truth |
 | Cloud | Hosted AI runtime, model routing, provider adapters, Site Knowledge, indexing, queues, quotas, long-running execution | WordPress write authority, local approval store, WordPress control plane |
 | Toolbox | WordPress operator UI, fixed buttons, review surfaces, planning artifacts, suggestion workflows | Final writes, approval truth, provider billing, workflow runtime |
-| Adapter / OpenClaw | Natural-language or external-channel orchestration into existing contracts | Core truth, duplicated ability registry, duplicated workflow registry |
+| Adapter / OpenClaw | Generic external AI-client contract and channel orchestration into existing contracts; OpenClaw first | Core truth, duplicated ability registry, duplicated workflow registry |
 | Future channel plugins | New entry points such as public widget, browser extension, Slack, WeChat, or SaaS console | Reimplementing Core, Abilities, Cloud, or Toolbox responsibilities |
 
 ## Feature Placement Rules
@@ -109,6 +109,15 @@ Every new AI feature should define these artifacts before implementation:
 
 Default to `suggestion_only`. Escalate to `core_proposal_required` when a
 WordPress write is involved.
+
+ADR-006 narrows one pre-classification case: a reviewed value placed into the
+current article's visible editor state and persisted only by native WordPress
+Publish or Update is `native_editor_commit`, not a Toolbox write and not a Core
+operation. Plugin-admin batches, external/background actions, hidden post-save
+execution, media mutation, and cross-object writes still escalate to Core.
+
+`wp-magick-toolbox` is a separate, unrelated plugin. It is not a legacy name,
+feature source, compatibility target, or release dependency of this platform.
 
 ## Hard Blocks
 

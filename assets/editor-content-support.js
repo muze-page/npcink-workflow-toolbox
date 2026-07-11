@@ -34,7 +34,6 @@
 	const IMAGE_CANDIDATE_TARGET_COUNT = 9;
 	const IMAGE_DIRECTION_TARGET_COUNT = 4;
 	const AUDIO_PREFERENCE_STORAGE_KEY = 'npcink_toolbox_audio_preferences_v1';
-	const PUBLISH_EXECUTION_OPERATIONS = ['seo_meta', 'image_adoption', 'article_audio'];
 	const AUDIO_PREFERENCE_DEFAULTS = {
 		tone: 'calm',
 		pace: 'normal',
@@ -625,13 +624,6 @@
 		return postJsonToUrl(joinRestUrl(config.restUrl, path), payload);
 	}
 
-	function editorConfirmationCorrelationId() {
-		if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function') {
-			return window.crypto.randomUUID();
-		}
-		return 'toolbox-editor-alt-' + String(Date.now()) + '-' + Math.random().toString(16).slice(2);
-	}
-
 	function normalizeEditorAlt(value) {
 		return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 180);
 	}
@@ -701,39 +693,6 @@
 
 	function adapterRestUrl(path) {
 		return joinRestUrl(config.adapterRestUrl || '/wp-json/npcink-openclaw-adapter/v1', path);
-	}
-
-	function normalizePublishExecutionIntents(value) {
-		return (Array.isArray(value) ? value : []).map((intent) => {
-			const proposalId = String(intent && intent.proposal_id ? intent.proposal_id : '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 191);
-			const operation = String(intent && intent.operation ? intent.operation : '');
-			const approvedAt = String(intent && intent.author_approved_at ? intent.author_approved_at : '');
-			if (!proposalId || PUBLISH_EXECUTION_OPERATIONS.indexOf(operation) < 0 || !approvedAt) {
-				return null;
-			}
-			return { proposal_id: proposalId, operation, author_approved_at: approvedAt };
-		}).filter(Boolean).slice(0, 20);
-	}
-
-	async function queuePublishExecutionIntent(postId, proposalId, operation) {
-		const safeProposalId = String(proposalId || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 191);
-		if (!postId || !safeProposalId || PUBLISH_EXECUTION_OPERATIONS.indexOf(operation) < 0) {
-			throw new Error(__('The reviewed action could not be attached to this post for publish-time execution.', 'npcink-workflow-toolbox'));
-		}
-		const response = await postJson('editor/reviewed-action-intents', {
-			action: 'queue',
-			post_id: postId,
-			proposal_id: safeProposalId,
-			operation,
-		});
-		return normalizePublishExecutionIntents(response && response.intents);
-	}
-
-	async function executeReviewedProposalOnPublish(intent) {
-		return postJsonToUrl(
-			adapterRestUrl('proposals/' + encodeURIComponent(intent.proposal_id) + '/approve-and-execute'),
-			{ note: __('Author reviewed this action in the post editor. Execute it after the article publish or update completed.', 'npcink-workflow-toolbox') }
-		);
 	}
 
 	function extractProposalId(value, depth) {
@@ -980,9 +939,7 @@
 		});
 	}
 
-	function seoMetaProposalPayload(section, options) {
-		const opts = options || {};
-		const commitExecution = Boolean(opts.commitExecution);
+	function seoMetaProposalPayload(section) {
 		const template = section && section.proposal_payload_template && typeof section.proposal_payload_template === 'object'
 			? section.proposal_payload_template
 			: {};
@@ -993,20 +950,17 @@
 			post_id: postId,
 			seo_title: String(input.seo_title || '').trim(),
 			seo_description: String(input.seo_description || '').trim(),
-			dry_run: !commitExecution,
-			commit: commitExecution,
+			dry_run: true,
+			commit: false,
 		};
-		if (commitExecution) {
-			payloadInput.idempotency_key = 'toolbox-editor-seo-meta-' + postId + '-' + Date.now();
-		}
 		return {
 			ability_id: 'npcink-abilities-toolkit/set-post-seo-meta',
 			title: template.title || __('Review SEO meta for the current post', 'npcink-workflow-toolbox'),
 			summary: template.summary || __('Single-post SEO title and description candidate prepared by Toolbox for Core-governed review.', 'npcink-workflow-toolbox'),
 			input: payloadInput,
 			preview: Object.assign({}, preview, {
-				dry_run: !commitExecution,
-				commit_execution: commitExecution,
+				dry_run: true,
+				commit_execution: false,
 			}),
 			caller: {
 				surface: 'toolbox_editor_content_support',
@@ -1016,8 +970,8 @@
 		};
 	}
 
-	async function postSeoMetaProposalToAdapter(section, options) {
-		return postJsonToUrl(adapterRestUrl('proposals'), seoMetaProposalPayload(section, options));
+	async function postSeoMetaProposalToAdapter(section) {
+		return postJsonToUrl(adapterRestUrl('proposals'), seoMetaProposalPayload(section));
 	}
 
 	async function postLocalFeaturedImageConsent(input) {
@@ -1040,7 +994,7 @@
 				message: __('Core did not create an executable adoption proposal from this image plan.', 'npcink-workflow-toolbox'),
 			} };
 		}
-		return { bridge, proposal_id: proposalId, deferred_to_publish: true };
+		return { bridge, proposal_id: proposalId, operator_next_action: 'review_in_core' };
 	}
 
 	async function postArticleAudioAdoptionToAdapter(plan, planInput) {
@@ -1060,7 +1014,7 @@
 				message: __('Core did not create an executable article audio adoption proposal from this plan.', 'npcink-workflow-toolbox'),
 			} };
 		}
-		return { bridge, proposal_id: proposalId, deferred_to_publish: true };
+		return { bridge, proposal_id: proposalId, operator_next_action: 'review_in_core' };
 	}
 
 	function usePostContext() {
@@ -1082,9 +1036,6 @@
 				category_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('categories') : []) || [],
 				tag_ids: (editor.getEditedPostAttribute ? editor.getEditedPostAttribute('tags') : []) || [],
 				featured_media: editor.getEditedPostAttribute ? editor.getEditedPostAttribute('featured_media') : 0,
-				is_saving_post: editor.isSavingPost ? editor.isSavingPost() : false,
-				is_autosaving_post: editor.isAutosavingPost ? editor.isAutosavingPost() : false,
-				did_post_save_succeed: editor.didPostSaveRequestSucceed ? editor.didPostSaveRequestSucceed() : false,
 				media_items: currentArticleMediaItems(blocks),
 				selected_block_name: selectedBlock && selectedBlock.name ? String(selectedBlock.name) : '',
 				selected_block_text: selectedBlockText(selectedBlock),
@@ -2532,14 +2483,14 @@
 		const mediaImportOnly = result.adoption_target === 'media_import';
 		const title = status === 'adopted'
 			? (mediaImportOnly ? __('Media imported', 'npcink-workflow-toolbox') : __('Featured image adopted', 'npcink-workflow-toolbox'))
-			: (status === 'submitted' ? __('Image approved for publish', 'npcink-workflow-toolbox') : __('Image adoption not queued', 'npcink-workflow-toolbox'));
+			: (status === 'submitted' ? __('Image Core proposal created', 'npcink-workflow-toolbox') : __('Image proposal unavailable', 'npcink-workflow-toolbox'));
 		const summary = status === 'adopted'
 			? (localConsent
 				? __('Existing media is now the featured image.', 'npcink-workflow-toolbox')
 				: (mediaImportOnly ? __('Media is imported and ready in the media library.', 'npcink-workflow-toolbox') : __('Image is imported and applied as the featured image.', 'npcink-workflow-toolbox')))
 			: (status === 'submitted'
-				? __('Core recorded the reviewed request. Publish or update the article to import and adopt it.', 'npcink-workflow-toolbox')
-				: __('The request could not be queued for publish-time execution. Open Core to review the proposal.', 'npcink-workflow-toolbox'));
+				? __('Continue in Governance Core to review and execute the image adoption.', 'npcink-workflow-toolbox')
+				: __('The Core proposal was not created. Review the plan and try again.', 'npcink-workflow-toolbox'));
 		const coreLink = proposalId && config.coreAdminUrl
 			? createElement(
 				'a',
@@ -3978,26 +3929,27 @@
 		const core = result.core && typeof result.core === 'object' ? result.core : null;
 		const executionError = core && core.execution_error ? core.execution_error : null;
 		const proposalId = core && core.proposal_id ? String(core.proposal_id) : '';
-		const approvedForPublish = Boolean(proposalId && core.deferred_to_publish && !executionError);
-		const statusText = approvedForPublish
-			? __('Article audio approved for publish.', 'npcink-workflow-toolbox')
-			: (proposalId ? __('Core proposal created, but publish-time adoption was not queued.', 'npcink-workflow-toolbox') : __('Article audio adoption plan prepared.', 'npcink-workflow-toolbox'));
+		const proposalCreated = Boolean(proposalId && !executionError);
+		const statusText = proposalCreated
+			? __('Article audio Core proposal created.', 'npcink-workflow-toolbox')
+			: __('Article audio adoption plan prepared.', 'npcink-workflow-toolbox');
 		const rows = [];
 		if (proposalId) {
 			rows.push({ name: __('Proposal', 'npcink-workflow-toolbox'), detail: proposalId });
 		}
-		if (approvedForPublish) {
-			rows.push({ name: __('Next step', 'npcink-workflow-toolbox'), detail: __('Publish or update the article. Core/Adapter will then execute the reviewed adoption.', 'npcink-workflow-toolbox') });
+		if (proposalCreated) {
+			rows.push({ name: __('Next step', 'npcink-workflow-toolbox'), detail: __('Continue in Governance Core to review and execute the adoption.', 'npcink-workflow-toolbox') });
 		}
 		if (executionError) {
 			rows.push({ name: __('Next step', 'npcink-workflow-toolbox'), detail: executionError.message || __('Open Core review and complete the approved adoption from there.', 'npcink-workflow-toolbox') });
 		}
 		return createElement(
 			'div',
-			{ className: 'npcink-toolbox-editor-support__handoff-result' + (approvedForPublish ? ' is-ok' : '') },
+			{ className: 'npcink-toolbox-editor-support__handoff-result' + (proposalCreated ? ' is-ok' : '') },
 			createElement('strong', null, statusText),
 			rows.length ? renderItems(rows, '') : null,
-			!approvedForPublish ? renderAudioAdoptionPlan(result.plan || result) : null
+			proposalCreated && coreHandoffProposalUrl(proposalId) ? createElement('a', { href: coreHandoffProposalUrl(proposalId), target: '_blank', rel: 'noreferrer' }, __('Open Governance Core', 'npcink-workflow-toolbox')) : null,
+			!proposalCreated ? renderAudioAdoptionPlan(result.plan || result) : null
 		);
 	}
 
@@ -4056,7 +4008,7 @@
 								disabled: Boolean(audioAdoptionControls.running),
 								onClick: () => audioAdoptionControls.prepare(item, section, adoptionKey),
 							},
-							audioAdoptionControls.running === adoptionKey ? __('Adopting audio', 'npcink-workflow-toolbox') : __('Adopt audio', 'npcink-workflow-toolbox')
+							audioAdoptionControls.running === adoptionKey ? __('Creating proposal', 'npcink-workflow-toolbox') : __('Create Core proposal', 'npcink-workflow-toolbox')
 						) : null
 						)
 					);
@@ -4506,7 +4458,7 @@
 				'section',
 				{ className: 'npcink-toolbox-editor-support__discoverability-next-step' },
 				createElement('h4', null, __('Main action', 'npcink-workflow-toolbox')),
-					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it only after Publish or Update succeeds.', 'npcink-workflow-toolbox')),
+					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Create a Core proposal for the reviewed SEO title and description, then continue in Governance Core.', 'npcink-workflow-toolbox')),
 					createElement(
 						Button,
 						{
@@ -4517,7 +4469,7 @@
 							disabled: seoDisabled,
 							onClick: seoControls && seoControls.submit,
 					},
-						seoControls && seoControls.running ? __('Approving', 'npcink-workflow-toolbox') : __('Approve SEO for publish', 'npcink-workflow-toolbox')
+						seoControls && seoControls.running ? __('Creating proposal', 'npcink-workflow-toolbox') : __('Create SEO Core proposal', 'npcink-workflow-toolbox')
 				),
 				seoControls && seoControls.error ? createElement(Notice, { status: 'error', isDismissible: false }, seoControls.error) : null,
 				seoControls && seoControls.result ? createElement(
@@ -4752,7 +4704,7 @@
 				),
 				applyControls.status ? createElement(Notice, { status: applyControls.status.status || 'info', isDismissible: false }, applyControls.status.message || '') : null
 			) : null,
-			createElement('p', { className: 'npcink-toolbox-editor-support__contextual-alt-boundary' }, __('Core records automatic or edited ALT application. Only the current Gutenberg draft changes; use WordPress Save draft or Update to persist it. The media library stays unchanged.', 'npcink-workflow-toolbox'))
+			createElement('p', { className: 'npcink-toolbox-editor-support__contextual-alt-boundary' }, __('Only the current Gutenberg draft changes. Use WordPress Save draft or Update to persist it; no Core trace or media-library change is created.', 'npcink-workflow-toolbox'))
 		);
 	}
 
@@ -5826,7 +5778,7 @@
 		const changes = payload && payload.changes && typeof payload.changes === 'object' ? payload.changes : {};
 		const items = [];
 		if (result && result.proposal_id) {
-			items.push({ name: __('Core proposal', 'npcink-workflow-toolbox'), value: result.proposal_id, status: result.deferred_to_publish ? 'approved_for_publish' : 'review_required' });
+			items.push({ name: __('Core proposal', 'npcink-workflow-toolbox'), value: result.proposal_id, status: 'review_required' });
 		}
 		if (payload.provider) {
 			items.push({ name: __('SEO provider', 'npcink-workflow-toolbox'), value: payload.provider, status: payload.updated ? 'applied' : 'review_required' });
@@ -5854,11 +5806,11 @@
 		return createElement(
 			'details',
 			{ className: 'npcink-toolbox-editor-support__metadata-handoff' },
-				createElement('summary', null, __('SEO optimization apply', 'npcink-workflow-toolbox')),
+				createElement('summary', null, __('SEO Core handoff', 'npcink-workflow-toolbox')),
 				createElement(
 					'div',
 					{ className: 'npcink-toolbox-editor-support__metadata-handoff-body' },
-					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Approve the reviewed SEO title and description for this article. Core records the request now; Adapter/Abilities execute it after the next successful Publish or Update.', 'npcink-workflow-toolbox')),
+					createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Create a Core proposal for the reviewed SEO title and description, then continue in Governance Core.', 'npcink-workflow-toolbox')),
 				renderItems(
 					[
 						{ name: __('SEO title', 'npcink-workflow-toolbox'), value: input.seo_title, status: 'review_required' },
@@ -5876,14 +5828,14 @@
 						disabled,
 						onClick: controls.submit,
 					},
-						controls.running ? __('Approving', 'npcink-workflow-toolbox') : __('Approve SEO for publish', 'npcink-workflow-toolbox')
+						controls.running ? __('Creating proposal', 'npcink-workflow-toolbox') : __('Create SEO Core proposal', 'npcink-workflow-toolbox')
 					),
 					controls.error ? createElement(Notice, { status: 'error', isDismissible: false }, handoffErrorMessage(controls.error, __('Could not apply the SEO optimization.', 'npcink-workflow-toolbox'))) : null,
 					controls.error && controls.error.handoff_receipt ? renderCoreHandoffReceipt(controls.error.handoff_receipt) : null,
 					controls.result ? createElement(
 						Notice,
 						{ status: controls.result.execution_error ? 'warning' : 'success', isDismissible: false },
-						controls.result.message || __('SEO optimization approved for the next publish or update.', 'npcink-workflow-toolbox')
+						controls.result.message || __('SEO Core proposal created. Continue in Governance Core.', 'npcink-workflow-toolbox')
 					) : null,
 					controls.result && controls.result.handoff_receipt ? renderCoreHandoffReceipt(controls.result.handoff_receipt) : null,
 					controls.result ? renderItems(
@@ -6331,10 +6283,6 @@
 		const [audioAdoptionRunning, setAudioAdoptionRunning] = useState('');
 		const [audioAdoptionResult, setAudioAdoptionResult] = useState(null);
 		const [audioAdoptionError, setAudioAdoptionError] = useState('');
-		const [publishExecutionIntents, setPublishExecutionIntents] = useState([]);
-		const [publishExecutionStatus, setPublishExecutionStatus] = useState(null);
-		const publishExecutionRunningRef = useRef(false);
-		const wasSavingPostRef = useRef(false);
 		const [audioPlaybackErrors, setAudioPlaybackErrors] = useState({});
 		const [audioPreferences, setAudioPreferences] = useState(readAudioPreferences);
 		const [contentFeedbackRunning, setContentFeedbackRunning] = useState('');
@@ -6358,41 +6306,6 @@
 			const progressiveRequestSeqRef = useRef(0);
 			const progressiveCurrentKeyRef = useRef(progressiveKey);
 			progressiveCurrentKeyRef.current = progressiveKey;
-			const pendingPublishExecutionKey = publishExecutionIntents.map((intent) => intent.proposal_id).join('|');
-
-			useEffect(() => {
-				let active = true;
-				if (!postContext.post_id) {
-					setPublishExecutionIntents([]);
-					return undefined;
-				}
-				postJson('editor/reviewed-action-intents', { action: 'list', post_id: postContext.post_id })
-					.then((response) => {
-						if (active) {
-							setPublishExecutionIntents(normalizePublishExecutionIntents(response && response.intents));
-						}
-					})
-					.catch(() => {
-						if (active) {
-							setPublishExecutionIntents([]);
-						}
-					});
-				return () => {
-					active = false;
-				};
-			}, [postContext.post_id]);
-
-			useEffect(() => {
-				const completedPublishSave = wasSavingPostRef.current
-					&& !postContext.is_saving_post
-					&& postContext.did_post_save_succeed
-					&& postContext.post_status === 'publish';
-				wasSavingPostRef.current = Boolean(postContext.is_saving_post && !postContext.is_autosaving_post);
-				if (completedPublishSave && pendingPublishExecutionKey && !publishExecutionRunningRef.current) {
-					executePendingPublishIntents();
-				}
-			}, [postContext.is_saving_post, postContext.is_autosaving_post, postContext.did_post_save_succeed, postContext.post_status, pendingPublishExecutionKey]);
-
 			useEffect(() => {
 				progressiveMountedRef.current = true;
 				return () => {
@@ -6750,24 +6663,12 @@
 					}
 				}
 
-				const correlationId = editorConfirmationCorrelationId();
-				const auditPayload = {
-					post_id: Number(postContext.post_id || 0),
-					correlation_id: correlationId,
-					apply_mode: automatic ? 'automatic_missing_alt' : 'manual_editor_apply',
-					items: changes,
-				};
-				let requestedRecorded = false;
-				let editorStateApplied = false;
 				setContextualAltApplyRunning(true);
 				setContextualAltApplyStatus(null);
 				try {
-					await postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, { stage: 'requested' }));
-					requestedRecorded = true;
 					changes.forEach((change) => {
 						blockDispatcher.updateBlockAttributes(change.block_client_id, { alt: change.final_alt });
 					});
-					editorStateApplied = true;
 					const unapplied = changes.some((change) => {
 						const block = blockSelector.getBlock(change.block_client_id);
 						return !block || block.name !== 'core/image' || normalizeEditorAlt(block.attributes && block.attributes.alt) !== change.final_alt;
@@ -6775,7 +6676,6 @@
 					if (unapplied) {
 						throw new Error(__('Gutenberg could not apply every reviewed ALT value.', 'npcink-workflow-toolbox'));
 					}
-					const completion = await postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, { stage: 'completed' }));
 					const appliedByOccurrence = {};
 					changes.forEach((change) => {
 						appliedByOccurrence[change.occurrence_id] = change.final_alt;
@@ -6792,41 +6692,31 @@
 								write_status: 'applied_to_editor_state',
 							})
 							: item);
-						const nextSection = Object.assign({}, currentSection, {
-							items: nextItems,
-							missing_alt_count: nextItems.filter((item) => !String(item.current_alt || '')).length,
-							editor_confirmation: completion,
-						});
 						return Object.assign({}, current, {
-							sections: Object.assign({}, current.sections, { image_alt_suggestions: nextSection }),
+							sections: Object.assign({}, current.sections, {
+								image_alt_suggestions: Object.assign({}, currentSection, {
+									items: nextItems,
+									missing_alt_count: nextItems.filter((item) => !String(item.current_alt || '')).length,
+									editor_commit: {
+										mode: 'native_editor_commit',
+										wordpress_save_required: true,
+										core_trace_required: false,
+									},
+								}),
+							}),
 						});
 					});
 					setContextualAltApplyStatus({
 						status: 'success',
 						message: automatic
-							? sprintf(__('%d missing ALT value(s) were automatically applied to the current editor. Core recorded the action. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length)
-							: sprintf(__('%d reviewed ALT draft(s) applied to the current editor. Core recorded editor confirmation. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length),
+							? sprintf(__('%d missing ALT value(s) were applied to the current editor. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length)
+							: sprintf(__('%d reviewed ALT draft(s) applied to the current editor. Use Save draft or Update to persist.', 'npcink-workflow-toolbox'), changes.length),
 					});
-					submitContentImplicitFeedback('contextual_alt_editor_apply', 'accepted', ['editor_confirmed', 'core_audit_recorded']);
-				} catch (requestError) {
-					if (editorStateApplied) {
-						changes.forEach((change) => {
-							const block = blockSelector.getBlock(change.block_client_id);
-							const currentAlt = normalizeEditorAlt(block && block.attributes ? block.attributes.alt : '');
-							if (block && block.name === 'core/image' && currentAlt === change.final_alt) {
-								blockDispatcher.updateBlockAttributes(change.block_client_id, { alt: change.expected_old_alt });
-							}
-						});
-					}
-					if (requestedRecorded) {
-						postJson('editor/contextual-alt-audit', Object.assign({}, auditPayload, {
-							stage: 'failed',
-							failure_code: editorStateApplied ? 'completion_audit_failed_editor_state_reverted' : 'editor_state_apply_failed',
-						})).catch(() => {});
-					}
+					submitContentImplicitFeedback('contextual_alt_editor_apply', 'accepted', ['native_editor_commit', 'editor_state_only']);
+				} catch (applyError) {
 					setContextualAltApplyStatus({
 						status: 'error',
-						message: (requestError && requestError.message ? requestError.message : __('Core could not record editor confirmation.', 'npcink-workflow-toolbox')) + ' ' + __('No ALT changes were kept in the editor.', 'npcink-workflow-toolbox'),
+						message: applyError && applyError.message ? applyError.message : __('Gutenberg could not apply the reviewed ALT values.', 'npcink-workflow-toolbox'),
 					});
 				} finally {
 					setContextualAltApplyRunning(false);
@@ -6919,17 +6809,12 @@
 				if (plan && plan.proposal_ready !== false) {
 					try {
 						core = await postArticleAudioAdoptionToAdapter(plan, planInput);
-						if (core && core.proposal_id) {
-							const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, core.proposal_id, 'article_audio');
-							setPublishExecutionIntents(queuedIntents);
-							setPublishExecutionStatus({ status: 'info', message: __('Article audio was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
-						}
 					} catch (coreError) {
 						core = { bridge: null, proposal_id: '', execution_error: coreError };
 					}
 				}
 				setAudioAdoptionResult({ plan, plan_input: planInput, core });
-				submitContentImplicitFeedback('article_audio_adoption_plan', plan && plan.proposal_ready === false ? 'edited_before_accept' : 'accepted', [core && core.proposal_id ? 'core_handoff_approved_for_publish' : 'core_handoff_prepared']);
+				submitContentImplicitFeedback('article_audio_adoption_plan', plan && plan.proposal_ready === false ? 'edited_before_accept' : 'accepted', [core && core.proposal_id ? 'core_proposal_created' : 'core_handoff_prepared']);
 			} catch (requestError) {
 				setAudioAdoptionError(requestError && requestError.message ? requestError.message : __('Could not adopt the article audio candidate through Core.', 'npcink-workflow-toolbox'));
 			} finally {
@@ -6937,47 +6822,6 @@
 			}
 		}
 
-		async function executePendingPublishIntents() {
-			const intents = normalizePublishExecutionIntents(publishExecutionIntents);
-			if (!intents.length || publishExecutionRunningRef.current) {
-				return;
-			}
-			publishExecutionRunningRef.current = true;
-			setPublishExecutionStatus({ status: 'info', message: sprintf(__('Executing %d author-reviewed action(s) after publish...', 'npcink-workflow-toolbox'), intents.length) });
-			const failures = [];
-			let cleanupFailed = false;
-			for (let index = 0; index < intents.length; index += 1) {
-				try {
-					await executeReviewedProposalOnPublish(intents[index]);
-				} catch (executionError) {
-					failures.push({ intent: intents[index], error: executionError });
-				}
-			}
-
-			try {
-				const attemptedIds = intents.map((intent) => intent.proposal_id);
-				const cleanup = await postJson('editor/reviewed-action-intents', {
-					action: 'complete',
-					post_id: postContext.post_id,
-					proposal_ids: attemptedIds,
-				});
-				setPublishExecutionIntents(normalizePublishExecutionIntents(cleanup && cleanup.intents));
-			} catch (cleanupError) {
-				cleanupFailed = true;
-			}
-
-			if (failures.length || cleanupFailed) {
-				setPublishExecutionStatus({
-					status: 'warning',
-					message: cleanupFailed
-						? __('Publish-time execution finished, but the editor could not clear its temporary handoff record. Review Core before the next update.', 'npcink-workflow-toolbox')
-						: sprintf(__('%1$d of %2$d publish-time action(s) need attention in Core. Automatic retries were not started.', 'npcink-workflow-toolbox'), failures.length, intents.length),
-				});
-			} else {
-				setPublishExecutionStatus({ status: 'success', message: sprintf(__('%d author-reviewed action(s) executed and recorded after publish.', 'npcink-workflow-toolbox'), intents.length) });
-			}
-			publishExecutionRunningRef.current = false;
-		}
 
 		function markAudioPlaybackError(key) {
 			const id = String(key || 'audio');
@@ -7802,7 +7646,7 @@
 
 		async function submitSeoHandoff() {
 			const section = result && result.sections && result.sections.seo_handoff ? result.sections.seo_handoff : null;
-			const payload = seoMetaProposalPayload(section, { commitExecution: true });
+			const payload = seoMetaProposalPayload(section);
 			const input = payload.input || {};
 			if (!section || !section.proposal_ready || !input.post_id || !input.seo_title || !input.seo_description) {
 				setSeoHandoffError(__('Run discoverability optimization and review complete SEO title and description candidates before applying.', 'npcink-workflow-toolbox'));
@@ -7813,7 +7657,7 @@
 			setSeoHandoffError('');
 			setSeoHandoffResult(null);
 			try {
-				const bridge = await postSeoMetaProposalToAdapter(section, { commitExecution: true });
+				const bridge = await postSeoMetaProposalToAdapter(section);
 				const proposalId = extractProposalId(bridge, 0);
 				const handoffReceipt = coreHandoffReceipt(bridge, {
 					proposal_id: proposalId,
@@ -7828,19 +7672,15 @@
 						bridge,
 						proposal_id: '',
 						handoff_receipt: handoffReceipt,
-						message: __('SEO optimization was submitted for Core review, but it could not be attached to this article for publish-time execution.', 'npcink-workflow-toolbox'),
+						message: __('SEO optimization was submitted for Core review, but no proposal id was returned.', 'npcink-workflow-toolbox'),
 					});
 					return;
 				}
-				const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, proposalId, 'seo_meta');
-				setPublishExecutionIntents(queuedIntents);
-				setPublishExecutionStatus({ status: 'info', message: __('SEO optimization was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
 				setSeoHandoffResult({
 					bridge,
 					proposal_id: proposalId,
-					deferred_to_publish: true,
-					handoff_receipt: Object.assign({}, handoffReceipt, { status: 'approved_for_publish', operator_next_action: 'publish_post' }),
-					message: __('SEO optimization approved by the author. It will be applied when the article is published or updated.', 'npcink-workflow-toolbox'),
+					handoff_receipt: Object.assign({}, handoffReceipt, { status: 'pending_review', operator_next_action: 'review_in_core' }),
+					message: __('SEO Core proposal created. Continue in Governance Core before execution.', 'npcink-workflow-toolbox'),
 				});
 			} catch (requestError) {
 				setSeoHandoffError(coreHandoffFailure(requestError, {
@@ -7907,11 +7747,6 @@
 				const plan = await postJson('flows/image-candidate-adoption-plan', planInput);
 				try {
 					const core = await postAdapterAdoption(plan, planInput);
-					if (core && core.proposal_id) {
-						const queuedIntents = await queuePublishExecutionIntent(postContext.post_id, core.proposal_id, 'image_adoption');
-						setPublishExecutionIntents(queuedIntents);
-						setPublishExecutionStatus({ status: 'info', message: __('Image adoption was reviewed and queued. Publish or update the article to execute it through Core/Adapter.', 'npcink-workflow-toolbox') });
-					}
 					setImageAdoptionResult({ plan, core, adoption_target: setFeaturedImage ? 'featured_image' : 'media_import' });
 					submitImplicitAgentFeedback(
 						editorImageImplicitFeedbackPayload(imageResult || {}, selectedImage, activePicker, setFeaturedImage ? 'featured_image_adopt' : 'media_import', 'accepted', ['evidence_useful', 'operator_confidence_high'])
@@ -8252,11 +8087,6 @@
 				createElement(
 					'div',
 					{ className: 'npcink-toolbox-editor-support__surface' },
-					publishExecutionStatus ? createElement(
-						Notice,
-						{ status: publishExecutionStatus.status || 'info', isDismissible: false },
-						publishExecutionStatus.message
-					) : null,
 					showResultView ? createElement(
 						'div',
 						{ className: 'npcink-toolbox-editor-support__result-view' },
