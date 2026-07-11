@@ -9,7 +9,9 @@ Default buttons may collect bounded context, call suggestion tools, render
 candidates, and prepare governed handoff artifacts. They must not introduce a write executor, local queue, indexing lifecycle control, provider control plane,
 approval store, request log, or scheduler truth.
 
-This matrix is the product contract for default visible buttons.
+This matrix is the human-readable product contract for default visible buttons.
+The machine-readable coverage and ownership gate is
+[`fixed-button-contract-table.json`](fixed-button-contract-table.json).
 `Ability_Surface_Metadata` is only the read-only Workflow readiness projection
 used by the admin UI; it is not an exhaustive button catalog, ability registry,
 workflow registry, or route-compatibility registry. Do not add metadata entries
@@ -30,7 +32,26 @@ registry, runtime, approval store, queue, or write executor.
 | Internal Link Candidates | Editor Content Support | current draft context plus optional related Site Knowledge evidence | `internal_link_candidates.v1` | Toolkit candidate assembly with optional Cloud-managed Site Knowledge evidence | manual editor placement or governed future handoff | `default_button_v1`; no automatic insertion, no link graph control plane, no backend post-content patch |
 | Article Image ALT (SEO) | Editor Content Support | each current-article image occurrence, nearest heading, adjacent text, caption, and current block ALT | `current_article_image_alt_context_review.v1` plus Native Commit editor state | local context first; existing Cloud visual evidence only when context is absent | missing ALT is automatically applied only to Gutenberg editor state; native WordPress save persists and no Core trace is created | `default_button_v1`; silent Cloud failure, no extra confirmation UI, existing ALT preserved, no attachment-global ALT write, Toolbox post write, Adapter execution, proposal, or audit |
 | Image Candidates | Editor Content Support | current draft context and visual brief | `image_candidate_review.v1` or image candidate adoption plan | Cloud-managed image-source runtime; explicit AI image candidates remain reviewed candidates | Core-governed media or featured-image adoption path | `default_button_v1`; no media import, no provider picker, no prompt/model routing ownership, no direct featured-image batch replacement |
-| Article Audio Candidates | Editor Content Support | reviewed article text or summary script | `audio_generation_request.v1` candidate and `article_audio_adoption_plan.v1` | Cloud audio generation runtime | Core/Adapter/Toolkit audio adoption path | `default_button_v1`; no post-content insertion, no local audio queue, no media import or playback metadata write in Toolbox |
+| Article Narration | Editor Content Support | reviewed full article text | `audio_generation_request.v1` narration candidate and `article_audio_adoption_plan.v1` | Cloud audio generation runtime | Core/Adapter/Toolkit audio adoption path | `default_button_v1`; no post-content insertion, no local audio queue, no media import or playback metadata write in Toolbox |
+| Audio Summary | Editor Content Support | reviewed article summary context | concise summary script, `audio_generation_request.v1` candidate, and `article_audio_adoption_plan.v1` | hosted summary support plus Cloud audio generation runtime | Core/Adapter/Toolkit audio adoption path | `default_button_v1`; no article rewrite, media import, post-meta write, or playback adoption in Toolbox |
+| Batch Image Optimization Review | Admin Image Handling | selected or bounded eligible media attachments plus reviewed output policy | Toolkit `media-optimization` recipe, derivative previews, and `media_optimization_plan` | Toolkit request contracts plus Cloud Addon/Cloud derivative runtime | Adapter `/proposals/from-plan` to Core; Toolbox stops after proposal submission | `default_button_v1`; no Toolbox run store, approval, execution, attachment replacement, or metadata write |
+| Review ALT Suggestions | Admin Image Handling | bounded media review set plus operator-confirmed ALT drafts | Toolkit media ALT review set and `media_alt_apply_plan` | Toolbox review projection, Toolkit contracts, optional Cloud visual evidence | Adapter `/proposals/from-plan` to Core; Toolbox stops after proposal submission | `default_button_v1`; no attachment metadata write, approval, execution, or batch writer in Toolbox |
+
+## Adapter Parity Audit
+
+The current nine-button audit deliberately distinguishes three levels instead
+of claiming universal parity prematurely:
+
+- `workflow_projection_proven`: the Toolkit workflow definition, Toolbox
+  projection, and Adapter projection have enforced field parity;
+- `ability_parity_ready`: the reusable ability and governed handoff exist, but
+  there is not yet a separately enforced canonical workflow projection;
+- `partial_contract_reuse`: important source artifacts are reusable, but one
+  coherent external-client workflow contract is not yet proven.
+
+Only Batch Image Optimization currently claims `workflow_projection_proven`.
+This is an audit result, not a product defect or permission to start another
+broad migration. Partial rows should be closed one bounded contract at a time.
 
 ## Route-Compatible Support Only
 

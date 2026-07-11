@@ -724,6 +724,20 @@ Core review proposals through Adapter `proposals/from-plan`. It does not call
 the removed Adapter Cloud routes, approve, preflight, execute, or replace media
 files. Cloud transport is tested separately by Cloud Addon.
 
+To verify that the Adapter contract can be consumed by a client that is not
+implemented as OpenClaw, run:
+
+```bash
+composer smoke:generic-ai-client-contract
+```
+
+This authenticated real-host probe identifies itself as a generic contract
+consumer, reads Adapter discovery and connection metadata, and resolves the
+canonical Toolkit media workflow through Adapter `run-read-ability`. It checks
+proposal-only writes and fail-closed workflow parity. It deliberately does not
+add a second `supported_channels` entry or claim production support for a new
+channel; OpenClaw remains the priority and currently supported implementation.
+
 For downstream selected-batch execution proof outside the Toolbox workbench,
 run:
 

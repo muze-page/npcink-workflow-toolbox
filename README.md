@@ -126,6 +126,7 @@ the [documentation index](docs/README.md). Start with:
 - [WordPress.org Submission](docs/wordpress-org-submission.md)
 - [Architecture Decision Records](docs/decisions/)
 - [ADR-006: Native Editor Commit And Governed Batch Handoff](docs/decisions/ADR-006-native-editor-commit-and-governed-batch-handoff.md)
+- [ADR-008: Freeze Fixed-Button And Generic AI-Client Boundaries](docs/decisions/ADR-008-freeze-fixed-button-and-generic-client-boundary.md)
 
 The documentation index also tracks key detail records that static contracts
 expect to stay discoverable from the root README:
@@ -163,6 +164,12 @@ expect to stay discoverable from the root README:
 [Ability Boundary Table](docs/ability-boundary-table.json),
 [Cloud Bridge Contract Table](docs/cloud-bridge-contract-table.json),
 [Fixed Button Surface](docs/fixed-button-surface.md).
+
+The default button coverage gate is machine-readable in
+[Fixed Button Contract Table](docs/fixed-button-contract-table.json). It records
+the runtime owner, write lane, handoff owner, and current Adapter parity status
+for all nine currently committed default buttons; partial parity is reported
+rather than hidden. New default editor flows must add their own contract row.
 
 ### Boundary Exceptions Only
 

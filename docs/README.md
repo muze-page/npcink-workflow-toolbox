@@ -29,6 +29,7 @@ Start from the active documents below before changing code.
 - [Route Boundary Table](route-boundary-table.json)
 - [Ability Boundary Table](ability-boundary-table.json)
 - [Cloud Bridge Contract Table](cloud-bridge-contract-table.json)
+- [Fixed Button Contract Table](fixed-button-contract-table.json)
 
 ## Development And Release
 
@@ -120,6 +121,7 @@ Start from the active documents below before changing code.
 - [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](decisions/ADR-005-wp-cron-cloud-batch-orchestration.md)
 - [ADR-006: Separate Native Editor Commit From Governed Batch Handoff](decisions/ADR-006-native-editor-commit-and-governed-batch-handoff.md)
 - [ADR-007: Let Toolbox Own Optional Suite Navigation](decisions/ADR-007-toolbox-owned-admin-navigation.md)
+- [ADR-008: Freeze Fixed-Button And Generic AI-Client Boundaries](decisions/ADR-008-freeze-fixed-button-and-generic-client-boundary.md)
 
 ## Archived Closeouts
 
