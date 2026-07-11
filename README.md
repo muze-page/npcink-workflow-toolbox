@@ -165,6 +165,7 @@ Media and hardening detail records remain indexed at
 [Media Optimization Operator Trial](docs/archive/2026-06/media-optimization-operator-trial.md),
 [Media ALT/Caption Review Set](docs/media-alt-caption-review-set.md),
 [Media ALT/Caption Toolkit Validation Plan](docs/media-alt-caption-toolkit-validation-plan.md),
+[Media ALT Governed Workflow Closeout](docs/media-alt-governed-workflow-closeout-2026-07-11.md),
 [Media ALT/Caption Migration Closeout](docs/archive/2026-07/media-alt-caption-migration-closeout-2026-07-06.md),
 [Media ALT/Caption Operator Trial](docs/archive/2026-06/media-alt-caption-operator-trial-2026-06-21.md),
 [Scoped Permissions First Version](docs/scoped-permissions-first-version.md), and
