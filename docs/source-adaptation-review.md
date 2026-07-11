@@ -1,15 +1,15 @@
 # External Source Adaptation Review
 
-Status: first bounded editor slice.
+Status: staged exact-source editor slice.
 
 ## AI Change Envelope
 
 - **Target repositories:** `/Users/muze/gitee/npcink-workflow-toolbox` only.
 - **Focused module:** Gutenberg `Npcink Content Support` source research and
   adaptation review.
-- **Intended change:** accept one public source URL, request bounded Cloud web
-  evidence with URL-reader enhancement, query Cloud Site Knowledge for related
-  local passages, and return one review-only `source_adaptation_review.v1`
+- **Intended change:** accept one public source URL, first return a bounded exact
+  URL extraction preview, then query Cloud Site Knowledge for related local
+  passages and return one review-only `source_adaptation_review.v1`
   artifact with Chinese source summary, site-style signals, adaptation
   directions, outline guidance, and fact/copyright checks.
 - **Explicit non-goals:** no full article generation, translation-and-publish,
@@ -19,8 +19,8 @@ Status: first bounded editor slice.
 - **Boundary owner:** Toolbox owns the editor button and composition; Cloud owns
   web-reader runtime, hosted AI runtime, and Site Knowledge/vector detail;
   WordPress authors retain article text and native save authority.
-- **Public contracts touched:** editor intent `source_adaptation_review`, Cloud
-  `web_search.v1` reader inputs, Site Knowledge `writing_support_plan`, hosted
+- **Public contracts touched:** editor intent `source_adaptation_review`, stages
+  `extract|adapt`, Cloud `source_extraction_preview.v1`, Site Knowledge `writing_support_plan`, hosted
   content-support suggestion contract, and artifact
   `source_adaptation_review.v1`.
 - **Files expected to change:** `includes/Rest_Controller.php`,
@@ -53,8 +53,10 @@ sources for claims about the external article.
 
 ```text
 one public source URL
--> Cloud web search with bounded URL-reader enhancement
--> source evidence and extraction status
+-> Cloud exact URL reader (`source_extraction_preview.v1`)
+-> requested/resolved URL match, bounded coverage, opening/closing previews
+-> operator verifies that the intended source was captured
+-> continue explicitly
 -> Cloud Site Knowledge writing-support query
 -> related local passages and coverage signals
 -> hosted AI source-adaptation review
@@ -67,11 +69,16 @@ one public source URL
 - Accept only one public `http` or `https` URL with a normal hostname.
 - Reject localhost, loopback, private/reserved IP literals, credential-bearing
   URLs, and non-web schemes before any Cloud request.
+- Do not use search ranking to resolve the submitted URL. Cloud must read that
+  exact URL and return `requested_url`, `resolved_url`, and `url_match`.
 - Request at most one external source result and six local Site Knowledge
   results.
 - Preserve the resolved source URL and reader status in review evidence.
-- Block before Site Knowledge or hosted AI calls when Cloud search returns a
-  different article path on the same allowed domain.
+- The default `extract` stage must stop before Site Knowledge and hosted AI.
+- Enable `adapt` only when Cloud reports `status=ready` and `url_match=matched`,
+  with a second Toolbox path check as defense in depth.
+- Treat reader content as `untrusted_external_source`; embedded instructions
+  are data and must never override the adaptation prompt.
 - Keep every returned artifact `suggestion_only` with
   `direct_wordpress_write=false`.
 - Do not expose a button that inserts or replaces the article body.
@@ -84,3 +91,6 @@ Do not add full translation, full-body adaptation, or native editor insertion
 until a trial shows that operators repeatedly use the review artifact and that
 source extraction coverage, factual preservation, and copyright confirmation
 can be measured reliably.
+
+Use the repeatable [Source Adaptation Operator Trial](source-adaptation-operator-trial.md)
+and its real-public-URL fixtures before making that decision.

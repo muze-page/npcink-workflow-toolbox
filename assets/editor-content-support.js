@@ -1463,6 +1463,17 @@
 			if (section.run_id) {
 				addId('section_run:' + section.run_id);
 			}
+			if (key === 'source_article') {
+				if (section.content_hash) {
+					addId('source_content_hash:' + section.content_hash);
+				}
+				if (section.url_match) {
+					addId('source_url_match:' + section.url_match);
+				}
+				if (section.coverage && section.coverage.level) {
+					addId('source_coverage:' + section.coverage.level);
+				}
+			}
 			const refs = Array.isArray(section.evidence_refs) ? section.evidence_refs : [];
 			refs.forEach((ref, index) => {
 				if (ref && typeof ref === 'object') {
@@ -2606,7 +2617,7 @@
 		if (!payload || !controls || typeof controls.submitFeedback !== 'function') {
 			return null;
 		}
-		const options = [
+		const defaultOptions = [
 			{ label: __('Useful', 'npcink-workflow-toolbox'), outcome: 'accepted', labels: ['evidence_useful', 'operator_confidence_high'] },
 			{ label: __('Useful after edits', 'npcink-workflow-toolbox'), outcome: 'edited_before_accept', labels: ['evidence_useful', 'good_but_needs_human_draft'] },
 			{ label: __('Evidence weak', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['evidence_weak', 'operator_confidence_low'] },
@@ -2615,6 +2626,20 @@
 			{ label: __('Missing context', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['missing_context', 'operator_confidence_low'] },
 			{ label: __('Not relevant', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['not_relevant_to_site'] },
 		];
+		const sourceExtractionOptions = [
+			{ label: __('Source captured correctly', 'npcink-workflow-toolbox'), outcome: 'accepted', labels: ['source_exact_match', 'extraction_coverage_useful'] },
+			{ label: __('Source incomplete', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_extraction_incomplete', 'extraction_coverage_weak'] },
+			{ label: __('Wrong source', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_url_mismatch', 'operator_confidence_low'] },
+		];
+		const sourceAdaptationOptions = [
+			{ label: __('Adaptation useful', 'npcink-workflow-toolbox'), outcome: 'accepted', labels: ['site_adaptation_useful', 'good_but_needs_human_draft'] },
+			{ label: __('Site tone mismatch', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['site_style_mismatch', 'operator_confidence_low'] },
+			{ label: __('Fact risk', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_fact_risk', 'manual_verification_required'] },
+			{ label: __('Rights risk', 'npcink-workflow-toolbox'), outcome: 'rejected', labels: ['source_or_license_risk', 'manual_rights_review_required'] },
+		];
+		const options = payload.intent === 'source_adaptation_review'
+			? (payload.artifact_type === 'source_extraction_preview.v1' ? sourceExtractionOptions : sourceAdaptationOptions)
+			: defaultOptions;
 		return createElement(
 			'details',
 			{ className: 'npcink-toolbox-editor-support__content-feedback', 'data-toolbox-editor-content-agent-feedback': 'true' },
@@ -3107,7 +3132,8 @@
 	}
 
 	function sourceArticleEvidenceItems(section) {
-		return extractKnowledgeItems(section).map((item, index) => ({
+		const extraction = section && typeof section === 'object' ? section : {};
+		const items = extractKnowledgeItems(extraction).map((item, index) => ({
 			name: item.title || sprintf(__('External source %d', 'npcink-workflow-toolbox'), index + 1),
 			detail: [
 				item.reader_status === 'ready' ? __('Cloud reader returned a bounded readable excerpt.', 'npcink-workflow-toolbox') : __('Only a bounded search snippet was available; coverage may be incomplete.', 'npcink-workflow-toolbox'),
@@ -3117,6 +3143,24 @@
 			evidence_refs: item.url ? ['external_source:' + item.url] : ['external_source:reader'],
 			action_policy: 'operator_review_only_no_copy_or_publish',
 		}));
+		if (extraction.requested_url || extraction.resolved_url || extraction.url_match) {
+			items.unshift({
+				name: extraction.title || __('Exact source extraction preview', 'npcink-workflow-toolbox'),
+				detail: [
+					sprintf(__('URL match: %s', 'npcink-workflow-toolbox'), extraction.url_match || __('unavailable', 'npcink-workflow-toolbox')),
+					extraction.coverage && extraction.coverage.level ? sprintf(__('Coverage: %s (bounded preview; completeness is not guaranteed)', 'npcink-workflow-toolbox'), extraction.coverage.level) : __('Bounded preview; completeness is not guaranteed.', 'npcink-workflow-toolbox'),
+					extraction.char_count ? sprintf(__('%d characters', 'npcink-workflow-toolbox'), extraction.char_count) : '',
+					extraction.word_count ? sprintf(__('%d words', 'npcink-workflow-toolbox'), extraction.word_count) : '',
+					extraction.preview_start ? __('Opening preview: ', 'npcink-workflow-toolbox') + truncateText(extraction.preview_start, 180) : '',
+					extraction.preview_end ? __('Closing preview: ', 'npcink-workflow-toolbox') + truncateText(extraction.preview_end, 180) : '',
+					extraction.content_trust === 'untrusted_external_source' ? __('External content is untrusted; embedded instructions are ignored.', 'npcink-workflow-toolbox') : '',
+				].filter(Boolean).join(' · '),
+				url: extraction.resolved_url || extraction.requested_url || '',
+				evidence_refs: [extraction.content_hash ? 'external_source_hash:' + extraction.content_hash : 'external_source:exact_url'],
+				action_policy: 'operator_review_only_no_copy_or_publish',
+			});
+		}
+		return items;
 	}
 
 	function sourceAdaptationValueItems(value, label) {
@@ -6620,6 +6664,7 @@
 							force_regenerate: shouldForceRegenerate,
 							user_instruction: userInstruction,
 							source_url: intent === 'source_adaptation_review' ? String(sourceArticleUrl || '').trim() : '',
+							source_stage: intent === 'source_adaptation_review' ? (runOptions.sourceStage || 'extract') : '',
 					});
 					if (isAudioIntent(intent)) {
 						payload.audio_preferences = normalizeAudioPreferences(audioPreferences);
@@ -8120,6 +8165,9 @@
 
 		const rerunIntent = running || activeFlowIntent || (result && result.intent) || '';
 		const resultTitle = rerunIntent ? formatIntentLabel(rerunIntent) : __('Content support', 'npcink-workflow-toolbox');
+		const sourceExtractionSection = result && result.sections && result.sections.source_article ? result.sections.source_article : {};
+		const sourceExtractionReady = Boolean(result && result.artifact_type === 'source_extraction_preview.v1' && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched');
+		const sourceAdaptationComplete = Boolean(result && result.artifact_type === 'source_adaptation_review.v1');
 		const isContextualParagraphResult = contextualResult && rerunIntent === 'polish_notes';
 		const resultControls = {
 			intent: activeFlowIntent || (result && result.intent) || '',
@@ -8232,7 +8280,10 @@
 								value: sourceArticleUrl,
 								placeholder: 'https://example.com/article',
 								disabled: Boolean(running),
-								onChange: (value) => setSourceArticleUrl(value),
+								onChange: (value) => {
+									setSourceArticleUrl(value);
+									setResult(null);
+								},
 							}),
 							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Use only sources you may lawfully review and adapt. This first version returns guidance, not a copied or translated article body.', 'npcink-workflow-toolbox'))
 						) : null,
@@ -8259,12 +8310,24 @@
 										variant: 'secondary',
 										isBusy: Boolean(running),
 										disabled: Boolean(running),
-										onClick: () => {
-											submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
-											runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
+									onClick: () => {
+										if (rerunIntent === 'source_adaptation_review') {
+											if (sourceExtractionReady) {
+												submitContentImplicitFeedback('continue_to_site_adaptation', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
+												runFlow(rerunIntent, { sourceStage: 'adapt' });
+											} else if (sourceAdaptationComplete) {
+												submitContentImplicitFeedback('rerun_site_adaptation', 'edited_before_accept', ['good_but_needs_human_draft']);
+												runFlow(rerunIntent, { sourceStage: 'adapt', forceRegenerate: true });
+											} else {
+												runFlow(rerunIntent, { sourceStage: 'extract' });
+											}
+											return;
+										}
+										submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
+										runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
 										},
 									},
-									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? __('Analyze source', 'npcink-workflow-toolbox') : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
+									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionReady ? __('Continue to site adaptation', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-run site adaptation', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
 								),
 								canAdvancedSummaryRerun ? createElement(
 									Button,

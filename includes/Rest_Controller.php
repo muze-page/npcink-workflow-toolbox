@@ -858,6 +858,8 @@ final class Rest_Controller {
 				return $source_url;
 			}
 			$context['source_url'] = $source_url;
+			$source_stage = sanitize_key( (string) ( $request->get_param( 'source_stage' ) ?: 'extract' ) );
+			$context['source_stage'] = in_array( $source_stage, array( 'extract', 'adapt' ), true ) ? $source_stage : 'extract';
 		}
 			if ( 'title_suggestions' === $intent ) {
 				$context['context_scope']        = 'full_article';
@@ -932,28 +934,41 @@ final class Rest_Controller {
 		}
 
 		if ( 'source_adaptation_review' === $intent ) {
-			$source_url    = (string) ( $context['source_url'] ?? '' );
-			$source_host   = sanitize_text_field( (string) wp_parse_url( $source_url, PHP_URL_HOST ) );
+			$source_url   = (string) ( $context['source_url'] ?? '' );
+			$source_stage = (string) ( $context['source_stage'] ?? 'extract' );
 			$external_raw  = $this->editor_cached_cloud_web_search(
 				array(
-					'query'               => $source_url,
-					'intent'              => 'source_discovery',
-					'max_results'         => 1,
-					'recency_days'        => 0,
-					'allowed_domains'     => array( $source_host ),
-					'enhance_with_reader' => true,
+					'query'        => $source_url,
+					'source_url'   => $source_url,
+					'intent'       => 'source_extraction_preview',
+					'max_results'  => 1,
+					'recency_days' => 0,
 				)
 			);
 			$external       = $this->editor_support_section( $external_raw );
 			$source_item    = ! is_wp_error( $external_raw ) && is_array( $external_raw['results'][0] ?? null ) ? $external_raw['results'][0] : array();
 			$source_text    = trim( (string) ( $source_item['reader_excerpt'] ?? $source_item['snippet'] ?? '' ) );
-			$source_title   = sanitize_text_field( (string) ( $source_item['title'] ?? '' ) );
-			$source_resolved_url = esc_url_raw( (string) ( $source_item['url'] ?? $source_url ) );
-			$source_url_matches = $this->editor_source_adaptation_url_matches( $source_url, $source_resolved_url );
+			$source_title   = sanitize_text_field( (string) ( $external['title'] ?? $source_item['title'] ?? '' ) );
+			$source_resolved_url = esc_url_raw( (string) ( $external['resolved_url'] ?? $source_item['url'] ?? '' ) );
+			$cloud_url_match = sanitize_key( (string) ( $external['url_match'] ?? '' ) );
+			$source_url_matches = 'matched' === $cloud_url_match && $this->editor_source_adaptation_url_matches( $source_url, $source_resolved_url );
 			$result['sections']['source_article'] = $external;
-			$result['sections']['source_article']['requested_url'] = $source_url;
+			$result['sections']['source_article']['requested_url'] = esc_url_raw( (string) ( $external['requested_url'] ?? $source_url ) );
 			$result['sections']['source_article']['resolved_url']  = $source_resolved_url;
-			$result['sections']['source_article']['url_match']     = $source_url_matches ? 'matched' : 'mismatched';
+			$result['sections']['source_article']['url_match']     = $source_url_matches ? 'matched' : ( $cloud_url_match ?: 'unavailable' );
+			$result['artifact_type']              = 'source_extraction_preview.v1';
+			$result['composition_role']           = 'external_source_extraction_review';
+			$result['final_write_path']            = 'operator_review_only_no_insert';
+			$result['handoff']['final_writes']     = 'operator_review_only_no_insert';
+			$result['handoff']['source_runtime']   = 'cloud_exact_url_reader';
+			$result['handoff']['body_generation']  = false;
+			$result['handoff']['body_replacement'] = false;
+
+			if ( 'extract' === $source_stage ) {
+				$result['recommendation_set']  = $this->editor_recommendation_set( $context, $intent, $result['sections'] );
+				$result['content_fingerprint'] = $result['recommendation_set']['content_fingerprint'];
+				return rest_ensure_response( $result );
+			}
 
 			if ( ! $source_url_matches ) {
 				$result['sections']['source_adaptation_review'] = array(
@@ -996,7 +1011,7 @@ final class Rest_Controller {
 			$result['composition_role']           = 'external_source_site_style_review';
 			$result['final_write_path']            = 'human_editor_native_save_after_review';
 			$result['handoff']['final_writes']     = 'human_editor_native_save_after_review';
-			$result['handoff']['source_runtime']   = 'cloud_web_search_reader';
+			$result['handoff']['source_runtime']   = 'cloud_exact_url_reader';
 			$result['handoff']['style_runtime']    = 'cloud_site_knowledge';
 			$result['handoff']['body_generation']  = false;
 			$result['handoff']['body_replacement'] = false;

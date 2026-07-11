@@ -154,6 +154,7 @@ expect to stay discoverable from the root README:
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
 [Content Support Product Readiness](docs/content-support-product-readiness.md),
 [External Source Adaptation Review](docs/source-adaptation-review.md),
+[Source Adaptation Operator Trial](docs/source-adaptation-operator-trial.md),
 [Content Support Release And Trial Closeout](docs/archive/2026-06/content-support-release-trial-closeout.md),
 [Content Support Toolkit Migration History](docs/archive/2026-06/content-support-toolkit-migration-history-2026-06-21.md),
 [Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),

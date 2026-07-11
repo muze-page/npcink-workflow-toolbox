@@ -468,9 +468,12 @@ to sentence-density, fact-gap, tone, structure, and format review items without
 rewriting or inserting text. Paragraph review lives in the selected-block
 toolbar.
 The `source_adaptation_review` intent is deliberately not a restored article
-generator. It requests one bounded Cloud web-reader result, queries related
-Cloud Site Knowledge passages as style and coverage hints, and asks hosted AI
-for a Chinese summary, adaptation directions, outline, and verification list.
+generator. Its default `extract` stage requests one exact-URL bounded Cloud
+`source_extraction_preview.v1` result and stops for operator verification. Only
+the explicit `adapt` stage queries related Cloud Site Knowledge passages as
+style and coverage hints and asks hosted AI for a Chinese summary, adaptation
+directions, outline, and verification list. Reader content remains untrusted
+external data and embedded instructions cannot change the hosted task.
 It does not fetch URLs from WordPress, return a full translation, insert or
 replace article text, import media, create a Core proposal, or publish.
 The discoverability result may show a current-draft image ALT/caption check and
