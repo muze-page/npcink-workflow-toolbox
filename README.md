@@ -29,7 +29,8 @@ The first version provides:
   a generic Abilities Explorer, provider picker, request log, or connector
   approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
-  on Npcink review and handoff flows: publish preflight, internal-link
+  on Npcink review and handoff flows: bounded external-source adaptation review,
+  publish preflight, internal-link
   candidates, current-article contextual ALT review, image candidates, and
   article audio candidates. Generic title, summary, taxonomy/tag, outline, and
   article-checkup support remains available through compatible route/rendering paths, plus
@@ -152,6 +153,7 @@ expect to stay discoverable from the root README:
 [Cloud Diagnostics Transition Summary](docs/cloud-diagnostics-transition-summary.md),
 [AI Plugin Overlap Closeout](docs/archive/2026-06/ai-plugin-overlap-closeout-2026-06-29.md),
 [Content Support Product Readiness](docs/content-support-product-readiness.md),
+[External Source Adaptation Review](docs/source-adaptation-review.md),
 [Content Support Release And Trial Closeout](docs/archive/2026-06/content-support-release-trial-closeout.md),
 [Content Support Toolkit Migration History](docs/archive/2026-06/content-support-toolkit-migration-history-2026-06-21.md),
 [Content Metadata Apply Plan Decision Envelope Closeout](docs/archive/2026-06/content-metadata-apply-plan-decision-envelope-closeout-2026-06-21.md),
@@ -168,7 +170,7 @@ expect to stay discoverable from the root README:
 The default button coverage gate is machine-readable in
 [Fixed Button Contract Table](docs/fixed-button-contract-table.json). It records
 the runtime owner, write lane, handoff owner, and current Adapter parity status
-for all nine currently committed default buttons; partial parity is reported
+for all ten default buttons; partial parity is reported
 rather than hidden. New default editor flows must add their own contract row.
 
 ### Boundary Exceptions Only

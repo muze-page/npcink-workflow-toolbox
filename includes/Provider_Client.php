@@ -2267,6 +2267,13 @@ final class Provider_Client {
 			),
 			'write_posture'       => 'suggestion_only',
 		);
+		$allowed_domains = $this->sanitize_string_list( $input['allowed_domains'] ?? array() );
+		if ( ! empty( $allowed_domains ) ) {
+			$runtime_input['allowed_domains'] = array_slice( $allowed_domains, 0, 3 );
+		}
+		if ( ! empty( $input['enhance_with_reader'] ) ) {
+			$runtime_input['enhance_with_reader'] = true;
+		}
 		if ( 'zhihu_research' === $managed_source ) {
 			$runtime_input['provider']         = 'zhihu';
 			$runtime_input['source_type']      = 'zhihu_research';
@@ -4116,7 +4123,7 @@ final class Provider_Client {
 
 	public function run_hosted_ai_content_support( array $input ) {
 		$intent = sanitize_key( (string) ( $input['intent'] ?? 'discoverability' ) );
-		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'summary_suggestions', 'summary_terms_optimization', 'audio_summary_script' ), true ) ) {
+		if ( ! in_array( $intent, array( 'title_summary', 'article_outline', 'polish_notes', 'summary_suggestions', 'summary_terms_optimization', 'audio_summary_script', 'source_adaptation_review' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_hosted_ai_intent',
 				__( 'A supported hosted AI content-support intent is required.', 'npcink-workflow-toolbox' ),
@@ -4162,6 +4169,8 @@ final class Provider_Client {
 			'generation_variant'      => sanitize_text_field( (string) ( $input['generation_variant'] ?? '' ) ),
 			'post_context'            => $is_fast_summary ? array() : $this->collect_hosted_ai_post_context( $post_id ),
 			'related_content_context' => $is_fast_summary ? array() : $related_context,
+			'source_url'              => 'source_adaptation_review' === $intent ? esc_url_raw( (string) ( $input['source_url'] ?? '' ) ) : '',
+			'source_reader_status'    => 'source_adaptation_review' === $intent ? sanitize_key( (string) ( $input['source_reader_status'] ?? '' ) ) : '',
 			'site_snapshot'           => array(),
 			'media_snapshot'          => array(),
 		);
@@ -5284,6 +5293,9 @@ final class Provider_Client {
 				'title'                  => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
 				'url'                    => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
 				'snippet'                => sanitize_textarea_field( (string) ( $item['snippet'] ?? $item['content'] ?? '' ) ),
+				'reader_excerpt'         => sanitize_textarea_field( (string) ( $item['reader_excerpt'] ?? '' ) ),
+				'reader_status'          => sanitize_key( (string) ( $item['reader_status'] ?? '' ) ),
+				'reader_provider'        => sanitize_key( (string) ( $item['reader_provider'] ?? '' ) ),
 				'score'                  => is_numeric( $item['score'] ?? null ) ? (float) $item['score'] : null,
 				'source'                 => sanitize_key( (string) ( $item['source'] ?? $result['provider'] ?? '' ) ),
 				'content_type'           => sanitize_key( (string) ( $item['content_type'] ?? '' ) ),
@@ -6034,6 +6046,27 @@ final class Provider_Client {
 					'The script is a full article rewrite instead of a concise listening summary.',
 					'The script invents facts, claims, numbers, comparisons, or outcomes missing from the source.',
 					'The output includes markdown tables, source JSON, editor-only labels, or WordPress write instructions.',
+				),
+			),
+			'source_adaptation_review' => array(
+				'output_shape'     => array(
+					'source_summary_zh'       => 'concise Chinese summary grounded only in the bounded external source evidence',
+					'site_style_signals'      => '3 to 5 style or coverage signals inferred from supplied Site Knowledge passages',
+					'adaptation_directions'   => '3 to 6 concrete directions for a human editor to make the future article distinct and site-appropriate',
+					'suggested_outline'       => 'compact outline for a new human-written article, not replacement body copy',
+					'facts_to_verify'         => 'claims, names, dates, numbers, and source gaps requiring verification',
+					'copyright_and_attribution' => 'source-rights, attribution, quotation, and image-use checks',
+				),
+				'review_checklist' => array(
+					'Treat the external reader excerpt as bounded evidence, not proof that the complete article was captured.',
+					'Use Site Knowledge passages only for tone, coverage, overlap, and internal-reference hints; do not copy them or use them as facts about the external source.',
+					'Keep the output as an adaptation brief for a human editor; do not return a translated article body or replacement prose.',
+					'Preserve product names and factual meaning while clearly separating verified source facts from assumptions.',
+				),
+				'reject_if'        => array(
+					'The output contains a complete article, paragraph-by-paragraph translation, or insert-ready replacement body.',
+					'The output invents facts not present in the source evidence or treats similar site passages as proof.',
+					'The output recommends copying images, removing attribution, or publishing without rights review.',
 				),
 			),
 		);
@@ -7685,6 +7718,7 @@ final class Provider_Client {
 			'summary_suggestions' => 'Generate high-quality reader-facing WordPress excerpt candidates for the article after publication. Use the supplied title, existing excerpt, and draft body only as source material; first identify the core subject, content type, title-stated positioning, primary reader value, 2 to 4 must-cover points, and relationship rules; then produce an editor-ready recommended excerpt plus two alternate wordings. Do not truncate text, do not summarize only the first section, do not drop title-level differentiators, do not repeat the title, do not add unsupported facts, and do not mention draft, article, post, 本文, 这篇文章, or the act of summarizing.',
 			'summary_terms_optimization' => 'Optimize only the article metadata around a human-written draft: short summary, standard summary, SEO meta description, category candidates, tag candidates, normalization notes, feedback metric hints, and risk notes. Prefer existing terms when supplied, include a reason and evidence_source for every term candidate, and mark proposed new tags separately.',
 			'audio_summary_script' => 'Generate only a concise spoken audio summary script for the current article. The listener should understand the core topic, the main value, 3 to 5 important points, and whether to read the full article. Use natural speech, not archive excerpt copy. Do not rewrite the article, do not add unsupported facts, and do not include WordPress write instructions.',
+			'source_adaptation_review' => 'Build a review-only source adaptation brief. Summarize the bounded external source evidence in Chinese, compare it with supplied Site Knowledge passages for overlap and site-style signals, and return adaptation directions, a compact outline, facts to verify, and copyright or attribution checks. Do not translate or rewrite the full article body.',
 		)[ $intent ] ?? 'Generate WordPress content-support suggestions.';
 		$quality_contract = $this->hosted_ai_quality_contract( $intent );
 

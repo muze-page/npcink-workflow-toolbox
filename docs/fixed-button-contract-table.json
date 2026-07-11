@@ -19,6 +19,19 @@
       "direct_wordpress_write": false
     },
     {
+      "button_id": "source_adaptation_review",
+      "label": "Adapt External Source",
+      "surface": "editor_content_support",
+      "source_contracts": ["source_adaptation_review.v1", "bounded_external_source_evidence"],
+      "runtime_owner": "npcink_cloud_reader_site_knowledge_and_hosted_ai_via_cloud_addon",
+      "write_lane": "review_only",
+      "handoff_owner": "human_editor",
+      "adapter_parity_status": "partial_contract_reuse",
+      "source_file": "assets/editor-content-support.js",
+      "source_marker": "Adapt external source",
+      "direct_wordpress_write": false
+    },
+    {
       "button_id": "publish_preflight",
       "label": "Publish Preflight",
       "surface": "editor_content_support",

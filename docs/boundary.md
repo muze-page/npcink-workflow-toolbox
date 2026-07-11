@@ -19,6 +19,9 @@ Owned here:
 - non-secret content discoverability context for SEO, AEO, and GEO suggestion
   workflows;
 - operator-facing admin UI for the toolbox.
+- one editor-side `source_adaptation_review.v1` composition that joins bounded
+  Cloud reader evidence, Cloud Site Knowledge passages, and hosted suggestion
+  output without fetching URLs locally or generating replacement article text.
 
 Not owned here:
 

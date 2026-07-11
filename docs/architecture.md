@@ -433,7 +433,7 @@ mutation, media upload/import, SEO mutation, indexing, or re-indexing.
 
 `/editor/content-support` is the post-editor entrypoint for fixed, bounded
 support flows. It accepts current draft context plus one intent:
-`writing_support`, local full-draft diagnostics via `article_checkup`,
+`source_adaptation_review`, `writing_support`, local full-draft diagnostics via `article_checkup`,
 `title_suggestions`, `article_outline`, selection-only paragraph review via
 `polish_notes`, `publish_preflight`, `discoverability`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `summary_terms_optimization`,
@@ -441,7 +441,8 @@ support flows. It accepts current draft context plus one intent:
 `image_alt_suggestions`.
 The editor UI groups the default buttons around the author workflow. Common
 default buttons are now Npcink review and handoff actions: publish preflight,
-internal-link candidates, current-article contextual ALT review, image
+bounded external-source adaptation review, internal-link candidates,
+current-article contextual ALT review, image
 candidates, and article audio candidates. Contextual ALT operates on each image
 occurrence and uses the nearest heading, adjacent article text, and caption as
 the primary source. Missing ALT is automatically applied to the current
@@ -466,6 +467,12 @@ editor button. Article checkup is a local suggestion-only diagnostic that points
 to sentence-density, fact-gap, tone, structure, and format review items without
 rewriting or inserting text. Paragraph review lives in the selected-block
 toolbar.
+The `source_adaptation_review` intent is deliberately not a restored article
+generator. It requests one bounded Cloud web-reader result, queries related
+Cloud Site Knowledge passages as style and coverage hints, and asks hosted AI
+for a Chinese summary, adaptation directions, outline, and verification list.
+It does not fetch URLs from WordPress, return a full translation, insert or
+replace article text, import media, create a Core proposal, or publish.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
@@ -698,6 +705,8 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
+- one bounded external-source adaptation review using Cloud reader evidence
+  and related Cloud Site Knowledge passages;
 - internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
   optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.

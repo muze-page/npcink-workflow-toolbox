@@ -7020,3 +7020,19 @@ msgstr "未安装"
 #: includes/Admin_Page.php
 msgid "You do not have permission to manage Npcink AI."
 msgstr "你没有管理 Npcink AI 的权限。"
+
+#: includes/Rest_Controller.php
+msgid "Enter one valid public article URL."
+msgstr "请输入一个有效的公开文章 URL。"
+
+#: includes/Rest_Controller.php
+msgid "Use a public HTTP or HTTPS article URL without credentials, localhost, or private network addresses."
+msgstr "请使用不含凭据、localhost 或私有网络地址的公开 HTTP 或 HTTPS 文章 URL。"
+
+#: includes/Rest_Controller.php
+msgid "Cloud returned no readable source excerpt. Verify the URL or try a public article page."
+msgstr "Cloud 没有返回可读的来源摘录。请核对 URL，或改用公开文章页面。"
+
+#: includes/Rest_Controller.php
+msgid "Cloud search returned a different article URL on the same site. Verify the source URL before continuing."
+msgstr "Cloud 搜索返回了同一站点中的另一篇文章 URL。继续前请核对来源 URL。"

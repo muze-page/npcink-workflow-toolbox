@@ -90,14 +90,17 @@ semantics.
 7. Keep article text creation with human editors; keep the retired Article
    Assistant route as compatibility only, not as an operator-facing or public
    Ability surface.
-8. Treat `media_optimization_v1` as the fixed governed media optimization
+8. Let editors review one external source against Cloud Site Knowledge vectors
+   and receive a bounded Chinese adaptation brief without generating, inserting,
+   or publishing a replacement article body.
+9. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.
-9. Retain the Site Check compatibility route for bounded local review while it
+10. Retain the Site Check compatibility route for bounded local review while it
    is hidden from the default operator UI pending a clearer problem statement,
    action model, and acceptance loop. The retained route preserves its bounded
    ranked decision list without expanding Toolbox runtime or write ownership.
-10. Preserve Core and Abilities boundaries for final WordPress writes.
+11. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals
 
@@ -180,6 +183,11 @@ candidates rather than a separate writing-preparation button. Internal-link
 candidates are manual review aids, publish preflight is a unified advisory
 review panel, SEO metadata is only a single-post Core handoff preview, and new
 vocabulary remains Core policy-gated strong review.
+
+The editor may also expose one external-source adaptation review that combines
+bounded Cloud reader evidence with related Site Knowledge passages. It returns
+summary, overlap/style signals, directions, outline guidance, and verification
+checks only; it must not generate or insert a translated replacement body.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.

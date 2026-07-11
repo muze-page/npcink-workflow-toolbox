@@ -843,7 +843,7 @@ final class Rest_Controller {
 
 	public function editor_content_support( WP_REST_Request $request ) {
 		$intent = sanitize_key( (string) ( $request->get_param( 'intent' ) ?: '' ) );
-		if ( ! in_array( $intent, array( 'progressive_recommendations', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'article_narration', 'article_audio_summary', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
+		if ( ! in_array( $intent, array( 'progressive_recommendations', 'source_adaptation_review', 'writing_support', 'zhihu_research', 'zhihu_hot_topics', 'article_checkup', 'title_suggestions', 'article_outline', 'polish_notes', 'summary_suggestions', 'article_narration', 'article_audio_summary', 'category_suggestions', 'tag_suggestions', 'summary_terms_optimization', 'taxonomy_tags', 'internal_links', 'image_candidates', 'image_alt_suggestions', 'comment_reply_suggestion', 'publish_preflight', 'discoverability' ), true ) ) {
 			return new WP_Error(
 				'npcink_toolbox_invalid_editor_support_intent',
 				__( 'A supported editor content-support intent is required.', 'npcink-workflow-toolbox' ),
@@ -852,6 +852,13 @@ final class Rest_Controller {
 		}
 
 		$context = $this->editor_post_context( $request );
+		if ( 'source_adaptation_review' === $intent ) {
+			$source_url = $this->editor_source_adaptation_url( (string) $request->get_param( 'source_url' ) );
+			if ( is_wp_error( $source_url ) ) {
+				return $source_url;
+			}
+			$context['source_url'] = $source_url;
+		}
 			if ( 'title_suggestions' === $intent ) {
 				$context['context_scope']        = 'full_article';
 				$context['selected_text']        = '';
@@ -879,7 +886,9 @@ final class Rest_Controller {
 				}
 				$context['context_scope'] = 'selected_text';
 			}
-			$query   = $this->editor_support_query( $context );
+			$query   = 'source_adaptation_review' === $intent
+				? (string) ( $context['source_url'] ?? '' )
+				: $this->editor_support_query( $context );
 		if ( 'image_candidates' === $intent ) {
 			$query = $this->editor_image_support_query( $context );
 		}
@@ -919,6 +928,80 @@ final class Rest_Controller {
 			$result['sections']['progressive_recommendations'] = $this->editor_progressive_recommendations( $context, $query );
 			$result['recommendation_set']                     = $this->editor_recommendation_set( $context, $intent, $result['sections'] );
 			$result['content_fingerprint']                    = $result['recommendation_set']['content_fingerprint'];
+			return rest_ensure_response( $result );
+		}
+
+		if ( 'source_adaptation_review' === $intent ) {
+			$source_url    = (string) ( $context['source_url'] ?? '' );
+			$source_host   = sanitize_text_field( (string) wp_parse_url( $source_url, PHP_URL_HOST ) );
+			$external_raw  = $this->editor_cached_cloud_web_search(
+				array(
+					'query'               => $source_url,
+					'intent'              => 'source_discovery',
+					'max_results'         => 1,
+					'recency_days'        => 0,
+					'allowed_domains'     => array( $source_host ),
+					'enhance_with_reader' => true,
+				)
+			);
+			$external       = $this->editor_support_section( $external_raw );
+			$source_item    = ! is_wp_error( $external_raw ) && is_array( $external_raw['results'][0] ?? null ) ? $external_raw['results'][0] : array();
+			$source_text    = trim( (string) ( $source_item['reader_excerpt'] ?? $source_item['snippet'] ?? '' ) );
+			$source_title   = sanitize_text_field( (string) ( $source_item['title'] ?? '' ) );
+			$source_resolved_url = esc_url_raw( (string) ( $source_item['url'] ?? $source_url ) );
+			$source_url_matches = $this->editor_source_adaptation_url_matches( $source_url, $source_resolved_url );
+			$result['sections']['source_article'] = $external;
+			$result['sections']['source_article']['requested_url'] = $source_url;
+			$result['sections']['source_article']['resolved_url']  = $source_resolved_url;
+			$result['sections']['source_article']['url_match']     = $source_url_matches ? 'matched' : 'mismatched';
+
+			if ( ! $source_url_matches ) {
+				$result['sections']['source_adaptation_review'] = array(
+					'status'                 => 'blocked',
+					'message'                => __( 'Cloud search returned a different article URL on the same site. Verify the source URL before continuing.', 'npcink-workflow-toolbox' ),
+					'write_posture'          => 'suggestion_only',
+					'direct_wordpress_write' => false,
+				);
+			} elseif ( '' !== $source_text ) {
+				$site_query = trim( $source_title . ' ' . wp_trim_words( wp_strip_all_tags( $source_text ), 80, '' ) );
+				$knowledge_raw = $this->editor_cached_site_knowledge(
+					array(
+						'query'           => $site_query,
+						'intent'          => 'writing_support_plan',
+						'current_post_id' => absint( $context['post_id'] ?? 0 ),
+						'max_results'     => 6,
+					)
+				);
+				$result['sections']['source_site_context'] = $this->editor_support_section( $knowledge_raw );
+				$result['sections']['source_adaptation_review'] = $this->editor_hosted_source_adaptation_review(
+					$context,
+					array(
+						'title'         => $source_title,
+						'url'           => $source_resolved_url,
+						'content'       => $source_text,
+						'reader_status' => sanitize_key( (string) ( $source_item['reader_status'] ?? 'snippet_only' ) ),
+					),
+					is_wp_error( $knowledge_raw ) ? array() : $knowledge_raw
+				);
+			} else {
+				$result['sections']['source_adaptation_review'] = array(
+					'status'                 => 'blocked',
+					'message'                => __( 'Cloud returned no readable source excerpt. Verify the URL or try a public article page.', 'npcink-workflow-toolbox' ),
+					'write_posture'          => 'suggestion_only',
+					'direct_wordpress_write' => false,
+				);
+			}
+
+			$result['artifact_type']              = 'source_adaptation_review.v1';
+			$result['composition_role']           = 'external_source_site_style_review';
+			$result['final_write_path']            = 'human_editor_native_save_after_review';
+			$result['handoff']['final_writes']     = 'human_editor_native_save_after_review';
+			$result['handoff']['source_runtime']   = 'cloud_web_search_reader';
+			$result['handoff']['style_runtime']    = 'cloud_site_knowledge';
+			$result['handoff']['body_generation']  = false;
+			$result['handoff']['body_replacement'] = false;
+			$result['recommendation_set']          = $this->editor_recommendation_set( $context, $intent, $result['sections'] );
+			$result['content_fingerprint']         = $result['recommendation_set']['content_fingerprint'];
 			return rest_ensure_response( $result );
 		}
 
@@ -2921,6 +3004,99 @@ final class Rest_Controller {
 		}
 
 		return 'npcink_toolbox_editor_' . sanitize_key( $namespace ) . '_' . md5( $json );
+	}
+
+	/**
+	 * Validates one public source URL before Cloud research is requested.
+	 *
+	 * @param string $value Raw URL.
+	 * @return string|WP_Error
+	 */
+	private function editor_source_adaptation_url( string $value ) {
+		$value = trim( $value );
+		$url   = esc_url_raw( $value, array( 'http', 'https' ) );
+		$parts = '' !== $url ? wp_parse_url( $url ) : false;
+		if ( ! is_array( $parts ) ) {
+			return new WP_Error(
+				'npcink_toolbox_source_url_invalid',
+				__( 'Enter one valid public article URL.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$scheme = strtolower( (string) ( $parts['scheme'] ?? '' ) );
+		$host   = strtolower( trim( (string) ( $parts['host'] ?? '' ), '[]' ) );
+		$has_credentials = '' !== (string) ( $parts['user'] ?? '' ) || '' !== (string) ( $parts['pass'] ?? '' );
+		$blocked_host = '' === $host
+			|| 'localhost' === $host
+			|| str_ends_with( $host, '.localhost' )
+			|| str_ends_with( $host, '.local' )
+			|| str_ends_with( $host, '.test' );
+		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			$blocked_host = false === filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		}
+
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || $has_credentials || $blocked_host ) {
+			return new WP_Error(
+				'npcink_toolbox_source_url_not_public',
+				__( 'Use a public HTTP or HTTPS article URL without credentials, localhost, or private network addresses.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		return $url;
+	}
+
+	private function editor_source_adaptation_url_matches( string $requested_url, string $resolved_url ): bool {
+		$requested = wp_parse_url( $requested_url );
+		$resolved  = wp_parse_url( $resolved_url );
+		if ( ! is_array( $requested ) || ! is_array( $resolved ) ) {
+			return false;
+		}
+
+		$requested_host = strtolower( trim( (string) ( $requested['host'] ?? '' ), '[]' ) );
+		$resolved_host  = strtolower( trim( (string) ( $resolved['host'] ?? '' ), '[]' ) );
+		if ( '' === $requested_host || $requested_host !== $resolved_host ) {
+			return false;
+		}
+
+		$normalize_path = static function ( array $parts ): string {
+			$path = rawurldecode( (string) ( $parts['path'] ?? '/' ) );
+			$path = preg_replace( '#/+#', '/', '/' . ltrim( $path, '/' ) );
+			return '/' === $path ? '/' : rtrim( $path, '/' );
+		};
+
+		return $normalize_path( $requested ) === $normalize_path( $resolved );
+	}
+
+	private function editor_hosted_source_adaptation_review( array $context, array $source, array $knowledge ): array {
+		$section = $this->editor_support_section(
+			$this->editor_cached_hosted_ai_content_support(
+				array(
+					'intent'                  => 'source_adaptation_review',
+					'post_id'                 => absint( $context['post_id'] ?? 0 ),
+					'title'                   => (string) ( $source['title'] ?? '' ),
+					'content'                 => (string) ( $source['content'] ?? '' ),
+					'user_instruction'        => (string) ( $context['user_instruction'] ?? '' ),
+					'generation_variant'      => (string) ( $context['generation_variant'] ?? '' ),
+					'source_url'              => (string) ( $source['url'] ?? '' ),
+					'source_reader_status'    => (string) ( $source['reader_status'] ?? '' ),
+					'related_content_context' => $knowledge,
+				),
+				! empty( $context['force_regenerate'] )
+			)
+		);
+		$section['provider_execution']     = 'hosted_ai_source_adaptation_review';
+		$section['provider_intent']        = 'source_adaptation_review';
+		$section['artifact_type']          = 'source_adaptation_review.v1';
+		$section['write_posture']          = 'suggestion_only';
+		$section['direct_wordpress_write'] = false;
+		$section['source_url']             = esc_url_raw( (string) ( $source['url'] ?? '' ) );
+		$section['source_reader_status']   = sanitize_key( (string) ( $source['reader_status'] ?? '' ) );
+		$section['body_generation']        = false;
+		$section['body_replacement']       = false;
+
+		return $section;
 	}
 
 	private function editor_image_recommendation_section( array $section ): array {

@@ -64,7 +64,8 @@ Target features:
   It is not a default operator entry until its problem statement, action model,
   and acceptance loop are ready for another review.
 - Post editor Content Support panel for default Npcink review and handoff
-  buttons: publish preflight, internal-link candidates, current-article
+  buttons: bounded external-source adaptation review, publish preflight,
+  internal-link candidates, current-article
   contextual ALT review, image candidates, and article audio candidates. The
   ALT flow keeps each image occurrence separate, uses nearby article context
   first, and automatically fills missing block ALT after Core audit. When useful
@@ -79,6 +80,10 @@ Target features:
   duplicate-risk checks and internal-link candidates rather than a separate
   writing-preparation button. Image candidates may include a secondary
   saved-post media brief action for image planning.
+  External-source adaptation accepts one public URL and returns only bounded
+  reader evidence, related Site Knowledge/vector passages, and a review brief;
+  it does not generate, insert, translate in full, import, or publish article
+  content.
 - Frontend single-post article audio playback for already adopted narration or
   audio-summary metadata. This is a playback entry only; generation, adoption,
   proposal review, media import, regeneration, and writes stay in the governed
