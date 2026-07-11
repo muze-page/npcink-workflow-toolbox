@@ -36,6 +36,9 @@ Toolbox does not own:
 - final WordPress write authorization;
 - reusable first-party WordPress ability definitions already owned by
   `npcink-abilities-toolkit`;
+- reusable static workflow definitions already owned by
+  `npcink-abilities-toolkit`; Toolbox buttons may consume them but must not
+  become a parallel definition registry;
 - workflow runtime, queues, schedulers, retries, or leases;
 - MCP, Agent Gateway, Open API, or OpenClaw control-plane state;
 - long-term provider billing, quota, key rotation, or request log ownership;

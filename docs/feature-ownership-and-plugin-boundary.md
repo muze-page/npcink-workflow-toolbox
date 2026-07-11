@@ -44,7 +44,7 @@ channel or Toolbox entry
 | Layer | Owns | Does not own |
 | --- | --- | --- |
 | Core | Proposal records, approval, preflight, audit, governance truth | Provider execution, product UI, model routing |
-| Abilities Toolkit | Reusable WordPress read/write ability definitions and callbacks | AI reasoning, workflow UI, approval truth |
+| Abilities Toolkit | Reusable WordPress read/write ability definitions and callbacks; reusable static workflow definitions | AI reasoning, workflow UI, workflow runtime, approval truth |
 | Cloud | Hosted AI runtime, model routing, provider adapters, Site Knowledge, indexing, queues, quotas, long-running execution | WordPress write authority, local approval store, WordPress control plane |
 | Toolbox | WordPress operator UI, fixed buttons, review surfaces, planning artifacts, suggestion workflows | Final writes, approval truth, provider billing, workflow runtime |
 | Adapter / OpenClaw | Natural-language or external-channel orchestration into existing contracts | Core truth, duplicated ability registry, duplicated workflow registry |
@@ -57,6 +57,7 @@ channel or Toolbox entry
 | Operator clicks a button and reviews suggestions | Toolbox |
 | AI analyzes, summarizes, ranks, rewrites, searches, or plans | Cloud capability |
 | WordPress reads or writes need reusable schema and callbacks | Abilities Toolkit |
+| A versioned static workflow definition is reused by more than one channel | Abilities Toolkit |
 | Anything approves, audits, preflights, or commits writes | Core |
 | Natural-language request maps to existing governed workflows | Adapter/OpenClaw |
 | Public website chat widget or customer-facing assistant | New channel surface, backed by Cloud |
