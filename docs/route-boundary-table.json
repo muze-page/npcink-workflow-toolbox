@@ -276,6 +276,56 @@
       "boundary_note": "Builds media derivative handoff only; no derivative execution or media replacement."
     },
     {
+      "route": "/media-derivative-preview",
+      "documented_route": "/media-derivative-preview",
+      "methods": ["POST"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "toolbox_fixed_workflow_surface",
+      "write_posture": "preview_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Executes the Toolkit read ability locally and delegates signed runtime transport to Cloud Addon; no run persistence, proposal, or media write."
+    },
+    {
+      "route": "/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)",
+      "documented_route": "/media-derivative-preview/{run_id}",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_runtime_projection",
+      "write_posture": "read_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Reads one bounded Cloud Addon status projection; Toolbox stores no run truth."
+    },
+    {
+      "route": "/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)/result",
+      "documented_route": "/media-derivative-preview/{run_id}/result",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_runtime_projection",
+      "write_posture": "read_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Reads one bounded Cloud Addon result projection; no proposal creation or media write."
+    },
+    {
+      "route": "/media-derivative-optimization-payload",
+      "documented_route": "/media-derivative-optimization-payload",
+      "methods": ["POST"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_payload_projection",
+      "write_posture": "core_handoff_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Delegates payload construction to Cloud Addon and returns a Core-ready from-plan request without storing or submitting a proposal."
+    },
+    {
+      "route": "/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)",
+      "documented_route": "/media-derivative-preview-artifacts/{artifact_id}",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "toolbox_signed_preview_projection",
+      "write_posture": "preview_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Short-lived same-origin signed byte projection through Cloud Addon; no persistence, media registration, or write."
+    },
+    {
       "route": "/nightly-inspection/cloud-runtime-entitlement",
       "documented_route": "/nightly-inspection/cloud-runtime-entitlement",
       "methods": ["GET"],

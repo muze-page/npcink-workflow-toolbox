@@ -369,6 +369,11 @@ Current routes require `manage_options`:
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-preview`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}/result`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-optimization-payload`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview-artifacts/{artifact_id}`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/recent`
@@ -765,8 +770,11 @@ registry, or write executor.
 
 `media_optimization_v1` is the architecture name for media-library single-image
 actions and the Toolbox Batch Optimize Images workbench. It is
-implemented with current admin state, Adapter media derivative routes, Cloud
-Addon transport, Core proposal handoff, and Abilities media contracts. It
+implemented with current admin state, Toolbox media derivative preview
+projections, Cloud Addon transport, Adapter proposal handoff, and Core/Abilities
+media contracts. The projections do not persist run state: create/status/result
+calls delegate directly to Cloud Addon, while governed proposal submission
+continues through Adapter. It
 does not introduce a Toolbox custom table, a /workflow-runs route, queue, scheduler,
 retry lease, artifact registry, or direct media writer.
 Batch media replacement follows the same dependency direction: OpenClaw/Adapter

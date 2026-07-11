@@ -74,6 +74,8 @@ $legacy_markers = array(
 	'queuePublishExecutionIntent',
 	'executeReviewedProposalOnPublish',
 	'executePendingPublishIntents',
+	'media-derivative-runs',
+	'media-derivative-proposal-payload',
 );
 foreach ( array( 'assets', 'includes' ) as $source_dir ) {
 	$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . '/' . $source_dir, FilesystemIterator::SKIP_DOTS ) );

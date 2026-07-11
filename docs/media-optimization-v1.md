@@ -29,11 +29,12 @@ The workflow is deterministic:
    uploads URL to an attachment candidate.
 2. Toolbox reads its stored media optimization defaults and applies one-run
    operator overrides.
-3. Adapter runs the bounded media derivative recipe through Cloud Addon and
-   Cloud, returning a short-lived derivative preview artifact.
-4. Toolbox renders the same-origin signed preview proxy and collects reviewed
+3. Toolbox executes the Toolkit request ability locally, while Cloud Addon owns
+   signed Cloud dispatch and result reads for the short-lived derivative artifact.
+4. Toolbox renders its same-origin signed preview projection and collects reviewed
    media metadata.
-5. Toolbox submits the Adapter `from_plan_request` to
+5. Toolbox asks Cloud Addon to build the optimization payload, then submits its
+   `from_plan_request` through Adapter to
    `/proposals/from-plan`, so Core creates one media optimization proposal.
 6. Core owns proposal review, approval, preflight, and audit.
 7. Adapter and Abilities own approved final execution when policy permits.

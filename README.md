@@ -233,6 +233,11 @@ registered.
 - `POST /wp-json/npcink-toolbox/v1/flows/media-brief`
 - `POST /wp-json/npcink-toolbox/v1/editor/content-support`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-handoff`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-preview`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}/result`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-optimization-payload`
+- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview-artifacts/{artifact_id}` (short-lived signed preview only)
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/recent`

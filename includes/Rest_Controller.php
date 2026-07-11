@@ -58,6 +58,10 @@ final class Rest_Controller {
 		$this->post( '/flows/media-brief', 'media_brief' );
 		$this->post( '/editor/content-support', 'editor_content_support' );
 		$this->post( '/media-derivative-handoff', 'media_derivative_handoff' );
+		$this->post( '/media-derivative-preview', 'create_media_derivative_preview' );
+		$this->get( '/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)', 'get_media_derivative_preview' );
+		$this->get( '/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)/result', 'get_media_derivative_preview_result' );
+		$this->post( '/media-derivative-optimization-payload', 'build_media_derivative_optimization_payload' );
 		$this->post( '/nightly-inspection/cloud-batch', 'nightly_inspection_cloud_batch' );
 		$this->get( '/nightly-inspection/cloud-runtime-entitlement', 'nightly_inspection_cloud_runtime_entitlement' );
 		$this->get( '/nightly-inspection/cloud-batch/recent', 'nightly_inspection_cloud_batch_recent' );
@@ -85,6 +89,16 @@ final class Rest_Controller {
 				'permission_callback' => array( $this, 'permission' ),
 			)
 		);
+
+		register_rest_route(
+			Plugin::REST_NAMESPACE,
+			'/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'download_media_derivative_preview_artifact' ),
+				'permission_callback' => array( $this, 'permission_media_derivative_preview_artifact' ),
+			)
+		);
 	}
 
 	public function permission( $request = null ): bool {
@@ -104,6 +118,9 @@ final class Rest_Controller {
 	}
 
 	private function rest_route_scope( string $route ): string {
+		if ( preg_match( '#^/media-derivative-preview/[A-Za-z0-9._:-]+(?:/result)?$#', $route ) ) {
+			return 'cap.toolbox.workflow_suggest';
+		}
 		if ( preg_match( '#^/nightly-inspection/cloud-batch/[A-Za-z0-9._:-]+(?:/result|/retry)?$#', $route ) ) {
 			return 'cap.toolbox.nightly_inspection';
 		}
@@ -136,6 +153,9 @@ final class Rest_Controller {
 			'/flows/media-brief'                           => 'cap.toolbox.workflow_suggest',
 			'/editor/content-support'                      => 'cap.toolbox.workflow_suggest',
 			'/media-derivative-handoff'                    => 'cap.toolbox.workflow_suggest',
+			'/media-derivative-preview'                    => 'cap.toolbox.workflow_suggest',
+			'/media-derivative-optimization-payload'       => 'cap.toolbox.workflow_suggest',
+			'/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)' => 'cap.toolbox.workflow_suggest',
 			'/nightly-inspection/cloud-runtime-entitlement' => 'cap.toolbox.nightly_inspection',
 			'/nightly-inspection/cloud-batch'              => 'cap.toolbox.nightly_inspection',
 			'/nightly-inspection/cloud-batch/recent'       => 'cap.toolbox.nightly_inspection',
@@ -1062,6 +1082,163 @@ final class Rest_Controller {
 	public function media_derivative_handoff( WP_REST_Request $request ) {
 		$params = method_exists( $request, 'get_params' ) ? $request->get_params() : array();
 		return rest_ensure_response( $this->client->build_media_derivative_handoff( is_array( $params ) ? $params : array() ) );
+	}
+
+	/**
+	 * Starts one preview-only Cloud derivative run through the Cloud Addon seam.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function create_media_derivative_preview( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_dispatch_media_derivative_cloud_request' ) ) {
+			return $this->media_derivative_cloud_addon_unavailable();
+		}
+
+		$ability_input    = $this->media_derivative_preview_input( $request );
+		$ability_response = $this->run_toolkit_ability( 'npcink-abilities-toolkit/build-media-derivative-cloud-request', $ability_input );
+		if ( is_wp_error( $ability_response ) ) {
+			return $ability_response;
+		}
+
+		$source_artifact = $this->media_derivative_attachment_descriptor( absint( $ability_input['attachment_id'] ?? 0 ), 'source_file' );
+		if ( is_wp_error( $source_artifact ) ) {
+			return $source_artifact;
+		}
+
+		$watermark_artifact = array();
+		$watermark_id       = absint( $ability_input['watermark_attachment_id'] ?? 0 );
+		if ( $watermark_id > 0 ) {
+			$watermark_artifact = $this->media_derivative_attachment_descriptor( $watermark_id, 'watermark_file' );
+			if ( is_wp_error( $watermark_artifact ) ) {
+				return $watermark_artifact;
+			}
+		}
+
+		$trace_id = sanitize_text_field( (string) ( $request->get_param( 'trace_id' ) ?: wp_generate_uuid4() ) );
+		$dispatch = npcink_cloud_addon_dispatch_media_derivative_cloud_request(
+			$ability_response,
+			$source_artifact,
+			$trace_id,
+			sanitize_text_field( (string) $request->get_param( 'idempotency_key' ) ),
+			$watermark_artifact
+		);
+		if ( is_wp_error( $dispatch ) ) {
+			return $dispatch;
+		}
+
+		$run_id = function_exists( 'npcink_cloud_addon_media_derivative_run_id' ) ? npcink_cloud_addon_media_derivative_run_id( $dispatch ) : '';
+		$cloud_run = function_exists( 'npcink_cloud_addon_public_media_derivative_cloud_projection' ) ? npcink_cloud_addon_public_media_derivative_cloud_projection( $dispatch ) : array();
+
+		return new WP_REST_Response(
+			array(
+				'contract_version' => 'toolbox_media_derivative_preview.v1',
+				'status'           => 'submitted',
+				'run_id'           => sanitize_text_field( (string) $run_id ),
+				'cloud_run'        => $this->with_media_derivative_preview_url( $cloud_run ),
+				'ability_response' => $ability_response,
+				'write_posture'    => 'preview_only',
+				'direct_wordpress_write' => false,
+				'core_proposal_created'   => false,
+			),
+			202
+		);
+	}
+
+	public function get_media_derivative_preview( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_get_media_derivative_run' ) ) {
+			return $this->media_derivative_cloud_addon_unavailable();
+		}
+
+		$result = npcink_cloud_addon_get_media_derivative_run(
+			sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
+			sanitize_text_field( (string) $request->get_param( 'trace_id' ) )
+		);
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return rest_ensure_response(
+			array(
+				'contract_version' => 'toolbox_media_derivative_preview_status.v1',
+				'cloud_run'        => $this->with_media_derivative_preview_url( is_array( $result ) ? $result : array() ),
+				'direct_wordpress_write' => false,
+			)
+		);
+	}
+
+	public function get_media_derivative_preview_result( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_get_media_derivative_run_result' ) ) {
+			return $this->media_derivative_cloud_addon_unavailable();
+		}
+
+		$result = npcink_cloud_addon_get_media_derivative_run_result(
+			sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
+			sanitize_text_field( (string) $request->get_param( 'trace_id' ) )
+		);
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return rest_ensure_response(
+			array(
+				'contract_version' => 'toolbox_media_derivative_preview_result.v1',
+				'cloud_result'     => $this->with_media_derivative_preview_url( is_array( $result ) ? $result : array() ),
+				'direct_wordpress_write' => false,
+			)
+		);
+	}
+
+	public function build_media_derivative_optimization_payload( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_build_media_derivative_optimization_payload' ) ) {
+			return $this->media_derivative_cloud_addon_unavailable();
+		}
+
+		$payload = npcink_cloud_addon_build_media_derivative_optimization_payload(
+			$this->media_derivative_object_param( $request, 'ability_response' ),
+			$this->media_derivative_object_param( $request, 'cloud_result' ),
+			$this->media_derivative_object_param( $request, 'derivative_artifact' ),
+			$this->media_derivative_object_param( $request, 'media_details_input' )
+		);
+
+		return is_wp_error( $payload ) ? $payload : rest_ensure_response( $payload );
+	}
+
+	public function permission_media_derivative_preview_artifact( WP_REST_Request $request ): bool {
+		return current_user_can( 'manage_options' ) || $this->valid_media_derivative_preview_signature( $request );
+	}
+
+	public function download_media_derivative_preview_artifact( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_download_media_derivative_artifact' ) ) {
+			return $this->media_derivative_cloud_addon_unavailable();
+		}
+
+		$artifact = array(
+			'artifact_id' => sanitize_text_field( (string) $request->get_param( 'artifact_id' ) ),
+			'expires_at'  => gmdate( 'c', absint( $request->get_param( 'expires_ts' ) ) ),
+			'mime_type'   => sanitize_text_field( (string) $request->get_param( 'mime_type' ) ),
+			'checksum'    => sanitize_text_field( (string) $request->get_param( 'checksum' ) ),
+			'sha256'      => sanitize_text_field( (string) $request->get_param( 'sha256' ) ),
+			'run_id'      => sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
+		);
+		$download = npcink_cloud_addon_download_media_derivative_artifact( $artifact );
+		if ( is_wp_error( $download ) ) {
+			return $download;
+		}
+
+		$contents  = is_string( $download['contents'] ?? null ) ? $download['contents'] : '';
+		$mime_type = sanitize_text_field( (string) ( $download['mime_type'] ?? 'application/octet-stream' ) );
+		if ( function_exists( 'status_header' ) ) {
+			status_header( 200 );
+		}
+		nocache_headers();
+		header( 'Content-Type: ' . $mime_type );
+		header( 'Content-Length: ' . strlen( $contents ) );
+		header( 'Content-Disposition: inline; filename="derivative-' . sanitize_file_name( (string) $artifact['artifact_id'] ) . '"' );
+		header( 'Cache-Control: private, no-store, max-age=0' );
+		header( 'X-Content-Type-Options: nosniff' );
+		echo $contents; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		exit;
 	}
 
 	/**
@@ -6285,6 +6462,150 @@ final class Rest_Controller {
 			'direct_wordpress_write' => false,
 			'items'                  => $checks,
 		);
+	}
+
+	private function media_derivative_preview_input( WP_REST_Request $request ): array {
+		$input = $request->get_param( 'input' );
+		$input = is_array( $input ) ? map_deep( $input, 'sanitize_text_field' ) : array();
+		if ( isset( $input['target_format'] ) && ! isset( $input['preferred_format'] ) ) {
+			$input['preferred_format'] = sanitize_key( (string) $input['target_format'] );
+		}
+		if ( isset( $input['max_width'] ) && ! isset( $input['target_max_width'] ) ) {
+			$input['target_max_width'] = absint( $input['max_width'] );
+		}
+		$input['attachment_id'] = absint( $input['attachment_id'] ?? 0 );
+		if ( isset( $input['quality'] ) ) {
+			$input['quality'] = max( 1, min( 100, absint( $input['quality'] ) ) );
+		}
+		if ( array_key_exists( 'watermark_enabled', $input ) && ! filter_var( $input['watermark_enabled'], FILTER_VALIDATE_BOOLEAN ) ) {
+			unset( $input['watermark'] );
+		}
+		unset( $input['target_format'], $input['max_width'], $input['watermark_enabled'] );
+
+		return $input;
+	}
+
+	private function run_toolkit_ability( string $ability_id, array $input ) {
+		if ( ! function_exists( 'npcink_abilities_toolkit_get_registered' ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_toolkit_unavailable',
+				__( 'Npcink Abilities Toolkit is required to build the media derivative request.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$registered = npcink_abilities_toolkit_get_registered();
+		$definition = is_array( $registered[ $ability_id ] ?? null ) ? $registered[ $ability_id ] : array();
+		$callback   = $definition['execute_callback'] ?? null;
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_toolkit_unavailable',
+				__( 'The Toolkit media derivative request ability is not callable.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$result = call_user_func( $callback, $input );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return is_array( $result ) ? $result : new WP_Error(
+			'npcink_toolbox_media_derivative_toolkit_invalid_response',
+			__( 'The Toolkit media derivative request ability returned an invalid response.', 'npcink-workflow-toolbox' ),
+			array( 'status' => 502 )
+		);
+	}
+
+	private function media_derivative_attachment_descriptor( int $attachment_id, string $field_name ) {
+		$path = $attachment_id > 0 ? get_attached_file( $attachment_id ) : '';
+		if ( ! is_string( $path ) || '' === $path || ! is_readable( $path ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_file_unreadable',
+				__( 'The selected attachment file is not readable for the preview upload.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400, 'attachment_id' => $attachment_id )
+			);
+		}
+
+		return array(
+			'path'       => $path,
+			'filename'   => sanitize_file_name( basename( $path ) ),
+			'mime_type'  => sanitize_text_field( (string) get_post_mime_type( $attachment_id ) ),
+			'field_name' => sanitize_key( $field_name ),
+		);
+	}
+
+	private function media_derivative_cloud_addon_unavailable(): WP_Error {
+		return new WP_Error(
+			'npcink_toolbox_media_derivative_cloud_addon_unavailable',
+			__( 'Npcink Cloud Addon is required for media derivative preview transport.', 'npcink-workflow-toolbox' ),
+			array( 'status' => 503, 'required_plugin' => 'npcink-cloud-addon' )
+		);
+	}
+
+	private function media_derivative_object_param( WP_REST_Request $request, string $key ): array {
+		$value = $request->get_param( $key );
+		return is_array( $value ) ? $value : array();
+	}
+
+	private function with_media_derivative_preview_url( array $projection ): array {
+		$derivative = is_array( $projection['derivative'] ?? null ) ? $projection['derivative'] : array();
+		$artifact_id = sanitize_text_field( (string) ( $derivative['artifact_id'] ?? $derivative['id'] ?? '' ) );
+		$expires_ts  = strtotime( sanitize_text_field( (string) ( $derivative['expires_at'] ?? '' ) ) );
+		if ( '' === $artifact_id || false === $expires_ts || $expires_ts <= time() ) {
+			return $projection;
+		}
+
+		$query = array( 'expires_ts' => (string) $expires_ts );
+		foreach ( array( 'mime_type', 'checksum', 'sha256', 'run_id' ) as $key ) {
+			$value = sanitize_text_field( (string) ( $derivative[ $key ] ?? '' ) );
+			if ( '' !== $value ) {
+				$query[ $key ] = $value;
+			}
+		}
+		$query['preview_sig'] = $this->media_derivative_preview_signature( $artifact_id, $query );
+		$projection['derivative']['preview_url'] = add_query_arg(
+			$query,
+			rest_url( Plugin::REST_NAMESPACE . '/media-derivative-preview-artifacts/' . rawurlencode( $artifact_id ) )
+		);
+
+		return $projection;
+	}
+
+	private function media_derivative_preview_signature( string $artifact_id, array $query ): string {
+		return hash_hmac( 'sha256', $this->media_derivative_preview_signature_payload( $artifact_id, $query ), wp_salt( 'auth' ) );
+	}
+
+	private function media_derivative_preview_signature_payload( string $artifact_id, array $query ): string {
+		return (string) wp_json_encode(
+			array(
+				'artifact_id' => sanitize_text_field( $artifact_id ),
+				'expires_ts'  => absint( $query['expires_ts'] ?? 0 ),
+				'mime_type'   => sanitize_text_field( (string) ( $query['mime_type'] ?? '' ) ),
+				'checksum'    => sanitize_text_field( (string) ( $query['checksum'] ?? '' ) ),
+				'sha256'      => sanitize_text_field( (string) ( $query['sha256'] ?? '' ) ),
+				'run_id'      => sanitize_text_field( (string) ( $query['run_id'] ?? '' ) ),
+			)
+		);
+	}
+
+	private function valid_media_derivative_preview_signature( WP_REST_Request $request ): bool {
+		$artifact_id = sanitize_text_field( (string) $request->get_param( 'artifact_id' ) );
+		$expires_ts  = absint( $request->get_param( 'expires_ts' ) );
+		$signature   = strtolower( sanitize_text_field( (string) $request->get_param( 'preview_sig' ) ) );
+		if ( '' === $artifact_id || $expires_ts <= time() || '' === $signature ) {
+			return false;
+		}
+
+		$query = array( 'expires_ts' => (string) $expires_ts );
+		foreach ( array( 'mime_type', 'checksum', 'sha256', 'run_id' ) as $key ) {
+			$value = sanitize_text_field( (string) $request->get_param( $key ) );
+			if ( '' !== $value ) {
+				$query[ $key ] = $value;
+			}
+		}
+
+		return hash_equals( $this->media_derivative_preview_signature( $artifact_id, $query ), $signature );
 	}
 
 	private function csv_list( string $value ): array {

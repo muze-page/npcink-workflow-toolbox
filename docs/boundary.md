@@ -196,6 +196,11 @@ human-readable allowlist and must stay aligned with that table and
 - `/flows/media-brief`
 - `/editor/content-support`
 - `/media-derivative-handoff`
+- `/media-derivative-preview`
+- `/media-derivative-preview/{run_id}`
+- `/media-derivative-preview/{run_id}/result`
+- `/media-derivative-optimization-payload`
+- `/media-derivative-preview-artifacts/{artifact_id}`
 - `/nightly-inspection/cloud-runtime-entitlement`
 - `/nightly-inspection/cloud-batch`
 - `/nightly-inspection/cloud-batch/recent`
@@ -495,7 +500,7 @@ the selected-image review workbench. Deprecated `tool=optimize` and legacy
 workbench instead of rendering a standalone one-image picker. Batch
 optimization starts from selected media-library attachments or the
 `tab=image&tool=batch-optimize` workbench. These surfaces may guide operator
-intent through media selection, Toolbox policy defaults, Adapter/Cloud
+intent through media selection, Toolbox policy defaults, Toolbox/Cloud Addon
 derivative preview, reviewed metadata, selected Core proposal submission, and
 links to separate Core/Adapter execution. The fixed batch action stops after
 selected proposal submission. It must not add a generic workflow runner,
@@ -510,11 +515,14 @@ image/logo modes: text watermarks pass text/font/color/background/margin fields
 without requiring a logo artifact, while image/logo watermarks use the Toolbox
 configured logo source or another reviewed image source before Cloud dispatch.
 It is a planning artifact route. The admin media
-derivative preview surface may call Adapter's bounded media-derivative recipe
-to create one short-lived Cloud artifact and, for the single-image optimize
-flow, may submit the returned Adapter `from_plan_request` so Core creates one
+derivative preview surface calls the Toolbox-owned `/media-derivative-preview`
+projection, which executes the Toolkit read ability locally and delegates all
+signed runtime transport and result reads to Cloud Addon. The
+`/media-derivative-optimization-payload` projection delegates proposal-payload
+construction to Cloud Addon and, for the single-image optimize flow, may submit
+the returned `from_plan_request` through Adapter so Core creates one
 batch proposal containing reviewed metadata and derivative adoption actions. It
-may render the same-origin signed Adapter preview proxy for operator review, but
+may render the same-origin signed Toolbox preview proxy for operator review, but
 that URL is not a public Cloud URL or a WordPress media write. Toolbox must not
 store site media policy truth, own Cloud credentials, create an artifact
 registry, approve proposals, execute proposals, replace attachment files, or
@@ -526,8 +534,8 @@ The dedicated batch admin surface may call
 date-range format conversion. The batch surface may show candidates, skipped
 reasons, selected per-attachment previews, selected Core proposal submissions,
 and links to the governed execution surface; it must not request execution
-itself. It must still use the per-attachment Adapter media derivative recipe for Cloud
-artifacts and must not create a Toolbox-side media registry, approval queue,
+itself. It must still use the per-attachment Toolbox preview projection backed
+by Cloud Addon for Cloud artifacts and must not create a Toolbox-side media registry, approval queue,
 scheduler, or write executor.
 When selected batch items are later executed on the separate governed surface,
 it must be the

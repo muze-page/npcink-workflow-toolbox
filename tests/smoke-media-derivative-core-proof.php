@@ -257,19 +257,19 @@ toolbox_media_derivative_smoke_assert( ! isset( $ability_input['watermark'] ), '
 
 $create = toolbox_media_derivative_smoke_rest(
 	'POST',
-	'/npcink-openclaw-adapter/v1/media-derivative-runs',
+	'/npcink-toolbox/v1/media-derivative-preview',
 	array(
 		'input'           => $ability_input,
 		'idempotency_key' => 'toolbox-media-derivative-core-proof-' . $attachment_id . '-' . time(),
 	)
 );
 $run_id = sanitize_text_field( (string) ( $create['run_id'] ?? $create['cloud_run']['run_id'] ?? '' ) );
-toolbox_media_derivative_smoke_assert( '' !== $run_id, 'Adapter returns a Cloud media derivative run id.' );
+toolbox_media_derivative_smoke_assert( '' !== $run_id, 'Toolbox returns a Cloud media derivative run id.' );
 
 $result = array();
 for ( $attempt = 0; $attempt < 40; $attempt++ ) {
 	usleep( 0 === $attempt ? 250000 : 750000 );
-	$poll   = toolbox_media_derivative_smoke_rest_raw( 'GET', '/npcink-openclaw-adapter/v1/media-derivative-runs/' . rawurlencode( $run_id ) . '/result' );
+	$poll   = toolbox_media_derivative_smoke_rest_raw( 'GET', '/npcink-toolbox/v1/media-derivative-preview/' . rawurlencode( $run_id ) . '/result' );
 	$result = is_array( $poll['data'] ?? null ) ? (array) $poll['data'] : array();
 	$status = (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' );
 	if ( in_array( $status, array( 'succeeded', 'completed' ), true ) ) {
@@ -278,10 +278,10 @@ for ( $attempt = 0; $attempt < 40; $attempt++ ) {
 
 	$http_status = (int) ( $poll['status'] ?? 0 );
 	if ( 409 !== $http_status && ( $http_status < 200 || $http_status >= 300 ) ) {
-		toolbox_media_derivative_smoke_fail( 'GET /npcink-openclaw-adapter/v1/media-derivative-runs/' . $run_id . '/result returned HTTP ' . $http_status );
+		toolbox_media_derivative_smoke_fail( 'GET /npcink-toolbox/v1/media-derivative-preview/' . $run_id . '/result returned HTTP ' . $http_status );
 	}
 }
-toolbox_media_derivative_smoke_assert( in_array( (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' ), array( 'succeeded', 'completed' ), true ), 'Adapter media derivative run result becomes available.' );
+toolbox_media_derivative_smoke_assert( in_array( (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' ), array( 'succeeded', 'completed' ), true ), 'Toolbox media derivative preview result becomes available.' );
 
 $derivative = toolbox_media_derivative_smoke_derivative_from_result( $result );
 toolbox_media_derivative_smoke_assert( '' !== (string) ( $derivative['artifact_id'] ?? '' ), 'Cloud result includes a derivative artifact id.' );
@@ -313,7 +313,7 @@ $media_details_input = array(
 );
 $proposal_payload = toolbox_media_derivative_smoke_rest(
 	'POST',
-	'/npcink-openclaw-adapter/v1/media-derivative-proposal-payload',
+	'/npcink-toolbox/v1/media-derivative-optimization-payload',
 	array(
 		'ability_response'     => is_array( $create['ability_response'] ?? null ) ? (array) $create['ability_response'] : array(),
 		'cloud_result'         => is_array( $result['cloud_result'] ?? null ) ? (array) $result['cloud_result'] : $result,
@@ -321,7 +321,7 @@ $proposal_payload = toolbox_media_derivative_smoke_rest(
 		'media_details_input'  => $media_details_input,
 	)
 );
-toolbox_media_derivative_smoke_assert( ! empty( $proposal_payload['proposal_ready'] ), 'Adapter builds a proposal-ready media optimization payload.' );
+toolbox_media_derivative_smoke_assert( ! empty( $proposal_payload['proposal_ready'] ), 'Toolbox projects a proposal-ready media optimization payload from Cloud Addon.' );
 $from_plan_request = is_array( $proposal_payload['from_plan_request'] ?? null ) ? (array) $proposal_payload['from_plan_request'] : array();
 toolbox_media_derivative_smoke_assert( 'npcink-abilities-toolkit/build-media-optimization-plan' === (string) ( $from_plan_request['plan_ability_id'] ?? '' ), 'Proposal payload targets the media optimization plan ability.' );
 

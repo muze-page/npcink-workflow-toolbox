@@ -699,6 +699,17 @@ browser does not call preview, Core proposal, or execute routes. It is outside
 `composer test:all` because it needs a running local WordPress site, WP-CLI
 login-cookie generation, Playwright, and a local browser.
 
+For the production preview projection and same-origin image response, run:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:media-derivative-preview-browser
+```
+
+This creates one temporary attachment, submits the Toolbox-owned preview route
+from a real authenticated browser, polls Cloud Addon through Toolbox, loads the
+signed WebP preview bytes, and rejects any request to the removed Adapter media
+derivative Cloud routes. It cleans up the attachment after the check.
+
 When Adapter, Toolkit, and Core are available, run the workflow-projection Core
 proposal smoke:
 
