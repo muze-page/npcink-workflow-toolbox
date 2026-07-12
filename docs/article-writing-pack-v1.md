@@ -120,6 +120,12 @@ locale-independent bound. It does not use `wp_trim_words()` for this source
 because Chinese WordPress locales interpret that limit as characters and can
 silently reduce a long external article to a few hundred characters.
 
+Writing-pack Site Knowledge requests use the additive Cloud-owned
+`result_granularity=document` contract. Cloud filters and reranks chunk evidence,
+keeps the best-ranked chunk for each source document, and returns unique article
+candidates with bounded chunk references. Toolbox consumes that result and does
+not implement a second semantic dedupe or relevance-scoring policy.
+
 The default editor shows only the URL, source-body readiness, confirmation, and
 draft actions. Input modes, audience/focus overrides, fact ledgers, overlap,
 rights, and outline details remain available under optional or advanced

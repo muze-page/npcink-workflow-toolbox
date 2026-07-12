@@ -1019,6 +1019,7 @@ final class Rest_Controller {
 					array(
 						'query'           => $site_query,
 						'intent'          => 'writing_support_plan',
+						'result_granularity' => 'document',
 						'current_post_id' => absint( $context['post_id'] ?? 0 ),
 						'max_results'     => 6,
 					)
@@ -3279,6 +3280,7 @@ final class Rest_Controller {
 			array(
 				'query'           => $query,
 				'intent'          => 'writing_support_plan',
+				'result_granularity' => 'document',
 				'current_post_id' => absint( $context['post_id'] ?? 0 ),
 				'max_results'     => 6,
 			)

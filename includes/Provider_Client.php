@@ -2126,6 +2126,7 @@ final class Provider_Client {
 		}
 
 		$filters = is_array( $input['filters'] ?? null ) ? $this->sanitize_payload( $input['filters'] ) : array();
+		$result_granularity = sanitize_key( (string) ( $input['result_granularity'] ?? '' ) );
 		$payload = array(
 			'contract_version' => 'site_knowledge_search.v1',
 			'query'            => $query,
@@ -2136,6 +2137,9 @@ final class Provider_Client {
 			'write_posture'          => 'suggestion_only',
 			'direct_wordpress_write' => false,
 		);
+		if ( in_array( $result_granularity, array( 'chunk', 'document' ), true ) ) {
+			$payload['result_granularity'] = $result_granularity;
+		}
 
 		return $this->execute_site_knowledge_cloud_request(
 			'npcink-cloud/site-knowledge-search',
@@ -7946,6 +7950,8 @@ final class Provider_Client {
 				'progress'          => is_array( $result['progress'] ?? null ) ? $this->sanitize_payload( $result['progress'] ) : array(),
 				'active_run'        => is_array( $result['active_run'] ?? null ) ? $this->sanitize_payload( $result['active_run'] ) : array(),
 				'intent'            => sanitize_key( (string) ( $result['intent'] ?? '' ) ),
+				'result_granularity' => sanitize_key( (string) ( $result['result_granularity'] ?? 'chunk' ) ),
+				'result_grouping'    => is_array( $result['result_grouping'] ?? null ) ? $this->sanitize_payload( $result['result_grouping'] ) : array(),
 				'evidence_gate'     => is_array( $result['evidence_gate'] ?? null ) ? $this->sanitize_payload( $result['evidence_gate'] ) : array(),
 				'agent_handoff'     => $agent_handoff,
 				'handoff'           => $this->site_knowledge_handoff_for_display( $agent_handoff ),

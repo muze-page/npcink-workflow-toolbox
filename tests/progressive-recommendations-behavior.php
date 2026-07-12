@@ -14,6 +14,7 @@ $npcink_toolbox_progressive_taxonomy_inputs = array();
 $npcink_toolbox_progressive_transients = array();
 $npcink_toolbox_progressive_draft_inputs = array();
 $npcink_toolbox_progressive_writing_pack_inputs = array();
+$npcink_toolbox_progressive_site_knowledge_inputs = array();
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -170,6 +171,9 @@ function apply_filters( string $hook, $value, ...$args ) {
 		);
 	}
 	if ( 'npcink_toolbox_site_knowledge_cloud_request' === $hook ) {
+		global $npcink_toolbox_progressive_site_knowledge_inputs;
+		$site_knowledge_runtime = is_array( $args[0] ?? null ) ? $args[0] : array();
+		$npcink_toolbox_progressive_site_knowledge_inputs[] = is_array( $site_knowledge_runtime['input'] ?? null ) ? $site_knowledge_runtime['input'] : array();
 		return array(
 			'status' => 'ok',
 			'run_id' => 'writing-pack-knowledge-run',
@@ -874,6 +878,17 @@ npcink_toolbox_progressive_assert(
 	&& false === strpos( (string) ( $url_writing_pack_inputs[0]['content'] ?? '' ), 'Showcase' )
 	&& str_starts_with( (string) ( $url_writing_pack_inputs[0]['content'] ?? '' ), 'This article explains' ),
 	'URL writing-pack planning receives the article body after the exact title, not reader navigation.'
+);
+$document_knowledge_inputs = array_values(
+	array_filter(
+		$npcink_toolbox_progressive_site_knowledge_inputs,
+		static fn( array $input ): bool => 'writing_support_plan' === ( $input['intent'] ?? '' )
+			&& 'document' === ( $input['result_granularity'] ?? '' )
+	)
+);
+npcink_toolbox_progressive_assert(
+	! empty( $document_knowledge_inputs ),
+	'Article writing packs request Cloud-owned document-level Site Knowledge results instead of deduplicating chunks locally.'
 );
 
 $mixed_writing_pack_response = $controller->editor_content_support(
