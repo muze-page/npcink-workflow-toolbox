@@ -202,6 +202,47 @@ try {
 		npcink_toolbox_writing_pack_smoke_assert( 200 === $research['status'], $case_id . ': writing-pack request failed.' );
 		npcink_toolbox_writing_pack_smoke_assert( 'article_writing_pack.v1' === ( $research_data['artifact_type'] ?? '' ), $case_id . ': writing-pack response contract mismatch.' );
 		npcink_toolbox_writing_pack_smoke_assert( 'article_writing_pack.v1' === ( $pack['artifact_type'] ?? '' ), $case_id . ': nested writing pack is missing.' );
+		$blocking_reasons = $pack['generation_admission']['blocking_reasons'] ?? array();
+		if ( in_array( 'source_body_evidence_insufficient', $blocking_reasons, true ) ) {
+			$blocked_draft = npcink_toolbox_writing_pack_smoke_rest(
+				array_merge(
+					$base,
+					array(
+						'source_stage'          => 'draft',
+						'reviewed_writing_pack' => $pack,
+						'writing_pack_confirmation' => array(
+							'status'                   => 'confirmed_by_operator',
+							'confirmed'                => true,
+							'base_content_fingerprint' => (string) ( $pack['content_fingerprint'] ?? '' ),
+						),
+					)
+				)
+			);
+			npcink_toolbox_writing_pack_smoke_assert( 400 === $blocked_draft['status'], $case_id . ': insufficient source body was not blocked before drafting.' );
+			npcink_toolbox_writing_pack_smoke_assert( 'npcink_toolbox_writing_pack_generation_blocked' === ( $blocked_draft['data']['code'] ?? '' ), $case_id . ': insufficient source body returned the wrong draft error.' );
+			npcink_toolbox_writing_pack_smoke_assert_no_write( (int) $post->ID, $before, $case_id . ' blocked source body' );
+			$summary[] = array(
+				'case'                => $case_id,
+				'extract_seconds'     => $extract['duration_s'],
+				'research_seconds'    => $research['duration_s'],
+				'draft_status'        => 'blocked_source_body',
+				'fact_count'          => count( $facts ),
+				'draft_section_count' => 0,
+				'wordpress_mutated'   => false,
+			);
+			$review_cases[] = array(
+				'case'          => $case_id,
+				'source_url'    => $url,
+				'writing_pack'  => $pack,
+				'draft_preview' => array(),
+				'human_review'  => array(
+					'status'      => 'blocked_source_body',
+					'issue_codes' => array( 'source_body_evidence_insufficient' ),
+					'notes'       => 'No draft was requested from navigation or metadata-only evidence.',
+				),
+			);
+			continue;
+		}
 		npcink_toolbox_writing_pack_smoke_assert( ! empty( $facts ), $case_id . ': fact ledger is empty. ' . $research_diagnostic );
 		foreach ( $facts as $fact_index => $fact ) {
 			npcink_toolbox_writing_pack_smoke_assert( npcink_toolbox_writing_pack_smoke_has_value( $fact['claim'] ?? '' ), $case_id . ': fact ' . $fact_index . ' has no claim.' );
@@ -303,4 +344,4 @@ if ( '1' === getenv( 'NPCINK_TOOLBOX_WRITING_PACK_REVIEW_EXPORT' ) ) {
 }
 
 WP_CLI::log( wp_json_encode( $summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
-WP_CLI::success( sprintf( '%d real URL writing-pack case(s) passed extraction, fact-ledger, confirmation, draft-preview, and no-write gates.', count( $summary ) ) );
+WP_CLI::success( sprintf( '%d real URL writing-pack case(s) passed honest source-body admission and no-write gates.', count( $summary ) ) );

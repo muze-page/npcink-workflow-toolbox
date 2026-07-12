@@ -102,6 +102,29 @@ keeps the outer `source_adaptation_review.v1` wrapper while including the same
 `source_stage=research_plan` and receive `article_writing_pack.v1` as the
 primary outer artifact.
 
+## Simple Source-Body Gate
+
+URL and mixed modes first trim Cloud Reader navigation before the exact
+Markdown article-title heading, accepting a common publisher suffix such as
+`– WordPress News`. If no matching heading exists, the source fails closed.
+They proceed only when the remaining body
+contains at least 600 cleaned characters and three sentence-ending punctuation
+marks after URL text is removed. This deliberately small, transparent check rejects empty,
+metadata-only, and navigation-only captures before hosted planning or draft
+generation. A blocked pack carries
+`source_body_evidence_insufficient`; confirmation cannot override it. Manual
+brief mode is unaffected because it does not claim an external fact source.
+
+Hosted planning receives up to 30,000 characters of that body through a
+locale-independent bound. It does not use `wp_trim_words()` for this source
+because Chinese WordPress locales interpret that limit as characters and can
+silently reduce a long external article to a few hundred characters.
+
+The default editor shows only the URL, source-body readiness, confirmation, and
+draft actions. Input modes, audience/focus overrides, fact ledgers, overlap,
+rights, and outline details remain available under optional or advanced
+disclosures instead of occupying the main path.
+
 ## Review Contract
 
 Draft generation requires one request-scoped `article_writing_pack_review.v1`:

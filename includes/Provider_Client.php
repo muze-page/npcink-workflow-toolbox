@@ -4154,7 +4154,9 @@ final class Provider_Client {
 		) || ( 'summary_suggestions' === $intent && 'full_context' === $summary_generation_mode );
 		$content                = 'summary_suggestions' === $intent
 			? $this->hosted_ai_summary_source_content_for_mode( $raw_content, $summary_generation_mode, $summary_vector_context )
-			: wp_trim_words( wp_strip_all_tags( $raw_content ), 420, '' );
+			: ( 'source_adaptation_review' === $intent
+				? $this->hosted_ai_source_article_context( $raw_content )
+				: wp_trim_words( wp_strip_all_tags( $raw_content ), 420, '' ) );
 		$post_id = absint( $input['post_id'] ?? 0 );
 		$user_instruction = wp_trim_words( sanitize_textarea_field( wp_strip_all_tags( (string) ( $input['user_instruction'] ?? '' ) ) ), 60, '' );
 		$quality_contract = $is_fast_summary ? $this->hosted_ai_fast_summary_quality_contract() : $this->hosted_ai_quality_contract( $intent );
@@ -4272,6 +4274,23 @@ final class Provider_Client {
 		}
 
 		return $this->normalize_hosted_ai_content_support_response( is_array( $response ) ? $response : array(), $runtime_payload, $intent );
+	}
+
+	private function hosted_ai_source_article_context( string $content ): string {
+		$plain = $this->hosted_ai_normalized_text( $content );
+		if ( '' === $plain ) {
+			return '';
+		}
+
+		$length    = $this->hosted_ai_text_length( $plain );
+		$max_chars = 30000;
+		if ( $length <= $max_chars ) {
+			return sanitize_textarea_field( $plain );
+		}
+
+		return sanitize_textarea_field(
+			$this->hosted_ai_text_slice( $plain, 0, $max_chars ) . "\n\n[Source article context truncated after {$max_chars} characters for runtime safety.]"
+		);
 	}
 
 	private function hosted_ai_summary_source_content_for_mode( string $content, string $mode, array $summary_vector_context = array() ): string {

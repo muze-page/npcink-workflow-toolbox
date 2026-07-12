@@ -843,7 +843,9 @@ The script uses the three public WordPress cases in
 requires exact extraction, a non-empty fact ledger whose facts carry
 `evidence_basis` and `verification_status`, rejection before request-scoped
 operator confirmation, and a structured `article_draft_preview.v1` after
-confirmation. It snapshots an existing post plus media, taxonomy, post, and
+confirmation when source-body admission passes. Navigation or metadata-only
+captures must instead return `source_body_evidence_insufficient` and reject a
+confirmed draft request. It snapshots an existing post plus media, taxonomy, post, and
 attachment counts after every stage and performs no fixture creation or
 content write. Both structured writing stages use low reasoning effort so they
 stay bounded under the hosted provider budget without reducing the writing-pack

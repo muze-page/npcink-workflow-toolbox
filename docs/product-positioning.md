@@ -199,6 +199,11 @@ confirms the pack, Toolbox may request one `article_draft_preview.v1` from the
 hosted text runtime. The preview is structured plain text, never a translated
 replacement body. A separate explicit native-editor action may load sections
 only into an empty current Gutenberg body; it never saves or publishes.
+The default interaction stays deliberately small: URL, body-readiness result,
+one writing-direction confirmation, draft review, and optional adoption.
+Detailed brief fields and evidence remain behind optional/advanced disclosure.
+Navigation or metadata-only reader output stops before hosted planning and can
+never be confirmed into a draft.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.

@@ -979,6 +979,7 @@ final class Rest_Controller {
 			$source_item    = ! is_wp_error( $external_raw ) && is_array( $external_raw['results'][0] ?? null ) ? $external_raw['results'][0] : array();
 			$source_text    = trim( (string) ( $source_item['reader_excerpt'] ?? $source_item['snippet'] ?? '' ) );
 			$source_title   = sanitize_text_field( (string) ( $external['title'] ?? $source_item['title'] ?? '' ) );
+			$source_body_text = $this->editor_source_article_body_text( $source_title, $source_text );
 			$source_resolved_url = esc_url_raw( (string) ( $external['resolved_url'] ?? $source_item['url'] ?? '' ) );
 			$cloud_url_match = sanitize_key( (string) ( $external['url_match'] ?? '' ) );
 			$source_url_matches = 'matched' === $cloud_url_match && $this->editor_source_adaptation_url_matches( $source_url, $source_resolved_url );
@@ -986,6 +987,9 @@ final class Rest_Controller {
 			$result['sections']['source_article']['requested_url'] = esc_url_raw( (string) ( $external['requested_url'] ?? $source_url ) );
 			$result['sections']['source_article']['resolved_url']  = $source_resolved_url;
 			$result['sections']['source_article']['url_match']     = $source_url_matches ? 'matched' : ( $cloud_url_match ?: 'unavailable' );
+			$source_body_ready = $source_url_matches && $this->editor_source_body_is_draftable( $source_body_text );
+			$result['sections']['source_article']['body_ready'] = $source_body_ready;
+			$result['sections']['source_article']['body_readiness'] = $source_body_ready ? 'ready' : 'insufficient';
 			$result['artifact_type']              = 'source_extraction_preview.v1';
 			$result['contract_version']           = 'source_extraction_preview.v1';
 			$result['input_mode']                 = (string) ( $context['input_mode'] ?? 'url_reference' );
@@ -1009,8 +1013,8 @@ final class Rest_Controller {
 					'write_posture'          => 'suggestion_only',
 					'direct_wordpress_write' => false,
 				);
-			} elseif ( '' !== $source_text ) {
-				$site_query = trim( $source_title . ' ' . wp_trim_words( wp_strip_all_tags( $source_text ), 80, '' ) );
+			} elseif ( $source_body_ready ) {
+				$site_query = trim( $source_title . ' ' . wp_trim_words( wp_strip_all_tags( $source_body_text ), 80, '' ) );
 				$knowledge_raw = $this->editor_cached_site_knowledge(
 					array(
 						'query'           => $site_query,
@@ -1025,7 +1029,7 @@ final class Rest_Controller {
 					array(
 						'title'         => $source_title,
 						'url'           => $source_resolved_url,
-						'content'       => $source_text,
+						'content'       => $source_body_text,
 						'reader_status' => sanitize_key( (string) ( $source_item['reader_status'] ?? 'snippet_only' ) ),
 					),
 					is_wp_error( $knowledge_raw ) ? array() : $knowledge_raw
@@ -1033,7 +1037,7 @@ final class Rest_Controller {
 			} else {
 				$result['sections']['source_adaptation_review'] = array(
 					'status'                 => 'blocked',
-					'message'                => __( 'Cloud returned no readable source excerpt. Verify the URL or try a public article page.', 'npcink-workflow-toolbox' ),
+					'message'                => __( 'The source reader did not return enough article body text. Try another public article URL; no draft will be generated from navigation or metadata alone.', 'npcink-workflow-toolbox' ),
 					'write_posture'          => 'suggestion_only',
 					'direct_wordpress_write' => false,
 				);
@@ -1044,7 +1048,7 @@ final class Rest_Controller {
 				$result['sections']['source_article'],
 				$result['sections']['source_site_context'] ?? array(),
 				$result['sections']['source_adaptation_review'] ?? array(),
-				$source_text
+				$source_body_text
 			);
 			$legacy_adapt_stage = 'adapt' === (string) ( $context['source_stage_requested'] ?? '' );
 			$result['artifact_type']              = $legacy_adapt_stage ? 'source_adaptation_review.v1' : 'article_writing_pack.v1';
@@ -3129,6 +3133,44 @@ final class Rest_Controller {
 		return $normalize_path( $requested ) === $normalize_path( $resolved );
 	}
 
+	private function editor_source_article_body_text( string $source_title, string $source_text ): string {
+		$text = trim( $source_text );
+		$title = trim( $source_title );
+		if ( '' === $text || '' === $title ) {
+			return '';
+		}
+		$title_candidates = array( $title );
+		$short_title      = preg_split( '/\s+[–—|]\s+/u', $title, 2 );
+		if ( is_array( $short_title ) && '' !== trim( (string) ( $short_title[0] ?? '' ) ) ) {
+			$title_candidates[] = trim( (string) $short_title[0] );
+		}
+
+		foreach ( array_unique( $title_candidates ) as $title_candidate ) {
+			$pattern = '/^#{1,3}\s+' . preg_quote( $title_candidate, '/' ) . '\s*$/miu';
+			if ( 1 !== preg_match( $pattern, $text, $match, PREG_OFFSET_CAPTURE ) ) {
+				continue;
+			}
+			$heading = (string) ( $match[0][0] ?? '' );
+			$offset  = (int) ( $match[0][1] ?? 0 );
+
+			return trim( substr( $text, $offset + strlen( $heading ) ) );
+		}
+
+		return '';
+	}
+
+	private function editor_source_body_is_draftable( string $source_text ): bool {
+		$text = trim( wp_strip_all_tags( $source_text ) );
+		if ( '' === $text ) {
+			return false;
+		}
+		$char_count = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
+		$prose = preg_replace( '#https?://\S+#iu', '', $text );
+		$sentence_count = preg_match_all( '/[.!?。！？]/u', is_string( $prose ) ? $prose : '' );
+
+		return $char_count >= 600 && is_int( $sentence_count ) && $sentence_count >= 3;
+	}
+
 	private function editor_writing_pack_request_brief( $raw ): array {
 		if ( is_string( $raw ) && '' !== trim( $raw ) ) {
 			$decoded = json_decode( $raw, true );
@@ -3381,6 +3423,17 @@ final class Rest_Controller {
 				array( 'status' => 409 )
 			);
 		}
+		$admission = is_array( $pack['generation_admission'] ?? null ) ? $pack['generation_admission'] : array();
+		if ( 'blocked' === sanitize_key( (string) ( $admission['status'] ?? '' ) ) ) {
+			return new WP_Error(
+				'npcink_toolbox_writing_pack_generation_blocked',
+				__( 'This writing pack cannot generate a draft because the source body or required writing evidence is insufficient.', 'npcink-workflow-toolbox' ),
+				array(
+					'status'           => 400,
+					'blocking_reasons' => $this->editor_writing_pack_list( $admission['blocking_reasons'] ?? array(), 12 ),
+				)
+			);
+		}
 		$missing = $this->editor_writing_pack_required_fields( $pack );
 		if ( ! empty( $missing ) ) {
 			return new WP_Error(
@@ -3525,11 +3578,11 @@ final class Rest_Controller {
 		$manual_only = 'manual_brief' === $input_mode;
 		$source_ready = $manual_only || ( 'ready' === sanitize_key( (string) ( $source['status'] ?? '' ) )
 			&& 'matched' === sanitize_key( (string) ( $source['url_match'] ?? '' ) )
-			&& '' !== trim( $source_text ) );
+			&& $this->editor_source_body_is_draftable( $source_text ) );
 		$review_ready = ! empty( $output ) && ! in_array( sanitize_key( (string) ( $review['status'] ?? '' ) ), array( 'blocked', 'error', 'failed' ), true );
 		$blocking_reasons = array();
 		if ( ! $source_ready ) {
-			$blocking_reasons[] = 'source_extraction_not_ready';
+			$blocking_reasons[] = 'source_body_evidence_insufficient';
 		}
 		if ( ! $review_ready ) {
 			$blocking_reasons[] = 'writing_pack_output_not_ready';

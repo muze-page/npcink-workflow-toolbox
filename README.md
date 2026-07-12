@@ -37,6 +37,10 @@ The first version provides:
   article audio candidates. Generic title, summary, taxonomy/tag, outline, and
   article-checkup support remains available through compatible route/rendering paths, plus
   selected-paragraph toolbar checks that do not replace body text;
+- the URL-writing path stays compact by default: URL, source-body readiness,
+  direction confirmation, draft review, and optional empty-editor loading.
+  Metadata/navigation-only extraction stops before planning; brief and evidence
+  details stay under optional or advanced disclosure;
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
   candidate artifact path, and Toolbox may prepare a Core-governed article

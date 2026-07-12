@@ -13,6 +13,7 @@ $npcink_toolbox_progressive_cloud_calls = 0;
 $npcink_toolbox_progressive_taxonomy_inputs = array();
 $npcink_toolbox_progressive_transients = array();
 $npcink_toolbox_progressive_draft_inputs = array();
+$npcink_toolbox_progressive_writing_pack_inputs = array();
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -151,6 +152,8 @@ function apply_filters( string $hook, $value, ...$args ) {
 					'url_match'        => 'matched',
 					'title'            => 'Exact source article',
 					'content_hash'     => 'sha256-exact-source',
+					'char_count'       => 1200,
+					'word_count'       => 180,
 					'content_trust'    => 'untrusted_external_source',
 					'prompt_injection_review_required' => true,
 					'coverage'         => array( 'level' => 'partial', 'reader_bounded' => true, 'complete_capture_claimed' => false ),
@@ -158,7 +161,7 @@ function apply_filters( string $hook, $value, ...$args ) {
 						array(
 							'title'          => 'Exact source article',
 							'url'            => $source_url,
-							'reader_excerpt' => 'Bounded evidence about a staged source workflow.',
+							'reader_excerpt' => "* [Showcase](https://example.com/showcase)\n* [Plugins](https://example.com/plugins)\n# Exact source article\n" . str_repeat( 'This article explains a staged source workflow with concrete editorial evidence. ', 12 ),
 							'reader_status'  => 'ready',
 						),
 					),
@@ -182,7 +185,7 @@ function apply_filters( string $hook, $value, ...$args ) {
 		);
 	}
 	if ( 'npcink_toolbox_hosted_ai_cloud_request' === $hook ) {
-		global $npcink_toolbox_progressive_draft_inputs;
+		global $npcink_toolbox_progressive_draft_inputs, $npcink_toolbox_progressive_writing_pack_inputs;
 		$runtime_input = is_array( $args[1] ?? null ) ? $args[1] : array();
 		if ( 'article_draft_from_writing_pack' === (string) ( $runtime_input['intent'] ?? '' ) ) {
 			$npcink_toolbox_progressive_draft_inputs[] = $runtime_input;
@@ -206,6 +209,7 @@ function apply_filters( string $hook, $value, ...$args ) {
 				),
 			);
 		}
+		$npcink_toolbox_progressive_writing_pack_inputs[] = $runtime_input;
 		return array(
 			'status' => 'ok',
 			'run_id' => 'writing-pack-ai-run',
@@ -647,6 +651,43 @@ npcink_toolbox_progressive_assert(
 
 $writing_pack_method = new ReflectionMethod( Npcink_Toolbox\Rest_Controller::class, 'editor_article_writing_pack' );
 $writing_pack_method->setAccessible( true );
+$source_body_method = new ReflectionMethod( Npcink_Toolbox\Rest_Controller::class, 'editor_source_article_body_text' );
+$source_body_method->setAccessible( true );
+$trimmed_source_body = $source_body_method->invoke(
+	$controller,
+	'Exact source article',
+	"* [Showcase](https://example.com/showcase)\n* [Plugins](https://example.com/plugins)\n# Exact source article\nThe real article starts here. It contains evidence. It continues for readers."
+);
+npcink_toolbox_progressive_assert(
+	false === strpos( $trimmed_source_body, 'Showcase' )
+	&& str_starts_with( $trimmed_source_body, 'The real article starts here.' ),
+	'Exact-title slicing removes reader navigation before source-body admission and hosted planning.'
+);
+$suffixed_title_body = $source_body_method->invoke(
+	$controller,
+	'Exact source article – Publisher name',
+	"* [Showcase](https://example.com/showcase)\n# Exact source article\nThe suffix-free heading still identifies the real body. It has evidence. It has detail."
+);
+$missing_title_body = $source_body_method->invoke(
+	$controller,
+	'Expected article title',
+	"* [Showcase](https://example.com/showcase)\n* [Plugins](https://example.com/plugins)\nNavigation without the article heading."
+);
+npcink_toolbox_progressive_assert(
+	str_starts_with( $suffixed_title_body, 'The suffix-free heading' )
+	&& '' === $missing_title_body,
+	'Source-body slicing accepts a publisher suffix but fails closed when the article heading is absent.'
+);
+$provider_reflection = new ReflectionClass( Npcink_Toolbox\Provider_Client::class );
+$provider_without_constructor = $provider_reflection->newInstanceWithoutConstructor();
+$source_context_method = $provider_reflection->getMethod( 'hosted_ai_source_article_context' );
+$source_context_method->setAccessible( true );
+$long_source_context = $source_context_method->invoke( $provider_without_constructor, str_repeat( '正文证据。', 7000 ) );
+npcink_toolbox_progressive_assert(
+	strlen( $long_source_context ) > 420
+	&& str_contains( $long_source_context, 'Source article context truncated after 30000 characters' ),
+	'Hosted writing-pack planning uses a locale-independent bounded article context instead of the Chinese-locale 420-character wp_trim_words result.'
+);
 $writing_pack = $writing_pack_method->invoke(
 	$controller,
 	array(
@@ -661,6 +702,8 @@ $writing_pack = $writing_pack_method->invoke(
 		'resolved_url'  => 'https://example.com/reference',
 		'title'         => 'Reference article',
 		'content_hash'  => 'sha256-source',
+		'char_count'    => 1200,
+		'word_count'    => 180,
 		'content_trust' => 'untrusted_external_source',
 		'coverage'      => array(
 			'level'                    => 'partial',
@@ -714,7 +757,7 @@ $writing_pack = $writing_pack_method->invoke(
 			),
 		),
 	),
-	'Bounded exact source evidence for a staged workflow.'
+	str_repeat( 'This article explains a staged source workflow with concrete editorial evidence. ', 12 )
 );
 npcink_toolbox_progressive_assert(
 	'article_writing_pack.v1' === ( $writing_pack['artifact_type'] ?? '' )
@@ -730,6 +773,26 @@ npcink_toolbox_progressive_assert(
 	&& false === ( $writing_pack['direct_wordpress_write'] ?? true )
 	&& str_starts_with( (string) ( $writing_pack['content_fingerprint'] ?? '' ), 'sha256:' ),
 	'Article writing pack behavior keeps URL evidence, inferred editorial fields, Site Knowledge overlap, traceable facts, and no-generation/no-write admission.'
+);
+
+$insufficient_source_pack = $writing_pack_method->invoke(
+	$controller,
+	array( 'source_url' => 'https://example.com/navigation', 'input_mode' => 'url_reference' ),
+	array(
+		'status'       => 'ready',
+		'url_match'    => 'matched',
+		'char_count'   => 240,
+		'requested_url' => 'https://example.com/navigation',
+		'resolved_url' => 'https://example.com/navigation',
+	),
+	array(),
+	array( 'status' => 'blocked' ),
+	'Home Plugins Themes Hosting News Learn Documentation'
+);
+npcink_toolbox_progressive_assert(
+	'blocked' === ( $insufficient_source_pack['generation_admission']['status'] ?? '' )
+	&& in_array( 'source_body_evidence_insufficient', $insufficient_source_pack['generation_admission']['blocking_reasons'] ?? array(), true ),
+	'Article writing pack blocks navigation or metadata-only source evidence before draft generation.'
 );
 
 $unsupported_writing_pack_mode = $controller->editor_content_support(
@@ -786,6 +849,12 @@ $writing_pack_response = $controller->editor_content_support(
 	)
 );
 $writing_pack_response_data = $writing_pack_response instanceof WP_REST_Response ? $writing_pack_response->get_data() : $writing_pack_response;
+$url_writing_pack_inputs = array_values(
+	array_filter(
+		$npcink_toolbox_progressive_writing_pack_inputs,
+		static fn( array $input ): bool => 'url_reference' === (string) ( $input['input_mode'] ?? '' )
+	)
+);
 npcink_toolbox_progressive_assert(
 	is_array( $writing_pack_response_data )
 	&& 'article_writing_pack.v1' === ( $writing_pack_response_data['artifact_type'] ?? '' )
@@ -799,6 +868,12 @@ npcink_toolbox_progressive_assert(
 	&& 'operator_review_only_no_insert' === ( $writing_pack_response_data['final_write_path'] ?? '' )
 	&& false === ( $writing_pack_response_data['direct_wordpress_write'] ?? true ),
 	'Article writing pack route composes exact-source, Site Knowledge, hosted planning, and no-generation/no-write boundaries end to end.'
+);
+npcink_toolbox_progressive_assert(
+	! empty( $url_writing_pack_inputs )
+	&& false === strpos( (string) ( $url_writing_pack_inputs[0]['content'] ?? '' ), 'Showcase' )
+	&& str_starts_with( (string) ( $url_writing_pack_inputs[0]['content'] ?? '' ), 'This article explains' ),
+	'URL writing-pack planning receives the article body after the exact title, not reader navigation.'
 );
 
 $mixed_writing_pack_response = $controller->editor_content_support(
@@ -827,6 +902,29 @@ npcink_toolbox_progressive_assert(
 );
 
 $reviewed_pack = $writing_pack_response_data['sections']['article_writing_pack'];
+$blocked_reviewed_pack = $reviewed_pack;
+$blocked_reviewed_pack['generation_admission']['status'] = 'blocked';
+$blocked_reviewed_pack['generation_admission']['blocking_reasons'] = array( 'source_body_evidence_insufficient' );
+$blocked_draft_response = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'                => 'source_adaptation_review',
+			'input_mode'            => 'url_reference',
+			'source_stage'          => 'draft',
+			'reviewed_writing_pack' => $blocked_reviewed_pack,
+			'writing_pack_confirmation' => array(
+				'status'                   => 'confirmed_by_operator',
+				'confirmed'                => true,
+				'base_content_fingerprint' => $blocked_reviewed_pack['content_fingerprint'],
+			),
+		)
+	)
+);
+npcink_toolbox_progressive_assert(
+	is_wp_error( $blocked_draft_response )
+	&& 'npcink_toolbox_writing_pack_generation_blocked' === $blocked_draft_response->get_error_code(),
+	'Blocked writing packs cannot reach the hosted draft runtime even when a client submits confirmation.'
+);
 $unconfirmed_draft_response = $controller->editor_content_support(
 	new WP_REST_Request(
 		array(

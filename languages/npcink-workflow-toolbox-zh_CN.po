@@ -7170,6 +7170,42 @@ msgid "The draft could not be loaded into Gutenberg."
 msgstr "无法将初稿载入 Gutenberg。"
 
 #: assets/editor-content-support.js
+msgid "Article body: ready for drafting"
+msgstr "文章正文：可以起草"
+
+#: assets/editor-content-support.js
+msgid "Article body: insufficient; drafting is blocked"
+msgstr "文章正文：内容不足，已阻止起草"
+
+#: assets/editor-content-support.js
+msgid "Optional writing settings"
+msgstr "可选写作设置"
+
+#: assets/editor-content-support.js
+msgid "Writing direction is ready. Confirm it above, or open the advanced details when you need to inspect facts, overlap, rights, or structure."
+msgstr "写作方向已准备好。可直接在上方确认；需要时再展开高级详情查看事实、重叠、版权或结构。"
+
+#: assets/editor-content-support.js
+msgid "The source body is insufficient, so drafting stopped here. Try another public article URL."
+msgstr "来源正文不足，起草已在此停止。请尝试其他公开文章网址。"
+
+#: assets/editor-content-support.js
+msgid "Writing pack details (advanced)"
+msgstr "写作包详情（高级）"
+
+#: assets/editor-content-support.js
+msgid "Source body unavailable"
+msgstr "来源正文不可用"
+
+#: includes/Rest_Controller.php
+msgid "The source reader did not return enough article body text. Try another public article URL; no draft will be generated from navigation or metadata alone."
+msgstr "来源读取器没有返回足够的文章正文。请尝试其他公开文章网址；系统不会根据导航或元数据生成初稿。"
+
+#: includes/Rest_Controller.php
+msgid "This writing pack cannot generate a draft because the source body or required writing evidence is insufficient."
+msgstr "由于来源正文或必要写作证据不足，此写作包不能生成初稿。"
+
+#: assets/editor-content-support.js
 #, php-format
 msgid "Loaded %d blocks into the visible editor. Review them, then use WordPress Save draft or Publish to persist."
 msgstr "已将 %d 个区块载入当前可见编辑器。请审阅后使用 WordPress 保存草稿或发布来持久化。"

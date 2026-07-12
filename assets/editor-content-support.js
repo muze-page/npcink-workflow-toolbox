@@ -3185,6 +3185,7 @@
 				name: extraction.title || __('Exact source extraction preview', 'npcink-workflow-toolbox'),
 				detail: [
 					sprintf(__('URL match: %s', 'npcink-workflow-toolbox'), extraction.url_match || __('unavailable', 'npcink-workflow-toolbox')),
+					extraction.body_readiness === 'ready' ? __('Article body: ready for drafting', 'npcink-workflow-toolbox') : __('Article body: insufficient; drafting is blocked', 'npcink-workflow-toolbox'),
 					extraction.coverage && extraction.coverage.level ? sprintf(__('Coverage: %s (bounded preview; completeness is not guaranteed)', 'npcink-workflow-toolbox'), extraction.coverage.level) : __('Bounded preview; completeness is not guaranteed.', 'npcink-workflow-toolbox'),
 					extraction.char_count ? sprintf(__('%d characters', 'npcink-workflow-toolbox'), extraction.char_count) : '',
 					extraction.word_count ? sprintf(__('%d words', 'npcink-workflow-toolbox'), extraction.word_count) : '',
@@ -3562,10 +3563,8 @@
 				onChange: (value) => controls.onFieldChange && controls.onFieldChange(name, value),
 			});
 		};
-		return createElement(
-			'div',
-			{ className: 'npcink-toolbox-editor-support__flow-instruction' },
-			createElement(SelectControl, {
+		const advancedFields = [createElement(SelectControl, {
+			key: 'writing-pack-input-mode',
 				label: __('Writing-pack input mode', 'npcink-workflow-toolbox'),
 				value: inputMode,
 				disabled: Boolean(controls.disabled),
@@ -3575,10 +3574,9 @@
 					{ value: 'mixed', label: __('Reference URL + manual brief', 'npcink-workflow-toolbox') },
 				],
 				onChange: controls.onModeChange,
-			}),
-			showBrief ? createElement(
-				Fragment,
-				null,
+			})];
+		if (showBrief) {
+			advancedFields.push(
 				field('audience', __('Audience', 'npcink-workflow-toolbox')),
 				field('article_goal', __('Article goal', 'npcink-workflow-toolbox'), true, 2),
 				field('reader_problem', __('Reader problem', 'npcink-workflow-toolbox'), true, 2),
@@ -3588,14 +3586,24 @@
 				field('reader_promise', __('Reader promise', 'npcink-workflow-toolbox'), true, 2),
 				field('content_type', __('Content type', 'npcink-workflow-toolbox')),
 				field('outline', __('Outline headings (one per line)', 'npcink-workflow-toolbox'), true, 6),
-				field('operator_instruction', __('Additional writing guidance', 'npcink-workflow-toolbox'), true, 3),
-				createElement(CheckboxControl, {
+				field('operator_instruction', __('Additional writing guidance', 'npcink-workflow-toolbox'), true, 3)
+			);
+		}
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__flow-instruction' },
+			createElement(
+				'details',
+				{ className: 'npcink-toolbox-editor-support__writing-options' },
+				createElement('summary', null, __('Optional writing settings', 'npcink-workflow-toolbox')),
+				createElement('div', null, advancedFields)
+			),
+			controls.showConfirmation ? createElement(CheckboxControl, {
 					label: __('I reviewed the audience, focus, facts, source rights, overlap, angle, and outline in this writing pack.', 'npcink-workflow-toolbox'),
 					checked: Boolean(controls.confirmed),
 					disabled: Boolean(controls.disabled) || !controls.canConfirm,
 					onChange: controls.onConfirm,
-				})
-			) : null
+				}) : null
 		);
 	}
 
@@ -6555,15 +6563,27 @@
 				}
 				if (sections.article_writing_pack || sections.source_adaptation_review) {
 					if (sections.article_writing_pack) {
-						blocks.push(createElement('p', { key: 'writing-pack-inference-help', className: 'npcink-toolbox-editor-support__muted' }, __('Review the structured fields below. Operator values take precedence; inferred values remain suggestions until you confirm the complete writing pack.', 'npcink-workflow-toolbox')));
+						const admission = sections.article_writing_pack.generation_admission || {};
+						blocks.push(createElement('p', { key: 'writing-pack-inference-help', className: 'npcink-toolbox-editor-support__muted' }, admission.status === 'blocked'
+							? __('The source body is insufficient, so drafting stopped here. Try another public article URL.', 'npcink-workflow-toolbox')
+							: __('Writing direction is ready. Confirm it above, or open the advanced details when you need to inspect facts, overlap, rights, or structure.', 'npcink-workflow-toolbox')));
 					}
 					const groups = sections.article_writing_pack
 						? articleWritingPackGroups(sections.article_writing_pack)
 						: sourceAdaptationReviewGroups(sections.source_adaptation_review);
+					const writingPackDetails = [];
 					groups.forEach((group) => {
-						blocks.push(createElement('h4', { key: group.key + '-title' }, group.label));
-						blocks.push(renderItems(group.items, __('No review items returned.', 'npcink-workflow-toolbox')));
+						writingPackDetails.push(createElement('h4', { key: group.key + '-title' }, group.label));
+						writingPackDetails.push(renderItems(group.items, __('No review items returned.', 'npcink-workflow-toolbox')));
 					});
+					if (writingPackDetails.length) {
+						blocks.push(createElement(
+							'details',
+							{ key: 'writing-pack-advanced-details', className: 'npcink-toolbox-editor-support__writing-pack-details' },
+							createElement('summary', null, __('Writing pack details (advanced)', 'npcink-workflow-toolbox')),
+							createElement('div', null, writingPackDetails)
+						));
+					}
 					if (sections.source_adaptation_review && sections.source_adaptation_review.message) {
 						blocks.push(createElement('p', { key: 'source-adaptation-message', className: 'npcink-toolbox-editor-support__muted' }, sections.source_adaptation_review.message));
 					}
@@ -8700,8 +8720,10 @@
 		const resultTitle = rerunIntent ? formatIntentLabel(rerunIntent) : __('Content support', 'npcink-workflow-toolbox');
 		const sourceExtractionSection = result && result.sections && result.sections.source_article ? result.sections.source_article : {};
 		const currentWritingPackArtifact = result && result.sections && result.sections.article_writing_pack ? result.sections.article_writing_pack : null;
-		const sourceExtractionReady = Boolean(result && result.artifact_type === 'source_extraction_preview.v1' && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched');
+		const sourceExtractionComplete = Boolean(result && result.artifact_type === 'source_extraction_preview.v1');
+		const sourceExtractionReady = Boolean(sourceExtractionComplete && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched' && sourceExtractionSection.body_ready === true);
 		const sourceAdaptationComplete = Boolean(currentWritingPackArtifact && currentWritingPackArtifact.artifact_type === 'article_writing_pack.v1');
+		const sourceWritingPackBlocked = Boolean(sourceAdaptationComplete && currentWritingPackArtifact.generation_admission && currentWritingPackArtifact.generation_admission.status === 'blocked');
 		const sourceDraftComplete = Boolean(result && result.sections && result.sections.article_draft_preview && result.sections.article_draft_preview.artifact_type === 'article_draft_preview.v1');
 		const isContextualParagraphResult = contextualResult && rerunIntent === 'polish_notes';
 		const resultControls = {
@@ -8824,9 +8846,10 @@
 							null,
 							renderWritingPackEditor(writingPackInputMode, writingPackBrief, {
 								showBrief: writingPackInputMode !== 'url_reference' || sourceAdaptationComplete,
+								showConfirmation: sourceAdaptationComplete && !sourceWritingPackBlocked,
 								disabled: Boolean(running),
 								confirmed: writingPackConfirmed,
-								canConfirm: sourceAdaptationComplete && writingPackCanConfirm(currentWritingPackArtifact, writingPackBrief),
+								canConfirm: sourceAdaptationComplete && !sourceWritingPackBlocked && writingPackCanConfirm(currentWritingPackArtifact, writingPackBrief),
 								onModeChange: updateWritingPackInputMode,
 								onFieldChange: updateWritingPackBriefField,
 								onConfirm: setWritingPackConfirmed,
@@ -8870,29 +8893,32 @@
 										type: 'button',
 										variant: 'secondary',
 										isBusy: Boolean(running),
-										disabled: Boolean(running),
-									onClick: () => {
-										if (rerunIntent === 'source_adaptation_review') {
-											if (sourceExtractionReady) {
-												submitContentImplicitFeedback('generate_article_writing_pack', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
-												runFlow(rerunIntent, { sourceStage: 'research_plan' });
-											} else if (sourceAdaptationComplete) {
-												submitContentImplicitFeedback('regenerate_article_writing_pack', 'edited_before_accept', ['good_but_needs_human_draft']);
-												runFlow(rerunIntent, { sourceStage: 'research_plan', forceRegenerate: true });
-											} else if (writingPackInputMode === 'manual_brief') {
-												runFlow(rerunIntent, { sourceStage: 'research_plan' });
-											} else {
-												runFlow(rerunIntent, { sourceStage: 'extract' });
+										disabled: Boolean(running) || (rerunIntent === 'source_adaptation_review' && sourceExtractionComplete && !sourceExtractionReady),
+										onClick: () => {
+											if (rerunIntent === 'source_adaptation_review') {
+												if (sourceExtractionComplete && !sourceExtractionReady) {
+													return;
+												}
+												if (sourceExtractionReady) {
+													submitContentImplicitFeedback('generate_article_writing_pack', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
+													runFlow(rerunIntent, { sourceStage: 'research_plan' });
+												} else if (sourceAdaptationComplete) {
+													submitContentImplicitFeedback('regenerate_article_writing_pack', 'edited_before_accept', ['good_but_needs_human_draft']);
+													runFlow(rerunIntent, { sourceStage: 'research_plan', forceRegenerate: true });
+												} else if (writingPackInputMode === 'manual_brief') {
+													runFlow(rerunIntent, { sourceStage: 'research_plan' });
+												} else {
+													runFlow(rerunIntent, { sourceStage: 'extract' });
+												}
+												return;
 											}
-											return;
-										}
-										submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
-										runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
+											submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
+											runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
 										},
 									},
-									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionReady ? __('Generate writing pack', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-generate writing pack', 'npcink-workflow-toolbox') : (writingPackInputMode === 'manual_brief' ? __('Generate writing pack', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox')))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
+									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionComplete && !sourceExtractionReady ? __('Source body unavailable', 'npcink-workflow-toolbox') : (sourceExtractionReady ? __('Generate writing pack', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-generate writing pack', 'npcink-workflow-toolbox') : (writingPackInputMode === 'manual_brief' ? __('Generate writing pack', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
 								),
-								rerunIntent === 'source_adaptation_review' && sourceAdaptationComplete ? createElement(
+								rerunIntent === 'source_adaptation_review' && sourceAdaptationComplete && !sourceWritingPackBlocked ? createElement(
 									Button,
 									{
 										type: 'button',

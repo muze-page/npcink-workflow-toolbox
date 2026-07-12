@@ -28,6 +28,9 @@ Owned here:
   plain text. After review, one explicit `native_editor_commit` action may load
   sections only into an empty current Gutenberg body; it never saves, replaces
   an existing body, or publishes.
+  URL/mixed drafting also fails closed when the reader does not meet the small
+  documented source-body gate; operator confirmation cannot override that
+  evidence failure.
 
 Not owned here:
 

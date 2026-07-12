@@ -57,17 +57,40 @@ and wording-distinctness ratings remain separate editorial judgments.
 
 | Case | Extract status / URL match | Coverage / chars / words | Site-context useful? | Writing pack useful? | Draft grounded / distinct? | Fact or rights issue | WordPress mutated? |
 | --- | --- | --- | --- | --- | --- | --- |
-| `wordpress_developer_roundup_long` | ready / matched | body unavailable; metadata/navigation only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
-| `wordpress_developer_roundup_recent` | ready / matched | body unavailable; metadata only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
-| `wordpress_release_short` | ready / matched | body unavailable; metadata only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
+| `wordpress_developer_roundup_long` | ready / matched | model received leading navigation instead of body | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | source-body context was cut off; rights review remains required | no |
+| `wordpress_developer_roundup_recent` | ready / matched | model received leading navigation instead of body | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | source-body context was cut off; rights review remains required | no |
+| `wordpress_release_short` | ready / matched | model received leading metadata/navigation instead of body | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | source-body context was cut off; rights review remains required | no |
 
 Human draft review on 2026-07-12 rated all three generated previews
 `not_usable` as publishable target articles. They were factually conservative,
 traceable, and structurally distinct, but exact-source evidence contained only
-title/URL metadata plus navigation or an explicit body-coverage gap. All three
-therefore became verification checklists rather than useful article drafts.
+title/URL metadata plus navigation or an explicit body-coverage gap. Follow-up
+diagnosis found that Cloud Reader had returned the real body, but Toolbox sent
+only the leading 420 characters under the Chinese WordPress locale and the
+article began after a long navigation header.
+All three therefore became verification checklists rather than useful article drafts.
 The native-editor action remains unavailable for these cases because it
 requires the operator to rate the current regenerated draft `usable`.
+
+The next iteration converts that finding into a simple product rule: strip
+Reader navigation before the exact or suffix-free article-title heading, then fewer than 600
+cleaned body characters or fewer than three sentence endings blocks
+planning and drafting with `source_body_evidence_insufficient`. The UI shows
+the failure directly instead of offering another layer of review controls.
+
+The post-fix rerun on 2026-07-12 sent a locale-independent body context of up
+to 30,000 characters. All three cases then produced article-specific evidence:
+
+| Case | Traceable facts | Draft sections | Evidence improvement | WordPress mutated? |
+| --- | ---: | ---: | --- | --- |
+| `wordpress_developer_roundup_long` | 6 | 6 | WordPress 7.0 schedule, RTC architecture, PHP support, and developer API topics | no |
+| `wordpress_developer_roundup_recent` | 6 | 7 | WordPress 7.0 release, Field Guide, Gutenberg 23.2/23.3, and 7.1 testing | no |
+| `wordpress_release_short` | 7 | 6 | 6.9.2 security posture, update paths, vulnerability classes, and branch support | no |
+
+This rerun proves that article-body evidence now reaches planning and draft
+preview generation. It does not by itself mark the drafts publishable; operator
+review of usefulness, wording, rights, and source attribution remains the next
+acceptance step.
 
 ## Decision rule
 
