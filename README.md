@@ -29,7 +29,8 @@ The first version provides:
   a generic Abilities Explorer, provider picker, request log, or connector
   approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
-  on Npcink review and handoff flows: URL-reference article writing pack,
+  on Npcink review and handoff flows: URL/manual/mixed article writing pack and
+  confirmed plain-text draft preview,
   publish preflight, internal-link
   candidates, current-article contextual ALT review, image candidates, and
   article audio candidates. Generic title, summary, taxonomy/tag, outline, and

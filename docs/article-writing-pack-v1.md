@@ -1,19 +1,20 @@
 # Article Writing Pack V1
 
-Status: active contract for the URL-reference first slice.
+Status: active contract for URL, manual, mixed, review, and draft-preview stages.
 
 ## Purpose
 
-`article_writing_pack.v1` is the reviewed planning artifact that must exist
-before any future source-grounded article draft generation. It is not an
-article body, translation, workflow run, Core proposal, or WordPress write.
+`article_writing_pack.v1` is the planning artifact that must exist before an
+article draft preview can be requested. It is not an article body, translation,
+workflow run, Core proposal, durable approval record, or WordPress write.
 
-The first implemented input mode is `url_reference`: one operator-supplied
-public URL is read through Cloud exact-source extraction and compared with
-Cloud Site Knowledge. The contract is deliberately not URL-shaped. Future
-manual and mixed inputs will populate the same `source_materials` and
-`editorial_brief` fields additively instead of creating another writing-pack
-format.
+Three input modes populate the same contract:
+
+- `url_reference`: one public URL plus inferred editorial direction;
+- `manual_brief`: operator audience, goal, focus, and related fields without a
+  claimed external fact source;
+- `mixed`: exact URL evidence plus operator editorial fields, with operator
+  preferences taking precedence over inference.
 
 ## Contract
 
@@ -71,33 +72,29 @@ Every inferred editorial field carries:
 - `source`;
 - `operator_confirmed=false`.
 
-An explicit future operator value may replace an inferred preference, but it
-must not turn an unsupported claim into a verified fact. Source facts remain
+An explicit operator value may replace an inferred preference, but it must not
+turn an unsupported claim into a verified fact. Source facts remain
 grounded only in exact-source evidence; Site Knowledge remains overlap,
 terminology, tone, and internal-reference context rather than proof about the
 external source.
 
-## Current Input Boundary
+## Input Boundary
 
-Accepted now:
+Accepted:
 
-- `input_mode=url_reference`;
-- one validated public `source_url`.
+- `input_mode=url_reference` with one validated public `source_url`;
+- `input_mode=manual_brief` with audience, article goal, and at least one focus
+  point;
+- `input_mode=mixed` with the URL plus typed editorial fields.
 
-Not accepted yet:
+Not accepted:
 
-- `manual_brief`;
-- `mixed` URL plus manual field editing;
 - multiple source URLs;
 - pasted source bodies or uploads.
 
-The current editor surface does not expose a free-form brief field. Manual
-audience, priorities, and related information will enter only through the
-explicit future input modes, so URL-first behavior cannot become an accidental
-untyped manual contract.
-
-Unsupported input modes fail with a validation error instead of silently
-falling back to URL mode. Future support must be additive to this contract.
+The editor exposes typed audience, goal, reader problem, focus, angle, title,
+promise, content type, outline, and additional-guidance fields. Unsupported
+input modes fail explicitly instead of silently falling back.
 
 The legacy `source_stage=adapt` input remains accepted for compatibility and
 keeps the outer `source_adaptation_review.v1` wrapper while including the same
@@ -105,13 +102,45 @@ keeps the outer `source_adaptation_review.v1` wrapper while including the same
 `source_stage=research_plan` and receive `article_writing_pack.v1` as the
 primary outer artifact.
 
-## Article Generation Boundary
+## Review Contract
 
-V1 always returns `article_generation_allowed=false`. A future article
-generator must consume the reviewed writing pack and its fingerprint rather
-than independently rereading the URL and choosing a new direction. V1 exposes
-no article-generation, body-insertion, translation, media-import, proposal, or
-publish action.
+Draft generation requires one request-scoped `article_writing_pack_review.v1`:
+
+```json
+{
+  "artifact_type": "article_writing_pack_review.v1",
+  "status": "confirmed_by_operator",
+  "base_content_fingerprint": "sha256:...",
+  "review_fingerprint": "sha256:...",
+  "article_generation_allowed": true,
+  "authorization_scope": "single_synchronous_draft_preview_request",
+  "durable_approval_state": false,
+  "direct_wordpress_write": false
+}
+```
+
+The server rejects absent confirmation, fingerprint mismatch, unsupported input
+mode, or missing required fields. This is not `confirm_token`, Core approval,
+or a local approval store. Editing any structured field in the UI clears the
+confirmation checkbox.
+
+## Draft Preview Boundary
+
+The confirmed pack may produce `article_draft_preview.v1` with a title, excerpt,
+ordered plain-text sections, fact references, verification notes, and source
+attribution notes. The draft runtime must consume the reviewed pack and review
+fingerprint; it must not reread a URL and silently choose a different direction.
+
+The draft preview always remains:
+
+- `suggestion_only`;
+- `operator_review_required=true`;
+- `direct_wordpress_write=false`;
+- `body_insertion=false`;
+- `body_replacement=false`.
+
+The editor exposes no insert, replace, save, publish, media-import, proposal, or
+background action for this preview.
 
 ## Ownership
 

@@ -472,14 +472,19 @@ compatibility but now returns the planning artifact `article_writing_pack.v1`.
 Its default `extract` stage requests one exact-URL bounded Cloud
 `source_extraction_preview.v1` result and stops for operator verification. The
 canonical `research_plan` stage (`adapt` remains an input alias) queries related
-Cloud Site Knowledge passages and asks hosted AI for inferred audience,
-priorities, fact ledger, overlap map, distinct angle, outline, and risk review.
-The current input mode is `url_reference`; the normalized `source_materials`
-and `editorial_brief` boundaries allow later manual or mixed input without a
-second contract. Reader content remains untrusted external data and embedded
-instructions cannot change the hosted task.
-It does not fetch URLs from WordPress, return a full translation, insert or
-replace article text, import media, create a Core proposal, or publish.
+Cloud Site Knowledge passages and asks hosted AI for audience, priorities, fact
+ledger, overlap map, distinct angle, outline, and risk review. Input modes
+`url_reference`, `manual_brief`, and `mixed` populate the same normalized
+`source_materials` and `editorial_brief` boundaries. Reader content remains
+untrusted external data and embedded instructions cannot change the hosted
+task. Operator editorial preferences override inference but cannot turn
+unsupported claims into verified facts.
+
+The `draft` stage accepts only a reviewed `article_writing_pack.v1`, a matching
+base fingerprint, and explicit request-scoped operator confirmation. It returns
+`article_writing_pack_review.v1` plus `article_draft_preview.v1`. It does not
+reread the URL, store approval state, implement a confirmation token, insert or
+replace article text, import media, create a Core proposal, save, or publish.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
@@ -712,8 +717,8 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
-- one bounded URL-reference `article_writing_pack.v1` using Cloud reader
-  evidence and related Cloud Site Knowledge passages;
+- one `article_writing_pack.v1` built from URL, manual, or mixed inputs, with an
+  optional confirmed `article_draft_preview.v1` review result;
 - internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
   optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.

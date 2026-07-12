@@ -14,9 +14,11 @@ Toolbox may recommend, preview, and package reviewed handoffs. Toolbox must not
 approve Core proposals, execute final WordPress writes, create a second media
 registry, or become a prompt/model control plane.
 
-Human editors own the article text. Article Assistant is retired from the
-operator-facing and public Ability surface; the legacy route remains only as a
-compatibility path for older callers.
+Human editors own final article acceptance and WordPress persistence. Article
+Assistant is retired from the operator-facing and public Ability surface; the
+legacy route remains only as a compatibility path for older callers. The
+writing-pack flow may return a confirmed, structured plain-text draft preview,
+but it cannot insert, save, or publish that preview.
 
 ## Feedback Observation Loop
 
@@ -64,7 +66,7 @@ truth, audit truth, or final WordPress write owner.
 | Image candidates and media optimization | Editor Content Support exposes `image_candidates`; Toolbox owns image-source UX and Cloud/provider requests, then delegates review artifact projection to `npcink-abilities-toolkit/build-image-candidate-review-artifact`. Toolbox admin owns the fixed `media_optimization_v1` flow through Media Library image actions and Batch Optimize Images, with media derivative preview and Core proposal handoff. | Accepted for current phase. Crop override controls, preview-only Cloud Checks, and Core media proposal proof are implemented. Third-party plugins can reuse the Toolkit `image_candidate_review.v1` artifact before adoption planning. | Image-source candidates remain candidates; media derivative adoption remains one reviewed Core proposal, not direct media writes. |
 | Publish preflight and SEO handoff | Editor Content Support exposes `publish_preflight`, returns `pre_publish_review.v1`, and packages `seo_meta_handoff_preview.v1` for `npcink-abilities-toolkit/set-post-seo-meta`. The summary renders two lightweight readiness rows: editor readiness from existing preflight counts, and Core handoff readiness from the SEO preview. | Accepted for current phase. Browser validation created a pending Core SEO proposal from the editor, and Core review now surfaces `field_patch` values before raw JSON. The readiness rows borrow the checklist-style scan pattern without becoming publish enforcement. | Toolbox creates only a pending proposal. Approval, preflight, audit, and execution authorization stay in Core/Adapter/Abilities. The readiness rows are suggestion-only display guidance; they do not block publishing, submit proposals, approve, execute, or write WordPress fields. |
 | Operator feedback loop | Editor Content Support, image candidates, and Site Knowledge review surfaces can send fixed-label, metadata-only `cloud_agent_feedback.v1` events through the shared `/agent-feedback` route. Explicit editor feedback is hidden behind issue-report entries; useful behavior is captured from successful result actions. | Accepted as a narrow observation loop. Feedback is for Cloud eval and quality rollup only. The default editor view should not show a large always-visible rating panel. | Feedback does not mutate prompts, routers, profiles, proposals, audit truth, media, SEO fields, posts, or WordPress content. |
-| Article body generation | The retired Article Assistant route remains compatibility-only for older workbench callers. | Do not promote it as a product entry or public Ability. Use editor support or reviewed-draft handoff instead. | No Cloud article generation, no autonomous writer, no one-click long-form writing promise. |
+| Article body generation | The retired Article Assistant route remains compatibility-only. Editor Content Support may generate `article_draft_preview.v1` only from a structured, operator-confirmed `article_writing_pack.v1`. | Accepted as a narrow review-only preview, not a generic writer, product workbench, public Ability, or one-click publishing promise. | Hosted generation consumes the confirmed pack and returns plain text only. No insertion, replacement, native save, publish, durable approval state, background run, or autonomous writer. |
 
 ## Verification Evidence
 
