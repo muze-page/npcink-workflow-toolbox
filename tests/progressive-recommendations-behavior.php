@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $npcink_toolbox_progressive_cloud_calls = 0;
 $npcink_toolbox_progressive_taxonomy_inputs = array();
 $npcink_toolbox_progressive_transients = array();
+$npcink_toolbox_progressive_draft_inputs = array();
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -181,8 +182,10 @@ function apply_filters( string $hook, $value, ...$args ) {
 		);
 	}
 	if ( 'npcink_toolbox_hosted_ai_cloud_request' === $hook ) {
+		global $npcink_toolbox_progressive_draft_inputs;
 		$runtime_input = is_array( $args[1] ?? null ) ? $args[1] : array();
 		if ( 'article_draft_from_writing_pack' === (string) ( $runtime_input['intent'] ?? '' ) ) {
+			$npcink_toolbox_progressive_draft_inputs[] = $runtime_input;
 			return array(
 				'status' => 'ok',
 				'run_id' => 'writing-pack-draft-run',
@@ -895,6 +898,73 @@ npcink_toolbox_progressive_assert(
 	&& false === ( $confirmed_draft_data['sections']['article_draft_preview']['body_insertion'] ?? true )
 	&& 'operator_review_only_no_insert' === ( $confirmed_draft_data['final_write_path'] ?? '' ),
 	'Confirmed writing packs admit one synchronous structured draft preview without durable approval state, insertion, save, or publish.'
+);
+
+$feedback_draft_response = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'                => 'source_adaptation_review',
+			'input_mode'            => 'url_reference',
+			'source_stage'          => 'draft',
+			'force_regenerate'      => true,
+			'generation_variant'    => 'draft-review-feedback-test',
+			'reviewed_writing_pack' => $reviewed_pack,
+			'writing_pack_confirmation' => array(
+				'status'                   => 'confirmed_by_operator',
+				'confirmed'                => true,
+				'base_content_fingerprint' => $reviewed_pack['content_fingerprint'],
+			),
+			'draft_review_feedback' => array(
+				'status'      => 'usable_after_changes',
+				'issue_codes' => array( 'fact_accuracy', 'unknown_issue', 'site_tone' ),
+				'notes'       => '<b>Correct the version claim</b> and use a calmer opening.',
+			),
+		)
+	)
+);
+$feedback_draft_data = $feedback_draft_response instanceof WP_REST_Response ? $feedback_draft_response->get_data() : $feedback_draft_response;
+$captured_draft_input = end( $npcink_toolbox_progressive_draft_inputs );
+npcink_toolbox_progressive_assert(
+	is_array( $feedback_draft_data )
+	&& 'article_draft_review_feedback.v1' === ( $feedback_draft_data['sections']['draft_review_feedback']['artifact_type'] ?? '' )
+	&& 'usable_after_changes' === ( $feedback_draft_data['sections']['draft_review_feedback']['status'] ?? '' )
+	&& array( 'fact_accuracy', 'site_tone' ) === ( $feedback_draft_data['sections']['draft_review_feedback']['issue_codes'] ?? array() )
+	&& 'Correct the version claim and use a calmer opening.' === ( $feedback_draft_data['sections']['draft_review_feedback']['notes'] ?? '' )
+	&& false === ( $feedback_draft_data['sections']['draft_review_feedback']['durable_review_state'] ?? true )
+	&& false === ( $feedback_draft_data['sections']['draft_review_feedback']['direct_wordpress_write'] ?? true )
+	&& 'article_draft_review_feedback.v1' === ( $captured_draft_input['draft_review_feedback']['artifact_type'] ?? '' ),
+	'Draft review feedback is allowlisted, sanitized, request-scoped, forwarded for regeneration, and never becomes durable review or write state.'
+);
+
+$invalid_feedback_response = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'                => 'source_adaptation_review',
+			'input_mode'            => 'url_reference',
+			'source_stage'          => 'draft',
+			'force_regenerate'      => true,
+			'generation_variant'    => 'invalid-draft-review-feedback-test',
+			'reviewed_writing_pack' => $reviewed_pack,
+			'writing_pack_confirmation' => array(
+				'status'                   => 'confirmed_by_operator',
+				'confirmed'                => true,
+				'base_content_fingerprint' => $reviewed_pack['content_fingerprint'],
+			),
+			'draft_review_feedback' => array(
+				'status'      => 'auto_approved',
+				'issue_codes' => array( 'fact_accuracy' ),
+				'notes'       => 'This invalid status must discard the whole feedback envelope.',
+			),
+		)
+	)
+);
+$invalid_feedback_data = $invalid_feedback_response instanceof WP_REST_Response ? $invalid_feedback_response->get_data() : $invalid_feedback_response;
+$invalid_feedback_input = end( $npcink_toolbox_progressive_draft_inputs );
+npcink_toolbox_progressive_assert(
+	is_array( $invalid_feedback_data )
+	&& empty( $invalid_feedback_data['sections']['draft_review_feedback'] ?? array() )
+	&& empty( $invalid_feedback_input['draft_review_feedback'] ?? array() ),
+	'Draft regeneration discards the entire feedback envelope when its review status is not allowlisted.'
 );
 
 $legacy_adapt_response = $controller->editor_content_support(

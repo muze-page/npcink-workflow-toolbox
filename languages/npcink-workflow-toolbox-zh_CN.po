@@ -7077,3 +7077,82 @@ msgstr "第 %d 节"
 #: includes/Rest_Controller.php
 msgid "The hosted runtime did not return a structured draft preview."
 msgstr "托管运行时没有返回结构化初稿预览。"
+#: assets/editor-content-support.js
+msgid "Fact accuracy"
+msgstr "事实准确性"
+
+#: assets/editor-content-support.js
+msgid "Site tone"
+msgstr "本站调性"
+
+#: assets/editor-content-support.js
+msgid "Too similar to the source"
+msgstr "与来源过于相似"
+
+#: assets/editor-content-support.js
+msgid "Rights or attribution"
+msgstr "版权或署名"
+
+#: assets/editor-content-support.js
+msgid "Review this draft"
+msgstr "审阅这份初稿"
+
+#: assets/editor-content-support.js
+msgid "This feedback stays in the current editor session and is sent only when you request another draft. It is not saved as review history."
+msgstr "反馈仅保留在当前编辑会话中，并且只在你要求重新生成初稿时发送；不会保存为评审历史。"
+
+#: assets/editor-content-support.js
+msgid "Draft usability"
+msgstr "初稿可用性"
+
+#: assets/editor-content-support.js
+msgid "Choose a review result"
+msgstr "选择评审结果"
+
+#: assets/editor-content-support.js
+msgid "Usable"
+msgstr "可用"
+
+#: assets/editor-content-support.js
+msgid "Usable after changes"
+msgstr "修改后可用"
+
+#: assets/editor-content-support.js
+msgid "Not usable"
+msgstr "不可用"
+
+#: assets/editor-content-support.js
+msgid "Main issues"
+msgstr "主要问题"
+
+#: assets/editor-content-support.js
+msgid "Revision notes"
+msgstr "修改意见"
+
+#: assets/editor-content-support.js
+msgid "Describe what should change in the next draft."
+msgstr "说明下一版初稿需要修改什么。"
+
+#: assets/editor-content-support.js
+msgid "Regenerate from feedback"
+msgstr "按反馈重新生成"
+
+#: assets/editor-content-support.js
+msgid "Copy draft"
+msgstr "复制初稿"
+
+#: assets/editor-content-support.js
+msgid "Choose a change-needed result and add an issue or revision note first."
+msgstr "请先选择“修改后可用”或“不可用”，并填写问题或修改意见。"
+
+#: assets/editor-content-support.js
+msgid "Generating a new draft from this request-scoped feedback..."
+msgstr "正在根据本次反馈生成新初稿……"
+
+#: assets/editor-content-support.js
+msgid "Draft copied. Nothing was inserted or saved in WordPress."
+msgstr "初稿已复制；没有向 WordPress 插入或保存任何内容。"
+
+#: assets/editor-content-support.js
+msgid "The draft could not be copied."
+msgstr "无法复制初稿。"

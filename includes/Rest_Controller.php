@@ -877,6 +877,9 @@ final class Rest_Controller {
 			$context['editorial_brief'] = $this->editor_writing_pack_request_brief( $request->get_param( 'editorial_brief' ) );
 			$context['reviewed_writing_pack'] = $request->get_param( 'reviewed_writing_pack' );
 			$context['writing_pack_confirmation'] = $request->get_param( 'writing_pack_confirmation' );
+			$context['draft_review_feedback'] = 'draft' === $context['source_stage']
+				? $this->editor_draft_review_feedback_request( $request->get_param( 'draft_review_feedback' ) )
+				: array();
 			$context['user_instruction'] = (string) ( $context['editorial_brief']['operator_instruction'] ?? '' );
 		}
 			if ( 'title_suggestions' === $intent ) {
@@ -3147,6 +3150,41 @@ final class Rest_Controller {
 		return $result;
 	}
 
+	private function editor_draft_review_feedback_request( $raw ): array {
+		if ( is_string( $raw ) && '' !== trim( $raw ) ) {
+			$decoded = json_decode( $raw, true );
+			$raw = is_array( $decoded ) ? $decoded : array();
+		}
+		$raw = is_array( $raw ) ? $raw : array();
+		$status = sanitize_key( (string) ( $raw['status'] ?? '' ) );
+		if ( ! in_array( $status, array( 'usable', 'usable_after_changes', 'not_usable' ), true ) ) {
+			$status = '';
+		}
+		$allowed_issues = array( 'fact_accuracy', 'site_tone', 'structure', 'source_similarity', 'rights_attribution' );
+		$issue_codes = array();
+		foreach ( is_array( $raw['issue_codes'] ?? null ) ? $raw['issue_codes'] : array() as $issue_code ) {
+			$issue_code = sanitize_key( (string) $issue_code );
+			if ( in_array( $issue_code, $allowed_issues, true ) && ! in_array( $issue_code, $issue_codes, true ) ) {
+				$issue_codes[] = $issue_code;
+			}
+		}
+		$notes = wp_trim_words( sanitize_textarea_field( wp_strip_all_tags( (string) ( $raw['notes'] ?? '' ) ) ), 120, '' );
+		if ( '' === $status ) {
+			return array();
+		}
+
+		return array(
+			'artifact_type'              => 'article_draft_review_feedback.v1',
+			'contract_version'           => 'article_draft_review_feedback.v1',
+			'status'                     => $status,
+			'issue_codes'                => $issue_codes,
+			'notes'                      => $notes,
+			'authorization_scope'        => 'single_draft_regeneration_request',
+			'durable_review_state'       => false,
+			'direct_wordpress_write'     => false,
+		);
+	}
+
 	private function editor_writing_pack_query( array $context ): string {
 		$source_url = trim( (string) ( $context['source_url'] ?? '' ) );
 		if ( '' !== $source_url ) {
@@ -3247,7 +3285,8 @@ final class Rest_Controller {
 		if ( is_wp_error( $review ) ) {
 			return $review;
 		}
-		$pack = $review['reviewed_writing_pack'];
+		$pack                  = $review['reviewed_writing_pack'];
+		$draft_review_feedback = is_array( $context['draft_review_feedback'] ?? null ) ? $context['draft_review_feedback'] : array();
 		$public_review = $review;
 		unset( $public_review['reviewed_writing_pack'] );
 		$raw = $this->editor_support_section(
@@ -3258,13 +3297,14 @@ final class Rest_Controller {
 					'input_mode'          => (string) ( $pack['input_mode'] ?? 'manual_brief' ),
 					'writing_pack'        => $pack,
 					'writing_pack_review' => $public_review,
+					'draft_review_feedback' => $draft_review_feedback,
 					'generation_variant'  => (string) ( $context['generation_variant'] ?? '' ),
 				),
 				! empty( $context['force_regenerate'] )
 			)
 		);
 		$draft = $this->editor_article_draft_preview( $pack, $public_review, $raw );
-		unset( $context['reviewed_writing_pack'], $context['writing_pack_confirmation'] );
+		unset( $context['reviewed_writing_pack'], $context['writing_pack_confirmation'], $context['draft_review_feedback'] );
 		$result['post_context'] = $context;
 		$result['artifact_type'] = 'article_draft_preview.v1';
 		$result['contract_version'] = 'article_draft_preview.v1';
@@ -3274,6 +3314,9 @@ final class Rest_Controller {
 		$result['sections']['article_writing_pack'] = $pack;
 		$result['sections']['writing_pack_review'] = $public_review;
 		$result['sections']['article_draft_preview'] = $draft;
+		if ( ! empty( $draft_review_feedback ) ) {
+			$result['sections']['draft_review_feedback'] = $draft_review_feedback;
+		}
 		$result['write_posture'] = 'suggestion_only';
 		$result['final_write_path'] = 'operator_review_only_no_insert';
 		$result['direct_wordpress_write'] = false;

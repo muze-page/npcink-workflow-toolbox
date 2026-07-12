@@ -142,6 +142,33 @@ The draft preview always remains:
 The editor exposes no insert, replace, save, publish, media-import, proposal, or
 background action for this preview.
 
+## Request-Scoped Draft Review
+
+After a draft preview is returned, the editor may collect one lightweight
+`article_draft_review_feedback.v1` envelope:
+
+- `status`: `usable`, `usable_after_changes`, or `not_usable`;
+- `issue_codes`: a bounded subset of `fact_accuracy`, `site_tone`, `structure`,
+  `source_similarity`, and `rights_attribution`;
+- `notes`: a short operator revision instruction.
+
+The feedback exists only in the current editor session. It is sent to the
+hosted text runtime only when the operator explicitly requests another draft,
+and it may guide editorial revision but may never become factual evidence. The
+response may echo the sanitized envelope so the operator can see what informed
+the latest regeneration.
+
+The contract always keeps:
+
+- `authorization_scope=single_draft_regeneration_request`;
+- `durable_review_state=false`;
+- `direct_wordpress_write=false`.
+
+The editor may copy the plain-text preview to the clipboard. Copying does not
+insert content into Gutenberg, save the post, create a Core proposal, or
+publish anything. No review database, acceptance history, learning profile, or
+automatic regeneration loop is introduced in this version.
+
 ## Ownership
 
 - Toolbox owns the editor composition, normalization, display, and feedback.

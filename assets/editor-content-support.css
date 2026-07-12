@@ -2377,6 +2377,47 @@
 	font-size: 12px;
 }
 
+.npcink-toolbox-editor-support__draft-review {
+	display: grid;
+	gap: 10px;
+	margin-top: 16px;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.npcink-toolbox-editor-support__draft-review h4,
+.npcink-toolbox-editor-support__draft-review .components-base-control {
+	margin: 0;
+}
+
+.npcink-toolbox-editor-support__draft-review-label {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.npcink-toolbox-editor-support__draft-review-issues {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 4px 10px;
+}
+
+.npcink-toolbox-editor-support__draft-review-issues .components-base-control {
+	min-width: 0;
+}
+
+.npcink-toolbox-editor-support__draft-review-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.npcink-toolbox-editor-support__draft-review-actions .components-button {
+	min-height: 32px;
+	font-size: 12px;
+}
+
 .npcink-toolbox-editor-support__image-regenerate {
 	display: grid;
 	gap: 8px;

@@ -63,6 +63,13 @@
 			{ value: 'headings', label: __('Heading pauses', 'npcink-workflow-toolbox'), instruction: __('Focus: add clear pauses around headings.', 'npcink-workflow-toolbox') },
 		],
 	};
+	const DRAFT_REVIEW_ISSUES = [
+		{ value: 'fact_accuracy', label: __('Fact accuracy', 'npcink-workflow-toolbox') },
+		{ value: 'site_tone', label: __('Site tone', 'npcink-workflow-toolbox') },
+		{ value: 'structure', label: __('Structure', 'npcink-workflow-toolbox') },
+		{ value: 'source_similarity', label: __('Too similar to the source', 'npcink-workflow-toolbox') },
+		{ value: 'rights_attribution', label: __('Rights or attribution', 'npcink-workflow-toolbox') },
+	];
 	const imageResultCache = {};
 	const implicitAgentFeedbackSent = {};
 	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
@@ -3381,6 +3388,100 @@
 		].filter((group) => group.items.length);
 	}
 
+	function emptyDraftReviewFeedback() {
+		return { status: '', issue_codes: [], notes: '' };
+	}
+
+	function articleDraftReviewCanRegenerate(feedback) {
+		const value = feedback && typeof feedback === 'object' ? feedback : {};
+		return ['usable_after_changes', 'not_usable'].indexOf(value.status) >= 0 && (Boolean(String(value.notes || '').trim()) || (Array.isArray(value.issue_codes) && value.issue_codes.length > 0));
+	}
+
+	function articleDraftPreviewText(draft) {
+		if (!draft || typeof draft !== 'object') {
+			return '';
+		}
+		const lines = [];
+		if (draft.title) {
+			lines.push(String(draft.title).trim());
+		}
+		if (draft.excerpt) {
+			lines.push('', String(draft.excerpt).trim());
+		}
+		(Array.isArray(draft.sections) ? draft.sections : []).forEach((section) => {
+			const heading = String(section && section.heading ? section.heading : '').trim();
+			const body = String(section && section.body ? section.body : '').trim();
+			if (heading || body) {
+				lines.push('', heading, body);
+			}
+		});
+		return lines.filter((line, index) => line || index > 0).join('\n').trim();
+	}
+
+	function renderArticleDraftReview(draft, controls) {
+		if (!controls || !draft || typeof draft !== 'object') {
+			return null;
+		}
+		const feedback = controls.feedback && typeof controls.feedback === 'object' ? controls.feedback : emptyDraftReviewFeedback();
+		const issues = Array.isArray(feedback.issue_codes) ? feedback.issue_codes : [];
+		return createElement(
+			'section',
+			{ className: 'npcink-toolbox-editor-support__draft-review' },
+			createElement('h4', null, __('Review this draft', 'npcink-workflow-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('This feedback stays in the current editor session and is sent only when you request another draft. It is not saved as review history.', 'npcink-workflow-toolbox')),
+			createElement(SelectControl, {
+				label: __('Draft usability', 'npcink-workflow-toolbox'),
+				value: feedback.status || '',
+				disabled: Boolean(controls.running),
+				options: [
+					{ value: '', label: __('Choose a review result', 'npcink-workflow-toolbox') },
+					{ value: 'usable', label: __('Usable', 'npcink-workflow-toolbox') },
+					{ value: 'usable_after_changes', label: __('Usable after changes', 'npcink-workflow-toolbox') },
+					{ value: 'not_usable', label: __('Not usable', 'npcink-workflow-toolbox') },
+				],
+				onChange: (value) => controls.setStatus && controls.setStatus(value),
+			}),
+			createElement('strong', { className: 'npcink-toolbox-editor-support__draft-review-label' }, __('Main issues', 'npcink-workflow-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__draft-review-issues' },
+				DRAFT_REVIEW_ISSUES.map((issue) => createElement(CheckboxControl, {
+					key: issue.value,
+					label: issue.label,
+					checked: issues.indexOf(issue.value) >= 0,
+					disabled: Boolean(controls.running),
+					onChange: (checked) => controls.toggleIssue && controls.toggleIssue(issue.value, checked),
+				}))
+			),
+			createElement(TextareaControl, {
+				label: __('Revision notes', 'npcink-workflow-toolbox'),
+				value: feedback.notes || '',
+				rows: 3,
+				disabled: Boolean(controls.running),
+				placeholder: __('Describe what should change in the next draft.', 'npcink-workflow-toolbox'),
+				onChange: (value) => controls.setNotes && controls.setNotes(value),
+			}),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__draft-review-actions' },
+				createElement(Button, {
+					type: 'button',
+					variant: 'primary',
+					isBusy: Boolean(controls.running),
+					disabled: Boolean(controls.running) || !articleDraftReviewCanRegenerate(feedback),
+					onClick: () => controls.regenerate && controls.regenerate(),
+				}, __('Regenerate from feedback', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'secondary',
+					disabled: Boolean(controls.running),
+					onClick: () => controls.copy && controls.copy(draft),
+				}, __('Copy draft', 'npcink-workflow-toolbox'))
+			),
+			controls.status ? createElement(Notice, { status: controls.status.status || 'success', isDismissible: false }, controls.status.message) : null
+		);
+	}
+
 	function renderWritingPackEditor(inputMode, brief, options) {
 		const controls = options || {};
 		const showBrief = Boolean(controls.showBrief);
@@ -6410,6 +6511,7 @@
 						blocks.push(createElement('h4', { key: group.key + '-title' }, group.label));
 						blocks.push(renderItems(group.items, __('No draft preview items returned.', 'npcink-workflow-toolbox')));
 					});
+					blocks.push(renderArticleDraftReview(sections.article_draft_preview, metadataHandoffControls && metadataHandoffControls.draftReview));
 				}
 			}
 
@@ -6685,6 +6787,8 @@
 			const [writingPackInputMode, setWritingPackInputMode] = useState('url_reference');
 			const [writingPackBrief, setWritingPackBrief] = useState(emptyWritingPackBrief);
 			const [writingPackConfirmed, setWritingPackConfirmed] = useState(false);
+			const [draftReviewFeedback, setDraftReviewFeedback] = useState(emptyDraftReviewFeedback);
+			const [draftReviewStatus, setDraftReviewStatus] = useState(null);
 				const [titleApplyStatus, setTitleApplyStatus] = useState(null);
 				const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
 				const [slugApplyStatus, setSlugApplyStatus] = useState(null);
@@ -6961,6 +7065,9 @@
 								confirmed: true,
 								base_content_fingerprint: reviewedWritingPack.content_fingerprint || '',
 							};
+							if (runOptions.draftReviewFeedback && typeof runOptions.draftReviewFeedback === 'object') {
+								payload.draft_review_feedback = runOptions.draftReviewFeedback;
+							}
 						}
 					}
 					if (isAudioIntent(intent)) {
@@ -6983,6 +7090,8 @@
 							setWritingPackBrief(writingPackBriefFromArtifact(returnedWritingPack));
 							setWritingPackInputMode(returnedWritingPack.input_mode || writingPackInputMode);
 							setWritingPackConfirmed(false);
+							setDraftReviewFeedback(emptyDraftReviewFeedback());
+							setDraftReviewStatus(null);
 						}
 						setResult((current) => {
 							const mergedFlowResult = mergeContentSupportResult(current, flowResult, intent);
@@ -7014,6 +7123,42 @@
 				} finally {
 					setRunning('');
 				}
+			}
+
+			function updateDraftReviewStatus(status) {
+				setDraftReviewFeedback((current) => Object.assign({}, current, { status: String(status || '') }));
+				setDraftReviewStatus(null);
+			}
+
+			function toggleDraftReviewIssue(issueCode, checked) {
+				setDraftReviewFeedback((current) => {
+					const issueCodes = Array.isArray(current.issue_codes) ? current.issue_codes.slice() : [];
+					const next = checked ? issueCodes.concat(issueCodes.indexOf(issueCode) >= 0 ? [] : [issueCode]) : issueCodes.filter((item) => item !== issueCode);
+					return Object.assign({}, current, { issue_codes: next });
+				});
+				setDraftReviewStatus(null);
+			}
+
+			function updateDraftReviewNotes(notes) {
+				setDraftReviewFeedback((current) => Object.assign({}, current, { notes: String(notes || '') }));
+				setDraftReviewStatus(null);
+			}
+
+			function regenerateDraftFromReview() {
+				if (!articleDraftReviewCanRegenerate(draftReviewFeedback)) {
+					setDraftReviewStatus({ status: 'warning', message: __('Choose a change-needed result and add an issue or revision note first.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				setDraftReviewStatus({ status: 'info', message: __('Generating a new draft from this request-scoped feedback...', 'npcink-workflow-toolbox') });
+				runFlow('source_adaptation_review', { sourceStage: 'draft', forceRegenerate: true, draftReviewFeedback: draftReviewFeedback });
+			}
+
+			function copyArticleDraftPreview(draft) {
+				copyTextToClipboard(articleDraftPreviewText(draft)).then(() => {
+					setDraftReviewStatus({ status: 'success', message: __('Draft copied. Nothing was inserted or saved in WordPress.', 'npcink-workflow-toolbox') });
+				}).catch(() => {
+					setDraftReviewStatus({ status: 'error', message: __('The draft could not be copied.', 'npcink-workflow-toolbox') });
+				});
 			}
 
 			async function applyContextualAltToDraft(section, container, options) {
@@ -8515,6 +8660,16 @@
 				result: seoHandoffResult,
 				error: seoHandoffError,
 			},
+				draftReview: {
+					feedback: draftReviewFeedback,
+					status: draftReviewStatus,
+					running: Boolean(running),
+					setStatus: updateDraftReviewStatus,
+					toggleIssue: toggleDraftReviewIssue,
+					setNotes: updateDraftReviewNotes,
+					regenerate: regenerateDraftFromReview,
+					copy: copyArticleDraftPreview,
+				},
 				audioAdoption: {
 					running: audioAdoptionRunning,
 					result: audioAdoptionResult,

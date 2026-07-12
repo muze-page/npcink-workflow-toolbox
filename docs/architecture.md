@@ -485,6 +485,11 @@ base fingerprint, and explicit request-scoped operator confirmation. It returns
 `article_writing_pack_review.v1` plus `article_draft_preview.v1`. It does not
 reread the URL, store approval state, implement a confirmation token, insert or
 replace article text, import media, create a Core proposal, save, or publish.
+The returned preview may expose a lightweight human review form. A bounded
+`article_draft_review_feedback.v1` envelope can be sent only with an explicit
+regeneration request; it is sanitized editorial guidance, not factual evidence,
+durable feedback history, approval truth, or write authorization. Clipboard
+copy remains a manual operator action and does not insert into the editor.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
