@@ -455,6 +455,12 @@ Core trace, calls no Adapter execution route, writes no attachment data, and
 leaves persistence to native Save draft or Update. SEO, external-image
 adoption, and article-audio adoption stop after Core proposal creation and show
 the governance link.
+The article writing-pack draft remains a hosted suggestion artifact. After
+review, the browser may convert only its ordered sections into `core/heading`
+and `core/paragraph` blocks when the current editor body is empty. The click
+handler rechecks live block state, does not apply the generated title or
+excerpt, and does not call a REST write or native save action. Existing body
+content makes the action copy-only.
 Generic AI-plugin-style generation and diagnosis intents such as
 `article_checkup`, `title_suggestions`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `article_outline`,

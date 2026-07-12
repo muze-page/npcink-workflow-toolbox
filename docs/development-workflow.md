@@ -832,6 +832,12 @@ preview, hosted AI request budgets, or the no-write boundary:
 composer smoke:article-writing-pack-real-urls
 ```
 
+Set `NPCINK_TOOLBOX_WRITING_PACK_REVIEW_EXPORT=1` to write the three reviewed
+packs and draft previews to the ignored local file
+`build/eval/article-writing-pack-real-url-review.json` for human usefulness,
+tone, grounding, and distinctness review. The export is development-only and
+does not add Cloud result retention or WordPress state.
+
 The script uses the three public WordPress cases in
 `tests/fixtures/source-adaptation-real-url-trial.json`. For every case it
 requires exact extraction, a non-empty fact ledger whose facts carry
@@ -849,6 +855,15 @@ provider quota. Source research and confirmed draft generation each receive a
 bounded 60-second hosted-runtime and HTTP budget. Failure remains fail-closed;
 the smoke must not add retries, queues, durable approval state, insertion,
 save, media import, or publish behavior to make a remote call pass.
+
+The product's separate native-editor action is tested independently: it may
+load reviewed sections only after a present click and a live empty-body check.
+It must remain disabled for non-empty bodies and must never call Save, Update,
+Publish, Core, Adapter, or a write REST route.
+
+```bash
+composer test:article-draft-native-editor-js
+```
 
 Candidate generation remains preview-only. Static and browser checks must keep
 `candidate_quality.*`, `automation_recommendation`, and

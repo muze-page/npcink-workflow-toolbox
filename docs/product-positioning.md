@@ -151,9 +151,10 @@ writes, it belongs outside Toolbox.
 
 Default buttons should solve around-the-body work before offering article draft
 previews. The writing-pack exception is acceptable only after structured human
-review and confirmation; it returns plain-text suggestion output without an
-insert or write action. Any later governed cross-object or automated write still
-belongs outside Toolbox.
+review and confirmation. Its hosted result remains plain-text suggestion output;
+the editor may explicitly map reviewed sections into native blocks only when the
+current Gutenberg body is empty, with persistence left to normal WordPress save.
+Any later governed cross-object or automated write still belongs outside Toolbox.
 
 Media optimization is the first fixed governed media workflow. Toolbox may
 present `media_optimization_v1` through media-library single-image actions and
@@ -196,7 +197,8 @@ overlap/style signals, distinct angle, outline guidance, and risk checks.
 `source_materials` and `editorial_brief` contract. After the operator edits and
 confirms the pack, Toolbox may request one `article_draft_preview.v1` from the
 hosted text runtime. The preview is structured plain text, never a translated
-replacement body, and has no insert, save, or publish action.
+replacement body. A separate explicit native-editor action may load sections
+only into an empty current Gutenberg body; it never saves or publishes.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.

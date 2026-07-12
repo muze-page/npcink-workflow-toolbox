@@ -84,8 +84,9 @@ Target features:
   returns related Site Knowledge/vector passages, editorial fields, fact and
   overlap maps, and `article_writing_pack.v1`. After structured operator review
   and confirmation, one synchronous `article_draft_preview.v1` may be generated
-  from that reviewed pack. The preview is not inserted, saved, translated in
-  full, imported, queued, or published by Toolbox.
+  from that reviewed pack. Reviewed sections may be explicitly loaded only into
+  an empty current Gutenberg body; Toolbox never replaces existing content,
+  saves, translates in full, imports, queues, or publishes it.
 - Frontend single-post article audio playback for already adopted narration or
   audio-summary metadata. This is a playback entry only; generation, adoption,
   proposal review, media import, regeneration, and writes stay in the governed

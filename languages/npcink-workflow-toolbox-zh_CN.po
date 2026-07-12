@@ -7138,8 +7138,53 @@ msgid "Regenerate from feedback"
 msgstr "按反馈重新生成"
 
 #: assets/editor-content-support.js
+msgid "Load into empty editor"
+msgstr "载入空白编辑器"
+
+#: assets/editor-content-support.js
 msgid "Copy draft"
 msgstr "复制初稿"
+
+#: assets/editor-content-support.js
+msgid "Loading changes only the visible Gutenberg editor. Use WordPress Save draft or Publish to persist it."
+msgstr "载入只会更改当前可见的 Gutenberg 编辑器；请使用 WordPress 保存草稿或发布来持久化。"
+
+#: assets/editor-content-support.js
+msgid "The current article already has body content. Loading is blocked; copy the draft for manual review instead."
+msgstr "当前文章已有正文，载入已被阻止；请复制初稿后手动审阅。"
+
+#: assets/editor-content-support.js
+msgid "Mark the current draft as usable before loading it. Drafts that need changes must be regenerated and reviewed again."
+msgstr "载入前请将当前初稿评为可用；需要修改的初稿必须重新生成并再次审阅。"
+
+#: assets/editor-content-support.js
+msgid "Mark the current draft as usable before loading it into Gutenberg."
+msgstr "载入 Gutenberg 前，请先将当前初稿评为可用。"
+
+#: assets/editor-content-support.js
+msgid "The article body is no longer empty. Nothing was loaded; copy the draft for manual review instead."
+msgstr "文章正文已不再为空，因此没有载入任何内容；请复制初稿后手动审阅。"
+
+#: assets/editor-content-support.js
+msgid "The draft could not be loaded into Gutenberg."
+msgstr "无法将初稿载入 Gutenberg。"
+
+#: assets/editor-content-support.js
+#, php-format
+msgid "Loaded %d blocks into the visible editor. Review them, then use WordPress Save draft or Publish to persist."
+msgstr "已将 %d 个区块载入当前可见编辑器。请审阅后使用 WordPress 保存草稿或发布来持久化。"
+
+#: assets/editor-content-support.js
+msgid "Suggestion only; reviewed sections may load only into an empty editor and are never saved or published automatically"
+msgstr "仅提供建议；已审阅章节只能载入空白编辑器，且绝不会自动保存或发布"
+
+#: assets/editor-content-support.js
+msgid "Builds a reviewable writing pack from URL, manual, or mixed inputs. Reviewed sections may load only into an empty editor; nothing is saved or published automatically."
+msgstr "根据网址、手动需求或混合输入生成可审阅写作包。已审阅章节只能载入空白编辑器；不会自动保存或发布任何内容。"
+
+#: assets/editor-content-support.js
+msgid "Build or edit one writing pack, confirm it, then generate a plain-text draft preview. Reviewed sections may load only into an empty editor; nothing is saved or published automatically."
+msgstr "生成或编辑一个写作包并确认，再生成纯文本初稿预览。已审阅章节只能载入空白编辑器；不会自动保存或发布任何内容。"
 
 #: assets/editor-content-support.js
 msgid "Choose a change-needed result and add an issue or revision note first."

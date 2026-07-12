@@ -26,7 +26,8 @@ The plugin provides a WordPress admin surface and post-editor panel for:
 * one article writing pack contract for URL, typed manual, or mixed inputs,
   combining optional exact-source evidence with related site knowledge,
   structured human review, and an optional confirmed plain-text draft preview
-  that is never inserted, saved, or published automatically;
+  that may be loaded only into an empty current Gutenberg body and is never
+  saved or published automatically;
 * SEO, AEO, and GEO guidance from operator-maintained site context;
 * existing-category and existing-tag recommendations for review;
 * internal-link candidates and source-coverage notes;

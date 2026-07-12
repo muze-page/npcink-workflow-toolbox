@@ -139,8 +139,16 @@ The draft preview always remains:
 - `body_insertion=false`;
 - `body_replacement=false`.
 
-The editor exposes no insert, replace, save, publish, media-import, proposal, or
-background action for this preview.
+These flags describe the hosted result: it never inserts or replaces article
+content. After explicitly rating the current result `usable`, the editor may
+load its ordered sections as native heading and paragraph blocks only when the
+current Gutenberg body is empty. `usable_after_changes` must regenerate and be
+reviewed again. The action rechecks both review status and emptiness at click
+time, changes only visible editor memory, and never loads the generated title
+or excerpt. A non-empty body
+keeps only the copy path. Persistence still requires the author's normal
+WordPress Save draft, Update, or Publish action; there is no REST write,
+media-import, proposal, hidden save hook, or background action.
 
 ## Request-Scoped Draft Review
 
@@ -164,10 +172,10 @@ The contract always keeps:
 - `durable_review_state=false`;
 - `direct_wordpress_write=false`.
 
-The editor may copy the plain-text preview to the clipboard. Copying does not
-insert content into Gutenberg, save the post, create a Core proposal, or
-publish anything. No review database, acceptance history, learning profile, or
-automatic regeneration loop is introduced in this version.
+The editor may copy the plain-text preview to the clipboard, or explicitly load
+blocks into an empty current editor. Neither action saves the post, creates a
+Core proposal, or publishes anything. No review database, acceptance history,
+learning profile, or automatic regeneration loop is introduced in this version.
 
 ## Ownership
 

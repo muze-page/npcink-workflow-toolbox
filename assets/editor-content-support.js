@@ -5,6 +5,7 @@
 	const element = wp.element || {};
 	const components = wp.components || {};
 	const data = wp.data || {};
+	const blocks = wp.blocks || {};
 	const blockEditor = wp.blockEditor || {};
 	const editPost = wp.editPost || {};
 	const editor = wp.editor || {};
@@ -17,6 +18,7 @@
 	const useEffect = element.useEffect;
 	const useRef = element.useRef;
 	const useSelect = data.useSelect;
+	const createBlock = blocks.createBlock;
 	const __ = i18n.__ || ((value) => value);
 	const sprintf = i18n.sprintf || ((value) => value);
 	const SIDEBAR_NAME = 'npcink-content-support-sidebar';
@@ -259,7 +261,7 @@
 			actionLabel: __('Review pack / generate draft preview', 'npcink-workflow-toolbox'),
 			ownerLabel: __('Toolbox UI; Cloud reader, Site Knowledge, and hosted AI runtime', 'npcink-workflow-toolbox'),
 			runtimeLabel: __('Cloud reader when needed, Cloud Site Knowledge vectors, and hosted text runtime', 'npcink-workflow-toolbox'),
-			writePostureLabel: __('Suggestion only; no body insertion, save, media import, or publish', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('Suggestion only; reviewed sections may load only into an empty editor and are never saved or published automatically', 'npcink-workflow-toolbox'),
 			blockedLabel: __('Blocked when required brief fields, source evidence, pack confirmation, or fact and rights review are missing.', 'npcink-workflow-toolbox'),
 		},
 		{
@@ -2007,7 +2009,7 @@
 
 	function resultScopeLabel(value) {
 		if (value === 'source_adaptation_review') {
-			return __('Builds a reviewable writing pack from URL, manual, or mixed inputs. A confirmed pack may generate a plain-text draft preview, but nothing is inserted, saved, or published.', 'npcink-workflow-toolbox');
+			return __('Builds a reviewable writing pack from URL, manual, or mixed inputs. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'writing_support') {
 			return __('Finds similar published content first, then helps you decide how this draft should differ.', 'npcink-workflow-toolbox');
@@ -3418,6 +3420,59 @@
 		return lines.filter((line, index) => line || index > 0).join('\n').trim();
 	}
 
+	function articleDraftBlockContent(value) {
+		return String(value || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
+	function articleDraftPreviewBlocks(draft) {
+		if (!createBlock || !draft || typeof draft !== 'object') {
+			return [];
+		}
+		const draftBlocks = [];
+		(Array.isArray(draft.sections) ? draft.sections : []).forEach((section) => {
+			const heading = String(section && section.heading ? section.heading : '').trim();
+			const body = String(section && section.body ? section.body : '').trim();
+			if (heading) {
+				draftBlocks.push(createBlock('core/heading', { level: 2, content: articleDraftBlockContent(heading) }));
+			}
+			if (body) {
+				draftBlocks.push(createBlock('core/paragraph', { content: articleDraftBlockContent(body) }));
+			}
+		});
+		return draftBlocks;
+	}
+
+	function editorBlockHasMeaningfulContent(block) {
+		if (!block || typeof block !== 'object') {
+			return false;
+		}
+		const innerBlocks = Array.isArray(block.innerBlocks) ? block.innerBlocks : [];
+		if (innerBlocks.some(editorBlockHasMeaningfulContent)) {
+			return true;
+		}
+		if (block.name !== 'core/paragraph') {
+			return true;
+		}
+		const content = block.attributes && block.attributes.content ? String(block.attributes.content) : '';
+		return Boolean(content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim());
+	}
+
+	function currentEditorBodyIsEmpty(fallbackContent) {
+		const blockSelector = data.select && data.select('core/block-editor');
+		if (blockSelector && blockSelector.getBlocks) {
+			const currentBlocks = blockSelector.getBlocks();
+			if (Array.isArray(currentBlocks)) {
+				return !currentBlocks.some(editorBlockHasMeaningfulContent);
+			}
+		}
+		return !String(fallbackContent || '').trim();
+	}
+
 	function renderArticleDraftReview(draft, controls) {
 		if (!controls || !draft || typeof draft !== 'object') {
 			return null;
@@ -3474,10 +3529,21 @@
 				createElement(Button, {
 					type: 'button',
 					variant: 'secondary',
+					disabled: Boolean(controls.running) || !Boolean(controls.editorBodyEmpty) || !Boolean(controls.draftApproved),
+					onClick: () => controls.loadIntoEditor && controls.loadIntoEditor(draft),
+				}, __('Load into empty editor', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'secondary',
 					disabled: Boolean(controls.running),
 					onClick: () => controls.copy && controls.copy(draft),
 				}, __('Copy draft', 'npcink-workflow-toolbox'))
 			),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, controls.editorBodyEmpty
+				? (controls.draftApproved
+					? __('Loading changes only the visible Gutenberg editor. Use WordPress Save draft or Publish to persist it.', 'npcink-workflow-toolbox')
+					: __('Mark the current draft as usable before loading it. Drafts that need changes must be regenerated and reviewed again.', 'npcink-workflow-toolbox'))
+				: __('The current article already has body content. Loading is blocked; copy the draft for manual review instead.', 'npcink-workflow-toolbox')),
 			controls.status ? createElement(Notice, { status: controls.status.status || 'success', isDismissible: false }, controls.status.message) : null
 		);
 	}
@@ -7161,6 +7227,25 @@
 				});
 			}
 
+			function loadArticleDraftPreviewIntoEditor(draft) {
+				if (draftReviewFeedback.status !== 'usable') {
+					setDraftReviewStatus({ status: 'warning', message: __('Mark the current draft as usable before loading it into Gutenberg.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				if (!currentEditorBodyIsEmpty(postContext.content)) {
+					setDraftReviewStatus({ status: 'warning', message: __('The article body is no longer empty. Nothing was loaded; copy the draft for manual review instead.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				const draftBlocks = articleDraftPreviewBlocks(draft);
+				const blockDispatch = data.dispatch && data.dispatch('core/block-editor');
+				if (!draftBlocks.length || !blockDispatch || !blockDispatch.resetBlocks) {
+					setDraftReviewStatus({ status: 'error', message: __('The draft could not be loaded into Gutenberg.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				blockDispatch.resetBlocks(draftBlocks);
+				setDraftReviewStatus({ status: 'success', message: sprintf(__('Loaded %d blocks into the visible editor. Review them, then use WordPress Save draft or Publish to persist.', 'npcink-workflow-toolbox'), draftBlocks.length) });
+			}
+
 			async function applyContextualAltToDraft(section, container, options) {
 				const applyOptions = options && typeof options === 'object' ? options : {};
 				const automatic = Boolean(applyOptions.automatic);
@@ -8669,6 +8754,9 @@
 					setNotes: updateDraftReviewNotes,
 					regenerate: regenerateDraftFromReview,
 					copy: copyArticleDraftPreview,
+					loadIntoEditor: loadArticleDraftPreviewIntoEditor,
+					editorBodyEmpty: currentEditorBodyIsEmpty(postContext.content),
+					draftApproved: draftReviewFeedback.status === 'usable',
 				},
 				audioAdoption: {
 					running: audioAdoptionRunning,
@@ -8758,7 +8846,7 @@
 									setResult(null);
 								},
 							}) : null,
-							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Build or edit one writing pack, confirm it, then generate a plain-text draft preview. Nothing is inserted, saved, or published automatically.', 'npcink-workflow-toolbox'))
+							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Build or edit one writing pack, confirm it, then generate a plain-text draft preview. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.', 'npcink-workflow-toolbox'))
 						) : null,
 						rerunIntent && flowAcceptsUserInstruction(rerunIntent) ? createElement(
 							'div',

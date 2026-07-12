@@ -146,7 +146,8 @@ wp_set_current_user( $admin_id );
 $post    = npcink_toolbox_writing_pack_smoke_context_post();
 $before  = npcink_toolbox_writing_pack_smoke_snapshot( (int) $post->ID );
 $base    = npcink_toolbox_writing_pack_smoke_base_params( $post );
-$summary     = array();
+$summary      = array();
+$review_cases = array();
 $case_limit  = absint( getenv( 'NPCINK_TOOLBOX_WRITING_PACK_CASE_LIMIT' ) );
 $trial_cases = $case_limit > 0 ? array_slice( $fixture['cases'], 0, min( 3, $case_limit ) ) : $fixture['cases'];
 
@@ -263,10 +264,42 @@ try {
 			'draft_section_count' => count( $draft_preview['sections'] ),
 			'wordpress_mutated'   => false,
 		);
+		$review_cases[] = array(
+			'case'          => $case_id,
+			'source_url'    => $url,
+			'writing_pack'  => $pack,
+			'draft_preview' => $draft_preview,
+			'human_review'  => array(
+				'status'      => 'pending',
+				'issue_codes' => array(),
+				'notes'       => '',
+			),
+		);
 	}
 } catch ( Throwable $error ) {
 	npcink_toolbox_writing_pack_smoke_assert_no_write( (int) $post->ID, $before, 'failed real-URL smoke' );
 	WP_CLI::error( $error->getMessage() );
+}
+
+if ( '1' === getenv( 'NPCINK_TOOLBOX_WRITING_PACK_REVIEW_EXPORT' ) ) {
+	$review_dir  = dirname( __DIR__ ) . '/build/eval';
+	$review_path = $review_dir . '/article-writing-pack-real-url-review.json';
+	npcink_toolbox_writing_pack_smoke_assert( wp_mkdir_p( $review_dir ), 'Could not create the local writing-pack review directory.' );
+	$written = file_put_contents(
+		$review_path,
+		wp_json_encode(
+			array(
+				'artifact_type'          => 'article_writing_pack_operator_trial.v1',
+				'generated_at'           => gmdate( 'c' ),
+				'write_posture'          => 'local_eval_only',
+				'direct_wordpress_write' => false,
+				'cases'                  => $review_cases,
+			),
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+		) . "\n"
+	);
+	npcink_toolbox_writing_pack_smoke_assert( false !== $written, 'Could not write the local writing-pack review export.' );
+	WP_CLI::log( 'Local writing-pack review export: ' . $review_path );
 }
 
 WP_CLI::log( wp_json_encode( $summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );

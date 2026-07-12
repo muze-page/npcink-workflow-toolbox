@@ -25,7 +25,9 @@ Owned here:
   fetching URLs locally. `url_reference`, `manual_brief`, and `mixed` extend the
   same contract. A stateless, operator-confirmed review envelope may admit one
   synchronous `article_draft_preview.v1`; the preview remains suggestion-only
-  plain text with no insert, save, replace, or publish action.
+  plain text. After review, one explicit `native_editor_commit` action may load
+  sections only into an empty current Gutenberg body; it never saves, replaces
+  an existing body, or publishes.
 
 Not owned here:
 

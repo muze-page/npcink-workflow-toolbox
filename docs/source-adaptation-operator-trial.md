@@ -57,9 +57,17 @@ and wording-distinctness ratings remain separate editorial judgments.
 
 | Case | Extract status / URL match | Coverage / chars / words | Site-context useful? | Writing pack useful? | Draft grounded / distinct? | Fact or rights issue | WordPress mutated? |
 | --- | --- | --- | --- | --- | --- | --- |
-| `wordpress_developer_roundup_long` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 38.708s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
-| `wordpress_developer_roundup_recent` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 41.568s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
-| `wordpress_release_short` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 43.084s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
+| `wordpress_developer_roundup_long` | ready / matched | body unavailable; metadata/navigation only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
+| `wordpress_developer_roundup_recent` | ready / matched | body unavailable; metadata only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
+| `wordpress_release_short` | ready / matched | body unavailable; metadata only | no | safe but not useful for the target article; 3 traceable facts | grounded/distinct, but `not_usable`; became a verification checklist | missing source body; rights review remains required | no |
+
+Human draft review on 2026-07-12 rated all three generated previews
+`not_usable` as publishable target articles. They were factually conservative,
+traceable, and structurally distinct, but exact-source evidence contained only
+title/URL metadata plus navigation or an explicit body-coverage gap. All three
+therefore became verification checklists rather than useful article drafts.
+The native-editor action remains unavailable for these cases because it
+requires the operator to rate the current regenerated draft `usable`.
 
 ## Decision rule
 
@@ -69,4 +77,7 @@ repeated operator value plus factual and rights safety. Until then the durable
 closed loop is: exact extraction evidence -> Site Knowledge overlap/style
 context -> `article_writing_pack.v1` -> structured human review and
 request-scoped confirmation -> `article_draft_preview.v1` -> human review ->
-metadata-only quality feedback. Native insertion remains outside this gate.
+metadata-only quality feedback. After human usefulness and distinctness pass,
+one explicit empty-body-only Gutenberg load may enter the separate
+`native_editor_commit` lane; non-empty bodies remain copy-only and persistence
+still requires normal WordPress save.

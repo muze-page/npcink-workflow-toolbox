@@ -988,11 +988,22 @@
       "Revision notes": ["修改意见"],
       "Describe what should change in the next draft.": ["说明下一版初稿需要修改什么。"],
       "Regenerate from feedback": ["按反馈重新生成"],
+      "Load into empty editor": ["载入空白编辑器"],
       "Copy draft": ["复制初稿"],
+      "Loading changes only the visible Gutenberg editor. Use WordPress Save draft or Publish to persist it.": ["载入只会更改当前可见的 Gutenberg 编辑器；请使用 WordPress 保存草稿或发布来持久化。"],
+      "The current article already has body content. Loading is blocked; copy the draft for manual review instead.": ["当前文章已有正文，载入已被阻止；请复制初稿后手动审阅。"],
+      "Mark the current draft as usable before loading it. Drafts that need changes must be regenerated and reviewed again.": ["载入前请将当前初稿评为可用；需要修改的初稿必须重新生成并再次审阅。"],
+      "Mark the current draft as usable before loading it into Gutenberg.": ["载入 Gutenberg 前，请先将当前初稿评为可用。"],
       "Choose a change-needed result and add an issue or revision note first.": ["请先选择“修改后可用”或“不可用”，并填写问题或修改意见。"],
       "Generating a new draft from this request-scoped feedback...": ["正在根据本次反馈生成新初稿……"],
       "Draft copied. Nothing was inserted or saved in WordPress.": ["初稿已复制；没有向 WordPress 插入或保存任何内容。"],
-      "The draft could not be copied.": ["无法复制初稿。"]
+      "The draft could not be copied.": ["无法复制初稿。"],
+      "The article body is no longer empty. Nothing was loaded; copy the draft for manual review instead.": ["文章正文已不再为空，因此没有载入任何内容；请复制初稿后手动审阅。"],
+      "The draft could not be loaded into Gutenberg.": ["无法将初稿载入 Gutenberg。"],
+      "Loaded %d blocks into the visible editor. Review them, then use WordPress Save draft or Publish to persist.": ["已将 %d 个区块载入当前可见编辑器。请审阅后使用 WordPress 保存草稿或发布来持久化。"],
+      "Suggestion only; reviewed sections may load only into an empty editor and are never saved or published automatically": ["仅提供建议；已审阅章节只能载入空白编辑器，且绝不会自动保存或发布"],
+      "Builds a reviewable writing pack from URL, manual, or mixed inputs. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.": ["根据网址、手动需求或混合输入生成可审阅写作包。已审阅章节只能载入空白编辑器；不会自动保存或发布任何内容。"],
+      "Build or edit one writing pack, confirm it, then generate a plain-text draft preview. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.": ["生成或编辑一个写作包并确认，再生成纯文本初稿预览。已审阅章节只能载入空白编辑器；不会自动保存或发布任何内容。"]
     }
   }
 }

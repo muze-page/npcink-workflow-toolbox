@@ -32,7 +32,7 @@ final class Editor_Content_Support {
 		wp_enqueue_script(
 			'npcink-toolbox-editor-content-support',
 			NPCINK_TOOLBOX_URL . 'assets/editor-content-support.js',
-			array( 'wp-api-fetch', 'wp-block-editor', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-hooks', 'wp-i18n', 'wp-plugins' ),
+			array( 'wp-api-fetch', 'wp-block-editor', 'wp-blocks', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-hooks', 'wp-i18n', 'wp-plugins' ),
 			$script_version,
 			true
 		);
