@@ -22,6 +22,7 @@ Start from the active documents below before changing code.
 - [Cross-Repo GitHub Release Closeout](cross-repo-github-release-closeout-2026-07-08.md)
 - [Cross-Repo Third-Party AI Review Brief](cross-repo-third-party-ai-review-brief-2026-07-09.md)
 - [Platform Boundary And Development Summary](platform-boundary-and-development-summary-2026-07-12.md)
+- [Project History And Development Thinking](project-history-and-development-thinking-2026-07-12.md)
 - [Reference Learning Migration Closeout](reference-learning-migration-closeout-2026-07-08.md)
 - [Reference Plugin Evaluation Checklist](reference-plugin-evaluation-checklist.md)
 - [Reference Plugin Evaluation Record Template](reference-plugin-evaluation-record-template.md)
