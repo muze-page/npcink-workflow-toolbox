@@ -43,6 +43,19 @@ For a focused redline vocabulary check, run:
 composer test:boundary-vocabulary
 ```
 
+For the six-project ownership baseline and bounded editor migration-debt check,
+run:
+
+```bash
+composer check:platform-contracts
+```
+
+The gate validates local authority documents, the six-project matrix, Toolkit
+workflow-definition ownership, generic Adapter direction, Cloud boundaries,
+and requires legacy editor post-save execution markers to remain absent from
+production source. Missing sibling checkouts are reported as
+skipped; a present but drifting sibling contract fails the gate.
+
 This source-only gate keeps the highest-risk boundary terms discoverable:
 write-confirmation contracts, local vector/RAG ownership, old menu labels,
 local web-search ability wording, image-source versus generated-image wording,
@@ -353,27 +366,6 @@ responses, verifies success and failure receipt rendering, checks the Core
 review link, and confirms failed handoffs show operator recovery feedback. It
 does not create WordPress, Adapter, or Core records.
 
-For the post-editor SEO apply loop, run:
-
-```bash
-composer smoke:editor-seo-apply
-```
-
-This creates a temporary draft and asks Toolbox only for the `discoverability`
-SEO handoff preview. The fixture then uses Adapter/Core/Abilities to create an
-executable `npcink-abilities-toolkit/set-post-seo-meta` Core proposal and call
-Adapter `approve-and-execute`, simulating the editor's post-save execution step
-after a successful Publish or Update. The browser-side editor contract must
-queue only the bounded proposal id before that save and must not execute on the
-adoption click. Toolbox does not write SEO meta in this smoke; it proves that a
-reviewed Toolbox handoff can be carried into the governed
-Core/Adapter/Abilities path. If local Core policy
-allows execution, the smoke verifies the SEO title and description meta were
-written by the Core-approved ability. If policy blocks automatic execution, it
-verifies the Core proposal remains reviewable and the temporary post SEO meta
-is unchanged. It is intentionally outside `composer test:all` because it
-depends on a running local WordPress site with Adapter, Core, and Abilities
-active.
 
 For hosted AI no-result editor diagnostics, run:
 
@@ -707,17 +699,44 @@ browser does not call preview, Core proposal, or execute routes. It is outside
 `composer test:all` because it needs a running local WordPress site, WP-CLI
 login-cookie generation, Playwright, and a local browser.
 
-When Adapter, Cloud Addon, and Core are available, run the selected-preview
-Core proposal smoke:
+For the production preview projection and same-origin image response, run:
+
+```bash
+NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules}" composer smoke:media-derivative-preview-browser
+```
+
+This creates one temporary attachment, submits the Toolbox-owned preview route
+from a real authenticated browser, polls Cloud Addon through Toolbox, loads the
+signed WebP preview bytes, and rejects any request to the removed Adapter media
+derivative Cloud routes. It cleans up the attachment after the check.
+
+When Adapter, Toolkit, and Core are available, run the workflow-projection Core
+proposal smoke:
 
 ```bash
 composer smoke:media-derivative-batch-core
 ```
 
 This creates two temporary JPEG attachments, builds the batch plan through
-Adapter `run-read-ability`, generates selected Cloud previews, builds reviewed
-media optimization proposal payloads, and creates two Core review proposals. It
-does not approve, preflight, execute, or replace media files.
+Adapter `run-read-ability`, supplies bounded non-production derivative evidence,
+resolves the canonical Toolkit `build-media-optimization-plan`, and creates two
+Core review proposals through Adapter `proposals/from-plan`. It does not call
+the removed Adapter Cloud routes, approve, preflight, execute, or replace media
+files. Cloud transport is tested separately by Cloud Addon.
+
+To verify that the Adapter contract can be consumed by a client that is not
+implemented as OpenClaw, run:
+
+```bash
+composer smoke:generic-ai-client-contract
+```
+
+This authenticated real-host probe identifies itself as a generic contract
+consumer, reads Adapter discovery and connection metadata, and resolves the
+canonical Toolkit media workflow through Adapter `run-read-ability`. It checks
+proposal-only writes and fail-closed workflow parity. It deliberately does not
+add a second `supported_channels` entry or claim production support for a new
+channel; OpenClaw remains the priority and currently supported implementation.
 
 For downstream selected-batch execution proof outside the Toolbox workbench,
 run:

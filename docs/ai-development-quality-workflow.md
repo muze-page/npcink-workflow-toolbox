@@ -2,8 +2,8 @@
 
 Status: active workflow guardrail.
 
-This workflow is for AI-assisted changes across the related Npcink and Magick
-AI repositories:
+This workflow is for AI-assisted changes across the related Npcink
+repositories:
 
 - `npcink-abilities-toolkit`
 - `npcink-governance-core`
@@ -11,7 +11,9 @@ AI repositories:
 - `npcink-toolbox`
 - `npcink-cloud-addon`
 - `npcink-ai-cloud`
-- `magick-ai-toolbox` when that checkout is present
+
+`wp-magick-toolbox` is an independent plugin and is intentionally excluded from
+this workflow and its cross-repository quality matrix.
 
 It adds an operational layer on top of each repository's own `AGENTS.md`,
 boundary documents, and release gates. It does not replace repository-specific

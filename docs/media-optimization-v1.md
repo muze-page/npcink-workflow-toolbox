@@ -7,6 +7,9 @@ It is exposed through media-library single-image actions and the Toolbox Batch
 Optimize Images workbench.
 This is a product contract over the current media derivative, metadata review,
 Adapter recipe, and Core proposal handoff. It is not a new workflow runtime.
+The canonical reusable definition is
+`npcink-abilities-toolkit/recipes/media-optimization`; this document and the
+Toolbox button are consumer projections, not another definition registry.
 
 The current V1 has passed release smokes and one real-attachment operator trial:
 one single-image execution, one selected batch review set, governed execution,
@@ -26,11 +29,12 @@ The workflow is deterministic:
    uploads URL to an attachment candidate.
 2. Toolbox reads its stored media optimization defaults and applies one-run
    operator overrides.
-3. Adapter runs the bounded media derivative recipe through Cloud Addon and
-   Cloud, returning a short-lived derivative preview artifact.
-4. Toolbox renders the same-origin signed preview proxy and collects reviewed
+3. Toolbox executes the Toolkit request ability locally, while Cloud Addon owns
+   signed Cloud dispatch and result reads for the short-lived derivative artifact.
+4. Toolbox renders its same-origin signed preview projection and collects reviewed
    media metadata.
-5. Toolbox submits the Adapter `from_plan_request` to
+5. Toolbox asks Cloud Addon to build the optimization payload, then submits its
+   `from_plan_request` through Adapter to
    `/proposals/from-plan`, so Core creates one media optimization proposal.
 6. Core owns proposal review, approval, preflight, and audit.
 7. Adapter and Abilities own approved final execution when policy permits.
@@ -39,12 +43,12 @@ The workflow is deterministic:
 
 | Project | Owns |
 | --- | --- |
-| `npcink-toolbox` | Fixed operator UI, media selection, media optimization defaults, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
+| `npcink-workflow-toolbox` | Fixed-button projection, media selection, media optimization defaults, one-run overrides, preview rendering, reviewed metadata capture, operator feedback display, and Core proposal handoff. |
 | `npcink-governance-core` | Plan intake, proposal records, approval, preflight, and audit truth. |
-| `npcink-openclaw-adapter` | Bounded media derivative recipe dispatch, same-origin preview proxy, from-plan relay, and approved allowlisted execution. |
+| `npcink-ai-client-adapter` | Generic external AI-client projection with OpenClaw first, from-plan relay, and approved allowlisted execution after Core preflight. |
 | `npcink-cloud-addon` | Verified local-to-Cloud signing and transport. |
-| `npcink-cloud` | Hosted derivative processing, run/result state, entitlement, quota, provider routing, and runtime diagnostics. |
-| `npcink-abilities-toolkit` | Reusable media read, derivative request, optimization plan, metadata, and derivative adoption abilities. |
+| `npcink-ai-cloud` | Hosted derivative processing, run/result state, entitlement, quota, provider routing, and runtime diagnostics. |
+| `npcink-abilities-toolkit` | Canonical `media-optimization` workflow definition plus reusable media read, derivative request, optimization plan, metadata, and derivative adoption abilities. |
 
 ## Non-Goals
 

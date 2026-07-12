@@ -263,27 +263,7 @@
       "owner": "toolbox_editor_surface",
       "write_posture": "suggestion_only",
       "direct_wordpress_write": false,
-      "boundary_note": "Editor content-support suggestions only; missing contextual ALT may use the existing silent visual-evidence fallback and is applied only to editor state through the separate Core-audited route."
-    },
-    {
-      "route": "/editor/reviewed-action-intents",
-      "documented_route": "/editor/reviewed-action-intents",
-      "methods": ["POST"],
-      "scope": "cap.toolbox.workflow_suggest",
-      "owner": "toolbox_editor_publish_handoff",
-      "write_posture": "bounded_private_control_meta",
-      "direct_wordpress_write": false,
-      "boundary_note": "Lists, queues, or completes at most 20 sanitized Core proposal references for author-reviewed execution after a successful native Publish or Update; accepts no article, SEO, image, audio, media metadata, or execution-result payload and triggers no second post save."
-    },
-    {
-      "route": "/editor/contextual-alt-audit",
-      "documented_route": "/editor/contextual-alt-audit",
-      "methods": ["POST"],
-      "scope": "cap.toolbox.local_admin_consent",
-      "owner": "toolbox_editor_confirmation_audit",
-      "write_posture": "editor_state_confirmation_audit",
-      "direct_wordpress_write": false,
-      "boundary_note": "Records requested/completed/failed Core audit evidence for automatic missing-ALT or edited core/image changes applied only to current Gutenberg editor state; WordPress Save or Update remains required and media metadata stays unchanged."
+      "boundary_note": "Editor content-support suggestions only; missing contextual ALT may use the existing silent visual-evidence fallback and is applied only to Gutenberg editor state for native WordPress save, without Core audit or attachment metadata mutation."
     },
     {
       "route": "/media-derivative-handoff",
@@ -294,6 +274,56 @@
       "write_posture": "core_handoff_only",
       "direct_wordpress_write": false,
       "boundary_note": "Builds media derivative handoff only; no derivative execution or media replacement."
+    },
+    {
+      "route": "/media-derivative-preview",
+      "documented_route": "/media-derivative-preview",
+      "methods": ["POST"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "toolbox_fixed_workflow_surface",
+      "write_posture": "preview_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Executes the Toolkit read ability locally and delegates signed runtime transport to Cloud Addon; no run persistence, proposal, or media write."
+    },
+    {
+      "route": "/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)",
+      "documented_route": "/media-derivative-preview/{run_id}",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_runtime_projection",
+      "write_posture": "read_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Reads one bounded Cloud Addon status projection; Toolbox stores no run truth."
+    },
+    {
+      "route": "/media-derivative-preview/(?P<run_id>[A-Za-z0-9._:-]+)/result",
+      "documented_route": "/media-derivative-preview/{run_id}/result",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_runtime_projection",
+      "write_posture": "read_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Reads one bounded Cloud Addon result projection; no proposal creation or media write."
+    },
+    {
+      "route": "/media-derivative-optimization-payload",
+      "documented_route": "/media-derivative-optimization-payload",
+      "methods": ["POST"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "cloud_addon_payload_projection",
+      "write_posture": "core_handoff_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Delegates payload construction to Cloud Addon and returns a Core-ready from-plan request without storing or submitting a proposal."
+    },
+    {
+      "route": "/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)",
+      "documented_route": "/media-derivative-preview-artifacts/{artifact_id}",
+      "methods": ["GET"],
+      "scope": "cap.toolbox.workflow_suggest",
+      "owner": "toolbox_signed_preview_projection",
+      "write_posture": "preview_only",
+      "direct_wordpress_write": false,
+      "boundary_note": "Short-lived same-origin signed byte projection through Cloud Addon; no persistence, media registration, or write."
     },
     {
       "route": "/nightly-inspection/cloud-runtime-entitlement",

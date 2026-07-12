@@ -12,21 +12,49 @@ and repeatable AI-assisted content-support workflows.
 Npcink Workflow Toolbox turns proven AI-assisted WordPress operations and
 content-support abilities into fixed, review-only buttons for site operators.
 
-## Relationship To OpenClaw
+## Relationship To External AI Clients And OpenClaw
 
-Toolbox and OpenClaw should expose the same governed workflows through
+Toolbox and external AI clients should expose the same governed workflows through
 different operator entry points:
 
-- OpenClaw is the natural-language channel for broad requests.
+- Npcink AI Client Adapter is the generic external AI-client contract.
+- OpenClaw is the first and priority natural-language implementation.
 - Toolbox is the fixed-button product surface for the same repeatable flows.
-- Adapter publishes OpenClaw recipe guidance and forwards reviewed plans.
+- Adapter projects Toolkit-owned workflow definitions into client-specific
+  recipes and forwards reviewed plans.
 - Core owns proposal, approval, preflight, and final WordPress write truth.
 - Abilities execute the reusable WordPress read/write callbacks.
 - Cloud may provide hosted runtime processing, but not write authority.
 
-When a workflow can be used both by OpenClaw and by a Toolbox button, the
+When a workflow can be used both by an external AI client and by a Toolbox button, the
 Toolbox button should reuse the same ability ids, plan artifact shapes, and
-Core proposal handoff as the OpenClaw recipe. Toolbox must not fork the flow
+Core proposal handoff as the Adapter projection. The reusable, versioned,
+static workflow definition is owned by `npcink-abilities-toolkit`. Toolbox and
+Adapter must not fork it into a separate workflow registry, approval path,
+media registry, prompt/model control plane, or WordPress write executor.
+
+OpenClaw-specific REST names may remain for compatibility. Channels with
+materially different authentication, transport, lifecycle, or durable state
+may use separate adapter plugins instead of distorting the common contract.
+
+## Two Write Lanes
+
+The product has two intentionally different commit paths:
+
+- In the article editor, reviewed values may enter the current article's
+  visible and editable editor state. They become durable only when the author
+  uses normal WordPress Publish or Update. This `native_editor_commit` path
+  does not create a Core proposal or Core audit record.
+- In plugin-admin batch execution surfaces, selected writes become Core
+  proposals. Toolbox then stops and links or navigates to the governance
+  surface; approval and execution do not occur in Toolbox.
+
+The editor rule applies only to the current article and the native save
+transaction. Hidden post-save execution, media import or mutation,
+cross-object/global writes, external/background actions, and batches remain on
+the Core proposal path. See ADR-006 for the complete eligibility test.
+
+Toolbox must not fork the flow
 into a separate approval path, media registry, prompt/model control plane, or
 WordPress write executor.
 
@@ -62,14 +90,18 @@ semantics.
 7. Keep article text creation with human editors; keep the retired Article
    Assistant route as compatibility only, not as an operator-facing or public
    Ability surface.
-8. Treat `media_optimization_v1` as the fixed governed media optimization
+8. Let editors review one external source against Cloud Site Knowledge vectors
+   and receive `article_writing_pack.v1`: a bounded, source-grounded planning
+   artifact with inferred audience, priorities, facts, overlap, angle, and
+   outline, without generating, inserting, or publishing an article body.
+9. Treat `media_optimization_v1` as the fixed governed media optimization
    workflow, improving the Media Library image actions and Batch Optimize
    Images surface rather than creating a duplicate runner.
-9. Retain the Site Check compatibility route for bounded local review while it
+10. Retain the Site Check compatibility route for bounded local review while it
    is hidden from the default operator UI pending a clearer problem statement,
    action model, and acceptance loop. The retained route preserves its bounded
    ranked decision list without expanding Toolbox runtime or write ownership.
-10. Preserve Core and Abilities boundaries for final WordPress writes.
+11. Preserve Core and Abilities boundaries for final WordPress writes.
 
 ## Non-Goals
 
@@ -88,9 +120,13 @@ Npcink Workflow Toolbox does not own:
 | Project | Owns |
 | --- | --- |
 | `npcink-governance-core` | Governance, proposal records, approval boundaries, audit logs, and host policy. |
-| `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, and dry-run previews. |
+| `npcink-abilities-toolkit` | Reusable WordPress Abilities API definitions, schemas, callbacks, dry-run previews, and reusable versioned static workflow definitions. |
+| `npcink-ai-client-adapter` | Generic external AI-client contract and channel projections, with OpenClaw implemented first. |
 | `npcink-workflow-toolbox` | Operator tool UI, fixed workflow buttons, content discoverability context, Cloud-managed external research handoff, optional result reading, Cloud-managed image-source candidates, and Cloud-managed site knowledge actions. Runtime REST routes, ability ids, options, and hook names keep the first-version `npcink-toolbox` contract for compatibility. |
 | Provider connector plugins | Durable provider configuration, key rotation, quotas, billing, and request logs when those surfaces mature. |
+
+`wp-magick-toolbox` is an independent plugin with no migration, compatibility,
+release, or ownership relationship to `npcink-workflow-toolbox`.
 
 ## Design Rule
 
@@ -148,6 +184,14 @@ candidates rather than a separate writing-preparation button. Internal-link
 candidates are manual review aids, publish preflight is a unified advisory
 review panel, SEO metadata is only a single-post Core handoff preview, and new
 vocabulary remains Core policy-gated strong review.
+
+The editor may also expose one URL-reference article-writing-pack flow that
+combines bounded Cloud reader evidence with related Site Knowledge passages.
+It returns `article_writing_pack.v1` with inferred editorial direction,
+fact ledger, overlap/style signals, distinct angle, outline guidance, and risk
+checks only; it must not generate or insert a translated replacement body.
+The contract keeps `source_materials` and `editorial_brief` separate so future
+manual and mixed inputs can extend it without replacing the URL-first format.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.

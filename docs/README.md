@@ -21,6 +21,8 @@ Start from the active documents below before changing code.
 - [Cross-Repo Contract Reuse Stage Closeout](cross-repo-contract-reuse-stage-closeout-2026-07-08.md)
 - [Cross-Repo GitHub Release Closeout](cross-repo-github-release-closeout-2026-07-08.md)
 - [Cross-Repo Third-Party AI Review Brief](cross-repo-third-party-ai-review-brief-2026-07-09.md)
+- [Platform Boundary And Development Summary](platform-boundary-and-development-summary-2026-07-12.md)
+- [Project History And Development Thinking](project-history-and-development-thinking-2026-07-12.md)
 - [Reference Learning Migration Closeout](reference-learning-migration-closeout-2026-07-08.md)
 - [Reference Plugin Evaluation Checklist](reference-plugin-evaluation-checklist.md)
 - [Reference Plugin Evaluation Record Template](reference-plugin-evaluation-record-template.md)
@@ -29,6 +31,7 @@ Start from the active documents below before changing code.
 - [Route Boundary Table](route-boundary-table.json)
 - [Ability Boundary Table](ability-boundary-table.json)
 - [Cloud Bridge Contract Table](cloud-bridge-contract-table.json)
+- [Fixed Button Contract Table](fixed-button-contract-table.json)
 
 ## Development And Release
 
@@ -51,6 +54,9 @@ Start from the active documents below before changing code.
 - [Admin Surface Consolidation Summary](admin-surface-consolidation-summary.md)
 - [AI Plugin Overlap Boundary](ai-plugin-overlap-boundary.md)
 - [Content Support Product Readiness](content-support-product-readiness.md)
+- [Article Writing Pack V1](article-writing-pack-v1.md)
+- [External Source Adaptation Review](source-adaptation-review.md)
+- [Source Adaptation Operator Trial](source-adaptation-operator-trial.md)
 - [Fixed Button Surface](fixed-button-surface.md)
 - [Toolbox Fixed Button Reference Notes](toolbox-fixed-button-reference-notes-2026-07.md)
 - [Reference Learning Synthesis](reference-learning-synthesis-2026-07.md)
@@ -107,6 +113,9 @@ Start from the active documents below before changing code.
 - [OpenClaw Content Discoverability Handoff](openclaw-content-discoverability-handoff.md)
 - [OpenClaw SEO/GEO/AEO Acceptance Summary](openclaw-seo-geo-aeo-acceptance-summary.md)
 - [OpenClaw Batch Media Optimization Handoff](openclaw-batch-media-optimization-handoff.md)
+- [Platform Contract Convergence Baseline](platform-contract-convergence-2026-07-11.md)
+- [Editor Native Commit Migration Specification](editor-native-commit-migration-spec.md)
+- [Workflow Definition And AI Client Projection Contract](workflow-and-ai-client-projection-contract.md)
 
 ## Architecture Decisions
 
@@ -115,6 +124,9 @@ Start from the active documents below before changing code.
 - [ADR-003: Local Admin Consent Requires A Separate Write Boundary](decisions/ADR-003-local-admin-consent-boundary.md)
 - [ADR-004: Bundle Local Automation Runtime As An Isolated Module](decisions/ADR-004-bundle-local-automation-runtime-as-isolated-module.md)
 - [ADR-005: Use WP-Cron Local Preview And Cloud Batch Runtime For Nightly Automation](decisions/ADR-005-wp-cron-cloud-batch-orchestration.md)
+- [ADR-006: Separate Native Editor Commit From Governed Batch Handoff](decisions/ADR-006-native-editor-commit-and-governed-batch-handoff.md)
+- [ADR-007: Let Toolbox Own Optional Suite Navigation](decisions/ADR-007-toolbox-owned-admin-navigation.md)
+- [ADR-008: Freeze Fixed-Button And Generic AI-Client Boundaries](decisions/ADR-008-freeze-fixed-button-and-generic-client-boundary.md)
 
 ## Archived Closeouts
 

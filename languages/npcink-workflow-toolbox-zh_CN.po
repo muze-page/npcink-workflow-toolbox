@@ -6960,3 +6960,83 @@ msgstr "必须提供有效提案和受支持的编辑器操作。"
 #: includes/Rest_Controller.php
 msgid "At least one attempted proposal id is required."
 msgstr "至少需要一个已尝试的提案 ID。"
+
+#: includes/Admin_Page.php
+msgid "Npcink AI Overview"
+msgstr "Npcink AI 概览"
+
+#: includes/Admin_Page.php
+msgid "Installed Npcink WordPress tools and their independent administration surfaces."
+msgstr "已安装的 Npcink WordPress 工具及其独立管理界面。"
+
+#: includes/Admin_Page.php
+msgid "Installed Surfaces"
+msgstr "已安装界面"
+
+#: includes/Admin_Page.php
+msgid "Core"
+msgstr "治理核心"
+
+#: includes/Admin_Page.php
+msgid "Adapter"
+msgstr "渠道适配器"
+
+#: includes/Admin_Page.php
+msgid "Abilities"
+msgstr "原子能力"
+
+#: includes/Admin_Page.php
+msgid "Workflow Toolbox"
+msgstr "流程工具箱"
+
+#: includes/Admin_Page.php
+msgid "Cloud Addon"
+msgstr "云端扩展"
+
+#: includes/Admin_Page.php
+msgid "Review proposals, approval decisions, commit preflight, audit, and client access tokens."
+msgstr "查看提案、审批决策、提交预检、审计和客户端访问令牌。"
+
+#: includes/Admin_Page.php
+msgid "Connect OpenClaw and compatible AI clients through the Adapter surface."
+msgstr "通过渠道适配器连接 OpenClaw 和兼容的 AI 客户端。"
+
+#: includes/Admin_Page.php
+msgid "Inspect WordPress Abilities API packages and bounded ability controls."
+msgstr "检查 WordPress Abilities API 能力包和受限能力控件。"
+
+#: includes/Admin_Page.php
+msgid "Open fixed review-only tools, site checks, and governed handoff suggestions."
+msgstr "打开固定的仅审阅工具、站点检查和受治理的交接建议。"
+
+#: includes/Admin_Page.php
+msgid "Connect this site to Npcink Cloud and inspect connector status."
+msgstr "将此站点连接到 Npcink Cloud 并查看连接器状态。"
+
+#: includes/Admin_Page.php
+msgid "Not installed"
+msgstr "未安装"
+
+#: includes/Admin_Page.php
+msgid "You do not have permission to manage Npcink AI."
+msgstr "你没有管理 Npcink AI 的权限。"
+
+#: includes/Rest_Controller.php
+msgid "This version supports article writing packs generated from one public reference URL only."
+msgstr "当前版本仅支持根据一个公开参考文章 URL 生成文章写作包。"
+
+#: includes/Rest_Controller.php
+msgid "Enter one valid public article URL."
+msgstr "请输入一个有效的公开文章 URL。"
+
+#: includes/Rest_Controller.php
+msgid "Use a public HTTP or HTTPS article URL without credentials, localhost, or private network addresses."
+msgstr "请使用不含凭据、localhost 或私有网络地址的公开 HTTP 或 HTTPS 文章 URL。"
+
+#: includes/Rest_Controller.php
+msgid "Cloud returned no readable source excerpt. Verify the URL or try a public article page."
+msgstr "Cloud 没有返回可读的来源摘录。请核对 URL，或改用公开文章页面。"
+
+#: includes/Rest_Controller.php
+msgid "Cloud search returned a different article URL on the same site. Verify the source URL before continuing."
+msgstr "Cloud 搜索返回了同一站点中的另一篇文章 URL。继续前请核对来源 URL。"

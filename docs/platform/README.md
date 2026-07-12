@@ -30,9 +30,20 @@ a way that can drift from the owner repository.
 | --- | --- | --- |
 | Proposal lifecycle, approval policy, commit preflight, audit, app keys, operation classification | `npcink-governance-core` | A summary and link to Core contracts. |
 | WordPress ability ids, schemas, dry-run previews, host-approved callbacks, reusable static workflow definitions | `npcink-abilities-toolkit` | Reuse guidance and migration criteria. |
-| Channel adapter entry, OpenClaw projections of Toolkit-owned workflow definitions, signed client handoff, execution profiles | `npcink-ai-client-adapter` | Channel placement and handoff guidance. |
+| Generic external AI-client entry, OpenClaw-first projections of Toolkit-owned workflow definitions, signed client handoff, execution profiles | `npcink-ai-client-adapter` | Channel placement and handoff guidance. |
 | Operator UI, fixed buttons, suggestion artifacts, Core-ready plans, cross-repo quality gates | `npcink-workflow-toolbox` | Full local product-surface guidance. |
 | Cloud Base URL/API key settings, signed transport, entitlement and runtime detail reads | `npcink-cloud-addon` | Shallow transport ownership and handoff guidance. |
+
+## WordPress Admin Navigation Ownership
+
+`npcink-workflow-toolbox` is the sole owner of the optional top-level
+`Npcink AI` menu (`npcink-ai`) and its installed-surface Overview. This is
+navigation composition only, not a platform authority transfer.
+
+Core, Adapter, Abilities Toolkit, and Cloud Addon remain independently
+installable. While Toolbox is active they attach their own pages beneath the
+Toolbox-owned parent. Without Toolbox they expose their own native WordPress
+Tools or Settings entry and must not create a replacement suite Overview.
 
 ## Platform Boundaries
 
@@ -54,6 +65,7 @@ a way that can drift from the owner repository.
 
 Start here before multi-repository design or implementation:
 
+- [ADR-007: Let Toolbox Own Optional Suite Navigation](../decisions/ADR-007-toolbox-owned-admin-navigation.md)
 - [Cross-Repo Platform Governance History - 2026-07-08](cross-repo-platform-governance-history-2026-07-08.md)
 - [Feature Ownership And Plugin Boundary](../feature-ownership-and-plugin-boundary.md)
 - [Cross-Repo Boundary Matrix](../cross-repo-boundary-matrix.md)
@@ -116,6 +128,21 @@ Keep in the owner repository:
 - Cloud Addon credential and signed transport details;
 - Cloud hosted runtime, entitlement, provider, Site Knowledge, queue, and
   billing contracts.
+
+## Entry Parity And Write-Lane Rule
+
+Toolkit owns each reusable, versioned static workflow definition. Toolbox may
+project it as a fixed button and Adapter may project it into OpenClaw or another
+external AI client, but neither projection owns a workflow registry.
+
+For writes, apply ADR-006 before the four Core operation classifications. A
+reviewed value in the current article that is persisted only by native
+WordPress Publish or Update is `native_editor_commit` and never enters Core.
+Plugin-admin batches, external clients, background work, cross-object writes,
+media mutation, and hidden post-save execution remain Core-proposal paths.
+
+`wp-magick-toolbox` is independent of `npcink-workflow-toolbox` and is not part
+of this platform authority map or its release matrix.
 
 ## Cleanup Rule For Existing Core Docs
 

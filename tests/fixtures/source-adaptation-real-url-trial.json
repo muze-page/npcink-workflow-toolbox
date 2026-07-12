@@ -1,0 +1,28 @@
+{
+  "contract_version": "source_adaptation_real_url_trial.v1",
+  "network_policy": "manual_or_pre_release_only",
+  "write_posture": "suggestion_only",
+  "cases": [
+    {
+      "id": "wordpress_developer_roundup_long",
+      "url": "https://developer.wordpress.org/news/2026/04/whats-new-for-developers-april-2026/",
+      "expected_host": "developer.wordpress.org",
+      "source_shape": "long_roundup",
+      "rights_posture": "public_official_source_manual_review_required"
+    },
+    {
+      "id": "wordpress_developer_roundup_recent",
+      "url": "https://developer.wordpress.org/news/2026/06/whats-new-for-developers-june-2026/",
+      "expected_host": "developer.wordpress.org",
+      "source_shape": "long_roundup",
+      "rights_posture": "public_official_source_manual_review_required"
+    },
+    {
+      "id": "wordpress_release_short",
+      "url": "https://wordpress.org/news/2026/03/wordpress-6-9-2-release/",
+      "expected_host": "wordpress.org",
+      "source_shape": "short_release_notice",
+      "rights_posture": "public_official_source_manual_review_required"
+    }
+  ]
+}

@@ -3824,7 +3824,7 @@
 			preview.appendChild(image);
 			preview.appendChild(el('figcaption', '', 'Same-origin signed preview proxy. This is not a public Cloud URL or a WordPress media write.'));
 			result.appendChild(preview);
-			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Preview is served through Adapter and Cloud Addon with local authorization.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Preview is served through Toolbox and Cloud Addon with local authorization.'));
 		} else {
 			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
 		}
@@ -4486,17 +4486,17 @@
 	async function waitForMediaDerivativeResult(runId) {
 		let lastStatus = '';
 		for (let attempt = 0; attempt < 30; attempt += 1) {
-			const statusPayload = await getJson(config.adapterRestUrl, 'media-derivative-runs/' + encodeURIComponent(runId));
+			const statusPayload = await getJson(config.restUrl, 'media-derivative-preview/' + encodeURIComponent(runId));
 			lastStatus = cloudStatus(statusPayload);
 			if (lastStatus === 'failed' || lastStatus === 'error') {
 				throw statusPayload;
 			}
 			if (lastStatus === 'succeeded' || lastStatus === 'complete' || lastStatus === 'completed') {
-				return getJson(config.adapterRestUrl, 'media-derivative-runs/' + encodeURIComponent(runId) + '/result');
+				return getJson(config.restUrl, 'media-derivative-preview/' + encodeURIComponent(runId) + '/result');
 			}
 			await sleep(1500);
 		}
-		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Adapter.' };
+		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Toolbox.' };
 	}
 
 	async function createMediaDerivativePreview(input, mediaDetails, previewOnly) {
@@ -4504,10 +4504,10 @@
 			throw { message: 'Select an image attachment before generating a preview.' };
 		}
 
-		const createPayload = await postJson(config.adapterRestUrl, 'media-derivative-runs', { input });
+		const createPayload = await postJson(config.restUrl, 'media-derivative-preview', { input });
 		const runId = createPayload.run_id || (createPayload.cloud_run && createPayload.cloud_run.run_id) || '';
 		if (!runId) {
-			throw { message: 'Adapter did not return a Cloud run id.' };
+			throw { message: 'Toolbox did not return a Cloud run id.' };
 		}
 
 		const resultPayload = await waitForMediaDerivativeResult(runId);
@@ -4552,7 +4552,7 @@
 		if (hasReviewedMediaDetails(mediaDetails)) {
 			proposalRequest.media_details_input = mediaDetails;
 		}
-		const proposalEnvelope = await postJson(config.adapterRestUrl, 'media-derivative-proposal-payload', proposalRequest);
+		const proposalEnvelope = await postJson(config.restUrl, 'media-derivative-optimization-payload', proposalRequest);
 
 		return {
 			abilityInput: input,
@@ -4569,8 +4569,8 @@
 	}
 
 	async function runMediaDerivative(form) {
-		if (!config.adapterRestUrl) {
-			throw { message: 'Npcink Adapter REST URL is unavailable.' };
+		if (!config.restUrl) {
+			throw { message: 'Npcink Toolbox REST URL is unavailable.' };
 		}
 
 		const input = mediaDerivativeInput(form);

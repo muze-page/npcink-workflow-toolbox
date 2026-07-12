@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $npcink_toolbox_progressive_cloud_calls = 0;
 $npcink_toolbox_progressive_taxonomy_inputs = array();
+$npcink_toolbox_progressive_transients = array();
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -104,8 +105,101 @@ function sanitize_title( $value ): string {
 	return trim( preg_replace( '/[^a-z0-9]+/', '-', $value ) ?? '', '-' );
 }
 
-function esc_url_raw( $value ): string {
+function esc_url_raw( $value, $protocols = null ): string {
 	return trim( (string) $value );
+}
+
+function wp_parse_url( string $url, int $component = -1 ) {
+	return -1 === $component ? parse_url( $url ) : parse_url( $url, $component );
+}
+
+function get_transient( string $key ) {
+	global $npcink_toolbox_progressive_transients;
+	return $npcink_toolbox_progressive_transients[ $key ] ?? false;
+}
+
+function set_transient( string $key, $value, int $expiration = 0 ): bool {
+	global $npcink_toolbox_progressive_transients;
+	$npcink_toolbox_progressive_transients[ $key ] = $value;
+	return true;
+}
+
+function get_option( string $key, $default = false ) {
+	return $default;
+}
+
+function apply_filters( string $hook, $value, ...$args ) {
+	if ( in_array( $hook, array( 'npcink_toolbox_web_search_runtime_payload', 'npcink_toolbox_site_knowledge_runtime_payload', 'npcink_toolbox_hosted_ai_runtime_payload', 'npcink_toolbox_cloud_data_classification' ), true ) ) {
+		return $value;
+	}
+	if ( 'npcink_toolbox_web_search_cloud_request' === $hook ) {
+		$runtime_input = is_array( $args[1] ?? null ) ? $args[1] : array();
+		$source_url = (string) ( $runtime_input['source_url'] ?? '' );
+		return array(
+			'status' => 'ok',
+			'run_id' => 'writing-pack-source-run',
+			'data'   => array(
+				'result' => array(
+					'artifact_type'    => 'source_extraction_preview',
+					'contract_version' => 'source_extraction_preview.v1',
+					'output_contract'  => 'source_extraction_preview.v1',
+					'status'           => 'ready',
+					'intent'           => 'source_extraction_preview',
+					'requested_url'    => $source_url,
+					'resolved_url'     => $source_url,
+					'url_match'        => 'matched',
+					'title'            => 'Exact source article',
+					'content_hash'     => 'sha256-exact-source',
+					'content_trust'    => 'untrusted_external_source',
+					'prompt_injection_review_required' => true,
+					'coverage'         => array( 'level' => 'partial', 'reader_bounded' => true, 'complete_capture_claimed' => false ),
+					'results'          => array(
+						array(
+							'title'          => 'Exact source article',
+							'url'            => $source_url,
+							'reader_excerpt' => 'Bounded evidence about a staged source workflow.',
+							'reader_status'  => 'ready',
+						),
+					),
+				),
+			),
+		);
+	}
+	if ( 'npcink_toolbox_site_knowledge_cloud_request' === $hook ) {
+		return array(
+			'status' => 'ok',
+			'run_id' => 'writing-pack-knowledge-run',
+			'data'   => array(
+				'result' => array(
+					'status'  => 'ready',
+					'intent'  => 'writing_support_plan',
+					'results' => array(
+						array( 'post_id' => 88, 'title' => 'Existing site article', 'url' => 'https://example.test/existing', 'score' => 0.82 ),
+					),
+				),
+			),
+		);
+	}
+	if ( 'npcink_toolbox_hosted_ai_cloud_request' === $hook ) {
+		return array(
+			'status' => 'ok',
+			'run_id' => 'writing-pack-ai-run',
+			'data'   => array(
+				'result' => array(
+					'status'      => 'ready',
+					'output_json' => array(
+						'editorial_direction' => array( 'audience' => 'WordPress site operators', 'article_goal' => 'Plan a distinct article.', 'reader_problem' => 'Source use lacks review.', 'focus_points' => array( 'Evidence', 'Distinct angle' ) ),
+						'research_basis' => array( 'source_summary' => array( 'A staged workflow.' ), 'fact_ledger' => array( array( 'claim' => 'The source describes stages.', 'evidence_basis' => 'reader_excerpt', 'verification_status' => 'source_supported' ) ) ),
+						'site_adaptation' => array( 'overlap_map' => array( 'Governance basics already exist.' ), 'site_style_signals' => array( 'Use operational language.' ), 'unique_angle' => 'Focus on the pre-generation review gate.' ),
+						'writing_plan' => array( 'title_directions' => array( 'From evidence to writing pack' ), 'reader_promise' => 'A safer planning path.', 'content_type' => 'tutorial', 'outline' => array( 'Verify', 'Compare', 'Review' ) ),
+						'risk_review' => array( 'rights_risks' => array( 'Confirm quotation rights.' ), 'similarity_risks' => array( 'Do not mirror structure.' ) ),
+					),
+				),
+			),
+		);
+	}
+
+	return $value;
 }
 
 function wp_strip_all_tags( $value ): string {
@@ -274,6 +368,15 @@ function npcink_cloud_addon_runtime_client() {
 	global $npcink_toolbox_progressive_cloud_calls;
 	++$npcink_toolbox_progressive_cloud_calls;
 	return null;
+}
+
+if ( ! class_exists( 'Npcink_Toolbox\\Plugin' ) ) {
+	class Npcink_Toolbox_Progressive_Plugin_Stub {
+		public const OPTION_NAME         = 'npcink_toolbox_settings';
+		public const CONTEXT_OPTION_NAME = 'npcink_toolbox_content_context';
+		public const MEDIA_OPTION_NAME   = 'npcink_toolbox_media_settings';
+	}
+	class_alias( Npcink_Toolbox_Progressive_Plugin_Stub::class, 'Npcink_Toolbox\\Plugin' );
 }
 
 require_once dirname( __DIR__ ) . '/includes/Settings.php';
@@ -515,4 +618,151 @@ npcink_toolbox_progressive_assert(
 npcink_toolbox_progressive_assert(
 	array( 'taxonomy_terms', 'featured_media' ) === array_values( array_slice( $preflight_targets, 0, 2 ) ),
 	'Progressive preflight candidates keep a stable local review order for the active draft context.'
+);
+
+$writing_pack_method = new ReflectionMethod( Npcink_Toolbox\Rest_Controller::class, 'editor_article_writing_pack' );
+$writing_pack_method->setAccessible( true );
+$writing_pack = $writing_pack_method->invoke(
+	$controller,
+	array(
+		'source_url'      => 'https://example.com/reference',
+		'input_mode'      => 'url_reference',
+		'user_instruction' => '',
+	),
+	array(
+		'status'        => 'ready',
+		'url_match'     => 'matched',
+		'requested_url' => 'https://example.com/reference',
+		'resolved_url'  => 'https://example.com/reference',
+		'title'         => 'Reference article',
+		'content_hash'  => 'sha256-source',
+		'content_trust' => 'untrusted_external_source',
+		'coverage'      => array(
+			'level'                    => 'partial',
+			'reader_bounded'           => true,
+			'complete_capture_claimed' => false,
+		),
+	),
+	array(
+		'results' => array(
+			array(
+				'post_id' => 88,
+				'title'   => 'Existing site article',
+				'url'     => 'https://example.test/existing',
+				'score'   => 0.82,
+			),
+		),
+	),
+	array(
+		'status'      => 'ready',
+		'output_json' => array(
+			'editorial_direction' => array(
+				'audience'       => 'WordPress site operators',
+				'article_goal'   => 'Help operators decide how to use source evidence safely.',
+				'reader_problem' => 'External references are easy to copy without adapting.',
+				'focus_points'   => array( 'Exact evidence', 'Distinct site angle' ),
+			),
+			'research_basis' => array(
+				'source_summary' => array( 'The source describes a bounded workflow.' ),
+				'fact_ledger'    => array(
+					array(
+						'claim'               => 'The source uses a staged workflow.',
+						'evidence_basis'      => 'bounded_reader_excerpt',
+						'verification_status' => 'source_supported',
+					),
+				),
+			),
+			'site_adaptation' => array(
+				'overlap_map'        => array( 'Existing article covers governance basics.' ),
+				'site_style_signals' => array( 'Use concise operational language.' ),
+				'unique_angle'       => 'Focus on the review gate before generation.',
+			),
+			'writing_plan' => array(
+				'title_directions' => array( 'From source evidence to a reviewed writing pack' ),
+				'reader_promise'   => 'A safer article-planning path.',
+				'content_type'     => 'tutorial',
+				'outline'          => array( 'Verify source', 'Compare site coverage', 'Review the pack' ),
+			),
+			'risk_review' => array(
+				'rights_risks'     => array( 'Confirm quotation and image rights.' ),
+				'similarity_risks' => array( 'Do not mirror the source structure.' ),
+			),
+		),
+	),
+	'Bounded exact source evidence for a staged workflow.'
+);
+npcink_toolbox_progressive_assert(
+	'article_writing_pack.v1' === ( $writing_pack['artifact_type'] ?? '' )
+	&& 'url_reference' === ( $writing_pack['input_mode'] ?? '' )
+	&& false === ( $writing_pack['inputs']['editorial_brief']['audience']['operator_confirmed'] ?? true )
+	&& false === ( $writing_pack['inputs']['editorial_brief']['focus_points']['operator_confirmed'] ?? true )
+	&& 'WordPress site operators' === ( $writing_pack['inputs']['editorial_brief']['audience']['value'] ?? '' )
+	&& 'source_supported' === ( $writing_pack['research_basis']['fact_ledger'][0]['verification_status'] ?? '' )
+	&& 88 === ( $writing_pack['site_adaptation']['related_articles'][0]['post_id'] ?? 0 )
+	&& false === ( $writing_pack['generation_admission']['article_generation_allowed'] ?? true )
+	&& empty( $writing_pack['generation_admission']['missing_required_fields'] )
+	&& 'suggestion_only' === ( $writing_pack['write_posture'] ?? '' )
+	&& false === ( $writing_pack['direct_wordpress_write'] ?? true )
+	&& str_starts_with( (string) ( $writing_pack['content_fingerprint'] ?? '' ), 'sha256:' ),
+	'Article writing pack behavior keeps URL evidence, inferred editorial fields, Site Knowledge overlap, traceable facts, and no-generation/no-write admission.'
+);
+
+$unsupported_writing_pack_mode = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'     => 'source_adaptation_review',
+			'input_mode' => 'manual_brief',
+		)
+	)
+);
+npcink_toolbox_progressive_assert(
+	is_wp_error( $unsupported_writing_pack_mode )
+	&& 'npcink_toolbox_writing_pack_input_mode_not_supported' === $unsupported_writing_pack_mode->get_error_code(),
+	'Article writing pack rejects unsupported manual input mode instead of silently falling back to URL mode.'
+);
+
+$writing_pack_response = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'       => 'source_adaptation_review',
+			'input_mode'   => 'url_reference',
+			'source_stage' => 'research_plan',
+			'source_url'   => 'https://example.com/reference',
+			'user_instruction' => 'This must be ignored until a typed manual input mode exists.',
+		)
+	)
+);
+$writing_pack_response_data = $writing_pack_response instanceof WP_REST_Response ? $writing_pack_response->get_data() : $writing_pack_response;
+npcink_toolbox_progressive_assert(
+	is_array( $writing_pack_response_data )
+	&& 'article_writing_pack.v1' === ( $writing_pack_response_data['artifact_type'] ?? '' )
+	&& 'url_reference' === ( $writing_pack_response_data['input_mode'] ?? '' )
+	&& 'source_extraction_preview.v1' === ( $writing_pack_response_data['sections']['source_article']['output_contract'] ?? '' )
+	&& 'Existing site article' === ( $writing_pack_response_data['sections']['article_writing_pack']['site_adaptation']['related_articles'][0]['title'] ?? '' )
+	&& 'WordPress site operators' === ( $writing_pack_response_data['sections']['article_writing_pack']['inputs']['editorial_brief']['audience']['value'] ?? '' )
+	&& '' === ( $writing_pack_response_data['sections']['article_writing_pack']['inputs']['editorial_brief']['operator_instruction']['value'] ?? 'unexpected' )
+	&& false === ( $writing_pack_response_data['sections']['article_writing_pack']['inputs']['source_materials'][0]['operator_confirmed'] ?? true )
+	&& false === ( $writing_pack_response_data['sections']['article_writing_pack']['generation_admission']['article_generation_allowed'] ?? true )
+	&& 'operator_review_only_no_insert' === ( $writing_pack_response_data['final_write_path'] ?? '' )
+	&& false === ( $writing_pack_response_data['direct_wordpress_write'] ?? true ),
+	'Article writing pack route composes exact-source, Site Knowledge, hosted planning, and no-generation/no-write boundaries end to end.'
+);
+
+$legacy_adapt_response = $controller->editor_content_support(
+	new WP_REST_Request(
+		array(
+			'intent'       => 'source_adaptation_review',
+			'input_mode'   => 'url_reference',
+			'source_stage' => 'adapt',
+			'source_url'   => 'https://example.com/reference',
+		)
+	)
+);
+$legacy_adapt_data = $legacy_adapt_response instanceof WP_REST_Response ? $legacy_adapt_response->get_data() : $legacy_adapt_response;
+npcink_toolbox_progressive_assert(
+	is_array( $legacy_adapt_data )
+	&& 'source_adaptation_review.v1' === ( $legacy_adapt_data['artifact_type'] ?? '' )
+	&& 'article_writing_pack.v1' === ( $legacy_adapt_data['primary_artifact_type'] ?? '' )
+	&& 'article_writing_pack.v1' === ( $legacy_adapt_data['sections']['article_writing_pack']['artifact_type'] ?? '' ),
+	'Legacy adapt stage preserves its outer artifact while adding the canonical article writing pack.'
 );

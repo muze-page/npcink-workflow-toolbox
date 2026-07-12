@@ -72,8 +72,8 @@ search engines. Therefore the evidence order is:
 
 For the editor flow, AI vision is a silent, non-blocking fallback. Existing ALT
 is never overwritten, and missing `core/image` ALT is applied only to the
-in-memory Gutenberg draft after Core local-consent audit; native WordPress Save
-or Update persists it.
+in-memory Gutenberg draft as Native Commit state, without a Core proposal or
+audit; native WordPress Save or Update persists it.
 
 For the backend media-library flow, visual confirmation is explicit because the
 result targets attachment-global metadata and may affect every occurrence of

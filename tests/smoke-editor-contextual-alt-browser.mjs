@@ -169,14 +169,12 @@ if (existsSync(chrome)) {
 let browser = null;
 let page = null;
 let loginHelper = null;
-const auditEventIds = [];
 try {
 	browser = await chromium.launch(browserOptions);
 	const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1800 } });
 	page = await context.newPage();
 	const requests = [];
 	const contextualResponses = [];
-	const confirmationResponses = [];
 	page.on('request', (request) => {
 		if (request.url().includes('/wp-json/')) {
 			requests.push({ url: request.url(), body: request.postData() || '' });
@@ -192,19 +190,6 @@ try {
 			} catch (error) {
 				// The explicit response assertions below report malformed payloads.
 			}
-		}
-		if (!response.url().includes('/wp-json/npcink-toolbox/v1/editor/contextual-alt-audit')) {
-			return;
-		}
-		try {
-			const payload = await response.json();
-			confirmationResponses.push(payload);
-			const eventId = payload && payload.audit ? String(payload.audit.event_id || '') : '';
-			if (eventId) {
-				auditEventIds.push(eventId);
-			}
-		} catch (error) {
-			// The explicit response assertions below report malformed payloads.
 		}
 	});
 
@@ -251,27 +236,14 @@ try {
 	assert((contextualRequests[0].body.match(new RegExp(String(fixture.attachmentId), 'g')) || []).length >= 2, 'The request preserves both occurrences of the reused attachment.');
 	assert(!requests.some((request) => /proposal|approve-and-execute|cloud/i.test(request.url)), 'The preview calls no Core proposal, execution, or Cloud route.');
 
-	await page.waitForSelector('text=/automatically applied to the current editor|自动应用到当前编辑器/', { timeout: 30000 });
-	await waitForCount(() => confirmationResponses.length, 2);
-	assert(confirmationResponses.every((response) => response && response.decision === 'editor_confirmed' && response.auto_accepted === true), 'Requested and completed receipts are automatically accepted as editor-confirmed records.');
-	assert(confirmationResponses.every((response) => response && response.apply_mode === 'automatic_missing_alt'), 'Core receipts distinguish automatic missing-ALT application from optional manual edits.');
-	assert(confirmationResponses.every((response) => response && response.proposal_created === false && response.direct_wordpress_write === false), 'Editor confirmation receipts create no proposal and perform no server-side WordPress write.');
-	assert(auditEventIds.length === 2, 'Governance Core returns requested and completed audit event ids.');
-	const phpAuditIds = auditEventIds.map((eventId) => `'${eventId.replace(/[^a-z0-9-]/gi, '')}'`).join(',');
-	const auditRows = JSON.parse(wpCli(['eval', `global $wpdb; $rows = array(); foreach (array(${phpAuditIds}) as $event_id) { $row = $wpdb->get_row($wpdb->prepare("SELECT event_name, metadata_json FROM {$wpdb->prefix}npcink_governance_core_audit_log WHERE event_id = %s", $event_id), ARRAY_A); if ($row) { $row['metadata'] = json_decode((string) $row['metadata_json'], true); unset($row['metadata_json']); $rows[] = $row; } } echo wp_json_encode($rows);`]));
-	assert(auditRows.length === 2 && auditRows.some((row) => row.event_name === 'local_admin_consent.requested') && auditRows.some((row) => row.event_name === 'local_admin_consent.completed'), 'Core persists the linked requested and completed local-consent events.');
-	assert(auditRows.every((row) => row.metadata.apply_mode === 'automatic_missing_alt'), 'Core audit stores the automatic missing-ALT apply mode.');
-	assert(auditRows.every((row) => JSON.stringify(row.metadata.reviewed_items.map((item) => item.final_alt)) === JSON.stringify([values[0]])), 'Core audit preserves the exact Unicode ALT value automatically applied to the missing occurrence.');
-	assert(auditRows.every((row) => row.metadata.reviewed_items.every((item) => item.generation_basis === 'article_context')), 'Core audit records article context as the basis when silent vision fallback is unnecessary.');
-	assert(auditRows.every((row) => row.metadata.reviewed_items.every((item) => /^[a-f0-9]{64}$/.test(item.context_fingerprint))), 'Every Core audit item keeps its required article-context fingerprint.');
+	await page.waitForSelector('text=/applied to the current editor|已应用到当前编辑器/', { timeout: 30000 });
 	const appliedAltValues = await page.evaluate(() => window.wp.data.select('core/block-editor').getBlocks()
 		.filter((block) => block.name === 'core/image')
 		.map((block) => String(block.attributes.alt || '')));
 	assert(appliedAltValues.length === 2 && appliedAltValues[0] === values[0] && appliedAltValues[1] === fixture.existingAlt, 'Automatic apply fills the missing occurrence and preserves the existing human ALT on the reused image.');
 	const editorDirty = await page.evaluate(() => Boolean(window.wp.data.select('core/editor').isEditedPostDirty()));
 	assert(editorDirty, 'Automatic missing-ALT application marks the Gutenberg post dirty for the native Save or Update action.');
-	const confirmationRequests = requests.filter((request) => request.url.includes('/wp-json/npcink-toolbox/v1/editor/contextual-alt-audit'));
-	assert(confirmationRequests.length === 2 && confirmationRequests.every((request) => request.body.includes('"apply_mode":"automatic_missing_alt"')) && confirmationRequests.some((request) => request.body.includes('"stage":"requested"')) && confirmationRequests.some((request) => request.body.includes('"stage":"completed"')), 'Browser sends linked requested and completed automatic-apply audit calls.');
+	assert(!requests.some((request) => /reviewed-action-intents|contextual-alt-audit|approve-and-execute/.test(request.url)), 'Native editor ALT apply sends no Core audit or hidden execution request.');
 	const editedApplyButton = page.locator('button').filter({ hasText: /Apply edited ALT changes|应用编辑后的 ALT/ });
 	assert(await editedApplyButton.count() === 1, 'Manual apply remains optional for later ALT edits instead of blocking the automatic path.');
 	assert(!requests.some((request) => /\/wp-json\/wp\/v2\/(posts|media)\//.test(request.url) && request.body), 'The apply action does not save the post or mutate media through wp/v2.');
@@ -290,16 +262,6 @@ try {
 } finally {
 	if (loginHelper) {
 		loginHelper.cleanup();
-	}
-	if (auditEventIds.length) {
-		try {
-			const safeIds = auditEventIds.filter((eventId) => /^[a-z0-9-]{8,64}$/i.test(eventId));
-			const phpIds = safeIds.map((eventId) => `'${eventId}'`).join(',');
-			wpCli(['eval', `global $wpdb; foreach (array(${phpIds}) as $event_id) { $wpdb->delete($wpdb->prefix . 'npcink_governance_core_audit_log', array('event_id' => $event_id), array('%s')); }`]);
-			pass(`Cleaned ${safeIds.length} contextual ALT Core audit event(s).`);
-		} catch (error) {
-			console.error(`WARN: Could not clean contextual ALT Core audit events. ${error.message || error}`);
-		}
 	}
 	try {
 		wpCli(['post', 'delete', String(postId), '--force']);
