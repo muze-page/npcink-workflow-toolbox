@@ -820,7 +820,35 @@ Media ALT/Caption Quality Preview Gate:
 - run `composer smoke:media-alt-caption-trial` when local real attachments are
   available;
 - run `composer smoke:media-alt-caption-browser` after UI label or button
-  changes.
+changes.
+
+## Real URL Article Writing-Pack Smoke
+
+Run the explicit network-dependent writing-pack gate after changes to exact URL
+extraction, source adaptation, fact-ledger normalization, confirmation, draft
+preview, hosted AI request budgets, or the no-write boundary:
+
+```bash
+composer smoke:article-writing-pack-real-urls
+```
+
+The script uses the three public WordPress cases in
+`tests/fixtures/source-adaptation-real-url-trial.json`. For every case it
+requires exact extraction, a non-empty fact ledger whose facts carry
+`evidence_basis` and `verification_status`, rejection before request-scoped
+operator confirmation, and a structured `article_draft_preview.v1` after
+confirmation. It snapshots an existing post plus media, taxonomy, post, and
+attachment counts after every stage and performs no fixture creation or
+content write. Both structured writing stages use low reasoning effort so they
+stay bounded under the hosted provider budget without reducing the writing-pack
+or draft-preview output ceilings.
+
+This gate is intentionally outside `composer test:all`: it depends on a
+running local WordPress site, connected Cloud runtime, live public URLs, and
+provider quota. Source research and confirmed draft generation each receive a
+bounded 60-second hosted-runtime and HTTP budget. Failure remains fail-closed;
+the smoke must not add retries, queues, durable approval state, insertion,
+save, media import, or publish behavior to make a remote call pass.
 
 Candidate generation remains preview-only. Static and browser checks must keep
 `candidate_quality.*`, `automation_recommendation`, and

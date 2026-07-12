@@ -4146,6 +4146,11 @@ final class Provider_Client {
 		$writing_pack_review = is_array( $input['writing_pack_review'] ?? null ) ? $this->sanitize_payload( $input['writing_pack_review'] ) : array();
 		$editorial_brief = is_array( $input['editorial_brief'] ?? null ) ? $this->sanitize_payload( $input['editorial_brief'] ) : array();
 		$is_fast_summary        = 'summary_suggestions' === $intent && 'fast_brief' === $summary_generation_mode;
+		$is_long_form_writing_support = in_array(
+			$intent,
+			array( 'source_adaptation_review', 'article_draft_from_writing_pack' ),
+			true
+		) || ( 'summary_suggestions' === $intent && 'full_context' === $summary_generation_mode );
 		$content                = 'summary_suggestions' === $intent
 			? $this->hosted_ai_summary_source_content_for_mode( $raw_content, $summary_generation_mode, $summary_vector_context )
 			: wp_trim_words( wp_strip_all_tags( $raw_content ), 420, '' );
@@ -4213,14 +4218,15 @@ final class Provider_Client {
 				'params'           => array(
 					'temperature' => 'summary_suggestions' === $intent || 'audio_summary_script' === $intent ? 0.45 : 0.2,
 					'max_tokens'  => $is_fast_summary ? 260 : ( 'summary_suggestions' === $intent ? 450 : ( 'audio_summary_script' === $intent ? 900 : ( 'source_adaptation_review' === $intent ? 1400 : ( 'article_draft_from_writing_pack' === $intent ? 3200 : 650 ) ) ) ),
+					'thinking'    => $is_long_form_writing_support ? array( 'budget' => 'low' ) : array(),
 				),
 				'quality_contract' => $quality_contract,
 			),
 			'data_classification' => 'public_site_content',
 			'storage_mode'        => 'result_only',
 			'retention_ttl'       => 86400,
-			'timeout_seconds'     => $is_fast_summary ? 12 : ( 'article_draft_from_writing_pack' === $intent || ( 'summary_suggestions' === $intent && 'full_context' === $summary_generation_mode ) ? 60 : 30 ),
-			'http_timeout_seconds' => $is_fast_summary ? 12 : ( 'article_draft_from_writing_pack' === $intent || ( 'summary_suggestions' === $intent && 'full_context' === $summary_generation_mode ) ? 60 : 30 ),
+			'timeout_seconds'     => $is_fast_summary ? 12 : ( $is_long_form_writing_support ? 60 : 30 ),
+			'http_timeout_seconds' => $is_fast_summary ? 12 : ( $is_long_form_writing_support ? 60 : 30 ),
 			'connect_timeout_seconds' => self::HTTP_CONNECT_TIMEOUT,
 			'retry_max'           => 0,
 			'policy'              => array(

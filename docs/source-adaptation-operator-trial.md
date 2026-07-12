@@ -9,6 +9,27 @@ writing-pack review, and confirmed draft-preview stages from the post editor and
 record one row per source. Do not save, insert, import media, or publish during
 this trial.
 
+The repeatable pre-release gate is:
+
+```bash
+composer smoke:article-writing-pack-real-urls
+```
+
+It runs all three public fixtures through exact extraction, writing-pack
+research, unconfirmed-draft rejection, and confirmed draft preview. It reads an
+existing local post only as editor context, compares title, excerpt, body,
+status, modification time, featured media, taxonomy terms, post counts, and
+attachment counts after every stage, and fails if any WordPress state changes.
+The command deliberately bypasses hosted result caches for research and draft
+generation. It therefore requires a running local WordPress site, connected
+Cloud Addon/runtime, external network access, and available provider quota.
+
+`source_adaptation_review` and `article_draft_from_writing_pack` use low
+reasoning effort plus the same bounded 60-second hosted-runtime and HTTP
+request budget. This is a synchronous pre-release gate, not a queue or
+background runtime. A timeout must remain a visible failed/blocked result and
+must never relax the confirmation or no-write boundary.
+
 ## Required observations
 
 | Metric | How to record | Admission target |
@@ -30,11 +51,15 @@ this trial.
 
 ## Trial record
 
+Automated live-runtime acceptance completed on 2026-07-12 with the default
+1400-token writing-pack and 3200-token draft-preview ceilings. Human usefulness
+and wording-distinctness ratings remain separate editorial judgments.
+
 | Case | Extract status / URL match | Coverage / chars / words | Site-context useful? | Writing pack useful? | Draft grounded / distinct? | Fact or rights issue | WordPress mutated? |
 | --- | --- | --- | --- | --- | --- | --- |
-| `wordpress_developer_roundup_long` | pending | pending | pending | pending | pending | pending | must be no |
-| `wordpress_developer_roundup_recent` | pending | pending | pending | pending | pending | pending | must be no |
-| `wordpress_release_short` | pending | pending | pending | pending | pending | pending | must be no |
+| `wordpress_developer_roundup_long` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 38.708s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
+| `wordpress_developer_roundup_recent` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 41.568s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
+| `wordpress_release_short` | ready / matched | bounded contract; size not logged | pending human rating | contract pass in 43.084s; 3 traceable facts | structure gate pass; 5 sections; semantic grounding/distinctness pending | none detected automatically; rights review remains required | no |
 
 ## Decision rule
 
