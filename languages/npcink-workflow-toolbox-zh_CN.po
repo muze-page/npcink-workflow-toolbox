@@ -7138,6 +7138,38 @@ msgid "Regenerate from feedback"
 msgstr "按反馈重新生成"
 
 #: assets/editor-content-support.js
+msgid "Create WordPress draft through Core"
+msgstr "通过 Core 创建 WordPress 草稿"
+
+#: assets/editor-content-support.js
+msgid "Submitted to Core review"
+msgstr "已提交 Core 审核"
+
+#: assets/editor-content-support.js
+msgid "A usable draft title and body are required before Core review."
+msgstr "提交 Core 审核前，需要可用的初稿标题和正文。"
+
+#: assets/editor-content-support.js
+msgid "Core did not return a proposal id for this WordPress draft."
+msgstr "Core 没有返回这篇 WordPress 草稿的提案编号。"
+
+#: assets/editor-content-support.js
+msgid "Core review creates a new WordPress post with status draft only. Toolbox does not approve, execute, or publish it."
+msgstr "Core 审核只会创建状态为草稿的新 WordPress 文章；Toolbox 不批准、不执行，也不发布。"
+
+#: assets/editor-content-support.js
+msgid "The WordPress draft could not be submitted to Core review."
+msgstr "无法将 WordPress 草稿提交到 Core 审核。"
+
+#: assets/editor-content-support.js
+msgid "Mark the current draft as usable before submitting it to Core review."
+msgstr "提交 Core 审核前，请先将当前初稿评为可用。"
+
+#: assets/editor-content-support.js
+msgid "The draft proposal is ready in Core. Approve and execute it there to create the WordPress draft; publishing remains manual."
+msgstr "草稿提案已进入 Core；请在那里批准并执行以创建 WordPress 草稿，发布仍需人工完成。"
+
+#: assets/editor-content-support.js
 msgid "Load into empty editor"
 msgstr "载入空白编辑器"
 

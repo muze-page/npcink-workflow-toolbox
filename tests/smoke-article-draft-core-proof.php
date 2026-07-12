@@ -13,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit( 1 );
 }
 
-$toolbox_article_core_smoke_proposal_ids = array();
+$GLOBALS['toolbox_article_core_smoke_proposal_ids'] = array();
+$GLOBALS['toolbox_article_core_smoke_post_title']   = '';
 
 function toolbox_article_core_smoke_pass( string $message ): void {
 	echo "PASS: {$message}\n";
@@ -25,6 +26,7 @@ function toolbox_article_core_smoke_info( string $message ): void {
 
 function toolbox_article_core_smoke_fail( string $message ): void {
 	fwrite( STDERR, "FAIL: {$message}\n" );
+	toolbox_article_core_smoke_purge_post_fixture();
 	toolbox_article_core_smoke_purge_governance_records();
 	exit( 1 );
 }
@@ -50,9 +52,7 @@ function toolbox_article_core_smoke_admin_user_id(): int {
 }
 
 function toolbox_article_core_smoke_track_rest_fixture( string $method, string $route, $data ): void {
-	global $toolbox_article_core_smoke_proposal_ids;
-
-	if ( 'POST' !== strtoupper( $method ) || '/npcink-governance-core/v1/proposals/from-plan' !== $route || ! is_array( $data ) ) {
+	if ( 'POST' !== strtoupper( $method ) || ! in_array( $route, array( '/npcink-governance-core/v1/proposals/from-plan', '/npcink-openclaw-adapter/v1/proposals/from-plan' ), true ) || ! is_array( $data ) ) {
 		return;
 	}
 
@@ -63,8 +63,34 @@ function toolbox_article_core_smoke_track_rest_fixture( string $method, string $
 
 		$proposal_id = trim( (string) ( $proposal['proposal_id'] ?? '' ) );
 		if ( '' !== $proposal_id ) {
-			$toolbox_article_core_smoke_proposal_ids[ $proposal_id ] = true;
+			$GLOBALS['toolbox_article_core_smoke_proposal_ids'][ $proposal_id ] = true;
 		}
+	}
+}
+
+function toolbox_article_core_smoke_should_execute(): bool {
+	$value = getenv( 'NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_EXECUTE' );
+
+	return is_string( $value ) && in_array( strtolower( trim( $value ) ), array( '1', 'true', 'yes' ), true );
+}
+
+function toolbox_article_core_smoke_purge_post_fixture(): void {
+	$title = (string) ( $GLOBALS['toolbox_article_core_smoke_post_title'] ?? '' );
+	if ( '' === $title ) {
+		return;
+	}
+
+	$post_ids = get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'any',
+			'title'          => $title,
+			'fields'         => 'ids',
+			'posts_per_page' => 5,
+		)
+	);
+	foreach ( $post_ids as $post_id ) {
+		wp_delete_post( absint( $post_id ), true );
 	}
 }
 
@@ -78,13 +104,13 @@ function toolbox_article_core_smoke_should_purge_governance_records(): bool {
 }
 
 function toolbox_article_core_smoke_purge_governance_records(): void {
-	global $wpdb, $toolbox_article_core_smoke_proposal_ids;
+	global $wpdb;
 
 	if ( ! toolbox_article_core_smoke_should_purge_governance_records() ) {
 		return;
 	}
 
-	$proposal_ids = array_keys( $toolbox_article_core_smoke_proposal_ids );
+	$proposal_ids = array_keys( (array) ( $GLOBALS['toolbox_article_core_smoke_proposal_ids'] ?? array() ) );
 	if ( empty( $proposal_ids ) ) {
 		return;
 	}
@@ -143,17 +169,17 @@ function toolbox_article_core_smoke_post_title_count( string $title ): int {
 }
 
 toolbox_article_core_smoke_assert( class_exists( 'WP_REST_Request' ) && function_exists( 'rest_do_request' ), 'WordPress REST dispatch is available.' );
-toolbox_article_core_smoke_assert( function_exists( 'npcink_abilities_toolkit_get_registered' ), 'Npcink Abilities Toolkit registry is available.' );
+toolbox_article_core_smoke_assert( class_exists( 'WP_Abilities_Registry' ), 'WordPress Abilities registry is available.' );
 
-$definitions = npcink_abilities_toolkit_get_registered();
-$definitions = is_array( $definitions ) ? $definitions : array();
+$registry = WP_Abilities_Registry::get_instance();
 foreach ( array( 'npcink-toolbox/build-article-write-plan', 'npcink-abilities-toolkit/create-draft' ) as $ability_id ) {
-	toolbox_article_core_smoke_assert( isset( $definitions[ $ability_id ] ) && is_array( $definitions[ $ability_id ] ), "{$ability_id} is registered." );
+	toolbox_article_core_smoke_assert( null !== $registry->get_registered( $ability_id ), "{$ability_id} is registered." );
 }
 
 $run_id   = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : uniqid( 'article_core_', true );
 $title    = 'Toolbox Core Article Draft Smoke ' . substr( md5( $run_id ), 0, 8 );
-$content  = "This reviewed draft is used only for the local Toolbox/Core smoke test.\n\nIt should become a Core pending proposal for a draft post, not a direct WordPress post.";
+$GLOBALS['toolbox_article_core_smoke_post_title'] = $title;
+$content  = "## Governed draft smoke\n\nThis reviewed draft is used only for the local Toolbox/Core smoke test.\n\nIt should become a Core pending proposal for a draft post, not a direct WordPress post.";
 $plan_input = array(
 	'title'            => $title,
 	'topic'            => 'Toolbox Core article draft handoff smoke',
@@ -179,23 +205,21 @@ $input  = is_array( $action['input'] ?? null ) ? $action['input'] : array();
 toolbox_article_core_smoke_assert( 'npcink-abilities-toolkit/create-draft' === (string) ( $action['target_ability_id'] ?? '' ), 'Toolbox write action targets the governed create-draft ability.' );
 toolbox_article_core_smoke_assert( 'host_governed_create_draft' === (string) ( $action['recipe_step'] ?? '' ), 'Toolbox write action marks the host-governed recipe step.' );
 toolbox_article_core_smoke_assert( 'draft' === (string) ( $input['status'] ?? '' ), 'Toolbox write action is draft-only.' );
+toolbox_article_core_smoke_assert( 'markdown' === (string) ( $input['content_format'] ?? '' ), 'Toolbox declares the reviewed section payload as markdown for safe WordPress conversion.' );
 toolbox_article_core_smoke_assert( true === (bool) ( $input['dry_run'] ?? false ) && false === (bool) ( $input['commit'] ?? true ), 'Toolbox write action input is dry-run and non-commit.' );
 toolbox_article_core_smoke_assert( true === (bool) ( $action['proposal_ready'] ?? false ), 'Toolbox write action is proposal-ready for the reviewed draft.' );
 
 $created = toolbox_article_core_smoke_rest(
 	'POST',
-	'/npcink-governance-core/v1/proposals/from-plan',
+	'/npcink-openclaw-adapter/v1/proposals/from-plan',
 	array(
 		'plan_ability_id' => 'npcink-toolbox/build-article-write-plan',
 		'plan'            => $plan,
 		'plan_input'      => $plan_input,
-		'caller'          => array(
-			'source' => 'tests/smoke-article-draft-core-proof.php:' . $run_id,
-		),
 	)
 );
 
-toolbox_article_core_smoke_assert( 'npcink-toolbox/build-article-write-plan' === (string) ( $created['plan_ability_id'] ?? '' ), 'Core response records the Toolbox planning ability.' );
+toolbox_article_core_smoke_assert( 'npcink-toolbox/build-article-write-plan' === (string) ( $created['plan_ability_id'] ?? '' ), 'Adapter/Core response records the Toolbox planning ability.' );
 toolbox_article_core_smoke_assert( 1 === (int) ( $created['proposal_count'] ?? 0 ), 'Core creates one proposal from the article plan.' );
 toolbox_article_core_smoke_assert( false === (bool) ( $created['commit_execution'] ?? true ), 'Core from-plan intake remains non-commit.' );
 
@@ -216,6 +240,40 @@ toolbox_article_core_smoke_assert( true === (bool) ( $proposal_input['dry_run'] 
 
 $after_count = toolbox_article_core_smoke_post_title_count( $title );
 toolbox_article_core_smoke_assert( $before_count === $after_count, 'No WordPress post is created during Toolbox/Core proposal intake.' );
+
+if ( toolbox_article_core_smoke_should_execute() ) {
+	$proposal_id = sanitize_text_field( (string) ( $proposal['proposal_id'] ?? '' ) );
+	toolbox_article_core_smoke_assert( '' !== $proposal_id, 'Core returns a proposal id for explicit Adapter execution.' );
+	$executed = toolbox_article_core_smoke_rest(
+		'POST',
+		'/npcink-openclaw-adapter/v1/proposals/' . rawurlencode( $proposal_id ) . '/approve-and-execute',
+		array(
+			'intent' => 'commit',
+			'note'   => 'Local Toolbox article draft smoke approval.',
+		)
+	);
+	$execution_record = is_array( $executed['execution_record'] ?? null ) ? $executed['execution_record'] : ( is_array( $executed['execution'] ?? null ) ? $executed['execution'] : array() );
+	toolbox_article_core_smoke_assert( 'succeeded' === (string) ( $execution_record['status'] ?? '' ), 'Adapter approve-and-execute succeeds after Core approval and preflight.' );
+
+	$post_ids = get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'any',
+			'title'          => $title,
+			'fields'         => 'ids',
+			'posts_per_page' => 5,
+		)
+	);
+	toolbox_article_core_smoke_assert( 1 === count( $post_ids ), 'Approved governed execution creates exactly one WordPress post.' );
+	$created_post = get_post( absint( $post_ids[0] ?? 0 ) );
+	toolbox_article_core_smoke_assert( $created_post instanceof WP_Post && 'draft' === $created_post->post_status, 'Governed execution creates status draft, never publish.' );
+	toolbox_article_core_smoke_assert( false !== strpos( (string) $created_post->post_content, '<h2>Governed draft smoke</h2>' ), 'Markdown sections are converted to WordPress-safe HTML.' );
+
+	toolbox_article_core_smoke_purge_post_fixture();
+	toolbox_article_core_smoke_assert( $before_count === toolbox_article_core_smoke_post_title_count( $title ), 'Created draft fixture is removed after readback.' );
+} else {
+	toolbox_article_core_smoke_info( 'Set NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_EXECUTE=1 to approve, execute, verify draft status, and clean up the post fixture.' );
+}
 
 toolbox_article_core_smoke_purge_governance_records();
 echo "Toolbox article draft Core handoff smoke passed.\n";

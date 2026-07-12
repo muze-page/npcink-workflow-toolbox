@@ -28,6 +28,11 @@ Owned here:
   plain text. After review, one explicit `native_editor_commit` action may load
   sections only into an empty current Gutenberg body; it never saves, replaces
   an existing body, or publishes.
+  After a preview is rated `usable`, a separate explicit governed action may
+  reuse `npcink-toolbox/build-article-write-plan` and submit the plan through
+  Adapter to Core. Toolbox then stops at the proposal receipt and Core link; it
+  does not approve, execute, poll-to-execute, save, or publish. Approved
+  Toolkit execution creates only a WordPress `draft` for later human review.
   URL/mixed drafting also fails closed when the reader does not meet the small
   documented source-body gate; operator confirmation cannot override that
   evidence failure.

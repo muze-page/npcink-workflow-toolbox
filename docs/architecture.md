@@ -230,11 +230,19 @@ not registered as a public Toolbox ability.
 `npcink-toolbox/build-article-write-plan` assembles a Core-ready
 `article_write_plan` for a reviewed draft and leaves proposal creation,
 approval, preflight, audit, and final execution outside Toolbox.
+The editor may invoke this existing planner only after the current
+`article_draft_preview.v1` is rated `usable`, then forward the plan to Adapter's
+`proposals/from-plan` route. Toolbox keeps only an ephemeral receipt and links
+to Core; it never approves, executes, polls-to-execute, or publishes. Approved
+Adapter/Toolkit execution creates a WordPress post with status `draft`.
 `composer smoke:article-core` proves the local route by building the Toolbox
 plan through `/wp-json/npcink-toolbox/v1/flows/article-plan`, submitting it to
-Core `/wp-json/npcink-governance-core/v1/proposals/from-plan`, and asserting the
-result is one pending dry-run `npcink-abilities-toolkit/create-draft` proposal
-without creating a WordPress post.
+Adapter `/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan`, and asserting
+the Core-backed result is one pending dry-run
+`npcink-abilities-toolkit/create-draft` proposal without creating a WordPress
+post. Setting `NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_EXECUTE=1` additionally runs
+the explicit approve-and-execute path, verifies the result is exactly one
+WordPress `draft`, reads back Markdown conversion, and removes the fixture.
 `npcink-toolbox/build-article-media-batch-write-plan` assembles a
 Core-ready `article_media_batch_write_plan` from reviewed drafts and reviewed
 image-source candidates. It does not upload media, set featured images, approve

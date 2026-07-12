@@ -199,8 +199,14 @@ confirms the pack, Toolbox may request one `article_draft_preview.v1` from the
 hosted text runtime. The preview is structured plain text, never a translated
 replacement body. A separate explicit native-editor action may load sections
 only into an empty current Gutenberg body; it never saves or publishes.
+After the operator rates a preview `usable`, a second explicit action may map
+the reviewed sections into the existing `article_write_plan`, submit that plan
+through Adapter to Core, and then stop with a proposal receipt and Core review
+link. Only approved Adapter/Toolkit execution may create a WordPress post with
+status `draft`; an author or editor still publishes it with native WordPress.
 The default interaction stays deliberately small: URL, body-readiness result,
-one writing-direction confirmation, draft review, and optional adoption.
+one writing-direction confirmation, draft review, and either optional Core
+handoff or empty-body adoption.
 Detailed brief fields and evidence remain behind optional/advanced disclosure.
 Navigation or metadata-only reader output stops before hosted planning and can
 never be confirmed into a draft.

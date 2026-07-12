@@ -1068,6 +1068,30 @@
 		return { bridge, proposal_id: proposalId, operator_next_action: 'review_in_core' };
 	}
 
+	async function postArticleDraftToAdapter(draft) {
+		const planInput = articleDraftPreviewPlanInput(draft);
+		if (!planInput.title || !planInput.content_markdown) {
+			throw new Error(__('A usable draft title and body are required before Core review.', 'npcink-workflow-toolbox'));
+		}
+		const plan = await postJson('flows/article-plan', planInput);
+		const bridge = await postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
+			plan_ability_id: 'npcink-toolbox/build-article-write-plan',
+			plan,
+			plan_input: planInput,
+			caller: {
+				surface: 'toolbox_editor_content_support',
+				external_thread_id: 'toolbox-editor-article-draft',
+				source: 'article_draft_preview_core_handoff',
+			},
+		});
+		const proposalId = extractProposalId(bridge, 0);
+		if (!proposalId) {
+			throw new Error(__('Core did not return a proposal id for this WordPress draft.', 'npcink-workflow-toolbox'));
+		}
+
+		return { plan, bridge, proposal_id: proposalId };
+	}
+
 	function usePostContext() {
 		return useSelect((select) => {
 			const editor = select('core/editor');
@@ -3421,6 +3445,49 @@
 		return lines.filter((line, index) => line || index > 0).join('\n').trim();
 	}
 
+	function articleDraftPreviewPlanInput(draft) {
+		const source = draft && typeof draft === 'object' ? draft : {};
+		const sections = (Array.isArray(source.sections) ? source.sections : [])
+			.map((section) => ({
+				heading: String(section && section.heading ? section.heading : '').trim(),
+				body: String(section && section.body ? section.body : '').trim(),
+			}))
+			.filter((section) => section.heading || section.body);
+		const contentMarkdown = sections.map((section) => {
+			const parts = [];
+			if (section.heading) {
+				parts.push('## ' + section.heading);
+			}
+			if (section.body) {
+				parts.push(section.body);
+			}
+			return parts.join('\n\n');
+		}).join('\n\n').trim();
+		const verificationNotes = (Array.isArray(source.verification_notes) ? source.verification_notes : []).map((item) => String(item || '').trim()).filter(Boolean);
+		const sourceNotes = (Array.isArray(source.source_attribution_notes) ? source.source_attribution_notes : []).map((item) => String(item || '').trim()).filter(Boolean);
+
+		return {
+			title: String(source.title || '').trim(),
+			topic: String(source.title || '').trim(),
+			content_markdown: contentMarkdown,
+			excerpt: String(source.excerpt || '').trim(),
+			risk_level: 'medium',
+			article_outline: {
+				title: String(source.title || '').trim(),
+				sections: sections.map((section) => section.heading).filter(Boolean),
+			},
+			article_draft_candidate: {
+				content_markdown: contentMarkdown,
+				used_sources: sourceNotes,
+				unverified_claims: verificationNotes,
+				needs_human_input: verificationNotes,
+			},
+			used_sources: sourceNotes,
+			unverified_claims: verificationNotes,
+			needs_review: verificationNotes,
+		};
+	}
+
 	function articleDraftBlockContent(value) {
 		return String(value || '')
 			.replace(/&/g, '&amp;')
@@ -3522,11 +3589,18 @@
 				{ className: 'npcink-toolbox-editor-support__draft-review-actions' },
 				createElement(Button, {
 					type: 'button',
-					variant: 'primary',
+					variant: 'secondary',
 					isBusy: Boolean(controls.running),
 					disabled: Boolean(controls.running) || !articleDraftReviewCanRegenerate(feedback),
 					onClick: () => controls.regenerate && controls.regenerate(),
 				}, __('Regenerate from feedback', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'primary',
+					isBusy: Boolean(controls.coreHandoffRunning),
+					disabled: Boolean(controls.running) || Boolean(controls.coreHandoffRunning) || Boolean(controls.coreHandoffSubmitted) || !Boolean(controls.draftApproved),
+					onClick: () => controls.submitToCore && controls.submitToCore(draft),
+				}, controls.coreHandoffSubmitted ? __('Submitted to Core review', 'npcink-workflow-toolbox') : __('Create WordPress draft through Core', 'npcink-workflow-toolbox')),
 				createElement(Button, {
 					type: 'button',
 					variant: 'secondary',
@@ -3545,6 +3619,9 @@
 					? __('Loading changes only the visible Gutenberg editor. Use WordPress Save draft or Publish to persist it.', 'npcink-workflow-toolbox')
 					: __('Mark the current draft as usable before loading it. Drafts that need changes must be regenerated and reviewed again.', 'npcink-workflow-toolbox'))
 				: __('The current article already has body content. Loading is blocked; copy the draft for manual review instead.', 'npcink-workflow-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Core review creates a new WordPress post with status draft only. Toolbox does not approve, execute, or publish it.', 'npcink-workflow-toolbox')),
+			controls.coreHandoffResult ? renderCoreHandoffReceipt(controls.coreHandoffResult.handoff_receipt) : null,
+			controls.coreHandoffError ? createElement(Notice, { status: 'error', isDismissible: false }, controls.coreHandoffError.message || __('The WordPress draft could not be submitted to Core review.', 'npcink-workflow-toolbox')) : null,
 			controls.status ? createElement(Notice, { status: controls.status.status || 'success', isDismissible: false }, controls.status.message) : null
 		);
 	}
@@ -6875,6 +6952,9 @@
 			const [writingPackConfirmed, setWritingPackConfirmed] = useState(false);
 			const [draftReviewFeedback, setDraftReviewFeedback] = useState(emptyDraftReviewFeedback);
 			const [draftReviewStatus, setDraftReviewStatus] = useState(null);
+			const [draftCoreHandoffRunning, setDraftCoreHandoffRunning] = useState(false);
+			const [draftCoreHandoffResult, setDraftCoreHandoffResult] = useState(null);
+			const [draftCoreHandoffError, setDraftCoreHandoffError] = useState(null);
 				const [titleApplyStatus, setTitleApplyStatus] = useState(null);
 				const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
 				const [slugApplyStatus, setSlugApplyStatus] = useState(null);
@@ -7080,6 +7160,10 @@
 						setError(__('Manual brief mode requires an audience, article goal, and at least one focus point.', 'npcink-workflow-toolbox'));
 						return;
 					}
+					if (intent === 'source_adaptation_review' && sourceStage === 'draft') {
+						setDraftCoreHandoffResult(null);
+						setDraftCoreHandoffError(null);
+					}
 
 					setSupportView('result');
 					setContextualResult(Boolean(runOptions.contextualResult) || (intent === 'polish_notes' && Boolean(paragraphReviewContext)));
@@ -7214,6 +7298,8 @@
 			function updateDraftReviewStatus(status) {
 				setDraftReviewFeedback((current) => Object.assign({}, current, { status: String(status || '') }));
 				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
 			}
 
 			function toggleDraftReviewIssue(issueCode, checked) {
@@ -7223,11 +7309,15 @@
 					return Object.assign({}, current, { issue_codes: next });
 				});
 				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
 			}
 
 			function updateDraftReviewNotes(notes) {
 				setDraftReviewFeedback((current) => Object.assign({}, current, { notes: String(notes || '') }));
 				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
 			}
 
 			function regenerateDraftFromReview() {
@@ -7245,6 +7335,39 @@
 				}).catch(() => {
 					setDraftReviewStatus({ status: 'error', message: __('The draft could not be copied.', 'npcink-workflow-toolbox') });
 				});
+			}
+
+			async function submitArticleDraftToCore(draft) {
+				if (draftReviewFeedback.status !== 'usable') {
+					setDraftReviewStatus({ status: 'warning', message: __('Mark the current draft as usable before submitting it to Core review.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				setDraftCoreHandoffRunning(true);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
+				try {
+					const handoff = await postArticleDraftToAdapter(draft);
+					const receipt = coreHandoffReceipt(handoff.bridge, {
+						proposal_id: handoff.proposal_id,
+						target_ability_id: 'npcink-abilities-toolkit/create-draft',
+						source_item_id: String(draft && draft.writing_pack_id ? draft.writing_pack_id : ''),
+						source_label: String(draft && draft.title ? draft.title : ''),
+						handoff_type: 'article_draft_core_proposal',
+						operator_next_action: 'review_and_execute_in_core',
+					});
+					setDraftCoreHandoffResult(Object.assign({}, handoff, { handoff_receipt: receipt }));
+					setDraftReviewStatus({ status: 'success', message: __('The draft proposal is ready in Core. Approve and execute it there to create the WordPress draft; publishing remains manual.', 'npcink-workflow-toolbox') });
+				} catch (handoffError) {
+					setDraftCoreHandoffError(coreHandoffFailure(handoffError, {
+						fallback: __('The WordPress draft could not be submitted to Core review.', 'npcink-workflow-toolbox'),
+						receipt: {
+							target_ability_id: 'npcink-abilities-toolkit/create-draft',
+							handoff_type: 'article_draft_core_proposal',
+						},
+					}));
+				} finally {
+					setDraftCoreHandoffRunning(false);
+				}
 			}
 
 			function loadArticleDraftPreviewIntoEditor(draft) {
@@ -8776,9 +8899,14 @@
 					setNotes: updateDraftReviewNotes,
 					regenerate: regenerateDraftFromReview,
 					copy: copyArticleDraftPreview,
+					submitToCore: submitArticleDraftToCore,
 					loadIntoEditor: loadArticleDraftPreviewIntoEditor,
 					editorBodyEmpty: currentEditorBodyIsEmpty(postContext.content),
 					draftApproved: draftReviewFeedback.status === 'usable',
+					coreHandoffRunning: draftCoreHandoffRunning,
+					coreHandoffResult: draftCoreHandoffResult,
+					coreHandoffError: draftCoreHandoffError,
+					coreHandoffSubmitted: Boolean(draftCoreHandoffResult && draftCoreHandoffResult.proposal_id),
 				},
 				audioAdoption: {
 					running: audioAdoptionRunning,

@@ -179,6 +179,17 @@ keeps only the copy path. Persistence still requires the author's normal
 WordPress Save draft, Update, or Publish action; there is no REST write,
 media-import, proposal, hidden save hook, or background action.
 
+A separate explicit governed action is available only after the current draft
+is rated `usable`. It maps ordered sections to bounded Markdown, preserving
+verification and attribution notes as review evidence rather than body text,
+then reuses `npcink-toolbox/build-article-write-plan` and Adapter's
+`proposals/from-plan` route. The result is one pending dry-run
+`npcink-abilities-toolkit/create-draft` proposal. Toolbox shows the ephemeral
+receipt and Core link, then stops. Approval, preflight, execution, and the
+resulting WordPress `draft` belong to Core, Adapter, and Toolkit; publication
+remains a native human action. Regeneration or review changes clear the prior
+receipt so it cannot be mistaken for the current draft.
+
 ## Request-Scoped Draft Review
 
 After a draft preview is returned, the editor may collect one lightweight
@@ -201,15 +212,18 @@ The contract always keeps:
 - `durable_review_state=false`;
 - `direct_wordpress_write=false`.
 
-The editor may copy the plain-text preview to the clipboard, or explicitly load
-blocks into an empty current editor. Neither action saves the post, creates a
-Core proposal, or publishes anything. No review database, acceptance history,
-learning profile, or automatic regeneration loop is introduced in this version.
+The editor may copy the plain-text preview to the clipboard, explicitly load
+blocks into an empty current editor, or explicitly submit a `usable` preview to
+the governed Core proposal path. Copy/load never saves or creates a proposal;
+the governed path stops after proposal creation and never publishes. No review
+database, acceptance history, learning profile, or automatic regeneration loop
+is introduced in this version.
 
 ## Ownership
 
 - Toolbox owns the editor composition, normalization, display, and feedback.
 - Cloud owns exact-source reading, hosted text execution, and Site Knowledge.
 - Cloud Addon remains signed transport only.
-- Core, Adapter, and Toolkit are unchanged because this artifact performs no
-  WordPress write.
+- Core, Adapter, and Toolkit keep their existing contracts: Core owns proposal
+  truth and approval, Adapter executes only after approval, and Toolkit owns
+  `create-draft`. Toolbox adds no second write or approval path.
