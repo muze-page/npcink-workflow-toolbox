@@ -64,6 +64,13 @@ creates Core proposals and then stops. It links or navigates the operator to the
 Core governance surface; Toolbox does not approve, execute, poll-to-execute, or
 perform the WordPress writes.
 
+The same stop rule applies to a new-object editor action. A reviewed article
+preview may either enter visible state in the current empty editor as a
+`native_editor_commit`, or explicitly create a Core proposal for a separate new
+WordPress draft. In the latter path Toolbox reuses the existing article plan,
+shows the proposal receipt, and stops; approved execution creates status
+`draft`, while publication remains a native author/editor action.
+
 ### Adapter contract
 
 `npcink-ai-client-adapter` owns a generic external AI-client contract, with

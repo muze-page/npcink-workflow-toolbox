@@ -87,9 +87,10 @@ semantics.
 6. Prioritize work around the article body: taxonomy/tag candidates,
    internal-link candidates, image candidates, SEO/AEO/GEO briefs, media
    metadata plans, and publish/readiness checks.
-7. Keep article text creation with human editors; keep the retired Article
-   Assistant route as compatibility only, not as an operator-facing or public
-   Ability surface.
+7. Keep final article acceptance and WordPress persistence with human editors;
+   keep the retired Article Assistant generic route as compatibility only. A
+   confirmed `article_writing_pack.v1` may request one structured, review-only
+   draft preview through the existing hosted content-support seam.
 8. Let editors review one external source against Cloud Site Knowledge vectors
    and receive `article_writing_pack.v1`: a bounded, source-grounded planning
    artifact with inferred audience, priorities, facts, overlap, angle, and
@@ -149,8 +150,11 @@ If a feature authorizes, commits, audits, schedules, or owns final WordPress
 writes, it belongs outside Toolbox.
 
 Default buttons should solve around-the-body work before offering article draft
-handoffs. Draft handoffs are acceptable only after a reviewed human draft exists
-and the final write goes through Core proposal governance.
+previews. The writing-pack exception is acceptable only after structured human
+review and confirmation. Its hosted result remains plain-text suggestion output;
+the editor may explicitly map reviewed sections into native blocks only when the
+current Gutenberg body is empty, with persistence left to normal WordPress save.
+Any later governed cross-object or automated write still belongs outside Toolbox.
 
 Media optimization is the first fixed governed media workflow. Toolbox may
 present `media_optimization_v1` through media-library single-image actions and
@@ -187,11 +191,25 @@ vocabulary remains Core policy-gated strong review.
 
 The editor may also expose one URL-reference article-writing-pack flow that
 combines bounded Cloud reader evidence with related Site Knowledge passages.
-It returns `article_writing_pack.v1` with inferred editorial direction,
-fact ledger, overlap/style signals, distinct angle, outline guidance, and risk
-checks only; it must not generate or insert a translated replacement body.
-The contract keeps `source_materials` and `editorial_brief` separate so future
-manual and mixed inputs can extend it without replacing the URL-first format.
+It returns `article_writing_pack.v1` with editorial direction, fact ledger,
+overlap/style signals, distinct angle, outline guidance, and risk checks.
+`url_reference`, `manual_brief`, and `mixed` populate the same
+`source_materials` and `editorial_brief` contract. After the operator edits and
+confirms the pack, Toolbox may request one `article_draft_preview.v1` from the
+hosted text runtime. The preview is structured plain text, never a translated
+replacement body. A separate explicit native-editor action may load sections
+only into an empty current Gutenberg body; it never saves or publishes.
+After the operator rates a preview `usable`, a second explicit action may map
+the reviewed sections into the existing `article_write_plan`, submit that plan
+through Adapter to Core, and then stop with a proposal receipt and Core review
+link. Only approved Adapter/Toolkit execution may create a WordPress post with
+status `draft`; an author or editor still publishes it with native WordPress.
+The default interaction stays deliberately small: URL, body-readiness result,
+one writing-direction confirmation, draft review, and either optional Core
+handoff or empty-body adoption.
+Detailed brief fields and evidence remain behind optional/advanced disclosure.
+Navigation or metadata-only reader output stops before hosted planning and can
+never be confirmed into a draft.
 
 For the current article only, an author clicking the editor's reviewed SEO,
 external-image adoption, or article-audio adoption action is the approval step.
