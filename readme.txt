@@ -23,9 +23,13 @@ The plugin provides a WordPress admin surface and post-editor panel for:
   direct-answer lanes;
 * writing preparation, title ideas, outline support, summary suggestions, and
   publish-readiness checks;
-* a URL-reference article writing pack that combines exact-source evidence with
-  related site knowledge to infer audience, focus, facts, overlap, angle, and
-  outline for review before any future article generation;
+* one article writing pack contract for URL, typed manual, or mixed inputs,
+  combining optional exact-source evidence with related site knowledge,
+  structured human review, and an optional confirmed plain-text draft preview
+  that may be loaded only into an empty current Gutenberg body and is never
+  saved or published automatically;
+* a compact default URL flow that blocks metadata or navigation-only captures
+  before drafting and keeps brief/evidence details in optional disclosures;
 * SEO, AEO, and GEO guidance from operator-maintained site context;
 * existing-category and existing-tag recommendations for review;
 * internal-link candidates and source-coverage notes;

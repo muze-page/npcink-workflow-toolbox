@@ -5,6 +5,7 @@
 	const element = wp.element || {};
 	const components = wp.components || {};
 	const data = wp.data || {};
+	const blocks = wp.blocks || {};
 	const blockEditor = wp.blockEditor || {};
 	const editPost = wp.editPost || {};
 	const editor = wp.editor || {};
@@ -17,6 +18,7 @@
 	const useEffect = element.useEffect;
 	const useRef = element.useRef;
 	const useSelect = data.useSelect;
+	const createBlock = blocks.createBlock;
 	const __ = i18n.__ || ((value) => value);
 	const sprintf = i18n.sprintf || ((value) => value);
 	const SIDEBAR_NAME = 'npcink-content-support-sidebar';
@@ -63,6 +65,13 @@
 			{ value: 'headings', label: __('Heading pauses', 'npcink-workflow-toolbox'), instruction: __('Focus: add clear pauses around headings.', 'npcink-workflow-toolbox') },
 		],
 	};
+	const DRAFT_REVIEW_ISSUES = [
+		{ value: 'fact_accuracy', label: __('Fact accuracy', 'npcink-workflow-toolbox') },
+		{ value: 'site_tone', label: __('Site tone', 'npcink-workflow-toolbox') },
+		{ value: 'structure', label: __('Structure', 'npcink-workflow-toolbox') },
+		{ value: 'source_similarity', label: __('Too similar to the source', 'npcink-workflow-toolbox') },
+		{ value: 'rights_attribution', label: __('Rights or attribution', 'npcink-workflow-toolbox') },
+	];
 	const imageResultCache = {};
 	const implicitAgentFeedbackSent = {};
 	const PluginSidebarComponent = editor.PluginSidebar || editPost.PluginSidebar;
@@ -101,6 +110,31 @@
 				disabled: Boolean(props.disabled),
 				onChange: (event) => props.onChange && props.onChange(event.target.value),
 			})
+		);
+	};
+	const SelectControl = components.SelectControl || function SelectControlFallback(props) {
+		return createElement(
+			'label',
+			{ className: 'npcink-toolbox-editor-support__field' },
+			createElement('span', null, props.label || ''),
+			createElement('select', {
+				value: props.value || '',
+				disabled: Boolean(props.disabled),
+				onChange: (event) => props.onChange && props.onChange(event.target.value),
+			}, (props.options || []).map((option) => createElement('option', { key: option.value, value: option.value }, option.label)))
+		);
+	};
+	const CheckboxControl = components.CheckboxControl || function CheckboxControlFallback(props) {
+		return createElement(
+			'label',
+			{ className: 'npcink-toolbox-editor-support__field' },
+			createElement('input', {
+				type: 'checkbox',
+				checked: Boolean(props.checked),
+				disabled: Boolean(props.disabled),
+				onChange: (event) => props.onChange && props.onChange(Boolean(event.target.checked)),
+			}),
+			createElement('span', null, props.label || '')
 		);
 	};
 	const Modal = components.Modal || function ModalFallback(props) {
@@ -219,16 +253,16 @@
 	const flows = [
 		{
 			intent: 'source_adaptation_review',
-			label: __('Adapt external source', 'npcink-workflow-toolbox'),
-			description: __('Review one public article against related site content and get Chinese adaptation guidance without copying or publishing it.', 'npcink-workflow-toolbox'),
+			label: __('Prepare article from source or brief', 'npcink-workflow-toolbox'),
+			description: __('Build a structured writing pack from a URL, manual brief, or both; confirm it before generating a review-only draft preview.', 'npcink-workflow-toolbox'),
 			group: 'research_adaptation',
-			sourceLabel: __('One public article URL plus bounded Cloud reader evidence', 'npcink-workflow-toolbox'),
-			evidenceLabel: __('Source excerpt, related Site Knowledge passages, style and overlap signals', 'npcink-workflow-toolbox'),
-			actionLabel: __('Review summary / adaptation brief', 'npcink-workflow-toolbox'),
+			sourceLabel: __('Optional public URL plus typed editorial brief', 'npcink-workflow-toolbox'),
+			evidenceLabel: __('Source evidence when present, Site Knowledge overlap, reviewed plan, and fact risks', 'npcink-workflow-toolbox'),
+			actionLabel: __('Review pack / generate draft preview', 'npcink-workflow-toolbox'),
 			ownerLabel: __('Toolbox UI; Cloud reader, Site Knowledge, and hosted AI runtime', 'npcink-workflow-toolbox'),
-			runtimeLabel: __('Cloud web-search reader plus Cloud Site Knowledge vectors', 'npcink-workflow-toolbox'),
-			writePostureLabel: __('Suggestion only; no translation import, body replacement, media import, or publish', 'npcink-workflow-toolbox'),
-			blockedLabel: __('Blocked when the URL is not public, reader evidence is empty, Cloud is unavailable, or source rights require review.', 'npcink-workflow-toolbox'),
+			runtimeLabel: __('Cloud reader when needed, Cloud Site Knowledge vectors, and hosted text runtime', 'npcink-workflow-toolbox'),
+			writePostureLabel: __('Suggestion only; reviewed sections may load only into an empty editor and are never saved or published automatically', 'npcink-workflow-toolbox'),
+			blockedLabel: __('Blocked when required brief fields, source evidence, pack confirmation, or fact and rights review are missing.', 'npcink-workflow-toolbox'),
 		},
 		{
 			intent: 'publish_preflight',
@@ -1032,6 +1066,30 @@
 			} };
 		}
 		return { bridge, proposal_id: proposalId, operator_next_action: 'review_in_core' };
+	}
+
+	async function postArticleDraftToAdapter(draft) {
+		const planInput = articleDraftPreviewPlanInput(draft);
+		if (!planInput.title || !planInput.content_markdown) {
+			throw new Error(__('A usable draft title and body are required before Core review.', 'npcink-workflow-toolbox'));
+		}
+		const plan = await postJson('flows/article-plan', planInput);
+		const bridge = await postJsonToUrl(adapterRestUrl('proposals/from-plan'), {
+			plan_ability_id: 'npcink-toolbox/build-article-write-plan',
+			plan,
+			plan_input: planInput,
+			caller: {
+				surface: 'toolbox_editor_content_support',
+				external_thread_id: 'toolbox-editor-article-draft',
+				source: 'article_draft_preview_core_handoff',
+			},
+		});
+		const proposalId = extractProposalId(bridge, 0);
+		if (!proposalId) {
+			throw new Error(__('Core did not return a proposal id for this WordPress draft.', 'npcink-workflow-toolbox'));
+		}
+
+		return { plan, bridge, proposal_id: proposalId };
 	}
 
 	function usePostContext() {
@@ -1975,7 +2033,7 @@
 
 	function resultScopeLabel(value) {
 		if (value === 'source_adaptation_review') {
-			return __('Builds a reviewable article writing pack from exact source evidence and related site vectors. Audience, focus, angle, facts, overlap, and outline remain planning inputs; no article body is generated or inserted.', 'npcink-workflow-toolbox');
+			return __('Builds a reviewable writing pack from URL, manual, or mixed inputs. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.', 'npcink-workflow-toolbox');
 		}
 		if (value === 'writing_support') {
 			return __('Finds similar published content first, then helps you decide how this draft should differ.', 'npcink-workflow-toolbox');
@@ -3151,6 +3209,7 @@
 				name: extraction.title || __('Exact source extraction preview', 'npcink-workflow-toolbox'),
 				detail: [
 					sprintf(__('URL match: %s', 'npcink-workflow-toolbox'), extraction.url_match || __('unavailable', 'npcink-workflow-toolbox')),
+					extraction.body_readiness === 'ready' ? __('Article body: ready for drafting', 'npcink-workflow-toolbox') : __('Article body: insufficient; drafting is blocked', 'npcink-workflow-toolbox'),
 					extraction.coverage && extraction.coverage.level ? sprintf(__('Coverage: %s (bounded preview; completeness is not guaranteed)', 'npcink-workflow-toolbox'), extraction.coverage.level) : __('Bounded preview; completeness is not guaranteed.', 'npcink-workflow-toolbox'),
 					extraction.char_count ? sprintf(__('%d characters', 'npcink-workflow-toolbox'), extraction.char_count) : '',
 					extraction.word_count ? sprintf(__('%d words', 'npcink-workflow-toolbox'), extraction.word_count) : '',
@@ -3251,6 +3310,378 @@
 				].filter(Boolean).join(' · '),
 			}, __('Admission', 'npcink-workflow-toolbox')) },
 		].filter((group) => group.items.length);
+	}
+
+	function emptyWritingPackBrief() {
+		return {
+			audience: '',
+			article_goal: '',
+			reader_problem: '',
+			focus_points: '',
+			unique_angle: '',
+			title_directions: '',
+			reader_promise: '',
+			content_type: '',
+			outline: '',
+			operator_instruction: '',
+		};
+	}
+
+	function writingPackFieldValue(value) {
+		const raw = value && typeof value === 'object' && !Array.isArray(value) && Object.prototype.hasOwnProperty.call(value, 'value') ? value.value : value;
+		if (Array.isArray(raw)) {
+			return raw.map((item) => readableItemText(item && typeof item === 'object' ? (item.heading || item.title || item.claim || item.value || item) : item, '')).filter(Boolean).join('\n');
+		}
+		return readableItemText(raw, '');
+	}
+
+	function writingPackBriefFromArtifact(pack) {
+		const inputs = pack && pack.inputs ? pack.inputs : {};
+		const brief = inputs.editorial_brief || {};
+		const adaptation = pack && pack.site_adaptation ? pack.site_adaptation : {};
+		const plan = pack && pack.writing_plan ? pack.writing_plan : {};
+		return {
+			audience: writingPackFieldValue(brief.audience),
+			article_goal: writingPackFieldValue(brief.article_goal),
+			reader_problem: writingPackFieldValue(brief.reader_problem),
+			focus_points: writingPackFieldValue(brief.focus_points),
+			unique_angle: writingPackFieldValue(adaptation.unique_angle),
+			title_directions: writingPackFieldValue(plan.title_directions),
+			reader_promise: writingPackFieldValue(plan.reader_promise),
+			content_type: writingPackFieldValue(plan.content_type),
+			outline: writingPackFieldValue(plan.outline),
+			operator_instruction: writingPackFieldValue(brief.operator_instruction),
+		};
+	}
+
+	function writingPackLines(value) {
+		return String(value || '').split(/\r\n|\r|\n/).map((item) => item.trim()).filter(Boolean).slice(0, 20);
+	}
+
+	function reviewedWritingPackFromEditor(pack, brief) {
+		if (!pack || typeof pack !== 'object') {
+			return null;
+		}
+		const reviewed = JSON.parse(JSON.stringify(pack));
+		reviewed.inputs = reviewed.inputs || {};
+		reviewed.inputs.editorial_brief = reviewed.inputs.editorial_brief || {};
+		reviewed.site_adaptation = reviewed.site_adaptation || {};
+		reviewed.writing_plan = reviewed.writing_plan || {};
+		const operatorField = (value) => ({ value, source: 'operator_reviewed_editorial_brief', operator_confirmed: true });
+		reviewed.inputs.editorial_brief.audience = operatorField(String(brief.audience || '').trim());
+		reviewed.inputs.editorial_brief.article_goal = operatorField(String(brief.article_goal || '').trim());
+		reviewed.inputs.editorial_brief.reader_problem = operatorField(String(brief.reader_problem || '').trim());
+		reviewed.inputs.editorial_brief.focus_points = operatorField(writingPackLines(brief.focus_points));
+		reviewed.inputs.editorial_brief.operator_instruction = operatorField(String(brief.operator_instruction || '').trim());
+		reviewed.site_adaptation.unique_angle = operatorField(String(brief.unique_angle || '').trim());
+		reviewed.writing_plan.title_directions = writingPackLines(brief.title_directions);
+		reviewed.writing_plan.reader_promise = operatorField(String(brief.reader_promise || '').trim());
+		reviewed.writing_plan.content_type = operatorField(String(brief.content_type || '').trim());
+		reviewed.writing_plan.outline = writingPackLines(brief.outline).map((heading) => ({ heading }));
+		return reviewed;
+	}
+
+	function writingPackCanConfirm(pack, brief) {
+		if (!pack || typeof pack !== 'object' || !String(pack.content_fingerprint || '').trim()) {
+			return false;
+		}
+		const requiredText = ['audience', 'article_goal', 'unique_angle', 'outline'];
+		if (requiredText.some((field) => !String(brief[field] || '').trim()) || !writingPackLines(brief.focus_points).length) {
+			return false;
+		}
+		if (pack.input_mode === 'url_reference' || pack.input_mode === 'mixed') {
+			const facts = pack.research_basis && Array.isArray(pack.research_basis.fact_ledger) ? pack.research_basis.fact_ledger : [];
+			const sources = pack.inputs && Array.isArray(pack.inputs.source_materials) ? pack.inputs.source_materials : [];
+			return Boolean(facts.length && sources.length);
+		}
+		return true;
+	}
+
+	function articleDraftPreviewGroups(draft) {
+		if (!draft || typeof draft !== 'object') {
+			return [];
+		}
+		const sections = Array.isArray(draft.sections) ? draft.sections : [];
+		return [
+			{ key: 'article-draft-title', label: __('Draft title and excerpt', 'npcink-workflow-toolbox'), items: articleWritingPackItems([{ title: draft.title || __('Untitled draft', 'npcink-workflow-toolbox'), detail: draft.excerpt || '' }], __('Draft', 'npcink-workflow-toolbox')) },
+			{ key: 'article-draft-sections', label: __('Draft sections', 'npcink-workflow-toolbox'), items: sections.map((section, index) => ({
+				name: readableItemText(section.heading || sprintf(__('Section %d', 'npcink-workflow-toolbox'), index + 1), ''),
+				detail: readableItemText(section.body, ''),
+				evidence_refs: Array.isArray(section.supporting_fact_refs) ? section.supporting_fact_refs : [],
+				action_policy: 'operator_review_only_no_insert',
+			})) },
+			{ key: 'article-draft-verification', label: __('Draft verification notes', 'npcink-workflow-toolbox'), items: articleWritingPackItems(draft.verification_notes, __('Verify', 'npcink-workflow-toolbox')) },
+			{ key: 'article-draft-attribution', label: __('Source and attribution notes', 'npcink-workflow-toolbox'), items: articleWritingPackItems(draft.source_attribution_notes, __('Source note', 'npcink-workflow-toolbox')) },
+		].filter((group) => group.items.length);
+	}
+
+	function emptyDraftReviewFeedback() {
+		return { status: '', issue_codes: [], notes: '' };
+	}
+
+	function articleDraftReviewCanRegenerate(feedback) {
+		const value = feedback && typeof feedback === 'object' ? feedback : {};
+		return ['usable_after_changes', 'not_usable'].indexOf(value.status) >= 0 && (Boolean(String(value.notes || '').trim()) || (Array.isArray(value.issue_codes) && value.issue_codes.length > 0));
+	}
+
+	function articleDraftPreviewText(draft) {
+		if (!draft || typeof draft !== 'object') {
+			return '';
+		}
+		const lines = [];
+		if (draft.title) {
+			lines.push(String(draft.title).trim());
+		}
+		if (draft.excerpt) {
+			lines.push('', String(draft.excerpt).trim());
+		}
+		(Array.isArray(draft.sections) ? draft.sections : []).forEach((section) => {
+			const heading = String(section && section.heading ? section.heading : '').trim();
+			const body = String(section && section.body ? section.body : '').trim();
+			if (heading || body) {
+				lines.push('', heading, body);
+			}
+		});
+		return lines.filter((line, index) => line || index > 0).join('\n').trim();
+	}
+
+	function articleDraftPreviewPlanInput(draft) {
+		const source = draft && typeof draft === 'object' ? draft : {};
+		const sections = (Array.isArray(source.sections) ? source.sections : [])
+			.map((section) => ({
+				heading: String(section && section.heading ? section.heading : '').trim(),
+				body: String(section && section.body ? section.body : '').trim(),
+			}))
+			.filter((section) => section.heading || section.body);
+		const contentMarkdown = sections.map((section) => {
+			const parts = [];
+			if (section.heading) {
+				parts.push('## ' + section.heading);
+			}
+			if (section.body) {
+				parts.push(section.body);
+			}
+			return parts.join('\n\n');
+		}).join('\n\n').trim();
+		const verificationNotes = (Array.isArray(source.verification_notes) ? source.verification_notes : []).map((item) => String(item || '').trim()).filter(Boolean);
+		const sourceNotes = (Array.isArray(source.source_attribution_notes) ? source.source_attribution_notes : []).map((item) => String(item || '').trim()).filter(Boolean);
+
+		return {
+			title: String(source.title || '').trim(),
+			topic: String(source.title || '').trim(),
+			content_markdown: contentMarkdown,
+			excerpt: String(source.excerpt || '').trim(),
+			risk_level: 'medium',
+			article_outline: {
+				title: String(source.title || '').trim(),
+				sections: sections.map((section) => section.heading).filter(Boolean),
+			},
+			article_draft_candidate: {
+				content_markdown: contentMarkdown,
+				used_sources: sourceNotes,
+				unverified_claims: verificationNotes,
+				needs_human_input: verificationNotes,
+			},
+			used_sources: sourceNotes,
+			unverified_claims: verificationNotes,
+			needs_review: verificationNotes,
+		};
+	}
+
+	function articleDraftBlockContent(value) {
+		return String(value || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
+	function articleDraftPreviewBlocks(draft) {
+		if (!createBlock || !draft || typeof draft !== 'object') {
+			return [];
+		}
+		const draftBlocks = [];
+		(Array.isArray(draft.sections) ? draft.sections : []).forEach((section) => {
+			const heading = String(section && section.heading ? section.heading : '').trim();
+			const body = String(section && section.body ? section.body : '').trim();
+			if (heading) {
+				draftBlocks.push(createBlock('core/heading', { level: 2, content: articleDraftBlockContent(heading) }));
+			}
+			if (body) {
+				draftBlocks.push(createBlock('core/paragraph', { content: articleDraftBlockContent(body) }));
+			}
+		});
+		return draftBlocks;
+	}
+
+	function editorBlockHasMeaningfulContent(block) {
+		if (!block || typeof block !== 'object') {
+			return false;
+		}
+		const innerBlocks = Array.isArray(block.innerBlocks) ? block.innerBlocks : [];
+		if (innerBlocks.some(editorBlockHasMeaningfulContent)) {
+			return true;
+		}
+		if (block.name !== 'core/paragraph') {
+			return true;
+		}
+		const content = block.attributes && block.attributes.content ? String(block.attributes.content) : '';
+		return Boolean(content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim());
+	}
+
+	function currentEditorBodyIsEmpty(fallbackContent) {
+		const blockSelector = data.select && data.select('core/block-editor');
+		if (blockSelector && blockSelector.getBlocks) {
+			const currentBlocks = blockSelector.getBlocks();
+			if (Array.isArray(currentBlocks)) {
+				return !currentBlocks.some(editorBlockHasMeaningfulContent);
+			}
+		}
+		return !String(fallbackContent || '').trim();
+	}
+
+	function renderArticleDraftReview(draft, controls) {
+		if (!controls || !draft || typeof draft !== 'object') {
+			return null;
+		}
+		const feedback = controls.feedback && typeof controls.feedback === 'object' ? controls.feedback : emptyDraftReviewFeedback();
+		const issues = Array.isArray(feedback.issue_codes) ? feedback.issue_codes : [];
+		return createElement(
+			'section',
+			{ className: 'npcink-toolbox-editor-support__draft-review' },
+			createElement('h4', null, __('Review this draft', 'npcink-workflow-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('This feedback stays in the current editor session and is sent only when you request another draft. It is not saved as review history.', 'npcink-workflow-toolbox')),
+			createElement(SelectControl, {
+				label: __('Draft usability', 'npcink-workflow-toolbox'),
+				value: feedback.status || '',
+				disabled: Boolean(controls.running),
+				options: [
+					{ value: '', label: __('Choose a review result', 'npcink-workflow-toolbox') },
+					{ value: 'usable', label: __('Usable', 'npcink-workflow-toolbox') },
+					{ value: 'usable_after_changes', label: __('Usable after changes', 'npcink-workflow-toolbox') },
+					{ value: 'not_usable', label: __('Not usable', 'npcink-workflow-toolbox') },
+				],
+				onChange: (value) => controls.setStatus && controls.setStatus(value),
+			}),
+			createElement('strong', { className: 'npcink-toolbox-editor-support__draft-review-label' }, __('Main issues', 'npcink-workflow-toolbox')),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__draft-review-issues' },
+				DRAFT_REVIEW_ISSUES.map((issue) => createElement(CheckboxControl, {
+					key: issue.value,
+					label: issue.label,
+					checked: issues.indexOf(issue.value) >= 0,
+					disabled: Boolean(controls.running),
+					onChange: (checked) => controls.toggleIssue && controls.toggleIssue(issue.value, checked),
+				}))
+			),
+			createElement(TextareaControl, {
+				label: __('Revision notes', 'npcink-workflow-toolbox'),
+				value: feedback.notes || '',
+				rows: 3,
+				disabled: Boolean(controls.running),
+				placeholder: __('Describe what should change in the next draft.', 'npcink-workflow-toolbox'),
+				onChange: (value) => controls.setNotes && controls.setNotes(value),
+			}),
+			createElement(
+				'div',
+				{ className: 'npcink-toolbox-editor-support__draft-review-actions' },
+				createElement(Button, {
+					type: 'button',
+					variant: 'secondary',
+					isBusy: Boolean(controls.running),
+					disabled: Boolean(controls.running) || !articleDraftReviewCanRegenerate(feedback),
+					onClick: () => controls.regenerate && controls.regenerate(),
+				}, __('Regenerate from feedback', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'primary',
+					isBusy: Boolean(controls.coreHandoffRunning),
+					disabled: Boolean(controls.running) || Boolean(controls.coreHandoffRunning) || Boolean(controls.coreHandoffSubmitted) || !Boolean(controls.draftApproved),
+					onClick: () => controls.submitToCore && controls.submitToCore(draft),
+				}, controls.coreHandoffSubmitted ? __('Submitted to Core review', 'npcink-workflow-toolbox') : __('Create WordPress draft through Core', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'secondary',
+					disabled: Boolean(controls.running) || !Boolean(controls.editorBodyEmpty) || !Boolean(controls.draftApproved),
+					onClick: () => controls.loadIntoEditor && controls.loadIntoEditor(draft),
+				}, __('Load into empty editor', 'npcink-workflow-toolbox')),
+				createElement(Button, {
+					type: 'button',
+					variant: 'secondary',
+					disabled: Boolean(controls.running),
+					onClick: () => controls.copy && controls.copy(draft),
+				}, __('Copy draft', 'npcink-workflow-toolbox'))
+			),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, controls.editorBodyEmpty
+				? (controls.draftApproved
+					? __('Loading changes only the visible Gutenberg editor. Use WordPress Save draft or Publish to persist it.', 'npcink-workflow-toolbox')
+					: __('Mark the current draft as usable before loading it. Drafts that need changes must be regenerated and reviewed again.', 'npcink-workflow-toolbox'))
+				: __('The current article already has body content. Loading is blocked; copy the draft for manual review instead.', 'npcink-workflow-toolbox')),
+			createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Core review creates a new WordPress post with status draft only. Toolbox does not approve, execute, or publish it.', 'npcink-workflow-toolbox')),
+			controls.coreHandoffResult ? renderCoreHandoffReceipt(controls.coreHandoffResult.handoff_receipt) : null,
+			controls.coreHandoffError ? createElement(Notice, { status: 'error', isDismissible: false }, controls.coreHandoffError.message || __('The WordPress draft could not be submitted to Core review.', 'npcink-workflow-toolbox')) : null,
+			controls.status ? createElement(Notice, { status: controls.status.status || 'success', isDismissible: false }, controls.status.message) : null
+		);
+	}
+
+	function renderWritingPackEditor(inputMode, brief, options) {
+		const controls = options || {};
+		const showBrief = Boolean(controls.showBrief);
+		const field = (name, label, multiline, rows) => {
+			const Component = multiline ? TextareaControl : TextControl;
+			return createElement(Component, {
+				key: name,
+				label,
+				value: brief[name] || '',
+				disabled: Boolean(controls.disabled),
+				rows: rows || 3,
+				onChange: (value) => controls.onFieldChange && controls.onFieldChange(name, value),
+			});
+		};
+		const advancedFields = [createElement(SelectControl, {
+			key: 'writing-pack-input-mode',
+				label: __('Writing-pack input mode', 'npcink-workflow-toolbox'),
+				value: inputMode,
+				disabled: Boolean(controls.disabled),
+				options: [
+					{ value: 'url_reference', label: __('Reference URL', 'npcink-workflow-toolbox') },
+					{ value: 'manual_brief', label: __('Manual brief', 'npcink-workflow-toolbox') },
+					{ value: 'mixed', label: __('Reference URL + manual brief', 'npcink-workflow-toolbox') },
+				],
+				onChange: controls.onModeChange,
+			})];
+		if (showBrief) {
+			advancedFields.push(
+				field('audience', __('Audience', 'npcink-workflow-toolbox')),
+				field('article_goal', __('Article goal', 'npcink-workflow-toolbox'), true, 2),
+				field('reader_problem', __('Reader problem', 'npcink-workflow-toolbox'), true, 2),
+				field('focus_points', __('Focus points (one per line)', 'npcink-workflow-toolbox'), true, 4),
+				field('unique_angle', __('Distinct angle', 'npcink-workflow-toolbox'), true, 2),
+				field('title_directions', __('Title directions (one per line)', 'npcink-workflow-toolbox'), true, 3),
+				field('reader_promise', __('Reader promise', 'npcink-workflow-toolbox'), true, 2),
+				field('content_type', __('Content type', 'npcink-workflow-toolbox')),
+				field('outline', __('Outline headings (one per line)', 'npcink-workflow-toolbox'), true, 6),
+				field('operator_instruction', __('Additional writing guidance', 'npcink-workflow-toolbox'), true, 3)
+			);
+		}
+		return createElement(
+			'div',
+			{ className: 'npcink-toolbox-editor-support__flow-instruction' },
+			createElement(
+				'details',
+				{ className: 'npcink-toolbox-editor-support__writing-options' },
+				createElement('summary', null, __('Optional writing settings', 'npcink-workflow-toolbox')),
+				createElement('div', null, advancedFields)
+			),
+			controls.showConfirmation ? createElement(CheckboxControl, {
+					label: __('I reviewed the audience, focus, facts, source rights, overlap, angle, and outline in this writing pack.', 'npcink-workflow-toolbox'),
+					checked: Boolean(controls.confirmed),
+					disabled: Boolean(controls.disabled) || !controls.canConfirm,
+					onChange: controls.onConfirm,
+				}) : null
+		);
 	}
 
 	function extractZhihuResearchItems(section) {
@@ -6197,31 +6628,53 @@
 				}
 			}
 
-			if (sections.source_article || sections.source_adaptation_review || sections.article_writing_pack) {
-				blocks.push(createElement('h4', { key: 'source-adaptation-source-title' }, __('External source evidence', 'npcink-workflow-toolbox')));
-				blocks.push(createElement('p', { key: 'source-adaptation-source-help', className: 'npcink-toolbox-editor-support__muted' }, __('Reader output is bounded evidence, not proof that the complete article was captured. Verify the source and usage rights before drafting.', 'npcink-workflow-toolbox')));
-				blocks.push(renderItems(sourceArticleEvidenceItems(sections.source_article), __('No readable source evidence returned.', 'npcink-workflow-toolbox')));
+			if (sections.source_article || sections.source_adaptation_review || sections.article_writing_pack || sections.article_draft_preview) {
+				if (payload.input_mode !== 'manual_brief') {
+					blocks.push(createElement('h4', { key: 'source-adaptation-source-title' }, __('External source evidence', 'npcink-workflow-toolbox')));
+					blocks.push(createElement('p', { key: 'source-adaptation-source-help', className: 'npcink-toolbox-editor-support__muted' }, __('Reader output is bounded evidence, not proof that the complete article was captured. Verify the source and usage rights before drafting.', 'npcink-workflow-toolbox')));
+					blocks.push(renderItems(sourceArticleEvidenceItems(sections.source_article), __('No readable source evidence returned.', 'npcink-workflow-toolbox')));
+				}
 				if (sections.source_site_context) {
 					blocks.push(createElement('h4', { key: 'source-adaptation-site-title' }, __('Related site articles from Site Knowledge', 'npcink-workflow-toolbox')));
 					blocks.push(renderItems(extractWritingSupportItems(sections.source_site_context), __('No related site articles were found.', 'npcink-workflow-toolbox')));
 				}
 				if (sections.article_writing_pack || sections.source_adaptation_review) {
 					if (sections.article_writing_pack) {
-						blocks.push(createElement('p', { key: 'writing-pack-inference-help', className: 'npcink-toolbox-editor-support__muted' }, __('Audience, goals, priorities, and angle are inferred planning fields and remain unconfirmed until a future typed manual-review mode is introduced.', 'npcink-workflow-toolbox')));
+						const admission = sections.article_writing_pack.generation_admission || {};
+						blocks.push(createElement('p', { key: 'writing-pack-inference-help', className: 'npcink-toolbox-editor-support__muted' }, admission.status === 'blocked'
+							? __('The source body is insufficient, so drafting stopped here. Try another public article URL.', 'npcink-workflow-toolbox')
+							: __('Writing direction is ready. Confirm it above, or open the advanced details when you need to inspect facts, overlap, rights, or structure.', 'npcink-workflow-toolbox')));
 					}
 					const groups = sections.article_writing_pack
 						? articleWritingPackGroups(sections.article_writing_pack)
 						: sourceAdaptationReviewGroups(sections.source_adaptation_review);
+					const writingPackDetails = [];
 					groups.forEach((group) => {
-						blocks.push(createElement('h4', { key: group.key + '-title' }, group.label));
-						blocks.push(renderItems(group.items, __('No review items returned.', 'npcink-workflow-toolbox')));
+						writingPackDetails.push(createElement('h4', { key: group.key + '-title' }, group.label));
+						writingPackDetails.push(renderItems(group.items, __('No review items returned.', 'npcink-workflow-toolbox')));
 					});
+					if (writingPackDetails.length) {
+						blocks.push(createElement(
+							'details',
+							{ key: 'writing-pack-advanced-details', className: 'npcink-toolbox-editor-support__writing-pack-details' },
+							createElement('summary', null, __('Writing pack details (advanced)', 'npcink-workflow-toolbox')),
+							createElement('div', null, writingPackDetails)
+						));
+					}
 					if (sections.source_adaptation_review && sections.source_adaptation_review.message) {
 						blocks.push(createElement('p', { key: 'source-adaptation-message', className: 'npcink-toolbox-editor-support__muted' }, sections.source_adaptation_review.message));
 					}
 					if (sections.source_adaptation_review) {
 						blocks.push(renderHostedAiDiagnostics(sections.source_adaptation_review, { defaultOpen: false }));
 					}
+				}
+				if (sections.article_draft_preview) {
+					blocks.push(createElement('p', { key: 'article-draft-preview-help', className: 'npcink-toolbox-editor-support__muted' }, __('This draft was generated from the confirmed writing pack. It remains plain-text review output and has not been inserted, saved, or published.', 'npcink-workflow-toolbox')));
+					articleDraftPreviewGroups(sections.article_draft_preview).forEach((group) => {
+						blocks.push(createElement('h4', { key: group.key + '-title' }, group.label));
+						blocks.push(renderItems(group.items, __('No draft preview items returned.', 'npcink-workflow-toolbox')));
+					});
+					blocks.push(renderArticleDraftReview(sections.article_draft_preview, metadataHandoffControls && metadataHandoffControls.draftReview));
 				}
 			}
 
@@ -6494,6 +6947,14 @@
 			const [contextualAltApplyStatus, setContextualAltApplyStatus] = useState(null);
 			const [flowInstructions, setFlowInstructions] = useState({});
 			const [sourceArticleUrl, setSourceArticleUrl] = useState('');
+			const [writingPackInputMode, setWritingPackInputMode] = useState('url_reference');
+			const [writingPackBrief, setWritingPackBrief] = useState(emptyWritingPackBrief);
+			const [writingPackConfirmed, setWritingPackConfirmed] = useState(false);
+			const [draftReviewFeedback, setDraftReviewFeedback] = useState(emptyDraftReviewFeedback);
+			const [draftReviewStatus, setDraftReviewStatus] = useState(null);
+			const [draftCoreHandoffRunning, setDraftCoreHandoffRunning] = useState(false);
+			const [draftCoreHandoffResult, setDraftCoreHandoffResult] = useState(null);
+			const [draftCoreHandoffError, setDraftCoreHandoffError] = useState(null);
 				const [titleApplyStatus, setTitleApplyStatus] = useState(null);
 				const [excerptApplyStatus, setExcerptApplyStatus] = useState(null);
 				const [slugApplyStatus, setSlugApplyStatus] = useState(null);
@@ -6664,6 +7125,18 @@
 				setError('');
 			}
 
+			function updateWritingPackBriefField(field, value) {
+				setWritingPackBrief((current) => Object.assign({}, current || emptyWritingPackBrief(), { [field]: value }));
+				setWritingPackConfirmed(false);
+			}
+
+			function updateWritingPackInputMode(value) {
+				setWritingPackInputMode(value);
+				setWritingPackConfirmed(false);
+				setResult(null);
+				setError('');
+			}
+
 				async function runFlow(intent, options) {
 					const runOptions = options && typeof options === 'object' ? options : {};
 					if (intent === 'image_candidates') {
@@ -6671,12 +7144,25 @@
 						return;
 					}
 					const displayIntent = runOptions.resultIntent || intent;
-					if (intent === 'source_adaptation_review' && !String(sourceArticleUrl || '').trim()) {
+					const sourceStage = runOptions.sourceStage || (writingPackInputMode === 'manual_brief' ? 'research_plan' : 'extract');
+					const requiresSourceUrl = writingPackInputMode === 'url_reference' || writingPackInputMode === 'mixed';
+					if (intent === 'source_adaptation_review' && sourceStage !== 'draft' && requiresSourceUrl && !String(sourceArticleUrl || '').trim()) {
 						setSupportView('result');
 						setContextualResult(false);
 						setActiveFlowIntent(intent);
-						setError(__('Enter one public article URL before running source adaptation review.', 'npcink-workflow-toolbox'));
+						setError(__('Enter one public article URL for URL reference or mixed mode.', 'npcink-workflow-toolbox'));
 						return;
+					}
+					if (intent === 'source_adaptation_review' && sourceStage !== 'draft' && writingPackInputMode === 'manual_brief' && (!String(writingPackBrief.audience || '').trim() || !String(writingPackBrief.article_goal || '').trim() || !writingPackLines(writingPackBrief.focus_points).length)) {
+						setSupportView('result');
+						setContextualResult(false);
+						setActiveFlowIntent(intent);
+						setError(__('Manual brief mode requires an audience, article goal, and at least one focus point.', 'npcink-workflow-toolbox'));
+						return;
+					}
+					if (intent === 'source_adaptation_review' && sourceStage === 'draft') {
+						setDraftCoreHandoffResult(null);
+						setDraftCoreHandoffError(null);
 					}
 
 					setSupportView('result');
@@ -6723,6 +7209,11 @@
 							fallbackContextOverride,
 							runOptions.contextOverride && typeof runOptions.contextOverride === 'object' ? runOptions.contextOverride : {}
 						);
+						const currentWritingPack = result && result.sections && result.sections.article_writing_pack ? result.sections.article_writing_pack : null;
+						const reviewedWritingPack = intent === 'source_adaptation_review' && sourceStage === 'draft' ? reviewedWritingPackFromEditor(currentWritingPack, writingPackBrief) : null;
+						if (intent === 'source_adaptation_review' && sourceStage === 'draft' && (!reviewedWritingPack || !writingPackConfirmed)) {
+							throw new Error(__('Review and confirm the current writing pack before generating a draft.', 'npcink-workflow-toolbox'));
+						}
 						const payload = Object.assign({}, runContext, {
 							intent,
 							category_ids: Array.isArray(runContext.category_ids) ? runContext.category_ids.join(',') : '',
@@ -6732,9 +7223,23 @@
 							force_regenerate: shouldForceRegenerate,
 							user_instruction: userInstruction,
 							source_url: intent === 'source_adaptation_review' ? String(sourceArticleUrl || '').trim() : '',
-							input_mode: intent === 'source_adaptation_review' ? 'url_reference' : '',
-							source_stage: intent === 'source_adaptation_review' ? (runOptions.sourceStage || 'extract') : '',
+							input_mode: intent === 'source_adaptation_review' ? writingPackInputMode : '',
+							source_stage: intent === 'source_adaptation_review' ? sourceStage : '',
 					});
+					if (intent === 'source_adaptation_review') {
+						payload.editorial_brief = writingPackBrief;
+						if (reviewedWritingPack) {
+							payload.reviewed_writing_pack = reviewedWritingPack;
+							payload.writing_pack_confirmation = {
+								status: 'confirmed_by_operator',
+								confirmed: true,
+								base_content_fingerprint: reviewedWritingPack.content_fingerprint || '',
+							};
+							if (runOptions.draftReviewFeedback && typeof runOptions.draftReviewFeedback === 'object') {
+								payload.draft_review_feedback = runOptions.draftReviewFeedback;
+							}
+						}
+					}
 					if (isAudioIntent(intent)) {
 						payload.audio_preferences = normalizeAudioPreferences(audioPreferences);
 					}
@@ -6750,6 +7255,14 @@
 						const flowResult = runOptions.timeoutMs
 							? await postJsonWithTimeout('editor/content-support', payload, runOptions.timeoutMs)
 							: await postJson('editor/content-support', payload);
+						const returnedWritingPack = flowResult && flowResult.sections ? flowResult.sections.article_writing_pack : null;
+						if (returnedWritingPack && flowResult.artifact_type === 'article_writing_pack.v1') {
+							setWritingPackBrief(writingPackBriefFromArtifact(returnedWritingPack));
+							setWritingPackInputMode(returnedWritingPack.input_mode || writingPackInputMode);
+							setWritingPackConfirmed(false);
+							setDraftReviewFeedback(emptyDraftReviewFeedback());
+							setDraftReviewStatus(null);
+						}
 						setResult((current) => {
 							const mergedFlowResult = mergeContentSupportResult(current, flowResult, intent);
 							if (!runOptions.preserveResult || !current || !current.sections) {
@@ -6780,6 +7293,100 @@
 				} finally {
 					setRunning('');
 				}
+			}
+
+			function updateDraftReviewStatus(status) {
+				setDraftReviewFeedback((current) => Object.assign({}, current, { status: String(status || '') }));
+				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
+			}
+
+			function toggleDraftReviewIssue(issueCode, checked) {
+				setDraftReviewFeedback((current) => {
+					const issueCodes = Array.isArray(current.issue_codes) ? current.issue_codes.slice() : [];
+					const next = checked ? issueCodes.concat(issueCodes.indexOf(issueCode) >= 0 ? [] : [issueCode]) : issueCodes.filter((item) => item !== issueCode);
+					return Object.assign({}, current, { issue_codes: next });
+				});
+				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
+			}
+
+			function updateDraftReviewNotes(notes) {
+				setDraftReviewFeedback((current) => Object.assign({}, current, { notes: String(notes || '') }));
+				setDraftReviewStatus(null);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
+			}
+
+			function regenerateDraftFromReview() {
+				if (!articleDraftReviewCanRegenerate(draftReviewFeedback)) {
+					setDraftReviewStatus({ status: 'warning', message: __('Choose a change-needed result and add an issue or revision note first.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				setDraftReviewStatus({ status: 'info', message: __('Generating a new draft from this request-scoped feedback...', 'npcink-workflow-toolbox') });
+				runFlow('source_adaptation_review', { sourceStage: 'draft', forceRegenerate: true, draftReviewFeedback: draftReviewFeedback });
+			}
+
+			function copyArticleDraftPreview(draft) {
+				copyTextToClipboard(articleDraftPreviewText(draft)).then(() => {
+					setDraftReviewStatus({ status: 'success', message: __('Draft copied. Nothing was inserted or saved in WordPress.', 'npcink-workflow-toolbox') });
+				}).catch(() => {
+					setDraftReviewStatus({ status: 'error', message: __('The draft could not be copied.', 'npcink-workflow-toolbox') });
+				});
+			}
+
+			async function submitArticleDraftToCore(draft) {
+				if (draftReviewFeedback.status !== 'usable') {
+					setDraftReviewStatus({ status: 'warning', message: __('Mark the current draft as usable before submitting it to Core review.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				setDraftCoreHandoffRunning(true);
+				setDraftCoreHandoffResult(null);
+				setDraftCoreHandoffError(null);
+				try {
+					const handoff = await postArticleDraftToAdapter(draft);
+					const receipt = coreHandoffReceipt(handoff.bridge, {
+						proposal_id: handoff.proposal_id,
+						target_ability_id: 'npcink-abilities-toolkit/create-draft',
+						source_item_id: String(draft && draft.writing_pack_id ? draft.writing_pack_id : ''),
+						source_label: String(draft && draft.title ? draft.title : ''),
+						handoff_type: 'article_draft_core_proposal',
+						operator_next_action: 'review_and_execute_in_core',
+					});
+					setDraftCoreHandoffResult(Object.assign({}, handoff, { handoff_receipt: receipt }));
+					setDraftReviewStatus({ status: 'success', message: __('The draft proposal is ready in Core. Approve and execute it there to create the WordPress draft; publishing remains manual.', 'npcink-workflow-toolbox') });
+				} catch (handoffError) {
+					setDraftCoreHandoffError(coreHandoffFailure(handoffError, {
+						fallback: __('The WordPress draft could not be submitted to Core review.', 'npcink-workflow-toolbox'),
+						receipt: {
+							target_ability_id: 'npcink-abilities-toolkit/create-draft',
+							handoff_type: 'article_draft_core_proposal',
+						},
+					}));
+				} finally {
+					setDraftCoreHandoffRunning(false);
+				}
+			}
+
+			function loadArticleDraftPreviewIntoEditor(draft) {
+				if (draftReviewFeedback.status !== 'usable') {
+					setDraftReviewStatus({ status: 'warning', message: __('Mark the current draft as usable before loading it into Gutenberg.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				if (!currentEditorBodyIsEmpty(postContext.content)) {
+					setDraftReviewStatus({ status: 'warning', message: __('The article body is no longer empty. Nothing was loaded; copy the draft for manual review instead.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				const draftBlocks = articleDraftPreviewBlocks(draft);
+				const blockDispatch = data.dispatch && data.dispatch('core/block-editor');
+				if (!draftBlocks.length || !blockDispatch || !blockDispatch.resetBlocks) {
+					setDraftReviewStatus({ status: 'error', message: __('The draft could not be loaded into Gutenberg.', 'npcink-workflow-toolbox') });
+					return;
+				}
+				blockDispatch.resetBlocks(draftBlocks);
+				setDraftReviewStatus({ status: 'success', message: sprintf(__('Loaded %d blocks into the visible editor. Review them, then use WordPress Save draft or Publish to persist.', 'npcink-workflow-toolbox'), draftBlocks.length) });
 			}
 
 			async function applyContextualAltToDraft(section, container, options) {
@@ -8235,8 +8842,12 @@
 		const rerunIntent = running || activeFlowIntent || (result && result.intent) || '';
 		const resultTitle = rerunIntent ? formatIntentLabel(rerunIntent) : __('Content support', 'npcink-workflow-toolbox');
 		const sourceExtractionSection = result && result.sections && result.sections.source_article ? result.sections.source_article : {};
-		const sourceExtractionReady = Boolean(result && result.artifact_type === 'source_extraction_preview.v1' && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched');
-		const sourceAdaptationComplete = Boolean(result && result.sections && result.sections.article_writing_pack && result.sections.article_writing_pack.artifact_type === 'article_writing_pack.v1');
+		const currentWritingPackArtifact = result && result.sections && result.sections.article_writing_pack ? result.sections.article_writing_pack : null;
+		const sourceExtractionComplete = Boolean(result && result.artifact_type === 'source_extraction_preview.v1');
+		const sourceExtractionReady = Boolean(sourceExtractionComplete && sourceExtractionSection.status === 'ready' && sourceExtractionSection.url_match === 'matched' && sourceExtractionSection.body_ready === true);
+		const sourceAdaptationComplete = Boolean(currentWritingPackArtifact && currentWritingPackArtifact.artifact_type === 'article_writing_pack.v1');
+		const sourceWritingPackBlocked = Boolean(sourceAdaptationComplete && currentWritingPackArtifact.generation_admission && currentWritingPackArtifact.generation_admission.status === 'blocked');
+		const sourceDraftComplete = Boolean(result && result.sections && result.sections.article_draft_preview && result.sections.article_draft_preview.artifact_type === 'article_draft_preview.v1');
 		const isContextualParagraphResult = contextualResult && rerunIntent === 'polish_notes';
 		const resultControls = {
 			intent: activeFlowIntent || (result && result.intent) || '',
@@ -8279,6 +8890,24 @@
 				result: seoHandoffResult,
 				error: seoHandoffError,
 			},
+				draftReview: {
+					feedback: draftReviewFeedback,
+					status: draftReviewStatus,
+					running: Boolean(running),
+					setStatus: updateDraftReviewStatus,
+					toggleIssue: toggleDraftReviewIssue,
+					setNotes: updateDraftReviewNotes,
+					regenerate: regenerateDraftFromReview,
+					copy: copyArticleDraftPreview,
+					submitToCore: submitArticleDraftToCore,
+					loadIntoEditor: loadArticleDraftPreviewIntoEditor,
+					editorBodyEmpty: currentEditorBodyIsEmpty(postContext.content),
+					draftApproved: draftReviewFeedback.status === 'usable',
+					coreHandoffRunning: draftCoreHandoffRunning,
+					coreHandoffResult: draftCoreHandoffResult,
+					coreHandoffError: draftCoreHandoffError,
+					coreHandoffSubmitted: Boolean(draftCoreHandoffResult && draftCoreHandoffResult.proposal_id),
+				},
 				audioAdoption: {
 					running: audioAdoptionRunning,
 					result: audioAdoptionResult,
@@ -8341,9 +8970,19 @@
 						),
 						renderFlowTrustMeta(flowByIntent(rerunIntent), { compact: true }),
 						rerunIntent === 'source_adaptation_review' ? createElement(
-							'div',
-							{ className: 'npcink-toolbox-editor-support__flow-instruction' },
-							createElement(TextControl, {
+							Fragment,
+							null,
+							renderWritingPackEditor(writingPackInputMode, writingPackBrief, {
+								showBrief: writingPackInputMode !== 'url_reference' || sourceAdaptationComplete,
+								showConfirmation: sourceAdaptationComplete && !sourceWritingPackBlocked,
+								disabled: Boolean(running),
+								confirmed: writingPackConfirmed,
+								canConfirm: sourceAdaptationComplete && !sourceWritingPackBlocked && writingPackCanConfirm(currentWritingPackArtifact, writingPackBrief),
+								onModeChange: updateWritingPackInputMode,
+								onFieldChange: updateWritingPackBriefField,
+								onConfirm: setWritingPackConfirmed,
+							}),
+							writingPackInputMode !== 'manual_brief' ? createElement(TextControl, {
 								label: __('Public article URL', 'npcink-workflow-toolbox'),
 								type: 'url',
 								value: sourceArticleUrl,
@@ -8351,10 +8990,14 @@
 								disabled: Boolean(running),
 								onChange: (value) => {
 									setSourceArticleUrl(value);
+									if (writingPackInputMode === 'url_reference') {
+										setWritingPackBrief(emptyWritingPackBrief());
+									}
+									setWritingPackConfirmed(false);
 									setResult(null);
 								},
-							}),
-							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('This version generates a reviewable writing pack from one public URL. Audience, priorities, and angle are inferred and not yet operator-confirmed; no article body is generated or inserted.', 'npcink-workflow-toolbox'))
+							}) : null,
+							createElement('p', { className: 'npcink-toolbox-editor-support__muted' }, __('Build or edit one writing pack, confirm it, then generate a plain-text draft preview. Reviewed sections may load only into an empty editor; nothing is saved or published automatically.', 'npcink-workflow-toolbox'))
 						) : null,
 						rerunIntent && flowAcceptsUserInstruction(rerunIntent) ? createElement(
 							'div',
@@ -8378,26 +9021,45 @@
 										type: 'button',
 										variant: 'secondary',
 										isBusy: Boolean(running),
-										disabled: Boolean(running),
-									onClick: () => {
-										if (rerunIntent === 'source_adaptation_review') {
-											if (sourceExtractionReady) {
-												submitContentImplicitFeedback('generate_article_writing_pack', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
-												runFlow(rerunIntent, { sourceStage: 'research_plan' });
-											} else if (sourceAdaptationComplete) {
-												submitContentImplicitFeedback('regenerate_article_writing_pack', 'edited_before_accept', ['good_but_needs_human_draft']);
-												runFlow(rerunIntent, { sourceStage: 'research_plan', forceRegenerate: true });
-											} else {
-												runFlow(rerunIntent, { sourceStage: 'extract' });
+										disabled: Boolean(running) || (rerunIntent === 'source_adaptation_review' && sourceExtractionComplete && !sourceExtractionReady),
+										onClick: () => {
+											if (rerunIntent === 'source_adaptation_review') {
+												if (sourceExtractionComplete && !sourceExtractionReady) {
+													return;
+												}
+												if (sourceExtractionReady) {
+													submitContentImplicitFeedback('generate_article_writing_pack', 'accepted', ['source_exact_match', 'extraction_coverage_useful']);
+													runFlow(rerunIntent, { sourceStage: 'research_plan' });
+												} else if (sourceAdaptationComplete) {
+													submitContentImplicitFeedback('regenerate_article_writing_pack', 'edited_before_accept', ['good_but_needs_human_draft']);
+													runFlow(rerunIntent, { sourceStage: 'research_plan', forceRegenerate: true });
+												} else if (writingPackInputMode === 'manual_brief') {
+													runFlow(rerunIntent, { sourceStage: 'research_plan' });
+												} else {
+													runFlow(rerunIntent, { sourceStage: 'extract' });
+												}
+												return;
 											}
-											return;
-										}
-										submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
-										runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
+											submitContentImplicitFeedback('run_again', 'edited_before_accept', ['good_but_needs_human_draft']);
+											runFlow(rerunIntent, (rerunIntent === 'summary_suggestions' || isAudioIntent(rerunIntent)) ? { forceRegenerate: true } : undefined);
 										},
 									},
-									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionReady ? __('Generate writing pack', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-generate writing pack', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
+									running ? __('Running', 'npcink-workflow-toolbox') : (rerunIntent === 'source_adaptation_review' ? (sourceExtractionComplete && !sourceExtractionReady ? __('Source body unavailable', 'npcink-workflow-toolbox') : (sourceExtractionReady ? __('Generate writing pack', 'npcink-workflow-toolbox') : (sourceAdaptationComplete ? __('Re-generate writing pack', 'npcink-workflow-toolbox') : (writingPackInputMode === 'manual_brief' ? __('Generate writing pack', 'npcink-workflow-toolbox') : __('Fetch source', 'npcink-workflow-toolbox'))))) : (isAudioRerun ? __('Regenerate audio', 'npcink-workflow-toolbox') : (rerunIntent === 'summary_suggestions' ? __('Regenerate', 'npcink-workflow-toolbox') : __('Run again', 'npcink-workflow-toolbox'))))
 								),
+								rerunIntent === 'source_adaptation_review' && sourceAdaptationComplete && !sourceWritingPackBlocked ? createElement(
+									Button,
+									{
+										type: 'button',
+										variant: 'primary',
+										isBusy: Boolean(running),
+										disabled: Boolean(running) || !writingPackConfirmed,
+										onClick: () => {
+											submitContentImplicitFeedback(sourceDraftComplete ? 'regenerate_article_draft_preview' : 'generate_article_draft_preview', 'accepted', ['writing_pack_operator_confirmed']);
+											runFlow(rerunIntent, { sourceStage: 'draft', forceRegenerate: sourceDraftComplete });
+										},
+									},
+									sourceDraftComplete ? __('Re-generate draft preview', 'npcink-workflow-toolbox') : __('Generate draft preview', 'npcink-workflow-toolbox')
+								) : null,
 								canAdvancedSummaryRerun ? createElement(
 									Button,
 									{

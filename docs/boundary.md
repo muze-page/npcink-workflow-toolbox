@@ -22,9 +22,20 @@ Owned here:
 - one editor-side staged composition that first reviews exact-URL
   `source_extraction_preview.v1` evidence, then joins Cloud Site Knowledge
   passages and hosted suggestions into `article_writing_pack.v1` without
-  fetching URLs locally or generating replacement article text. The current
-  input mode is `url_reference`; future manual brief fields must extend the same
-  contract rather than create a parallel writer.
+  fetching URLs locally. `url_reference`, `manual_brief`, and `mixed` extend the
+  same contract. A stateless, operator-confirmed review envelope may admit one
+  synchronous `article_draft_preview.v1`; the preview remains suggestion-only
+  plain text. After review, one explicit `native_editor_commit` action may load
+  sections only into an empty current Gutenberg body; it never saves, replaces
+  an existing body, or publishes.
+  After a preview is rated `usable`, a separate explicit governed action may
+  reuse `npcink-toolbox/build-article-write-plan` and submit the plan through
+  Adapter to Core. Toolbox then stops at the proposal receipt and Core link; it
+  does not approve, execute, poll-to-execute, save, or publish. Approved
+  Toolkit execution creates only a WordPress `draft` for later human review.
+  URL/mixed drafting also fails closed when the reader does not meet the small
+  documented source-body gate; operator confirmation cannot override that
+  evidence failure.
 
 Not owned here:
 
@@ -80,6 +91,9 @@ Hard blocks:
 
 - Toolbox must never implement `confirm_token`, `write_confirmed`, hidden
   write confirmation, or a local approval-state store.
+- A writing-pack confirmation is valid only as a request-scoped editor review
+  envelope for one synchronous draft preview. It is not reusable authorization,
+  Core approval, durable state, or permission to mutate WordPress.
 - Toolbox must not add direct publish, media import, media metadata mutation,
   SEO mutation, post-content mutation, or featured-image writes outside the
   single Local Admin Consent featured-image exception recorded in the Boundary

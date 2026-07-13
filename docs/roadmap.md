@@ -80,12 +80,13 @@ Target features:
   duplicate-risk checks and internal-link candidates rather than a separate
   writing-preparation button. Image candidates may include a secondary
   saved-post media brief action for image planning.
-  The writing-pack flow accepts one public URL and returns bounded reader
-  evidence, related Site Knowledge/vector passages, inferred editorial fields,
-  fact and overlap maps, and `article_writing_pack.v1`. It is the prerequisite
-  contract for future draft generation, but this stage does not generate,
-  insert, translate in full, import, or publish article content. Manual and
-  mixed brief modes remain future additive inputs to the same contract.
+  The writing-pack flow accepts a public URL, a typed manual brief, or both and
+  returns related Site Knowledge/vector passages, editorial fields, fact and
+  overlap maps, and `article_writing_pack.v1`. After structured operator review
+  and confirmation, one synchronous `article_draft_preview.v1` may be generated
+  from that reviewed pack. Reviewed sections may be explicitly loaded only into
+  an empty current Gutenberg body; Toolbox never replaces existing content,
+  saves, translates in full, imports, queues, or publishes it.
 - Frontend single-post article audio playback for already adopted narration or
   audio-summary metadata. This is a playback entry only; generation, adoption,
   proposal review, media import, regeneration, and writes stay in the governed

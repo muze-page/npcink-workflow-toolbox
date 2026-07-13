@@ -20,15 +20,15 @@
     },
     {
       "button_id": "source_adaptation_review",
-      "label": "Adapt External Source",
+      "label": "Prepare Article From Source Or Brief",
       "surface": "editor_content_support",
-      "source_contracts": ["source_extraction_preview.v1", "source_adaptation_review.v1", "article_writing_pack.v1", "bounded_external_source_evidence"],
+      "source_contracts": ["source_extraction_preview.v1", "source_adaptation_review.v1", "article_writing_pack.v1", "article_writing_pack_review.v1", "article_draft_preview.v1", "bounded_external_source_evidence"],
       "runtime_owner": "npcink_cloud_reader_site_knowledge_and_hosted_ai_via_cloud_addon",
-      "write_lane": "review_only",
-      "handoff_owner": "human_editor",
+      "write_lane": "native_editor_commit",
+      "handoff_owner": "human_editor_empty_body_then_native_save_only",
       "adapter_parity_status": "partial_contract_reuse",
       "source_file": "assets/editor-content-support.js",
-      "source_marker": "Adapt external source",
+      "source_marker": "Prepare article from source or brief",
       "direct_wordpress_write": false
     },
     {

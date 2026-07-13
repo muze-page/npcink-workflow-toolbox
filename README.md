@@ -29,12 +29,19 @@ The first version provides:
   a generic Abilities Explorer, provider picker, request log, or connector
   approval surface;
 - a post editor **Npcink Content Support** sidebar whose default buttons focus
-  on Npcink review and handoff flows: URL-reference article writing pack,
+  on Npcink review and handoff flows: URL/manual/mixed article writing pack,
+  confirmed plain-text draft preview, one explicit Core proposal handoff for a
+  new WordPress `draft`, and optional empty-body-only Gutenberg loading that
+  remains unsaved until the author's native WordPress action,
   publish preflight, internal-link
   candidates, current-article contextual ALT review, image candidates, and
   article audio candidates. Generic title, summary, taxonomy/tag, outline, and
   article-checkup support remains available through compatible route/rendering paths, plus
   selected-paragraph toolbar checks that do not replace body text;
+- the URL-writing path stays compact by default: URL, source-body readiness,
+  direction confirmation, draft review, and optional empty-editor loading.
+  Metadata/navigation-only extraction stops before planning; brief and evidence
+  details stay under optional or advanced disclosure;
 - a frontend article audio playback entry that renders only already adopted
   WordPress audio metadata near single posts; Cloud generation remains a
   candidate artifact path, and Toolbox may prepare a Core-governed article
@@ -453,6 +460,10 @@ button; it must not create a separate batch writer.
 The article plan flow and `npcink-toolbox/build-article-write-plan` ability
 assemble a Core-ready `article_write_plan` for a reviewed draft. They do not
 call Core, approve proposals, publish content, or write WordPress data.
+After a user rates an editor draft preview `usable`, a separate explicit button
+may submit that plan through Adapter to Core and then stops at the proposal
+receipt. Core approval and Adapter/Toolkit execution create only a WordPress
+`draft`; an author or editor publishes it later through native WordPress.
 The **Site Check** surface is the operator-facing path for site content
 opportunity triage. The bounded content snapshot helper remains available through
 `/ai/site-helpers` for route/internal composition, while the reviewed-draft

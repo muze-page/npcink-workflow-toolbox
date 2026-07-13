@@ -230,11 +230,19 @@ not registered as a public Toolbox ability.
 `npcink-toolbox/build-article-write-plan` assembles a Core-ready
 `article_write_plan` for a reviewed draft and leaves proposal creation,
 approval, preflight, audit, and final execution outside Toolbox.
+The editor may invoke this existing planner only after the current
+`article_draft_preview.v1` is rated `usable`, then forward the plan to Adapter's
+`proposals/from-plan` route. Toolbox keeps only an ephemeral receipt and links
+to Core; it never approves, executes, polls-to-execute, or publishes. Approved
+Adapter/Toolkit execution creates a WordPress post with status `draft`.
 `composer smoke:article-core` proves the local route by building the Toolbox
 plan through `/wp-json/npcink-toolbox/v1/flows/article-plan`, submitting it to
-Core `/wp-json/npcink-governance-core/v1/proposals/from-plan`, and asserting the
-result is one pending dry-run `npcink-abilities-toolkit/create-draft` proposal
-without creating a WordPress post.
+Adapter `/wp-json/npcink-openclaw-adapter/v1/proposals/from-plan`, and asserting
+the Core-backed result is one pending dry-run
+`npcink-abilities-toolkit/create-draft` proposal without creating a WordPress
+post. Setting `NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_EXECUTE=1` additionally runs
+the explicit approve-and-execute path, verifies the result is exactly one
+WordPress `draft`, reads back Markdown conversion, and removes the fixture.
 `npcink-toolbox/build-article-media-batch-write-plan` assembles a
 Core-ready `article_media_batch_write_plan` from reviewed drafts and reviewed
 image-source candidates. It does not upload media, set featured images, approve
@@ -455,6 +463,12 @@ Core trace, calls no Adapter execution route, writes no attachment data, and
 leaves persistence to native Save draft or Update. SEO, external-image
 adoption, and article-audio adoption stop after Core proposal creation and show
 the governance link.
+The article writing-pack draft remains a hosted suggestion artifact. After
+review, the browser may convert only its ordered sections into `core/heading`
+and `core/paragraph` blocks when the current editor body is empty. The click
+handler rechecks live block state, does not apply the generated title or
+excerpt, and does not call a REST write or native save action. Existing body
+content makes the action copy-only.
 Generic AI-plugin-style generation and diagnosis intents such as
 `article_checkup`, `title_suggestions`, `summary_suggestions`,
 `category_suggestions`, `tag_suggestions`, `article_outline`,
@@ -472,14 +486,24 @@ compatibility but now returns the planning artifact `article_writing_pack.v1`.
 Its default `extract` stage requests one exact-URL bounded Cloud
 `source_extraction_preview.v1` result and stops for operator verification. The
 canonical `research_plan` stage (`adapt` remains an input alias) queries related
-Cloud Site Knowledge passages and asks hosted AI for inferred audience,
-priorities, fact ledger, overlap map, distinct angle, outline, and risk review.
-The current input mode is `url_reference`; the normalized `source_materials`
-and `editorial_brief` boundaries allow later manual or mixed input without a
-second contract. Reader content remains untrusted external data and embedded
-instructions cannot change the hosted task.
-It does not fetch URLs from WordPress, return a full translation, insert or
-replace article text, import media, create a Core proposal, or publish.
+Cloud Site Knowledge passages and asks hosted AI for audience, priorities, fact
+ledger, overlap map, distinct angle, outline, and risk review. Input modes
+`url_reference`, `manual_brief`, and `mixed` populate the same normalized
+`source_materials` and `editorial_brief` boundaries. Reader content remains
+untrusted external data and embedded instructions cannot change the hosted
+task. Operator editorial preferences override inference but cannot turn
+unsupported claims into verified facts.
+
+The `draft` stage accepts only a reviewed `article_writing_pack.v1`, a matching
+base fingerprint, and explicit request-scoped operator confirmation. It returns
+`article_writing_pack_review.v1` plus `article_draft_preview.v1`. It does not
+reread the URL, store approval state, implement a confirmation token, insert or
+replace article text, import media, create a Core proposal, save, or publish.
+The returned preview may expose a lightweight human review form. A bounded
+`article_draft_review_feedback.v1` envelope can be sent only with an explicit
+regeneration request; it is sanitized editorial guidance, not factual evidence,
+durable feedback history, approval truth, or write authorization. Clipboard
+copy remains a manual operator action and does not insert into the editor.
 The discoverability result may show a current-draft image ALT/caption check and
 CTA that reuses the `image_alt_suggestions` intent; generated suggestions merge
 back into the discoverability panel while preserving the
@@ -712,8 +736,8 @@ opened from the editor top toolbar. It is a high-frequency entrypoint for the
 same fixed workflows that the admin surface owns:
 
 - publish/readiness preflight;
-- one bounded URL-reference `article_writing_pack.v1` using Cloud reader
-  evidence and related Cloud Site Knowledge passages;
+- one `article_writing_pack.v1` built from URL, manual, or mixed inputs, with an
+  optional confirmed `article_draft_preview.v1` review result;
 - internal-link candidates from `npcink-abilities-toolkit/resolve-internal-link-targets`,
   optionally ranked with Cloud-managed Site Knowledge evidence;
 - image-source candidates through the configured Cloud image-source runtime.
