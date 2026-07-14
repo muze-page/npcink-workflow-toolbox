@@ -177,7 +177,7 @@ final class Rest_Controller {
 				'vector_provider'          => 'cloud_site_knowledge',
 				'web_search_owner'         => 'cloud_runtime',
 				'cloud_image_sources_configured' => $this->settings->has_image_source_provider(),
-				'raw_responses_enabled'    => (bool) $this->settings->get( 'include_raw_responses' ),
+				'raw_responses_enabled'    => $this->settings->raw_responses_enabled(),
 				'image_source_enabled'     => (bool) $this->settings->get( 'enable_image_source' ),
 				'image_source_available'   => $cloud_ready && (bool) $this->settings->get( 'enable_image_source' ),
 				'vector_search_registered' => true,
@@ -3094,25 +3094,135 @@ final class Rest_Controller {
 
 		$scheme = strtolower( (string) ( $parts['scheme'] ?? '' ) );
 		$host   = strtolower( trim( (string) ( $parts['host'] ?? '' ), '[]' ) );
+		$port   = isset( $parts['port'] ) ? (int) $parts['port'] : ( 'https' === $scheme ? 443 : 80 );
 		$has_credentials = '' !== (string) ( $parts['user'] ?? '' ) || '' !== (string) ( $parts['pass'] ?? '' );
 		$blocked_host = '' === $host
 			|| 'localhost' === $host
 			|| str_ends_with( $host, '.localhost' )
 			|| str_ends_with( $host, '.local' )
-			|| str_ends_with( $host, '.test' );
+			|| str_ends_with( $host, '.test' )
+			|| str_ends_with( $host, '.invalid' )
+			|| str_ends_with( $host, '.example' )
+			|| str_ends_with( $host, '.internal' )
+			|| str_ends_with( $host, '.home.arpa' );
 		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
 			$blocked_host = false === filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
 		}
 
-		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || $has_credentials || $blocked_host ) {
+		$safe_port = ( 'http' === $scheme && 80 === $port ) || ( 'https' === $scheme && 443 === $port );
+		$wordpress_safe_url = function_exists( 'wp_http_validate_url' ) ? wp_http_validate_url( $url ) : $url;
+		$public_host        = $this->editor_source_adaptation_host_is_public( $host );
+
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || $has_credentials || $blocked_host || ! $safe_port || false === $wordpress_safe_url || ! $public_host ) {
 			return new WP_Error(
 				'npcink_toolbox_source_url_not_public',
-				__( 'Use a public HTTP or HTTPS article URL without credentials, localhost, or private network addresses.', 'npcink-workflow-toolbox' ),
+				__( 'Use a public HTTP or HTTPS article URL on a standard port without credentials, localhost, or private network addresses.', 'npcink-workflow-toolbox' ),
 				array( 'status' => 400 )
 			);
 		}
 
-		return $url;
+		return is_string( $wordpress_safe_url ) ? $wordpress_safe_url : $url;
+	}
+
+	private function editor_source_adaptation_host_is_public( string $host ): bool {
+		$host = strtolower( trim( $host, '[]' ) );
+		if ( '' === $host ) {
+			return false;
+		}
+		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return $this->editor_source_adaptation_ip_is_public( $host );
+		}
+
+		// Cloud Addon owns fetch-time DNS and redirect validation. Resolving a
+		// hostname here would duplicate transport policy and break hosts that use
+		// a local outbound proxy address for public destinations.
+		return true;
+	}
+
+	private function editor_source_adaptation_ip_is_public( string $address ): bool {
+		$packed = @inet_pton( $address );
+		if ( false === $packed ) {
+			return false;
+		}
+
+		if ( 16 === strlen( $packed ) && substr( $packed, 0, 12 ) === str_repeat( "\0", 10 ) . "\xff\xff" ) {
+			$mapped_ipv4 = @inet_ntop( substr( $packed, 12, 4 ) );
+			return is_string( $mapped_ipv4 ) && $this->editor_source_adaptation_ip_is_public( $mapped_ipv4 );
+		}
+
+		$blocked_cidrs = 4 === strlen( $packed )
+			? array(
+				'0.0.0.0/8',
+				'10.0.0.0/8',
+				'100.64.0.0/10',
+				'127.0.0.0/8',
+				'169.254.0.0/16',
+				'172.16.0.0/12',
+				'192.0.0.0/24',
+				'192.0.2.0/24',
+				'192.88.99.0/24',
+				'192.168.0.0/16',
+				'198.18.0.0/15',
+				'198.51.100.0/24',
+				'203.0.113.0/24',
+				'224.0.0.0/4',
+				'240.0.0.0/4',
+			)
+			: array(
+				'::/96',
+				'::1/128',
+				'64:ff9b::/96',
+				'64:ff9b:1::/48',
+				'100::/64',
+				'2001:2::/48',
+				'2001:10::/28',
+				'2001:20::/28',
+				'2001:db8::/32',
+				'2002::/16',
+				'fc00::/7',
+				'fe80::/10',
+				'ff00::/8',
+			);
+
+		foreach ( $blocked_cidrs as $blocked_cidr ) {
+			if ( $this->editor_source_adaptation_ip_is_in_cidr( $address, $blocked_cidr ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private function editor_source_adaptation_ip_is_in_cidr( string $address, string $cidr ): bool {
+		$parts = explode( '/', $cidr, 2 );
+		if ( 2 !== count( $parts ) || ! ctype_digit( $parts[1] ) ) {
+			return false;
+		}
+
+		$address_bytes = @inet_pton( $address );
+		$network_bytes = @inet_pton( $parts[0] );
+		if ( false === $address_bytes || false === $network_bytes || strlen( $address_bytes ) !== strlen( $network_bytes ) ) {
+			return false;
+		}
+
+		$prefix_bits = (int) $parts[1];
+		$total_bits  = strlen( $address_bytes ) * 8;
+		if ( 0 > $prefix_bits || $prefix_bits > $total_bits ) {
+			return false;
+		}
+
+		$full_bytes = intdiv( $prefix_bits, 8 );
+		if ( 0 < $full_bytes && substr( $address_bytes, 0, $full_bytes ) !== substr( $network_bytes, 0, $full_bytes ) ) {
+			return false;
+		}
+
+		$remaining_bits = $prefix_bits % 8;
+		if ( 0 === $remaining_bits ) {
+			return true;
+		}
+
+		$mask = ( 0xff << ( 8 - $remaining_bits ) ) & 0xff;
+		return ( ord( $address_bytes[ $full_bytes ] ) & $mask ) === ( ord( $network_bytes[ $full_bytes ] ) & $mask );
 	}
 
 	private function editor_source_adaptation_url_matches( string $requested_url, string $resolved_url ): bool {

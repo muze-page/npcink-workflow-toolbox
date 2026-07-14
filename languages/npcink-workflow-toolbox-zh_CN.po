@@ -7269,3 +7269,19 @@ msgstr "初稿已复制；没有向 WordPress 插入或保存任何内容。"
 #: assets/editor-content-support.js
 msgid "The draft could not be copied."
 msgstr "无法复制初稿。"
+
+#: includes/Dashboard_Widget.php
+msgid "You are not allowed to refresh Toolbox hot topics."
+msgstr "您没有权限刷新 Toolbox 热榜。"
+
+#: includes/Dashboard_Widget.php
+msgid "Refresh hot topics"
+msgstr "刷新热榜"
+
+#: includes/Hot_Topic_Pool.php
+msgid "Showing the last locally cached hot-topic snapshot."
+msgstr "正在显示最近一次本地缓存的热榜快照。"
+
+#: includes/Hot_Topic_Pool.php
+msgid "No local hot-topic snapshot is available yet. Refresh it when you want to contact Cloud."
+msgstr "尚无本地热榜快照。需要连接 Cloud 时请手动刷新。"

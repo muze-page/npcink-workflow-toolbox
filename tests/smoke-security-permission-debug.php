@@ -80,6 +80,7 @@ require_once $root . '/includes/Settings.php';
 require_once $root . '/includes/Provider_Client.php';
 require_once $root . '/includes/Rest_Controller.php';
 require_once $root . '/includes/Abilities.php';
+require_once $root . '/includes/Editor_Content_Support.php';
 
 $fail = static function ( string $message ): void {
 	fwrite( STDERR, '[fail] ' . $message . "\n" );
@@ -138,7 +139,8 @@ $assert(
 	'Ability permission filter receives ability id and required scope.'
 );
 
-$provider     = ( new ReflectionClass( \Npcink_Toolbox\Provider_Client::class ) )->newInstanceWithoutConstructor();
+$settings     = new \Npcink_Toolbox\Settings();
+$provider     = new \Npcink_Toolbox\Provider_Client( $settings );
 $with_raw     = new ReflectionMethod( \Npcink_Toolbox\Provider_Client::class, 'with_optional_raw' );
 $sanitize_raw = new ReflectionMethod( \Npcink_Toolbox\Provider_Client::class, 'sanitize_debug_payload' );
 $with_raw->setAccessible( true );
@@ -150,6 +152,12 @@ $payload = $with_raw->invoke(
 	array( 'message' => 'Bearer sk-testsecret1234567890' )
 );
 $assert( ! array_key_exists( 'raw', $payload ), 'Raw payloads are force-disabled by NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES.' );
+$assert( false === $settings->raw_responses_enabled(), 'The centralized settings policy honors the raw-response kill switch.' );
+
+$editor_diagnostics = new ReflectionMethod( \Npcink_Toolbox\Editor_Content_Support::class, 'show_runtime_diagnostics' );
+$editor_diagnostics->setAccessible( true );
+$editor_support = new \Npcink_Toolbox\Editor_Content_Support( $settings );
+$assert( false === $editor_diagnostics->invoke( $editor_support ), 'Editor diagnostics honor the centralized raw-response kill switch.' );
 
 $redacted = $sanitize_raw->invoke(
 	$provider,
@@ -165,5 +173,64 @@ $encoded = wp_json_encode( $redacted );
 $assert( is_string( $encoded ) && false === strpos( $encoded, 'abcdefghijklmnopqrstuvwxyz123456' ), 'Debug payload redacts bearer-shaped secrets in non-sensitive fields.' );
 $assert( is_string( $encoded ) && false === strpos( $encoded, 'sk-abcdefghijklmnopqrstuvwxyz' ), 'Debug payload redacts API-key-shaped secrets in non-sensitive fields.' );
 $assert( is_string( $encoded ) && false === strpos( $encoded, 'aaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbb.cccccccccccccccc' ), 'Debug payload redacts JWT-shaped strings.' );
+
+$deep_redacted = $sanitize_raw->invoke(
+	$provider,
+	array(
+		'level_1' => array(
+			'level_2' => array(
+				'level_3' => array(
+					'level_4' => array(
+						'level_5' => array(
+							'message' => 'Bearer abcdefghijklmnopqrstuvwxyz123456',
+						),
+					),
+				),
+			),
+		),
+	)
+);
+$deep_encoded = wp_json_encode( $deep_redacted );
+$assert( is_string( $deep_encoded ) && false === strpos( $deep_encoded, 'abcdefghijklmnopqrstuvwxyz123456' ), 'Debug payload redacts secrets at the maximum nesting depth.' );
+
+$classify = new ReflectionMethod( \Npcink_Toolbox\Provider_Client::class, 'runtime_payload_data_classification' );
+$storage  = new ReflectionMethod( \Npcink_Toolbox\Provider_Client::class, 'runtime_payload_storage_mode' );
+$classify->setAccessible( true );
+$storage->setAccessible( true );
+$classification = $classify->invoke( $provider, array( 'content' => 'api_key=sk-abcdefghijklmnopqrstuvwxyz' ), 'public_site_content', array() );
+$assert( 'secret' === $classification, 'Secret-shaped editor text is classified as secret before Cloud handoff.' );
+$assert( 'no_store' === $storage->invoke( $provider, $classification ), 'Secret-shaped editor text forces no_store Cloud handling.' );
+$requested_pii_secret = $classify->invoke(
+	$provider,
+	array( 'content' => 'api_key=sk-abcdefghijklmnopqrstuvwxyz' ),
+	'public_site_content',
+	array( 'runtime_data_classification' => 'pii' )
+);
+$assert( 'secret' === $requested_pii_secret, 'Detected secrets take priority over a caller-requested PII classification.' );
+
+$deep_secret = 'api_key=sk-abcdefghijklmnopqrstuvwxyz';
+for ( $depth = 0; $depth < 8; ++$depth ) {
+	$deep_secret = array( 'nested' => $deep_secret );
+}
+$assert( 'secret' === $classify->invoke( $provider, $deep_secret, 'public_site_content', array() ), 'Uninspected payload data at the recursion budget fails closed as secret.' );
+$assert( 'public_site_content' === $classify->invoke( $provider, array( 'quota' => 100 ), 'public_site_content', array() ), 'Non-secret operational metadata is not misclassified as a secret.' );
+
+$public_host = new ReflectionMethod( \Npcink_Toolbox\Rest_Controller::class, 'editor_source_adaptation_host_is_public' );
+$public_host->setAccessible( true );
+$assert( false === $public_host->invoke( $rest_controller, '169.254.169.254' ), 'Source URL validation rejects link-local IP addresses.' );
+$assert( false === $public_host->invoke( $rest_controller, '255.255.255.255' ), 'Source URL validation rejects reserved broadcast IP addresses.' );
+$assert( false === $public_host->invoke( $rest_controller, '100.64.0.1' ), 'Source URL validation rejects shared CGNAT addresses.' );
+$assert( false === $public_host->invoke( $rest_controller, '198.18.0.1' ), 'Source URL validation rejects benchmark network addresses.' );
+$assert( false === $public_host->invoke( $rest_controller, '192.0.2.1' ), 'Source URL validation rejects documentation network addresses.' );
+$assert( false === $public_host->invoke( $rest_controller, '::ffff:10.0.0.1' ), 'Source URL validation rechecks IPv4-mapped IPv6 private addresses.' );
+$assert( true === $public_host->invoke( $rest_controller, '::ffff:93.184.216.34' ), 'Source URL validation permits an IPv4-mapped public address after rechecking it.' );
+$assert( false === $public_host->invoke( $rest_controller, '2001:db8::1' ), 'Source URL validation rejects IPv6 documentation addresses.' );
+$assert( true === $public_host->invoke( $rest_controller, '2606:4700:4700::1111' ), 'Source URL validation permits a global IPv6 address.' );
+$assert( true === $public_host->invoke( $rest_controller, '93.184.216.34' ), 'Source URL validation permits a public IP address.' );
+
+$provider_source = (string) file_get_contents( $root . '/includes/Provider_Client.php' );
+$rest_source     = (string) file_get_contents( $root . '/includes/Rest_Controller.php' );
+$assert( false === strpos( $provider_source, "settings->get( 'include_raw_responses' )" ), 'Provider normalizers cannot bypass the centralized raw-response policy.' );
+$assert( false !== strpos( $rest_source, 'wp_http_validate_url' ) && false !== strpos( $rest_source, '$safe_port' ) && false !== strpos( $rest_source, '100.64.0.0/10' ) && false !== strpos( $rest_source, '2001:db8::/32' ) && false !== strpos( $rest_source, 'Cloud Addon owns fetch-time DNS and redirect validation' ), 'External source URLs reject literal special-purpose addresses and non-standard ports while Cloud Addon owns fetch-time DNS validation.' );
 
 echo "Security permission/debug smoke: ok\n";

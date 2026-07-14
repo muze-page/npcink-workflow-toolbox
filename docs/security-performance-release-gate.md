@@ -36,6 +36,15 @@ Confirm:
 - `NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES` suppresses raw payloads even when the
   local debug option is enabled.
 - Debug payloads redact sensitive keys and token-shaped strings before display.
+- The same effective raw-response policy drives REST status, editor diagnostics,
+  and every Cloud response normalizer; production code must not read the raw
+  option directly.
+- Secret-shaped editor text is classified as `secret` with `no_store` before a
+  Cloud handoff.
+- Exact external source URLs pass WordPress validation, reject literal
+  special-purpose IPv4/IPv6 addresses, and use only the standard port for their
+  HTTP or HTTPS scheme. Cloud Addon owns fetch-time DNS, redirect, and response
+  validation; Toolbox must not duplicate that transport policy.
 
 ## 3. Site Knowledge Cloud Addon Gate
 
@@ -83,6 +92,11 @@ Site Knowledge status, and, when enabled, Cloud-backed Site Knowledge search,
 content support, and fast-first image candidates. Any probe without an HTTP
 status, unexpected 4xx/5xx status, or over 2500ms should be investigated before
 release.
+
+The WordPress Dashboard hot-topic widget is a local cache reader. Rendering the
+widget must make zero Cloud calls. Its capability- and nonce-protected refresh
+action may make one synchronous Cloud request after an explicit administrator
+click; failure must preserve the last local backup.
 
 ## 6. Nightly Cloud E2E Gate
 

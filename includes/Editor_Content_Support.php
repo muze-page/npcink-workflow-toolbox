@@ -10,6 +10,12 @@ namespace Npcink_Toolbox;
 defined( 'ABSPATH' ) || exit;
 
 final class Editor_Content_Support {
+	private Settings $settings;
+
+	public function __construct( Settings $settings ) {
+		$this->settings = $settings;
+	}
+
 	public function register_hooks(): void {
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue' ) );
 	}
@@ -58,8 +64,7 @@ final class Editor_Content_Support {
 	}
 
 	private function show_runtime_diagnostics(): bool {
-		$settings = get_option( Plugin::OPTION_NAME, array() );
-		return is_array( $settings ) && ! empty( $settings['include_raw_responses'] );
+		return $this->settings->raw_responses_enabled();
 	}
 
 	private function asset_version( string $relative_path ): string {
