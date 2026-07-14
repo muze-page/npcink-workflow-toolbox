@@ -184,6 +184,52 @@ php scripts/cross-repo-quality-matrix.php --run-gates --fail-on-dirty
 Both commands are read-only except when an explicit `--output=PATH` report file
 is requested. They must not fetch, stage, reset, or mutate WordPress.
 
+## Five-Plugin No-Credit Acceptance
+
+After changing a boundary shared by Toolbox, Toolkit, Core, Adapter, or Cloud
+Addon, run the focused local stack acceptance:
+
+```bash
+composer accept:local-five-plugin
+```
+
+The command requires an exclusive local development site: do not run it while
+another browser, worker, or acceptance process is mutating the same WordPress
+database. It verifies that all five plugins are active and that each mounted
+plugin directory resolves to the current Toolbox or sibling repository, then
+runs two deliberately separate lanes:
+
+A single `--skip-plugins --skip-themes` WP-CLI preflight reads the active plugin
+option and plugin directory without booting plugin code. Every WP-CLI process,
+including that preflight, loads the same bootstrap HTTP guard. The guard enables
+WordPress external-request blocking, records attempted URLs for the parent shell
+gate, and remains active through shutdown. The second lane alone allows its
+exact loopback runtime URL, which is still intercepted by the deterministic
+in-process mock before any socket opens.
+
+1. Toolbox builds a reviewed article plan, Toolkit exposes the real
+   `create-draft` ability, Core creates and preflights the proposal, and Adapter
+   executes exactly one draft write. A duplicate execution must return HTTP 409
+   and Core must read back `executed` with exactly one approval, preflight, and
+   execution audit event bound to the same input hash and correlation id. Only
+   the exact returned draft post id is deleted; the Adapter record, Core
+   proposal, and audit rows must also be removed afterward. Process-local
+   settings disable Addon monitoring and Site Knowledge delivery, while a
+   shutdown-aware HTTP guard rejects any outbound request.
+2. Toolbox calls the Cloud Addon image-generation transport with temporary
+   credentials held only in an authenticated in-memory envelope. The stored
+   Addon option is never changed. WordPress HTTP is preempted with a deterministic
+   loopback response; every other request, including a shutdown request, fails
+   the gate.
+
+This is a development-only acceptance command outside `composer test:all`.
+It does not call `npcink-ai-cloud`, consume provider credit, publish content,
+leave proposal history, add a queue, or merge Cloud transport into Core
+governance. Override `WP_PATH`, `WP_CLI_BIN`, `WP_CLI_PHP`, `WP_DB_SOCKET`, or
+`NPCINK_REPO_FAMILY_ROOT` when the local site or sibling checkout root differs
+from the documented default. A process lock prevents two copies of this gate
+from running concurrently.
+
 AI agents must not run `git reset --hard`, `git checkout -- .`, or use
 `git add -A` in mixed worktrees unless the user explicitly requests that exact
 operation. If cleanup is needed, prefer a scoped reverse patch or
