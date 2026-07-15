@@ -71,6 +71,7 @@ Start here before multi-repository design or implementation:
 - [Cross-Repo Boundary Matrix](../cross-repo-boundary-matrix.md)
 - [Cross-Repo Database Boundary Closeout - 2026-07-08](../cross-repo-database-boundary-closeout-2026-07-08.md)
 - [Cross-Repo Contract Reuse Acceptance](../cross-repo-contract-reuse-acceptance.md)
+- [Five-Plugin Hardening And Cloud-Offline Closeout - 2026-07-15](../five-plugin-hardening-and-cloud-offline-closeout-2026-07-15.md)
 - [AI Development Quality Workflow](../ai-development-quality-workflow.md)
 - [AI Change Envelope Template](../ai-change-envelope-template.md)
 - [Development Workflow](../development-workflow.md)
