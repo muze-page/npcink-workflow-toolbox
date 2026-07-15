@@ -14,6 +14,13 @@
 $toolbox_http_guard_allowed_url = trim( (string) getenv( 'NPCINK_TOOLBOX_HTTP_GUARD_ALLOWED_URL' ) );
 $toolbox_http_guard_log         = trim( (string) getenv( 'NPCINK_TOOLBOX_HTTP_GUARD_LOG' ) );
 
+// WordPress 6.9+ checks due cron events during shutdown and otherwise spawns a
+// loopback HTTP request. Acceptance owns no scheduler work, so keep that
+// process-local side effect disabled while the broader HTTP guard stays strict.
+if ( ! defined( 'DISABLE_WP_CRON' ) ) {
+	define( 'DISABLE_WP_CRON', true );
+}
+
 if ( ! defined( 'WP_HTTP_BLOCK_EXTERNAL' ) ) {
 	define( 'WP_HTTP_BLOCK_EXTERNAL', true );
 }

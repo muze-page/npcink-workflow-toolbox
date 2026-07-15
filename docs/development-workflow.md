@@ -202,10 +202,13 @@ runs two deliberately separate lanes:
 A single `--skip-plugins --skip-themes` WP-CLI preflight reads the active plugin
 option and plugin directory without booting plugin code. Every WP-CLI process,
 including that preflight, loads the same bootstrap HTTP guard. The guard enables
-WordPress external-request blocking, records attempted URLs for the parent shell
-gate, and remains active through shutdown. The second lane alone allows its
-exact loopback runtime URL, which is still intercepted by the deterministic
-in-process mock before any socket opens.
+WordPress external-request blocking, disables process-local WP-Cron spawning,
+records attempted URLs for the parent shell gate, and remains active through
+shutdown. The cron isolation prevents WordPress 6.9+ from starting its normal
+shutdown loopback request during acceptance; it does not change site-level cron
+configuration. The second lane alone allows its exact loopback runtime URL,
+which is still intercepted by the deterministic in-process mock before any
+socket opens.
 
 1. Toolbox builds a reviewed article plan, Toolkit exposes the real
    `create-draft` ability, Core creates and preflights the proposal, and Adapter
