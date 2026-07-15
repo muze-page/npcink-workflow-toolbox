@@ -79,19 +79,29 @@ Capture a small authenticated local or staging REST baseline:
 NPCINK_TOOLBOX_BASE_URL="https://example.local" \
 NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
 NPCINK_TOOLBOX_NONCE="..." \
-NPCINK_TOOLBOX_PERF_OUTPUT="var/perf/toolbox-baseline.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-observation-1.jsonl" \
 composer perf:baseline
 ```
 
-Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only when Cloud Addon/runtime
-availability is part of the release proof. For local self-signed HTTPS only,
-add `NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. To measure a known Cloud unavailable
-or no-candidate failure path, add `NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1`
-and preserve the status in the trial note. The baseline should include status,
-Site Knowledge status, and, when enabled, Cloud-backed Site Knowledge search,
-content support, and fast-first image candidates. Any probe without an HTTP
-status, unexpected 4xx/5xx status, or over 2500ms should be investigated before
-release.
+The default is a local-only `/status` probe with one warmup and ten measured
+requests. It records median and P95 timing. Missing or mixed HTTP status,
+redirects, non-JSON responses, and non-2xx local responses fail immediately;
+timing remains observation-only while three comparable baseline batches are
+collected. After selecting a stable reference, set
+`NPCINK_TOOLBOX_PERF_BASELINE` to compare later medians. A candidate regression
+requires both greater than 30 percent and greater than 20 milliseconds. Add
+`NPCINK_TOOLBOX_PERF_ENFORCE_REGRESSION=1` only after the three-batch baseline
+is stable.
+
+Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only for an intentional,
+quota-aware Cloud proof. Site Knowledge status is Cloud-backed, and the full
+set contains four Cloud routes. Start with
+`NPCINK_TOOLBOX_PERF_SAMPLES=3 NPCINK_TOOLBOX_PERF_WARMUPS=0`; that still makes
+twelve Cloud-backed requests. A stable known Cloud 4xx/5xx may be measured with
+`NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1`, but this never relaxes local status.
+For local self-signed HTTPS only, add
+`NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. Keep output under ignored and
+package-excluded `build/perf/`.
 
 The WordPress Dashboard hot-topic widget is a local cache reader. Rendering the
 widget must make zero Cloud calls. Its capability- and nonce-protected refresh

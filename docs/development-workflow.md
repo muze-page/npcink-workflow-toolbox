@@ -444,19 +444,56 @@ For an authenticated REST latency baseline, run:
 NPCINK_TOOLBOX_BASE_URL="https://example.local" \
 NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
 NPCINK_TOOLBOX_NONCE="..." \
-NPCINK_TOOLBOX_PERF_OUTPUT="var/perf/toolbox-baseline.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-observation-1.jsonl" \
 composer perf:baseline
 ```
 
+The default probe is local `/status` only. It runs one warmup and ten measured
+requests, then records median, P95, minimum, maximum, the individual timings,
+response size median, HTTP status consistency, and JSON validity. Missing HTTP
+status, mixed statuses, redirects, invalid JSON, and any non-2xx local status
+are hard failures. Timing is observation-only at first; there is no absolute
+latency failure threshold during baseline stabilization.
+
+Capture three batches against the same origin, authentication state, probe
+set, sample count, and warmup count. Choose one stable JSONL result as the
+reference, then compare a later run without enforcing timing:
+
+```bash
+NPCINK_TOOLBOX_BASE_URL="https://example.local" \
+NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
+NPCINK_TOOLBOX_NONCE="..." \
+NPCINK_TOOLBOX_PERF_BASELINE="build/perf/toolbox-reference.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-current.jsonl" \
+composer perf:baseline
+```
+
+The comparison rejects a different schema, origin, probe signature, probe set,
+sample count, warmup count, or HTTP status. A candidate regression requires
+both a median increase greater than 30 percent and an increase greater than 20
+milliseconds. The candidate is reported but does not fail until three stable
+batches exist and the release owner explicitly adds
+`NPCINK_TOOLBOX_PERF_ENFORCE_REGRESSION=1`.
+
 Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only when Cloud Addon/runtime
-availability is part of the proof. For local self-signed HTTPS only, add
-`NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. To measure a known Cloud unavailable or
-no-candidate failure path, add `NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1` and
-record the status in the trial notes. This records JSONL timing for the status
-and Site Knowledge status routes, plus Cloud-backed probes when enabled. Any
-probe without an HTTP status, unexpected error status, or over 2500ms exits
-non-zero so the release owner investigates the path instead of shipping an
-unmeasured slowdown.
+availability is intentionally part of the proof. Site Knowledge status is a
+Cloud-backed route too. Because four Cloud routes are sampled, use a small
+explicit trial first:
+
+```bash
+NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1 \
+NPCINK_TOOLBOX_PERF_SAMPLES=3 \
+NPCINK_TOOLBOX_PERF_WARMUPS=0 \
+composer perf:baseline
+```
+
+That example still makes twelve Cloud-backed requests and may consume provider
+quota. To measure a stable known Cloud 4xx/5xx path, also add
+`NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1` and record the status in the trial
+notes; this flag never relaxes the local `/status` probe. For local self-signed
+HTTPS only, add `NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. `build/perf/` is ignored
+by Git and excluded from release packages so local origins and measurements do
+not enter commits or ZIP files.
 
 For the post-editor follow-up quality trial through eval-lab, run:
 

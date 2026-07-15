@@ -840,7 +840,10 @@ payloads off even if the local option is enabled.
 For hardening release checks, run `composer smoke:security-permission-debug`
 with the default gate. To capture an authenticated local or staging latency
 baseline, set `NPCINK_TOOLBOX_BASE_URL` plus admin REST authentication headers
-and run `composer perf:baseline`. The release checklist is documented in
+and run `composer perf:baseline`. The default command is local-only and records
+one warmup plus ten measured `/status` requests with median and P95 timing;
+Cloud-backed probes require an explicit, quota-aware opt-in. The release
+checklist is documented in
 [Security And Performance Release Gate](docs/security-performance-release-gate.md).
 
 ## Development
