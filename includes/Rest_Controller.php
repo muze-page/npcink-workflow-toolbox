@@ -94,11 +94,12 @@ final class Rest_Controller {
 
 		register_rest_route(
 			Plugin::REST_NAMESPACE,
-			'/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)',
+			'/media-derivative-local-review/(?P<artifact_id>art_[0-9a-f]{32})',
 			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'download_media_derivative_preview_artifact' ),
-				'permission_callback' => array( $this, 'permission_media_derivative_preview_artifact' ),
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'serve_media_derivative_local_review' ),
+				'permission_callback' => array( $this, 'permission_media_derivative_local_review' ),
+				'args'                => $this->media_derivative_local_review_route_args(),
 			)
 		);
 	}
@@ -157,7 +158,7 @@ final class Rest_Controller {
 			'/media-derivative-handoff'                    => 'cap.toolbox.workflow_suggest',
 			'/media-derivative-preview'                    => 'cap.toolbox.workflow_suggest',
 			'/media-derivative-optimization-payload'       => 'cap.toolbox.workflow_suggest',
-			'/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)' => 'cap.toolbox.workflow_suggest',
+			'/media-derivative-local-review/(?P<artifact_id>art_[0-9a-f]{32})' => 'cap.toolbox.workflow_suggest',
 			'/nightly-inspection/cloud-runtime-entitlement' => 'cap.toolbox.nightly_inspection',
 			'/nightly-inspection/cloud-batch'              => 'cap.toolbox.nightly_inspection',
 			'/nightly-inspection/cloud-batch/recent'       => 'cap.toolbox.nightly_inspection',
@@ -1278,15 +1279,15 @@ final class Rest_Controller {
 			return $dispatch;
 		}
 
-		$run_id = function_exists( 'npcink_cloud_addon_media_derivative_run_id' ) ? npcink_cloud_addon_media_derivative_run_id( $dispatch ) : '';
-		$cloud_run = function_exists( 'npcink_cloud_addon_public_media_derivative_cloud_projection' ) ? npcink_cloud_addon_public_media_derivative_cloud_projection( $dispatch ) : array();
+		$cloud_run = is_array( $dispatch ) ? $dispatch : array();
+		$run_id    = sanitize_text_field( (string) ( $cloud_run['run_id'] ?? '' ) );
 
 		return new WP_REST_Response(
 			array(
-				'contract_version' => 'toolbox_media_derivative_preview.v1',
+				'contract_version' => 'toolbox_media_derivative_preview.v2',
 				'status'           => 'submitted',
 				'run_id'           => sanitize_text_field( (string) $run_id ),
-				'cloud_run'        => $this->with_media_derivative_preview_url( $cloud_run ),
+				'cloud_run'        => $cloud_run,
 				'ability_response' => $ability_response,
 				'write_posture'    => 'preview_only',
 				'direct_wordpress_write' => false,
@@ -1311,8 +1312,9 @@ final class Rest_Controller {
 
 		return rest_ensure_response(
 			array(
-				'contract_version' => 'toolbox_media_derivative_preview_status.v1',
-				'cloud_run'        => $this->with_media_derivative_preview_url( is_array( $result ) ? $result : array() ),
+				'contract_version' => 'toolbox_media_derivative_preview_status.v2',
+				'cloud_run'        => is_array( $result ) ? $result : array(),
+				'local_review'     => $this->media_derivative_local_review_projection( is_array( $result ) ? $result : array() ),
 				'direct_wordpress_write' => false,
 			)
 		);
@@ -1331,10 +1333,21 @@ final class Rest_Controller {
 			return $result;
 		}
 
+		$cloud_result = is_array( $result ) ? $result : array();
+		$local_review = $this->media_derivative_local_review_projection( $cloud_result );
+		if ( empty( $local_review ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_local_review_unavailable',
+				__( 'Cloud media derivative result did not include a valid local review artifact.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 502 )
+			);
+		}
+
 		return rest_ensure_response(
 			array(
-				'contract_version' => 'toolbox_media_derivative_preview_result.v1',
-				'cloud_result'     => $this->with_media_derivative_preview_url( is_array( $result ) ? $result : array() ),
+				'contract_version' => 'toolbox_media_derivative_preview_result.v2',
+				'cloud_result'     => $cloud_result,
+				'local_review'     => $local_review,
 				'direct_wordpress_write' => false,
 			)
 		);
@@ -1355,39 +1368,81 @@ final class Rest_Controller {
 		return is_wp_error( $payload ) ? $payload : rest_ensure_response( $payload );
 	}
 
-	public function permission_media_derivative_preview_artifact( WP_REST_Request $request ): bool {
-		return current_user_can( 'manage_options' ) || $this->valid_media_derivative_preview_signature( $request );
+	public function permission_media_derivative_local_review(): bool {
+		return current_user_can( 'manage_options' );
 	}
 
-	public function download_media_derivative_preview_artifact( WP_REST_Request $request ) {
-		if ( ! function_exists( 'npcink_cloud_addon_download_media_derivative_artifact' ) ) {
+	public function serve_media_derivative_local_review( WP_REST_Request $request ) {
+		if ( ! function_exists( 'npcink_cloud_addon_receive_media_derivative_artifact' ) ) {
 			return $this->media_derivative_cloud_addon_unavailable();
 		}
-
-		$artifact = array(
-			'artifact_id' => sanitize_text_field( (string) $request->get_param( 'artifact_id' ) ),
-			'expires_at'  => gmdate( 'c', absint( $request->get_param( 'expires_ts' ) ) ),
-			'mime_type'   => sanitize_text_field( (string) $request->get_param( 'mime_type' ) ),
-			'checksum'    => sanitize_text_field( (string) $request->get_param( 'checksum' ) ),
-			'sha256'      => sanitize_text_field( (string) $request->get_param( 'sha256' ) ),
-			'run_id'      => sanitize_text_field( (string) $request->get_param( 'run_id' ) ),
-		);
-		$download = npcink_cloud_addon_download_media_derivative_artifact( $artifact );
-		if ( is_wp_error( $download ) ) {
-			return $download;
+		$allowed_params = array( 'artifact_id', 'artifact' );
+		$unknown_params = array_diff( array_keys( $request->get_params() ), $allowed_params );
+		$query_params   = method_exists( $request, 'get_query_params' ) ? $request->get_query_params() : array();
+		$json_params    = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if (
+			! empty( $unknown_params )
+			|| ! empty( $query_params )
+			|| ! is_array( $json_params )
+			|| array( 'artifact' ) !== array_keys( $json_params )
+		) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_local_review_args_invalid',
+				__( 'Media derivative local review requires one exact JSON artifact body and no query parameters.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400, 'unsupported_fields' => array_values( $unknown_params ) )
+			);
 		}
 
-		$contents  = is_string( $download['contents'] ?? null ) ? $download['contents'] : '';
-		$mime_type = sanitize_text_field( (string) ( $download['mime_type'] ?? 'application/octet-stream' ) );
+		$artifact = $this->media_derivative_local_review_artifact_from_request( $request );
+		if ( is_wp_error( $artifact ) ) {
+			return $artifact;
+		}
+		$artifact_id = (string) $artifact['artifact_id'];
+		$expected_local_artifact_keys = array(
+			'artifact_id',
+			'expires_at',
+			'mime_type',
+			'format',
+			'width',
+			'height',
+			'filesize_bytes',
+			'sha256',
+			'suggested_filename',
+			'filename_basis',
+			'processing_warnings',
+		);
+		if ( $expected_local_artifact_keys !== array_keys( $artifact ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_local_review_contract_invalid',
+				__( 'Media derivative local review could not build the exact Addon receive contract.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 500 )
+			);
+		}
+		$received = npcink_cloud_addon_receive_media_derivative_artifact( $artifact );
+		if ( is_wp_error( $received ) ) {
+			return $received;
+		}
+
+		$contents  = is_string( $received['contents'] ?? null ) ? $received['contents'] : '';
+		$mime_type = sanitize_text_field( (string) ( $received['mime_type'] ?? '' ) );
+		if ( '' === $contents || ! in_array( $mime_type, array( 'image/avif', 'image/jpeg', 'image/png', 'image/webp' ), true ) ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_local_review_invalid',
+				__( 'Cloud Addon did not return verified media derivative bytes.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 502 )
+			);
+		}
 		if ( function_exists( 'status_header' ) ) {
 			status_header( 200 );
 		}
 		nocache_headers();
 		header( 'Content-Type: ' . $mime_type );
 		header( 'Content-Length: ' . strlen( $contents ) );
-		header( 'Content-Disposition: inline; filename="derivative-' . sanitize_file_name( (string) $artifact['artifact_id'] ) . '"' );
+		header( 'Content-Disposition: inline; filename="' . (string) $artifact['suggested_filename'] . '"' );
 		header( 'Cache-Control: private, no-store, max-age=0' );
+		header( 'Pragma: no-cache' );
 		header( 'X-Content-Type-Options: nosniff' );
+		header( 'X-Npcink-Artifact-Id: ' . $artifact_id );
 		echo $contents; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
@@ -7347,64 +7402,322 @@ final class Rest_Controller {
 		return is_array( $value ) ? $value : array();
 	}
 
-	private function with_media_derivative_preview_url( array $projection ): array {
-		$derivative = is_array( $projection['derivative'] ?? null ) ? $projection['derivative'] : array();
-		$artifact_id = sanitize_text_field( (string) ( $derivative['artifact_id'] ?? $derivative['id'] ?? '' ) );
-		$expires_ts  = strtotime( sanitize_text_field( (string) ( $derivative['expires_at'] ?? '' ) ) );
-		if ( '' === $artifact_id || false === $expires_ts || $expires_ts <= time() ) {
-			return $projection;
+	private function media_derivative_local_review_projection( array $cloud_projection ): array {
+		$artifact = is_array( $cloud_projection['artifact'] ?? null ) ? $cloud_projection['artifact'] : array();
+		$expected_keys = array(
+			'artifact_id',
+			'artifact_reference',
+			'expires_at',
+			'suggested_filename',
+			'filename_basis',
+			'mime_type',
+			'format',
+			'width',
+			'height',
+			'filesize_bytes',
+			'checksum',
+			'processing_warnings',
+		);
+		if ( count( $artifact ) !== count( $expected_keys ) || array() !== array_diff( $expected_keys, array_keys( $artifact ) ) || array() !== array_diff( array_keys( $artifact ), $expected_keys ) ) {
+			return array();
 		}
 
-		$query = array( 'expires_ts' => (string) $expires_ts );
-		foreach ( array( 'mime_type', 'checksum', 'sha256', 'run_id' ) as $key ) {
-			$value = sanitize_text_field( (string) ( $derivative[ $key ] ?? '' ) );
-			if ( '' !== $value ) {
-				$query[ $key ] = $value;
+		$artifact_id = (string) $artifact['artifact_id'];
+		$expires_at  = (string) $artifact['expires_at'];
+		$expires_ts  = self::media_derivative_strict_timestamp( $expires_at );
+		$format      = (string) $artifact['format'];
+		$mime_type   = (string) $artifact['mime_type'];
+		$mime_by_format = array(
+			'avif' => 'image/avif',
+			'jpeg' => 'image/jpeg',
+			'png'  => 'image/png',
+			'webp' => 'image/webp',
+		);
+		$artifact_reference = $artifact['artifact_reference'];
+		$filename_basis     = $artifact['filename_basis'];
+		if (
+			! is_string( $artifact['artifact_id'] )
+			|| 1 !== preg_match( '/^art_[0-9a-f]{32}$/', $artifact_id )
+			|| ! is_string( $artifact['expires_at'] )
+			|| ! is_string( $artifact['mime_type'] )
+			|| ! is_string( $artifact['format'] )
+			|| ! is_string( $artifact['checksum'] )
+			|| ! is_string( $artifact['suggested_filename'] )
+			|| ! is_array( $artifact_reference )
+			|| array( 'artifact_id' ) !== array_keys( $artifact_reference )
+			|| $artifact_id !== (string) ( $artifact_reference['artifact_id'] ?? '' )
+			|| ! is_array( $filename_basis )
+			|| 3 !== count( $filename_basis )
+			|| array() !== array_diff( array( 'owner', 'strategy', 'final_sanitize_unique_required' ), array_keys( $filename_basis ) )
+			|| array() !== array_diff( array_keys( $filename_basis ), array( 'owner', 'strategy', 'final_sanitize_unique_required' ) )
+			|| 'wordpress_write_ability_final' !== ( $filename_basis['owner'] ?? null )
+			|| 'format_checksum' !== ( $filename_basis['strategy'] ?? null )
+			|| true !== ( $filename_basis['final_sanitize_unique_required'] ?? null )
+			|| false === $expires_ts
+			|| $expires_ts <= time()
+			|| ! isset( $mime_by_format[ $format ] )
+			|| $mime_by_format[ $format ] !== $mime_type
+			|| ! is_int( $artifact['width'] )
+			|| (int) $artifact['width'] <= 0
+			|| (int) $artifact['width'] > 8192
+			|| ! is_int( $artifact['height'] )
+			|| (int) $artifact['height'] <= 0
+			|| (int) $artifact['height'] > 8192
+			|| (int) $artifact['width'] * (int) $artifact['height'] > 16777216
+			|| ! is_int( $artifact['filesize_bytes'] )
+			|| (int) $artifact['filesize_bytes'] <= 0
+			|| (int) $artifact['filesize_bytes'] > 26214400
+			|| 1 !== preg_match( '/^sha256:[0-9a-f]{64}$/', (string) $artifact['checksum'] )
+			|| ! is_array( $artifact['processing_warnings'] )
+			|| ( ! empty( $artifact['processing_warnings'] ) && array_keys( $artifact['processing_warnings'] ) !== range( 0, count( $artifact['processing_warnings'] ) - 1 ) )
+			|| count( $artifact['processing_warnings'] ) > 20
+			|| '' === (string) $artifact['suggested_filename']
+			|| strlen( (string) $artifact['suggested_filename'] ) > 120
+			|| sanitize_file_name( (string) $artifact['suggested_filename'] ) !== (string) $artifact['suggested_filename']
+		) {
+			return array();
+		}
+		foreach ( $artifact['processing_warnings'] as $warning ) {
+			if ( ! is_string( $warning ) || strlen( $warning ) > 200 || sanitize_text_field( $warning ) !== $warning ) {
+				return array();
 			}
 		}
-		$query['preview_sig'] = $this->media_derivative_preview_signature( $artifact_id, $query );
-		$projection['derivative']['preview_url'] = add_query_arg(
-			$query,
-			rest_url( Plugin::REST_NAMESPACE . '/media-derivative-preview-artifacts/' . rawurlencode( $artifact_id ) )
+
+		$local_artifact = array(
+			'artifact_id'         => $artifact_id,
+			'expires_at'          => $expires_at,
+			'mime_type'           => $mime_type,
+			'format'              => $format,
+			'width'               => (int) $artifact['width'],
+			'height'              => (int) $artifact['height'],
+			'filesize_bytes'      => (int) $artifact['filesize_bytes'],
+			'sha256'              => substr( (string) $artifact['checksum'], 7 ),
+			'suggested_filename'  => (string) $artifact['suggested_filename'],
+			'filename_basis'      => $filename_basis,
+			'processing_warnings' => array_values( $artifact['processing_warnings'] ),
 		);
 
-		return $projection;
-	}
-
-	private function media_derivative_preview_signature( string $artifact_id, array $query ): string {
-		return hash_hmac( 'sha256', $this->media_derivative_preview_signature_payload( $artifact_id, $query ), wp_salt( 'auth' ) );
-	}
-
-	private function media_derivative_preview_signature_payload( string $artifact_id, array $query ): string {
-		return (string) wp_json_encode(
-			array(
-				'artifact_id' => sanitize_text_field( $artifact_id ),
-				'expires_ts'  => absint( $query['expires_ts'] ?? 0 ),
-				'mime_type'   => sanitize_text_field( (string) ( $query['mime_type'] ?? '' ) ),
-				'checksum'    => sanitize_text_field( (string) ( $query['checksum'] ?? '' ) ),
-				'sha256'      => sanitize_text_field( (string) ( $query['sha256'] ?? '' ) ),
-				'run_id'      => sanitize_text_field( (string) ( $query['run_id'] ?? '' ) ),
-			)
+		return array(
+			'endpoint' => rest_url( Plugin::REST_NAMESPACE . '/media-derivative-local-review/' . rawurlencode( $artifact_id ) ),
+			'method'   => 'POST',
+			'artifact' => $local_artifact,
 		);
 	}
 
-	private function valid_media_derivative_preview_signature( WP_REST_Request $request ): bool {
-		$artifact_id = sanitize_text_field( (string) $request->get_param( 'artifact_id' ) );
-		$expires_ts  = absint( $request->get_param( 'expires_ts' ) );
-		$signature   = strtolower( sanitize_text_field( (string) $request->get_param( 'preview_sig' ) ) );
-		if ( '' === $artifact_id || $expires_ts <= time() || '' === $signature ) {
-			return false;
-		}
-
-		$query = array( 'expires_ts' => (string) $expires_ts );
-		foreach ( array( 'mime_type', 'checksum', 'sha256', 'run_id' ) as $key ) {
-			$value = sanitize_text_field( (string) $request->get_param( $key ) );
-			if ( '' !== $value ) {
-				$query[ $key ] = $value;
+	/**
+	 * Parses the exact UTC RFC3339 forms emitted by Cloud without calendar normalization.
+	 *
+	 * @param string $value Timestamp.
+	 * @return int|false
+	 */
+	private static function media_derivative_strict_timestamp( string $value ) {
+		$utc = new \DateTimeZone( 'UTC' );
+		$formats = array(
+			'!Y-m-d\TH:i:s\Z'   => 'Y-m-d\TH:i:s\Z',
+			'!Y-m-d\TH:i:sP'    => 'Y-m-d\TH:i:sP',
+			'!Y-m-d\TH:i:s.u\Z' => 'Y-m-d\TH:i:s.u\Z',
+			'!Y-m-d\TH:i:s.uP'  => 'Y-m-d\TH:i:s.uP',
+		);
+		foreach ( $formats as $parse_format => $roundtrip_format ) {
+			$timestamp = \DateTimeImmutable::createFromFormat( $parse_format, $value, $utc );
+			$errors    = \DateTimeImmutable::getLastErrors();
+			if (
+				false !== $timestamp
+				&& ( ! is_array( $errors ) || ( 0 === (int) $errors['warning_count'] && 0 === (int) $errors['error_count'] ) )
+				&& 0 === $timestamp->getOffset()
+				&& $value === $timestamp->format( $roundtrip_format )
+			) {
+				return $timestamp->getTimestamp();
 			}
 		}
 
-		return hash_equals( $this->media_derivative_preview_signature( $artifact_id, $query ), $signature );
+		return false;
+	}
+
+	/**
+	 * Builds the exact local11 artifact only after fail-closed cross-field validation.
+	 *
+	 * WordPress REST args validate individual body fields, but cannot validate
+	 * MIME/format, width/height area, or the complete descriptor together.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function media_derivative_local_review_artifact_from_request( WP_REST_Request $request ) {
+		$path_artifact_id   = $request->get_param( 'artifact_id' );
+		$json_params        = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		$artifact           = is_array( $json_params['artifact'] ?? null ) ? $json_params['artifact'] : array();
+		$expected_keys      = array(
+			'artifact_id',
+			'expires_at',
+			'mime_type',
+			'format',
+			'width',
+			'height',
+			'filesize_bytes',
+			'sha256',
+			'suggested_filename',
+			'filename_basis',
+			'processing_warnings',
+		);
+		if (
+			count( $artifact ) !== count( $expected_keys )
+			|| array() !== array_diff( $expected_keys, array_keys( $artifact ) )
+			|| array() !== array_diff( array_keys( $artifact ), $expected_keys )
+		) {
+			return $this->media_derivative_local_review_descriptor_invalid();
+		}
+
+		$artifact_id        = $artifact['artifact_id'];
+		$expires_at         = $artifact['expires_at'];
+		$mime_type          = $artifact['mime_type'];
+		$format             = $artifact['format'];
+		$width              = self::media_derivative_local_review_positive_integer( $artifact['width'] );
+		$height             = self::media_derivative_local_review_positive_integer( $artifact['height'] );
+		$filesize_bytes     = self::media_derivative_local_review_positive_integer( $artifact['filesize_bytes'] );
+		$sha256             = $artifact['sha256'];
+		$suggested_filename = $artifact['suggested_filename'];
+		$filename_basis     = $artifact['filename_basis'];
+		$processing_warnings = $artifact['processing_warnings'];
+		$expires_timestamp  = is_string( $expires_at ) ? self::media_derivative_strict_timestamp( $expires_at ) : false;
+		$mime_by_format     = array(
+			'avif' => 'image/avif',
+			'jpeg' => 'image/jpeg',
+			'png'  => 'image/png',
+			'webp' => 'image/webp',
+		);
+		if (
+			! is_string( $path_artifact_id )
+			|| ! is_string( $artifact_id )
+			|| 1 !== preg_match( '/^art_[0-9a-f]{32}$/', $artifact_id )
+			|| $path_artifact_id !== $artifact_id
+			|| false === $expires_timestamp
+			|| $expires_timestamp <= time()
+			|| ! is_string( $mime_type )
+			|| ! is_string( $format )
+			|| ! isset( $mime_by_format[ $format ] )
+			|| $mime_by_format[ $format ] !== $mime_type
+			|| false === $width
+			|| $width > 8192
+			|| false === $height
+			|| $height > 8192
+			|| $width * $height > 16777216
+			|| false === $filesize_bytes
+			|| $filesize_bytes > 26214400
+			|| ! is_string( $sha256 )
+			|| 1 !== preg_match( '/^[0-9a-f]{64}$/', $sha256 )
+			|| ! is_string( $suggested_filename )
+			|| '' === $suggested_filename
+			|| strlen( $suggested_filename ) > 120
+			|| sanitize_file_name( $suggested_filename ) !== $suggested_filename
+			|| ! is_array( $filename_basis )
+			|| 3 !== count( $filename_basis )
+			|| array() !== array_diff( array( 'owner', 'strategy', 'final_sanitize_unique_required' ), array_keys( $filename_basis ) )
+			|| array() !== array_diff( array_keys( $filename_basis ), array( 'owner', 'strategy', 'final_sanitize_unique_required' ) )
+			|| 'wordpress_write_ability_final' !== ( $filename_basis['owner'] ?? null )
+			|| 'format_checksum' !== ( $filename_basis['strategy'] ?? null )
+			|| true !== ( $filename_basis['final_sanitize_unique_required'] ?? null )
+		) {
+			return $this->media_derivative_local_review_descriptor_invalid();
+		}
+
+		if (
+			! is_array( $processing_warnings )
+			|| ( ! empty( $processing_warnings ) && array_keys( $processing_warnings ) !== range( 0, count( $processing_warnings ) - 1 ) )
+			|| count( $processing_warnings ) > 20
+		) {
+			return $this->media_derivative_local_review_descriptor_invalid();
+		}
+		foreach ( $processing_warnings as $warning ) {
+			if ( ! is_string( $warning ) || strlen( $warning ) > 200 || sanitize_text_field( $warning ) !== $warning ) {
+				return $this->media_derivative_local_review_descriptor_invalid();
+			}
+		}
+
+		return array(
+			'artifact_id'         => $artifact_id,
+			'expires_at'          => $expires_at,
+			'mime_type'           => $mime_type,
+			'format'              => $format,
+			'width'               => $width,
+			'height'              => $height,
+			'filesize_bytes'      => $filesize_bytes,
+			'sha256'              => $sha256,
+			'suggested_filename'  => $suggested_filename,
+			'filename_basis'      => array(
+				'owner'                          => 'wordpress_write_ability_final',
+				'strategy'                       => 'format_checksum',
+				'final_sanitize_unique_required' => true,
+			),
+			'processing_warnings' => $processing_warnings,
+		);
+	}
+
+	/**
+	 * Accepts one exact positive JSON integer without coercion.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return int|false
+	 */
+	private static function media_derivative_local_review_positive_integer( $value ) {
+		return is_int( $value ) && $value > 0 ? $value : false;
+	}
+
+	private function media_derivative_local_review_descriptor_invalid(): WP_Error {
+		return new WP_Error(
+			'npcink_toolbox_media_derivative_local_review_descriptor_invalid',
+			__( 'Media derivative local review descriptor facts are invalid.', 'npcink-workflow-toolbox' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	private function media_derivative_local_review_route_args(): array {
+		return array(
+			'artifact_id'         => array(
+				'required'          => true,
+				'type'              => 'string',
+				'validate_callback' => static fn( $value ): bool => is_string( $value ) && 1 === preg_match( '/^art_[0-9a-f]{32}$/', $value ),
+			),
+			'artifact'            => array(
+				'required'             => true,
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'validate_callback'    => 'rest_validate_request_arg',
+				'properties'           => array(
+					'artifact_id'         => array( 'required' => true, 'type' => 'string', 'pattern' => '^art_[0-9a-f]{32}$' ),
+					'expires_at'          => array( 'required' => true, 'type' => 'string' ),
+					'mime_type'           => array( 'required' => true, 'type' => 'string', 'enum' => array( 'image/avif', 'image/jpeg', 'image/png', 'image/webp' ) ),
+					'format'              => array( 'required' => true, 'type' => 'string', 'enum' => array( 'avif', 'jpeg', 'png', 'webp' ) ),
+					'width'               => array( 'required' => true, 'type' => 'integer', 'minimum' => 1, 'maximum' => 8192 ),
+					'height'              => array( 'required' => true, 'type' => 'integer', 'minimum' => 1, 'maximum' => 8192 ),
+					'filesize_bytes'      => array( 'required' => true, 'type' => 'integer', 'minimum' => 1, 'maximum' => 26214400 ),
+					'sha256'              => array( 'required' => true, 'type' => 'string', 'pattern' => '^[0-9a-f]{64}$' ),
+					'suggested_filename'  => array( 'required' => true, 'type' => 'string', 'minLength' => 1, 'maxLength' => 120 ),
+					'filename_basis'      => array(
+						'required' => true,
+						'type'     => 'object',
+						'anyOf'    => array(
+							array(
+								'type'                 => 'object',
+								'additionalProperties' => false,
+								'required'             => array( 'owner', 'strategy', 'final_sanitize_unique_required' ),
+								'properties'           => array(
+									'owner'                          => array( 'type' => 'string', 'enum' => array( 'wordpress_write_ability_final' ) ),
+									'strategy'                       => array( 'type' => 'string', 'enum' => array( 'format_checksum' ) ),
+									'final_sanitize_unique_required' => array( 'type' => 'boolean', 'enum' => array( true ) ),
+								),
+							),
+						),
+					),
+					'processing_warnings' => array(
+						'required' => true,
+						'type'     => 'array',
+						'maxItems' => 20,
+						'items'    => array( 'type' => 'string', 'maxLength' => 200 ),
+					),
+				),
+			),
+		);
 	}
 
 	private function csv_list( string $value ): array {

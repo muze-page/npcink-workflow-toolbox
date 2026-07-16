@@ -46,8 +46,8 @@ The first real-attachment validation is recorded in
 | --- | --- |
 | Fixed operator UX, media defaults, one-run overrides, preview display, reviewed metadata fields | Toolbox |
 | WordPress proposal truth, approval, preflight, and audit | Core |
-| Plan-to-proposal relay, approved execution orchestration, same-origin preview proxy | Adapter |
-| Local-to-Cloud signing and transport | Cloud Addon |
+| Plan-to-proposal relay and approved execution orchestration | Adapter |
+| Local-to-Cloud signing, verified artifact receive/ACK transport | Cloud Addon |
 | Derivative processing runtime, short-lived artifacts, processing evidence | Cloud |
 | WordPress media read/write ability contracts and rollback primitives | Abilities Toolkit |
 

@@ -31,8 +31,9 @@ The workflow is deterministic:
    operator overrides.
 3. Toolbox executes the Toolkit request ability locally, while Cloud Addon owns
    signed Cloud dispatch and result reads for the short-lived derivative artifact.
-4. Toolbox renders its same-origin signed preview projection and collects reviewed
-   media metadata.
+4. Toolbox separately projects a capability- and REST nonce-gated local review
+   URL; Cloud Addon receives, verifies, and ACKs the bytes before Toolbox renders
+   them and collects reviewed media metadata.
 5. Toolbox asks Cloud Addon to build the optimization payload, then submits its
    `from_plan_request` through Adapter to
    `/proposals/from-plan`, so Core creates one media optimization proposal.

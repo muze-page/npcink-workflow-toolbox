@@ -47,7 +47,8 @@ For media derivative replacement, approved execution must reuse:
 
 - `npcink-abilities-toolkit/build-media-derivative-cloud-request` for bounded
   Cloud derivative request input;
-- the Adapter media derivative run/result and proposal-payload bridge;
+- the Toolbox media derivative preview and optimization-payload projections,
+  both delegated to Cloud Addon transport;
 - `npcink-abilities-toolkit/build-media-optimization-plan` for the reviewed
   Core proposal shape;
 - `npcink-abilities-toolkit/adopt-cloud-media-derivative` or

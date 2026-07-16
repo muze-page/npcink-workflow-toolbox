@@ -381,13 +381,24 @@ Current routes require `manage_options`:
 - `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}`
 - `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}/result`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-optimization-payload`
-- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview-artifacts/{artifact_id}`
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-local-review/{artifact_id}`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/recent`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}`
 - `GET|POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/result`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/{run_id}/retry`
+
+Media derivative result responses keep two independent projections. The
+`cloud_result.artifact` member is the exact artifact validated from
+`media_derivative_result.v1`; `local_review` contains one queryless same-origin
+`endpoint`, `method=POST`, and the exact local11 `artifact`. The route is
+administrator-only and cookie plus `X-WP-Nonce` gated. Toolbox rejects every
+query parameter and every extra body field before passing the exact artifact to
+Addon, which pulls, verifies, and ACKs the bytes. The browser renders those
+verified bytes through a short-lived Blob object URL and revokes it on load,
+error, or re-render. Toolbox never stores, registers, adopts, or writes the
+artifact.
 
 `/status` reports Cloud-backed surfaces as registered capabilities plus current
 availability. `web_search_registered`, `vector_search_registered`,

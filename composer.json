@@ -9,6 +9,7 @@
   "scripts": {
     "lint:php": "php tests/lint.php",
     "test": "php tests/run.php",
+    "test:media-derivative-local-review": "php tests/media-derivative-local-review-behavior.php",
     "test:progressive-recommendations": "php tests/progressive-recommendations-behavior.php",
     "test:publish-preflight": "php tests/publish-preflight-service-behavior.php",
     "test:performance-baseline": "php tests/performance-baseline-behavior.php",
@@ -114,6 +115,7 @@
     "test:all": [
       "@lint:php",
       "@test",
+      "@test:media-derivative-local-review",
       "@test:boundary-vocabulary",
       "@check:platform-contracts",
       "@check:fixed-button-contracts",

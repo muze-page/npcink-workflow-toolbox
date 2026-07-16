@@ -37,6 +37,7 @@
 	}
 
 	function clearNode(node) {
+		revokeMediaDerivativePreviewUrls(node);
 		while (node.firstChild) {
 			node.removeChild(node.firstChild);
 		}
@@ -311,25 +312,6 @@
 
 	function joinRestUrl(base, path) {
 		return String(base || '').replace(/\/$/, '') + '/' + String(path || '').replace(/^\//, '');
-	}
-
-	function withRestNonce(url) {
-		if (!url) {
-			return '';
-		}
-
-		try {
-			const parsed = new URL(String(url), window.location.href);
-			if (parsed.origin !== window.location.origin) {
-				return '';
-			}
-			if (config.nonce && !parsed.searchParams.has('_wpnonce')) {
-				parsed.searchParams.set('_wpnonce', config.nonce);
-			}
-			return parsed.toString();
-		} catch (error) {
-			return '';
-		}
 	}
 
 	async function postJson(base, path, payload) {
@@ -3010,20 +2992,124 @@
 	}
 
 	function derivativeFromResult(payload) {
-		const cloudResult = payload && payload.cloud_result ? payload.cloud_result : payload;
-		if (!cloudResult || typeof cloudResult !== 'object') {
-			return {};
+		const cloudResult = payload && payload.cloud_result && typeof payload.cloud_result === 'object' ? payload.cloud_result : {};
+		return cloudResult.artifact && typeof cloudResult.artifact === 'object' ? cloudResult.artifact : {};
+	}
+
+	function localReviewFromResult(payload) {
+		return payload && payload.local_review && typeof payload.local_review === 'object' ? payload.local_review : {};
+	}
+
+	const mediaDerivativePreviewObjectUrls = new Map();
+
+	function releaseMediaDerivativePreviewUrl(image, loaded) {
+		const active = mediaDerivativePreviewObjectUrls.get(image);
+		if (!active) {
+			return;
 		}
-		if (cloudResult.derivative && typeof cloudResult.derivative === 'object') {
-			return cloudResult.derivative;
+		mediaDerivativePreviewObjectUrls.delete(image);
+		URL.revokeObjectURL(active.url);
+		if (typeof active.settle === 'function') {
+			active.settle(loaded === true);
 		}
-		if (cloudResult.data && cloudResult.data.derivative && typeof cloudResult.data.derivative === 'object') {
-			return cloudResult.data.derivative;
+	}
+
+	function revokeMediaDerivativePreviewUrls(root) {
+		mediaDerivativePreviewObjectUrls.forEach((active, image) => {
+			if (!root || !image.isConnected || root === image || root.contains(image)) {
+				releaseMediaDerivativePreviewUrl(image, false);
+			}
+		});
+	}
+
+	function mediaDerivativeLocalReviewTransport(localReview) {
+		localReview = localReview && typeof localReview === 'object' ? localReview : {};
+		const artifact = localReview.artifact && typeof localReview.artifact === 'object' ? localReview.artifact : {};
+		const expectedArtifactKeys = [
+			'artifact_id', 'expires_at', 'mime_type', 'format', 'width', 'height',
+			'filesize_bytes', 'sha256', 'suggested_filename', 'filename_basis', 'processing_warnings'
+		];
+		if (localReview.method !== 'POST' || Object.keys(artifact).length !== expectedArtifactKeys.length || !expectedArtifactKeys.every((key) => Object.prototype.hasOwnProperty.call(artifact, key))) {
+			return null;
 		}
-		if (cloudResult.data && cloudResult.data.result && cloudResult.data.result.artifact) {
-			return cloudResult.data.result.artifact;
+		if (!/^art_[0-9a-f]{32}$/.test(String(artifact.artifact_id || ''))) {
+			return null;
 		}
-		return {};
+		try {
+			const endpoint = new URL(String(localReview.endpoint || ''), window.location.href);
+			if (
+				endpoint.origin !== window.location.origin
+				|| endpoint.username !== ''
+				|| endpoint.password !== ''
+				|| endpoint.search !== ''
+				|| endpoint.hash !== ''
+				|| !endpoint.pathname.endsWith('/media-derivative-local-review/' + encodeURIComponent(String(artifact.artifact_id)))
+			) {
+				return null;
+			}
+			return { endpoint: endpoint.toString(), artifact };
+		} catch (error) {
+			return null;
+		}
+	}
+
+	async function loadMediaDerivativePreviewImage(image, transport) {
+		const response = await fetch(transport.endpoint, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Accept': 'image/avif,image/webp,image/png,image/jpeg',
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': config.nonce || '',
+			},
+			body: JSON.stringify({ artifact: transport.artifact }),
+		});
+		if (!response.ok) {
+			const errorPayload = await response.clone().json().catch(() => ({}));
+			throw Object.assign({ status: response.status }, errorPayload || {});
+		}
+		const contentType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+		if (!['image/avif', 'image/jpeg', 'image/png', 'image/webp'].includes(contentType)) {
+			throw new Error('Verified local review returned an unsupported image type.');
+		}
+		const blob = await response.blob();
+		if (!image.isConnected || blob.size < 1) {
+			return false;
+		}
+
+		releaseMediaDerivativePreviewUrl(image, false);
+		const objectUrl = URL.createObjectURL(blob);
+		return await new Promise((resolve) => {
+			mediaDerivativePreviewObjectUrls.set(image, { url: objectUrl, settle: resolve });
+			image.addEventListener('load', () => releaseMediaDerivativePreviewUrl(image, true), { once: true });
+			image.addEventListener('error', () => releaseMediaDerivativePreviewUrl(image, false), { once: true });
+			image.src = objectUrl;
+			if (!image.isConnected) {
+				releaseMediaDerivativePreviewUrl(image, false);
+			}
+		});
+	}
+
+	function startMediaDerivativePreviewImage(image, localReview, onLoaded, onError) {
+		const transport = mediaDerivativeLocalReviewTransport(localReview);
+		if (!transport) {
+			return false;
+		}
+		loadMediaDerivativePreviewImage(image, transport)
+			.then((loaded) => {
+				if (loaded && typeof onLoaded === 'function') {
+					onLoaded();
+				} else if (!loaded && typeof onError === 'function') {
+					onError();
+				}
+			})
+			.catch((error) => {
+				releaseMediaDerivativePreviewUrl(image, false);
+				if (typeof onError === 'function') {
+					onError(error);
+				}
+			});
+		return true;
 	}
 
 	function cloudStatus(payload) {
@@ -3786,6 +3872,7 @@
 	function renderMediaDerivativeRun(form, state, message) {
 		const payload = state.result || state.create || {};
 		const derivative = state.derivative || derivativeFromResult(payload);
+		const localReview = state.localReview || localReviewFromResult(payload);
 		const result = renderShell(
 			form,
 			{ provider: 'cloud runtime' },
@@ -3814,19 +3901,31 @@
 			});
 		}
 
-		const previewUrl = withRestNonce(derivative.preview_url || '');
-		if (previewUrl) {
+		const localReviewTransport = mediaDerivativeLocalReviewTransport(localReview);
+		if (localReviewTransport) {
 			const preview = el('figure', 'npcink-toolbox__derivative-preview');
 			const image = el('img');
-			image.src = previewUrl;
 			image.alt = 'Generated derivative preview';
 			image.loading = 'lazy';
 			preview.appendChild(image);
-			preview.appendChild(el('figcaption', '', 'Same-origin signed preview proxy. This is not a public Cloud URL or a WordPress media write.'));
+			preview.appendChild(el('figcaption', '', 'Capability-gated local review copy. This is not a public Cloud URL or a WordPress media write.'));
 			result.appendChild(preview);
-			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Preview is served through Toolbox and Cloud Addon with local authorization.'));
+			const previewStatus = el('div', 'npcink-toolbox__result-notice', 'Loading verified preview bytes through local WordPress authorization.');
+			result.appendChild(previewStatus);
+			startMediaDerivativePreviewImage(
+				image,
+				localReview,
+				() => {
+					previewStatus.classList.add('is-ok');
+					previewStatus.textContent = t('Preview bytes were received and verified by Cloud Addon.');
+				},
+				(error) => {
+					previewStatus.classList.add('is-warning');
+					previewStatus.textContent = t('Verified preview could not be displayed. ') + formatErrorMessage(error || {}, 'Retry the preview before artifact expiry.');
+				}
+			);
 		} else {
-			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local signed preview proxy did not return a display URL.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local review response did not return an exact POST transport.'));
 		}
 		renderArtifactSummary(result, 'Derivative artifact', derivative);
 		if (state.fromPlanRequest) {
@@ -4153,6 +4252,7 @@
 		const list = el('div', 'npcink-toolbox__result-list');
 		states.forEach((state) => {
 			const derivative = state.derivative || {};
+			const localReview = state.localReview || {};
 			const candidate = asObject(state.batchCandidate);
 			const row = el('article', 'npcink-toolbox__result-item');
 			row.appendChild(el('h4', '', '#' + String(state.abilityInput && state.abilityInput.attachment_id ? state.abilityInput.attachment_id : '') + ' ' + String(candidate.title || (derivative.format ? String(derivative.format).toUpperCase() : 'Derivative'))));
@@ -4178,9 +4278,9 @@
 			if (state.batchPreviewError) {
 				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview failed: ' + formatErrorMessage(state.batchPreviewError)));
 			}
-			const previewUrl = withRestNonce(derivative.preview_url || '');
+			const localReviewTransport = mediaDerivativeLocalReviewTransport(localReview);
 			const originalUrl = candidate.thumbnail_url || candidate.attachment_url || candidate.url || '';
-			if (originalUrl || previewUrl) {
+			if (originalUrl || localReviewTransport) {
 				const comparison = el('div', 'npcink-toolbox__media-comparison');
 				if (originalUrl) {
 					const originalFigure = el('figure');
@@ -4192,15 +4292,21 @@
 					originalFigure.appendChild(el('figcaption', '', 'Original'));
 					comparison.appendChild(originalFigure);
 				}
-				if (previewUrl) {
+				if (localReviewTransport) {
 					const previewFigure = el('figure');
 					const previewImage = el('img');
-					previewImage.src = previewUrl;
 					previewImage.alt = '';
 					previewImage.loading = 'lazy';
 					previewFigure.appendChild(previewImage);
-					previewFigure.appendChild(el('figcaption', '', 'Optimized preview'));
+					const previewCaption = el('figcaption', '', 'Loading optimized preview');
+					previewFigure.appendChild(previewCaption);
 					comparison.appendChild(previewFigure);
+					startMediaDerivativePreviewImage(
+						previewImage,
+						localReview,
+						() => { previewCaption.textContent = t('Optimized preview'); },
+						() => { previewCaption.textContent = t('Optimized preview unavailable'); }
+					);
 				}
 				row.appendChild(comparison);
 			}
@@ -4512,8 +4618,13 @@
 
 		const resultPayload = await waitForMediaDerivativeResult(runId);
 		const derivative = derivativeFromResult(resultPayload);
+		const localReview = localReviewFromResult(resultPayload);
 		if (!derivative || !derivative.artifact_id) {
 			throw { message: 'Cloud result did not include a derivative artifact id.' };
+		}
+		const localReviewTransport = mediaDerivativeLocalReviewTransport(localReview);
+		if (!localReviewTransport || localReviewTransport.artifact.artifact_id !== derivative.artifact_id || localReviewTransport.artifact.expires_at !== derivative.expires_at) {
+			throw { message: 'Toolbox did not return a canonical local review projection for the Cloud artifact.' };
 		}
 		const preflightState = {
 			abilityInput: input,
@@ -4540,6 +4651,7 @@
 				result: resultPayload,
 				runId,
 				derivative,
+				localReview,
 				preflightEnvelope,
 			};
 		}
@@ -4561,6 +4673,7 @@
 			result: resultPayload,
 			runId,
 			derivative,
+			localReview,
 			proposalPayload: proposalEnvelope.proposal_payload || {},
 			proposalEnvelope,
 			fromPlanRequest: proposalEnvelope.from_plan_request || null,

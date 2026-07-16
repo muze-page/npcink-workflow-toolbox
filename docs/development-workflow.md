@@ -792,9 +792,13 @@ NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/
 ```
 
 This creates one temporary attachment, submits the Toolbox-owned preview route
-from a real authenticated browser, polls Cloud Addon through Toolbox, loads the
-signed WebP preview bytes, and rejects any request to the removed Adapter media
-derivative Cloud routes. It cleans up the attachment after the check.
+from a real authenticated browser, polls Cloud Addon through Toolbox, proves the
+separate queryless local review endpoint rejects a POST body without a WordPress
+REST nonce, then loads verified WebP bytes with `X-WP-Nonce` and the exact local11
+JSON body. It also checks no-store and nosniff response headers, rejects every
+query field and extra body shape, and rejects
+any request to the removed Adapter media derivative Cloud routes. It cleans up
+the attachment after the check.
 
 When Adapter, Toolkit, and Core are available, run the workflow-projection Core
 proposal smoke:
@@ -1064,7 +1068,8 @@ automatic editor-state action, and media metadata remains unchanged.
   `core_proposal_required` and be verified with
   `composer smoke:article-media-batch-core`.
 - Treat media optimization as a governed fixed flow: Toolbox builds the
-  operator handoff, Adapter/Cloud generates the short-lived preview, Core owns
+  operator handoff, Cloud Addon/Cloud generates and receives the short-lived
+  local review bytes, Core owns
   proposal approval, and release checks should run
   `composer smoke:media-derivative-core`.
 - Keep Cloud-managed web search output as source candidates, not verified truth.
