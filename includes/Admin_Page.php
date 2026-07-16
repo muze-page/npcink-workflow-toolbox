@@ -147,6 +147,7 @@ final class Admin_Page {
 			array(
 				'restUrl'       => esc_url_raw( rest_url( Plugin::REST_NAMESPACE ) ),
 				'adapterRestUrl' => esc_url_raw( rest_url( 'npcink-openclaw-adapter/v1' ) ),
+				'coreRestUrl'    => esc_url_raw( rest_url( 'npcink-governance-core/v1' ) ),
 				'coreAdminUrl'  => esc_url_raw( admin_url( 'admin.php?page=npcink-governance-core' ) ),
 				'nonce'         => wp_create_nonce( 'wp_rest' ),
 				'dateTime'      => $this->datetime_display_config(),

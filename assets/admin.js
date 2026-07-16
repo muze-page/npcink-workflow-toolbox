@@ -430,6 +430,106 @@
 		result.appendChild(notice);
 	}
 
+	function renderMediaDerivativeProgress(form, stage, detail) {
+		const stages = [
+			{ id: 'upload', label: 'Upload source' },
+			{ id: 'process', label: 'Cloud processing' },
+			{ id: 'read', label: 'Read result' },
+		];
+		const activeIndex = Math.max(0, stages.findIndex((item) => item.id === stage));
+		const result = renderShell(
+			form,
+			{ provider: 'cloud runtime' },
+			'Generating media preview',
+			detail || 'Toolbox is preparing short-lived review evidence. No WordPress media is changed during these steps.'
+		);
+		if (!result) {
+			return;
+		}
+
+		const progress = el('ol', 'npcink-toolbox__media-progress');
+		progress.setAttribute('aria-label', 'Media preview progress');
+		stages.forEach((item, index) => {
+			const state = index < activeIndex ? 'is-complete' : index === activeIndex ? 'is-current' : 'is-pending';
+			const row = el('li', state);
+			row.appendChild(el('span', 'npcink-toolbox__media-progress-marker', index < activeIndex ? '✓' : String(index + 1)));
+			row.appendChild(el('span', '', item.label));
+			if (state === 'is-current') {
+				row.setAttribute('aria-current', 'step');
+			}
+			progress.appendChild(row);
+		});
+		result.appendChild(progress);
+		result.appendChild(el(
+			'div',
+			'npcink-toolbox__result-notice is-pending',
+			'Current state: ' + String(detail || stages[activeIndex].label)
+		));
+	}
+
+	function mediaDerivativeTimeoutContext(error) {
+		return error && typeof error === 'object' && error.media_derivative_resume && typeof error.media_derivative_resume === 'object'
+			? error.media_derivative_resume
+			: null;
+	}
+
+	function isMediaDerivativePollTimeout(error) {
+		return errorContainsCode(error, 'cloud_media_derivative_poll_timeout', new WeakSet());
+	}
+
+	function mediaDerivativeRetryAdvice(error, context) {
+		const message = formatErrorMessage(error || {}, 'Media preview request failed.');
+		if (isMediaDerivativePollTimeout(error)) {
+			return 'Use Continue checking this run to poll the existing Cloud run. Toolbox will not upload the source or create a second run.';
+		}
+		if (
+			errorContainsCode(error, 'cloud_quota_exhausted', new WeakSet())
+			|| errorContainsCode(error, 'cloud_runtime_quota_exhausted', new WeakSet())
+			|| errorContainsCode(error, 'cloud_entitlement_required', new WeakSet())
+			|| /quota|billing|entitlement/i.test(message)
+		) {
+			return 'Check Cloud quota or entitlement, then use the same preview action again. Any successful preview evidence already shown is preserved.';
+		}
+		if (/timeout|did not finish|pending/i.test(message)) {
+			return 'Wait briefly, then use the same preview action again. Toolbox will not retry automatically.';
+		}
+		if (/local review|verified preview|artifact.*expir/i.test(message)) {
+			return 'Generate a new preview before artifact expiry; do not submit this item to Core until the verified image is visible.';
+		}
+		if (context === 'proposal') {
+			return 'Keep the reviewed preview, resolve the Core handoff error, then submit again. Existing successful Core proposals are not resubmitted.';
+		}
+		if (context === 'batch-retry') {
+			return 'Review the failed rows, then choose Retry failed previews again or deselect those rows. Successful previews remain unchanged.';
+		}
+		return 'Keep the current selection, resolve the reported issue, then use the same preview action again. Toolbox will not retry automatically.';
+	}
+
+	function renderMediaDerivativeFailure(form, error, context) {
+		const result = renderShell(
+			form,
+			{ provider: context === 'proposal' ? 'core governance' : 'cloud runtime' },
+			context === 'proposal' ? 'Core handoff needs attention' : 'Media preview needs attention',
+			formatErrorMessage(error || {}, 'The requested media step did not finish.')
+		);
+		if (!result) {
+			return;
+		}
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Next action: ' + mediaDerivativeRetryAdvice(error, context)));
+		const resumeContext = mediaDerivativeTimeoutContext(error);
+		if (resumeContext) {
+			form.__npcinkMediaDerivativePendingRun = resumeContext;
+			const actions = el('div', 'npcink-toolbox__result-actions');
+			const continueButton = el('button', 'button button-primary', 'Continue checking this run');
+			continueButton.type = 'button';
+			continueButton.setAttribute('data-toolbox-continue-media-run', '');
+			continueButton.__npcinkMediaDerivativeResume = resumeContext;
+			actions.appendChild(continueButton);
+			result.appendChild(actions);
+		}
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'No automatic retry, Core approval, or WordPress media write was performed.'));
+	}
+
 	function renderCoreHandoffError(form, error, fallback, options) {
 		options = options || {};
 		const result = renderShell(
@@ -3053,6 +3153,26 @@
 		}
 	}
 
+	function mediaDerivativeLocalReviewVerified(state) {
+		const transport = state ? mediaDerivativeLocalReviewTransport(state.localReview) : null;
+		const derivative = state && state.derivative && typeof state.derivative === 'object' ? state.derivative : {};
+		return Boolean(
+			state
+			&& state.localReviewStatus === 'verified'
+			&& transport
+			&& derivative.artifact_id
+			&& transport.artifact.artifact_id === derivative.artifact_id
+			&& transport.artifact.expires_at === derivative.expires_at
+		);
+	}
+
+	function updateMediaDerivativeSubmitState(form, state) {
+		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
+		if (submitButton instanceof HTMLButtonElement) {
+			submitButton.disabled = !(state && state.fromPlanRequest && mediaDerivativeLocalReviewVerified(state));
+		}
+	}
+
 	async function loadMediaDerivativePreviewImage(image, transport) {
 		const response = await fetch(transport.endpoint, {
 			method: 'POST',
@@ -3839,6 +3959,9 @@
 		if (state && state.batchPreviewError) {
 			return 'preview_failed';
 		}
+		if (state && state.localReviewStatus === 'failed') {
+			return 'preview_verification_failed';
+		}
 		if (state && state.batchExecutionError) {
 			return 'execution_failed';
 		}
@@ -3852,7 +3975,7 @@
 			return 'submitted';
 		}
 		if (state && state.derivative) {
-			return state.batchStatus || 'preview_ready';
+			return state.localReviewStatus === 'verified' ? 'preview_verified' : 'preview_verification_pending';
 		}
 		return state && state.batchStatus ? state.batchStatus : 'pending';
 	}
@@ -3906,6 +4029,7 @@
 		appendMeta(meta, 'Crop', mediaDerivativeCropLabel(state.abilityInput));
 		appendMeta(meta, 'Watermark', mediaDerivativeWatermarkLabel(state.abilityInput));
 		result.appendChild(meta);
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Cloud returned an exact artifact descriptor. Reading the image bytes is still required before Core handoff.'));
 
 		if (Array.isArray(derivative.processing_warnings) && derivative.processing_warnings.length) {
 			derivative.processing_warnings.forEach((warning) => {
@@ -3922,26 +4046,35 @@
 			preview.appendChild(image);
 			preview.appendChild(el('figcaption', '', 'Capability-gated local review copy. This is not a public Cloud URL or a WordPress media write.'));
 			result.appendChild(preview);
-			const previewStatus = el('div', 'npcink-toolbox__result-notice', 'Loading verified preview bytes through local WordPress authorization.');
+			const previewStatus = el('div', 'npcink-toolbox__result-notice is-pending', 'Loading verified preview bytes through local WordPress authorization.');
 			result.appendChild(previewStatus);
 			startMediaDerivativePreviewImage(
 				image,
 				localReview,
 				() => {
+					state.localReviewStatus = 'verified';
+					previewStatus.classList.remove('is-pending');
 					previewStatus.classList.add('is-ok');
-					previewStatus.textContent = t('Preview bytes were received and verified by Cloud Addon.');
+					previewStatus.textContent = 'Verified preview ready. Cloud Addon received and checked the result bytes for this local review.';
+					updateMediaDerivativeSubmitState(form, state);
 				},
 				(error) => {
+					state.localReviewStatus = 'failed';
+					state.localReviewError = error || { message: 'Verified preview could not be displayed.' };
+					previewStatus.classList.remove('is-pending');
 					previewStatus.classList.add('is-warning');
 					previewStatus.textContent = t('Verified preview could not be displayed. ') + formatErrorMessage(error || {}, 'Retry the preview before artifact expiry.');
+					updateMediaDerivativeSubmitState(form, state);
 				}
 			);
 		} else {
+			state.localReviewStatus = 'failed';
+			updateMediaDerivativeSubmitState(form, state);
 			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview uses artifact evidence only. The local review response did not return an exact POST transport.'));
 		}
 		renderArtifactSummary(result, 'Derivative artifact', derivative);
 		if (state.fromPlanRequest) {
-			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Optimization plan is ready for one Core proposal approval.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Optimization plan is ready for one Core proposal approval. Next action: inspect the preview and preflight evidence, then submit before the artifact expires.'));
 			renderArtifactSummary(result, 'Media optimization plan', state.fromPlanRequest.plan || {});
 		} else if (state.proposalEnvelope) {
 			const guard = state.proposalEnvelope.ability_guard || {};
@@ -4180,14 +4313,29 @@
 		return parseInt(abilityInput.attachment_id || candidate.attachment_id || value.attachment_id || '0', 10) || 0;
 	}
 
+	function mediaBatchArtifactReady(state) {
+		return Boolean(
+			state
+			&& !state.batchPreviewError
+			&& state.derivative
+			&& state.derivative.artifact_id
+			&& mediaBatchAttachmentId(state) > 0
+			&& mediaDerivativeLocalReviewTransport(state.localReview)
+		);
+	}
+
 	function mediaBatchPreviewReady(state) {
-		return !!(state && !state.batchPreviewError && state.derivative && mediaBatchAttachmentId(state) > 0);
+		return mediaBatchArtifactReady(state) && mediaDerivativeLocalReviewVerified(state);
+	}
+
+	function selectedMediaBatchStates(form) {
+		const selectedIds = new Set(selectedMediaBatchCandidates(form).map((candidate) => mediaBatchAttachmentId(candidate)).filter(Boolean));
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+		return states.filter((state) => selectedIds.has(mediaBatchAttachmentId(state)));
 	}
 
 	function selectedMediaBatchPreviewStates(form) {
-		const selectedIds = new Set(selectedMediaBatchCandidates(form).map((candidate) => mediaBatchAttachmentId(candidate)).filter(Boolean));
-		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
-		return states.filter((state) => selectedIds.has(mediaBatchAttachmentId(state)) && mediaBatchPreviewReady(state));
+		return selectedMediaBatchStates(form).filter(mediaBatchPreviewReady);
 	}
 
 	function updateMediaBatchSelectedCount(form) {
@@ -4209,6 +4357,30 @@
 		}
 	}
 
+	function updateMediaBatchVerificationStatus(form) {
+		const statusNode = form.querySelector('[data-toolbox-media-batch-verification-summary]');
+		if (!statusNode) {
+			return;
+		}
+		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+		const returnedCount = states.filter(mediaBatchArtifactReady).length;
+		const verifiedCount = states.filter(mediaBatchPreviewReady).length;
+		const failedCount = states.filter((state) => state && (state.batchPreviewError || state.localReviewStatus === 'failed')).length;
+		statusNode.classList.remove('is-ok', 'is-warning', 'is-pending');
+		if (failedCount > 0) {
+			statusNode.classList.add('is-warning');
+			statusNode.textContent = String(failedCount) + ' item(s) need attention. Verified items remain available; retry only failed preview reads or runs.';
+			return;
+		}
+		if (returnedCount > 0 && verifiedCount === returnedCount) {
+			statusNode.classList.add('is-ok');
+			statusNode.textContent = String(verifiedCount) + ' verified preview image(s) are ready. Compare them with the originals before Core review.';
+			return;
+		}
+		statusNode.classList.add('is-pending');
+		statusNode.textContent = String(returnedCount) + ' artifact descriptor(s) returned; ' + String(verifiedCount) + ' verified image read(s) complete.';
+	}
+
 	function renderMediaDerivativeBatchResults(form, states, title, summary, batchContext) {
 		batchContext = asObject(batchContext);
 		const selectedCount = integerOr(batchContext.selected_count || batchContext.selectedCount, states.length);
@@ -4218,12 +4390,13 @@
 		);
 		const failedCount = integerOr(
 			batchContext.failed_count || batchContext.failedCount,
-			states.filter((state) => state && (state.batchPreviewError || state.batchProposalError)).length
+			states.filter((state) => state && (state.batchPreviewError || state.batchProposalError || state.localReviewStatus === 'failed')).length
 		);
-		const previewedCount = integerOr(batchContext.previewed_count || batchContext.previewedCount, states.filter(mediaBatchPreviewReady).length);
+		const returnedCount = states.filter(mediaBatchArtifactReady).length;
+		const previewedCount = states.filter(mediaBatchPreviewReady).length;
 		const result = renderShell(
 			form,
-			{ provider: 'core governance' },
+			{ provider: submittedCount > 0 ? 'core governance' : 'cloud runtime' },
 			title || 'Batch media derivative previews',
 			summary || 'Selected media now have short-lived derivative artifact evidence. Submit Core proposals before artifact expiry.'
 		);
@@ -4233,7 +4406,8 @@
 
 		const meta = el('div', 'npcink-toolbox__result-meta');
 		appendMeta(meta, 'Selected', selectedCount);
-		appendMeta(meta, 'Previewed', previewedCount);
+		appendMeta(meta, 'Returned', returnedCount);
+		appendMeta(meta, 'Verified', previewedCount);
 		appendMeta(meta, 'Submitted', submittedCount);
 		appendMeta(meta, 'Failed', failedCount);
 		appendMeta(meta, 'Partial success', batchContext.partial_success ? 'Yes' : 'No');
@@ -4243,8 +4417,17 @@
 		appendMeta(meta, 'Watermark', states.length ? mediaDerivativeWatermarkLabel(states[0].abilityInput) : '');
 		result.appendChild(meta);
 
+		if (submittedCount > 0) {
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', String(submittedCount) + ' selected item(s) were handed to Core review. Toolbox did not approve or execute them.'));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'After any later approved replacement, rollback and backup restoration stay in the governed Core, Adapter, and Abilities path. Return to the Core record for execution evidence or recovery.'));
+		} else {
+			const verificationSummary = el('div', 'npcink-toolbox__result-notice is-pending', String(returnedCount) + ' artifact descriptor(s) returned; verified browser image reads are still required.');
+			verificationSummary.setAttribute('data-toolbox-media-batch-verification-summary', '');
+			result.appendChild(verificationSummary);
+		}
+
 		if (batchContext.operator_next_action) {
-			result.appendChild(el('div', 'npcink-toolbox__result-notice is-ok', 'Next action: ' + String(batchContext.operator_next_action)));
+			result.appendChild(el('div', 'npcink-toolbox__result-notice ' + (failedCount > 0 ? 'is-warning' : 'is-ok'), 'Next action: ' + String(batchContext.operator_next_action)));
 		}
 		if (batchContext.retry_guidance) {
 			result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Retry guidance: ' + String(batchContext.retry_guidance)));
@@ -4252,8 +4435,10 @@
 		if (batchContext.core_preflight_evidence) {
 			result.appendChild(createRawDetails(batchContext.core_preflight_evidence, 'Core preflight evidence'));
 		}
-		if (states.some((state) => state && state.batchPreviewError)) {
+		if (states.some((state) => state && (state.batchPreviewError || mediaBatchArtifactReady(state)))) {
 			const retryActions = el('div', 'npcink-toolbox__result-actions');
+			retryActions.hidden = !states.some((state) => state && (state.batchPreviewError || state.localReviewStatus === 'failed'));
+			retryActions.setAttribute('data-toolbox-media-retry-actions', '');
 			const retryButton = el('button', 'button', 'Retry failed previews');
 			retryButton.type = 'button';
 			retryButton.setAttribute('data-toolbox-retry-failed-media-previews', '');
@@ -4285,12 +4470,27 @@
 				].filter(Boolean).join(' · ')));
 			}
 			if (state.batchProposalError) {
-				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', formatErrorMessage(state.batchProposalError)));
+				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Core handoff failed: ' + formatErrorMessage(state.batchProposalError) + ' Resolve the error, then submit selected items again; successful proposals will not be resubmitted.'));
 			}
 			if (state.batchPreviewError) {
-				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview failed: ' + formatErrorMessage(state.batchPreviewError)));
+				row.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'Preview failed: ' + formatErrorMessage(state.batchPreviewError) + ' Use Retry failed previews or deselect this row before Core submission.'));
+				const resumeContext = mediaDerivativeTimeoutContext(state.batchPreviewError);
+				if (resumeContext) {
+					const continueButton = el('button', 'button button-primary', 'Continue checking this run');
+					continueButton.type = 'button';
+					continueButton.setAttribute('data-toolbox-continue-media-run', '');
+					continueButton.__npcinkMediaDerivativeResume = Object.assign({}, resumeContext, {
+						batch_attachment_id: mediaBatchAttachmentId(state),
+					});
+					row.appendChild(continueButton);
+				}
 			}
 			const localReviewTransport = mediaDerivativeLocalReviewTransport(localReview);
+			let verifiedReadStatus = null;
+			if (mediaBatchPreviewReady(state) && localReviewTransport) {
+				verifiedReadStatus = el('div', 'npcink-toolbox__result-notice is-pending', 'Reading verified preview bytes through local WordPress authorization.');
+				row.appendChild(verifiedReadStatus);
+			}
 			const originalUrl = candidate.thumbnail_url || candidate.attachment_url || candidate.url || '';
 			if (originalUrl || localReviewTransport) {
 				const comparison = el('div', 'npcink-toolbox__media-comparison');
@@ -4316,19 +4516,46 @@
 					startMediaDerivativePreviewImage(
 						previewImage,
 						localReview,
-						() => { previewCaption.textContent = t('Optimized preview'); },
-						() => { previewCaption.textContent = t('Optimized preview unavailable'); }
+						() => {
+							state.localReviewStatus = 'verified';
+							delete state.localReviewError;
+							previewCaption.textContent = t('Optimized preview');
+							if (verifiedReadStatus) {
+								verifiedReadStatus.classList.remove('is-pending');
+								verifiedReadStatus.classList.add('is-ok');
+								verifiedReadStatus.textContent = 'Verified preview ready. Compare it with the original before Core review.';
+							}
+							updateMediaBatchSelectedCount(form);
+							updateMediaBatchVerificationStatus(form);
+						},
+						(error) => {
+							state.localReviewStatus = 'failed';
+							state.localReviewError = error || { message: 'Optimized preview unavailable.' };
+							previewCaption.textContent = t('Optimized preview unavailable');
+							if (verifiedReadStatus) {
+								verifiedReadStatus.classList.remove('is-pending');
+								verifiedReadStatus.classList.add('is-warning');
+								verifiedReadStatus.textContent = 'Verified result could not be displayed. Generate a new preview before expiry; do not submit this item to Core yet.';
+							}
+							updateMediaBatchSelectedCount(form);
+							updateMediaBatchVerificationStatus(form);
+							const retryActions = form.querySelector('[data-toolbox-media-retry-actions]');
+							if (retryActions) {
+								retryActions.hidden = false;
+							}
+						}
 					);
 				}
 				row.appendChild(comparison);
 			}
-			const proposalUrl = coreProposalUrl(state.batchProposalResult);
+			const proposalUrl = coreHandoffProposalUrl(proposalIdFromResponse(state.batchProposalResult));
 			if (proposalUrl) {
 				row.appendChild(createLink(proposalUrl, 'Open in Core review'));
 			}
 			list.appendChild(row);
 		});
 		result.appendChild(list);
+		updateMediaBatchVerificationStatus(form);
 	}
 
 	function renderProposalCreated(form, proposal, options) {
@@ -4362,6 +4589,7 @@
 		if (receiptNode) {
 			result.appendChild(receiptNode);
 		}
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'Next action: continue in Core to approve or reject the proposal. Any later execution evidence and governed backup restore belong to Core, Adapter, and Abilities; Toolbox does not execute or roll back media.'));
 		result.appendChild(createRawDetails(proposal, options.rawTitle || 'Core proposal'));
 	}
 
@@ -4601,7 +4829,7 @@
 		renderStructuredResult(form, payload);
 	}
 
-	async function waitForMediaDerivativeResult(runId) {
+	async function waitForMediaDerivativeResult(runId, onProgress) {
 		let lastStatus = '';
 		for (let attempt = 0; attempt < 30; attempt += 1) {
 			const statusPayload = await getJson(config.restUrl, 'media-derivative-preview/' + encodeURIComponent(runId));
@@ -4610,25 +4838,53 @@
 				throw statusPayload;
 			}
 			if (lastStatus === 'succeeded' || lastStatus === 'complete' || lastStatus === 'completed') {
+				if (typeof onProgress === 'function') {
+					onProgress('read', 'Cloud processing finished. Reading and verifying the short-lived result.');
+				}
 				return getJson(config.restUrl, 'media-derivative-preview/' + encodeURIComponent(runId) + '/result');
+			}
+			if (typeof onProgress === 'function' && attempt === 0) {
+				onProgress('process', 'Cloud run ' + String(runId) + ' is processing the uploaded source.');
 			}
 			await sleep(1500);
 		}
-		throw { message: 'Media derivative run did not finish before the preview timeout. Poll the run result again from Toolbox.' };
+		throw {
+			code: 'cloud_media_derivative_poll_timeout',
+			message: 'Media derivative run did not finish before the preview timeout.',
+			run_id: runId,
+			last_status: lastStatus,
+		};
 	}
 
-	async function createMediaDerivativePreview(input, mediaDetails, previewOnly) {
-		if (!input.attachment_id) {
-			throw { message: 'Select an image attachment before generating a preview.' };
+	async function finishMediaDerivativePreview(resumeContext, onProgress) {
+		resumeContext = asObject(resumeContext);
+		const input = asObject(resumeContext.input);
+		const mediaDetails = asObject(resumeContext.media_details);
+		const previewOnly = resumeContext.preview_only === true;
+		const createPayload = asObject(resumeContext.create);
+		const runId = String(resumeContext.run_id || createPayload.run_id || (createPayload.cloud_run && createPayload.cloud_run.run_id) || '');
+		if (!runId || !input.attachment_id) {
+			throw { message: 'The existing media derivative run context is incomplete.' };
 		}
 
-		const createPayload = await postJson(config.restUrl, 'media-derivative-preview', { input });
-		const runId = createPayload.run_id || (createPayload.cloud_run && createPayload.cloud_run.run_id) || '';
-		if (!runId) {
-			throw { message: 'Toolbox did not return a Cloud run id.' };
+		let resultPayload;
+		try {
+			resultPayload = await waitForMediaDerivativeResult(runId, onProgress);
+		} catch (error) {
+			if (isMediaDerivativePollTimeout(error)) {
+				throw Object.assign({}, error, {
+					media_derivative_resume: {
+						contract_version: 'toolbox_media_derivative_resume.v1',
+						run_id: runId,
+						create: createPayload,
+						input,
+						media_details: mediaDetails,
+						preview_only: previewOnly,
+					},
+				});
+			}
+			throw error;
 		}
-
-		const resultPayload = await waitForMediaDerivativeResult(runId);
 		const derivative = derivativeFromResult(resultPayload);
 		const localReview = localReviewFromResult(resultPayload);
 		if (!derivative || !derivative.artifact_id) {
@@ -4637,6 +4893,9 @@
 		const localReviewTransport = mediaDerivativeLocalReviewTransport(localReview);
 		if (!localReviewTransport || localReviewTransport.artifact.artifact_id !== derivative.artifact_id || localReviewTransport.artifact.expires_at !== derivative.expires_at) {
 			throw { message: 'Toolbox did not return a canonical local review projection for the Cloud artifact.' };
+		}
+		if (typeof onProgress === 'function') {
+			onProgress('read', 'Exact artifact and local review descriptors passed validation. Reading image bytes requires browser verification.');
 		}
 		const preflightState = {
 			abilityInput: input,
@@ -4664,6 +4923,7 @@
 				runId,
 				derivative,
 				localReview,
+				localReviewStatus: 'pending',
 				preflightEnvelope,
 			};
 		}
@@ -4686,11 +4946,38 @@
 			runId,
 			derivative,
 			localReview,
+			localReviewStatus: 'pending',
 			proposalPayload: proposalEnvelope.proposal_payload || {},
 			proposalEnvelope,
 			fromPlanRequest: proposalEnvelope.from_plan_request || null,
 			preflightEnvelope,
 		};
+	}
+
+	async function createMediaDerivativePreview(input, mediaDetails, previewOnly, onProgress) {
+		if (!input.attachment_id) {
+			throw { message: 'Select an image attachment before generating a preview.' };
+		}
+
+		if (typeof onProgress === 'function') {
+			onProgress('upload', 'Uploading the selected WordPress source through Cloud Addon.');
+		}
+		const createPayload = await postJson(config.restUrl, 'media-derivative-preview', { input });
+		const runId = createPayload.run_id || (createPayload.cloud_run && createPayload.cloud_run.run_id) || '';
+		if (!runId) {
+			throw { message: 'Toolbox did not return a Cloud run id.' };
+		}
+		if (typeof onProgress === 'function') {
+			onProgress('process', 'Source accepted. Cloud run ' + String(runId) + ' is processing the derivative.');
+		}
+		return finishMediaDerivativePreview({
+			contract_version: 'toolbox_media_derivative_resume.v1',
+			run_id: runId,
+			create: createPayload,
+			input,
+			media_details: mediaDetails || {},
+			preview_only: previewOnly === true,
+		}, onProgress);
 	}
 
 	async function runMediaDerivative(form) {
@@ -4701,18 +4988,68 @@
 		const input = mediaDerivativeInput(form);
 		const mediaDetails = mediaDetailsInput(form);
 		const previewOnly = form.hasAttribute('data-toolbox-media-derivative-preview-only');
-		renderTextResult(form, 'Submitting media derivative run...', 'pending');
-		const state = await createMediaDerivativePreview(input, mediaDetails, previewOnly);
+		form.__npcinkMediaDerivativeState = null;
+		form.__npcinkMediaDerivativePendingRun = null;
+		updateMediaDerivativeSubmitState(form, null);
+		renderMediaDerivativeProgress(form, 'upload', 'Preparing the selected source for Cloud processing.');
+		const state = await createMediaDerivativePreview(input, mediaDetails, previewOnly, (stage, detail) => {
+			renderMediaDerivativeProgress(form, stage, detail);
+		});
 		form.__npcinkMediaDerivativeState = state;
-		const submitButton = form.querySelector('[data-toolbox-submit-media-proposal]');
-		if (submitButton instanceof HTMLButtonElement) {
-			submitButton.disabled = !state.fromPlanRequest;
-		}
+		form.__npcinkMediaDerivativePendingRun = null;
+		updateMediaDerivativeSubmitState(form, state);
 		renderMediaDerivativeRun(
 			form,
 			state,
 			previewOnly ? 'Cloud generated a short-lived derivative preview. This check does not submit a Core proposal or write media.' : ''
 		);
+	}
+
+	async function continueMediaDerivativeRun(form, resumeContext) {
+		resumeContext = asObject(resumeContext);
+		if (!resumeContext.run_id || !resumeContext.create || !resumeContext.input) {
+			throw { message: 'No resumable media derivative run context is available.' };
+		}
+		const batchAttachmentId = parseInt(resumeContext.batch_attachment_id || '0', 10) || 0;
+		renderMediaDerivativeProgress(form, 'process', 'Continuing status checks for Cloud run ' + String(resumeContext.run_id) + '. No source upload or new run is being created.');
+		let state;
+		try {
+			state = await finishMediaDerivativePreview(resumeContext, (stage, detail) => {
+				renderMediaDerivativeProgress(form, stage, detail);
+			});
+		} catch (error) {
+			if (batchAttachmentId && isMediaDerivativePollTimeout(error) && mediaDerivativeTimeoutContext(error)) {
+				error.media_derivative_resume.batch_attachment_id = batchAttachmentId;
+			}
+			throw error;
+		}
+
+		if (batchAttachmentId) {
+			const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
+			const stateIndex = states.findIndex((item) => mediaBatchAttachmentId(item) === batchAttachmentId);
+			const previousState = stateIndex >= 0 ? states[stateIndex] : {};
+			state.batchCandidate = asObject(previousState.batchCandidate);
+			state.batchStatus = 'preview_verification_pending';
+			if (stateIndex >= 0) {
+				states[stateIndex] = state;
+			} else {
+				states.push(state);
+			}
+			form.__npcinkMediaDerivativeBatchStates = states;
+			updateMediaBatchSelectedCount(form);
+			renderMediaDerivativeBatchResults(form, states, 'Cloud run result received', 'The existing run returned artifact evidence. Verified browser image reads are still required before Core submission.', {
+				selected_count: selectedMediaBatchCandidates(form).length,
+				previewed_count: states.filter(mediaBatchPreviewReady).length,
+				failed_count: states.filter((item) => item && (item.batchPreviewError || item.localReviewStatus === 'failed')).length,
+				operator_next_action: 'Wait for the local preview image to verify, then review it before Core submission.',
+			});
+			return;
+		}
+
+		form.__npcinkMediaDerivativePendingRun = null;
+		form.__npcinkMediaDerivativeState = state;
+		updateMediaDerivativeSubmitState(form, state);
+		renderMediaDerivativeRun(form, state, 'The existing Cloud run returned an artifact descriptor. Verify the local preview before Core submission.');
 	}
 
 	async function resolveMediaAttachmentUrl(form) {
@@ -4748,11 +5085,33 @@
 
 		const input = mediaDerivativeBatchPlanInput(form);
 		renderTextResult(form, 'Building media derivative batch plan...', 'pending');
-		const planEnvelope = await postJson(config.adapterRestUrl, 'run-read-ability', {
+		let planEnvelope;
+		try {
+			planEnvelope = await runMediaDerivativeBatchPlanRead(input);
+		} catch (error) {
+			if (!errorContainsCode(error, 'npcink_openclaw_adapter_core_read_authorization_required', new WeakSet())) {
+				throw error;
+			}
+			await requestMediaDerivativeBatchReadAuthorization(form, input);
+			return;
+		}
+		completeMediaDerivativeBatchPlan(form, planEnvelope);
+	}
+
+	function runMediaDerivativeBatchPlanRead(input, readRequestId) {
+		const payload = {
 			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
 			input,
-		});
+		};
+		if (readRequestId) {
+			payload.read_request_id = readRequestId;
+		}
+		return postJson(config.adapterRestUrl, 'run-read-ability', payload);
+	}
+
+	function completeMediaDerivativeBatchPlan(form, planEnvelope) {
 		const plan = normalizeMediaDerivativeBatchPlan(planDataFromEnvelope(planEnvelope) || {});
+		form.__npcinkMediaDerivativeBatchReadAuthorization = null;
 		form.__npcinkMediaDerivativeBatchPlan = plan;
 		form.__npcinkMediaDerivativeBatchStates = [];
 		renderMediaDerivativeBatchPlan(form, planEnvelope, plan);
@@ -4765,6 +5124,74 @@
 		if (submitButton instanceof HTMLButtonElement) {
 			submitButton.disabled = true;
 		}
+	}
+
+	async function requestMediaDerivativeBatchReadAuthorization(form, input) {
+		const request = await postJson(config.adapterRestUrl, 'read-requests', {
+			ability_id: 'npcink-abilities-toolkit/build-media-derivative-batch-plan',
+			input,
+			requested_input_summary: 'Build the bounded media derivative review list selected in Toolbox.',
+			data_classes: ['media', 'attachment_metadata'],
+			redaction_level: 'strict',
+			purpose: 'Let the current WordPress operator review local media candidates before any Cloud upload or Core proposal.',
+			caller: { external_thread_id: 'toolbox-media-derivative-batch-plan' },
+			bounds: { denied_fields: ['authorization', 'cookie', 'application_password'] },
+		});
+		const requestId = String(request && request.request_id || '').trim();
+		if (!requestId || String(request.status || '') !== 'pending') {
+			throw { message: 'Core did not return a pending bounded read authorization request.', response: request };
+		}
+
+		form.__npcinkMediaDerivativeBatchReadAuthorization = { requestId, input };
+		const result = renderShell(
+			form,
+			{ provider: 'core governance' },
+			'Bounded media read needs authorization',
+			'Core owns this one-time authorization. Review the stated scope, then explicitly authorize it before Toolbox reads local media candidates.'
+		);
+		if (!result) {
+			return;
+		}
+		const meta = el('div', 'npcink-toolbox__result-meta');
+		appendMeta(meta, 'Request', requestId);
+		appendMeta(meta, 'Data', 'Media and attachment metadata');
+		appendMeta(meta, 'Redaction', 'Strict');
+		appendMeta(meta, 'Writes', 'None');
+		result.appendChild(meta);
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-warning', 'This approval is bound to the current filters and can be used once. It does not authorize Cloud upload, a Core proposal, or a WordPress write.'));
+		const actions = el('div', 'npcink-toolbox__result-actions');
+		const approveButton = el('button', 'button button-primary', 'Authorize bounded read and build list');
+		approveButton.type = 'button';
+		approveButton.setAttribute('data-toolbox-authorize-media-batch-read', '');
+		actions.appendChild(approveButton);
+		if (config.coreAdminUrl) {
+			actions.appendChild(createLink(config.coreAdminUrl, 'Open Core governance'));
+		}
+		result.appendChild(actions);
+		result.appendChild(el('div', 'npcink-toolbox__result-notice is-pending', 'No media candidates or bytes have been returned yet.'));
+	}
+
+	async function authorizeMediaDerivativeBatchRead(form, button) {
+		const state = form.__npcinkMediaDerivativeBatchReadAuthorization;
+		if (!state || !state.requestId || !state.input) {
+			throw { message: 'The bounded Core read request is missing. Build the review list again.' };
+		}
+		if (!config.coreRestUrl) {
+			throw { message: 'Npcink Core REST URL is unavailable.' };
+		}
+
+		if (button instanceof HTMLButtonElement) {
+			button.disabled = true;
+			button.textContent = t('Authorizing bounded read...');
+		}
+		renderTextResult(form, 'Core is recording the explicit one-time read authorization...', 'pending');
+		await postJson(config.coreRestUrl, 'read-requests/' + encodeURIComponent(state.requestId) + '/approve', {
+			note: 'WordPress operator explicitly authorized the bounded Toolbox media review-list read.',
+			redaction_level: 'strict',
+			denied_fields: ['authorization', 'cookie', 'application_password'],
+		});
+		const planEnvelope = await runMediaDerivativeBatchPlanRead(state.input, state.requestId);
+		completeMediaDerivativeBatchPlan(form, planEnvelope);
 	}
 
 	async function runMediaDerivativeBatchPreviews(form) {
@@ -4780,19 +5207,28 @@
 		const cropInput = mediaDerivativeCropInput(raw);
 		const watermarkInput = mediaDerivativeWatermarkInput(raw);
 		const states = [];
+		form.__npcinkMediaDerivativeBatchStates = states;
+		updateMediaBatchSelectedCount(form);
 		for (let index = 0; index < candidates.length; index += 1) {
 			const candidate = candidates[index] || {};
 			const input = Object.assign({}, candidate.cloud_request_input || {}, cropInput, watermarkInput);
 			if (!input.attachment_id && candidate.attachment_id) {
 				input.attachment_id = candidate.attachment_id;
 			}
-			renderTextResult(form, 'Generating preview ' + String(index + 1) + ' of ' + String(candidates.length) + '...', 'pending');
+			const itemLabel = 'Item ' + String(index + 1) + ' of ' + String(candidates.length) + ': ';
+			renderMediaDerivativeProgress(form, 'upload', itemLabel + 'preparing the selected source.');
 			try {
-				const state = await createMediaDerivativePreview(input);
+				const state = await createMediaDerivativePreview(input, {}, false, (stage, detail) => {
+					renderMediaDerivativeProgress(form, stage, itemLabel + detail);
+				});
 				state.batchCandidate = candidate;
-				state.batchStatus = 'preview_ready';
+				state.batchStatus = 'preview_verification_pending';
 				states.push(state);
 			} catch (error) {
+				const resumeContext = mediaDerivativeTimeoutContext(error);
+				if (resumeContext) {
+					resumeContext.batch_attachment_id = mediaBatchAttachmentId(candidate) || parseInt(input.attachment_id || '0', 10) || 0;
+				}
 				states.push({
 					abilityInput: input,
 					batchCandidate: candidate,
@@ -4804,7 +5240,7 @@
 
 		form.__npcinkMediaDerivativeBatchStates = states;
 		const previewReadyCount = states.filter(mediaBatchPreviewReady).length;
-		const failedCount = states.length - previewReadyCount;
+		const failedCount = states.filter((state) => state && state.batchPreviewError).length;
 		updateMediaBatchSelectedCount(form);
 		renderMediaDerivativeBatchResults(form, states, '', '', {
 			selected_count: candidates.length,
@@ -4812,14 +5248,14 @@
 			previewed_count: previewReadyCount,
 			failed_count: failedCount,
 			retryable: failedCount > 0,
-			operator_next_action: failedCount > 0 ? 'Review successful previews and retry only the failed items.' : 'Review selected previews, then submit selected items to Core review.',
+			operator_next_action: failedCount > 0 ? 'Continue checking timed-out runs or retry only failed previews.' : 'Wait for verified local image reads, then review selected previews before Core submission.',
 			retry_guidance: failedCount > 0 ? 'Retry failed previews without regenerating successful items, or deselect failed rows before Core submission.' : 'Change selected media or rebuild the plan before generating previews again.',
 		});
 	}
 
 	async function retryFailedMediaDerivativeBatchPreviews(form) {
 		const states = Array.isArray(form.__npcinkMediaDerivativeBatchStates) ? form.__npcinkMediaDerivativeBatchStates : [];
-		const failedIndexes = states.map((state, index) => state && state.batchPreviewError ? index : -1).filter((index) => index >= 0);
+		const failedIndexes = states.map((state, index) => state && (state.batchPreviewError || state.localReviewStatus === 'failed') ? index : -1).filter((index) => index >= 0);
 		if (!failedIndexes.length) {
 			throw { message: 'No failed previews are available to retry.' };
 		}
@@ -4827,13 +5263,20 @@
 		for (let offset = 0; offset < failedIndexes.length; offset += 1) {
 			const stateIndex = failedIndexes[offset];
 			const failedState = states[stateIndex] || {};
-			renderTextResult(form, 'Retrying failed preview ' + String(offset + 1) + ' of ' + String(failedIndexes.length) + '...', 'pending');
+			const itemLabel = 'Retry ' + String(offset + 1) + ' of ' + String(failedIndexes.length) + ': ';
+			renderMediaDerivativeProgress(form, 'upload', itemLabel + 'preparing the failed item again.');
 			try {
-				const retriedState = await createMediaDerivativePreview(asObject(failedState.abilityInput));
+				const retriedState = await createMediaDerivativePreview(asObject(failedState.abilityInput), {}, false, (stage, detail) => {
+					renderMediaDerivativeProgress(form, stage, itemLabel + detail);
+				});
 				retriedState.batchCandidate = asObject(failedState.batchCandidate);
-				retriedState.batchStatus = 'preview_ready';
+				retriedState.batchStatus = 'preview_verification_pending';
 				states[stateIndex] = retriedState;
 			} catch (error) {
+				const resumeContext = mediaDerivativeTimeoutContext(error);
+				if (resumeContext) {
+					resumeContext.batch_attachment_id = mediaBatchAttachmentId(failedState);
+				}
 				failedState.batchPreviewError = error;
 				failedState.batchStatus = 'preview_failed';
 				states[stateIndex] = failedState;
@@ -4842,9 +5285,9 @@
 
 		form.__npcinkMediaDerivativeBatchStates = states;
 		const previewReadyCount = states.filter(mediaBatchPreviewReady).length;
-		const failedCount = states.length - previewReadyCount;
+		const failedCount = states.filter((state) => state && (state.batchPreviewError || state.localReviewStatus === 'failed')).length;
 		updateMediaBatchSelectedCount(form);
-		renderMediaDerivativeBatchResults(form, states, 'Preview retry finished', failedCount > 0 ? 'Some previews still need attention.' : 'All selected previews are ready for review.', {
+		renderMediaDerivativeBatchResults(form, states, 'Preview retry finished', failedCount > 0 ? 'Some previews still need attention.' : 'Artifact descriptors returned; verified browser image reads are still required.', {
 			selected_count: selectedMediaBatchCandidates(form).length,
 			previewed_count: previewReadyCount,
 			failed_count: failedCount,
@@ -4860,12 +5303,18 @@
 		}
 
 		const selectedCandidates = selectedMediaBatchCandidates(form);
-		const states = selectedMediaBatchPreviewStates(form);
-		if (!states.length) {
+		const states = selectedMediaBatchStates(form);
+		if (!states.length || states.some((state) => !mediaBatchArtifactReady(state))) {
 			throw { message: 'Generate selected previews before submitting items for review.' };
 		}
 		if (states.length !== selectedCandidates.length) {
 			throw { message: 'Every currently selected image needs a successful preview before Core submission.' };
+		}
+		if (states.some((state) => !mediaDerivativeLocalReviewVerified(state))) {
+			throw {
+				code: 'toolbox_media_derivative_local_review_unverified',
+				message: 'Every selected image must finish the same-origin verified preview read before Core submission.',
+			};
 		}
 		const statesToSubmit = states.filter((state) => !state.batchProposalResult);
 		if (!statesToSubmit.length) {
@@ -4932,6 +5381,12 @@
 		const state = form.__npcinkMediaDerivativeState;
 		if (!state || !state.proposalEnvelope || !state.derivative) {
 			throw { message: 'Generate a derivative preview before submitting a Core proposal.' };
+		}
+		if (!mediaDerivativeLocalReviewVerified(state)) {
+			throw {
+				code: 'toolbox_media_derivative_local_review_unverified',
+				message: 'The same-origin preview image must load successfully before Core submission.',
+			};
 		}
 		if (!state.fromPlanRequest) {
 			throw {
@@ -7074,7 +7529,7 @@
 				if (runButton && form.contains(runButton)) {
 					event.preventDefault();
 					runMediaDerivative(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+						renderMediaDerivativeFailure(form, error, 'preview');
 					});
 					return;
 				}
@@ -7088,11 +7543,20 @@
 					return;
 				}
 
+				const batchReadAuthorizationButton = event.target.closest('[data-toolbox-authorize-media-batch-read]');
+				if (batchReadAuthorizationButton && form.contains(batchReadAuthorizationButton)) {
+					event.preventDefault();
+					authorizeMediaDerivativeBatchRead(form, batchReadAuthorizationButton).catch((error) => {
+						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+					});
+					return;
+				}
+
 				const batchPreviewButton = event.target.closest('[data-toolbox-run-media-batch-previews]');
 				if (batchPreviewButton && form.contains(batchPreviewButton)) {
 					event.preventDefault();
 					runMediaDerivativeBatchPreviews(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+						renderMediaDerivativeFailure(form, error, 'preview');
 					});
 					return;
 				}
@@ -7101,7 +7565,7 @@
 				if (batchProposalButton && form.contains(batchProposalButton)) {
 					event.preventDefault();
 					submitMediaDerivativeBatchProposals(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+						renderMediaDerivativeFailure(form, error, 'proposal');
 					});
 					return;
 				}
@@ -7110,16 +7574,26 @@
 				if (retryFailedPreviewButton && form.contains(retryFailedPreviewButton)) {
 					event.preventDefault();
 					retryFailedMediaDerivativeBatchPreviews(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+						renderMediaDerivativeFailure(form, error, 'batch-retry');
 					});
 					return;
 				}
 
-					const proposalButton = event.target.closest('[data-toolbox-submit-media-proposal]');
+				const continueMediaRunButton = event.target.closest('[data-toolbox-continue-media-run]');
+				if (continueMediaRunButton && form.contains(continueMediaRunButton)) {
+					event.preventDefault();
+					const resumeContext = continueMediaRunButton.__npcinkMediaDerivativeResume || form.__npcinkMediaDerivativePendingRun;
+					continueMediaDerivativeRun(form, resumeContext).catch((error) => {
+						renderMediaDerivativeFailure(form, error, 'preview');
+					});
+					return;
+				}
+
+				const proposalButton = event.target.closest('[data-toolbox-submit-media-proposal]');
 				if (proposalButton && form.contains(proposalButton)) {
 					event.preventDefault();
 					submitMediaDerivativeProposal(form).catch((error) => {
-						renderTextResult(form, error && error.message ? error.message : (config.labels && config.labels.error ? config.labels.error : 'Request failed.'), 'error');
+						renderMediaDerivativeFailure(form, error, 'proposal');
 					});
 					return;
 				}

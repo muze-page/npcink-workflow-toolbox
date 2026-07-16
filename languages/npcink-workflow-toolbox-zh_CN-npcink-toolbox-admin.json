@@ -11,6 +11,7 @@
       },
       "Toolbox": ["流程工具箱"],
       "Request failed.": ["请求失败。"],
+      "Authorizing bounded read...": ["正在授权有限范围读取……"],
       "Code: ": ["代码："],
       "Cloud runtime profile expects text input but received an empty value. Check the Cloud route/profile input mapping.": ["Cloud 运行时配置需要文本输入，但收到了空值。请检查 Cloud 路由或 profile 的输入映射。"],
       "Cloud runtime quota is exhausted for this request. Check Cloud quota or billing limits, then retry.": ["此请求的 Cloud 运行时额度已耗尽。请检查 Cloud 配额或计费限制后重试。"],

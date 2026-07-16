@@ -38,6 +38,10 @@ msgstr "正在运行..."
 msgid "Request failed."
 msgstr "请求失败。"
 
+#: assets/admin.js
+msgid "Authorizing bounded read..."
+msgstr "正在授权有限范围读取……"
+
 msgid "Use hosted AI for reviewable content-support suggestions, then hand final WordPress writes to Core proposal approval."
 msgstr "使用托管 AI 生成可审阅的内容支持建议，最终 WordPress 写入仍交由 Core 提案审批。"
 
