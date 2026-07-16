@@ -3123,11 +3123,17 @@
 	function mediaDerivativeInput(form) {
 		const raw = serialize(form);
 		const input = {};
-		['attachment_id', 'target_format', 'max_width', 'quality'].forEach((key) => {
+		['attachment_id', 'quality'].forEach((key) => {
 			if (raw[key] !== undefined && raw[key] !== null && String(raw[key]).trim() !== '') {
 				input[key] = raw[key];
 			}
 		});
+		if (raw.target_format !== undefined && raw.target_format !== null && String(raw.target_format).trim() !== '') {
+			input.preferred_format = raw.target_format;
+		}
+		if (raw.max_width !== undefined && raw.max_width !== null && String(raw.max_width).trim() !== '') {
+			input.target_max_width = raw.max_width;
+		}
 		Object.assign(input, mediaDerivativeCropInput(raw));
 		Object.assign(input, mediaDerivativeWatermarkInput(raw));
 		return input;
@@ -3160,7 +3166,7 @@
 		raw = raw || {};
 		const mode = String(raw.watermark_mode || 'core');
 		if (mode === 'off') {
-			return { watermark_enabled: false };
+			return {};
 		}
 		if (mode !== 'text' && mode !== 'image' && mode !== 'override') {
 			return {};
@@ -3172,7 +3178,6 @@
 		if (mode === 'text') {
 			const text = String(raw.watermark_text || 'AI').trim().slice(0, 64) || 'AI';
 			return {
-				watermark_enabled: true,
 				watermark: {
 					type: 'text',
 					text,
@@ -3187,7 +3192,6 @@
 		}
 
 		return {
-			watermark_enabled: true,
 			watermark: {
 				type: 'image',
 				position,
@@ -3226,9 +3230,6 @@
 	function mediaDerivativeWatermarkLabel(input) {
 		if (!input || typeof input !== 'object') {
 			return '';
-		}
-		if (input.watermark_enabled === false) {
-			return 'Disabled for this run';
 		}
 		if (input.watermark && typeof input.watermark === 'object') {
 			const watermark = input.watermark;

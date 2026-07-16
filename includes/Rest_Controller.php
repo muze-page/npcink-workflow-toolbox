@@ -1243,11 +1243,19 @@ final class Rest_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function create_media_derivative_preview( WP_REST_Request $request ) {
+		$preview_input = $this->media_derivative_preview_input( $request );
+		if ( is_wp_error( $preview_input ) ) {
+			return $preview_input;
+		}
+
 		if ( ! function_exists( 'npcink_cloud_addon_dispatch_media_derivative_cloud_request' ) ) {
 			return $this->media_derivative_cloud_addon_unavailable();
 		}
 
-		$ability_input    = $this->media_derivative_preview_input( $request );
+		$watermark_id = absint( $preview_input['watermark_attachment_id'] ?? 0 );
+		$ability_input = $preview_input;
+		unset( $ability_input['watermark_attachment_id'] );
+
 		$ability_response = $this->run_toolkit_ability( 'npcink-abilities-toolkit/build-media-derivative-cloud-request', $ability_input );
 		if ( is_wp_error( $ability_response ) ) {
 			return $ability_response;
@@ -1259,7 +1267,6 @@ final class Rest_Controller {
 		}
 
 		$watermark_artifact = array();
-		$watermark_id       = absint( $ability_input['watermark_attachment_id'] ?? 0 );
 		if ( $watermark_id > 0 ) {
 			$watermark_artifact = $this->media_derivative_attachment_descriptor( $watermark_id, 'watermark_file' );
 			if ( is_wp_error( $watermark_artifact ) ) {
@@ -7318,23 +7325,66 @@ final class Rest_Controller {
 		);
 	}
 
-	private function media_derivative_preview_input( WP_REST_Request $request ): array {
+	/**
+	 * Returns the exact preview input contract or rejects legacy/unknown fields.
+	 *
+	 * watermark_attachment_id is a WordPress-local upload selector. It is removed
+	 * before the canonical Toolkit ability input is dispatched.
+	 *
+	 * @return array<string, mixed>|WP_Error
+	 */
+	private function media_derivative_preview_input( WP_REST_Request $request ) {
 		$input = $request->get_param( 'input' );
-		$input = is_array( $input ) ? map_deep( $input, 'sanitize_text_field' ) : array();
-		if ( isset( $input['target_format'] ) && ! isset( $input['preferred_format'] ) ) {
-			$input['preferred_format'] = sanitize_key( (string) $input['target_format'] );
+		$input = is_array( $input ) ? $input : array();
+
+		$legacy_fields = array( 'target_format', 'max_width', 'watermark_enabled' );
+		foreach ( $legacy_fields as $legacy_field ) {
+			if ( array_key_exists( $legacy_field, $input ) ) {
+				return new WP_Error(
+					'npcink_toolbox_media_derivative_preview_legacy_field',
+					__( 'The media derivative preview input contains a removed legacy field.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400, 'field' => $legacy_field )
+				);
+			}
 		}
-		if ( isset( $input['max_width'] ) && ! isset( $input['target_max_width'] ) ) {
-			$input['target_max_width'] = absint( $input['max_width'] );
+
+		$allowed_fields = array(
+			'attachment_id',
+			'target_max_width',
+			'large_file_threshold_bytes',
+			'preferred_format',
+			'quality',
+			'crop',
+			'watermark',
+			'watermark_attachment_id',
+		);
+		foreach ( array_keys( $input ) as $field ) {
+			if ( ! is_string( $field ) || ! in_array( $field, $allowed_fields, true ) ) {
+				return new WP_Error(
+					'npcink_toolbox_media_derivative_preview_unknown_field',
+					__( 'The media derivative preview input contains an unknown field.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400, 'field' => sanitize_key( (string) $field ) )
+				);
+			}
 		}
+
+		$input = map_deep( $input, 'sanitize_text_field' );
 		$input['attachment_id'] = absint( $input['attachment_id'] ?? 0 );
+		if ( isset( $input['watermark_attachment_id'] ) ) {
+			$input['watermark_attachment_id'] = absint( $input['watermark_attachment_id'] );
+		}
+		if ( isset( $input['target_max_width'] ) ) {
+			$input['target_max_width'] = absint( $input['target_max_width'] );
+		}
+		if ( isset( $input['large_file_threshold_bytes'] ) ) {
+			$input['large_file_threshold_bytes'] = absint( $input['large_file_threshold_bytes'] );
+		}
+		if ( isset( $input['preferred_format'] ) ) {
+			$input['preferred_format'] = sanitize_key( (string) $input['preferred_format'] );
+		}
 		if ( isset( $input['quality'] ) ) {
 			$input['quality'] = max( 1, min( 100, absint( $input['quality'] ) ) );
 		}
-		if ( array_key_exists( 'watermark_enabled', $input ) && ! filter_var( $input['watermark_enabled'], FILTER_VALIDATE_BOOLEAN ) ) {
-			unset( $input['watermark'] );
-		}
-		unset( $input['target_format'], $input['max_width'], $input['watermark_enabled'] );
 
 		return $input;
 	}

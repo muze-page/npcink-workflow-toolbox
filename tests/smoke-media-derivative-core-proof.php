@@ -249,6 +249,32 @@ toolbox_media_derivative_smoke_assert( 'webp' === (string) ( $ability_input['pre
 toolbox_media_derivative_smoke_assert( 320 === (int) ( $ability_input['target_max_width'] ?? 0 ), 'Toolbox handoff maps width override to target_max_width.' );
 toolbox_media_derivative_smoke_assert( ! isset( $ability_input['watermark'] ), 'Toolbox handoff can omit watermark for one disabled-watermark run.' );
 
+$legacy_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'target_format' => 'webp',
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $legacy_preview['status'] ?? 0 ), 'Toolbox rejects a removed preview alias before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_legacy_field' === (string) ( $legacy_preview['data']['code'] ?? '' ), 'Toolbox returns the stable legacy-field error code.' );
+
+$unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'future_option' => true,
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown preview field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_unknown_field' === (string) ( $unknown_preview['data']['code'] ?? '' ), 'Toolbox returns the stable unknown-field error code.' );
+
 $create = toolbox_media_derivative_smoke_rest(
 	'POST',
 	'/npcink-toolbox/v1/media-derivative-preview',
