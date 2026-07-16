@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $toolbox_media_derivative_smoke_proposal_ids  = array();
+$toolbox_media_derivative_smoke_read_request_ids = array();
 $toolbox_media_derivative_smoke_attachment_id = 0;
 $toolbox_media_derivative_smoke_paths         = array();
 
@@ -81,6 +82,15 @@ function toolbox_media_derivative_smoke_track_proposals( $data ): void {
 	$proposal_id = sanitize_text_field( (string) ( $data['proposal_id'] ?? '' ) );
 	if ( '' !== $proposal_id ) {
 		$toolbox_media_derivative_smoke_proposal_ids[ $proposal_id ] = true;
+	}
+}
+
+function toolbox_media_derivative_smoke_track_read_request( string $read_request_id ): void {
+	global $toolbox_media_derivative_smoke_read_request_ids;
+
+	$read_request_id = sanitize_text_field( $read_request_id );
+	if ( '' !== $read_request_id ) {
+		$toolbox_media_derivative_smoke_read_request_ids[ $read_request_id ] = true;
 	}
 }
 
@@ -178,7 +188,7 @@ function toolbox_media_derivative_smoke_latest_replacement_id( int $attachment_i
 }
 
 function toolbox_media_derivative_smoke_cleanup(): void {
-	global $wpdb, $toolbox_media_derivative_smoke_attachment_id, $toolbox_media_derivative_smoke_paths, $toolbox_media_derivative_smoke_proposal_ids;
+	global $wpdb, $toolbox_media_derivative_smoke_attachment_id, $toolbox_media_derivative_smoke_paths, $toolbox_media_derivative_smoke_proposal_ids, $toolbox_media_derivative_smoke_read_request_ids;
 
 	if ( $toolbox_media_derivative_smoke_attachment_id > 0 ) {
 		wp_delete_attachment( $toolbox_media_derivative_smoke_attachment_id, true );
@@ -215,6 +225,18 @@ function toolbox_media_derivative_smoke_cleanup(): void {
 				$wpdb->delete( $proposal_table, array( 'proposal_id' => $proposal_id ), array( '%s' ) );
 			}
 			toolbox_media_derivative_smoke_info( 'Purged Core proposal fixtures: ' . count( $proposal_ids ) );
+		}
+
+		$read_request_ids = array_keys( is_array( $toolbox_media_derivative_smoke_read_request_ids ) ? $toolbox_media_derivative_smoke_read_request_ids : array() );
+		if ( ! empty( $read_request_ids ) ) {
+			$audit_table        = $wpdb->prefix . 'npcink_governance_core_audit_log';
+			$read_request_table = $wpdb->prefix . 'npcink_governance_core_read_requests';
+			foreach ( $read_request_ids as $read_request_id ) {
+				$read_request_id = sanitize_text_field( $read_request_id );
+				$wpdb->delete( $audit_table, array( 'proposal_id' => $read_request_id ), array( '%s' ) );
+				$wpdb->delete( $read_request_table, array( 'request_id' => $read_request_id ), array( '%s' ) );
+			}
+			toolbox_media_derivative_smoke_info( 'Purged Core read authorization fixtures: ' . count( $read_request_ids ) );
 		}
 	}
 }
@@ -379,17 +401,70 @@ toolbox_media_derivative_smoke_assert( false !== strpos( (string) ( $local_revie
 toolbox_media_derivative_smoke_assert( array( 'artifact_id', 'expires_at', 'mime_type', 'format', 'width', 'height', 'filesize_bytes', 'sha256', 'suggested_filename', 'filename_basis', 'processing_warnings' ) === array_keys( $local_review_artifact ), 'Toolbox local review carries exact local11 JSON artifact evidence.' );
 toolbox_media_derivative_smoke_assert( ! isset( $local_review_artifact['checksum'], $local_review_artifact['artifact_reference'] ), 'Toolbox local review omits Cloud-only checksum and artifact_reference fields.' );
 
-$preflight = toolbox_media_derivative_smoke_rest(
+$direct_preflight = toolbox_media_derivative_smoke_rest_raw(
 	'POST',
 	'/npcink-openclaw-adapter/v1/run-read-ability',
 	array(
 		'ability_id' => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
 		'input'      => array(
 			'attachment_id'       => $attachment_id,
-			'derivative_artifact' => $derivative,
+			'derivative_artifact' => $local_review_artifact,
 		),
 	)
 );
+toolbox_media_derivative_smoke_assert( 403 === (int) ( $direct_preflight['status'] ?? 0 ), 'Adapter fails closed before Core authorizes the media adoption preflight read.' );
+toolbox_media_derivative_smoke_assert( 'npcink_openclaw_adapter_core_read_authorization_required' === (string) ( $direct_preflight['data']['code'] ?? '' ), 'Adapter returns the stable Core read authorization requirement.' );
+
+$read_request = toolbox_media_derivative_smoke_rest(
+	'POST',
+	'/npcink-openclaw-adapter/v1/read-requests',
+	array(
+		'ability_id'             => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
+		'input'                  => array(
+			'attachment_id'       => $attachment_id,
+			'derivative_artifact' => $local_review_artifact,
+		),
+		'requested_input_summary' => 'Toolbox media derivative smoke adoption preflight.',
+		'data_classes'           => array( 'media', 'attachment_metadata' ),
+		'redaction_level'        => 'strict',
+		'purpose'                => 'Verify the bounded media adoption preflight before Core proposal creation.',
+		'caller'                 => array( 'external_thread_id' => 'toolbox-media-derivative-core-proof' ),
+		'bounds'                 => array( 'denied_fields' => array( 'authorization', 'cookie', 'application_password' ) ),
+	)
+);
+$read_request_id = sanitize_text_field( (string) ( $read_request['request_id'] ?? '' ) );
+toolbox_media_derivative_smoke_assert( '' !== $read_request_id && 'pending' === (string) ( $read_request['status'] ?? '' ), 'Adapter creates a pending Core-governed media preflight read request.' );
+toolbox_media_derivative_smoke_track_read_request( $read_request_id );
+
+$approved_read_request = toolbox_media_derivative_smoke_rest(
+	'POST',
+	'/npcink-governance-core/v1/read-requests/' . rawurlencode( $read_request_id ) . '/approve',
+	array(
+		'note'             => 'Toolbox media derivative smoke approval.',
+		'redaction_level'  => 'strict',
+		'denied_fields'    => array( 'authorization', 'cookie', 'application_password' ),
+	)
+);
+toolbox_media_derivative_smoke_assert( 'approved' === (string) ( $approved_read_request['status'] ?? '' ), 'Core approves the bounded media preflight read request.' );
+
+$preflight_response = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-openclaw-adapter/v1/run-read-ability',
+	array(
+		'ability_id'      => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
+		'input'           => array(
+			'attachment_id'       => $attachment_id,
+			'derivative_artifact' => $local_review_artifact,
+		),
+		'read_request_id' => $read_request_id,
+	)
+);
+$preflight_status = (int) ( $preflight_response['status'] ?? 0 );
+$preflight        = is_array( $preflight_response['data'] ?? null ) ? (array) $preflight_response['data'] : array();
+if ( $preflight_status < 200 || $preflight_status >= 300 ) {
+	toolbox_media_derivative_smoke_fail( 'Adapter failed the Core-authorized media adoption preflight read: ' . wp_json_encode( $preflight ) );
+}
+toolbox_media_derivative_smoke_pass( 'Adapter executes the Core-authorized media adoption preflight read.' );
 $preflight_data = is_array( $preflight['result']['data'] ?? null ) ? (array) $preflight['result']['data'] : ( is_array( $preflight['data'] ?? null ) ? (array) $preflight['data'] : array() );
 toolbox_media_derivative_smoke_assert( 'media_adoption_preflight_summary' === (string) ( $preflight_data['artifact_type'] ?? '' ), 'Adapter can run the media adoption preflight summary ability.' );
 toolbox_media_derivative_smoke_assert( false === (bool) ( $preflight_data['direct_wordpress_write'] ?? true ), 'Media adoption preflight summary declares no direct WordPress write.' );
