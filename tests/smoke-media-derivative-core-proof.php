@@ -275,11 +275,74 @@ $unknown_preview = toolbox_media_derivative_smoke_rest_raw(
 toolbox_media_derivative_smoke_assert( 400 === (int) ( $unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown preview field before Cloud dispatch.' );
 toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_unknown_field' === (string) ( $unknown_preview['data']['code'] ?? '' ), 'Toolbox returns the stable unknown-field error code.' );
 
+$nested_unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'crop'          => array( 'future_option' => true ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $nested_unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown nested preview field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'crop.future_option' === (string) ( $nested_unknown_preview['data']['data']['field'] ?? '' ), 'Toolbox identifies the exact unknown nested field.' );
+
+$nested_watermark_unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'watermark'     => array( 'type' => 'text', 'future_option' => true ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $nested_watermark_unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown nested watermark field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'watermark.future_option' === (string) ( $nested_watermark_unknown_preview['data']['data']['field'] ?? '' ), 'Toolbox identifies the exact unknown nested watermark field.' );
+
+$missing_watermark_attachment = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'watermark'     => array( 'type' => 'image' ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $missing_watermark_attachment['status'] ?? 0 ), 'Toolbox rejects an image watermark without a local attachment before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_watermark_attachment_required' === (string) ( $missing_watermark_attachment['data']['code'] ?? '' ), 'Toolbox returns the stable missing watermark attachment code.' );
+
+$unexpected_watermark_attachment = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id'           => $attachment_id,
+			'watermark'               => array( 'type' => 'text', 'text' => 'AI' ),
+			'watermark_attachment_id' => $attachment_id,
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $unexpected_watermark_attachment['status'] ?? 0 ), 'Toolbox rejects a local watermark attachment for a text watermark before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_watermark_attachment_unexpected' === (string) ( $unexpected_watermark_attachment['data']['code'] ?? '' ), 'Toolbox returns the stable unexpected watermark attachment code.' );
+
+$preview_input = $ability_input;
+$preview_input['watermark'] = array(
+	'type'          => 'image',
+	'position'      => 'bottom_right',
+	'opacity'       => 0.5,
+	'scale_percent' => 12,
+	'margin_px'     => 8,
+);
+$preview_input['watermark_attachment_id'] = $attachment_id;
+
 $create = toolbox_media_derivative_smoke_rest(
 	'POST',
 	'/npcink-toolbox/v1/media-derivative-preview',
 	array(
-		'input'           => $ability_input,
+		'input'           => $preview_input,
 		'idempotency_key' => 'toolbox-media-derivative-core-proof-' . $attachment_id . '-' . time(),
 	)
 );

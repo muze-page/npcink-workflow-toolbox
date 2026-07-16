@@ -3808,6 +3808,9 @@ final class Admin_Page {
 	private function render_media_derivative_watermark_controls( array $toolbox_policy ): void {
 		?>
 		<div class="npcink-toolbox__batch-panel">
+			<input type="hidden" name="watermark_policy_enabled" value="<?php echo ! empty( $toolbox_policy['watermark_enabled'] ) ? '1' : '0'; ?>" />
+			<input type="hidden" name="watermark_policy_type" value="<?php echo esc_attr( (string) ( $toolbox_policy['watermark_type'] ?? 'image' ) ); ?>" />
+			<input type="hidden" name="watermark_attachment_id" value="<?php echo esc_attr( (string) absint( $toolbox_policy['watermark_attachment_id'] ?? 0 ) ); ?>" />
 			<h3><?php esc_html_e( 'Watermark override', 'npcink-workflow-toolbox' ); ?></h3>
 			<p><?php esc_html_e( 'Use Toolbox watermark defaults unless this run needs a specific override. Text watermark overrides do not need a logo attachment; image/logo overrides use the configured Toolbox logo source for this run.', 'npcink-workflow-toolbox' ); ?></p>
 			<div class="npcink-toolbox__split">

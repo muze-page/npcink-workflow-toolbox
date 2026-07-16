@@ -3164,7 +3164,13 @@
 
 	function mediaDerivativeWatermarkInput(raw) {
 		raw = raw || {};
-		const mode = String(raw.watermark_mode || 'core');
+		let mode = String(raw.watermark_mode || 'default');
+		if (mode === 'default') {
+			if (String(raw.watermark_policy_enabled || '') !== '1') {
+				return {};
+			}
+			mode = String(raw.watermark_policy_type || 'image');
+		}
 		if (mode === 'off') {
 			return {};
 		}
@@ -3191,7 +3197,7 @@
 			};
 		}
 
-		return {
+		const imageInput = {
 			watermark: {
 				type: 'image',
 				position,
@@ -3200,6 +3206,11 @@
 				margin_px: margin,
 			},
 		};
+		const watermarkAttachmentId = parseInt(raw.watermark_attachment_id, 10);
+		if (!Number.isNaN(watermarkAttachmentId) && watermarkAttachmentId > 0) {
+			imageInput.watermark_attachment_id = watermarkAttachmentId;
+		}
+		return imageInput;
 	}
 
 	function mediaDerivativeCropInput(raw) {

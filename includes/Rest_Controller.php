@@ -1261,14 +1261,14 @@ final class Rest_Controller {
 			return $ability_response;
 		}
 
-		$source_artifact = $this->media_derivative_attachment_descriptor( absint( $ability_input['attachment_id'] ?? 0 ), 'source_file' );
+		$source_artifact = $this->media_derivative_attachment_descriptor( absint( $ability_input['attachment_id'] ?? 0 ) );
 		if ( is_wp_error( $source_artifact ) ) {
 			return $source_artifact;
 		}
 
 		$watermark_artifact = array();
 		if ( $watermark_id > 0 ) {
-			$watermark_artifact = $this->media_derivative_attachment_descriptor( $watermark_id, 'watermark_file' );
+			$watermark_artifact = $this->media_derivative_attachment_descriptor( $watermark_id );
 			if ( is_wp_error( $watermark_artifact ) ) {
 				return $watermark_artifact;
 			}
@@ -7368,6 +7368,50 @@ final class Rest_Controller {
 			}
 		}
 
+		$nested_fields = array(
+			'crop'      => array( 'type', 'aspect_ratio', 'position' ),
+			'watermark' => array( 'type', 'artifact_id', 'text', 'position', 'opacity', 'scale_percent', 'font_size', 'color', 'background', 'margin_px' ),
+		);
+		foreach ( $nested_fields as $parent => $allowed_nested_fields ) {
+			if ( ! array_key_exists( $parent, $input ) ) {
+				continue;
+			}
+			if ( ! is_array( $input[ $parent ] ) ) {
+				return new WP_Error(
+					'npcink_toolbox_media_derivative_preview_invalid_field',
+					__( 'The media derivative preview input contains an invalid field value.', 'npcink-workflow-toolbox' ),
+					array( 'status' => 400, 'field' => $parent )
+				);
+			}
+			foreach ( array_keys( $input[ $parent ] ) as $nested_field ) {
+				if ( ! is_string( $nested_field ) || ! in_array( $nested_field, $allowed_nested_fields, true ) ) {
+					return new WP_Error(
+						'npcink_toolbox_media_derivative_preview_unknown_field',
+						__( 'The media derivative preview input contains an unknown field.', 'npcink-workflow-toolbox' ),
+						array( 'status' => 400, 'field' => $parent . '.' . sanitize_key( (string) $nested_field ) )
+					);
+				}
+			}
+		}
+
+		$watermark               = is_array( $input['watermark'] ?? null ) ? $input['watermark'] : array();
+		$watermark_type          = ! empty( $watermark ) ? sanitize_key( (string) ( $watermark['type'] ?? 'image' ) ) : '';
+		$watermark_attachment_id = absint( $input['watermark_attachment_id'] ?? 0 );
+		if ( 'image' === $watermark_type && $watermark_attachment_id <= 0 ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_preview_watermark_attachment_required',
+				__( 'Image watermark previews require a configured local watermark attachment.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400, 'field' => 'watermark_attachment_id' )
+			);
+		}
+		if ( $watermark_attachment_id > 0 && 'image' !== $watermark_type ) {
+			return new WP_Error(
+				'npcink_toolbox_media_derivative_preview_watermark_attachment_unexpected',
+				__( 'A local watermark attachment is allowed only for an image watermark preview.', 'npcink-workflow-toolbox' ),
+				array( 'status' => 400, 'field' => 'watermark_attachment_id' )
+			);
+		}
+
 		$input = map_deep( $input, 'sanitize_text_field' );
 		$input['attachment_id'] = absint( $input['attachment_id'] ?? 0 );
 		if ( isset( $input['watermark_attachment_id'] ) ) {
@@ -7421,7 +7465,7 @@ final class Rest_Controller {
 		);
 	}
 
-	private function media_derivative_attachment_descriptor( int $attachment_id, string $field_name ) {
+	private function media_derivative_attachment_descriptor( int $attachment_id ) {
 		$path = $attachment_id > 0 ? get_attached_file( $attachment_id ) : '';
 		if ( ! is_string( $path ) || '' === $path || ! is_readable( $path ) ) {
 			return new WP_Error(
@@ -7432,10 +7476,9 @@ final class Rest_Controller {
 		}
 
 		return array(
-			'path'       => $path,
-			'filename'   => sanitize_file_name( basename( $path ) ),
-			'mime_type'  => sanitize_text_field( (string) get_post_mime_type( $attachment_id ) ),
-			'field_name' => sanitize_key( $field_name ),
+			'path'      => $path,
+			'filename'  => sanitize_file_name( basename( $path ) ),
+			'mime_type' => sanitize_text_field( (string) get_post_mime_type( $attachment_id ) ),
 		);
 	}
 
