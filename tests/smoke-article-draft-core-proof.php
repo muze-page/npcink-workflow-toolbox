@@ -15,6 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $GLOBALS['toolbox_article_core_smoke_proposal_ids'] = array();
 $GLOBALS['toolbox_article_core_smoke_post_title']   = '';
+$GLOBALS['toolbox_article_core_smoke_post_id']      = 0;
+$GLOBALS['toolbox_article_core_smoke_unexpected_http_urls'] = array();
+$GLOBALS['toolbox_article_core_smoke_addon_state_before'] = array();
 
 function toolbox_article_core_smoke_pass( string $message ): void {
 	echo "PASS: {$message}\n";
@@ -27,6 +30,7 @@ function toolbox_article_core_smoke_info( string $message ): void {
 function toolbox_article_core_smoke_fail( string $message ): void {
 	fwrite( STDERR, "FAIL: {$message}\n" );
 	toolbox_article_core_smoke_purge_post_fixture();
+	toolbox_article_core_smoke_purge_adapter_records();
 	toolbox_article_core_smoke_purge_governance_records();
 	exit( 1 );
 }
@@ -75,23 +79,30 @@ function toolbox_article_core_smoke_should_execute(): bool {
 }
 
 function toolbox_article_core_smoke_purge_post_fixture(): void {
-	$title = (string) ( $GLOBALS['toolbox_article_core_smoke_post_title'] ?? '' );
-	if ( '' === $title ) {
+	$post_id = absint( $GLOBALS['toolbox_article_core_smoke_post_id'] ?? 0 );
+	$title   = (string) ( $GLOBALS['toolbox_article_core_smoke_post_title'] ?? '' );
+	if ( $post_id <= 0 ) {
 		return;
 	}
 
-	$post_ids = get_posts(
-		array(
-			'post_type'      => 'post',
-			'post_status'    => 'any',
-			'title'          => $title,
-			'fields'         => 'ids',
-			'posts_per_page' => 5,
-		)
-	);
-	foreach ( $post_ids as $post_id ) {
-		wp_delete_post( absint( $post_id ), true );
+	$post = get_post( $post_id );
+	if ( ! $post instanceof WP_Post ) {
+		$GLOBALS['toolbox_article_core_smoke_post_id'] = 0;
+		return;
 	}
+
+	if ( 'post' !== $post->post_type || 'draft' !== $post->post_status || $title !== $post->post_title ) {
+		fwrite( STDERR, "FAIL: Refusing to delete a post whose id, type, status, or title no longer matches the smoke fixture.\n" );
+		return;
+	}
+
+	$deleted = wp_delete_post( $post_id, true );
+	if ( $deleted instanceof WP_Post ) {
+		$GLOBALS['toolbox_article_core_smoke_post_id'] = 0;
+		return;
+	}
+
+	fwrite( STDERR, "FAIL: WordPress did not delete the tracked smoke draft.\n" );
 }
 
 function toolbox_article_core_smoke_should_purge_governance_records(): bool {
@@ -101,6 +112,76 @@ function toolbox_article_core_smoke_should_purge_governance_records(): bool {
 	}
 
 	return in_array( strtolower( trim( $value ) ), array( '1', 'true', 'yes' ), true );
+}
+
+function toolbox_article_core_smoke_purge_adapter_records(): void {
+	if ( ! toolbox_article_core_smoke_should_purge_governance_records() ) {
+		return;
+	}
+
+	$proposal_ids = array_keys( (array) ( $GLOBALS['toolbox_article_core_smoke_proposal_ids'] ?? array() ) );
+	if ( empty( $proposal_ids ) ) {
+		return;
+	}
+
+	foreach ( array( 'npcink_openclaw_adapter_execution_records', 'npcink_openclaw_adapter_preflight_handoffs' ) as $option_name ) {
+		$records = get_option( $option_name, array() );
+		if ( ! is_array( $records ) ) {
+			continue;
+		}
+
+		foreach ( $proposal_ids as $proposal_id ) {
+			unset( $records[ md5( $proposal_id ) ] );
+			foreach ( $records as $record_key => $record ) {
+				if ( is_array( $record ) && $proposal_id === (string) ( $record['proposal_id'] ?? '' ) ) {
+					unset( $records[ $record_key ] );
+				}
+			}
+			delete_option( 'npcink_openclaw_adapter_exec_lock_' . md5( $proposal_id ) );
+		}
+
+		update_option( $option_name, $records, false );
+	}
+
+	toolbox_article_core_smoke_info( 'Purged Adapter execution fixtures: ' . count( $proposal_ids ) );
+}
+
+function toolbox_article_core_smoke_assert_fixture_cleanup(): void {
+	global $wpdb;
+
+	$proposal_ids = array_keys( (array) ( $GLOBALS['toolbox_article_core_smoke_proposal_ids'] ?? array() ) );
+	foreach ( $proposal_ids as $proposal_id ) {
+		if ( ! toolbox_article_core_smoke_should_purge_governance_records() ) {
+			toolbox_article_core_smoke_info( "Retained Adapter and Core records for inspection: {$proposal_id}" );
+			continue;
+		}
+
+		foreach ( array( 'npcink_openclaw_adapter_execution_records', 'npcink_openclaw_adapter_preflight_handoffs' ) as $option_name ) {
+			$records = get_option( $option_name, array() );
+			$records = is_array( $records ) ? $records : array();
+			$contains_proposal = isset( $records[ md5( $proposal_id ) ] );
+			foreach ( $records as $record ) {
+				if ( is_array( $record ) && $proposal_id === (string) ( $record['proposal_id'] ?? '' ) ) {
+					$contains_proposal = true;
+				}
+			}
+			toolbox_article_core_smoke_assert( ! $contains_proposal, "{$option_name} no longer contains the smoke proposal." );
+		}
+
+		$proposal_count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->prefix}npcink_governance_core_proposals WHERE proposal_id = %s",
+				$proposal_id
+			)
+		);
+		$audit_count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->prefix}npcink_governance_core_audit_log WHERE proposal_id = %s",
+				$proposal_id
+			)
+		);
+		toolbox_article_core_smoke_assert( 0 === $proposal_count && 0 === $audit_count, 'Core proposal and audit fixtures are removed.' );
+	}
 }
 
 function toolbox_article_core_smoke_purge_governance_records(): void {
@@ -167,6 +248,99 @@ function toolbox_article_core_smoke_post_title_count( string $title ): int {
 		)
 	);
 }
+
+/**
+ * Installs process-local guards that keep the acceptance lane offline and
+ * prevent Cloud Addon buffers from observing the temporary draft lifecycle.
+ */
+function toolbox_article_core_smoke_install_local_guards(): void {
+	$option_name = class_exists( 'Npcink_Cloud_Addon_Settings' )
+		? Npcink_Cloud_Addon_Settings::option_name()
+		: 'npcink_cloud_addon_settings';
+	$stored_settings = get_option( $option_name, false );
+	$safe_settings   = is_array( $stored_settings ) ? $stored_settings : $stored_settings;
+	if ( is_array( $safe_settings ) ) {
+		$safe_settings['monitoring_enabled']              = false;
+		$safe_settings['site_knowledge_delivery_enabled'] = false;
+	}
+
+	add_filter(
+		'pre_option_' . $option_name,
+		static function () use ( $safe_settings ) {
+			return $safe_settings;
+		},
+		PHP_INT_MAX,
+		3
+	);
+
+	add_filter(
+		'pre_http_request',
+		static function ( $preempt, $parsed_args, $url ) {
+			$GLOBALS['toolbox_article_core_smoke_unexpected_http_urls'][] = (string) $url;
+
+			return new WP_Error(
+				'toolbox_article_core_smoke_outbound_http_blocked',
+				'Outbound HTTP is blocked for the five-plugin no-credit acceptance lane.'
+			);
+		},
+		PHP_INT_MAX,
+		3
+	);
+
+	$GLOBALS['toolbox_article_core_smoke_addon_state_before'] = array(
+		'site_knowledge_buffer' => get_option( 'npcink_cloud_addon_site_knowledge_change_buffer', null ),
+		'observability_buffer'  => get_option( 'npcink_cloud_addon_observability_buffer', null ),
+		'site_knowledge_flush'  => wp_next_scheduled( 'npcink_cloud_addon_flush_site_knowledge_changes' ),
+		'site_knowledge_sync'   => wp_next_scheduled( 'npcink_cloud_addon_reconcile_site_knowledge_changes' ),
+		'observability_flush'   => wp_next_scheduled( 'npcink_cloud_addon_flush_observability' ),
+	);
+
+	register_shutdown_function(
+		static function (): void {
+			$urls = (array) ( $GLOBALS['toolbox_article_core_smoke_unexpected_http_urls'] ?? array() );
+			if ( empty( $urls ) ) {
+				return;
+			}
+
+			fwrite( STDERR, 'FAIL: Outbound HTTP was attempted during the governed draft lane: ' . implode( ', ', array_unique( $urls ) ) . "\n" );
+			exit( 1 );
+		}
+	);
+}
+
+/**
+ * Confirms the temporary draft did not mutate Cloud Addon delivery state.
+ */
+function toolbox_article_core_smoke_assert_addon_state_unchanged(): void {
+	$after = array(
+		'site_knowledge_buffer' => get_option( 'npcink_cloud_addon_site_knowledge_change_buffer', null ),
+		'observability_buffer'  => get_option( 'npcink_cloud_addon_observability_buffer', null ),
+		'site_knowledge_flush'  => wp_next_scheduled( 'npcink_cloud_addon_flush_site_knowledge_changes' ),
+		'site_knowledge_sync'   => wp_next_scheduled( 'npcink_cloud_addon_reconcile_site_knowledge_changes' ),
+		'observability_flush'   => wp_next_scheduled( 'npcink_cloud_addon_flush_observability' ),
+	);
+
+	toolbox_article_core_smoke_assert(
+		(array) ( $GLOBALS['toolbox_article_core_smoke_addon_state_before'] ?? array() ) === $after,
+		'Cloud Addon buffers and scheduled delivery hooks remain unchanged.'
+	);
+}
+
+/**
+ * Counts one Core event in a proposal detail audit timeline.
+ */
+function toolbox_article_core_smoke_audit_event_count( array $timeline, string $event_name ): int {
+	return count(
+		array_filter(
+			$timeline,
+			static function ( $event ) use ( $event_name ): bool {
+				return is_array( $event ) && $event_name === (string) ( $event['event_name'] ?? '' );
+			}
+		)
+	);
+}
+
+toolbox_article_core_smoke_install_local_guards();
 
 toolbox_article_core_smoke_assert( class_exists( 'WP_REST_Request' ) && function_exists( 'rest_do_request' ), 'WordPress REST dispatch is available.' );
 toolbox_article_core_smoke_assert( class_exists( 'WP_Abilities_Registry' ), 'WordPress Abilities registry is available.' );
@@ -253,27 +427,69 @@ if ( toolbox_article_core_smoke_should_execute() ) {
 		)
 	);
 	$execution_record = is_array( $executed['execution_record'] ?? null ) ? $executed['execution_record'] : ( is_array( $executed['execution'] ?? null ) ? $executed['execution'] : array() );
+	$created_post_id = absint( $execution_record['post_id'] ?? ( $executed['post_id'] ?? 0 ) );
+	$GLOBALS['toolbox_article_core_smoke_post_id'] = $created_post_id;
 	toolbox_article_core_smoke_assert( 'succeeded' === (string) ( $execution_record['status'] ?? '' ), 'Adapter approve-and-execute succeeds after Core approval and preflight.' );
+	$core_preflight_evidence = is_array( $executed['core_preflight_evidence'] ?? null ) ? $executed['core_preflight_evidence'] : array();
+	$core_execution_record   = is_array( $execution_record['core_execution_record'] ?? null ) ? $execution_record['core_execution_record'] : array();
+	toolbox_article_core_smoke_assert( 'pending' === (string) ( $executed['status_before'] ?? '' ) && true === (bool) ( $executed['approved_by_adapter'] ?? false ), 'Adapter records the explicit pending-to-approved transition.' );
+	toolbox_article_core_smoke_assert( 'core_commit_preflight' === (string) ( $executed['preflight_source'] ?? '' ), 'Adapter execution uses fresh Core commit preflight.' );
+	toolbox_article_core_smoke_assert( false === (bool) ( $executed['core_commit_execution'] ?? true ), 'Core remains authorization-only and does not execute the write.' );
+	toolbox_article_core_smoke_assert( true === (bool) ( $core_preflight_evidence['authorized'] ?? false ) && 'core-preflight-v1' === (string) ( $core_preflight_evidence['policy_version'] ?? '' ), 'Adapter preserves authorized Core preflight policy evidence.' );
+	toolbox_article_core_smoke_assert( true === (bool) ( $core_execution_record['recorded'] ?? false ) && 'executed' === (string) ( $core_execution_record['status'] ?? '' ), 'Adapter records the completed execution back in Core.' );
 
-	$post_ids = get_posts(
-		array(
-			'post_type'      => 'post',
-			'post_status'    => 'any',
-			'title'          => $title,
-			'fields'         => 'ids',
-			'posts_per_page' => 5,
-		)
-	);
-	toolbox_article_core_smoke_assert( 1 === count( $post_ids ), 'Approved governed execution creates exactly one WordPress post.' );
-	$created_post = get_post( absint( $post_ids[0] ?? 0 ) );
-	toolbox_article_core_smoke_assert( $created_post instanceof WP_Post && 'draft' === $created_post->post_status, 'Governed execution creates status draft, never publish.' );
+	toolbox_article_core_smoke_assert( $created_post_id > 0, 'Adapter returns the exact created WordPress post id.' );
+	toolbox_article_core_smoke_assert( 1 === toolbox_article_core_smoke_post_title_count( $title ), 'Approved governed execution creates exactly one WordPress post.' );
+	$created_post = get_post( $created_post_id );
+	toolbox_article_core_smoke_assert( $created_post instanceof WP_Post && $title === $created_post->post_title && 'draft' === $created_post->post_status, 'Governed execution creates the expected status-draft post, never publish.' );
 	toolbox_article_core_smoke_assert( false !== strpos( (string) $created_post->post_content, '<h2>Governed draft smoke</h2>' ), 'Markdown sections are converted to WordPress-safe HTML.' );
 
+	$duplicate = toolbox_article_core_smoke_rest_result(
+		'POST',
+		'/npcink-openclaw-adapter/v1/proposals/' . rawurlencode( $proposal_id ) . '/approve-and-execute',
+		array(
+			'intent' => 'commit',
+			'note'   => 'Duplicate local Toolbox article draft smoke approval.',
+		)
+	);
+	$duplicate_data = is_array( $duplicate['data'] ?? null ) ? $duplicate['data'] : array();
+	$duplicate_error_data = is_array( $duplicate_data['data'] ?? null ) ? $duplicate_data['data'] : array();
+	$duplicate_record = is_array( $duplicate_error_data['execution_record'] ?? null ) ? $duplicate_error_data['execution_record'] : array();
+	toolbox_article_core_smoke_assert( 409 === (int) $duplicate['status'], 'Duplicate governed execution is rejected with HTTP 409.' );
+	toolbox_article_core_smoke_assert( 'npcink_openclaw_adapter_execution_already_completed' === (string) ( $duplicate_data['code'] ?? '' ), 'Duplicate governed execution returns the Adapter completed-execution code.' );
+	toolbox_article_core_smoke_assert( $created_post_id === absint( $duplicate_record['post_id'] ?? 0 ), 'Duplicate rejection returns the original execution record.' );
+	toolbox_article_core_smoke_assert( 1 === toolbox_article_core_smoke_post_title_count( $title ), 'Duplicate execution does not create a second WordPress post.' );
+
+	$core_readback = toolbox_article_core_smoke_rest( 'GET', '/npcink-governance-core/v1/proposals/' . rawurlencode( $proposal_id ) );
+	toolbox_article_core_smoke_assert( 'executed' === (string) ( $core_readback['status'] ?? '' ), 'Core truth records the proposal as executed.' );
+	$core_timeline = is_array( $core_readback['audit_timeline'] ?? null ) ? $core_readback['audit_timeline'] : array();
+	foreach ( array( 'proposal.approved', 'commit.preflighted', 'proposal.executed' ) as $event_name ) {
+		toolbox_article_core_smoke_assert( 1 === toolbox_article_core_smoke_audit_event_count( $core_timeline, $event_name ), "Core audit timeline contains exactly one {$event_name} event." );
+	}
+
+	$expected_hash        = sanitize_text_field( (string) ( $core_preflight_evidence['approved_input_hash'] ?? '' ) );
+	$expected_correlation = sanitize_text_field( (string) ( $core_preflight_evidence['correlation_id'] ?? '' ) );
+	toolbox_article_core_smoke_assert( '' !== $expected_hash && '' !== $expected_correlation, 'Adapter exposes the Core preflight input hash and correlation id.' );
+	foreach ( $core_timeline as $event ) {
+		if ( ! is_array( $event ) || ! in_array( (string) ( $event['event_name'] ?? '' ), array( 'commit.preflighted', 'proposal.executed' ), true ) ) {
+			continue;
+		}
+		$metadata = is_array( $event['metadata'] ?? null ) ? $event['metadata'] : array();
+		toolbox_article_core_smoke_assert( $expected_hash === sanitize_text_field( (string) ( $metadata['approved_input_hash'] ?? '' ) ), 'Core audit event remains bound to the approved input hash.' );
+		toolbox_article_core_smoke_assert( $expected_correlation === sanitize_text_field( (string) ( $metadata['correlation_id'] ?? '' ) ), 'Core audit event remains bound to the preflight correlation id.' );
+	}
+
+	$deleted_post_id = $created_post_id;
 	toolbox_article_core_smoke_purge_post_fixture();
+	toolbox_article_core_smoke_assert( null === get_post( $deleted_post_id ), 'Only the tracked draft post id is permanently removed.' );
 	toolbox_article_core_smoke_assert( $before_count === toolbox_article_core_smoke_post_title_count( $title ), 'Created draft fixture is removed after readback.' );
 } else {
 	toolbox_article_core_smoke_info( 'Set NPCINK_TOOLBOX_ARTICLE_CORE_SMOKE_EXECUTE=1 to approve, execute, verify draft status, and clean up the post fixture.' );
 }
 
+toolbox_article_core_smoke_purge_adapter_records();
 toolbox_article_core_smoke_purge_governance_records();
+toolbox_article_core_smoke_assert_fixture_cleanup();
+toolbox_article_core_smoke_assert_addon_state_unchanged();
+toolbox_article_core_smoke_assert( array() === (array) $GLOBALS['toolbox_article_core_smoke_unexpected_http_urls'], 'No outbound HTTP request is attempted during the governed draft lane.' );
 echo "Toolbox article draft Core handoff smoke passed.\n";

@@ -36,6 +36,15 @@ Confirm:
 - `NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES` suppresses raw payloads even when the
   local debug option is enabled.
 - Debug payloads redact sensitive keys and token-shaped strings before display.
+- The same effective raw-response policy drives REST status, editor diagnostics,
+  and every Cloud response normalizer; production code must not read the raw
+  option directly.
+- Secret-shaped editor text is classified as `secret` with `no_store` before a
+  Cloud handoff.
+- Exact external source URLs pass WordPress validation, reject literal
+  special-purpose IPv4/IPv6 addresses, and use only the standard port for their
+  HTTP or HTTPS scheme. Cloud Addon owns fetch-time DNS, redirect, and response
+  validation; Toolbox must not duplicate that transport policy.
 
 ## 3. Site Knowledge Cloud Addon Gate
 
@@ -70,19 +79,34 @@ Capture a small authenticated local or staging REST baseline:
 NPCINK_TOOLBOX_BASE_URL="https://example.local" \
 NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
 NPCINK_TOOLBOX_NONCE="..." \
-NPCINK_TOOLBOX_PERF_OUTPUT="var/perf/toolbox-baseline.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-observation-1.jsonl" \
 composer perf:baseline
 ```
 
-Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only when Cloud Addon/runtime
-availability is part of the release proof. For local self-signed HTTPS only,
-add `NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. To measure a known Cloud unavailable
-or no-candidate failure path, add `NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1`
-and preserve the status in the trial note. The baseline should include status,
-Site Knowledge status, and, when enabled, Cloud-backed Site Knowledge search,
-content support, and fast-first image candidates. Any probe without an HTTP
-status, unexpected 4xx/5xx status, or over 2500ms should be investigated before
-release.
+The default is a local-only `/status` probe with one warmup and ten measured
+requests. It records median and P95 timing. Missing or mixed HTTP status,
+redirects, non-JSON responses, and non-2xx local responses fail immediately;
+timing remains observation-only while three comparable baseline batches are
+collected. After selecting a stable reference, set
+`NPCINK_TOOLBOX_PERF_BASELINE` to compare later medians. A candidate regression
+requires both greater than 30 percent and greater than 20 milliseconds. Add
+`NPCINK_TOOLBOX_PERF_ENFORCE_REGRESSION=1` only after the three-batch baseline
+is stable.
+
+Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only for an intentional,
+quota-aware Cloud proof. Site Knowledge status is Cloud-backed, and the full
+set contains four Cloud routes. Start with
+`NPCINK_TOOLBOX_PERF_SAMPLES=3 NPCINK_TOOLBOX_PERF_WARMUPS=0`; that still makes
+twelve Cloud-backed requests. A stable known Cloud 4xx/5xx may be measured with
+`NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1`, but this never relaxes local status.
+For local self-signed HTTPS only, add
+`NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. Keep output under ignored and
+package-excluded `build/perf/`.
+
+The WordPress Dashboard hot-topic widget is a local cache reader. Rendering the
+widget must make zero Cloud calls. Its capability- and nonce-protected refresh
+action may make one synchronous Cloud request after an explicit administrator
+click; failure must preserve the last local backup.
 
 ## 6. Nightly Cloud E2E Gate
 

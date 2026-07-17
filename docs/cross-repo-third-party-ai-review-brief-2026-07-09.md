@@ -248,7 +248,7 @@ Role: WordPress-side signed Cloud transport and shallow status bridge.
 Current implementation posture:
 
 - owns Cloud Base URL/API key settings, request signing, bounded runtime
-  transport, entitlement/status reads, artifact download transport, Site
+  transport, entitlement/status reads, verified artifact receive/ACK transport, Site
   Knowledge delivery/status bridge, and observability forwarding;
 - recent merged work preserved signed-transport ownership and GitHub-only
   repository management;

@@ -21,6 +21,7 @@ final class Plugin {
 
 	private Settings $settings;
 	private Provider_Client $client;
+	private Publish_Preflight_Service $publish_preflight;
 	private Rest_Controller $rest_controller;
 	private Admin_Page $admin_page;
 	private Dashboard_Widget $dashboard_widget;
@@ -31,12 +32,13 @@ final class Plugin {
 	private Abilities $abilities;
 
 	private function __construct() {
-		$this->settings        = new Settings();
-		$this->client          = new Provider_Client( $this->settings );
-		$this->rest_controller = new Rest_Controller( $this->settings, $this->client );
-		$this->admin_page      = new Admin_Page( $this->settings );
+		$this->settings          = new Settings();
+		$this->client            = new Provider_Client( $this->settings );
+		$this->publish_preflight = new Publish_Preflight_Service();
+		$this->rest_controller   = new Rest_Controller( $this->settings, $this->client, $this->publish_preflight );
+		$this->admin_page        = new Admin_Page( $this->settings );
 		$this->dashboard_widget = new Dashboard_Widget( $this->client );
-		$this->editor_content_support = new Editor_Content_Support();
+		$this->editor_content_support = new Editor_Content_Support( $this->settings );
 		$this->article_audio_playback = new Article_Audio_Playback();
 		$this->site_knowledge_auto_sync = new Site_Knowledge_Auto_Sync( $this->client );
 		$this->nightly_inspection_cron = new Basic_WP_Cron_Dry_Run( $this->settings );

@@ -184,6 +184,55 @@ php scripts/cross-repo-quality-matrix.php --run-gates --fail-on-dirty
 Both commands are read-only except when an explicit `--output=PATH` report file
 is requested. They must not fetch, stage, reset, or mutate WordPress.
 
+## Five-Plugin No-Credit Acceptance
+
+After changing a boundary shared by Toolbox, Toolkit, Core, Adapter, or Cloud
+Addon, run the focused local stack acceptance:
+
+```bash
+composer accept:local-five-plugin
+```
+
+The command requires an exclusive local development site: do not run it while
+another browser, worker, or acceptance process is mutating the same WordPress
+database. It verifies that all five plugins are active and that each mounted
+plugin directory resolves to the current Toolbox or sibling repository, then
+runs two deliberately separate lanes:
+
+A single `--skip-plugins --skip-themes` WP-CLI preflight reads the active plugin
+option and plugin directory without booting plugin code. Every WP-CLI process,
+including that preflight, loads the same bootstrap HTTP guard. The guard enables
+WordPress external-request blocking, disables process-local WP-Cron spawning,
+records attempted URLs for the parent shell gate, and remains active through
+shutdown. The cron isolation prevents WordPress 6.9+ from starting its normal
+shutdown loopback request during acceptance; it does not change site-level cron
+configuration. The second lane alone allows its exact loopback runtime URL,
+which is still intercepted by the deterministic in-process mock before any
+socket opens.
+
+1. Toolbox builds a reviewed article plan, Toolkit exposes the real
+   `create-draft` ability, Core creates and preflights the proposal, and Adapter
+   executes exactly one draft write. A duplicate execution must return HTTP 409
+   and Core must read back `executed` with exactly one approval, preflight, and
+   execution audit event bound to the same input hash and correlation id. Only
+   the exact returned draft post id is deleted; the Adapter record, Core
+   proposal, and audit rows must also be removed afterward. Process-local
+   settings disable Addon monitoring and Site Knowledge delivery, while a
+   shutdown-aware HTTP guard rejects any outbound request.
+2. Toolbox calls the Cloud Addon image-generation transport with temporary
+   credentials held only in an authenticated in-memory envelope. The stored
+   Addon option is never changed. WordPress HTTP is preempted with a deterministic
+   loopback response; every other request, including a shutdown request, fails
+   the gate.
+
+This is a development-only acceptance command outside `composer test:all`.
+It does not call `npcink-ai-cloud`, consume provider credit, publish content,
+leave proposal history, add a queue, or merge Cloud transport into Core
+governance. Override `WP_PATH`, `WP_CLI_BIN`, `WP_CLI_PHP`, `WP_DB_SOCKET`, or
+`NPCINK_REPO_FAMILY_ROOT` when the local site or sibling checkout root differs
+from the documented default. A process lock prevents two copies of this gate
+from running concurrently.
+
 AI agents must not run `git reset --hard`, `git checkout -- .`, or use
 `git add -A` in mixed worktrees unless the user explicitly requests that exact
 operation. If cleanup is needed, prefer a scoped reverse patch or
@@ -398,19 +447,56 @@ For an authenticated REST latency baseline, run:
 NPCINK_TOOLBOX_BASE_URL="https://example.local" \
 NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
 NPCINK_TOOLBOX_NONCE="..." \
-NPCINK_TOOLBOX_PERF_OUTPUT="var/perf/toolbox-baseline.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-observation-1.jsonl" \
 composer perf:baseline
 ```
 
+The default probe is local `/status` only. It runs one warmup and ten measured
+requests, then records median, P95, minimum, maximum, the individual timings,
+response size median, HTTP status consistency, and JSON validity. Missing HTTP
+status, mixed statuses, redirects, invalid JSON, and any non-2xx local status
+are hard failures. Timing is observation-only at first; there is no absolute
+latency failure threshold during baseline stabilization.
+
+Capture three batches against the same origin, authentication state, probe
+set, sample count, and warmup count. Choose one stable JSONL result as the
+reference, then compare a later run without enforcing timing:
+
+```bash
+NPCINK_TOOLBOX_BASE_URL="https://example.local" \
+NPCINK_TOOLBOX_AUTH_COOKIE="wordpress_logged_in_..." \
+NPCINK_TOOLBOX_NONCE="..." \
+NPCINK_TOOLBOX_PERF_BASELINE="build/perf/toolbox-reference.jsonl" \
+NPCINK_TOOLBOX_PERF_OUTPUT="build/perf/toolbox-current.jsonl" \
+composer perf:baseline
+```
+
+The comparison rejects a different schema, origin, probe signature, probe set,
+sample count, warmup count, or HTTP status. A candidate regression requires
+both a median increase greater than 30 percent and an increase greater than 20
+milliseconds. The candidate is reported but does not fail until three stable
+batches exist and the release owner explicitly adds
+`NPCINK_TOOLBOX_PERF_ENFORCE_REGRESSION=1`.
+
 Add `NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1` only when Cloud Addon/runtime
-availability is part of the proof. For local self-signed HTTPS only, add
-`NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. To measure a known Cloud unavailable or
-no-candidate failure path, add `NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1` and
-record the status in the trial notes. This records JSONL timing for the status
-and Site Knowledge status routes, plus Cloud-backed probes when enabled. Any
-probe without an HTTP status, unexpected error status, or over 2500ms exits
-non-zero so the release owner investigates the path instead of shipping an
-unmeasured slowdown.
+availability is intentionally part of the proof. Site Knowledge status is a
+Cloud-backed route too. Because four Cloud routes are sampled, use a small
+explicit trial first:
+
+```bash
+NPCINK_TOOLBOX_PERF_INCLUDE_CLOUD=1 \
+NPCINK_TOOLBOX_PERF_SAMPLES=3 \
+NPCINK_TOOLBOX_PERF_WARMUPS=0 \
+composer perf:baseline
+```
+
+That example still makes twelve Cloud-backed requests and may consume provider
+quota. To measure a stable known Cloud 4xx/5xx path, also add
+`NPCINK_TOOLBOX_PERF_ALLOW_ERROR_STATUS=1` and record the status in the trial
+notes; this flag never relaxes the local `/status` probe. For local self-signed
+HTTPS only, add `NPCINK_TOOLBOX_PERF_INSECURE_TLS=1`. `build/perf/` is ignored
+by Git and excluded from release packages so local origins and measurements do
+not enter commits or ZIP files.
 
 For the post-editor follow-up quality trial through eval-lab, run:
 
@@ -706,9 +792,13 @@ NODE_PATH="${NODE_PATH:-/Users/muze/.cache/codex-runtimes/codex-primary-runtime/
 ```
 
 This creates one temporary attachment, submits the Toolbox-owned preview route
-from a real authenticated browser, polls Cloud Addon through Toolbox, loads the
-signed WebP preview bytes, and rejects any request to the removed Adapter media
-derivative Cloud routes. It cleans up the attachment after the check.
+from a real authenticated browser, polls Cloud Addon through Toolbox, proves the
+separate queryless local review endpoint rejects a POST body without a WordPress
+REST nonce, then loads verified WebP bytes with `X-WP-Nonce` and the exact local11
+JSON body. It also checks no-store and nosniff response headers, rejects every
+query field and extra body shape, and rejects
+any request to the removed Adapter media derivative Cloud routes. It cleans up
+the attachment after the check.
 
 When Adapter, Toolkit, and Core are available, run the workflow-projection Core
 proposal smoke:
@@ -978,7 +1068,8 @@ automatic editor-state action, and media metadata remains unchanged.
   `core_proposal_required` and be verified with
   `composer smoke:article-media-batch-core`.
 - Treat media optimization as a governed fixed flow: Toolbox builds the
-  operator handoff, Adapter/Cloud generates the short-lived preview, Core owns
+  operator handoff, Cloud Addon/Cloud generates and receives the short-lived
+  local review bytes, Core owns
   proposal approval, and release checks should run
   `composer smoke:media-derivative-core`.
 - Keep Cloud-managed web search output as source candidates, not verified truth.

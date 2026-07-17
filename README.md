@@ -255,7 +255,7 @@ registered.
 - `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}`
 - `GET /wp-json/npcink-toolbox/v1/media-derivative-preview/{run_id}/result`
 - `POST /wp-json/npcink-toolbox/v1/media-derivative-optimization-payload`
-- `GET /wp-json/npcink-toolbox/v1/media-derivative-preview-artifacts/{artifact_id}` (short-lived signed preview only)
+- `POST /wp-json/npcink-toolbox/v1/media-derivative-local-review/{artifact_id}` (queryless, capability- and REST nonce-gated local review bytes only)
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-runtime-entitlement`
 - `POST /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch`
 - `GET /wp-json/npcink-toolbox/v1/nightly-inspection/cloud-batch/recent`
@@ -691,9 +691,16 @@ local uploads URL, the same surface can call the local read-only
 `npcink-abilities-toolkit/resolve-media-attachment-by-url` ability through Adapter
 `run-read-ability`, show bounded match evidence, and fill the attachment ID for
 the same preview/proposal flow. The single-image action surface dispatches the
-bounded Adapter media-derivative recipe, polls the short-lived Cloud artifact
-result, renders the same-origin signed Adapter preview proxy when available,
-and can submit a Core replacement proposal with the artifact evidence. The
+bounded media-derivative recipe through Cloud Addon, polls the short-lived Cloud
+artifact result, and renders a separate `local_review` POST transport. Its
+same-origin WordPress endpoint has no query string; the browser submits the
+exact local11 artifact as JSON with cookie authentication and `X-WP-Nonce`.
+Cloud Addon receives, verifies, and ACKs the bytes before Toolbox serves them
+with no-store and nosniff headers. The browser renders the response through a
+short-lived Blob object URL and revokes it on load, error, or re-render. The
+Cloud `artifact` projection never contains this local endpoint, a remote URL, a
+storage locator, or a self-signed credential. The surface can then submit
+a Core replacement proposal with the artifact evidence. The
 	Batch Optimize Images workbench can build a bounded batch conversion plan, show
 	candidates and skipped reasons, generate selected previews, and submit selected
 	items for review; final replacement execution stays in the governed
@@ -840,7 +847,10 @@ payloads off even if the local option is enabled.
 For hardening release checks, run `composer smoke:security-permission-debug`
 with the default gate. To capture an authenticated local or staging latency
 baseline, set `NPCINK_TOOLBOX_BASE_URL` plus admin REST authentication headers
-and run `composer perf:baseline`. The release checklist is documented in
+and run `composer perf:baseline`. The default command is local-only and records
+one warmup plus ten measured `/status` requests with median and P95 timing;
+Cloud-backed probes require an explicit, quota-aware opt-in. The release
+checklist is documented in
 [Security And Performance Release Gate](docs/security-performance-release-gate.md).
 
 ## Development

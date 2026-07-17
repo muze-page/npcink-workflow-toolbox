@@ -66,8 +66,8 @@ Confirm the operator-facing path is still understandable:
   reviews, not one-click whole-site replacement;
 - batch flow defaults to a small review set and does not ask operators to run
   unattended whole-library replacement;
-- the generated preview image loads through the same-origin signed preview
-  proxy;
+- the generated preview image loads through the administrator-only local review
+  route with a WordPress REST nonce, no-store, and nosniff headers;
 - no button or success state implies Toolbox or Cloud directly writes
   WordPress media.
 

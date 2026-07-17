@@ -299,6 +299,20 @@ final class Settings {
 	}
 
 	/**
+	 * Returns the effective raw-response diagnostics policy.
+	 *
+	 * The constant is an operator kill switch and must win over the stored
+	 * setting on every surface that can expose provider diagnostics.
+	 */
+	public function raw_responses_enabled(): bool {
+		if ( defined( 'NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES' ) && NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES ) {
+			return false;
+		}
+
+		return (bool) $this->get( 'include_raw_responses' );
+	}
+
+	/**
 	 * Returns bounded local fallback preview settings for Nightly Site Inspection.
 	 *
 	 * @return array<string,bool|int|string>

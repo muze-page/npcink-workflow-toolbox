@@ -414,11 +414,13 @@ if ( ! class_exists( 'Npcink_Toolbox\\Plugin' ) ) {
 
 require_once dirname( __DIR__ ) . '/includes/Settings.php';
 require_once dirname( __DIR__ ) . '/includes/Provider_Client.php';
+require_once dirname( __DIR__ ) . '/includes/Publish_Preflight_Service.php';
 require_once dirname( __DIR__ ) . '/includes/Rest_Controller.php';
 
 $settings   = new Npcink_Toolbox\Settings();
 $client     = new Npcink_Toolbox\Provider_Client( $settings );
-$controller = new Npcink_Toolbox\Rest_Controller( $settings, $client );
+$preflight  = new Npcink_Toolbox\Publish_Preflight_Service();
+$controller = new Npcink_Toolbox\Rest_Controller( $settings, $client, $preflight );
 
 function npcink_toolbox_progressive_request( Npcink_Toolbox\Rest_Controller $controller, array $payload ): array {
 	$response = $controller->editor_content_support( new WP_REST_Request( $payload ) );

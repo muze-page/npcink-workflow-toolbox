@@ -2734,6 +2734,58 @@ pre.npcink-toolbox__result {
 	border: 1px solid #dcdcde;
 }
 
+.npcink-toolbox__media-progress {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1px;
+	margin: 12px 0 8px;
+	padding: 0;
+	list-style: none;
+	border: 1px solid #dcdcde;
+	background: #dcdcde;
+}
+
+.npcink-toolbox__media-progress li {
+	display: flex;
+	gap: 7px;
+	align-items: center;
+	min-width: 0;
+	padding: 9px 10px;
+	background: #f6f7f7;
+	color: #646970;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.npcink-toolbox__media-progress li.is-current {
+	background: #fff;
+	color: #1d2327;
+}
+
+.npcink-toolbox__media-progress li.is-complete {
+	background: #edfaef;
+	color: #0a4b20;
+}
+
+.npcink-toolbox__media-progress-marker {
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 20px;
+	width: 20px;
+	height: 20px;
+	border: 1px solid currentcolor;
+	border-radius: 50%;
+	font-size: 11px;
+	line-height: 1;
+}
+
+@media (max-width: 782px) {
+	.npcink-toolbox__media-progress {
+		grid-template-columns: 1fr;
+	}
+}
+
 .npcink-toolbox__url-resolution {
 	margin: 10px 0 0;
 	padding: 12px;

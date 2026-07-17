@@ -25,8 +25,6 @@ final class Provider_Client {
 	private const DEBUG_PAYLOAD_MAX_DEPTH = 6;
 	private const DEBUG_PAYLOAD_MAX_ITEMS = 40;
 	private const DEBUG_PAYLOAD_MAX_STRING_CHARS = 2000;
-	private const HTTP_TIMEOUT_DEFAULT = 20;
-	private const HTTP_TIMEOUT_MAX = 60;
 	private const HTTP_CONNECT_TIMEOUT = 5;
 
 	private Settings $settings;
@@ -981,6 +979,9 @@ final class Provider_Client {
 
 	private function runtime_payload_data_classification( array $runtime_input, string $default, array $source_input = array() ): string {
 		$requested_classification = sanitize_key( (string) ( $source_input['runtime_data_classification'] ?? $source_input['data_classification'] ?? '' ) );
+		if ( $this->payload_contains_secret( $runtime_input ) || ( array() !== $source_input && $this->payload_contains_secret( $source_input ) ) ) {
+			return 'secret';
+		}
 		if ( in_array( $requested_classification, array( 'pii', 'secret' ), true ) ) {
 			return $requested_classification;
 		}
@@ -1103,6 +1104,81 @@ final class Provider_Client {
 		}
 		if ( preg_match( '/\b\d{15}\b|\b\d{17}[\dXx]\b/', $text ) ) {
 			return true;
+		}
+
+		return false;
+	}
+
+	private function payload_contains_secret( $value, int $depth = 0, string $current_key = '' ): bool {
+		if ( $depth >= self::PAYLOAD_MAX_DEPTH ) {
+			if ( is_array( $value ) ) {
+				return array() !== $value;
+			}
+
+			return is_scalar( $value ) && '' !== trim( (string) $value );
+		}
+		if ( '' !== $current_key && $this->is_secret_payload_key( $current_key ) && is_scalar( $value ) && '' !== trim( (string) $value ) ) {
+			return true;
+		}
+		if ( is_array( $value ) ) {
+			foreach ( $value as $key => $child ) {
+				if ( $this->payload_contains_secret( $child, $depth + 1, is_string( $key ) ? $key : '' ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		if ( ! is_scalar( $value ) ) {
+			return false;
+		}
+
+		$text = trim( (string) $value );
+		if ( '' === $text ) {
+			return false;
+		}
+
+		return $this->redact_sensitive_debug_text( $text ) !== $text;
+	}
+
+	private function is_secret_payload_key( string $key ): bool {
+		$normalized = strtolower( preg_replace( '/[^a-z0-9]+/', '_', $key ) ?? $key );
+		$normalized = trim( $normalized, '_' );
+		if ( '' === $normalized ) {
+			return false;
+		}
+
+		if (
+			in_array(
+				$normalized,
+				array(
+					'authorization',
+					'api_key',
+					'apikey',
+					'access_token',
+					'refresh_token',
+					'id_token',
+					'token',
+					'secret',
+					'password',
+					'credential',
+					'private_key',
+					'cookie',
+					'set_cookie',
+					'headers',
+					'request_headers',
+					'response_headers',
+					'raw_headers',
+				),
+				true
+			)
+		) {
+			return true;
+		}
+
+		foreach ( array( '_api_key', '_token', '_secret', '_password', '_credential', '_private_key' ) as $suffix ) {
+			if ( strlen( $normalized ) >= strlen( $suffix ) && substr( $normalized, -strlen( $suffix ) ) === $suffix ) {
+				return true;
+			}
 		}
 
 		return false;
@@ -1300,7 +1376,7 @@ final class Provider_Client {
 			$payload['merged_morning_brief'] = $this->sanitize_payload( $merger->merge( $morning_brief, $result ) );
 		}
 
-		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+		if ( $this->settings->raw_responses_enabled() ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
@@ -1355,7 +1431,7 @@ final class Provider_Client {
 			'site_ops_cloud_analysis_result'
 		);
 
-		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+		if ( $this->settings->raw_responses_enabled() ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
@@ -5411,7 +5487,7 @@ final class Provider_Client {
 			$payload['hot_topic_pool'] = $hot_topic_pool;
 		}
 
-		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+		if ( $this->settings->raw_responses_enabled() ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
@@ -7965,7 +8041,7 @@ final class Provider_Client {
 			$payload['site_knowledge_cloud_boundary'] = $cloud_boundary;
 		}
 
-		if ( (bool) $this->settings->get( 'include_raw_responses' ) ) {
+		if ( $this->settings->raw_responses_enabled() ) {
 			$payload['cloud_response'] = $this->sanitize_debug_payload( $response );
 		}
 
@@ -8622,96 +8698,6 @@ final class Provider_Client {
 		return strlen( $value ) > $max_chars ? substr( $value, 0, $max_chars ) : $value;
 	}
 
-	private function json_request( string $url, string $method, array $headers = array(), ?array $body = null, int $timeout = self::HTTP_TIMEOUT_DEFAULT ) {
-		$args = array(
-			'method'             => $method,
-			'timeout'            => $this->http_timeout( $timeout ),
-			'connect_timeout'    => self::HTTP_CONNECT_TIMEOUT,
-			'redirection'        => 2,
-			'limit_response_size' => 1048576,
-			'headers' => array_merge(
-				array(
-					'Accept' => 'application/json',
-				),
-				$headers
-			),
-		);
-
-		if ( null !== $body ) {
-			$args['headers']['Content-Type'] = 'application/json';
-			$args['body'] = wp_json_encode( $body );
-		}
-
-		$response = wp_remote_request( $url, $args );
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$status = (int) wp_remote_retrieve_response_code( $response );
-		$raw = (string) wp_remote_retrieve_body( $response );
-		$data = json_decode( $raw, true );
-		if ( ! is_array( $data ) ) {
-			return new WP_Error(
-				'npcink_toolbox_provider_invalid_json',
-				__( 'The provider returned an invalid JSON response.', 'npcink-workflow-toolbox' ),
-				array(
-					'status'          => 502,
-					'provider_status' => $status,
-				)
-			);
-		}
-
-		if ( 200 > $status || 299 < $status ) {
-			$message = sanitize_text_field( (string) ( $data['error']['message'] ?? $data['message'] ?? __( 'The provider request failed.', 'npcink-workflow-toolbox' ) ) );
-			return new WP_Error(
-				'npcink_toolbox_provider_error',
-				$message,
-				array(
-					'status'          => $status,
-					'provider_status' => $status,
-				)
-			);
-		}
-
-		return $data;
-	}
-
-	private function text_request( string $url, string $method, array $headers = array(), int $timeout = self::HTTP_TIMEOUT_DEFAULT ) {
-		$args = array(
-			'method'             => $method,
-			'timeout'            => $this->http_timeout( $timeout ),
-			'connect_timeout'    => self::HTTP_CONNECT_TIMEOUT,
-			'redirection'        => 2,
-			'limit_response_size' => 1048576,
-			'headers' => array_merge(
-				array(
-					'Accept' => 'text/plain',
-				),
-				$headers
-			),
-		);
-
-		$response = wp_remote_request( $url, $args );
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$status = (int) wp_remote_retrieve_response_code( $response );
-		$raw    = (string) wp_remote_retrieve_body( $response );
-		if ( 200 > $status || 299 < $status ) {
-			return new WP_Error(
-				'npcink_toolbox_provider_error',
-				__( 'The provider text request failed.', 'npcink-workflow-toolbox' ),
-				array(
-					'status'          => $status,
-					'provider_status' => $status,
-				)
-			);
-		}
-
-		return $raw;
-	}
-
 	private function with_optional_raw( array $payload, array $raw ): array {
 		if ( $this->raw_responses_enabled() ) {
 			$payload['raw'] = $this->sanitize_debug_payload( $raw );
@@ -8721,15 +8707,7 @@ final class Provider_Client {
 	}
 
 	private function raw_responses_enabled(): bool {
-		if ( defined( 'NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES' ) && NPCINK_TOOLBOX_DISABLE_RAW_RESPONSES ) {
-			return false;
-		}
-
-		return (bool) $this->settings->get( 'include_raw_responses' );
-	}
-
-	private function http_timeout( int $timeout ): int {
-		return max( 1, min( self::HTTP_TIMEOUT_MAX, $timeout ) );
+		return $this->settings->raw_responses_enabled();
 	}
 
 	private function with_output_contract( array $payload, string $artifact_type, string $composition_role ): array {
@@ -9139,7 +9117,9 @@ final class Provider_Client {
 		}
 
 		if ( $depth >= self::DEBUG_PAYLOAD_MAX_DEPTH ) {
-			return is_array( $value ) ? array( '_truncated' => true ) : $this->bounded_text( (string) $value, self::DEBUG_PAYLOAD_MAX_STRING_CHARS );
+			return is_array( $value )
+				? array( '_truncated' => true )
+				: $this->bounded_text( $this->redact_sensitive_debug_text( (string) $value ), self::DEBUG_PAYLOAD_MAX_STRING_CHARS );
 		}
 
 		if ( is_array( $value ) ) {

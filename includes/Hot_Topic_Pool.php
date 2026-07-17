@@ -21,13 +21,36 @@ final class Hot_Topic_Pool {
 		$this->client = $client;
 	}
 
-	public function get( bool $force_refresh = false ): array {
-		$cached = $force_refresh ? false : get_transient( self::CACHE_KEY );
+	/**
+	 * Reads the local hot-topic snapshot without performing remote I/O.
+	 */
+	public function read_cached(): array {
+		$cached = get_transient( self::CACHE_KEY );
 		if ( is_array( $cached ) ) {
 			$cached['cache_status'] = 'hit';
 			return $cached;
 		}
 
+		$backup = get_option( self::BACKUP_OPTION, array() );
+		if ( is_array( $backup ) && ! empty( $backup['items'] ) && is_array( $backup['items'] ) ) {
+			$backup['status']       = 'stale';
+			$backup['cache_status'] = 'stale';
+			$backup['message']      = __( 'Showing the last locally cached hot-topic snapshot.', 'npcink-workflow-toolbox' );
+			return $backup;
+		}
+
+		return array(
+			'status'       => 'empty',
+			'cache_status' => 'empty',
+			'message'      => __( 'No local hot-topic snapshot is available yet. Refresh it when you want to contact Cloud.', 'npcink-workflow-toolbox' ),
+			'items'        => array(),
+		);
+	}
+
+	/**
+	 * Refreshes the snapshot after an explicit administrator action.
+	 */
+	public function refresh(): array {
 		$result = $this->client->test_cloud_web_search(
 			array(
 				'query'          => '知乎热榜',
@@ -57,16 +80,12 @@ final class Hot_Topic_Pool {
 
 		$pool = $this->normalize( is_array( $result ) ? $result : array() );
 		if ( 'ready' === (string) ( $pool['status'] ?? '' ) ) {
+			$pool['cache_status'] = 'refreshed';
 			set_transient( self::CACHE_KEY, $pool, self::CACHE_TTL );
 			update_option( self::BACKUP_OPTION, $pool, false );
 		}
 
 		return $pool;
-	}
-
-	public function refresh(): array {
-		delete_transient( self::CACHE_KEY );
-		return $this->get( true );
 	}
 
 	public function display_signal( array $item ): string {

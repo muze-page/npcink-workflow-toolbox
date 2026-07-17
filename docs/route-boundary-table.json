@@ -316,14 +316,14 @@
       "boundary_note": "Delegates payload construction to Cloud Addon and returns a Core-ready from-plan request without storing or submitting a proposal."
     },
     {
-      "route": "/media-derivative-preview-artifacts/(?P<artifact_id>[A-Za-z0-9._:-]+)",
-      "documented_route": "/media-derivative-preview-artifacts/{artifact_id}",
-      "methods": ["GET"],
+      "route": "/media-derivative-local-review/(?P<artifact_id>art_[0-9a-f]{32})",
+      "documented_route": "/media-derivative-local-review/{artifact_id}",
+      "methods": ["POST"],
       "scope": "cap.toolbox.workflow_suggest",
-      "owner": "toolbox_signed_preview_projection",
+      "owner": "toolbox_local_review_projection",
       "write_posture": "preview_only",
       "direct_wordpress_write": false,
-      "boundary_note": "Short-lived same-origin signed byte projection through Cloud Addon; no persistence, media registration, or write."
+      "boundary_note": "Queryless POST with cookie plus X-WP-Nonce and exact local11 JSON artifact body; bytes are received and verified through Cloud Addon with no self-signed query authorization, persistence, media registration, or write."
     },
     {
       "route": "/nightly-inspection/cloud-runtime-entitlement",

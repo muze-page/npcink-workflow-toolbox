@@ -165,19 +165,13 @@ function toolbox_media_batch_execute_create_attachment( string $label ): int {
 
 function toolbox_media_batch_execute_derivative_from_result( array $result ): array {
 	$cloud_result = is_array( $result['cloud_result'] ?? null ) ? $result['cloud_result'] : $result;
-	foreach ( array( 'derivative_artifact', 'artifact', 'derivative' ) as $key ) {
-		if ( is_array( $cloud_result[ $key ] ?? null ) ) {
-			return (array) $cloud_result[ $key ];
-		}
-	}
-
-	return array();
+	return is_array( $cloud_result['artifact'] ?? null ) ? (array) $cloud_result['artifact'] : array();
 }
 
 function toolbox_media_batch_execute_wait_for_result( string $run_id ): array {
 	for ( $attempt = 0; $attempt < 40; $attempt++ ) {
 		usleep( 0 === $attempt ? 250000 : 750000 );
-		$poll   = toolbox_media_batch_execute_rest_raw( 'GET', '/npcink-openclaw-adapter/v1/media-derivative-runs/' . rawurlencode( $run_id ) . '/result' );
+		$poll   = toolbox_media_batch_execute_rest_raw( 'GET', '/npcink-toolbox/v1/media-derivative-preview/' . rawurlencode( $run_id ) . '/result' );
 		$result = is_array( $poll['data'] ?? null ) ? (array) $poll['data'] : array();
 		$status = (string) ( $result['cloud_result']['status'] ?? $result['status'] ?? '' );
 		if ( in_array( $status, array( 'succeeded', 'completed' ), true ) ) {
@@ -190,7 +184,7 @@ function toolbox_media_batch_execute_wait_for_result( string $run_id ): array {
 		}
 	}
 
-	toolbox_media_batch_execute_fail( 'Adapter media derivative run result did not become available.' );
+	toolbox_media_batch_execute_fail( 'Toolbox media derivative preview result did not become available.' );
 }
 
 function toolbox_media_batch_execute_latest_replacement_id( int $attachment_id ): string {
@@ -308,14 +302,14 @@ foreach ( $candidates as $index => $candidate ) {
 
 	$create = toolbox_media_batch_execute_rest(
 		'POST',
-		'/npcink-openclaw-adapter/v1/media-derivative-runs',
+		'/npcink-toolbox/v1/media-derivative-preview',
 		array(
 			'input'           => $ability_input,
 			'idempotency_key' => 'toolbox-media-batch-execute-' . $attachment_id . '-' . time() . '-' . $index,
 		)
 	);
 	$run_id = sanitize_text_field( (string) ( $create['run_id'] ?? $create['cloud_run']['run_id'] ?? '' ) );
-	toolbox_media_batch_execute_assert( '' !== $run_id, 'Adapter returns Cloud run id for selected preview ' . ( $index + 1 ) . '.' );
+	toolbox_media_batch_execute_assert( '' !== $run_id, 'Toolbox returns a Cloud run id for selected preview ' . ( $index + 1 ) . '.' );
 
 	$result     = toolbox_media_batch_execute_wait_for_result( $run_id );
 	$derivative = toolbox_media_batch_execute_derivative_from_result( $result );
@@ -331,7 +325,7 @@ foreach ( $candidates as $index => $candidate ) {
 	);
 	$proposal_payload = toolbox_media_batch_execute_rest(
 		'POST',
-		'/npcink-openclaw-adapter/v1/media-derivative-proposal-payload',
+		'/npcink-toolbox/v1/media-derivative-optimization-payload',
 		array(
 			'ability_response'     => is_array( $create['ability_response'] ?? null ) ? (array) $create['ability_response'] : array(),
 			'cloud_result'         => is_array( $result['cloud_result'] ?? null ) ? (array) $result['cloud_result'] : $result,
@@ -340,7 +334,7 @@ foreach ( $candidates as $index => $candidate ) {
 		)
 	);
 	$from_plan_request = is_array( $proposal_payload['from_plan_request'] ?? null ) ? (array) $proposal_payload['from_plan_request'] : array();
-	toolbox_media_batch_execute_assert( ! empty( $proposal_payload['proposal_ready'] ), 'Adapter builds proposal-ready payload for selected preview ' . ( $index + 1 ) . '.' );
+	toolbox_media_batch_execute_assert( ! empty( $proposal_payload['proposal_ready'] ), 'Toolbox projects a proposal-ready payload from Cloud Addon for selected preview ' . ( $index + 1 ) . '.' );
 
 	$proposal_bridge = toolbox_media_batch_execute_rest( 'POST', '/npcink-openclaw-adapter/v1/proposals/from-plan', $from_plan_request );
 	$proposal        = is_array( $proposal_bridge['proposals'][0] ?? null ) ? (array) $proposal_bridge['proposals'][0] : array();

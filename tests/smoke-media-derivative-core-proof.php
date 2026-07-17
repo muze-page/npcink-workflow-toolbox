@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $toolbox_media_derivative_smoke_proposal_ids  = array();
+$toolbox_media_derivative_smoke_read_request_ids = array();
 $toolbox_media_derivative_smoke_attachment_id = 0;
 $toolbox_media_derivative_smoke_paths         = array();
 
@@ -81,6 +82,15 @@ function toolbox_media_derivative_smoke_track_proposals( $data ): void {
 	$proposal_id = sanitize_text_field( (string) ( $data['proposal_id'] ?? '' ) );
 	if ( '' !== $proposal_id ) {
 		$toolbox_media_derivative_smoke_proposal_ids[ $proposal_id ] = true;
+	}
+}
+
+function toolbox_media_derivative_smoke_track_read_request( string $read_request_id ): void {
+	global $toolbox_media_derivative_smoke_read_request_ids;
+
+	$read_request_id = sanitize_text_field( $read_request_id );
+	if ( '' !== $read_request_id ) {
+		$toolbox_media_derivative_smoke_read_request_ids[ $read_request_id ] = true;
 	}
 }
 
@@ -166,13 +176,7 @@ function toolbox_media_derivative_smoke_create_attachment(): int {
 
 function toolbox_media_derivative_smoke_derivative_from_result( array $result ): array {
 	$cloud_result = is_array( $result['cloud_result'] ?? null ) ? $result['cloud_result'] : $result;
-	foreach ( array( 'derivative_artifact', 'artifact', 'derivative' ) as $key ) {
-		if ( is_array( $cloud_result[ $key ] ?? null ) ) {
-			return (array) $cloud_result[ $key ];
-		}
-	}
-
-	return array();
+	return is_array( $cloud_result['artifact'] ?? null ) ? (array) $cloud_result['artifact'] : array();
 }
 
 function toolbox_media_derivative_smoke_latest_replacement_id( int $attachment_id ): string {
@@ -184,7 +188,7 @@ function toolbox_media_derivative_smoke_latest_replacement_id( int $attachment_i
 }
 
 function toolbox_media_derivative_smoke_cleanup(): void {
-	global $wpdb, $toolbox_media_derivative_smoke_attachment_id, $toolbox_media_derivative_smoke_paths, $toolbox_media_derivative_smoke_proposal_ids;
+	global $wpdb, $toolbox_media_derivative_smoke_attachment_id, $toolbox_media_derivative_smoke_paths, $toolbox_media_derivative_smoke_proposal_ids, $toolbox_media_derivative_smoke_read_request_ids;
 
 	if ( $toolbox_media_derivative_smoke_attachment_id > 0 ) {
 		wp_delete_attachment( $toolbox_media_derivative_smoke_attachment_id, true );
@@ -222,6 +226,18 @@ function toolbox_media_derivative_smoke_cleanup(): void {
 			}
 			toolbox_media_derivative_smoke_info( 'Purged Core proposal fixtures: ' . count( $proposal_ids ) );
 		}
+
+		$read_request_ids = array_keys( is_array( $toolbox_media_derivative_smoke_read_request_ids ) ? $toolbox_media_derivative_smoke_read_request_ids : array() );
+		if ( ! empty( $read_request_ids ) ) {
+			$audit_table        = $wpdb->prefix . 'npcink_governance_core_audit_log';
+			$read_request_table = $wpdb->prefix . 'npcink_governance_core_read_requests';
+			foreach ( $read_request_ids as $read_request_id ) {
+				$read_request_id = sanitize_text_field( $read_request_id );
+				$wpdb->delete( $audit_table, array( 'proposal_id' => $read_request_id ), array( '%s' ) );
+				$wpdb->delete( $read_request_table, array( 'request_id' => $read_request_id ), array( '%s' ) );
+			}
+			toolbox_media_derivative_smoke_info( 'Purged Core read authorization fixtures: ' . count( $read_request_ids ) );
+		}
 	}
 }
 
@@ -255,11 +271,100 @@ toolbox_media_derivative_smoke_assert( 'webp' === (string) ( $ability_input['pre
 toolbox_media_derivative_smoke_assert( 320 === (int) ( $ability_input['target_max_width'] ?? 0 ), 'Toolbox handoff maps width override to target_max_width.' );
 toolbox_media_derivative_smoke_assert( ! isset( $ability_input['watermark'] ), 'Toolbox handoff can omit watermark for one disabled-watermark run.' );
 
+$legacy_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'target_format' => 'webp',
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $legacy_preview['status'] ?? 0 ), 'Toolbox rejects a removed preview alias before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_legacy_field' === (string) ( $legacy_preview['data']['code'] ?? '' ), 'Toolbox returns the stable legacy-field error code.' );
+
+$unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'future_option' => true,
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown preview field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_unknown_field' === (string) ( $unknown_preview['data']['code'] ?? '' ), 'Toolbox returns the stable unknown-field error code.' );
+
+$nested_unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'crop'          => array( 'future_option' => true ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $nested_unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown nested preview field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'crop.future_option' === (string) ( $nested_unknown_preview['data']['data']['field'] ?? '' ), 'Toolbox identifies the exact unknown nested field.' );
+
+$nested_watermark_unknown_preview = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'watermark'     => array( 'type' => 'text', 'future_option' => true ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $nested_watermark_unknown_preview['status'] ?? 0 ), 'Toolbox rejects an unknown nested watermark field before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'watermark.future_option' === (string) ( $nested_watermark_unknown_preview['data']['data']['field'] ?? '' ), 'Toolbox identifies the exact unknown nested watermark field.' );
+
+$missing_watermark_attachment = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id' => $attachment_id,
+			'watermark'     => array( 'type' => 'image' ),
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $missing_watermark_attachment['status'] ?? 0 ), 'Toolbox rejects an image watermark without a local attachment before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_watermark_attachment_required' === (string) ( $missing_watermark_attachment['data']['code'] ?? '' ), 'Toolbox returns the stable missing watermark attachment code.' );
+
+$unexpected_watermark_attachment = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-toolbox/v1/media-derivative-preview',
+	array(
+		'input' => array(
+			'attachment_id'           => $attachment_id,
+			'watermark'               => array( 'type' => 'text', 'text' => 'AI' ),
+			'watermark_attachment_id' => $attachment_id,
+		),
+	)
+);
+toolbox_media_derivative_smoke_assert( 400 === (int) ( $unexpected_watermark_attachment['status'] ?? 0 ), 'Toolbox rejects a local watermark attachment for a text watermark before Cloud dispatch.' );
+toolbox_media_derivative_smoke_assert( 'npcink_toolbox_media_derivative_preview_watermark_attachment_unexpected' === (string) ( $unexpected_watermark_attachment['data']['code'] ?? '' ), 'Toolbox returns the stable unexpected watermark attachment code.' );
+
+$preview_input = $ability_input;
+$preview_input['watermark'] = array(
+	'type'          => 'image',
+	'position'      => 'bottom_right',
+	'opacity'       => 0.5,
+	'scale_percent' => 12,
+	'margin_px'     => 8,
+);
+$preview_input['watermark_attachment_id'] = $attachment_id;
+
 $create = toolbox_media_derivative_smoke_rest(
 	'POST',
 	'/npcink-toolbox/v1/media-derivative-preview',
 	array(
-		'input'           => $ability_input,
+		'input'           => $preview_input,
 		'idempotency_key' => 'toolbox-media-derivative-core-proof-' . $attachment_id . '-' . time(),
 	)
 );
@@ -286,18 +391,80 @@ toolbox_media_derivative_smoke_assert( in_array( (string) ( $result['cloud_resul
 $derivative = toolbox_media_derivative_smoke_derivative_from_result( $result );
 toolbox_media_derivative_smoke_assert( '' !== (string) ( $derivative['artifact_id'] ?? '' ), 'Cloud result includes a derivative artifact id.' );
 toolbox_media_derivative_smoke_assert( 'image/webp' === (string) ( $derivative['mime_type'] ?? '' ), 'Cloud derivative is WebP.' );
+$local_review = is_array( $result['local_review'] ?? null ) ? (array) $result['local_review'] : array();
+$local_review_artifact = is_array( $local_review['artifact'] ?? null ) ? (array) $local_review['artifact'] : array();
+toolbox_media_derivative_smoke_assert( array( 'endpoint', 'method', 'artifact' ) === array_keys( $local_review ), 'Toolbox local review exposes only the queryless POST transport.' );
+toolbox_media_derivative_smoke_assert( 'POST' === (string) ( $local_review['method'] ?? '' ), 'Toolbox local review requires POST.' );
+toolbox_media_derivative_smoke_assert( (string) $derivative['artifact_id'] === (string) ( $local_review_artifact['artifact_id'] ?? '' ), 'Toolbox local review binds to the exact Cloud artifact id.' );
+toolbox_media_derivative_smoke_assert( (string) $derivative['expires_at'] === (string) ( $local_review_artifact['expires_at'] ?? '' ), 'Toolbox local review preserves the Cloud artifact expiry.' );
+toolbox_media_derivative_smoke_assert( false !== strpos( (string) ( $local_review['endpoint'] ?? '' ), '/npcink-toolbox/v1/media-derivative-local-review/' ) && false === strpos( (string) ( $local_review['endpoint'] ?? '' ), '?' ), 'Toolbox returns a queryless capability-gated local review endpoint separately from the Cloud artifact.' );
+toolbox_media_derivative_smoke_assert( array( 'artifact_id', 'expires_at', 'mime_type', 'format', 'width', 'height', 'filesize_bytes', 'sha256', 'suggested_filename', 'filename_basis', 'processing_warnings' ) === array_keys( $local_review_artifact ), 'Toolbox local review carries exact local11 JSON artifact evidence.' );
+toolbox_media_derivative_smoke_assert( ! isset( $local_review_artifact['checksum'], $local_review_artifact['artifact_reference'] ), 'Toolbox local review omits Cloud-only checksum and artifact_reference fields.' );
 
-$preflight = toolbox_media_derivative_smoke_rest(
+$direct_preflight = toolbox_media_derivative_smoke_rest_raw(
 	'POST',
 	'/npcink-openclaw-adapter/v1/run-read-ability',
 	array(
 		'ability_id' => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
 		'input'      => array(
 			'attachment_id'       => $attachment_id,
-			'derivative_artifact' => $derivative,
+			'derivative_artifact' => $local_review_artifact,
 		),
 	)
 );
+toolbox_media_derivative_smoke_assert( 403 === (int) ( $direct_preflight['status'] ?? 0 ), 'Adapter fails closed before Core authorizes the media adoption preflight read.' );
+toolbox_media_derivative_smoke_assert( 'npcink_openclaw_adapter_core_read_authorization_required' === (string) ( $direct_preflight['data']['code'] ?? '' ), 'Adapter returns the stable Core read authorization requirement.' );
+
+$read_request = toolbox_media_derivative_smoke_rest(
+	'POST',
+	'/npcink-openclaw-adapter/v1/read-requests',
+	array(
+		'ability_id'             => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
+		'input'                  => array(
+			'attachment_id'       => $attachment_id,
+			'derivative_artifact' => $local_review_artifact,
+		),
+		'requested_input_summary' => 'Toolbox media derivative smoke adoption preflight.',
+		'data_classes'           => array( 'media', 'attachment_metadata' ),
+		'redaction_level'        => 'strict',
+		'purpose'                => 'Verify the bounded media adoption preflight before Core proposal creation.',
+		'caller'                 => array( 'external_thread_id' => 'toolbox-media-derivative-core-proof' ),
+		'bounds'                 => array( 'denied_fields' => array( 'authorization', 'cookie', 'application_password' ) ),
+	)
+);
+$read_request_id = sanitize_text_field( (string) ( $read_request['request_id'] ?? '' ) );
+toolbox_media_derivative_smoke_assert( '' !== $read_request_id && 'pending' === (string) ( $read_request['status'] ?? '' ), 'Adapter creates a pending Core-governed media preflight read request.' );
+toolbox_media_derivative_smoke_track_read_request( $read_request_id );
+
+$approved_read_request = toolbox_media_derivative_smoke_rest(
+	'POST',
+	'/npcink-governance-core/v1/read-requests/' . rawurlencode( $read_request_id ) . '/approve',
+	array(
+		'note'             => 'Toolbox media derivative smoke approval.',
+		'redaction_level'  => 'strict',
+		'denied_fields'    => array( 'authorization', 'cookie', 'application_password' ),
+	)
+);
+toolbox_media_derivative_smoke_assert( 'approved' === (string) ( $approved_read_request['status'] ?? '' ), 'Core approves the bounded media preflight read request.' );
+
+$preflight_response = toolbox_media_derivative_smoke_rest_raw(
+	'POST',
+	'/npcink-openclaw-adapter/v1/run-read-ability',
+	array(
+		'ability_id'      => 'npcink-abilities-toolkit/build-media-adoption-preflight-summary',
+		'input'           => array(
+			'attachment_id'       => $attachment_id,
+			'derivative_artifact' => $local_review_artifact,
+		),
+		'read_request_id' => $read_request_id,
+	)
+);
+$preflight_status = (int) ( $preflight_response['status'] ?? 0 );
+$preflight        = is_array( $preflight_response['data'] ?? null ) ? (array) $preflight_response['data'] : array();
+if ( $preflight_status < 200 || $preflight_status >= 300 ) {
+	toolbox_media_derivative_smoke_fail( 'Adapter failed the Core-authorized media adoption preflight read: ' . wp_json_encode( $preflight ) );
+}
+toolbox_media_derivative_smoke_pass( 'Adapter executes the Core-authorized media adoption preflight read.' );
 $preflight_data = is_array( $preflight['result']['data'] ?? null ) ? (array) $preflight['result']['data'] : ( is_array( $preflight['data'] ?? null ) ? (array) $preflight['data'] : array() );
 toolbox_media_derivative_smoke_assert( 'media_adoption_preflight_summary' === (string) ( $preflight_data['artifact_type'] ?? '' ), 'Adapter can run the media adoption preflight summary ability.' );
 toolbox_media_derivative_smoke_assert( false === (bool) ( $preflight_data['direct_wordpress_write'] ?? true ), 'Media adoption preflight summary declares no direct WordPress write.' );

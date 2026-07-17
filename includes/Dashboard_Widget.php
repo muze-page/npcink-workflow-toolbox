@@ -20,6 +20,7 @@ final class Dashboard_Widget {
 
 	public function register_hooks(): void {
 		add_action( 'wp_dashboard_setup', array( $this, 'register' ) );
+		add_action( 'admin_post_npcink_toolbox_refresh_hot_topic_pool', array( $this, 'refresh_hot_topic_pool' ) );
 	}
 
 	public function register(): void {
@@ -46,7 +47,7 @@ final class Dashboard_Widget {
 			return;
 		}
 
-		$pool  = $this->hot_topic_pool->get();
+		$pool  = $this->hot_topic_pool->read_cached();
 		$items = is_array( $pool['items'] ?? null ) ? $pool['items'] : array();
 
 		echo '<p class="description">' . esc_html__( '今日热榜标题速览。这里不做选题处理，只帮助快速判断外部热点。', 'npcink-workflow-toolbox' ) . '</p>';
@@ -59,6 +60,25 @@ final class Dashboard_Widget {
 		}
 
 		$this->render_hot_topic_meta( $pool );
+		$this->render_refresh_form();
+	}
+
+	public function refresh_hot_topic_pool(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die(
+				esc_html__( 'You are not allowed to refresh Toolbox hot topics.', 'npcink-workflow-toolbox' ),
+				'',
+				array( 'response' => 403 )
+			);
+		}
+
+		check_admin_referer( 'npcink_toolbox_refresh_hot_topic_pool' );
+		$pool   = $this->hot_topic_pool->refresh();
+		$status = sanitize_key( (string) ( $pool['status'] ?? 'unknown' ) );
+		$url    = add_query_arg( 'npcink_toolbox_hot_topic_refresh', $status, admin_url( 'index.php' ) );
+
+		wp_safe_redirect( $url );
+		exit;
 	}
 
 	private function render_hot_topic_titles( array $items ): void {
@@ -105,5 +125,13 @@ final class Dashboard_Widget {
 		if ( array() !== $parts ) {
 			echo '<p class="description" style="margin:8px 0 0;">' . esc_html( implode( ' · ', $parts ) ) . '</p>';
 		}
+	}
+
+	private function render_refresh_form(): void {
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin-top:10px;">';
+		echo '<input type="hidden" name="action" value="npcink_toolbox_refresh_hot_topic_pool">';
+		wp_nonce_field( 'npcink_toolbox_refresh_hot_topic_pool' );
+		submit_button( __( 'Refresh hot topics', 'npcink-workflow-toolbox' ), 'secondary', 'submit', false );
+		echo '</form>';
 	}
 }
